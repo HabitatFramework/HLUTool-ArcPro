@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+WARNING: This file should be changed carefully and a backup should be
+taken before any changes so that they can be backed out.  Changed lines
+can also be commented out as below.
+-->
+
+<!--
+This config file contains all the variables used by the DataSync
+ArcGIS Pro add-in.
+
+The 'configuration' node is the 'root' node and signifies the start of the
+contents of the configuration file.
+
+The 'DataSync' node contains all of the entries relating to the
+ArcGIS  Pro add-in variables.
+
+Each entry relates to a file, folder, table name, column name or SQL statement
+used by the ArcGIS Pro add-in to select and export GIS data for partners.
+-->
+
+<configuration>
+<DataSync>
+
+  <!-- The existing file location where log files will be saved with output messages. -->
+  <LogFilePath>
+	<value>D:\Data Tools\DataSync\Logfiles</value>
+  </LogFilePath>
+
+  <!-- The location of the SDE file that specifies which SQL Server database to connect to. -->
+  <SDEFile>
+	<value>D:\Data Tools\DataSync\Config\OpenSpace.sde</value>
+  </SDEFile>
+
+  <!-- The schema used in the SQL Server database. -->
+  <DatabaseSchema>
+	<value>dbo</value>
+  </DatabaseSchema>
+
+  <!-- The stored procedure to compare the local layer and remote table in SQL Server. -->
+  <CompareStoredProcedure>
+	<value>AFCompareSites</value>
+  </CompareStoredProcedure>
+
+  <!-- The stored procedure to update the remote table in SQL Server. -->
+  <UpdateStoredProcedure>
+	<value>AFSyncSites</value>
+  </UpdateStoredProcedure>
+
+  <!-- The stored procedure to clear the temporary tables in SQL Server. -->
+  <ClearStoredProcedure>
+	<value>AFClearSitesTemp</value>
+  </ClearStoredProcedure>
+
+  <!-- The name of the local layer in GIS containing the features. -->
+  <LocalLayer>
+	<value>OpenSpace_Sites</value>
+  </LocalLayer>
+
+  <!-- The local layer selection where clause (if required). -->
+  <LocalClause>
+	<value></value>
+  </LocalClause>
+
+  <!-- The name of the remote table in SQL Server containing the remote features. -->
+  <RemoteTable>
+	<value>OpenSpace_Sites</value>
+  </RemoteTable>
+
+  <!-- The remote table selection where clause (if required). -->
+  <RemoteClause>
+	<value>Deleted = 0</value>
+  </RemoteClause>
+
+  <!-- The name of the layer in GIS displaying the remote features from SQL Server. -->
+  <RemoteLayer>
+	<value>OpenSpace_Sites_Remote</value>
+  </RemoteLayer>
+
+  <!-- The name of the key column in the local layer and remote table. -->
+  <KeyColumn>
+	<value>SiteID</value>
+  </KeyColumn>
+
+  <!-- The name of the spatial column in the local layer and remote table. -->
+  <SpatialColumn>
+	<value>Shape</value>
+  </SpatialColumn>
+
+  <!-- By default, should an existing log file be cleared? -->
+  <DefaultClearLogFile>
+	<value>Yes</value>
+  </DefaultClearLogFile>
+
+  <!-- By default, should the log file be opened after running. -->
+  <DefaultOpenLogFile>
+  	<value>Yes</value>
+  </DefaultOpenLogFile>
+
+</DataSync>
+</configuration>

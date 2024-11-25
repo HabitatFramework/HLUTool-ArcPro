@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ArcGIS defaultAssembly="DataSync.dll"
+		defaultNamespace="DataSync"
+		xmlns="http://schemas.esri.com/DADF/Registry"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
+
+	<AddInInfo id="{3b4733d2-72bc-4515-818d-c7681bc43db9}" version="1.0.1" desktopVersion="3.3.52636">
+		<Name>DataSync</Name>
+		<Description>DataSync is an ArcGIS .Net tool and associated SQL scripts to compare and sync map layers between ArcGIS and SQL Server.</Description>
+		<Image>Images\AddinDesktop32.png</Image>
+		<Author>Andy Foy, andy@andyfoyconsulting.co.uk</Author>
+		<Company>Andy Foy Consulting</Company>
+		<Date>25/11/2024 15:37:00 AM</Date>
+		<Subject>Framework, Geodatabase</Subject>
+		<!-- Note subject can be one or more of these topics:
+                    Content, Framework, Editing, Geodatabase, Geometry, Geoprocessing, Layouts, Map Authoring, Map Exploration -->
+	</AddInInfo>
+
+	<dependencies>
+		<dependency name="{11a4897d-5c60-4521-b312-274e0ba2403e}" />
+	</dependencies>
+
+	<modules>
+		<insertModule id="DataSync_Module"
+					  className="DataSync"
+					  autoLoad="true"
+					  caption="Data Sync module">
+			<controls>
+				<button id="DataSync_btnDataSyncDockPane"
+						caption="Data Sync"
+						className="DataSync.UI.DockpaneMain_ShowButton"
+						loadOnClick="true"
+						keytip="DY"
+						smallImage="pack://application:,,,/DataSync;component/Images/DataSync16.png"
+						largeImage="pack://application:,,,/DataSync;component/Images/DataSync32.png">
+					<tooltip heading="Data Sync tool"
+							 image="pack://application:,,,/DataSync;component/Images/DataSync16.png">
+						Automate data synchronisation.<disabledText />
+					</tooltip>
+				</button>
+			</controls>
+			<dockPanes>
+				<dockPane id="DataSync_UI_DockpaneMain"
+						  hasHelp="true"
+						  autoHide="false"
+						  caption="Data Sync"
+						  className="DataSync.UI.DockpaneMainViewModel"
+						  dock="group"
+						  dockWith="esri_core_projectDockPane">
+					<content className="DataSync.UI.DockpaneMainView" />
+				</dockPane>
+			</dockPanes>
+		</insertModule>
+
+		<updateModule refID="DataTools_Module">
+			<groups>
+				<updateGroup refID="Data_Group">
+					<insertButton refID="DataSync_btnDataSyncDockPane"
+								  size="large" />
+				</updateGroup>
+			</groups>
+		</updateModule>
+	</modules>
+</ArcGIS>

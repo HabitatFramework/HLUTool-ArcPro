@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+WARNING: This file should be changed carefully and a backup should be
+taken before any changes so that they can be backed out.  Changed lines
+can also be commented out as below.
+-->
+
+<!--
+This config file contains all the variables used by the DataSearches
+ArcGIS Add-in tool.
+
+The 'configuration' node is the 'root' node and signifies the start of the
+contents of the configuration file.
+
+The 'InitialConfig' node contains the nodes relating to the initial setup of the tool.
+
+Note a detailed XML profile file must also be set up in order for the tool to run.
+-->
+
+<configuration>
+<InitialConfig>
+	<!-- Are we allowing the user to choose their own configuration file? Yes/No -->
+	<ChooseXML>
+		<value>Yes</value>
+	</ChooseXML>
+
+	<!-- What is the default XML file called? If blank, the system looks for DefaultProfile.xml -->
+	<DefaultProfile>
+		<value>Default Profile.xml</value>
+	</DefaultProfile>
+
+	<!-- The URL of the online user guide -->
+	<HelpURL>
+		<value>https://dataextractor-userguide.readthedocs.io/en/latest/</value>
+	</HelpURL>
+</InitialConfig>
+</configuration>
