@@ -122,8 +122,8 @@ namespace HLU.UI.View
     //    {
     //        StringBuilder textBuilder;
     //        StringBuilder numberBuilder;
-    //        textBuilder = new StringBuilder();
-    //        numberBuilder = new StringBuilder();
+    //        textBuilder = new();
+    //        numberBuilder = new();
     //        //Look at each char in the string
     //        foreach (char value in text)
     //        {

@@ -60,7 +60,7 @@ namespace HLU.UI.ViewModel
                          select new BapEnvironment(false, false, p.bap_id, p.incid, p.bap_habitat, p.quality_determination, p.quality_interpretation, p.interpretation_comments);
 
             _incidBapRowsAuto = new ObservableCollection<BapEnvironment>(prevBapRowsAuto);
-            OnPropertyChanged("IncidBapHabitatsAuto");
+            OnPropertyChanged(nameof(IncidBapHabitatsAuto));
         }
 
         #endregion
@@ -104,8 +104,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_okCommand == null)
                 {
-                    Action<object> okAction = new Action<object>(this.OkCommandClick);
-                    _okCommand = new RelayCommand(okAction, param => this.CanOk);
+                    Action<object> okAction = new(this.OkCommandClick);
+                    _okCommand = new(okAction, param => this.CanOk);
                 }
 
                 return _okCommand;
@@ -161,8 +161,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_cancelCommand == null)
                 {
-                    Action<object> cancelAction = new Action<object>(this.CancelCommandClick);
-                    _cancelCommand = new RelayCommand(cancelAction);
+                    Action<object> cancelAction = new(this.CancelCommandClick);
+                    _cancelCommand = new(cancelAction);
                 }
 
                 return _cancelCommand;
@@ -232,7 +232,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                StringBuilder error = new StringBuilder();
+                StringBuilder error = new();
 
                 if (error.Length > 0)
                     return error.ToString();

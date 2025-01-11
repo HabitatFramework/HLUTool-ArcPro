@@ -1,13 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<ArcGIS defaultAssembly="DataSync.dll"
-		defaultNamespace="DataSync"
+<ArcGIS defaultAssembly="HLUTool.dll"
+		defaultNamespace="HLU"
 		xmlns="http://schemas.esri.com/DADF/Registry"
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
 
 	<AddInInfo id="{3b4733d2-72bc-4515-818d-c7681bc43db9}" version="1.0.1" desktopVersion="3.3.52636">
-		<Name>DataSync</Name>
-		<Description>DataSync is an ArcGIS .Net tool and associated SQL scripts to compare and sync map layers between ArcGIS and SQL Server.</Description>
+		<Name>HLUTool</Name>
+		<Description>HLUTool is an ArcGIS .Net tool ....</Description>
 		<Image>Images\AddinDesktop32.png</Image>
 		<Author>Andy Foy, andy@andyfoyconsulting.co.uk</Author>
 		<Company>Andy Foy Consulting</Company>
@@ -22,41 +22,41 @@
 	</dependencies>
 
 	<modules>
-		<insertModule id="DataSync_Module"
-					  className="DataSync"
+		<insertModule id="HLUTool_Module"
+					  className="HLUTool"
 					  autoLoad="true"
-					  caption="Data Sync module">
+					  caption="HLU Tool module">
 			<controls>
-				<button id="DataSync_btnDataSyncDockPane"
-						caption="Data Sync"
-						className="DataSync.UI.DockpaneMain_ShowButton"
+				<button id="HLUTool_btnHLUToolDockPane"
+						caption="HLU Tool"
+						className="HLUTool.UI.DockpaneMain_ShowButton"
 						loadOnClick="true"
 						keytip="DY"
-						smallImage="pack://application:,,,/DataSync;component/Images/DataSync16.png"
-						largeImage="pack://application:,,,/DataSync;component/Images/DataSync32.png">
-					<tooltip heading="Data Sync tool"
-							 image="pack://application:,,,/DataSync;component/Images/DataSync16.png">
-						Automate data synchronisation.<disabledText />
+						smallImage="pack://application:,,,/HLUTool;component/Images/HLUTool16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/HLUTool32.png">
+					<tooltip heading="HLU Tool tool"
+							 image="pack://application:,,,/HLUTool;component/Images/HLUTool16.png">
+						Manage habitat and land use data.<disabledText />
 					</tooltip>
 				</button>
 			</controls>
 			<dockPanes>
-				<dockPane id="DataSync_UI_DockpaneMain"
+				<dockPane id="HLUTool_UI_DockpaneMain"
 						  hasHelp="true"
 						  autoHide="false"
-						  caption="Data Sync"
-						  className="DataSync.UI.DockpaneMainViewModel"
+						  caption="HLU Tool"
+						  className="HLUTool.UI.DockpaneMainViewModel"
 						  dock="group"
 						  dockWith="esri_core_projectDockPane">
-					<content className="DataSync.UI.DockpaneMainView" />
+					<content className="HLUTool.UI.DockpaneMainView" />
 				</dockPane>
 			</dockPanes>
 		</insertModule>
 
-		<updateModule refID="DataTools_Module">
+		<updateModule refID="HLU_Module">
 			<groups>
 				<updateGroup refID="Data_Group">
-					<insertButton refID="DataSync_btnDataSyncDockPane"
+					<insertButton refID="HLUTool_btnHLUToolDockPane"
 								  size="large" />
 				</updateGroup>
 			</groups>

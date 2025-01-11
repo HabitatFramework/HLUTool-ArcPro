@@ -79,8 +79,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_okCommand == null)
                 {
-                    Action<object> okAction = new Action<object>(this.OkCommandClick);
-                    _okCommand = new RelayCommand(okAction);
+                    Action<object> okAction = new(this.OkCommandClick);
+                    _okCommand = new(okAction);
                 }
 
                 return _okCommand;

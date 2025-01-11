@@ -1,18 +1,18 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -69,7 +69,7 @@ namespace HLU.UI.UserControls
             ref List<DependencyObject> childrenList)
         {
             DependencyObject foundChild = null;
-            if (childrenList == null) childrenList = new List<DependencyObject>();
+            if (childrenList == null) childrenList = [];
             if (reference != null)
             {
                 int childrenCount = VisualTreeHelper.GetChildrenCount(reference);
@@ -104,8 +104,7 @@ namespace HLU.UI.UserControls
                     }
                     else if (!string.IsNullOrEmpty(childName))
                     {
-                        var frameworkElement = child as FrameworkElement;
-                        if (frameworkElement != null && frameworkElement.Name == childName)
+                        if (child is FrameworkElement frameworkElement && frameworkElement.Name == childName)
                         {
                             foundChild = child;
                             break;

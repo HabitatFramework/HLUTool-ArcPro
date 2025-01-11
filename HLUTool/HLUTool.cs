@@ -24,14 +24,14 @@ using ArcGIS.Desktop.Framework.Contracts;
 
 namespace HLU
 {
-    internal class DataSync : Module
+    internal class HLU : Module
     {
-        private static DataSync _this = null;
+        private static HLU _this = null;
 
         /// <summary>
         /// Retrieve the singleton instance to this module here
         /// </summary>
-        public static DataSync Current => _this ??= (DataSync)FrameworkApplication.FindModule("DataSync_Module");
+        public static HLU Current => _this ??= (HLU)FrameworkApplication.FindModule("HLU_Module");
 
         #region Overrides
 

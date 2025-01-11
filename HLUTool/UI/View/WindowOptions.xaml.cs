@@ -43,7 +43,7 @@ namespace HLU.UI.View
         /// <param name="e"></param>
         private void TabHistory_GotFocus(object sender, RoutedEventArgs e)
         {
-            List<DependencyObject> listBoxes = new List<DependencyObject>();
+            List<DependencyObject> listBoxes = [];
             FindControls.GetChildren(this, typeof(ListBox), ref listBoxes);
 
             foreach (ListBox l in listBoxes)

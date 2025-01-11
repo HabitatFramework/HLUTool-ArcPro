@@ -1,19 +1,19 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2013 Thames Valley Environmental Records Centre
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -76,20 +76,20 @@ namespace HLU.Date
         }
     }
 
-    class VagueDate
+    partial class VagueDate
     {
         private static Dictionary<string, VagueDate.VagueDateTypes> _codeValueDictionary = Enum<VagueDate.VagueDateTypes>.ToCodeValueDictionary();
         private static Dictionary<VagueDate.VagueDateTypes, string> _valueCodeDictionary = Enum<VagueDate.VagueDateTypes>.ToValueCodeDictionary();
-        private static Dictionary<string, string> _codeNameDictionary = Enum<VagueDate.VagueDateTypes>.ToCodeNameDictionary();
-        private static Dictionary<string, string> _nameCodeDictionary = Enum<VagueDate.VagueDateTypes>.ToNameCodeDictionary();
+        //private static Dictionary<string, string> _codeNameDictionary = Enum<VagueDate.VagueDateTypes>.ToCodeNameDictionary();
+        //private static Dictionary<string, string> _nameCodeDictionary = Enum<VagueDate.VagueDateTypes>.ToNameCodeDictionary();
 
         /// <summary>
         /// Base date for vague dates (COM base date).
         /// </summary>
-        public static DateTime BaseDate = new DateTime(1899, 12, 30);
+        public static DateTime BaseDate = new(1899, 12, 30);
 
         /// <summary>
-        /// Time difference in days between COM base date (30/12/1899) and .NET base date (1/1/1) 
+        /// Time difference in days between COM base date (30/12/1899) and .NET base date (1/1/1)
         /// returned by ToTimeSpanDays overloads when conversion fails and date is unkown.
         /// </summary>
         //public static readonly int DateUnknown = -693593;
@@ -218,7 +218,7 @@ namespace HLU.Date
                 // Get the year of the second part
                 string endYearStr = String.Empty;
                 int endYear = -1;
-                if ((endDateString.Length >= 4) && Int32.TryParse(endDateString.Substring(endDateString.Length - 4, 4),
+                if ((endDateString.Length >= 4) && Int32.TryParse(endDateString.AsSpan(endDateString.Length - 4, 4),
                     out endYear)) endYearStr = endYear.ToString();
 
                 // Format the first part of the date (using the year from the end part ???)
@@ -279,7 +279,7 @@ namespace HLU.Date
         /// Reads one portion, either start or end, of an unformatted vague date string (i.e. after splitting).
         /// </summary>
         /// <param name="dateString">Start or end portion of a vague date string.</param>
-        /// <param name="endYear">A single integer could be both a year or a month, 
+        /// <param name="endYear">A single integer could be both a year or a month,
         /// and the start part of date ranges may not include the year, the end date part
         /// of a vague date string is read first and the year found is passed into this method.</param>
         /// <param name="formattedDate">Formatted version of userDateString.</param>
@@ -293,7 +293,7 @@ namespace HLU.Date
                 if (String.IsNullOrEmpty(dateString)) return String.Empty;
 
                 //if (dateString.ToLower() == "unknown") return VagueDateTypes.Unknown.ToString();
-                if (dateString.ToLower() == "unknown") return String.Empty;
+                if (dateString.Equals("unknown", StringComparison.CurrentCultureIgnoreCase)) return String.Empty;
 
                 DateTimeFormatInfo dtFormatInfo = CultureInfo.CurrentCulture.DateTimeFormat;
 
@@ -322,58 +322,58 @@ namespace HLU.Date
                                 return VagueDate.ToCode(VagueDateTypes.StartMonthAndYear); // "O";
                             }
                         }
-                        else if (dtFormatInfo.MonthNames.Count(s => s.ToLower() == splitArray[0].ToLower()) == 1)
+                        else if (dtFormatInfo.MonthNames.Count(s => s.Equals(splitArray[0], StringComparison.CurrentCultureIgnoreCase)) == 1)
                         {
                             // full month ("January")
                             formattedDate = String.Format("{0} {1}",
-                                dtFormatInfo.MonthNames.Single(s => s.ToLower() == splitArray[0].ToLower()), currYear);
+                                dtFormatInfo.MonthNames.Single(s => s.Equals(splitArray[0], StringComparison.CurrentCultureIgnoreCase)), currYear);
                             return VagueDate.ToCode(VagueDateTypes.StartMonthAndYear); // "O";
                         }
-                        else if (dtFormatInfo.AbbreviatedMonthNames.Count(s => s.ToLower() == splitArray[0].ToLower()) == 1)
+                        else if (dtFormatInfo.AbbreviatedMonthNames.Count(s => s.Equals(splitArray[0], StringComparison.CurrentCultureIgnoreCase)) == 1)
                         {
                             // abbreviated month ("Jan")
                             formattedDate = String.Format("{0} {1}", dtFormatInfo.MonthNames[System.Array.IndexOf(
                                 dtFormatInfo.AbbreviatedMonthNames, dtFormatInfo.AbbreviatedMonthNames.Single(
-                                s => s.ToLower() == splitArray[0].ToLower()))], currYear);
+                                s => s.Equals(splitArray[0], StringComparison.CurrentCultureIgnoreCase)))], currYear);
                             return VagueDate.ToCode(VagueDateTypes.StartMonthAndYear); // "O";
                         }
-                        else if (SeasonNames.Count(s => s.ToLower() == splitArray[0].ToLower()) == 1)
+                        else if (SeasonNames.Count(s => s.Equals(splitArray[0], StringComparison.CurrentCultureIgnoreCase)) == 1)
                         {
                             // season
                             formattedDate = String.Format("{0} {1}",
-                                SeasonNames.Single(s => s.ToLower() == splitArray[0].ToLower()), currYear);
+                                SeasonNames.Single(s => s.Equals(splitArray[0], StringComparison.CurrentCultureIgnoreCase)), currYear);
                             return VagueDate.ToCode(VagueDateTypes.StartSeason); // "P";
                         }
                         break;
                     case 2:
                         if (!Int32.TryParse(splitArray[1], out year))
-                            throw new ArgumentException("Invalid date string.", "userDateString");
+                            throw new ArgumentException("Invalid date string.", nameof(dateString));
                         userYear = new DateTime(year, 1, 1).Year.ToString();
                         if (Int32.TryParse(splitArray[0], out month))
                         {
                             formattedDate = String.Format("{0} {1}", dtFormatInfo.MonthNames[month - 1], userYear);
                             return VagueDate.ToCode(VagueDateTypes.StartMonthAndYear); // "O";
                         }
-                        else if (dtFormatInfo.MonthNames.Count(s => s.ToLower() == splitArray[0].ToLower()) == 1)
+                        else if (dtFormatInfo.MonthNames.Count(s => s.Equals(splitArray[0], StringComparison.CurrentCultureIgnoreCase)) == 1)
                         {
                             // full month and year ("January 2007")
                             formattedDate = String.Format("{0} {1}",
-                                dtFormatInfo.MonthNames.Single(s => s.ToLower() == splitArray[0].ToLower()), userYear);
+                                dtFormatInfo.MonthNames.Single(s => s.Equals(splitArray[0], StringComparison.CurrentCultureIgnoreCase)), userYear);
                             return VagueDate.ToCode(VagueDateTypes.StartMonthAndYear); // "O";
                         }
-                        else if (dtFormatInfo.AbbreviatedMonthNames.Count(s => s.ToLower() == splitArray[0].ToLower()) == 1)
+                        else if (dtFormatInfo.AbbreviatedMonthNames.Count(s => s.Equals(splitArray[0], StringComparison.CurrentCultureIgnoreCase)) == 1)
                         {
                             // abbreviated month and year("Jan 2007")
                             formattedDate = String.Format("{0} {1}", dtFormatInfo.MonthNames[System.Array.IndexOf(
                                 dtFormatInfo.AbbreviatedMonthNames, dtFormatInfo.AbbreviatedMonthNames.Single(
-                                s => s.ToLower() == splitArray[0].ToLower()))], userYear);
+                                s => s.Equals(splitArray[0], StringComparison.CurrentCultureIgnoreCase)))], userYear);
                             return VagueDate.ToCode(VagueDateTypes.StartMonthAndYear); // "O";
                         }
-                        else if (SeasonNames.Count(s => s.ToLower() == splitArray[0].ToLower()) == 1)
+                        else if (SeasonNames.Count(s => s.Equals(splitArray[0], StringComparison.CurrentCultureIgnoreCase)) == 1)
                         {
                             // season
                             formattedDate = String.Format("{0} {1}",
-                                SeasonNames.Single(s => s.ToLower() == splitArray[0].ToLower()), userYear);
+                                SeasonNames.Single(s => s.Equals(splitArray[0], StringComparison.CurrentCultureIgnoreCase)), userYear);
                             return VagueDate.ToCode(VagueDateTypes.StartSeason); // "P";
                         }
                         break;
@@ -391,7 +391,7 @@ namespace HLU.Date
         }
 
         /// <summary>
-        /// Creates a vague date string from a vague date instance containing a date type start and end dates 
+        /// Creates a vague date string from a vague date instance containing a date type start and end dates
         /// expressed as days elapsed since 30/12/1899.
         /// </summary>
         /// <param name="vd">a VagueDateInstance with the date to be converted.</param>
@@ -403,7 +403,7 @@ namespace HLU.Date
         }
 
         /// <summary>
-        /// Creates a vague date string of a specified format from start and end dates 
+        /// Creates a vague date string of a specified format from start and end dates
         /// expressed as days elapsed since 30/12/1899.
         /// </summary>
         /// <param name="startDateDays">Start date in days since 30/12/1899.</param>
@@ -453,8 +453,8 @@ namespace HLU.Date
         {
             try
             {
-                DateTime startDate = new DateTime(startDateTicks);
-                DateTime endDate = new DateTime(endDateTicks);
+                DateTime startDate = new(startDateTicks);
+                DateTime endDate = new(endDateTicks);
                 return FromDate(startDate, endDate, dateType, outputFormat);
             }
             catch { return FromDateString(String.Empty, String.Empty, dateType, outputFormat); }
@@ -569,7 +569,7 @@ namespace HLU.Date
                         if (dateType.Length > 0)
                             formatString1 = dateType.Substring(0, 1);
 
-                        StringBuilder returnString = new StringBuilder();
+                        StringBuilder returnString = new();
 
                         switch (VagueDate.FromCode(formatString1))
                         {
@@ -581,13 +581,13 @@ namespace HLU.Date
                                     dtFormatInfo.MonthNames[startDate.Month - 1], startDate.Year));
                                 break;
                             case VagueDateTypes.StartYear: // "Y"
-                                returnString.Append(startDate.Year.ToString());
+                                returnString.Append(startDate.Year);
                                 break;
                             case VagueDateTypes.StartSeason: // "P"
                                 returnString.Append(SeasonString(startDate));
                                 break;
                             case VagueDateTypes.Unknown: // "U"
-                                if (dateType.ToLower().StartsWith("unknown"))
+                                if (dateType.StartsWith("unknown", StringComparison.CurrentCultureIgnoreCase))
                                     returnString.Append(VagueDateTypes.Unknown.ToString());
                                 break;
                         }
@@ -696,11 +696,11 @@ namespace HLU.Date
                             case VagueDateTypes.StartSeason: // "P"
                                 if (!String.IsNullOrEmpty(startDateString))
                                 {
-                                    string[] splitArray = Regex.Split(startDateString, @"\s+");
+                                    string[] splitArray = RegexWholeWord().Split(startDateString);
                                     if ((splitArray.Length != 2) || !Int32.TryParse(splitArray[1], out year))
                                         return DateUnknown;
-                                    var q = SeasonNames.Where(s => s.ToLower() == splitArray[0].ToLower());
-                                    if (q.Count() > 0)
+                                    var q = SeasonNames.Where(s => s.Equals(splitArray[0], StringComparison.CurrentCultureIgnoreCase));
+                                    if (q.Any())
                                     {
                                         string season = q.ElementAt(0);
                                         int seasonIx = System.Array.IndexOf(SeasonNames, season);
@@ -732,11 +732,11 @@ namespace HLU.Date
                                 //if (endDateOk) return endDate.Subtract(BaseDate).Days;
                                 if (!String.IsNullOrEmpty(endDateString))
                                 {
-                                    string[] splitArray = Regex.Split(endDateString, @"\s+");
+                                    string[] splitArray = RegexWholeWord().Split(endDateString);
                                     if ((splitArray.Length != 2) || !Int32.TryParse(splitArray[1], out year))
                                         return DateUnknown;
-                                    var q = dtFormatInfo.MonthNames.Where(s => s.ToLower() == splitArray[0].ToLower());
-                                    if (q.Count() > 0)
+                                    var q = dtFormatInfo.MonthNames.Where(s => s.Equals(splitArray[0], StringComparison.CurrentCultureIgnoreCase));
+                                    if (q.Any())
                                     {
                                         string month = q.ElementAt(0);
                                         int monthIx = System.Array.IndexOf(dtFormatInfo.MonthNames, month) + 1;
@@ -757,11 +757,11 @@ namespace HLU.Date
                             case VagueDateTypes.StartSeason: // "P"
                                 if (!String.IsNullOrEmpty(endDateString))
                                 {
-                                    string[] splitArray = Regex.Split(endDateString, @"\s+");
+                                    string[] splitArray = RegexWholeWord().Split(endDateString);
                                     if ((splitArray.Length != 2) || !Int32.TryParse(splitArray[1], out year))
                                         return DateUnknown;
-                                    var q = SeasonNames.Where(s => s.ToLower() == splitArray[0].ToLower());
-                                    if (q.Count() > 0)
+                                    var q = SeasonNames.Where(s => s.Equals(splitArray[0], StringComparison.CurrentCultureIgnoreCase));
+                                    if (q.Any())
                                     {
                                         string season = q.ElementAt(0);
                                         int seasonIx = System.Array.IndexOf(SeasonNames, season);
@@ -851,19 +851,14 @@ namespace HLU.Date
 
             // Return the first day of the year plus the number of
             // days to the first day the season
-            switch (ix)
+            return ix switch
             {
-                case 0:
-                    return new DateTime(year, 1, 1).AddDays(80);
-                case 1:
-                    return new DateTime(year, 1, 1).AddDays(172);
-                case 2:
-                    return new DateTime(year, 1, 1).AddDays(266);
-                case 3:
-                    return new DateTime(year, 1, 1).AddDays(355);
-                default:
-                    return DateTime.MinValue;
-            }
+                0 => new DateTime(year, 1, 1).AddDays(80),
+                1 => new DateTime(year, 1, 1).AddDays(172),
+                2 => new DateTime(year, 1, 1).AddDays(266),
+                3 => new DateTime(year, 1, 1).AddDays(355),
+                _ => DateTime.MinValue,
+            };
         }
 
         private static DateTime SeasonEnd(string season, int year)
@@ -882,19 +877,14 @@ namespace HLU.Date
 
             // Return the first day of the year plus the number of
             // days to the last day the season
-            switch (ix)
+            return ix switch
             {
-                case 0:
-                    return new DateTime(year, 1, 1).AddDays(170);
-                case 1:
-                    return new DateTime(year, 1, 1).AddDays(264);
-                case 2:
-                    return new DateTime(year, 1, 1).AddDays(353);
-                case 3:
-                    return new DateTime(year + 1, 1, 1).AddDays(78);
-                default:
-                    return DateTime.MinValue;
-            }
+                0 => new DateTime(year, 1, 1).AddDays(170),
+                1 => new DateTime(year, 1, 1).AddDays(264),
+                2 => new DateTime(year, 1, 1).AddDays(353),
+                3 => new DateTime(year + 1, 1, 1).AddDays(78),
+                _ => DateTime.MinValue,
+            };
         }
 
         private static DateTime MonthEnd(string season, int month, int year)
@@ -912,6 +902,8 @@ namespace HLU.Date
             // days to the last day the month
             return new DateTime(year, 1, 1).AddMonths(month).AddDays(-1);
         }
-    
-}
+
+        [GeneratedRegex(@"\s+")]
+        private static partial Regex RegexWholeWord();
+    }
 }

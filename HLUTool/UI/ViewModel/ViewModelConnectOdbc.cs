@@ -1,18 +1,18 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -54,7 +54,7 @@ namespace HLU.UI.ViewModel
 
         public ViewModelConnectOdbc()
         {
-            _connStrBuilder = new OdbcConnectionStringBuilder();
+            _connStrBuilder = [];
         }
 
         #endregion
@@ -105,8 +105,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_okCommand == null)
                 {
-                    Action<object> okAction = new Action<object>(this.OkCommandClick);
-                    _okCommand = new RelayCommand(okAction, param => this.CanOk);
+                    Action<object> okAction = new(this.OkCommandClick);
+                    _okCommand = new(okAction, param => this.CanOk);
                 }
 
                 return _okCommand;
@@ -120,7 +120,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void OkCommandClick(object param)
         {
-            OdbcConnection cn;
+            OdbcConnection cn = null;
 
             try
             {
@@ -138,7 +138,7 @@ namespace HLU.UI.ViewModel
                 MessageBox.Show("ODBC Server responded with an error:\n\n" + exOdbc.Message,
                      "ODBC Server Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally { cn = null; }
+            finally { cn.Dispose(); }
         }
 
         /// <summary>
@@ -174,8 +174,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_cancelCommand == null)
                 {
-                    Action<object> cancelAction = new Action<object>(this.CancelCommandClick);
-                    _cancelCommand = new RelayCommand(cancelAction);
+                    Action<object> cancelAction = new(this.CancelCommandClick);
+                    _cancelCommand = new(cancelAction);
                 }
 
                 return _cancelCommand;
@@ -208,8 +208,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_manageDsnCommand == null)
                 {
-                    Action<object> manageDsnAction = new Action<object>(this.ManageDsnCommandClick);
-                    _manageDsnCommand = new RelayCommand(manageDsnAction);
+                    Action<object> manageDsnAction = new(this.ManageDsnCommandClick);
+                    _manageDsnCommand = new(manageDsnAction);
                 }
 
                 return _manageDsnCommand;
@@ -224,9 +224,9 @@ namespace HLU.UI.ViewModel
         private void ManageDsnCommandClick(object param)
         {
             //DispatcherHelper.DoEvents();
-            OdbcCP32 odbccp32 = new OdbcCP32();
-            bool result = odbccp32.ManageDatasources(_windowHandle);
-            OnPropertyChanged("DsnList");
+            OdbcCP32 odbccp32 = new();
+            odbccp32.ManageDatasources(_windowHandle);
+            OnPropertyChanged(nameof(DsnList));
         }
 
         #endregion
@@ -242,7 +242,7 @@ namespace HLU.UI.ViewModel
                 if (sk != null)
                     _dsnList = sk.GetValueNames();
                 else
-                    _dsnList = new string[0];
+                    _dsnList = [];
                 return _dsnList; 
             }
             set { }
@@ -256,7 +256,7 @@ namespace HLU.UI.ViewModel
                 if (!String.IsNullOrEmpty(value) && (value != _connStrBuilder.Dsn))
                 {
                     _connStrBuilder.Dsn = value;
-                    OnPropertyChanged("SupportsSchemata");
+                    OnPropertyChanged(nameof(SupportsSchemata));
                 }
             }
         }
@@ -268,9 +268,9 @@ namespace HLU.UI.ViewModel
             {
                 _userDsn = value;
                 _systemDsn = !value;
-                OnPropertyChanged("UserDsn");
-                OnPropertyChanged("SystemDsn");
-                OnPropertyChanged("DsnList");
+                OnPropertyChanged(nameof(UserDsn));
+                OnPropertyChanged(nameof(SystemDsn));
+                OnPropertyChanged(nameof(DsnList));
             }
         }
 
@@ -281,9 +281,9 @@ namespace HLU.UI.ViewModel
             {
                 _systemDsn = value;
                 _userDsn = !value;
-                OnPropertyChanged("UserDsn");
-                OnPropertyChanged("SystemDsn");
-                OnPropertyChanged("DsnList");
+                OnPropertyChanged(nameof(UserDsn));
+                OnPropertyChanged(nameof(SystemDsn));
+                OnPropertyChanged(nameof(DsnList));
             }
         }
 
@@ -314,7 +314,7 @@ namespace HLU.UI.ViewModel
 
         private void LoadSchemata()
         {
-            List<String> schemaList = new List<String>();
+            List<String> schemaList = [];
             OdbcConnection cn = null;
 
             try
@@ -332,8 +332,8 @@ namespace HLU.UI.ViewModel
                         cmd.CommandType = CommandType.Text;
                         cmd.CommandText = "SELECT SCHEMA_NAME FROM information_schema.schemata" +
                                             " WHERE SCHEMA_NAME <> 'INFORMATION_SCHEMA'";
-                        OdbcDataAdapter adapter = new OdbcDataAdapter(cmd);
-                        DataTable dbTable = new DataTable();
+                        OdbcDataAdapter adapter = new(cmd);
+                        DataTable dbTable = new();
                         try
                         {
                             adapter.Fill(dbTable);
@@ -359,10 +359,10 @@ namespace HLU.UI.ViewModel
                 if ((cn != null) && (cn.State != ConnectionState.Closed)) cn.Close();
 
                 _schemata = schemaList;
-                OnPropertyChanged("Schemata");
+                OnPropertyChanged(nameof(Schemata));
 
                 if (_schemata.Count == 1) _defaultSchema = _schemata[0];
-                OnPropertyChanged("DefaultSchema");
+                OnPropertyChanged(nameof(DefaultSchema));
             }
         }
 
@@ -383,7 +383,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                StringBuilder error = new StringBuilder();
+                StringBuilder error = new();
 
                 if (String.IsNullOrEmpty(_connStrBuilder.Dsn))
                     error.Append(", a data source");

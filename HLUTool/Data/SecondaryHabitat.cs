@@ -1,18 +1,18 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2022 Greenspace Information for Greater London CIC
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -38,14 +38,13 @@ namespace HLU.Data
 
         private bool _bulkUpdateMode;
         private string _incid_bak;
-        private string _secondary_habitat_bak;
 
         string _error;
         private static IEnumerable<SecondaryHabitat> _secondaryHabitatList;
         private static IEnumerable<string> _validSecondaryCodes;
         private static Dictionary<string, String> _secondaryGroupCodes;
 
-        public static int _primarySecondaryCodeValidation;
+        private static int _primarySecondaryCodeValidation;
 
         #endregion
 
@@ -236,12 +235,12 @@ namespace HLU.Data
 
         public object[] ToItemArray()
         {
-            return new object[] { _secondary_id, _incid, _secondary_habitat, _secondary_group };
+            return [_secondary_id, _incid, _secondary_habitat, _secondary_group];
         }
 
         public object[] ToItemArray(int secondaryID, string incid)
         {
-            return new object[] { secondaryID, incid, _secondary_habitat, _secondary_group };
+            return [secondaryID, incid, _secondary_habitat, _secondary_group];
         }
 
         #endregion
@@ -252,7 +251,7 @@ namespace HLU.Data
         {
             get
             {
-                return _secondaryHabitatList != null && _secondaryHabitatList.Count(sh => sh.secondary_habitat == this.secondary_habitat) > 0;
+                return _secondaryHabitatList != null && _secondaryHabitatList.Any(sh => sh.secondary_habitat == this.secondary_habitat);
             }
         }
 
@@ -280,16 +279,10 @@ namespace HLU.Data
             return ValidateRow(bulkUpdateMode, r.secondary_id, r.incid, r.secondary, r.secondary_group) == null;
         }
 
-        public static bool ValidateRow(bool bulkUpdateMode, HluDataSet.incid_secondaryRow r,
-            IEnumerable<SecondaryHabitat> secondaryHabitatList)
-        {
-            return ValidateRow(bulkUpdateMode, r.secondary_id, r.incid, r.secondary, r.secondary_group) == null;
-        }
-
         private static string ValidateRow(bool _bulkUpdateMode, int secondary_id, string incid,
             string secondary_habitat, string secondary_group)
         {
-            StringBuilder sbError = new StringBuilder();
+            StringBuilder sbError = new();
 
             // Only validate if not in bulk update mode and errors are to be shown
             if (!_bulkUpdateMode)
@@ -376,7 +369,6 @@ namespace HLU.Data
                                 }
                             }
 
-                            _secondary_habitat_bak = _secondary_habitat;
                         }
                         break;
                 }

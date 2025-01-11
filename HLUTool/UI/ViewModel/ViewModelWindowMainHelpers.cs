@@ -1,18 +1,18 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -39,7 +39,7 @@ namespace HLU.UI.ViewModel
             int i = 0;
             while (i < selectedRows.Length)
             {
-                List<SqlFilterCondition> whereClauseBlock = new List<SqlFilterCondition>();
+                List<SqlFilterCondition> whereClauseBlock = [];
                 int j = i;
 
                 while (j < selectedRows.Length)
@@ -90,7 +90,7 @@ namespace HLU.UI.ViewModel
         public static List<List<SqlFilterCondition>> IncidSelectionToWhereClause<T>(int incidPageSize,
             int incidOrdinal, T incidTable, IEnumerable<string> incidList) where T : DataTable
         {
-            if ((incidList == null) || (incidList.Count() == 0)) return null;
+            if ((incidList == null) || (!incidList.Any())) return null;
 
             return (from b in incidList.Select((i, index) => new
             {
@@ -104,7 +104,7 @@ namespace HLU.UI.ViewModel
         public static string IhsSummary(string[] ihsCodes)
         {
             StringBuilder buildSummary = ihsCodes.Where(c => !String.IsNullOrEmpty(c))
-                .Aggregate(new StringBuilder(), (sb, c) => sb.Append(String.Format(".{0}", c)));
+                .Aggregate(new(), (sb, c) => sb.Append(String.Format(".{0}", c)));
             if (buildSummary.Length > 1)
                 return buildSummary.Remove(0, 1).ToString();
             else
@@ -149,7 +149,7 @@ namespace HLU.UI.ViewModel
 
             string operationName = Enum.GetName(typeof(ViewModelWindowMain.Operations), modifyOperation);
             string descriptionPattern = Regex.Matches(operationName, "[A-Z][^A-Z]*").Cast<Match>()
-                .Aggregate(new StringBuilder(), (sb, m) => sb.Append(@"\s*" + operationName.Substring(m.Index, m.Length)))
+                .Aggregate(new(), (sb, m) => sb.Append(@"\s*" + operationName.Substring(m.Index, m.Length)))
                 .Append(@"\s*").ToString();
 
             var o = hluDS.lut_operation

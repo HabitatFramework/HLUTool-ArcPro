@@ -148,9 +148,9 @@ namespace HLU.UI.ViewModel
                 // Count the incid_osmm_update rows for the initial values.
                 CountOSMMUpdates();
 
-                OnPropertyChanged("IncidOSMMUpdatesProcessFlag");
-                OnPropertyChanged("IncidOSMMUpdatesSpatialFlag");
-                OnPropertyChanged("IncidOSMMUpdatesChangeFlag");
+                OnPropertyChanged(nameof(IncidOSMMUpdatesProcessFlag));
+                OnPropertyChanged(nameof(IncidOSMMUpdatesSpatialFlag));
+                OnPropertyChanged(nameof(IncidOSMMUpdatesChangeFlag));
             }
         }
 
@@ -192,8 +192,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_applyOSMMFilterCommand == null)
                 {
-                    Action<object> applyOSMMFilterAction = new Action<object>(this.ApplyOSMMFilterClicked);
-                    _applyOSMMFilterCommand = new RelayCommand(applyOSMMFilterAction, param => this.CanApplyOSMMFilter);
+                    Action<object> applyOSMMFilterAction = new(this.ApplyOSMMFilterClicked);
+                    _applyOSMMFilterCommand = new(applyOSMMFilterAction, param => this.CanApplyOSMMFilter);
                 }
                 return _applyOSMMFilterCommand;
             }
@@ -231,8 +231,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_resetOSMMFilterCommand == null)
                 {
-                    Action<object> resetOSMMFilterAction = new Action<object>(this.ResetOSMMFilterClicked);
-                    _resetOSMMFilterCommand = new RelayCommand(resetOSMMFilterAction, param => this.CanResetOSMMFilter);
+                    Action<object> resetOSMMFilterAction = new(this.ResetOSMMFilterClicked);
+                    _resetOSMMFilterCommand = new(resetOSMMFilterAction, param => this.CanResetOSMMFilter);
                 }
                 return _resetOSMMFilterCommand;
             }
@@ -259,10 +259,10 @@ namespace HLU.UI.ViewModel
             // Count the incid_osmm_update rows for the initial values.
             CountOSMMUpdates();
 
-            OnPropertyChanged("IncidOSMMUpdatesProcessFlag");
-            OnPropertyChanged("IncidOSMMUpdatesSpatialFlag");
-            OnPropertyChanged("IncidOSMMUpdatesChangeFlag");
-            OnPropertyChanged("IncidOSMMUpdatesStatus");
+            OnPropertyChanged(nameof(IncidOSMMUpdatesProcessFlag));
+            OnPropertyChanged(nameof(IncidOSMMUpdatesSpatialFlag));
+            OnPropertyChanged(nameof(IncidOSMMUpdatesChangeFlag));
+            OnPropertyChanged(nameof(IncidOSMMUpdatesStatus));
         }
 
         public bool CanResetOSMMFilter
@@ -286,8 +286,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_cancelOSMMFilterCommand == null)
                 {
-                    Action<object> cancelOSMMFilterAction = new Action<object>(this.CancelCommandClicked);
-                    _cancelOSMMFilterCommand = new RelayCommand(cancelOSMMFilterAction);
+                    Action<object> cancelOSMMFilterAction = new(this.CancelCommandClicked);
+                    _cancelOSMMFilterCommand = new(cancelOSMMFilterAction);
                 }
 
                 return _cancelOSMMFilterCommand;
@@ -503,7 +503,7 @@ namespace HLU.UI.ViewModel
             _osmmUpdatesCountPending = -1;
             _osmmUpdatesCountProposed = -1;
 
-            StringBuilder whereClause = new StringBuilder();
+            StringBuilder whereClause = new();
 
             if (!String.IsNullOrEmpty(_osmmProcessFlag) && _osmmProcessFlag != _codeAnyRow)
             {
@@ -592,13 +592,13 @@ namespace HLU.UI.ViewModel
                 }
             }
 
-            OnPropertyChanged("IncidOSMMUpdatesRejectedCount");
-            OnPropertyChanged("IncidOSMMUpdatesIgnoredCount");
-            OnPropertyChanged("IncidOSMMUpdatesAppliedCount");
-            OnPropertyChanged("IncidOSMMUpdatesPendingCount");
-            OnPropertyChanged("IncidOSMMUpdatesProposedCount");
+            OnPropertyChanged(nameof(IncidOSMMUpdatesRejectedCount));
+            OnPropertyChanged(nameof(IncidOSMMUpdatesIgnoredCount));
+            OnPropertyChanged(nameof(IncidOSMMUpdatesAppliedCount));
+            OnPropertyChanged(nameof(IncidOSMMUpdatesPendingCount));
+            OnPropertyChanged(nameof(IncidOSMMUpdatesProposedCount));
 
-            OnPropertyChanged("CanApplyOSMMFilter");
+            OnPropertyChanged(nameof(CanApplyOSMMFilter));
 
             // Reset the cursor back to normal.
             ChangeCursor(Cursors.Arrow);
@@ -629,7 +629,7 @@ namespace HLU.UI.ViewModel
                 ChangeCursor(Cursors.Wait);
 
                 // Define a new data table to hold the results.
-                List<OSMMUpdates> dataTable = new List<OSMMUpdates>();
+                List<OSMMUpdates> dataTable = [];
 
                 // Create a data reader to retrieve the rows for
                 // the required column.
@@ -781,7 +781,7 @@ namespace HLU.UI.ViewModel
                     allTotal = allTotal + allCount;
 
                     // Add the totals as a new row.
-                    _tableTotal = new List<OSMMUpdates>();
+                    _tableTotal = [];
                     dataRow = new OSMMUpdates();
                     dataRow.Process = "";
                     dataRow.Change = "";
@@ -842,7 +842,7 @@ namespace HLU.UI.ViewModel
         public void ChangeCursor(Cursor cursorType)
         {
             _cursorType = cursorType;
-            OnPropertyChanged("WindowCursor");
+            OnPropertyChanged(nameof(WindowCursor));
             if (cursorType == Cursors.Wait)
                 DispatcherHelper.DoEvents();
         }

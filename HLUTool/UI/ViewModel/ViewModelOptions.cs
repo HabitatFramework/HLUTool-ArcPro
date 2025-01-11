@@ -208,8 +208,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_saveCommand == null)
                 {
-                    Action<object> saveAction = new Action<object>(this.SaveCommandClick);
-                    _saveCommand = new RelayCommand(saveAction, param => this.CanSave);
+                    Action<object> saveAction = new(this.SaveCommandClick);
+                    _saveCommand = new(saveAction, param => this.CanSave);
                 }
 
                 return _saveCommand;
@@ -317,8 +317,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_cancelCommand == null)
                 {
-                    Action<object> cancelAction = new Action<object>(this.CancelCommandClick);
-                    _cancelCommand = new RelayCommand(cancelAction);
+                    Action<object> cancelAction = new(this.CancelCommandClick);
+                    _cancelCommand = new(cancelAction);
                 }
 
                 return _cancelCommand;
@@ -364,9 +364,9 @@ namespace HLU.UI.ViewModel
             set
             {
                 _preferredGis = (int)value;
-                OnPropertyChanged("CanBrowseMapPath");
-                OnPropertyChanged("MapDocument");
-                OnPropertyChanged("CanBrowseExportPath");
+                OnPropertyChanged(nameof(CanBrowseMapPath));
+                OnPropertyChanged(nameof(MapDocument));
+                OnPropertyChanged(nameof(CanBrowseExportPath));
             }
         }
 
@@ -391,8 +391,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_browseMapPathCommand == null)
                 {
-                    Action<object> browseMapPathAction = new Action<object>(this.BrowseMapPathClicked);
-                    _browseMapPathCommand = new RelayCommand(browseMapPathAction, param => this.CanBrowseMapPath);
+                    Action<object> browseMapPathAction = new(this.BrowseMapPathClicked);
+                    _browseMapPathCommand = new(browseMapPathAction, param => this.CanBrowseMapPath);
                 }
 
                 return _browseMapPathCommand;
@@ -415,7 +415,7 @@ namespace HLU.UI.ViewModel
                 Settings.Default.MapPath = _bakMapPath;
                 MapDocument = _bakMapPath;
             }
-            OnPropertyChanged("MapDocument");
+            OnPropertyChanged(nameof(MapDocument));
         }
 
         public string MapDocument
@@ -469,8 +469,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_browseExportPathCommand == null)
                 {
-                    Action<object> browseExportPathAction = new Action<object>(this.BrowseExportPathClicked);
-                    _browseExportPathCommand = new RelayCommand(browseExportPathAction, param => this.CanBrowseExportPath);
+                    Action<object> browseExportPathAction = new(this.BrowseExportPathClicked);
+                    _browseExportPathCommand = new(browseExportPathAction, param => this.CanBrowseExportPath);
                 }
 
                 return _browseExportPathCommand;
@@ -503,7 +503,7 @@ namespace HLU.UI.ViewModel
             {
                 ExportPath = _bakExportPath;
             }
-            OnPropertyChanged("ExportPath");
+            OnPropertyChanged(nameof(ExportPath));
         }
 
         /// <summary>
@@ -587,7 +587,7 @@ namespace HLU.UI.ViewModel
             get
             {
                 var q = HabitatClassCodes.Where(h => h.code == _preferredHabitatClass);
-                if (q.Count() > 0)
+                if (q.Any())
                     return _preferredHabitatClass;
                 else
                     return null;
@@ -718,7 +718,7 @@ namespace HLU.UI.ViewModel
             get
             {
                 var q = SecondaryGroupCodes.Where(h => h.code == _preferredSecondaryGroup);
-                if (q.Count() > 0)
+                if (q.Any())
                     return _preferredSecondaryGroup;
                 else
                     return null;
@@ -1092,8 +1092,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_browseSqlPathCommand == null)
                 {
-                    Action<object> browseSqlPathAction = new Action<object>(this.BrowseSqlPathClicked);
-                    _browseSqlPathCommand = new RelayCommand(browseSqlPathAction);
+                    Action<object> browseSqlPathAction = new(this.BrowseSqlPathClicked);
+                    _browseSqlPathCommand = new(browseSqlPathAction);
                 }
 
                 return _browseSqlPathCommand;
@@ -1114,7 +1114,7 @@ namespace HLU.UI.ViewModel
             {
                 SqlPath = _bakSqlPath;
             }
-            OnPropertyChanged("SqlPath");
+            OnPropertyChanged(nameof(SqlPath));
         }
 
         /// <summary>
@@ -1384,7 +1384,7 @@ namespace HLU.UI.ViewModel
         {
             get 
             {
-                StringBuilder error = new StringBuilder();
+                StringBuilder error = new();
 
                 // Database options
                 if (Convert.ToInt32(DbConnectionTimeout) <= 0 || DbConnectionTimeout == null)

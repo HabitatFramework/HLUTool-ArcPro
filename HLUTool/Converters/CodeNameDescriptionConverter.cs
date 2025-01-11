@@ -1,18 +1,18 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2014 Sussex Biodiversity Record Centre
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -44,12 +44,9 @@ namespace HLU.Converters
             int descriptionColumnOrdinal = -1;
             int sortColumnOrdinal = -1;
 
-            DataView v = null;
             DataTable t = null;
-            DataRow r = null;
-            DataRow[] a = value as DataRow[];
 
-            if ((a != null) && (a.Length > 0))
+            if ((value is DataRow[] a) && (a.Length > 0))
             {
                 t = a[0].Table;
                 GetOrdinals(t, parameter as string, out codeColumnOrdinal,
@@ -57,7 +54,7 @@ namespace HLU.Converters
                 return FormatList(a, codeColumnOrdinal, nameColumnOrdinal, descriptionColumnOrdinal, sortColumnOrdinal);
             }
 
-            if ((v = value as DataView) != null)
+            if (value is DataView v)
             {
                 t = v.Table;
                 GetOrdinals(t, parameter as string, out codeColumnOrdinal,
@@ -76,12 +73,12 @@ namespace HLU.Converters
                     nameColumnOrdinal, descriptionColumnOrdinal, sortColumnOrdinal);
             }
 
-            if ((r = value as DataRow) != null)
+            if (value is DataRow r)
             {
                 t = r.Table;
                 GetOrdinals(t, parameter as string, out codeColumnOrdinal,
                     out nameColumnOrdinal, out descriptionColumnOrdinal, out sortColumnOrdinal);
-                return FormatList(new DataRow[] { r }, codeColumnOrdinal,
+                return FormatList([r], codeColumnOrdinal,
                     nameColumnOrdinal, descriptionColumnOrdinal, sortColumnOrdinal);
             }
 
@@ -90,8 +87,7 @@ namespace HLU.Converters
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            string s = value as string;
-            if (s != null)
+            if (value is string s)
                 return UnformatString(s);
             else
                 return value;
@@ -112,7 +108,7 @@ namespace HLU.Converters
                 if (!String.IsNullOrEmpty(parameter))
                 {
                     string[] splitArray = parameter.Split(Settings.Default.ConverterParameterSeparator[0]);
-                    
+
                     switch (splitArray.Length)
                     {
                         case 4:
@@ -261,7 +257,7 @@ namespace HLU.Converters
                 }
                 else
                 {
-                    string[] splitArray = s.Split(new string[] { " : " }, StringSplitOptions.None);
+                    string[] splitArray = s.Split(" : ", StringSplitOptions.None);
                     return splitArray[0];
                 }
             }
@@ -296,13 +292,13 @@ namespace HLU.Converters
             {
                 string s = value as string;
                 if (s.Contains(" : "))
-                    return s.Split(new string[] { " : " }, StringSplitOptions.None);
+                    return s.Split(" : ", StringSplitOptions.None);
                 else
-                    return s.Split(new string[] { " : " }, StringSplitOptions.None);
+                    return s.Split(" : ", StringSplitOptions.None);
             }
             else
             {
-                return new object[] { value };
+                return [value];
             }
         }
 

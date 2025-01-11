@@ -84,7 +84,7 @@ namespace HLU.UI
                 var selectedItems = listView.SelectedItems.OfType<ResultDetail>().ToList();
 
                 if (selectedItems.Count == 1)
-                    listView.Items.OfType<ResultDetail>().ToList().Where(s => selectedItems.All(s2 => s2.NewRef != s.NewRef)).ToList().ForEach(p => p.IsSelected = false);
+                    listView.Items.OfType<ResultDetail>().ToList().Where(s => selectedItems.All(s2 => s2.NewKey != s.NewKey)).ToList().ForEach(p => p.IsSelected = false);
             }
         }
 

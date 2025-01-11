@@ -4,19 +4,19 @@
 // Copyright © 2014-15, 2018 Sussex Biodiversity Record Centre
 // Copyright © 2019 London & South East Record Centres (LaSER)
 // Copyright © 2019-2022 Greenspace Information for Greater London CIC
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -479,7 +479,7 @@ namespace HLU.GISApplication.MapInfo
                 DataTable resetTable = _hluLayerStructure.Clone();
                 resetTable.TableName = _selName;
                 List<SqlFilterCondition> reSelectionWhereClause;
-                reSelectionWhereClause = new List<SqlFilterCondition>();
+                reSelectionWhereClause = [];
                 SqlFilterCondition cond = whereClause[0];
                 cond.Operator = "IS NOT NULL";
                 cond.BooleanOperator = "AND";
@@ -557,7 +557,7 @@ namespace HLU.GISApplication.MapInfo
                 DataTable resetTable = _hluLayerStructure.Clone();
                 resetTable.TableName = _selName;
                 List<SqlFilterCondition> reSelectionWhereClause;
-                reSelectionWhereClause = new List<SqlFilterCondition>();
+                reSelectionWhereClause = [];
                 SqlFilterCondition cond = whereClauses[0][0];
                 cond.Operator = "IS NOT NULL";
                 cond.BooleanOperator = "AND";
@@ -697,7 +697,7 @@ namespace HLU.GISApplication.MapInfo
                     SqlFilterCondition cond = new SqlFilterCondition("AND", selTable,
                         _hluLayerStructure.toidColumn, q.ElementAt(0).Value);
                     cond.Table = selTable;
-                    reSelectionWhereClause = new List<SqlFilterCondition>();
+                    reSelectionWhereClause = [];
                     reSelectionWhereClause.Add(cond);
                     //---------------------------------------------------------------------
                     // FIXED: KI110 (Physical split)
@@ -721,7 +721,7 @@ namespace HLU.GISApplication.MapInfo
                 }
                 else if (TableExists(origSelName))
                 {
-                    reSelectionWhereClause = new List<SqlFilterCondition>();
+                    reSelectionWhereClause = [];
                     SqlFilterCondition cond = selectionWhereClause[0];
                     cond.Operator = "IS NOT NULL";
                     cond.BooleanOperator = "AND";
@@ -863,7 +863,7 @@ namespace HLU.GISApplication.MapInfo
 
         private DataTable CreateHistoryTable(string tableName, bool addGeomInfoColumns, DataColumn[] historyColumns)
         {
-            DataTable historyTable = new DataTable(tableName);
+            DataTable historyTable = new(tableName);
             foreach (DataColumn c in historyColumns)
                 historyTable.Columns.Add(new DataColumn(
                     c.ColumnName.Replace(GISApp.HistoryAdditionalFieldsDelimiter, String.Empty), c.DataType));
@@ -1291,8 +1291,8 @@ namespace HLU.GISApplication.MapInfo
                         {
                             // Don't include the geometry fields in the update string when updating
                             // all the rows that are logically merging into the keep incid.
-                            updateCommandTemplate = new StringBuilder(updateCommandTemplate).Append(_hluFieldNames.Where(fn =>
-                                (fn != incidFieldName) && (fn != toidFieldName) && (fn != toidFragFieldName) && !fn.StartsWith("shape_")).Aggregate(new StringBuilder(), 
+                            updateCommandTemplate = new(updateCommandTemplate).Append(_hluFieldNames.Where(fn =>
+                                (fn != incidFieldName) && (fn != toidFieldName) && (fn != toidFragFieldName) && !fn.StartsWith("shape_")).Aggregate(new(), 
                                 (sb, fn) => sb.Append(", " + fn + " = " + QuoteValue(_mapInfoApp.Eval(String.Format(readCommandTemplate, fn))))))
                                     .Append(" Where RowID = {0}").ToString();
                             break;
@@ -2164,7 +2164,7 @@ namespace HLU.GISApplication.MapInfo
                     (p.MainWindowHandle != IntPtr.Zero)).Where(p => (miProcs.Count(mip => mip.Id == p.Id) == 0));
 
                 // If at least one MapInfo process has been found
-                if (q.Count() > 0)
+                if (q.Any())
                 {
                     // Return the first process found
                     Process miProcess = q.ElementAt(0);
@@ -2205,7 +2205,7 @@ namespace HLU.GISApplication.MapInfo
 
         private void PopulateTypeMaps()
         {
-            _typeMapSystemToSQL = new Dictionary<Type, int>();
+            _typeMapSystemToSQL = [];
             _typeMapSystemToSQL.Add(typeof(System.String), (int)MapInfoConstants.ColumnType.COL_TYPE_CHAR);
             _typeMapSystemToSQL.Add(typeof(System.Decimal), (int)MapInfoConstants.ColumnType.COL_TYPE_DECIMAL);
             _typeMapSystemToSQL.Add(typeof(System.Int64), (int)MapInfoConstants.ColumnType.COL_TYPE_INTEGER);
@@ -2273,7 +2273,7 @@ namespace HLU.GISApplication.MapInfo
                 // Join to the temporary data table to the GIS layer
                 joinTable = AddJoinTable(scratchMdbPath, selectionTableName);
                 if (joinTable == String.Empty)
-                    return new DataTable();
+                    return new();
                 //---------------------------------------------------------------------
 
                 // Close the previous temporary selection table.
@@ -2285,7 +2285,7 @@ namespace HLU.GISApplication.MapInfo
                 string joinTableNameQuoted = QuoteIdentifier(joinTable);
                 string hluLayerNameQuoted = QuoteIdentifier(_hluLayer);
 
-                List<string> joinCondList = new List<string>();
+                List<string> joinCondList = [];
 
                 for (int i = 1; i <= numJoinColumns; i++)
                 {
@@ -2308,9 +2308,9 @@ namespace HLU.GISApplication.MapInfo
                 string selTable = _mapInfoApp.Eval(String.Format("SelectionInfo({0})",
                     (int)MapInfoConstants.SelectionInfo.SEL_INFO_SELNAME));
 
-                if (string.IsNullOrEmpty(selTable)) return new DataTable();
+                if (string.IsNullOrEmpty(selTable)) return new();
 
-                DataTable resultTable = new DataTable();
+                DataTable resultTable = new();
                 foreach (DataColumn c in targetColumns)
                     resultTable.Columns.Add(new DataColumn(c.ColumnName, c.DataType));
 
@@ -2322,7 +2322,7 @@ namespace HLU.GISApplication.MapInfo
             {
                 MessageBox.Show(String.Format("Map selection failed. MapInfo returned the following error message:\n\n{0}",
                     ex.Message), "HLU: Selection Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return new DataTable();
+                return new();
             }
             finally
             {
@@ -2341,7 +2341,7 @@ namespace HLU.GISApplication.MapInfo
             DataColumn[] targetList, List<SqlFilterCondition> whereConds)
         {
             if ((_mapInfoApp == null) || (targetList == null) || (targetList.Length == 0)) 
-                return new DataTable();
+                return new();
 
             try
             {
@@ -2349,7 +2349,7 @@ namespace HLU.GISApplication.MapInfo
                 bool additionalTables;
                 DataTable resultTable = null;
 
-                StringBuilder sbCommandText = new StringBuilder("SELECT ");
+                StringBuilder sbCommandText = new("SELECT ");
                 sbCommandText.Append(TargetList(targetList, true, false, ref qualifyColumns, out resultTable));
                 sbCommandText.Append(qualifyColumns ? FromList(true, targetList, true, ref whereConds,
                     out additionalTables) : String.Format(" FROM {0}", _hluLayer));
@@ -2366,7 +2366,7 @@ namespace HLU.GISApplication.MapInfo
             {
                 MessageBox.Show(String.Format("Map selection failed. MapInfo returned the following error message:\n\n{0}",
                     ex.Message), "HLU: Selection Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return new DataTable();
+                return new();
             }
         }
 
@@ -2383,7 +2383,7 @@ namespace HLU.GISApplication.MapInfo
             DataColumn[] targetList, List<SqlFilterCondition> whereConds)
         {
             if ((_mapInfoApp == null) || (targetList == null) || (targetList.Length == 0))
-                return new DataTable();
+                return new();
 
             try
             {
@@ -2391,7 +2391,7 @@ namespace HLU.GISApplication.MapInfo
                 bool additionalTables;
                 DataTable resultTable = null;
 
-                StringBuilder sbCommandText = new StringBuilder("SELECT ");
+                StringBuilder sbCommandText = new("SELECT ");
                 sbCommandText.Append(TargetList(targetList, true, false, ref qualifyColumns, out resultTable));
                 sbCommandText.Append(qualifyColumns ? FromList(true, targetList, true, ref whereConds,
                     out additionalTables) : String.Format(" FROM {0}", _hluLayer));
@@ -2408,7 +2408,7 @@ namespace HLU.GISApplication.MapInfo
             {
                 MessageBox.Show(String.Format("Map selection failed. MapInfo returned the following error message:\n\n{0}",
                     ex.Message), "HLU: Selection Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return new DataTable();
+                return new();
             }
         }
 
@@ -2416,14 +2416,14 @@ namespace HLU.GISApplication.MapInfo
             DataTable[] targetTables, List<SqlFilterCondition> whereConds)
         {
             if ((_mapInfoApp == null) || (targetTables == null) || (targetTables.Length == 0) ||
-                (targetTables[0].Columns.Count == 0)) return new DataTable();
+                (targetTables[0].Columns.Count == 0)) return new();
 
             try
             {
                 bool qualifyColumns = false;
                 bool additionalTables;
                 DataTable resultTable = null;
-                StringBuilder sbCommandText = new StringBuilder("SELECT ");
+                StringBuilder sbCommandText = new("SELECT ");
                 sbCommandText.Append(TargetList(targetTables, true, ref qualifyColumns, out resultTable));
                 sbCommandText.Append(FromList(true, false, targetTables, ref whereConds, out additionalTables));
                 sbCommandText.Append(WhereClause(true, true, qualifyColumns,
@@ -2438,7 +2438,7 @@ namespace HLU.GISApplication.MapInfo
             {
                 MessageBox.Show(String.Format("Map selection failed. MapInfo returned the following error message:\n\n{0}",
                     ex.Message), "HLU: Selection Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return new DataTable();
+                return new();
             }
         }
 
@@ -2446,7 +2446,7 @@ namespace HLU.GISApplication.MapInfo
             bool addGeometryInfo, bool negateWhereClause, List<SqlFilterCondition> whereConds, DataColumn[] orderBy)
         {
             if ((_mapInfoApp == null) || (targetList == null) || (targetList.Length == 0))
-                return new DataTable();
+                return new();
 
             try
             {
@@ -2454,14 +2454,14 @@ namespace HLU.GISApplication.MapInfo
                 bool additionalTables;
                 DataTable resultTable = null;
 
-                StringBuilder sbCommandText = new StringBuilder("SELECT ");
+                StringBuilder sbCommandText = new("SELECT ");
                 sbCommandText.Append(TargetList(targetList, true, true, ref qualifyColumns, out resultTable));
 
                 sbCommandText.Append(FromList(true, targetList, true, ref whereConds, out additionalTables));
 
                 if (negateWhereClause)
                     sbCommandText.Append(" WHERE NOT (").Append(WhereClause(false, true, qualifyColumns,
-                        MapWhereClauseFields(_hluLayerStructure, whereConds))).Append(")");
+                        MapWhereClauseFields(_hluLayerStructure, whereConds))).Append(')');
                 else
                     sbCommandText.Append(WhereClause(true, true, qualifyColumns,
                         MapWhereClauseFields(_hluLayerStructure, whereConds)));
@@ -2469,7 +2469,7 @@ namespace HLU.GISApplication.MapInfo
                 if ((orderBy != null) && (orderBy.Length > 0))
                 {
                     StringBuilder orderByColNames = orderBy.Where(c => _hluLayerStructure.Columns.Contains(c.ColumnName))
-                        .Aggregate(new StringBuilder(), (sb, c) => sb.Append(",").Append(qualifyColumns ? 
+                        .Aggregate(new(), (sb, c) => sb.Append(',').Append(qualifyColumns ? 
                             QuoteIdentifier(c.Table.TableName) + "." : String.Empty).Append(
                             QuoteIdentifier(GetFieldName(_hluLayerStructure.Columns[c.ColumnName].Ordinal))));
 
@@ -2509,7 +2509,7 @@ namespace HLU.GISApplication.MapInfo
                 bool additionalTables;
                 DataTable resultTable = null;
 
-                StringBuilder sbCommandText = new StringBuilder("SELECT ");
+                StringBuilder sbCommandText = new("SELECT ");
                 sbCommandText.Append(TargetList(targetList, true, false, ref qualifyColumns, out resultTable));
                 sbCommandText.Append(qualifyColumns ? FromList(true, targetList, true, ref whereConds,
                     out additionalTables) : String.Format(" FROM {0}", _hluLayer));
@@ -2765,11 +2765,11 @@ namespace HLU.GISApplication.MapInfo
         public override string TargetList(DataColumn[] targetColumns, bool quoteIdentifiers, 
             bool checkQualify, ref bool qualifyColumns, out DataTable resultTable)
         {
-            resultTable = new DataTable();
+            resultTable = new();
 
             if ((targetColumns == null) || (targetColumns.Length == 0)) return String.Empty; ;
 
-            StringBuilder sbTargetList = new StringBuilder();
+            StringBuilder sbTargetList = new();
 
             try
             {
@@ -3104,7 +3104,7 @@ namespace HLU.GISApplication.MapInfo
             int numColumns = Int32.Parse(_mapInfoApp.Eval(String.Format("TableInfo({0}, {1})",
                 tableName, (int)MapInfoConstants.TableInfo.TAB_INFO_NCOLS)));
 
-            List<string> columnList = new List<string>();
+            List<string> columnList = [];
 
             string tableNameQuoted = QuoteIdentifier(tableName);
 
@@ -3140,7 +3140,7 @@ namespace HLU.GISApplication.MapInfo
             int numColumns = Int32.Parse(_mapInfoApp.Eval(String.Format("TableInfo({0}, {1})",
                 tableName, (int)MapInfoConstants.TableInfo.TAB_INFO_NCOLS)));
 
-            List<string> columnList = new List<string>();
+            List<string> columnList = [];
 
             string tableNameQuoted = QuoteIdentifier(tableName);
 
@@ -3193,7 +3193,7 @@ namespace HLU.GISApplication.MapInfo
             int numColumns = Int32.Parse(_mapInfoApp.Eval(String.Format("TableInfo({0}, {1})",
                 tableName, (int)MapInfoConstants.TableInfo.TAB_INFO_NCOLS)));
 
-            List<string> columnList = new List<string>();
+            List<string> columnList = [];
 
             for (int i = 1; i <= numColumns; i++)
             {
@@ -3326,7 +3326,7 @@ namespace HLU.GISApplication.MapInfo
                 _mapWindowsCount = 0;
 
                 // Initialise the list of valid layers
-                if (_hluLayerList == null) _hluLayerList = new List<GISLayer>();
+                if (_hluLayerList == null) _hluLayerList = [];
 
                 // Clear the valid HLU layer list
                 _hluLayerList.Clear();

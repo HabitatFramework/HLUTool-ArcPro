@@ -2,10 +2,11 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:hlu="clr-namespace:HLU.UI.UserControls;assembly="
-    Title="{Binding Path=WindowTitle}" 
-        Height="202" Width="392" WindowStartupLocation="CenterScreen" Visibility="Collapsed" SizeToContent="Height" 
-        ShowInTaskbar="False" ResizeMode="NoResize" Background="{DynamicResource WindowBackgroundBrush}" 
+    Title="{Binding Path=WindowTitle}"
+        Height="202" Width="392" WindowStartupLocation="CenterScreen" Visibility="Collapsed" SizeToContent="Height"
+        ShowInTaskbar="False" ResizeMode="NoResize"
         Icon="..\..\..\Icons\HLUIcon.png" Activated="Window_Activated" WindowStyle="SingleBorderWindow">
+    <!-- Background="{DynamicResource WindowBackgroundBrush}" -->
 <!--Height -22 when setting WindowStyle from SingleBorderWindow to None-->
 
     <Window.Resources>
@@ -33,12 +34,12 @@
                 <Button Name="ButtonBrowseConn" Grid.Row="2" Grid.Column="0" Command="{Binding Path=BrowseConnCommand}" Margin="6,0,0,0">_UDL File...</Button>
                 <Button Name="ButtonCreateConn" Grid.Row="2" Grid.Column="1" Command="{Binding Path=CreateConnCommand}" Margin="6,0,0,0">_New</Button>
                 <Button Name="ButtonEditConn" Grid.Row="2" Grid.Column="2" Command="{Binding Path=EditConnCommand}" Margin="6,0,0,0">_Edit</Button>
-                <TextBox Name="TextBoxConnString" Grid.Row="0" Grid.ColumnSpan="4"  Text="{Binding Path=ConnectionString, Mode=TwoWay, ValidatesOnDataErrors=True}" Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" IsReadOnly="True" Margin="2" />
+                <TextBox Name="TextBoxConnString" Grid.Row="0" Grid.ColumnSpan="4"  Text="{Binding Path=ConnectionString, Mode=TwoWay, ValidatesOnDataErrors=True}" Tag="ErrorContent" IsReadOnly="True" Margin="2" />
             </Grid>
         </GroupBox>
 
         <GroupBox Name="GroupBpxDefaultSchema" IsEnabled="{Binding Path=SupportsSchemata}" Header="Default Schema" Margin="0,4,0,0" Padding="0">
-            <ComboBox Name="ComboBoxDefaultSchema"  ItemsSource="{Binding Path=Schemata, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Text="{Binding Path=DefaultSchema, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" SelectedItem="{Binding Path=DefaultSchema}" Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" IsEditable="True" IsReadOnly="False" Margin="0,4,0,0" DropDownOpened="ComboBox_DropDownOpened" />
+            <ComboBox Name="ComboBoxDefaultSchema"  ItemsSource="{Binding Path=Schemata, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Text="{Binding Path=DefaultSchema, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" SelectedItem="{Binding Path=DefaultSchema}" Tag="ErrorContent" IsEditable="True" IsReadOnly="False" Margin="0,4,0,0" DropDownOpened="ComboBox_DropDownOpened" />
         </GroupBox>
 
         <Grid Margin="0,4,0,0" Height="23" Name="GridButtons" VerticalAlignment="Bottom">

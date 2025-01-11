@@ -3,19 +3,19 @@
 // Copyright © 2013-2014, 2016 Thames Valley Environmental Records Centre
 // Copyright © 2014, 2018 Sussex Biodiversity Record Centre
 // Copyright © 2019-2022 Greenspace Information for Greater London CIC
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -68,12 +68,12 @@ namespace HLU.GISApplication.ArcGIS
         /// UIDs of ArcGIS workspaces that the application is designed to handle. Populated in PopulateValidWorkspaces().
         /// </summary>
         private object[] _validWorkspaces;
-        
+
         /// <summary>
         /// Full path to the HLU map document.
         /// </summary>
         private string _mapPath;
-        
+
         /// <summary>
         /// Reference to the running ArcMap application object.
         /// </summary>
@@ -83,7 +83,7 @@ namespace HLU.GISApplication.ArcGIS
         /// Object factory for creating Arc objects in ArcGIS's own memory space
         /// </summary>
         private IObjectFactory _objectFactory;
-        
+
         /// <summary>
         /// Window handle of the running ArcMap application object.
         /// </summary>
@@ -108,28 +108,28 @@ namespace HLU.GISApplication.ArcGIS
         /// Workspace-dependent format string passed to the ToString() method when adding date values to SQL queries.
         /// </summary>
         private string _dateFormatString;
-        
+
         /// <summary>
         /// Number format to the ToString() method when adding floating point numbers to SQL queries. 
         /// ArcGIS expect a decimal point regardless of regional settings.
         /// </summary>
         private NumberFormatInfo _numberFormatInfo;
-        
+
         /// <summary>
         /// Dictionay of ESRI SQL predicates and their string equivalents.
         /// </summary>
         private Dictionary<String, esriSQLPredicates> _sqlPredicates;
-        
+
         /// <summary>
         /// Template of the HLU layer's data structure.
         /// </summary>
         private HluGISLayer.incid_mm_polygonsDataTable _hluLayerStructure;
-        
+
         /// <summary>
         /// The workspace of the feature class of the HLU layer.
         /// </summary>
         private IFeatureWorkspace _hluWS;
-        
+
         /// <summary>
         /// The HLU map layer.
         /// </summary>
@@ -154,22 +154,22 @@ namespace HLU.GISApplication.ArcGIS
         /// Persisted HLU layer that is cloned every time the application starts.
         /// </summary>
         private IGeoFeatureLayer _templateLayer;
-        
+
         /// <summary>
         /// The feature class of the HLU layer.
         /// </summary>
         private IFeatureClass _hluFeatureClass;
-        
+
         /// <summary>
         /// The map of the HLU layer cast as IActiveView.
         /// </summary>
         private IActiveView _hluView;
-        
+
         /// <summary>
         /// SQL syntax supported by the HLU workspace.
         /// </summary>
         private ISQLSyntax _hluWSSqlSyntax;
-        
+
         /// <summary>
         /// Maps the _hluFeatureClass data structure onto _hluLayerStructure.
         /// This is required by shapefiles with potentially truncated field names.
@@ -335,7 +335,7 @@ namespace HLU.GISApplication.ArcGIS
             versionString = String.Empty;
             try
             {
-                
+
                 arcVersion = GetArcGISVersion(out versionString);
                 if (arcVersion > 9)
                 {
@@ -464,17 +464,17 @@ namespace HLU.GISApplication.ArcGIS
         public override bool QualifyColumnNames(DataColumn[] targetColumns)
         {
             if ((targetColumns == null) || (targetColumns.Length == 0)) return false;
-            return targetColumns.Count(c => GetFieldName(_hluLayerStructure.Columns[c.ColumnName].Ordinal) == null) != 0;
+            return targetColumns.Any(c => GetFieldName(_hluLayerStructure.Columns[c.ColumnName].Ordinal) == null);
         }
 
         public override string TargetList(DataColumn[] targetColumns, bool quoteIdentifiers, 
             bool checkQualify, ref bool qualifyColumns, out DataTable resultTable)
         {
-            resultTable = new DataTable();
+            resultTable = new();
 
             if ((targetColumns == null) || (targetColumns.Length == 0)) return String.Empty; ;
 
-            StringBuilder sbTargetList = new StringBuilder();
+            StringBuilder sbTargetList = new();
 
             try
             {
@@ -523,7 +523,7 @@ namespace HLU.GISApplication.ArcGIS
             DataColumn[] targetList, List<SqlFilterCondition> whereConds)
         {
             if ((_arcMap == null) || (_hluLayer == null) || (_hluView == null) ||
-                (targetList == null) || (targetList.Length == 0)) return new DataTable();
+                (targetList == null) || (targetList.Length == 0)) return new();
 
             try
             {
@@ -541,7 +541,7 @@ namespace HLU.GISApplication.ArcGIS
             {
                 MessageBox.Show(String.Format("Map selection failed. ArcMap returned the following error message:\n\n{0}",
                     ex.Message), "HLU: Selection Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return new DataTable();
+                return new();
             }
         }
 
@@ -558,7 +558,7 @@ namespace HLU.GISApplication.ArcGIS
             DataColumn[] targetList, List<SqlFilterCondition> whereConds)
         {
             if ((_arcMap == null) || (_hluLayer == null) || (_hluView == null) ||
-                (targetList == null) || (targetList.Length == 0)) return new DataTable();
+                (targetList == null) || (targetList.Length == 0)) return new();
 
             try
             {
@@ -576,7 +576,7 @@ namespace HLU.GISApplication.ArcGIS
             {
                 MessageBox.Show(String.Format("Map selection failed. ArcMap returned the following error message:\n\n{0}",
                     ex.Message), "HLU: Selection Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return new DataTable();
+                return new();
             }
         }
 
@@ -584,7 +584,7 @@ namespace HLU.GISApplication.ArcGIS
             DataTable[] targetTables, List<SqlFilterCondition> whereConds)
         {
             if ((_arcMap == null) || (_hluLayer == null) || (_hluView == null) || (targetTables == null) ||
-                (targetTables.Length == 0) || (targetTables[0].Columns.Count == 0)) return new DataTable();
+                (targetTables.Length == 0) || (targetTables[0].Columns.Count == 0)) return new();
 
             try
             {
@@ -601,15 +601,15 @@ namespace HLU.GISApplication.ArcGIS
             {
                 MessageBox.Show(String.Format("Map selection failed. ArcMap returned the following error message:\n\n{0}",
                     ex.Message), "HLU: Selection Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return new DataTable();
+                return new();
             }
         }
 
         private void SqlSelectShared(string fromList, List<SqlFilterCondition> whereConds, 
             ref DataTable resultTable, bool qualifyColumns, string subFields)
         {
-            List<string> selectionList = new List<string>();
-            
+            List<string> selectionList = [];
+
             if (qualifyColumns) // joined tables
             {
                 string oidColumnAlias = ColumnAlias(((IDataset)_hluLayer.FeatureClass).Name,
@@ -617,18 +617,18 @@ namespace HLU.GISApplication.ArcGIS
 
                 int oidOrdinalTable = resultTable.Columns.Contains(oidColumnAlias) ?
                     resultTable.Columns[oidColumnAlias].Ordinal : -1;
-                
+
                 if (oidOrdinalTable != -1)
                 {
-                    selectionList = IpcArcMap(new string[] { "qd", fromList, subFields, 
-                        WhereClause(false, false, true, MapWhereClauseFields(_hluLayerStructure, whereConds)), 
-                        oidColumnAlias, "false" });
+                    selectionList = IpcArcMap([ "qd", fromList, subFields, 
+                        WhereClause(false, false, true, MapWhereClauseFields(_hluLayerStructure, whereConds)),
+                        oidColumnAlias, "false" ]);
                 }
             }
             else // single table
             {
-                selectionList = IpcArcMap(new string[] { "qf", subFields, 
-                    WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, whereConds)), "false" });
+                selectionList = IpcArcMap([ "qf", subFields,
+                    WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, whereConds)), "false" ]);
             }
 
             ThrowPipeError(selectionList);
@@ -645,17 +645,15 @@ namespace HLU.GISApplication.ArcGIS
         public override DataTable SqlSelect(string scratchMdbPath, 
             string selectionTableName, DataColumn[] targetColumns)
         {
-            List<string> selectionList = new List<string>();
-
             try
             {
                 bool qualifyColumns = false;
                 DataTable resultTable;
-                string subFields = TargetList(targetColumns, false, true, 
+                string subFields = TargetList(targetColumns, false, true,
                     ref qualifyColumns, out resultTable);
 
-                selectionList = IpcArcMap(new string[] { "sj", scratchMdbPath, 
-                    selectionTableName, subFields, "false" });
+                List<string> selectionList = IpcArcMap([ "sj", scratchMdbPath,
+                    selectionTableName, subFields, "false" ]);
 
                 ThrowPipeError(selectionList);
 
@@ -669,8 +667,8 @@ namespace HLU.GISApplication.ArcGIS
             }
             catch (Exception ex)
             {
-                MessageBox.Show(String.Format("Map selection failed. " + 
-                    "ArcMap returned the following error message:\n\n{0}", ex.Message), 
+                MessageBox.Show(String.Format("Map selection failed. " +
+                    "ArcMap returned the following error message:\n\n{0}", ex.Message),
                     "HLU: Selection Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return null;
             }
@@ -753,7 +751,7 @@ namespace HLU.GISApplication.ArcGIS
         /// </summary>
         public override void ClearMapSelection()
         {
-            IpcArcMap(new string[] { "cs" });
+            IpcArcMap(["cs"]);
         }
         //---------------------------------------------------------------------
 
@@ -765,7 +763,7 @@ namespace HLU.GISApplication.ArcGIS
         /// </summary>
         public override void CountMapSelection(ref int fragCount)
         {
-            List<string> retList = IpcArcMap(new string[] { "qs" });
+            List<string> retList = IpcArcMap(["qs"]);
             if (retList.Count > 0)
                 fragCount = Convert.ToInt32(retList[0]);
             else
@@ -775,14 +773,14 @@ namespace HLU.GISApplication.ArcGIS
 
         /// <summary>
         /// Check if all selected rows have unique keys to avoid
-        /// any potential data integrity problems.        
+        /// any potential data integrity problems.
         /// </summary>
         /// <returns></returns>
         public override bool SelectedRowsUnique()
         {
             try
             {
-                List<string> retList = IpcArcMap(new string[] { "su" });
+                List<string> retList = IpcArcMap(["su"]);
                 if (retList.Count > 0)
                     return Convert.ToBoolean(retList[0]);
                 else
@@ -794,25 +792,25 @@ namespace HLU.GISApplication.ArcGIS
 
         public override void FlashSelectedFeature(List<SqlFilterCondition> whereClause)
         {
-            List<string> resultList = IpcArcMap(new string[] { "fl", 
-                WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, whereClause)) });
+            List<string> resultList = IpcArcMap([ "fl",
+                WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, whereClause)) ]);
         }
 
         public override void FlashSelectedFeatures(List<List<SqlFilterCondition>> whereClauses)
         {
             foreach (List<SqlFilterCondition> whereClause in whereClauses)
             {
-                List<string> resultList = IpcArcMap(new string[] { "fl", 
-                    WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, whereClause)) });
+                List<string> resultList = IpcArcMap([ "fl",
+                    WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, whereClause)) ]);
             }
         }
 
         public override DataTable SplitFeature(string currentToidFragmentID, string lastToidFragmentID,
             List<SqlFilterCondition> selectionWhereClause, DataColumn[] historyColumns)
         {
-            return ResultTableFromList(IpcArcMap(new string[] { "sp", 
-                WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, selectionWhereClause)), 
-                lastToidFragmentID, String.Join(",", historyColumns.Select(c => c.ColumnName).ToArray()) }));
+            return ResultTableFromList(IpcArcMap([ "sp",
+                WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, selectionWhereClause)),
+                lastToidFragmentID, String.Join(",", historyColumns.Select(c => c.ColumnName).ToArray()) ]));
         }
 
         //---------------------------------------------------------------------
@@ -824,13 +822,14 @@ namespace HLU.GISApplication.ArcGIS
         {
             try
             {
-                string[] sendList = new string[4];
-                sendList[0] = "sl";
-                sendList[1] = oldIncid;
-                sendList[2] = newIncid;
-                sendList[3] = historyColumns.Aggregate(new StringBuilder(), (sb, c) => 
-                    sb.Append("," + c.ColumnName)).Remove(0, 1).ToString();
-
+                string[] sendList =
+                [
+                    "sl",
+                    oldIncid,
+                    newIncid,
+                    historyColumns.Aggregate(new(), (sb, c) => 
+                        sb.Append("," + c.ColumnName)).Remove(0, 1).ToString(),
+                ];
                 return ResultTableFromList(IpcArcMap(sendList));
             }
             catch { throw; }
@@ -840,18 +839,19 @@ namespace HLU.GISApplication.ArcGIS
         public override DataTable MergeFeatures(string newToidFragmentID, 
             List<SqlFilterCondition> resultWhereClause, DataColumn[] historyColumns)
         {
-            return ResultTableFromList(IpcArcMap(new string[] { "mg",
+            return ResultTableFromList(IpcArcMap([ "mg",
                 WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, resultWhereClause)),
-                newToidFragmentID, String.Join(",", historyColumns.Select(c => c.ColumnName).ToArray())}));
+                newToidFragmentID, String.Join(",", historyColumns.Select(c => c.ColumnName).ToArray())]));
         }
 
         public override DataTable MergeFeaturesLogically(string keepIncid, DataColumn[] historyColumns)
         {
-            string[] sendList = new string[3];
-            sendList[0] = "ml";
-            sendList[1] = keepIncid;
-            sendList[2] = String.Join(",", historyColumns.Select(c => c.ColumnName).ToArray());
-
+            string[] sendList =
+            [
+                "ml",
+                keepIncid,
+                String.Join(",", historyColumns.Select(c => c.ColumnName).ToArray()),
+            ];
             return ResultTableFromList(IpcArcMap(sendList));
         }
 
@@ -862,7 +862,7 @@ namespace HLU.GISApplication.ArcGIS
                 if ((resultList != null) && (resultList.Count > 1))
                 {
                     // Create a new result table
-                    DataTable resultTable = new DataTable();
+                    DataTable resultTable = new();
 
                     // Define the result table by adding the columns
                     int i = 0;
@@ -898,9 +898,9 @@ namespace HLU.GISApplication.ArcGIS
 
                 return ResultTableFromList(IpcArcMap(new string[] { "us" }
                     .Concat(updateColumns.Select(c => c.ColumnName))
-                    .Concat(new string[] { PipeTransmissionInterrupt })
+                    .Concat([PipeTransmissionInterrupt])
                     .Concat(updateValues.Select(o => o.ToString()))
-                    .Concat(new string[] { PipeTransmissionInterrupt })
+                    .Concat([PipeTransmissionInterrupt])
                     .Concat(historyColumns.Select(c => c.ColumnName)).ToArray()));
             }
             catch { throw; }
@@ -913,12 +913,12 @@ namespace HLU.GISApplication.ArcGIS
             {
                 string delimiter = PipeFieldDelimiter.ToString();
 
-                return ResultTableFromList(IpcArcMap(new string[] { "up", 
+                return ResultTableFromList(IpcArcMap(new string[] { "up",
                     WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, selectionWhereClause)) }
                     .Concat(updateColumns.Select(c => c.ColumnName))
-                    .Concat(new string[] { PipeTransmissionInterrupt })
+                    .Concat([PipeTransmissionInterrupt])
                     .Concat(updateValues.Select(o => o.ToString()))
-                    .Concat(new string[] { PipeTransmissionInterrupt })
+                    .Concat([PipeTransmissionInterrupt])
                     .Concat(historyColumns.Select(c => c.ColumnName)).ToArray()));
             }
             catch { throw; }
@@ -933,9 +933,9 @@ namespace HLU.GISApplication.ArcGIS
             {
                 return ResultTableFromList(IpcArcMap(new string[] { "ub", tempMdbPathName, selectionTableName }
                     .Concat(updateColumns.Select(c => c.ColumnName))
-                    .Concat(new string[] { PipeTransmissionInterrupt })
+                    .Concat([PipeTransmissionInterrupt])
                     .Concat(updateValues.Select(o => o == null ? String.Empty : o.ToString()))
-                    .Concat(new string[] { PipeTransmissionInterrupt })
+                    .Concat([PipeTransmissionInterrupt])
                     .Concat(historyColumns.Select(c => c.ColumnName)).ToArray()));
             }
             catch { throw; }
@@ -945,9 +945,9 @@ namespace HLU.GISApplication.ArcGIS
         {
             // Enable auto zoom when selecting features on map.
             if (alwaysZoom)
-                IpcArcMap(new string[] { "zs", minZoom.ToString(), distUnits, "always" });
+                IpcArcMap(["zs", minZoom.ToString(), distUnits, "always"]);
             else
-                IpcArcMap(new string[] { "zs", minZoom.ToString(), distUnits, "when" });
+                IpcArcMap(["zs", minZoom.ToString(), distUnits, "when"]);
         }
 
         /// <summary>
@@ -961,8 +961,8 @@ namespace HLU.GISApplication.ArcGIS
         public override bool ExportPrompt(string tempMdbPathName, string attributeDatasetName, int attributesLength, bool selectedOnly)
         {
             List<string> returnList = IpcArcMap(
-                new string[] { "ep", tempMdbPathName, attributeDatasetName });
-            
+                ["ep", tempMdbPathName, attributeDatasetName]);
+
             if ((returnList.Count > 0) && (returnList[0] == "cancelled"))
             {
                 // Display message if no output layer is entered by the user.
@@ -994,7 +994,7 @@ namespace HLU.GISApplication.ArcGIS
         public override bool Export(string tempMdbPathName, string attributeDatasetName, bool selectedOnly)
         {
             List<string> returnList = IpcArcMap(
-                new string[] { "ex", tempMdbPathName, attributeDatasetName, (selectedOnly ? "true" : "false") });
+                ["ex", tempMdbPathName, attributeDatasetName, (selectedOnly ? "true" : "false")]);
 
             if ((returnList.Count > 0) && (returnList[0] == "cancelled"))
             {
@@ -1075,7 +1075,7 @@ namespace HLU.GISApplication.ArcGIS
             IInterProcessConnection clientConnection = null;
             try
             {
-                PipeList pipeList = new PipeList(sendList);
+                PipeList pipeList = new(sendList);
                 List<string> prepSendList = pipeList.List;
 
                 clientConnection = new ClientPipeConnection(_pipeName, ".");
@@ -1084,7 +1084,7 @@ namespace HLU.GISApplication.ArcGIS
                 foreach (string send in prepSendList)
                     clientConnection.Write(send);
 
-                List<string> responseList = new List<string>();
+                List<string> responseList = [];
                 string response;
                 while ((response = clientConnection.Read()) != PipeTransmissionEnd)
                     responseList.Add(response);
@@ -1104,7 +1104,7 @@ namespace HLU.GISApplication.ArcGIS
         private void ThrowPipeError(List<string> pipeData)
         {
             if ((pipeData.Count > 0) && (pipeData[0][0] == PipeErrorSymbol))
-                throw new Exception(pipeData.Skip(1).Aggregate(new StringBuilder(), (sb, m) => sb.Append(m)).ToString());
+                throw new Exception(pipeData.Skip(1).Aggregate(new(), (sb, m) => sb.Append(m)).ToString());
         }
 
         #endregion
@@ -1145,7 +1145,7 @@ namespace HLU.GISApplication.ArcGIS
 
         private void SelectionSetToTable(ISelectionSet selectionSet, ref DataTable resultTable)
         {
-            using (ComReleaser comReleaser = new ComReleaser())
+            using (ComReleaser comReleaser = new())
             {
                 ICursor resultCursor;
                 selectionSet.Search(null, true, out resultCursor);
@@ -1162,14 +1162,14 @@ namespace HLU.GISApplication.ArcGIS
                     selectRow = resultCursor.NextRow();
                 }
                 resultCursor.Flush();
-            }        
+            }
         }
 
         private void CursorToDataTable(ICursor cursor, ref DataTable resultTable)
         {
             DataRow resultRow;
             IRow selectRow;
-            using (ComReleaser comReleaser = new ComReleaser())
+            using (ComReleaser comReleaser = new())
             {
                 comReleaser.ManageLifetime(cursor);
                 while ((selectRow = cursor.NextRow()) != null)
@@ -1201,7 +1201,7 @@ namespace HLU.GISApplication.ArcGIS
 
         private DataTable SelectedIDsTable(ISelectionSet selectionSet)
         {
-            DataTable resultTable = new DataTable();
+            DataTable resultTable = new();
 
             if (selectionSet != null)
             {
@@ -1213,9 +1213,9 @@ namespace HLU.GISApplication.ArcGIS
 
         private int[] SelectedIDs(ISelectionSet selectionSet)
         {
-            if ((selectionSet == null) || (selectionSet.Count == 0)) return new int[0];
+            if ((selectionSet == null) || (!selectionSet.Any())) return [];
 
-            int[] resultIDs = new int[selectionSet.Count];
+            int[] resultIDs = new int[selectionSet.Count()];
             IEnumIDs selIDs = selectionSet.IDs;
             for (int i = 0; i < resultIDs.Length; i++)
                 resultIDs[i] = selIDs.Next();
@@ -1392,7 +1392,7 @@ namespace HLU.GISApplication.ArcGIS
 
         public override string HluLayerName
         {
-            get { return _hluLayer != null ? _hluLayer.Name : null; }
+            get { return _hluLayer?.Name; }
         }
 
         public override string IncidFieldName
@@ -1405,7 +1405,7 @@ namespace HLU.GISApplication.ArcGIS
         /// </summary>
         public override int HluLayerCount
         {
-            get { return _hluLayerList.Count(); }
+            get { return _hluLayerList.Count; }
         }
 
         /// <summary>
@@ -1468,7 +1468,7 @@ namespace HLU.GISApplication.ArcGIS
             {
                 try
                 {
-                    List<string> retList = IpcArcMap(new string[] { "ie" });
+                    List<string> retList = IpcArcMap(["ie"]);
                     if (retList.Count > 0)
                         return Convert.ToBoolean(retList[0]);
                     else
@@ -1563,7 +1563,7 @@ namespace HLU.GISApplication.ArcGIS
             System.Windows.Forms.Screen hluScreen =
                 System.Windows.Forms.Screen.FromHandle(Process.GetCurrentProcess().MainWindowHandle);
 
-            WinAPI.WINDOWINFO winfo = new WinAPI.WINDOWINFO();
+            WinAPI.WINDOWINFO winfo = new();
             winfo.cbSize = (uint)Marshal.SizeOf(winfo);
             WinAPI.GetWindowInfo(_arcMapWindow, ref winfo);
 
@@ -1641,17 +1641,19 @@ namespace HLU.GISApplication.ArcGIS
             try
             {
                 string path;
-                SaveFileDialog saveFileDlg = new SaveFileDialog();
-                saveFileDlg.Title = "Save New Map Document";
-                saveFileDlg.Filter = "ESRI ArcMap Documents (*.mxd)|*.mxd";
-                saveFileDlg.CheckPathExists = true;
-                saveFileDlg.RestoreDirectory = false;
-                saveFileDlg.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                SaveFileDialog saveFileDlg = new()
+                {
+                    Title = "Save New Map Document",
+                    Filter = "ESRI ArcMap Documents (*.mxd)|*.mxd",
+                    CheckPathExists = true,
+                    RestoreDirectory = false,
+                    InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+                };
                 _arcMap.Visible = false;
                 if (saveFileDlg.ShowDialog() == true)
                 {
                     path = saveFileDlg.FileName;
-                    FileInfo fInfo = new FileInfo(path);
+                    FileInfo fInfo = new(path);
                     if (Directory.Exists(fInfo.DirectoryName))
                     {
                         _arcMap.SaveAsDocument(path, false);
@@ -1682,7 +1684,7 @@ namespace HLU.GISApplication.ArcGIS
                 featClassDlg.RememberLocation = true;
                 IEnumGxObject enumGxObjs;
                 _arcMap.Visible = false;
-                WindowInteropHelper winInteropHelper = new WindowInteropHelper(App.Current.MainWindow);
+                WindowInteropHelper winInteropHelper = new(App.Current.MainWindow);
                 DispatcherHelper.DoEvents();
                 if (!featClassDlg.DoModalOpen(winInteropHelper.Handle.ToInt32(), out enumGxObjs)) return false;
 
@@ -1725,11 +1727,11 @@ namespace HLU.GISApplication.ArcGIS
         protected override bool IsHluWorkspace()
         {
             if (_hluLayerStructure == null)
-                _hluLayerStructure = new HluGISLayer.incid_mm_polygonsDataTable();
+                _hluLayerStructure = new();
 
             try
             {
-                List<string> retList = IpcArcMap(new string[] { "iw" });
+                List<string> retList = IpcArcMap(["iw"]);
                 if ((retList != null) && (retList.Count > 5))
                 {
                     IMap map = Maps(_arcMap).get_Item(Int32.Parse(retList[0]));
@@ -1742,7 +1744,7 @@ namespace HLU.GISApplication.ArcGIS
                     // This ensures that group layers are not counted, in the same way
                     // that they weren't counted when the position of the HLU layer
                     // was first determined.
-                    UID uid = new UIDClass();
+                    UID uid = new();
                     uid.Value = typeof(IFeatureLayer).GUID.ToString("B");
 
                     IEnumLayer layers = map.get_Layers(uid, true);
@@ -1806,11 +1808,11 @@ namespace HLU.GISApplication.ArcGIS
                 _hluLayerStructure = new HluGISLayer.incid_mm_polygonsDataTable();
 
             if (_hluLayerList == null)
-                _hluLayerList = new List<GISLayer>();
+                _hluLayerList = [];
 
             try
             {
-                List<string> retList = IpcArcMap(new string[] { "ll" });
+                List<string> retList = IpcArcMap(["ll"]);
                 if ((retList != null) && (retList.Count > 3))
                 {
                     if (Int32.Parse(retList[0]) > 0)
@@ -1821,7 +1823,7 @@ namespace HLU.GISApplication.ArcGIS
                         // Split each layer into constituent parts and add them to the list
                         // of valid layers.
                         if (_hluLayerList == null)
-                            _hluLayerList = new List<GISLayer>();
+                            _hluLayerList = [];
                         else
                             _hluLayerList.Clear();
 
@@ -1844,7 +1846,7 @@ namespace HLU.GISApplication.ArcGIS
 
             if (_hluCurrentLayer == null)
                 _hluCurrentLayer = _hluLayerList[0];
-            return _hluLayerList.Count();
+            return _hluLayerList.Count;
         }
         //---------------------------------------------------------------------
 
@@ -1881,7 +1883,7 @@ namespace HLU.GISApplication.ArcGIS
                     IMap map = Maps(_arcMap).get_Item(mapNum);
                     _hluView = map as IActiveView;
 
-                    UID uid = new UIDClass();
+                    UID uid = new();
                     uid.Value = typeof(IFeatureLayer).GUID.ToString("B");
 
                     // Loop through each layer in the map looking for the correct layer
@@ -2083,7 +2085,7 @@ namespace HLU.GISApplication.ArcGIS
             if (_hluWS == null) return;
 
             // ArcGIS expects decimal point regardless of regional settings
-            _numberFormatInfo = new NumberFormatInfo();
+            _numberFormatInfo = new();
             _numberFormatInfo.NumberDecimalSeparator = ".";
             _numberFormatInfo.NumberGroupSeparator = "";
 
@@ -2140,7 +2142,7 @@ namespace HLU.GISApplication.ArcGIS
                 IPropertySet propSet = ws.ConnectionProperties;
                 object propNames, outPropVals;
                 propSet.GetAllProperties(out propNames, out outPropVals);
-                List<string> propNamesList = new List<string>((string[])propNames);
+                List<string> propNamesList = new((string[])propNames);
                 object[] propValsArray = (object[])outPropVals;
 
                 propNamesList.ForEach(delegate(string pn) { pn = pn.ToUpper(); });
@@ -2163,8 +2165,8 @@ namespace HLU.GISApplication.ArcGIS
 
                 sdeLibs = ExtractSDE();
 
-                SE_Error seConnError = new SE_Error();
-                SE_Connection connection = new SE_Connection();
+                SE_Error seConnError = new();
+                SE_Connection connection = new();
                 if ((SE_RETURN = SE_connection_create(server, instance, database, username, password, ref seConnError,
                     ref connection)) != SE_SUCCESS) throw (new Exception(Enum.GetName(typeof(sdeError), SE_RETURN)));
 
@@ -2255,11 +2257,12 @@ namespace HLU.GISApplication.ArcGIS
         {
             string sdeLibPrefix = "HLU.GISApplication.ArcGIS.lib";
             // sde DLLs in order of dependency, i.e., main DLL last
-            SdeDLL[] sdeLibs = new SdeDLL[3];
-            sdeLibs[0] = new SdeDLL("pe.dll", sdeLibPrefix);
-            sdeLibs[1] = new SdeDLL("sg.dll", sdeLibPrefix);
-            sdeLibs[2] = new SdeDLL("sde.dll", sdeLibPrefix);
-
+            SdeDLL[] sdeLibs =
+            [
+                new SdeDLL("pe.dll", sdeLibPrefix),
+                new SdeDLL("sg.dll", sdeLibPrefix),
+                new SdeDLL("sde.dll", sdeLibPrefix),
+            ];
             try
             {
                 Process p = Process.GetCurrentProcess();
@@ -2279,7 +2282,7 @@ namespace HLU.GISApplication.ArcGIS
 
                 for (int i = 0; i < sdeLibs.Length; i++)
                 {
-                    if (pms.Count(pm => pm.ModuleName.Equals(sdeLibs[i].LibName, StringComparison.CurrentCultureIgnoreCase)) == 0)
+                    if (!pms.Any(pm => pm.ModuleName.Equals(sdeLibs[i].LibName, StringComparison.CurrentCultureIgnoreCase)))
                     {
                         sdeLibs[i].LibPath = System.IO.Path.Combine(arcDirName, sdeLibs[i].LibName);
                         if (!File.Exists(sdeLibs[i].LibPath))
@@ -2306,8 +2309,8 @@ namespace HLU.GISApplication.ArcGIS
             public SdeDLL(string dllName, string resourcePrefix)
             {
                 LibHandle = IntPtr.Zero;
-                ResourceName = (!String.IsNullOrEmpty(resourcePrefix) ? resourcePrefix + 
-                    (!resourcePrefix.EndsWith(".") ? "." : String.Empty) : String.Empty) + dllName;
+                ResourceName = (!String.IsNullOrEmpty(resourcePrefix) ? resourcePrefix +
+                    (!resourcePrefix.EndsWith('.') ? "." : String.Empty) : String.Empty) + dllName;
                 LibName = dllName;
                 LibPath = null;
             }
@@ -2394,15 +2397,17 @@ namespace HLU.GISApplication.ArcGIS
             {
                 if (!File.Exists(path))
                 {
-                    OpenFileDialog openFileDlg = new OpenFileDialog();
-                    openFileDlg.Filter = "ESRI ArcMap Documents (*.mxd)|*.mxd";
-                    openFileDlg.Title = title;
-                    openFileDlg.CheckPathExists = true;
-                    openFileDlg.CheckFileExists = true;
-                    openFileDlg.ValidateNames = true;
-                    openFileDlg.Multiselect = false;
-                    openFileDlg.RestoreDirectory = false;
-                    openFileDlg.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                    OpenFileDialog openFileDlg = new()
+                    {
+                        Filter = "ESRI ArcMap Documents (*.mxd)|*.mxd",
+                        Title = title,
+                        CheckPathExists = true,
+                        CheckFileExists = true,
+                        ValidateNames = true,
+                        Multiselect = false,
+                        RestoreDirectory = false,
+                        InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+                    };
 
                     _arcMap.Visible = false;
 
@@ -2530,7 +2535,7 @@ namespace HLU.GISApplication.ArcGIS
                 IFeatureSelection featureSelection = (IFeatureSelection)templateLayer;
                 if (featureSelection.SelectionSet.Count > 0)
                 {
-                    IQueryFilter queryFilter = new QueryFilterClass();
+                    IQueryFilter queryFilter = new();
                     queryFilter.WhereClause = String.Format("{0} IN ({1})", _hluFeatureClass.OIDFieldName,
                         String.Join(",", SelectedIDs(featureSelection.SelectionSet).Select(i => i.ToString()).ToArray()));
                     featureSelection = (IFeatureSelection)_hluLayer;
@@ -2587,7 +2592,7 @@ namespace HLU.GISApplication.ArcGIS
                 _hluView.Extent = originalExtent;
                 _hluView.Refresh();
             }
-            
+
             IBasicDocument document = (IBasicDocument)_arcMap.Document;
             document.UpdateContents();
         }
@@ -2603,7 +2608,7 @@ namespace HLU.GISApplication.ArcGIS
 
         private IMaps Maps(IApplication app)
         {
-            if (app == null) 
+            if (app == null)
                 return null;
             else
                 return ((IMxDocument)app.Document).Maps;

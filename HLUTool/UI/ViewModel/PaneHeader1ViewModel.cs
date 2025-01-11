@@ -21,7 +21,7 @@
 
 using ArcGIS.Desktop.Framework;
 using HLU.Properties;
-using DataTools;
+using HLU;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -43,7 +43,7 @@ namespace HLU.UI
 
         private readonly DockpaneMainViewModel _dockPane;
 
-        private const string _displayName = "HLU";
+        private const string _displayName = "HLUTool";
 
         #endregion Fields
 
@@ -103,6 +103,7 @@ namespace HLU.UI
                 OnPropertyChanged(nameof(AvailableXMLFiles));
                 OnPropertyChanged(nameof(SelectedXMLProfile));
                 OnPropertyChanged(nameof(CanSelectXMLPath));
+                OnPropertyChanged(nameof(CanSelectXMLProfile));
                 OnPropertyChanged(nameof(CanLoadProfile));
 
                 return;
@@ -170,6 +171,7 @@ namespace HLU.UI
             OnPropertyChanged(nameof(AvailableXMLFiles));
             OnPropertyChanged(nameof(SelectedXMLProfile));
             OnPropertyChanged(nameof(CanSelectXMLPath));
+            OnPropertyChanged(nameof(CanSelectXMLProfile));
             OnPropertyChanged(nameof(CanLoadProfile));
 
             // If the XML config file has been set (and it exists) then load it.
@@ -353,9 +355,9 @@ namespace HLU.UI
 
         #region Properties
 
-        private DataSyncConfig _xmlConfig;
+        private HLUToolConfig _xmlConfig;
 
-        public DataSyncConfig ToolConfig
+        public HLUToolConfig ToolConfig
         {
             get
             {
@@ -437,6 +439,7 @@ namespace HLU.UI
                 OnPropertyChanged(nameof(AvailableXMLFiles));
                 OnPropertyChanged(nameof(SelectedXMLProfile));
                 OnPropertyChanged(nameof(CanSelectXMLPath));
+                OnPropertyChanged(nameof(CanSelectXMLProfile));
                 OnPropertyChanged(nameof(CanLoadProfile));
 
                 return;
@@ -495,6 +498,7 @@ namespace HLU.UI
                 {
                     // Set the list to just the default XML file
                     // and select it.
+                    xmlFilesList = [];
                     xmlFilesList.Add(defaultXML);
                     _availableXMLFiles = xmlFilesList;
                     _selectedXMLProfile = defaultXML;
@@ -513,6 +517,7 @@ namespace HLU.UI
             OnPropertyChanged(nameof(AvailableXMLFiles));
             OnPropertyChanged(nameof(SelectedXMLProfile));
             OnPropertyChanged(nameof(CanSelectXMLPath));
+            OnPropertyChanged(nameof(CanSelectXMLProfile));
             OnPropertyChanged(nameof(CanLoadProfile));
 
             // If the XML config file has been set (and it exists) then load it.

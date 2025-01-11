@@ -1,18 +1,18 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -44,7 +44,7 @@ namespace HLU.UI.ViewModel
         {
             _connectionTypes = Enum.GetValues(typeof(ConnectionTypes)).Cast<ConnectionTypes>()
                 .Where(t => t != HLU.Data.Connection.ConnectionTypes.Unknown).ToArray();
-            object initVal = Enum.Parse(typeof(ConnectionTypes), Resources.DefaultConnectionType, true);
+            object initVal = Enum.Parse(typeof(ConnectionTypes), Settings.Default.DefaultConnectionType, true);
             if (initVal != null) _connectionType = (ConnectionTypes)initVal;
         }
 
@@ -90,8 +90,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_okCommand == null)
                 {
-                    Action<object> okAction = new Action<object>(this.OkCommandClick);
-                    _okCommand = new RelayCommand(okAction, param => this.CanOk);
+                    Action<object> okAction = new(this.OkCommandClick);
+                    _okCommand = new(okAction, param => this.CanOk);
                 }
 
                 return _okCommand;
@@ -132,8 +132,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_cancelCommand == null)
                 {
-                    Action<object> cancelAction = new Action<object>(this.CancelCommandClick);
-                    _cancelCommand = new RelayCommand(cancelAction);
+                    Action<object> cancelAction = new(this.CancelCommandClick);
+                    _cancelCommand = new(cancelAction);
                 }
 
                 return _cancelCommand;

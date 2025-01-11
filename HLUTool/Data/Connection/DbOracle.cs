@@ -1,19 +1,19 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -23,7 +23,7 @@ using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Windows;
-using Oracle.DataAccess.Client;
+using Oracle.ManagedDataAccess.Client;
 using System.Text;
 
 namespace HLU.Data.Connection
@@ -31,7 +31,7 @@ namespace HLU.Data.Connection
     class DbOracle : DbBase
     {
         #region Private Members
-        
+
         private string _errorMessage;
         private OracleConnectionStringBuilder _connStrBuilder;
         private OracleConnection _connection;
@@ -39,7 +39,7 @@ namespace HLU.Data.Connection
         private OracleDataAdapter _adapter;
         private OracleCommandBuilder _commandBuilder;
         private OracleTransaction _transaction;
-        private Dictionary<Type, OracleDataAdapter> _adaptersDic = new Dictionary<Type, OracleDataAdapter>();
+        private Dictionary<Type, OracleDataAdapter> _adaptersDic = [];
 
         private HLU.UI.View.Connection.ViewConnectOracle _connWindow;
         private HLU.UI.ViewModel.ViewModelConnectOracle _connViewModel;
@@ -66,8 +66,8 @@ namespace HLU.Data.Connection
                     TimePrecision, NumericPrecision, NumericScale);
 
                 _command = _connection.CreateCommand();
-                _adapter = new OracleDataAdapter(_command);
-                _commandBuilder = new OracleCommandBuilder(_adapter);
+                _adapter = new(_command);
+                _commandBuilder = new(_adapter);
 
                 connString = MaskPassword(_connStrBuilder, pwdMask);
                 defaultSchema = DefaultSchema;
@@ -79,7 +79,7 @@ namespace HLU.Data.Connection
             }
             catch { throw; }
         }
-        
+
         #endregion
 
         #region Public Static
@@ -106,7 +106,7 @@ namespace HLU.Data.Connection
         {
             if (!String.IsNullOrEmpty(userIDstring))
             {
-                if (userIDstring.StartsWith("\"") && userIDstring.EndsWith("\""))
+                if (userIDstring.StartsWith('\"') && userIDstring.EndsWith('\"'))
                     userIDstring = userIDstring.Remove(userIDstring.Length - 1, 1).Remove(0, 1);
                 else
                     userIDstring = userIDstring.ToUpper();
@@ -138,12 +138,12 @@ namespace HLU.Data.Connection
 
             try
             {
-                DataTable schemaTable = GetSchema("Columns", 
+                DataTable schemaTable = GetSchema("Columns",
                     _restrictionNameSchema, DefaultSchema, _connection, _transaction);
 
                 var dbSchema = schemaTable.AsEnumerable();
 
-                StringBuilder messageText = new StringBuilder();
+                StringBuilder messageText = new();
 
                 foreach (DataTable t in ds.Tables)
                 {
@@ -161,7 +161,7 @@ namespace HLU.Data.Connection
                                            DataType = r.Field<string>("DATATYPE")
                                        };
 
-                    if (dbSchemaCols.Count() == 0)
+                    if (dbSchemaCols.Any())
                     {
                         messageText.Append(String.Format("\n\nMissing table: {0}", QuoteIdentifier(t.TableName)));
                     }
@@ -173,7 +173,7 @@ namespace HLU.Data.Connection
                                                               TypeMatch(SystemDataType(dbCol.DataType), dbCol.ColumnLength, 
                                                                         dbCol.NumericScale, dsCol.DataType, dsCol.MaxLength)
                                                               select dbCol
-                                                 where dbCols.Count() == 0
+                                                 where dbCols.Any()
                                                  select QuoteIdentifier(dsCol.ColumnName) + " (" +
                                                  ((OracleDbType)SystemToDbType(dsCol.DataType) + ")").ToString()).ToArray();
                         if (checkColumns.Length > 0) messageText.Append(String.Format("\n\nTable: {0}\nColumns: {1}",
@@ -204,31 +204,24 @@ namespace HLU.Data.Connection
 
             if (dbColSysTypeCode == dsColTypeCode) return true;
 
-            TypeCode[] floatingPoint = new TypeCode[] { TypeCode.Decimal, TypeCode.Double };
+            TypeCode[] floatingPoint = [TypeCode.Decimal, TypeCode.Double];
 
-            switch (dsColTypeCode)
+            return dsColTypeCode switch
             {
-                case TypeCode.Boolean:
-                    return (dbColSysTypeCode == TypeCode.String && dbColLength == 5);
-                case TypeCode.Char:
-                    return (dsColLength == -1 || dbColLength <= dsColLength) && dbColSysTypeCode == TypeCode.String;
-                case TypeCode.Decimal:
-                    return dbColNumScale > 0 && Array.IndexOf(floatingPoint, dbColSysTypeCode) != 1;
-                case TypeCode.Double:
-                    return Array.IndexOf(floatingPoint, dbColSysTypeCode) != -1;
-                case TypeCode.Int16:
-                case TypeCode.UInt16:
-                case TypeCode.Int32:
-                case TypeCode.UInt32:
-                case TypeCode.Int64:
-                case TypeCode.UInt64:
-                    return dbColNumScale == 0 && dbColSysTypeCode == TypeCode.Decimal;
-                case TypeCode.Object:
-                case TypeCode.Single:
-                    return dbColNumScale > 0 && Array.IndexOf(floatingPoint, dbColSysTypeCode) != 1;
-            }
-
-            return false;
+                TypeCode.Boolean => (dbColSysTypeCode == TypeCode.String && dbColLength == 5),
+                TypeCode.Char => (dsColLength == -1 || dbColLength <= dsColLength) && dbColSysTypeCode == TypeCode.String,
+                TypeCode.Decimal => dbColNumScale > 0 && Array.IndexOf(floatingPoint, dbColSysTypeCode) != 1,
+                TypeCode.Double => Array.IndexOf(floatingPoint, dbColSysTypeCode) != -1,
+                TypeCode.Int16 => dbColNumScale == 0 && dbColSysTypeCode == TypeCode.Decimal,
+                TypeCode.UInt16 => dbColNumScale == 0 && dbColSysTypeCode == TypeCode.Decimal,
+                TypeCode.Int32 => dbColNumScale == 0 && dbColSysTypeCode == TypeCode.Decimal,
+                TypeCode.UInt32 => dbColNumScale == 0 && dbColSysTypeCode == TypeCode.Decimal,
+                TypeCode.Int64 => dbColNumScale == 0 && dbColSysTypeCode == TypeCode.Decimal,
+                TypeCode.UInt64 => dbColNumScale == 0 && dbColSysTypeCode == TypeCode.Decimal,
+                TypeCode.Object => dbColNumScale > 0 && Array.IndexOf(floatingPoint, dbColSysTypeCode) != 1,
+                TypeCode.Single => dbColNumScale > 0 && Array.IndexOf(floatingPoint, dbColSysTypeCode) != 1,
+                _ => false
+            };
         }
 
         public override IDbConnection Connection { get { return _connection; } }
@@ -248,40 +241,43 @@ namespace HLU.Data.Connection
                 return new OracleCommand();
         }
 
-        public override IDbDataAdapter CreateAdapter()
-        {
-            return new OracleDataAdapter();
-        }
+        //TODO: CreateAdapter
+        //public override IDbDataAdapter CreateAdapter()
+        //{
+        //    return new OracleDataAdapter();
+        //}
 
         public override IDbDataAdapter CreateAdapter<T>(T table)
         {
-            if (table == null) table = new T();
+            table ??= new T();
 
             OracleDataAdapter adapter;
 
             if (!_adaptersDic.TryGetValue(typeof(T), out adapter))
             {
-                adapter = new OracleDataAdapter();
+                adapter = new();
 
                 DataColumn[] pk = table.PrimaryKey;
                 if ((pk == null) || (pk.Length == 0)) return null;
 
-                DataTableMapping tableMapping = new DataTableMapping();
-                tableMapping.SourceTable = table.TableName; // "Table";
-                tableMapping.DataSetTable = table.TableName; // "Exports";
+                DataTableMapping tableMapping = new()
+                {
+                    SourceTable = table.TableName, // "Table";
+                    DataSetTable = table.TableName // "Exports";
+                };
 
-                List<OracleParameter> deleteParams = new List<OracleParameter>();
-                List<OracleParameter> insertParams = new List<OracleParameter>();
-                List<OracleParameter> updateParams = new List<OracleParameter>();
-                List<OracleParameter> updateParamsOrig = new List<OracleParameter>();
+                List<OracleParameter> deleteParams = [];
+                List<OracleParameter> insertParams = [];
+                List<OracleParameter> updateParams = [];
+                List<OracleParameter> updateParamsOrig = [];
 
-                StringBuilder sbTargetList = new StringBuilder();
-                StringBuilder sbInsValues = new StringBuilder();
-                StringBuilder sbUpdSetList = new StringBuilder();
-                StringBuilder sbWhereDel = new StringBuilder();
-                StringBuilder sbWhereUpd = new StringBuilder();
-                StringBuilder sbWherePkUpd = new StringBuilder();
-                StringBuilder sbWherePkIns = new StringBuilder();
+                StringBuilder sbTargetList = new();
+                StringBuilder sbInsValues = new();
+                StringBuilder sbUpdSetList = new();
+                StringBuilder sbWhereDel = new();
+                StringBuilder sbWhereUpd = new();
+                StringBuilder sbWherePkUpd = new();
+                StringBuilder sbWherePkIns = new();
 
                 string tableName = QualifyTableName(table.TableName);
 
@@ -326,7 +322,7 @@ namespace HLU.Data.Connection
                             ParameterMarker(delIsNullParamName), colName) + "{0}))";
                         updAddString = String.Format(" AND ((({0} = 1) AND ({1} IS NULL)) OR ({1} = ",
                             ParameterMarker(updIsNullParamName), colName) + "{0}))";
-                        
+
                         nullParamCount++;
                     }
                     else
@@ -375,36 +371,44 @@ namespace HLU.Data.Connection
 
                 adapter.TableMappings.Add(tableMapping);
 
-                adapter.SelectCommand = new OracleCommand();
-                adapter.SelectCommand.CommandType = CommandType.Text;
-                adapter.SelectCommand.Connection = _connection;
-                adapter.SelectCommand.CommandText = String.Format("SELECT {0} FROM {1}", sbTargetList, tableName);
+                adapter.SelectCommand = new()
+                {
+                    CommandType = CommandType.Text,
+                    Connection = _connection,
+                    CommandText = String.Format("SELECT {0} FROM {1}", sbTargetList, tableName)
+                };
 
                 if (!_useCommandBuilder)
                 {
-                    adapter.DeleteCommand = new OracleCommand();
-                    adapter.DeleteCommand.CommandType = CommandType.Text;
-                    adapter.DeleteCommand.Connection = _connection;
-                    adapter.DeleteCommand.CommandText = String.Format("DELETE FROM {0} WHERE {1}", tableName, sbWhereDel);
+                    adapter.DeleteCommand = new()
+                    {
+                        CommandType = CommandType.Text,
+                        Connection = _connection,
+                        CommandText = String.Format("DELETE FROM {0} WHERE {1}", tableName, sbWhereDel)
+                    };
                     adapter.DeleteCommand.Parameters.AddRange(deleteParams.ToArray());
 
-                    adapter.UpdateCommand = new OracleCommand();
-                    adapter.UpdateCommand.Connection = _connection;
-                    adapter.UpdateCommand.CommandType = CommandType.Text;
-                    adapter.UpdateCommand.CommandText =
-                        String.Format("UPDATE {0} SET {1} WHERE {2}", tableName, sbUpdSetList, sbWhereUpd);
+                    adapter.UpdateCommand = new()
+                    {
+                        Connection = _connection,
+                        CommandType = CommandType.Text,
+                        CommandText =
+                        String.Format("UPDATE {0} SET {1} WHERE {2}", tableName, sbUpdSetList, sbWhereUpd)
+                    };
                     adapter.UpdateCommand.Parameters.AddRange(updateParams.ToArray());
 
-                    adapter.InsertCommand = new OracleCommand();
-                    adapter.InsertCommand.CommandType = CommandType.Text;
-                    adapter.InsertCommand.Connection = _connection;
-                    adapter.InsertCommand.CommandText = String.Format("INSERT INTO {0} ({1}) VALUES ({2})",
-                        tableName, sbTargetList, sbInsValues);
+                    adapter.InsertCommand = new()
+                    {
+                        CommandType = CommandType.Text,
+                        Connection = _connection,
+                        CommandText = String.Format("INSERT INTO {0} ({1}) VALUES ({2})",
+                        tableName, sbTargetList, sbInsValues)
+                    };
                     adapter.InsertCommand.Parameters.AddRange(insertParams.ToArray());
                 }
                 else
                 {
-                    OracleCommandBuilder cmdBuilder = new OracleCommandBuilder(adapter);
+                    OracleCommandBuilder cmdBuilder = new(adapter);
                     adapter.DeleteCommand = cmdBuilder.GetDeleteCommand(_useColumnNames);
                     adapter.UpdateCommand = cmdBuilder.GetUpdateCommand(_useColumnNames);
                     adapter.InsertCommand = cmdBuilder.GetInsertCommand(_useColumnNames);
@@ -425,22 +429,26 @@ namespace HLU.Data.Connection
         private OracleParameter CreateParameter(string name, OracleDbType type, ParameterDirection direction,
             string srcColumn, DataRowVersion srcVersion, bool nullMapping)
         {
-            OracleParameter param = new OracleParameter(name, type);
-            param.Direction = direction;
-            param.SourceColumn = srcColumn;
-            param.SourceVersion = srcVersion;
-            param.SourceColumnNullMapping = nullMapping;
+            OracleParameter param = new(name, type)
+            {
+                Direction = direction,
+                SourceColumn = srcColumn,
+                SourceVersion = srcVersion,
+                SourceColumnNullMapping = nullMapping
+            };
             return param;
         }
 
         private OracleParameter CreateParameter(string name, object value, ParameterDirection direction,
             string srcColumn, DataRowVersion srcVersion, bool nullMapping)
         {
-            OracleParameter param = new OracleParameter(name, value);
-            param.Direction = direction;
-            param.SourceColumn = srcColumn;
-            param.SourceVersion = srcVersion;
-            param.SourceColumnNullMapping = nullMapping;
+            OracleParameter param = new(name, value)
+            {
+                Direction = direction,
+                SourceColumn = srcColumn,
+                SourceVersion = srcVersion,
+                SourceColumnNullMapping = nullMapping
+            };
             return param;
         }
 
@@ -462,7 +470,7 @@ namespace HLU.Data.Connection
             try
             {
                 _errorMessage = String.Empty;
-                if (table == null) table = new T();
+                table ??= new T();
                 if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
                 OracleDataAdapter adapter = UpdateAdapter(table);
                 if (adapter != null)
@@ -477,13 +485,14 @@ namespace HLU.Data.Connection
                     _command.CommandText = sql;
                     _command.CommandType = CommandType.Text;
                     if (_transaction != null) _command.Transaction = _transaction;
-                    _adapter = new OracleDataAdapter(_command);
+                    _adapter = new(_command)
+                    {
+                        // potential data loss with Oracle types: NUMBER, DATE, all Timestamp types, and INTERVAL DAY TO SECOND
+                        // _adapter.SafeMapping.Add("ColumnName", typeof(byte[])); _adapter.SafeMapping.Add("ColumnName", typeof(string));
+                        // _adapter.SafeMapping.Add("*", typeof(byte[])); _adapter.SafeMapping.Add("*", typeof(string));
 
-                    // potential data loss with Oracle types: NUMBER, DATE, all Timestamp types, and INTERVAL DAY TO SECOND
-                    // _adapter.SafeMapping.Add("ColumnName", typeof(byte[])); _adapter.SafeMapping.Add("ColumnName", typeof(string));
-                    // _adapter.SafeMapping.Add("*", typeof(byte[])); _adapter.SafeMapping.Add("*", typeof(string));
-                    
-                    _adapter.MissingSchemaAction = MissingSchemaAction.AddWithKey;
+                        MissingSchemaAction = MissingSchemaAction.AddWithKey
+                    };
                     _adapter.FillSchema(table, schemaType);
                 }
                 return true;
@@ -503,7 +512,7 @@ namespace HLU.Data.Connection
             try
             {
                 _errorMessage = String.Empty;
-                if (table == null) table = new T();
+                table ??= new T();
                 if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
                 OracleDataAdapter adapter = UpdateAdapter(table);
                 if (adapter != null)
@@ -517,12 +526,12 @@ namespace HLU.Data.Connection
                     _command.CommandText = sql;
                     _command.CommandType = CommandType.Text;
                     if (_transaction != null) _command.Transaction = _transaction;
-                    _adapter = new OracleDataAdapter(_command);
+                    _adapter = new(_command);
 
                     // potential data loss with Oracle types: NUMBER, DATE, all Timestamp types, and INTERVAL DAY TO SECOND
                     // _adapter.SafeMapping.Add("ColumnName", typeof(byte[])); _adapter.SafeMapping.Add("ColumnName", typeof(string));
                     // _adapter.SafeMapping.Add("*", typeof(byte[])); _adapter.SafeMapping.Add("*", typeof(string));
-                    
+
                     return _adapter.Fill(table);
                 }
             }
@@ -705,7 +714,8 @@ namespace HLU.Data.Connection
             catch (Exception ex)
             {
                 _errorMessage = ex.Message;
-                throw ex;
+                //TODO: throw ex;
+                return false;
             }
             finally { if (previousConnectionState == ConnectionState.Closed) _connection.Close(); }
         }
@@ -838,7 +848,7 @@ namespace HLU.Data.Connection
 
             return adapter;
         }
-        
+
         #endregion
 
         #region Protected Members
@@ -849,19 +859,24 @@ namespace HLU.Data.Connection
         }
 
         #region Browse Connection
-        
+
         protected override void BrowseConnection()
         {
             try
             {
-                _connWindow = new HLU.UI.View.Connection.ViewConnectOracle();
-                if ((_connWindow.Owner = App.GetActiveWindow()) == null)
-                    throw (new Exception("No parent window loaded"));
-                _connWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                _connWindow = new HLU.UI.View.Connection.ViewConnectOracle
+                {
+                    //TODO: App.GetActiveWindow
+                    //if ((_connWindow.Owner = App.GetActiveWindow()) == null)
+                    //    throw (new Exception("No parent window loaded"));
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                };
 
                 // create ViewModel to which main window binds
-                _connViewModel = new HLU.UI.ViewModel.ViewModelConnectOracle();
-                _connViewModel.DisplayName = "Oracle Connection";
+                _connViewModel = new()
+                {
+                    DisplayName = "Oracle Connection"
+                };
 
                 // when ViewModel asks to be closed, close window
                 _connViewModel.RequestClose +=
@@ -943,7 +958,8 @@ namespace HLU.Data.Connection
             if (_typeMapSystemToSQL.TryGetValue(valueType, out colType))
             {
                 string s = valueType == typeof(DateTime) ? ((DateTime)value).ToString("s") : value.ToString();
-                switch ((Oracle.DataAccess.Client.OracleDbType)colType)
+
+                switch ((OracleDbType)colType)
                 {
                     case OracleDbType.Char:
                     case OracleDbType.Clob:
@@ -974,9 +990,9 @@ namespace HLU.Data.Connection
                 return value.ToString();
             }
         }
-        
+
         #endregion
-        
+
         #endregion
 
         #region Private Methods
@@ -986,7 +1002,7 @@ namespace HLU.Data.Connection
         {
             GetMetaData(typeof(OracleDbType), _connection, _transaction);
 
-            Dictionary<Type, int> typeMapSystemToSQLAdd = new Dictionary<Type, int>();
+            Dictionary<Type, int> typeMapSystemToSQLAdd = [];
             typeMapSystemToSQLAdd.Add(typeof(Byte), (int)OracleDbType.Byte);
             typeMapSystemToSQLAdd.Add(typeof(Char), (int)OracleDbType.Char);
             typeMapSystemToSQLAdd.Add(typeof(DateTime), (int)(useTimeZone ? OracleDbType.TimeStampTZ : OracleDbType.TimeStamp));
@@ -1008,7 +1024,7 @@ namespace HLU.Data.Connection
             typeMapSystemToSQLAdd.Add(typeof(Guid), (int)OracleDbType.NVarchar2);
             typeMapSystemToSQLAdd.Add(typeof(Boolean), (int)OracleDbType.Char);
 
-            Dictionary<int, Type> typeMapSQLToSystemAdd = new Dictionary<int, Type>();
+            Dictionary<int, Type> typeMapSQLToSystemAdd = [];
             typeMapSQLToSystemAdd.Add((int)OracleDbType.BFile, typeof(object));
             typeMapSQLToSystemAdd.Add((int)OracleDbType.Blob, typeof(object));
             typeMapSQLToSystemAdd.Add((int)OracleDbType.Byte, typeof(Byte));
@@ -1037,7 +1053,7 @@ namespace HLU.Data.Connection
             typeMapSQLToSystemAdd.Add((int)OracleDbType.Varchar2, typeof(String));
             typeMapSQLToSystemAdd.Add((int)OracleDbType.XmlType, typeof(string));
 
-            Dictionary<string, int> sqlSynonymsAdd = new Dictionary<string, int>();
+            Dictionary<string, int> sqlSynonymsAdd = [];
             sqlSynonymsAdd.Add("bfile", (int)OracleDbType.BFile);
             sqlSynonymsAdd.Add("blob", (int)OracleDbType.Blob);
             sqlSynonymsAdd.Add("character", (int)OracleDbType.Char);
@@ -1105,8 +1121,8 @@ namespace HLU.Data.Connection
                     _sqlSynonyms.Add(kv.Key, kv.Value);
             }
 
-            _typeMapSQLToSQLCode = new Dictionary<int, string>();
-            _typeMapSQLCodeToSQL = new Dictionary<string, int>();
+            _typeMapSQLToSQLCode = [];
+            _typeMapSQLCodeToSQL = [];
 
             _typeMapSQLToSQLCode.Add((int)OracleDbType.BFile, "BFILE");
             _typeMapSQLToSQLCode.Add((int)OracleDbType.Blob, "BLOB");
@@ -1212,7 +1228,7 @@ namespace HLU.Data.Connection
                 _typeMapSQLCodeToSQL.Add("NCHAR", (int)OracleDbType.NChar);
             }
         }
-        
+
         #endregion
     }
 }

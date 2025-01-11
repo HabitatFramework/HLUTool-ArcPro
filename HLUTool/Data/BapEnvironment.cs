@@ -1,19 +1,19 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2013 Thames Valley Environmental Records Centre
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -40,9 +40,6 @@ namespace HLU.Data
         private string _quality_interpretation;
         private string _interpretation_comments;
         private string _incid_bak;
-        private string _bap_habitat_bak;
-        private string _quality_determination_bak;
-        private string _quality_interpretation_bak;
         string _error;
         private static IEnumerable<BapEnvironment> _bapEnvironmentList;
         private static int _potentialPriorityDetermQtyValidation;
@@ -125,7 +122,7 @@ namespace HLU.Data
                 _interpretation_comments = itemArray[5].ToString().Length < 255 ? itemArray[5].ToString() : itemArray[5].ToString().Substring(0, 254);
         }
 
-        public BapEnvironment(bool bulkUpdateMode, bool isSecondary, int bap_id, string incid, string bap_habitat, 
+        public BapEnvironment(bool bulkUpdateMode, bool isSecondary, int bap_id, string incid, string bap_habitat,
             string quality_determination, string quality_interpretation, string interpretation_comments)
         {
             _bulkUpdateMode = bulkUpdateMode;
@@ -159,7 +156,7 @@ namespace HLU.Data
         {
             return new BapEnvironment(this);
         }
-        
+
         #endregion
 
         #region DataChanged
@@ -220,7 +217,7 @@ namespace HLU.Data
         public string bap_habitat
         {
             get { return _bap_habitat; }
-            set 
+            set
             {
                 _bap_habitat = value;
                 // Flag that the current record has changed so that the apply button
@@ -233,7 +230,7 @@ namespace HLU.Data
         public string quality_determination
         {
             get { return _quality_determination; }
-            set 
+            set
             {
                 _quality_determination = value;
                 // Flag that the current record has changed so that the apply button
@@ -246,8 +243,8 @@ namespace HLU.Data
         public string quality_interpretation
         {
             get { return _quality_interpretation; }
-            set 
-            { 
+            set
+            {
                 _quality_interpretation = value;
                 // Flag that the current record has changed so that the apply button
                 // will appear.
@@ -259,8 +256,8 @@ namespace HLU.Data
         public string interpretation_comments
         {
             get { return _interpretation_comments; }
-            set 
-            { 
+            set
+            {
                 _interpretation_comments = value == null || value.Length < 255 ? value : value.Substring(0, 254);
                 // Flag that the current record has changed so that the apply button
                 // will appear.
@@ -268,7 +265,7 @@ namespace HLU.Data
                     this.DataChanged(true);
             }
         }
-        
+
         #endregion
 
         #endregion
@@ -277,21 +274,21 @@ namespace HLU.Data
 
         public object[] ToItemArray()
         {
-            return new object[] { _bap_id, _incid, _bap_habitat, _quality_determination, 
-                _quality_interpretation, _interpretation_comments };
+            return [ _bap_id, _incid, _bap_habitat, _quality_determination,
+                _quality_interpretation, _interpretation_comments ];
         }
 
         public object[] ToItemArray(int bapID, string incid)
         {
-            return new object[] { bapID, incid, _bap_habitat, _quality_determination, 
-                _quality_interpretation, _interpretation_comments };
+            return [ bapID, incid, _bap_habitat, _quality_determination,
+                _quality_interpretation, _interpretation_comments ];
         }
 
         public object[] ToItemArray(int bapID, string incid, bool isSecondary)
         {
             if (isSecondary) MakeSecondary();
-            return new object[] { bapID, incid, _bap_habitat, _quality_determination, 
-                _quality_interpretation, _interpretation_comments };
+            return [ bapID, incid, _bap_habitat, _quality_determination,
+                _quality_interpretation, _interpretation_comments ];
         }
 
         public void MakeSecondary()
@@ -300,7 +297,7 @@ namespace HLU.Data
         }
 
         //---------------------------------------------------------------------
-        // CHANGED: CR49 Process bulk OSMM Updates        
+        // CHANGED: CR49 Process bulk OSMM Updates
         /// <summary>
         /// Determines whether the specified row is a secondary priority habitat.
         /// </summary>
@@ -334,7 +331,7 @@ namespace HLU.Data
         {
             get
             {
-                return _bapEnvironmentList != null && _bapEnvironmentList.Count(be => be.bap_habitat == this.bap_habitat) > 0;
+                return _bapEnvironmentList != null && _bapEnvironmentList.Any(be => be.bap_habitat == this.bap_habitat);
             }
         }
 
@@ -345,7 +342,7 @@ namespace HLU.Data
 
         public bool IsValid(bool bulkUpdateMode, bool isSecondary)
         {
-            return String.IsNullOrEmpty(ValidateRow(bulkUpdateMode, isSecondary, _bap_id, 
+            return String.IsNullOrEmpty(ValidateRow(bulkUpdateMode, isSecondary, _bap_id,
                 _incid, _bap_habitat, _quality_determination, _quality_interpretation));
         }
 
@@ -359,21 +356,14 @@ namespace HLU.Data
 
         public static bool ValidateRow(bool bulkUpdateMode, bool isSecondary, HluDataSet.incid_bapRow r)
         {
-            return ValidateRow(bulkUpdateMode, isSecondary, r.bap_id, r.incid, r.bap_habitat, 
+            return ValidateRow(bulkUpdateMode, isSecondary, r.bap_id, r.incid, r.bap_habitat,
                 r.quality_determination, r.quality_interpretation) == null;
         }
 
-        public static bool ValidateRow(bool bulkUpdateMode, bool isSecondary, HluDataSet.incid_bapRow r, 
-            IEnumerable<BapEnvironment> bapEnvironmentList)
-        {
-            return ValidateRow(bulkUpdateMode, isSecondary, r.bap_id, r.incid, r.bap_habitat, 
-                r.quality_determination, r.quality_interpretation) == null;
-        }
-
-        private static string ValidateRow(bool _bulkUpdateMode, bool isSecondary, int bap_id, string incid, 
+        private static string ValidateRow(bool _bulkUpdateMode, bool isSecondary, int bap_id, string incid,
             string bap_habitat, string quality_determination, string quality_interpretation)
         {
-            StringBuilder sbError = new StringBuilder();
+            StringBuilder sbError = new();
 
             if ((bap_id != -1) && String.IsNullOrEmpty(incid))
                 sbError.Append(Environment.NewLine).Append("INCID is a mandatory field");
@@ -420,7 +410,7 @@ namespace HLU.Data
                     //---------------------------------------------------------------------
                     // CHANGED: CR49 Process bulk OSMM Updates
                     // Validate that the determination quality can be anything EXCEPT
-                    // 'Not present but close to definition' or 
+                    // 'Not present but close to definition' or
                     // 'Previously present, but may no longer exist'.
                     if (quality_determination == BAPDetQltyUserAdded)
                     {
@@ -447,7 +437,7 @@ namespace HLU.Data
             _error = ValidateRow(_bulkUpdateMode, _secondaryPriorityHabitat, bap_id, incid, bap_habitat, quality_determination, quality_interpretation);
             return _error == null;
         }
-        
+
         #endregion
 
         #region IDataErrorInfo Members
@@ -463,7 +453,7 @@ namespace HLU.Data
 
         string IDataErrorInfo.this[string columnName]
         {
-            get 
+            get
             {
                 string error = null;
 
@@ -487,7 +477,7 @@ namespace HLU.Data
                         {
                             return "Error: Duplicate priority habitat";
                         }
-                        _bap_habitat_bak = _bap_habitat;
+
                         break;
                     case "quality_determination":
                         if (String.IsNullOrEmpty(quality_determination))
@@ -526,7 +516,7 @@ namespace HLU.Data
                                 //---------------------------------------------------------------------
                                 // CHANGED: CR49 Process bulk OSMM Updates
                                 // Validate that the determination quality can be anything EXCEPT
-                                // 'Not present but close to definition' or 
+                                // 'Not present but close to definition' or
                                 // 'Previously present, but may no longer exist'.
                                 if ((quality_determination == BAPDetQltyUserAdded))
                                 {
@@ -543,14 +533,13 @@ namespace HLU.Data
                             //---------------------------------------------------------------------
                         }
 
-                        _quality_determination_bak = _quality_determination;
                         break;
                     case "quality_interpretation":
                         if (!_bulkUpdateMode && String.IsNullOrEmpty(quality_interpretation))
                         {
                             return "Error: Interpretation quality is a mandatory field";
                         }
-                        _quality_interpretation_bak = _quality_interpretation;
+
                         break;
                     case "interpretation_comments":
                         break;

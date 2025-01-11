@@ -1,19 +1,19 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2013 Thames Valley Environmental Records Centre
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -136,8 +136,8 @@ namespace HLU.GISApplication.ArcGIS
 
         public static string WhereClauseFromCursor(int oidOrdinalCursor, string oidColumnAlias, ICursor cursor)
         {
-            StringBuilder sbIDs = new StringBuilder();
-            StringBuilder sbBetween = new StringBuilder();
+            StringBuilder sbIDs = new();
+            StringBuilder sbBetween = new();
             string betweenTemplate = " OR (" + oidColumnAlias + " BETWEEN {0} AND {1})";
             int currOid = -1;
             int nextOid = -1;
@@ -169,11 +169,11 @@ namespace HLU.GISApplication.ArcGIS
                 switch (countContinuous)
                 {
                     case 1:
-                        sbIDs.Append(",").Append(currOid);
+                        sbIDs.Append(',').Append(currOid);
                         break;
                     case 2:
-                        sbIDs.Append(",").Append(currOid);
-                        if (nextOid != currOid) sbIDs.Append(",").Append(nextOid);
+                        sbIDs.Append(',').Append(currOid);
+                        if (nextOid != currOid) sbIDs.Append(',').Append(nextOid);
                         break;
                     default:
                         sbBetween.Append(String.Format(betweenTemplate, currOid, currOid + countContinuous - 1));
@@ -181,7 +181,7 @@ namespace HLU.GISApplication.ArcGIS
                 }
             }
 
-            if (sbIDs.Length > 1) sbIDs.Remove(0, 1).Insert(0, oidColumnAlias + " IN (").Append(")");
+            if (sbIDs.Length > 1) sbIDs.Remove(0, 1).Insert(0, oidColumnAlias + " IN (").Append(')');
             return sbIDs.Append(sbBetween).ToString();
         }
 
@@ -224,7 +224,7 @@ namespace HLU.GISApplication.ArcGIS
             _sqlPredicates.Add("EXISTS", esriSQLPredicates.esriSQL_EXISTS);
             _sqlPredicates.Add("NOT EXISTS", esriSQLPredicates.esriSQL_NOT_EXISTS);
 
-            _typeMapSystemToSQL = new Dictionary<Type, int>();
+            _typeMapSystemToSQL = [];
             _typeMapSystemToSQL.Add(typeof(System.String), (int)esriFieldType.esriFieldTypeString);
             _typeMapSystemToSQL.Add(typeof(System.Decimal), (int)esriFieldType.esriFieldTypeSingle);
             _typeMapSystemToSQL.Add(typeof(System.Int64), (int)esriFieldType.esriFieldTypeInteger);
@@ -262,7 +262,7 @@ namespace HLU.GISApplication.ArcGIS
             Float 14–19 -> Double 
             Number 1–8 (decimals>0) -> Float 
             Number 9–19 (decimals>0) -> Double 
-            
+
             Access Workspace:
             esriFieldType.esriFieldTypeOID, "Long Integer" (AutoNumber) 
             esriFieldType.esriFieldTypeSmallInteger, "Integer" 
@@ -301,7 +301,7 @@ namespace HLU.GISApplication.ArcGIS
             esriFieldType.esriFieldTypeGUID, "CHAR(8)" 
             esriFieldType.esriFieldTypeGeometry, "ST_GEOMETRY" // ST_Geometry is a superclass. The actual data subtype created (such as ST_Multilinestring or ST_Point) depends on what type of feature class you create such as polygon, line, point, multipoint, and multipatch. 
             esriFieldType.esriFieldTypeRaster, "INT(4)" 
-             
+
             Oracle Workspace
             esriFieldType.esriFieldTypeOID, "NUMBER(38) NOT NULL" 
             esriFieldType.esriFieldTypeSmallInteger, "INTEGER NUMBER(4)" 

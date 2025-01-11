@@ -333,7 +333,7 @@ namespace HLU.GISApplication
         public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
 
         /// <summary>
-        /// StringBuilder sbWinText = new StringBuilder();
+        /// StringBuilder sbWinText = new();
         /// sbWinText.Length = GetWindowTextLength(_mapInfoParentWindow);
         /// bool success = GetWindowText(_mapInfoParentWindow, sbWinText, sbWinText.Length) != 0;
         /// </summary>

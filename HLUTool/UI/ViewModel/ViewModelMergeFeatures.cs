@@ -97,8 +97,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_okCommand == null)
                 {
-                    Action<object> okAction = new Action<object>(this.OkCommandClick);
-                    _okCommand = new RelayCommand(okAction, param => this.CanOk);
+                    Action<object> okAction = new(this.OkCommandClick);
+                    _okCommand = new(okAction, param => this.CanOk);
                 }
 
                 return _okCommand;
@@ -133,8 +133,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_cancelCommand == null)
                 {
-                    Action<object> cancelAction = new Action<object>(this.CancelCommandClick);
-                    _cancelCommand = new RelayCommand(cancelAction);
+                    Action<object> cancelAction = new(this.CancelCommandClick);
+                    _cancelCommand = new(cancelAction);
                 }
 
                 return _cancelCommand;
@@ -161,8 +161,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_flashFeatureCommand == null)
                 {
-                    Action<object> flashFeatureAction = new Action<object>(this.FlashFeature);
-                    _flashFeatureCommand = new RelayCommand(flashFeatureAction, param => this.CanFlashFeature);
+                    Action<object> flashFeatureAction = new(this.FlashFeature);
+                    _flashFeatureCommand = new(flashFeatureAction, param => this.CanFlashFeature);
                 }
 
                 return _flashFeatureCommand;

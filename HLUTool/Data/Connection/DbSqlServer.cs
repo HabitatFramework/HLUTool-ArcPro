@@ -1,19 +1,19 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -21,7 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Linq;
 using System.Windows;
 using System.Text;
@@ -31,7 +31,7 @@ namespace HLU.Data.Connection
     class DbSqlServer : DbBase
     {
         #region Private Members
-        
+
         private string _errorMessage;
         private SqlConnectionStringBuilder _connStrBuilder;
         private SqlConnection _connection;
@@ -39,11 +39,11 @@ namespace HLU.Data.Connection
         private SqlDataAdapter _adapter;
         private SqlCommandBuilder _commandBuilder;
         private SqlTransaction _transaction;
-        private Dictionary<Type, SqlDataAdapter> _adaptersDic = new Dictionary<Type, SqlDataAdapter>();
+        private Dictionary<Type, SqlDataAdapter> _adaptersDic = [];
 
         private HLU.UI.View.Connection.ViewConnectSqlServer _connWindow;
         private HLU.UI.ViewModel.ViewModelConnectSqlServer _connViewModel;
-       
+
         #endregion
 
         #region Constructor
@@ -64,19 +64,19 @@ namespace HLU.Data.Connection
                     TimePrecision, NumericPrecision, NumericScale);
 
                 _command = _connection.CreateCommand();
-                _adapter = new SqlDataAdapter(_command);
-                _commandBuilder = new SqlCommandBuilder(_adapter);
+                _adapter = new(_command);
+                _commandBuilder = new(_adapter);
 
                 connString = MaskPassword(_connStrBuilder, pwdMask);
                 defaultSchema = DefaultSchema;
             }
             catch { throw; }
         }
-        
+
         #endregion
 
         #region DbBase Members
-        
+
         #region Public Members
 
         public override Backends Backend { get { return Backends.SqlServer; } }
@@ -91,7 +91,7 @@ namespace HLU.Data.Connection
                     _restrictionNameSchema, DefaultSchema, _connection, _transaction);
                 var dbSchema = schemaTable.AsEnumerable();
 
-                StringBuilder messageText = new StringBuilder();
+                StringBuilder messageText = new();
 
                 foreach (DataTable t in ds.Tables)
                 {
@@ -105,8 +105,8 @@ namespace HLU.Data.Connection
                                            ColumnName = r.Field<string>("COLUMN_NAME"),
                                            DataType = r.Field<string>("DATA_TYPE")
                                        };
-                    
-                    if (dbSchemaCols.Count() == 0)
+
+                    if (!dbSchemaCols.Any())
                     {
                         messageText.Append(String.Format("\n\nMissing table: {0}", QuoteIdentifier(t.TableName)));
                     }
@@ -117,7 +117,7 @@ namespace HLU.Data.Connection
                                                               where dbCol.ColumnName == dsCol.ColumnName &&
                                                               DbToSystemType(SQLCodeToSQLType(dbCol.DataType)) == dsCol.DataType
                                                               select dbCol
-                                                 where dbCols.Count() == 0
+                                                 where !dbCols.Any()
                                                  select QuoteIdentifier(dsCol.ColumnName) + " (" +
                                                  ((SqlDbType)SystemToDbType(dsCol.DataType) + ")").ToString()).ToArray();
                         if (checkColumns.Length > 0) messageText.Append(String.Format("\n\nTable: {0}\nColumns: {1}",
@@ -158,40 +158,43 @@ namespace HLU.Data.Connection
                 return new SqlCommand();
         }
 
-        public override IDbDataAdapter CreateAdapter()
-        {
-            return new SqlDataAdapter();
-        }
+        //TODO: CreateAdapter
+        //public override IDbDataAdapter CreateAdapter()
+        //{
+        //    return new SqlDataAdapter();
+        //}
 
         public override IDbDataAdapter CreateAdapter<T>(T table)
         {
-            if (table == null) table = new T();
+            table ??= new T();
 
             SqlDataAdapter adapter;
 
             if (!_adaptersDic.TryGetValue(typeof(T), out adapter))
             {
-                adapter = new SqlDataAdapter();
+                adapter = new();
 
                 DataColumn[] pk = table.PrimaryKey;
                 if ((pk == null) || (pk.Length == 0)) return null;
 
-                DataTableMapping tableMapping = new DataTableMapping();
-                tableMapping.SourceTable = table.TableName; // "Table";
-                tableMapping.DataSetTable = table.TableName; // "Exports";
+                DataTableMapping tableMapping = new()
+                {
+                    SourceTable = table.TableName, // "Table";
+                    DataSetTable = table.TableName // "Exports";
+                };
 
-                List<SqlParameter> deleteParams = new List<SqlParameter>();
-                List<SqlParameter> insertParams = new List<SqlParameter>();
-                List<SqlParameter> updateParams = new List<SqlParameter>();
-                List<SqlParameter> updateParamsOrig = new List<SqlParameter>();
+                List<SqlParameter> deleteParams = [];
+                List<SqlParameter> insertParams = [];
+                List<SqlParameter> updateParams = [];
+                List<SqlParameter> updateParamsOrig = [];
 
-                StringBuilder sbTargetList = new StringBuilder();
-                StringBuilder sbInsValues = new StringBuilder();
-                StringBuilder sbUpdSetList = new StringBuilder();
-                StringBuilder sbWhereDel = new StringBuilder();
-                StringBuilder sbWhereUpd = new StringBuilder();
-                StringBuilder sbWherePkUpd = new StringBuilder();
-                StringBuilder sbWherePkIns = new StringBuilder();
+                StringBuilder sbTargetList = new();
+                StringBuilder sbInsValues = new();
+                StringBuilder sbUpdSetList = new();
+                StringBuilder sbWhereDel = new();
+                StringBuilder sbWhereUpd = new();
+                StringBuilder sbWherePkUpd = new();
+                StringBuilder sbWherePkIns = new();
 
                 string tableName = QualifyTableName(table.TableName);
 
@@ -257,7 +260,7 @@ namespace HLU.Data.Connection
                     updateParams.Add(CreateParameter(updColParamName,
                         (SqlDbType)colType, ParameterDirection.Input, c.ColumnName, DataRowVersion.Current, false));
 
-                    updOrigParamName = ParameterName(_parameterPrefixOrig, c.ColumnName, 
+                    updOrigParamName = ParameterName(_parameterPrefixOrig, c.ColumnName,
                         i + _startParamNo + columnCount + nullParamCount);
                     updateParamsOrig.Add(CreateParameter(updOrigParamName,
                         (SqlDbType)colType, ParameterDirection.Input, c.ColumnName, DataRowVersion.Original, false));
@@ -286,36 +289,44 @@ namespace HLU.Data.Connection
 
                 adapter.TableMappings.Add(tableMapping);
 
-                adapter.SelectCommand = new SqlCommand();
-                adapter.SelectCommand.CommandType = CommandType.Text;
-                adapter.SelectCommand.Connection = _connection;
-                adapter.SelectCommand.CommandText = String.Format("SELECT {0} FROM {1}", sbTargetList, tableName);
+                adapter.SelectCommand = new()
+                {
+                    CommandType = CommandType.Text,
+                    Connection = _connection,
+                    CommandText = String.Format("SELECT {0} FROM {1}", sbTargetList, tableName)
+                };
 
                 if (!_useCommandBuilder)
                 {
-                    adapter.DeleteCommand = new SqlCommand();
-                    adapter.DeleteCommand.CommandType = CommandType.Text;
-                    adapter.DeleteCommand.Connection = _connection;
-                    adapter.DeleteCommand.CommandText = String.Format("DELETE FROM {0} WHERE {1}", tableName, sbWhereDel);
+                    adapter.DeleteCommand = new()
+                    {
+                        CommandType = CommandType.Text,
+                        Connection = _connection,
+                        CommandText = String.Format("DELETE FROM {0} WHERE {1}", tableName, sbWhereDel)
+                    };
                     adapter.DeleteCommand.Parameters.AddRange(deleteParams.ToArray());
 
-                    adapter.UpdateCommand = new SqlCommand();
-                    adapter.UpdateCommand.Connection = _connection;
-                    adapter.UpdateCommand.CommandType = CommandType.Text;
-                    adapter.UpdateCommand.CommandText =
-                        String.Format("UPDATE {0} SET {1} WHERE {2}", tableName, sbUpdSetList, sbWhereUpd);
+                    adapter.UpdateCommand = new()
+                    {
+                        Connection = _connection,
+                        CommandType = CommandType.Text,
+                        CommandText =
+                        String.Format("UPDATE {0} SET {1} WHERE {2}", tableName, sbUpdSetList, sbWhereUpd)
+                    };
                     adapter.UpdateCommand.Parameters.AddRange(updateParams.ToArray());
 
-                    adapter.InsertCommand = new SqlCommand();
-                    adapter.InsertCommand.CommandType = CommandType.Text;
-                    adapter.InsertCommand.Connection = _connection;
-                    adapter.InsertCommand.CommandText = String.Format("INSERT INTO {0} ({1}) VALUES ({2})",
-                        tableName, sbTargetList, sbInsValues);
+                    adapter.InsertCommand = new()
+                    {
+                        CommandType = CommandType.Text,
+                        Connection = _connection,
+                        CommandText = String.Format("INSERT INTO {0} ({1}) VALUES ({2})",
+                        tableName, sbTargetList, sbInsValues)
+                    };
                     adapter.InsertCommand.Parameters.AddRange(insertParams.ToArray());
                 }
                 else
                 {
-                    SqlCommandBuilder cmdBuilder = new SqlCommandBuilder(adapter);
+                    SqlCommandBuilder cmdBuilder = new(adapter);
                     adapter.DeleteCommand = cmdBuilder.GetDeleteCommand(_useColumnNames);
                     adapter.UpdateCommand = cmdBuilder.GetUpdateCommand(_useColumnNames);
                     adapter.InsertCommand = cmdBuilder.GetInsertCommand(_useColumnNames);
@@ -336,22 +347,26 @@ namespace HLU.Data.Connection
         private SqlParameter CreateParameter(string name, SqlDbType type, ParameterDirection direction,
             string srcColumn, DataRowVersion srcVersion, bool nullMapping)
         {
-            SqlParameter param = new SqlParameter(name, type);
-            param.Direction = direction;
-            param.SourceColumn = srcColumn;
-            param.SourceVersion = srcVersion;
-            param.SourceColumnNullMapping = nullMapping;
+            SqlParameter param = new(name, type)
+            {
+                Direction = direction,
+                SourceColumn = srcColumn,
+                SourceVersion = srcVersion,
+                SourceColumnNullMapping = nullMapping
+            };
             return param;
         }
 
         private SqlParameter CreateParameter(string name, object value, ParameterDirection direction,
             string srcColumn, DataRowVersion srcVersion, bool nullMapping)
         {
-            SqlParameter param = new SqlParameter(name, value);
-            param.Direction = direction;
-            param.SourceColumn = srcColumn;
-            param.SourceVersion = srcVersion;
-            param.SourceColumnNullMapping = nullMapping;
+            SqlParameter param = new(name, value)
+            {
+                Direction = direction,
+                SourceColumn = srcColumn,
+                SourceVersion = srcVersion,
+                SourceColumnNullMapping = nullMapping
+            };
             return param;
         }
 
@@ -375,7 +390,7 @@ namespace HLU.Data.Connection
             try
             {
                 _errorMessage = String.Empty;
-                if (table == null) table = new T();
+                table ??= new T();
                 if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
                 SqlDataAdapter adapter = UpdateAdapter(table);
                 if (adapter != null)
@@ -390,8 +405,10 @@ namespace HLU.Data.Connection
                     _command.CommandText = sql;
                     _command.CommandType = CommandType.Text;
                     if (_transaction != null) _command.Transaction = _transaction;
-                    _adapter = new SqlDataAdapter(_command);
-                    _adapter.MissingSchemaAction = MissingSchemaAction.AddWithKey;
+                    _adapter = new(_command)
+                    {
+                        MissingSchemaAction = MissingSchemaAction.AddWithKey
+                    };
                     _adapter.FillSchema(table, schemaType);
                 }
                 return true;
@@ -411,7 +428,7 @@ namespace HLU.Data.Connection
             try
             {
                 _errorMessage = String.Empty;
-                if (table == null) table = new T();
+                table ??= new T();
                 if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
                 SqlDataAdapter adapter = UpdateAdapter(table);
                 if (adapter != null)
@@ -425,7 +442,7 @@ namespace HLU.Data.Connection
                     _command.CommandText = sql;
                     _command.CommandType = CommandType.Text;
                     if (_transaction != null) _command.Transaction = _transaction;
-                    _adapter = new SqlDataAdapter(_command);
+                    _adapter = new(_command);
                     return _adapter.Fill(table);
                 }
             }
@@ -495,7 +512,7 @@ namespace HLU.Data.Connection
                 _command.CommandType = commandType;
                 _command.CommandTimeout = commandTimeout;
                 _command.CommandText = sql;
-                
+
                 if (_transaction != null) _command.Transaction = _transaction;
                 _commandBuilder.RefreshSchema();
                 if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
@@ -544,7 +561,8 @@ namespace HLU.Data.Connection
             catch (Exception ex)
             {
                 _errorMessage = ex.Message;
-                throw ex;
+                //TODO: throw ex;
+                return false;
             }
             finally { if (previousConnectionState == ConnectionState.Closed) _connection.Close(); }
         }
@@ -625,11 +643,11 @@ namespace HLU.Data.Connection
             try
             {
                 if (!String.IsNullOrEmpty(insertCommand))
-                    _adapter.InsertCommand = new SqlCommand(insertCommand);
+                    _adapter.InsertCommand = new(insertCommand);
                 if (!String.IsNullOrEmpty(updateCommand))
-                    _adapter.UpdateCommand = new SqlCommand(updateCommand);
+                    _adapter.UpdateCommand = new(updateCommand);
                 if (!String.IsNullOrEmpty(deleteCommand))
-                    _adapter.DeleteCommand = new SqlCommand(deleteCommand);
+                    _adapter.DeleteCommand = new(deleteCommand);
 
                 return _adapter.Update(table);;
             }
@@ -732,7 +750,7 @@ namespace HLU.Data.Connection
 
             return adapter;
         }
-    
+
         #endregion
 
         #region Protected Members
@@ -748,14 +766,19 @@ namespace HLU.Data.Connection
         {
             try
             {
-                _connWindow = new HLU.UI.View.Connection.ViewConnectSqlServer();
-                if ((_connWindow.Owner = App.GetActiveWindow()) == null)
-                    throw (new Exception("No parent window loaded"));
-                _connWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                _connWindow = new()
+                {
+                    //TODO: App.GetActiveWindow
+                    //if ((_connWindow.Owner = App.GetActiveWindow()) == null)
+                    //    throw (new Exception("No parent window loaded"));
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                };
 
                 // create ViewModel to which main window binds
-                _connViewModel = new HLU.UI.ViewModel.ViewModelConnectSqlServer();
-                _connViewModel.DisplayName = "SQL Server Connection";
+                _connViewModel = new()
+                {
+                    DisplayName = "SQL Server Connection"
+                };
 
                 // when ViewModel asks to be closed, close window
                 _connViewModel.RequestClose +=
@@ -800,7 +823,7 @@ namespace HLU.Data.Connection
         #endregion
 
         #endregion
-        
+
         #endregion
 
         #region SQLBuilder Members
@@ -885,7 +908,7 @@ namespace HLU.Data.Connection
         {
             GetMetaData(typeof(SqlDbType), _connection, _transaction);
 
-            Dictionary<Type, int> typeMapSystemToSQLAdd = new Dictionary<Type, int>();
+            Dictionary<Type, int> typeMapSystemToSQLAdd = [];
             typeMapSystemToSQLAdd.Add(typeof(Object), (int)SqlDbType.Variant);
             typeMapSystemToSQLAdd.Add(typeof(Boolean), (int)SqlDbType.Bit);
             typeMapSystemToSQLAdd.Add(typeof(SByte), (int)SqlDbType.Int);
@@ -916,7 +939,7 @@ namespace HLU.Data.Connection
                 typeMapSystemToSQLAdd.Add(typeof(Char[]), (int)SqlDbType.VarChar);
             }
 
-            Dictionary<int, Type> typeMapSQLToSystemAdd = new Dictionary<int, Type>();
+            Dictionary<int, Type> typeMapSQLToSystemAdd = [];
             typeMapSQLToSystemAdd.Add((int)SqlDbType.BigInt, typeof(Int64));
             typeMapSQLToSystemAdd.Add((int)SqlDbType.Binary, typeof(Byte[]));
             typeMapSQLToSystemAdd.Add((int)SqlDbType.Bit, typeof(Boolean));
@@ -946,7 +969,7 @@ namespace HLU.Data.Connection
             typeMapSQLToSystemAdd.Add((int)SqlDbType.VarChar, typeof(String));
             typeMapSQLToSystemAdd.Add((int)SqlDbType.Variant, typeof(Object));
 
-            Dictionary<string, int> sqlSynonymsAdd = new Dictionary<string, int>();
+            Dictionary<string, int> sqlSynonymsAdd = [];
             sqlSynonymsAdd.Add("bigint", (int)SqlDbType.BigInt);
             sqlSynonymsAdd.Add("binary", (int)SqlDbType.Binary);
             sqlSynonymsAdd.Add("bit", (int)SqlDbType.Bit);
@@ -1021,8 +1044,8 @@ namespace HLU.Data.Connection
                     _sqlSynonyms.Add(kv.Key, kv.Value);
             }
 
-            _typeMapSQLToSQLCode = new Dictionary<int, string>();
-            _typeMapSQLCodeToSQL = new Dictionary<string, int>();
+            _typeMapSQLToSQLCode = [];
+            _typeMapSQLCodeToSQL = [];
 
             _typeMapSQLToSQLCode.Add((int)SqlDbType.BigInt, "BIGINT");
             _typeMapSQLToSQLCode.Add((int)SqlDbType.Bit, "BIT");
@@ -1100,8 +1123,8 @@ namespace HLU.Data.Connection
                 _typeMapSQLToSQLCode.Add((int)SqlDbType.Binary, "BINARY");
                 _typeMapSQLToSQLCode.Add((int)SqlDbType.VarBinary, "VARBINARY");
 
-                _typeMapSQLCodeToSQL.Add(String.Format("BINARY", binaryLength), (int)SqlDbType.Binary);
-                _typeMapSQLCodeToSQL.Add(String.Format("VARBINARY", binaryLength), (int)SqlDbType.VarBinary);
+                _typeMapSQLCodeToSQL.Add("BINARY", (int)SqlDbType.Binary);
+                _typeMapSQLCodeToSQL.Add("VARBINARY", (int)SqlDbType.VarBinary);
             }
             if ((numericPrecision > 0) && (numericScale > 0))
             {
@@ -1135,7 +1158,7 @@ namespace HLU.Data.Connection
                 _typeMapSQLCodeToSQL.Add("VARCHAR", (int)SqlDbType.VarChar);
             }
         }
-        
+
         #endregion
     }
 }

@@ -39,8 +39,8 @@ namespace HLU.UI.ViewModel
         private RelayCommand _okCommand;
         private RelayCommand _cancelCommand;
         private List<String> _servers;
-        private List<String> _databases = new List<String>();
-        private List<String> _schemata = new List<String>();
+        private List<String> _databases = new();
+        private List<String> _schemata = new();
         private string _defaultSchema;
         private SqlConnectionStringBuilder _connStrBuilder;
 
@@ -101,8 +101,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_okCommand == null)
                 {
-                    Action<object> okAction = new Action<object>(this.OkCommandClick);
-                    _okCommand = new RelayCommand(okAction, param => this.CanOk);
+                    Action<object> okAction = new(this.OkCommandClick);
+                    _okCommand = new(okAction, param => this.CanOk);
                 }
 
                 return _okCommand;
@@ -171,8 +171,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_cancelCommand == null)
                 {
-                    Action<object> cancelAction = new Action<object>(this.CancelCommandClick);
-                    _cancelCommand = new RelayCommand(cancelAction);
+                    Action<object> cancelAction = new(this.CancelCommandClick);
+                    _cancelCommand = new(cancelAction);
                 }
 
                 return _cancelCommand;
@@ -220,7 +220,7 @@ namespace HLU.UI.ViewModel
                 // Retrieve enumerator instance and then the data
                 SqlDataSourceEnumerator instance = SqlDataSourceEnumerator.Instance;
                 DataTable table = instance.GetDataSources();
-                List<string> serverList = new List<string>();
+                List<string> serverList = [];
 
                 // Display contents of table
                 foreach (DataRow row in table.Rows)
@@ -232,7 +232,7 @@ namespace HLU.UI.ViewModel
             {
                 MessageBox.Show("SQL Server responded with an error: " + ex.Message,
                     "SQL Server Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return new List<string>();
+                return [];
             }
         }
 
@@ -246,9 +246,9 @@ namespace HLU.UI.ViewModel
             set
             {
                 _connStrBuilder.IntegratedSecurity = value;
-                OnPropertyChanged("SQLServerAuthentication");
-                OnPropertyChanged("WindowsAuthentication");
-                OnPropertyChanged("Username");
+                OnPropertyChanged(nameof(SQLServerAuthentication));
+                OnPropertyChanged(nameof(WindowsAuthentication));
+                OnPropertyChanged(nameof(Username));
             }
         }
 
@@ -258,9 +258,9 @@ namespace HLU.UI.ViewModel
             set
             {
                 _connStrBuilder.IntegratedSecurity = !value;
-                OnPropertyChanged("SQLServerAuthentication");
-                OnPropertyChanged("WindowsAuthentication");
-                OnPropertyChanged("Username");
+                OnPropertyChanged(nameof(SQLServerAuthentication));
+                OnPropertyChanged(nameof(WindowsAuthentication));
+                OnPropertyChanged(nameof(Username));
             }
         }
 
@@ -307,7 +307,7 @@ namespace HLU.UI.ViewModel
                 {
                     SqlConnection cn = new SqlConnection(_connStrBuilder.ConnectionString);
 
-                    List<String> DatabaseList = new List<String>();
+                    List<String> DatabaseList = new();
                     cn.Open();
 
                     DataTable dbTable = cn.GetSchema("Databases");
@@ -315,12 +315,12 @@ namespace HLU.UI.ViewModel
                                   let tableName = r.Field<string>("database_name")
                                   select tableName).OrderBy(t => t).ToList();
 
-                    OnPropertyChanged("Databases");
+                    OnPropertyChanged(nameof(Databases));
                 }
             }
             catch (Exception ex)
             {
-                _databases = new List<String>();
+                _databases = new();
                 MessageBox.Show("SQL Server responded with an error: " + ex.Message,
                     "SQL Server Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
@@ -348,7 +348,7 @@ namespace HLU.UI.ViewModel
 
         private void LoadSchemata()
         {
-            List<String> schemaList = new List<String>();
+            List<String> schemaList = new();
             SqlConnection cn = null;
 
             try
@@ -378,10 +378,10 @@ namespace HLU.UI.ViewModel
                 if ((cn != null) && (cn.State != ConnectionState.Closed)) cn.Close();
 
                 _schemata = schemaList;
-                OnPropertyChanged("Schemata");
+                OnPropertyChanged(nameof(Schemata));
 
                 if (_schemata.Count == 1) _defaultSchema = _schemata[0];
-                OnPropertyChanged("DefaultSchema");
+                OnPropertyChanged(nameof(DefaultSchema));
             }
         }
 

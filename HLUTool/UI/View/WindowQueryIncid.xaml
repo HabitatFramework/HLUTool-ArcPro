@@ -44,7 +44,7 @@
                        HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,0,8">Enter Incid to filter by</Label>
                 <TextBox Name="TextBoxQueryIncid" Grid.Row="0" Grid.Column="1" 
                          Text="{Binding Path=QueryIncid, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-                         Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                         Tag="ErrorContent"
                          IsEnabled="True" Margin="8,0,2,8"></TextBox>
             </Grid>
 

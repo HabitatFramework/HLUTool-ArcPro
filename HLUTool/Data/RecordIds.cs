@@ -1,18 +1,18 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -46,7 +46,7 @@ namespace HLU.Data
 
         #region ctor
 
-        public RecordIds(DbBase db, HluDataSet hluDataset, 
+        public RecordIds(DbBase db, HluDataSet hluDataset,
             TableAdapterManager hluTableAdapterMgr, ViewModelWindowMain.GeometryTypes gisLayerType)
         {
             if (db == null) throw new ArgumentException("db");
@@ -63,7 +63,7 @@ namespace HLU.Data
                     _hluTableAdapterMgr.lut_last_incidTableAdapter =
                         new HluTableAdapter<HluDataSet.lut_last_incidDataTable, HluDataSet.lut_last_incidRow>(_db);
                 _hluTableAdapterMgr.Fill(_hluDataset,
-                    new Type[] { typeof(HluDataSet.lut_last_incidDataTable) }, false);
+                    [typeof(HluDataSet.lut_last_incidDataTable)], false);
             }
             _incidCurrentNumber = CurrentMaxIncidNumber(false);
             InitializeIncidChildRecordIds();
@@ -169,7 +169,7 @@ namespace HLU.Data
         {
             get
             {
-                return NextID(_nextIncidBapId, _hluDataset.incid_bap, 
+                return NextID(_nextIncidBapId, _hluDataset.incid_bap,
                     _hluDataset.incid_bap.bap_idColumn.Ordinal) - 1;
             }
         }
@@ -198,7 +198,7 @@ namespace HLU.Data
         {
             get
             {
-                _nextIncidBapId = NextID(_nextIncidBapId, _hluDataset.incid_bap, 
+                _nextIncidBapId = NextID(_nextIncidBapId, _hluDataset.incid_bap,
                     _hluDataset.incid_bap.bap_idColumn.Ordinal);
                 return _nextIncidBapId;
             }
@@ -274,7 +274,7 @@ namespace HLU.Data
 
                 // check in-memory incid table
                 if (_hluDataset.incid.Count > 0)
-                    _hluDataset.incid.Max(r => IncidNumber(r.incid));
+                    maxIncidNumber = _hluDataset.incid.Max(r => IncidNumber(r.incid));
 
                 // check lut_last_incid in DB
                 _hluTableAdapterMgr.Fill(_hluDataset, typeof(HluDataSet.lut_last_incidDataTable), true);
@@ -293,7 +293,7 @@ namespace HLU.Data
                     _db.QualifyTableName(_hluDataset.incid.TableName));
                 object result = _db.ExecuteScalar(sql, _db.Connection.ConnectionTimeout, CommandType.Text);
                 int dbMax;
-                if ((result != DBNull.Value) && (result != null) && 
+                if ((result != DBNull.Value) && (result != null) &&
                     ((dbMax = IncidNumber(result.ToString())) > maxIncidNumber)) maxIncidNumber = dbMax;
 
                 if (increment)

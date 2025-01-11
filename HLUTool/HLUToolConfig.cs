@@ -32,14 +32,14 @@ namespace HLU
     /// <summary>
     /// This class reads the config XML file and stores the results.
     /// </summary>
-    internal class DataSyncConfig
+    internal class HLUToolConfig
     {
         #region Fields
 
         private static string _toolName;
 
         // Initialise component to read XML
-        private readonly XmlElement _xmlDataSync;
+        private readonly XmlElement _xmlHLUTool;
 
         #endregion Fields
 
@@ -51,7 +51,7 @@ namespace HLU
         /// <param name="xmlFile"></param>
         /// <param name="toolName"></param>
         /// <param name="msgErrors"></param>
-        public DataSyncConfig(string xmlFile, string toolName, bool msgErrors)
+        public HLUToolConfig(string xmlFile, string toolName, bool msgErrors)
         {
             _toolName = toolName;
 
@@ -74,9 +74,9 @@ namespace HLU
 
             // Get the InitialConfig node (the first node).
             XmlNode currNode = xmlConfig.DocumentElement.FirstChild;
-            _xmlDataSync = (XmlElement)currNode;
+            _xmlHLUTool = (XmlElement)currNode;
 
-            if (_xmlDataSync == null)
+            if (_xmlHLUTool == null)
             {
                 MessageBox.Show("Error loading XML file.", _toolName, MessageBoxButton.OK, MessageBoxImage.Error);
                 _xmlLoaded = false;
@@ -115,7 +115,7 @@ namespace HLU
             // The existing file location where log files will be saved with output messages.
             try
             {
-                _logFilePath = _xmlDataSync["LogFilePath"].InnerText;
+                _logFilePath = _xmlHLUTool["LogFilePath"].InnerText;
             }
             catch
             {
@@ -125,7 +125,7 @@ namespace HLU
             // The location of the SDE file that specifies which SQL Server database to connect to.
             try
             {
-                _sdeFile = _xmlDataSync["SDEFile"].InnerText;
+                _sdeFile = _xmlHLUTool["SDEFile"].InnerText;
             }
             catch
             {
@@ -135,7 +135,7 @@ namespace HLU
             // The schema used in the SQL Server database.
             try
             {
-                _databaseSchema = _xmlDataSync["DatabaseSchema"].InnerText;
+                _databaseSchema = _xmlHLUTool["DatabaseSchema"].InnerText;
             }
             catch
             {
@@ -145,7 +145,7 @@ namespace HLU
             // The stored procedure to compare the local layer and remote table in SQL Server.
             try
             {
-                _compareStoredProcedure = _xmlDataSync["CompareStoredProcedure"].InnerText;
+                _compareStoredProcedure = _xmlHLUTool["CompareStoredProcedure"].InnerText;
             }
             catch
             {
@@ -155,7 +155,7 @@ namespace HLU
             // The stored procedure to update the remote table in SQL Server.
             try
             {
-                _updateStoredProcedure = _xmlDataSync["UpdateStoredProcedure"].InnerText;
+                _updateStoredProcedure = _xmlHLUTool["UpdateStoredProcedure"].InnerText;
             }
             catch
             {
@@ -165,7 +165,7 @@ namespace HLU
             // The stored procedure to clear the temporary tables in SQL Server.
             try
             {
-                _clearStoredProcedure = _xmlDataSync["ClearStoredProcedure"].InnerText;
+                _clearStoredProcedure = _xmlHLUTool["ClearStoredProcedure"].InnerText;
             }
             catch
             {
@@ -175,47 +175,37 @@ namespace HLU
             // The name of the local layer in GIS containing the features.
             try
             {
-                _localLayer = _xmlDataSync["LocalLayer"].InnerText;
+                _localLayer = _xmlHLUTool["LocalLayer"].InnerText;
             }
             catch
             {
                 throw new("Could not locate item 'LocalLayer' in the XML profile.");
             }
 
-            // The local layer selection where clause (if required).
+            // The name of the remote table in SQL Server containing the remote features to upload to.
             try
             {
-                _localClause = _xmlDataSync["LocalClause"].InnerText;
+                _remoteTableUp = _xmlHLUTool["RemoteTableUp"].InnerText;
             }
             catch
             {
-                throw new("Could not locate item 'LocalClause' in the XML profile.");
+                throw new("Could not locate item 'RemoteTableUp' in the XML profile.");
             }
 
-            // The name of the remote table in SQL Server containing the remote features.
+            // The name of the remote table in SQL Server containing the remote features to download from.
             try
             {
-                _remoteTable = _xmlDataSync["RemoteTable"].InnerText;
+                _remoteTableDown = _xmlHLUTool["RemoteTableDown"].InnerText;
             }
             catch
             {
-                throw new("Could not locate item 'RemoteTable' in the XML profile.");
-            }
-
-            // The remote table selection where clause (if required).
-            try
-            {
-                _remoteClause = _xmlDataSync["RemoteClause"].InnerText;
-            }
-            catch
-            {
-                throw new("Could not locate item 'RemoteClause' in the XML profile.");
+                throw new("Could not locate item 'RemoteTableDown' in the XML profile.");
             }
 
             // The name of the layer in GIS displaying the remote features from SQL Server.
             try
             {
-                _remoteLayer = _xmlDataSync["RemoteLayer"].InnerText;
+                _remoteLayer = _xmlHLUTool["RemoteLayer"].InnerText;
             }
             catch
             {
@@ -225,7 +215,7 @@ namespace HLU
             // The name of the key column in the local layer and remote table.
             try
             {
-                _keyColumn = _xmlDataSync["KeyColumn"].InnerText;
+                _keyColumn = _xmlHLUTool["KeyColumn"].InnerText;
             }
             catch
             {
@@ -235,7 +225,7 @@ namespace HLU
             // The name of the spatial column in the local layer and remote table.
             try
             {
-                _spatialColumn = _xmlDataSync["SpatialColumn"].InnerText;
+                _spatialColumn = _xmlHLUTool["SpatialColumn"].InnerText;
             }
             catch
             {
@@ -246,7 +236,7 @@ namespace HLU
             try
             {
                 _defaultClearLogFile = false;
-                rawText = _xmlDataSync["DefaultClearLogFile"].InnerText;
+                rawText = _xmlHLUTool["DefaultClearLogFile"].InnerText;
                 if (rawText.ToLower(System.Globalization.CultureInfo.CurrentCulture) is "yes" or "y")
                     _defaultClearLogFile = true;
             }
@@ -260,7 +250,7 @@ namespace HLU
             try
             {
                 _defaultOpenLogFile = false;
-                rawText = _xmlDataSync["DefaultOpenLogFile"].InnerText;
+                rawText = _xmlHLUTool["DefaultOpenLogFile"].InnerText;
                 if (rawText.ToLower(System.Globalization.CultureInfo.CurrentCulture) is "yes" or "y")
                     _defaultOpenLogFile = true;
             }
@@ -357,25 +347,18 @@ namespace HLU
             get { return _localLayer; }
         }
 
-        private string _localClause;
+        private string _remoteTableUp;
 
-        public string LocalClause
+        public string RemoteTableUp
         {
-            get { return _localClause; }
+            get { return _remoteTableUp; }
         }
 
-        private string _remoteTable;
+        private string _remoteTableDown;
 
-        public string RemoteTable
+        public string RemoteTableDown
         {
-            get { return _remoteTable; }
-        }
-
-        private string _remoteClause;
-
-        public string RemoteClause
-        {
-            get { return _remoteClause; }
+            get { return _remoteTableDown; }
         }
 
         private string _remoteLayer;

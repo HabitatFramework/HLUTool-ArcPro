@@ -88,7 +88,7 @@
                                  VerticalAlignment="Center"
                                  BorderThickness="1"
                                  Text="{Binding DbConnectionTimeout, Converter={StaticResource nullableValueConverter}, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-                                 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" 
+                                 Tag="ErrorContent" 
                                  TextAlignment="Right" />
 
                         <Label x:Name="LabelIncidPageSize"
@@ -104,7 +104,7 @@
                                  VerticalAlignment="Center"
                                  BorderThickness="1"
                                  Text="{Binding IncidTablePageSize, Converter={StaticResource nullableValueConverter}, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-                                 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" 
+                                 Tag="ErrorContent" 
                                  TextAlignment="Right" />
 
                     </Grid>
@@ -173,7 +173,7 @@
 											  IsEnabled="{Binding GisAppsEnabled}"
 											  ItemsSource="{Binding GisApps}"
 											  SelectedValue="{Binding PreferredGis, ValidatesOnDataErrors=True}"
-											  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" />
+											  Tag="ErrorContent" />
 
 								</Grid>
 
@@ -196,7 +196,7 @@
 													BorderThickness="1"
 													IsEnabled="False"
 													Text="{Binding MapDocument, ValidatesOnDataErrors=True}"
-													Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" 
+													Tag="ErrorContent" 
 													TextAlignment="Left"
 													ToolTip="{Binding MapPath}"
 													ToolTipService.ShowOnDisabled="True" />
@@ -226,7 +226,7 @@
 											 Margin="4,8,4,8"
 											 BorderThickness="1"
 											 Text="{Binding MinAutoZoom, Converter={StaticResource nullableValueConverter}, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-											 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" 
+											 Tag="ErrorContent" 
 											 TextAlignment="Right" />
 								</Grid>
 
@@ -262,7 +262,7 @@
 											 BorderThickness="1"
 											 IsEnabled="False"
 											 Text="{Binding ExportPath, ValidatesOnDataErrors=True}"
-											 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" 
+											 Tag="ErrorContent" 
 											 TextAlignment="Left"
 											 ToolTip="{Binding ExportPath}"
 											 ToolTipService.ShowOnDisabled="True" />
@@ -399,7 +399,7 @@
                                  VerticalAlignment="Center"
                                  BorderThickness="1"
                                  Text="{Binding HistoryDisplayLastN, Converter={StaticResource nullableValueConverter}, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-                                 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" 
+                                 Tag="ErrorContent" 
                                  TextAlignment="Right" />
                         </Grid>
 
@@ -562,7 +562,7 @@
 												  BorderThickness="1"
 												  ItemsSource="{Binding ShowOSMMUpdatesOptions}"
 												  SelectedValue="{Binding ShowOSMMUpdatesOption, ValidatesOnDataErrors=True}"
-												  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" />
+												  Tag="ErrorContent" />
 
 									</Grid>
 
@@ -600,7 +600,7 @@
 												  DisplayMemberPath="description"
 												  ItemsSource="{Binding HabitatClassCodes}"
 												  SelectedValue="{Binding PreferredHabitatClass, ValidatesOnDataErrors=True}"
-												  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" 
+												  Tag="ErrorContent" 
 												  SelectedValuePath="code" />
 
 									</Grid>
@@ -623,7 +623,7 @@
 												  DisplayMemberPath="description"
 												  ItemsSource="{Binding SecondaryGroupCodes}"
 												  SelectedValue="{Binding PreferredSecondaryGroup, ValidatesOnDataErrors=True}"
-												  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" 
+												  Tag="ErrorContent" 
 												  SelectedValuePath="code" />
 
 									</Grid>
@@ -647,7 +647,7 @@
 												  BorderThickness="1"
 												  ItemsSource="{Binding SecondaryCodeOrderOptions}"
 												  SelectedValue="{Binding SecondaryCodeOrder, ValidatesOnDataErrors=True}"
-												  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" />
+												  Tag="ErrorContent" />
 										<Label x:Name="LabelSecondaryCodeDelimiter"
 											   Grid.Column="2"
 											   Margin="4,0,4,0"
@@ -659,7 +659,7 @@
 												 VerticalAlignment="Center"
 												 BorderThickness="1"
 												 Text="{Binding SecondaryCodeDelimiter, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-												 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" 
+												 Tag="ErrorContent" 
 												 TextAlignment="Center" />
 									</Grid>
 
@@ -731,7 +731,7 @@
 												  BorderThickness="1"
 												  ItemsSource="{Binding HabitatSecondaryCodeValidationOptions}"
 												  SelectedValue="{Binding HabitatSecondaryCodeValidation, ValidatesOnDataErrors=True}"
-												  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" />
+												  Tag="ErrorContent" />
 
                                             <Label x:Name="LabelPrimarySecondaryCodeValidation"
 											   Grid.Column="2"
@@ -744,7 +744,7 @@
 												  BorderThickness="1"
 												  ItemsSource="{Binding PrimarySecondaryCodeValidationOptions}"
 												  SelectedValue="{Binding PrimarySecondaryCodeValidation, ValidatesOnDataErrors=True}"
-												  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" />
+												  Tag="ErrorContent" />
 
                                         </Grid>
 
@@ -765,7 +765,7 @@
 												  BorderThickness="1"
 												  ItemsSource="{Binding QualityValidationOptions}"
 												  SelectedValue="{Binding QualityValidation, ValidatesOnDataErrors=True}"
-												  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" />
+												  Tag="ErrorContent" />
 
                                         </Grid>
 
@@ -786,7 +786,7 @@
 												  BorderThickness="1"
 												  ItemsSource="{Binding PotentialPriorityDetermQtyValidationOptions}"
 												  SelectedValue="{Binding PotentialPriorityDetermQtyValidation, ValidatesOnDataErrors=True}"
-												  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" />
+												  Tag="ErrorContent" />
 
                                         </Grid>
 
@@ -826,7 +826,7 @@
 												  BorderThickness="1"
 												  ItemsSource="{Binding SubsetUpdateActions}"
 												  SelectedValue="{Binding SubsetUpdateAction, ValidatesOnDataErrors=True}"
-												  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" />
+												  Tag="ErrorContent" />
 
 									</Grid>
 
@@ -849,7 +849,7 @@
 												  BorderThickness="1"
 												  ItemsSource="{Binding ClearIHSUpdateActions}"
 												  SelectedValue="{Binding ClearIHSUpdateAction, ValidatesOnDataErrors=True}"
-												  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" />
+												  Tag="ErrorContent" />
 
 									</Grid>
 
@@ -955,7 +955,7 @@
                                      VerticalAlignment="Center"
                                      BorderThickness="1"
                                      Text="{Binding GetValueRows, Converter={StaticResource nullableValueConverter}, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-                                     Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" 
+                                     Tag="ErrorContent" 
                                      TextAlignment="Right" />
 
                         </Grid>
@@ -977,7 +977,7 @@
                                       BorderThickness="1"
                                       ItemsSource="{Binding WarnBeforeGISSelectOptions}"
                                       SelectedValue="{Binding WarnBeforeGISSelect, ValidatesOnDataErrors=True}"
-                                      Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" />
+                                      Tag="ErrorContent" />
 
                         </Grid>
 
@@ -1000,7 +1000,7 @@
                                      BorderThickness="1"
                                      IsEnabled="False"
                                      Text="{Binding SqlPath, ValidatesOnDataErrors=True}"
-                                     Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" 
+                                     Tag="ErrorContent" 
                                      TextAlignment="Left"
                                      ToolTip="{Binding SqlPath}"
                                      ToolTipService.ShowOnDisabled="True" />
@@ -1088,7 +1088,7 @@
                                  VerticalAlignment="Center"
                                  BorderThickness="1"
                                  Text="{Binding SeasonSpring, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-                                 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" />
+                                 Tag="ErrorContent" />
                         <TextBox x:Name="TextBoxSeasonSummer"
                                  Grid.Row="1"
                                  Grid.Column="1"
@@ -1096,7 +1096,7 @@
                                  VerticalAlignment="Center"
                                  BorderThickness="1"
                                  Text="{Binding SeasonSummer, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-                                 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" />
+                                 Tag="ErrorContent" />
                         <TextBox x:Name="TextBoxSeasonAutumn"
                                  Grid.Row="0"
                                  Grid.Column="3"
@@ -1104,7 +1104,7 @@
                                  VerticalAlignment="Center"
                                  BorderThickness="1"
                                  Text="{Binding SeasonAutumn, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-                                 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" />
+                                 Tag="ErrorContent" />
                         <TextBox x:Name="TextBoxSeasonWinter"
                                  Grid.Row="1"
                                  Grid.Column="3"
@@ -1112,7 +1112,7 @@
                                  VerticalAlignment="Center"
                                  BorderThickness="1"
                                  Text="{Binding SeasonWinter, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-                                 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" />
+                                 Tag="ErrorContent" />
 
                         <Grid x:Name="GridDateDelimter"
                               Grid.Row="2"
@@ -1135,7 +1135,7 @@
                                      VerticalAlignment="Center"
                                      BorderThickness="1"
                                      Text="{Binding VagueDateDelimiter, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-                                     Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" 
+                                     Tag="ErrorContent" 
                                      TextAlignment="Center" />
                         </Grid>
 
@@ -1303,7 +1303,7 @@
 													  ItemsSource="{Binding BulkDeterminationQualityCodes}"
 													  SelectedValue="{Binding BulkDeterminationQuality, ValidatesOnDataErrors=True}"
 													  SelectedValuePath="code"
-													  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" />
+													  Tag="ErrorContent" />
 										</Grid>
 
 										<Grid x:Name="GridInterpretationQuality"
@@ -1326,7 +1326,7 @@
 													  ItemsSource="{Binding BulkInterpretationQualityCodes}"
 													  SelectedValue="{Binding BulkInterpretationQuality, ValidatesOnDataErrors=True}"
 													  SelectedValuePath="code"
-													  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" />
+													  Tag="ErrorContent" />
 										</Grid>
 
 										<Grid x:Name="GridOSMMSource"
@@ -1351,7 +1351,7 @@
 													  SelectedValue="{Binding OSMMSourceId,
                                                                           ValidatesOnDataErrors=True}"
 													  SelectedValuePath="source_id"
-													  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}" />
+													  Tag="ErrorContent" />
 										</Grid>
 
 									</Grid>

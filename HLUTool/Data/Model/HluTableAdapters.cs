@@ -140,8 +140,8 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                                   }
                                   ).ToDictionary(kv => kv.key, kv => kv.value);
 
-                _paramsUpdCurr = new Dictionary<string, int>();
-                _paramsUpdOrig = new Dictionary<string, int>();
+                _paramsUpdCurr = [];
+                _paramsUpdOrig = [];
 
                 for (int i = 0; i < _adapter.UpdateCommand.Parameters.Count; i++)
                 {
@@ -208,7 +208,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
 
                 this.CommandCollection[0].CommandText = _originalSelectCommand +
                     _db.WhereClause(true, true, true, whereClause);
-                
+
                 return Fill(dataTable);
             }
             catch { return -1; }
@@ -493,7 +493,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
         private string _sameConnErrorMsg =
             "All TableAdapters managed by a TableAdapterManager must use the same connection string.";
 
-        public static Type[] DataTableTypes = new Type[] {
+        public static Type[] DataTableTypes = [
                 typeof(HluDataSet.incidDataTable),
                 typeof(HluDataSet.incid_bapDataTable),
                 typeof(HluDataSet.incid_conditionDataTable),
@@ -503,9 +503,9 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                 typeof(HluDataSet.incid_ihs_managementDataTable),
                 typeof(HluDataSet.incid_ihs_matrixDataTable),
                 typeof(HluDataSet.incid_sourcesDataTable),
-                typeof(HluDataSet.incid_osmm_updatesDataTable) };
+                typeof(HluDataSet.incid_osmm_updatesDataTable) ];
 
-        public static Type[] LookupTableTypes = new Type[] {
+        public static Type[] LookupTableTypes = [
                 typeof(HluDataSet.exportsDataTable),
                 typeof(HluDataSet.exports_field_typesDataTable),
                 typeof(HluDataSet.exports_fieldsDataTable),
@@ -544,7 +544,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                 typeof(HluDataSet.lut_site_idDataTable),
                 typeof(HluDataSet.lut_sourcesDataTable),
                 typeof(HluDataSet.lut_userDataTable),
-                typeof(HluDataSet.lut_versionDataTable) };
+                typeof(HluDataSet.lut_versionDataTable) ];
         #endregion
 
         #region Properties
@@ -1254,7 +1254,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             _db = db;
 
             _tableAdapterMatches = (from pt in typeof(HluDataSet).GetProperties()
-                                    from pa in this.GetType().GetProperties().Where(pi => pi.PropertyType.GetGenericArguments().Count() > 0)
+                                    from pa in this.GetType().GetProperties().Where(pi => pi.PropertyType.GetGenericArguments().Any())
                                     where pa.PropertyType.GetGenericArguments().Contains(pt.PropertyType)
                                     select new 
                                     { 
@@ -1323,13 +1323,13 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
 
                     if (missingSchemaElems.Length > 0)
                     {
-                        StringBuilder messageText = new StringBuilder();
+                        StringBuilder messageText = new();
                         int i = 0;
                         while (i < missingSchemaElems.Length)
                         {
                             string table = missingSchemaElems[i][0];
                             messageText.Append("\n\nTable: ").Append(table);
-                            StringBuilder columnList = new StringBuilder();
+                            StringBuilder columnList = new();
                             while ((i < missingSchemaElems.Length) && (missingSchemaElems[i][0] == table))
                             {
                                 columnList.Append(", ").Append(missingSchemaElems[i++][1]);
@@ -1352,7 +1352,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                 }
             }
             catch (Exception ex) { errorMessage = ex.Message; }
-            
+
             return false;
         }
 
@@ -1360,69 +1360,69 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
         {
             try
             {
-                _historyTableAdapter = new HluTableAdapter<HluDataSet.historyDataTable, HluDataSet.historyRow>(_db);
-                _incidTableAdapter = new HluTableAdapter<HluDataSet.incidDataTable, HluDataSet.incidRow>(_db);
-                _incid_bapTableAdapter = new HluTableAdapter<HluDataSet.incid_bapDataTable, HluDataSet.incid_bapRow>(_db);
-                _incid_conditionTableAdapter = new HluTableAdapter<HluDataSet.incid_conditionDataTable, HluDataSet.incid_conditionRow>(_db);
-                _incid_secondaryTableAdapter = new HluTableAdapter<HluDataSet.incid_secondaryDataTable, HluDataSet.incid_secondaryRow>(_db);
-                _incid_ihs_complexTableAdapter = new HluTableAdapter<HluDataSet.incid_ihs_complexDataTable, HluDataSet.incid_ihs_complexRow>(_db);
-                _incid_ihs_formationTableAdapter = new HluTableAdapter<HluDataSet.incid_ihs_formationDataTable, HluDataSet.incid_ihs_formationRow>(_db);
-                _incid_ihs_managementTableAdapter = new HluTableAdapter<HluDataSet.incid_ihs_managementDataTable, HluDataSet.incid_ihs_managementRow>(_db);
-                _incid_ihs_matrixTableAdapter = new HluTableAdapter<HluDataSet.incid_ihs_matrixDataTable, HluDataSet.incid_ihs_matrixRow>(_db);
-                _incid_sourcesTableAdapter = new HluTableAdapter<HluDataSet.incid_sourcesDataTable, HluDataSet.incid_sourcesRow>(_db);
-                _incid_osmm_updatesTableAdapter = new HluTableAdapter<HluDataSet.incid_osmm_updatesDataTable, HluDataSet.incid_osmm_updatesRow>(_db);
+                _historyTableAdapter = new(_db);
+                _incidTableAdapter = new(_db);
+                _incid_bapTableAdapter = new(_db);
+                _incid_conditionTableAdapter = new(_db);
+                _incid_secondaryTableAdapter = new(_db);
+                _incid_ihs_complexTableAdapter = new(_db);
+                _incid_ihs_formationTableAdapter = new(_db);
+                _incid_ihs_managementTableAdapter = new(_db);
+                _incid_ihs_matrixTableAdapter = new(_db);
+                _incid_sourcesTableAdapter = new(_db);
+                _incid_osmm_updatesTableAdapter = new(_db);
             }
             catch { throw; }
         }
 
         private void CreateAdapterMMPolygons()
         {
-            _incid_mm_polygonsTableAdapter = new HluTableAdapter<HluDataSet.incid_mm_polygonsDataTable, HluDataSet.incid_mm_polygonsRow>(_db);
+            _incid_mm_polygonsTableAdapter = new(_db);
         }
 
         private void CreateAdaptersLut()
         {
             try
             {
-                _exportsTableAdapter = new HluTableAdapter<HluDataSet.exportsDataTable, HluDataSet.exportsRow>(_db);
-                _exports_field_typesTableAdapter = new HluTableAdapter<HluDataSet.exports_field_typesDataTable, HluDataSet.exports_field_typesRow>(_db);
-                _exports_fieldsTableAdapter = new HluTableAdapter<HluDataSet.exports_fieldsDataTable, HluDataSet.exports_fieldsRow>(_db);
-                _lut_quality_determinationTableAdapter = new HluTableAdapter<HluDataSet.lut_quality_determinationDataTable, HluDataSet.lut_quality_determinationRow>(_db);
-                _lut_quality_interpretationTableAdapter = new HluTableAdapter<HluDataSet.lut_quality_interpretationDataTable, HluDataSet.lut_quality_interpretationRow>(_db);
-                _lut_boundary_mapTableAdapter = new HluTableAdapter<HluDataSet.lut_boundary_mapDataTable, HluDataSet.lut_boundary_mapRow>(_db);
-                _lut_habitat_classTableAdapter = new HluTableAdapter<HluDataSet.lut_habitat_classDataTable, HluDataSet.lut_habitat_classRow>(_db);
-                _lut_habitat_typeTableAdapter = new HluTableAdapter<HluDataSet.lut_habitat_typeDataTable, HluDataSet.lut_habitat_typeRow>(_db);
-                _lut_conditionTableAdapter = new HluTableAdapter<HluDataSet.lut_conditionDataTable, HluDataSet.lut_conditionRow>(_db);
-                _lut_condition_qualifierTableAdapter = new HluTableAdapter<HluDataSet.lut_condition_qualifierDataTable, HluDataSet.lut_condition_qualifierRow>(_db);
-                _lut_primary_categoryTableAdapter = new HluTableAdapter<HluDataSet.lut_primary_categoryDataTable, HluDataSet.lut_primary_categoryRow>(_db);
-                _lut_primaryTableAdapter = new HluTableAdapter<HluDataSet.lut_primaryDataTable, HluDataSet.lut_primaryRow>(_db);
-                _lut_primary_bap_habitatTableAdapter = new HluTableAdapter<HluDataSet.lut_primary_bap_habitatDataTable, HluDataSet.lut_primary_bap_habitatRow>(_db);
-                _lut_secondary_groupTableAdapter = new HluTableAdapter<HluDataSet.lut_secondary_groupDataTable, HluDataSet.lut_secondary_groupRow>(_db);
-                _lut_secondaryTableAdapter = new HluTableAdapter<HluDataSet.lut_secondaryDataTable, HluDataSet.lut_secondaryRow>(_db);
-                _lut_secondary_bap_habitatTableAdapter = new HluTableAdapter<HluDataSet.lut_secondary_bap_habitatDataTable, HluDataSet.lut_secondary_bap_habitatRow>(_db);
-                _lut_primary_secondaryTableAdapter = new HluTableAdapter<HluDataSet.lut_primary_secondaryDataTable, HluDataSet.lut_primary_secondaryRow>(_db);
-                _lut_habitat_type_primaryTableAdapter = new HluTableAdapter<HluDataSet.lut_habitat_type_primaryDataTable, HluDataSet.lut_habitat_type_primaryRow>(_db);
-                _lut_habitat_type_secondaryTableAdapter = new HluTableAdapter<HluDataSet.lut_habitat_type_secondaryDataTable, HluDataSet.lut_habitat_type_secondaryRow>(_db);
-                _lut_ihs_primary_secondaryTableAdapter = new HluTableAdapter<HluDataSet.lut_ihs_primary_secondaryDataTable, HluDataSet.lut_ihs_primary_secondaryRow>(_db);
-                _lut_osmm_habitat_xrefTableAdapter = new HluTableAdapter<HluDataSet.lut_osmm_habitat_xrefDataTable, HluDataSet.lut_osmm_habitat_xrefRow>(_db);
-                _lut_ihs_complexTableAdapter = new HluTableAdapter<HluDataSet.lut_ihs_complexDataTable, HluDataSet.lut_ihs_complexRow>(_db);
-                _lut_ihs_formationTableAdapter = new HluTableAdapter<HluDataSet.lut_ihs_formationDataTable, HluDataSet.lut_ihs_formationRow>(_db);
-                _lut_ihs_habitatTableAdapter = new HluTableAdapter<HluDataSet.lut_ihs_habitatDataTable, HluDataSet.lut_ihs_habitatRow>(_db);
-                _lut_ihs_managementTableAdapter = new HluTableAdapter<HluDataSet.lut_ihs_managementDataTable, HluDataSet.lut_ihs_managementRow>(_db);
-                _lut_ihs_matrixTableAdapter = new HluTableAdapter<HluDataSet.lut_ihs_matrixDataTable, HluDataSet.lut_ihs_matrixRow>(_db);
-                _lut_importanceTableAdapter = new HluTableAdapter<HluDataSet.lut_importanceDataTable, HluDataSet.lut_importanceRow>(_db);
-                _lut_last_incidTableAdapter = new HluTableAdapter<HluDataSet.lut_last_incidDataTable, HluDataSet.lut_last_incidRow>(_db);
-                _lut_legacy_habitatTableAdapter = new HluTableAdapter<HluDataSet.lut_legacy_habitatDataTable, HluDataSet.lut_legacy_habitatRow>(_db);
-                _lut_operationTableAdapter = new HluTableAdapter<HluDataSet.lut_operationDataTable, HluDataSet.lut_operationRow>(_db);
-                _lut_osmm_updates_spatialTableAdapter = new HluTableAdapter<HluDataSet.lut_osmm_updates_spatialDataTable, HluDataSet.lut_osmm_updates_spatialRow>(_db);
-                _lut_osmm_updates_processTableAdapter = new HluTableAdapter<HluDataSet.lut_osmm_updates_processDataTable, HluDataSet.lut_osmm_updates_processRow>(_db);
-                _lut_osmm_updates_changeTableAdapter = new HluTableAdapter<HluDataSet.lut_osmm_updates_changeDataTable, HluDataSet.lut_osmm_updates_changeRow>(_db);
-                _lut_processTableAdapter = new HluTableAdapter<HluDataSet.lut_processDataTable, HluDataSet.lut_processRow>(_db);
-                _lut_reasonTableAdapter = new HluTableAdapter<HluDataSet.lut_reasonDataTable, HluDataSet.lut_reasonRow>(_db);
-                _lut_site_idTableAdapter = new HluTableAdapter<HluDataSet.lut_site_idDataTable, HluDataSet.lut_site_idRow>(_db);
-                _lut_sourcesTableAdapter = new HluTableAdapter<HluDataSet.lut_sourcesDataTable, HluDataSet.lut_sourcesRow>(_db);
-                _lut_userTableAdapter = new HluTableAdapter<HluDataSet.lut_userDataTable, HluDataSet.lut_userRow>(_db);
-                _lut_versionTableAdapter = new HluTableAdapter<HluDataSet.lut_versionDataTable, HluDataSet.lut_versionRow>(_db);
+                _exportsTableAdapter = new(_db);
+                _exports_field_typesTableAdapter = new(_db);
+                _exports_fieldsTableAdapter = new(_db);
+                _lut_quality_determinationTableAdapter = new(_db);
+                _lut_quality_interpretationTableAdapter = new(_db);
+                _lut_boundary_mapTableAdapter = new(_db);
+                _lut_habitat_classTableAdapter = new(_db);
+                _lut_habitat_typeTableAdapter = new(_db);
+                _lut_conditionTableAdapter = new(_db);
+                _lut_condition_qualifierTableAdapter = new(_db);
+                _lut_primary_categoryTableAdapter = new(_db);
+                _lut_primaryTableAdapter = new(_db);
+                _lut_primary_bap_habitatTableAdapter = new(_db);
+                _lut_secondary_groupTableAdapter = new(_db);
+                _lut_secondaryTableAdapter = new(_db);
+                _lut_secondary_bap_habitatTableAdapter = new(_db);
+                _lut_primary_secondaryTableAdapter = new(_db);
+                _lut_habitat_type_primaryTableAdapter = new(_db);
+                _lut_habitat_type_secondaryTableAdapter = new(_db);
+                _lut_ihs_primary_secondaryTableAdapter = new(_db);
+                _lut_osmm_habitat_xrefTableAdapter = new(_db);
+                _lut_ihs_complexTableAdapter = new(_db);
+                _lut_ihs_formationTableAdapter = new(_db);
+                _lut_ihs_habitatTableAdapter = new(_db);
+                _lut_ihs_managementTableAdapter = new(_db);
+                _lut_ihs_matrixTableAdapter = new(_db);
+                _lut_importanceTableAdapter = new(_db);
+                _lut_last_incidTableAdapter = new(_db);
+                _lut_legacy_habitatTableAdapter = new(_db);
+                _lut_operationTableAdapter = new(_db);
+                _lut_osmm_updates_spatialTableAdapter = new(_db);
+                _lut_osmm_updates_processTableAdapter = new(_db);
+                _lut_osmm_updates_changeTableAdapter = new(_db);
+                _lut_processTableAdapter = new(_db);
+                _lut_reasonTableAdapter = new(_db);
+                _lut_site_idTableAdapter = new(_db);
+                _lut_sourcesTableAdapter = new(_db);
+                _lut_userTableAdapter = new(_db);
+                _lut_versionTableAdapter = new(_db);
             }
             catch { throw; }
         }
@@ -2163,7 +2163,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
 
             if ((allAddedRows == null) || (allAddedRows.Count < 1)) return updatedRows;
 
-            List<R> realUpdatedRows = new List<R>();
+            List<R> realUpdatedRows = [];
             for (int i = 0; (i < updatedRows.Length); i = (i + 1))
             {
                 R row = updatedRows[i];
@@ -2202,14 +2202,14 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                 throw new ApplicationException("The transaction cannot begin. The current data connection does not " +
                     "support transactions or the current state is not allowing the transaction to begin.");
 
-            List<DataRow> allChangedRows = new List<DataRow>();
-            List<DataRow> allAddedRows = new List<DataRow>();
-            List<DataAdapter> adaptersWithAcceptChangesDuringUpdate = new List<DataAdapter>();
+            List<DataRow> allChangedRows = [];
+            List<DataRow> allAddedRows = [];
+            List<DataAdapter> adaptersWithAcceptChangesDuringUpdate = [];
             int result = 0;
             DataSet backupDataSet = null;
             if (this.BackupDataSetBeforeUpdate)
             {
-                backupDataSet = new DataSet();
+                backupDataSet = new();
                 backupDataSet.Merge(dataSet);
             }
 

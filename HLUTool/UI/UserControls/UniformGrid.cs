@@ -1,18 +1,18 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2019 London & South East Record Centres (LaSER)
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -72,7 +72,7 @@ namespace HLU.UI.UserControls
 
         private Size ArrangeOverrideVertical(Size arrangeSize)
         {
-            Rect finalRect = new Rect(0.0, 0.0, arrangeSize.Width / ((double)_columns), arrangeSize.Height / ((double)_rows));
+            Rect finalRect = new(0.0, 0.0, arrangeSize.Width / ((double)_columns), arrangeSize.Height / ((double)_rows));
             double height = finalRect.Height;
             double totalHeight = arrangeSize.Height - 1.0;
             foreach (UIElement element in base.InternalChildren)
@@ -94,7 +94,7 @@ namespace HLU.UI.UserControls
         private Size MeasureOverrideVertical(Size constraint)
         {
             UpdateComputedValuesVertical();
-            Size availableSize = new Size(constraint.Width / ((double)_columns), constraint.Height / ((double)_rows));
+            Size availableSize = new(constraint.Width / ((double)_columns), constraint.Height / ((double)_rows));
             double width = 0.0;
             double height = 0.0;
             int i = 0;

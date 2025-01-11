@@ -1,19 +1,19 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -39,7 +39,7 @@ namespace HLU.Data.Connection
         private OdbcDataAdapter _adapter;
         private OdbcCommandBuilder _commandBuilder;
         private OdbcTransaction _transaction;
-        private Dictionary<Type, OdbcDataAdapter> _adaptersDic = new Dictionary<Type, OdbcDataAdapter>();
+        private Dictionary<Type, OdbcDataAdapter> _adaptersDic = [];
 
         private HLU.UI.View.Connection.ViewConnectOdbc _connWindow;
         private HLU.UI.ViewModel.ViewModelConnectOdbc _connViewModel;
@@ -77,8 +77,8 @@ namespace HLU.Data.Connection
                 SetDefaults();
 
                 _command = _connection.CreateCommand();
-                _adapter = new OdbcDataAdapter(_command);
-                _commandBuilder = new OdbcCommandBuilder(_adapter);
+                _adapter = new(_command);
+                _commandBuilder = new(_adapter);
 
                 connString = MaskPassword(_connStrBuilder, pwdMask);
                 defaultSchema = DefaultSchema;
@@ -124,7 +124,7 @@ namespace HLU.Data.Connection
 
             try
             {
-                OdbcConnection cn = new OdbcConnection(connStrBuilder.ConnectionString);
+                OdbcConnection cn = new(connStrBuilder.ConnectionString);
                 return GetBackend(cn);
             }
             catch { return Backends.UndeterminedOdbc; }
@@ -136,7 +136,7 @@ namespace HLU.Data.Connection
 
             try
             {
-                OdbcConnection cn = new OdbcConnection(connString);
+                OdbcConnection cn = new(connString);
                 return GetBackend(cn);
             }
             catch { return Backends.UndeterminedOdbc; }
@@ -158,7 +158,7 @@ namespace HLU.Data.Connection
                     _restrictionNameSchema, DefaultSchema, _connection, _transaction);
                 var dbSchema = schemaTable.AsEnumerable();
 
-                StringBuilder messageText = new StringBuilder();
+                StringBuilder messageText = new();
 
                 foreach (DataTable t in ds.Tables)
                 {
@@ -173,7 +173,7 @@ namespace HLU.Data.Connection
                                            DataType = r.Field<string>("TYPE_NAME") //<int>("DATA_TYPE")
                                        };
 
-                    if (dbSchemaCols.Count() == 0)
+                    if (!dbSchemaCols.Any())
                     {
                         messageText.Append(String.Format("\n\nMissing table: {0}", QuoteIdentifier(t.TableName)));
                     }
@@ -184,7 +184,7 @@ namespace HLU.Data.Connection
                                                               where dbCol.ColumnName == dsCol.ColumnName &&
                                                               DbToSystemType(SQLCodeToSQLType(dbCol.DataType)) == dsCol.DataType
                                                               select dbCol
-                                                 where dbCols.Count() == 0
+                                                 where !dbCols.Any()
                                                  select QuoteIdentifier(dsCol.ColumnName) + " (" +
                                                  ((OdbcType)SystemToDbType(dsCol.DataType) + ")").ToString()).ToArray();
                         if (checkColumns.Length > 0) messageText.Append(String.Format("\n\nTable: {0}\nColumns: {1}",
@@ -224,40 +224,43 @@ namespace HLU.Data.Connection
                 return new OdbcCommand();
         }
 
-        public override IDbDataAdapter CreateAdapter()
-        {
-            return new OdbcDataAdapter();
-        }
+        //TODO: CreateAdapter
+        //public override IDbDataAdapter CreateAdapter()
+        //{
+        //    return new();
+        //}
 
         public override IDbDataAdapter CreateAdapter<T>(T table)
         {
-            if (table == null) table = new T();
+            table ??= new T();
 
             OdbcDataAdapter adapter;
 
             if (!_adaptersDic.TryGetValue(typeof(T), out adapter))
             {
-                adapter = new OdbcDataAdapter();
+                adapter = new();
 
                 DataColumn[] pk = table.PrimaryKey;
                 if ((pk == null) || (pk.Length == 0)) return null;
 
-                DataTableMapping tableMapping = new DataTableMapping();
-                tableMapping.SourceTable = table.TableName;
-                tableMapping.DataSetTable = table.TableName;
+                DataTableMapping tableMapping = new()
+                {
+                    SourceTable = table.TableName,
+                    DataSetTable = table.TableName
+                };
 
-                List<OdbcParameter> deleteParams = new List<OdbcParameter>();
-                List<OdbcParameter> insertParams = new List<OdbcParameter>();
-                List<OdbcParameter> updateParams = new List<OdbcParameter>();
-                List<OdbcParameter> updateParamsOrig = new List<OdbcParameter>();
+                List<OdbcParameter> deleteParams = [];
+                List<OdbcParameter> insertParams = [];
+                List<OdbcParameter> updateParams = [];
+                List<OdbcParameter> updateParamsOrig = [];
 
-                StringBuilder sbTargetList = new StringBuilder();
-                StringBuilder sbInsValues = new StringBuilder();
-                StringBuilder sbUpdSetList = new StringBuilder();
-                StringBuilder sbWhereDel = new StringBuilder();
-                StringBuilder sbWhereUpd = new StringBuilder();
-                StringBuilder sbWherePkUpd = new StringBuilder();
-                StringBuilder sbWherePkIns = new StringBuilder();
+                StringBuilder sbTargetList = new();
+                StringBuilder sbInsValues = new();
+                StringBuilder sbUpdSetList = new();
+                StringBuilder sbWhereDel = new();
+                StringBuilder sbWhereUpd = new();
+                StringBuilder sbWherePkUpd = new();
+                StringBuilder sbWherePkIns = new();
 
                 string tableName = QualifyTableName(table.TableName);
 
@@ -351,36 +354,44 @@ namespace HLU.Data.Connection
 
                 adapter.TableMappings.Add(tableMapping);
 
-                adapter.SelectCommand = new OdbcCommand();
-                adapter.SelectCommand.CommandType = CommandType.Text;
-                adapter.SelectCommand.Connection = _connection;
-                adapter.SelectCommand.CommandText = String.Format("SELECT {0} FROM {1}", sbTargetList, tableName);
+                adapter.SelectCommand = new()
+                {
+                    CommandType = CommandType.Text,
+                    Connection = _connection,
+                    CommandText = String.Format("SELECT {0} FROM {1}", sbTargetList, tableName)
+                };
 
                 if (!_useCommandBuilder)
                 {
-                    adapter.DeleteCommand = new OdbcCommand();
-                    adapter.DeleteCommand.CommandType = CommandType.Text;
-                    adapter.DeleteCommand.Connection = _connection;
-                    adapter.DeleteCommand.CommandText = String.Format("DELETE FROM {0} WHERE {1}", tableName, sbWhereDel);
+                    adapter.DeleteCommand = new()
+                    {
+                        CommandType = CommandType.Text,
+                        Connection = _connection,
+                        CommandText = String.Format("DELETE FROM {0} WHERE {1}", tableName, sbWhereDel)
+                    };
                     adapter.DeleteCommand.Parameters.AddRange(deleteParams.ToArray());
 
-                    adapter.UpdateCommand = new OdbcCommand();
-                    adapter.UpdateCommand.Connection = _connection;
-                    adapter.UpdateCommand.CommandType = CommandType.Text;
-                    adapter.UpdateCommand.CommandText =
-                        String.Format("UPDATE {0} SET {1} WHERE {2}", tableName, sbUpdSetList, sbWhereUpd);
+                    adapter.UpdateCommand = new()
+                    {
+                        Connection = _connection,
+                        CommandType = CommandType.Text,
+                        CommandText =
+                        String.Format("UPDATE {0} SET {1} WHERE {2}", tableName, sbUpdSetList, sbWhereUpd)
+                    };
                     adapter.UpdateCommand.Parameters.AddRange(updateParams.ToArray());
 
-                    adapter.InsertCommand = new OdbcCommand();
-                    adapter.InsertCommand.CommandType = CommandType.Text;
-                    adapter.InsertCommand.Connection = _connection;
-                    adapter.InsertCommand.CommandText = String.Format("INSERT INTO {0} ({1}) VALUES ({2})",
-                        tableName, sbTargetList, sbInsValues);
+                    adapter.InsertCommand = new()
+                    {
+                        CommandType = CommandType.Text,
+                        Connection = _connection,
+                        CommandText = String.Format("INSERT INTO {0} ({1}) VALUES ({2})",
+                        tableName, sbTargetList, sbInsValues)
+                    };
                     adapter.InsertCommand.Parameters.AddRange(insertParams.ToArray());
                 }
                 else
                 {
-                    OdbcCommandBuilder cmdBuilder = new OdbcCommandBuilder(adapter);
+                    OdbcCommandBuilder cmdBuilder = new(adapter);
                     adapter.DeleteCommand = cmdBuilder.GetDeleteCommand(_useColumnNames);
                     adapter.UpdateCommand = cmdBuilder.GetUpdateCommand(_useColumnNames);
                     adapter.InsertCommand = cmdBuilder.GetInsertCommand(_useColumnNames);
@@ -404,22 +415,26 @@ namespace HLU.Data.Connection
         private OdbcParameter CreateParameter(string name, OdbcType type, ParameterDirection direction,
             string srcColumn, DataRowVersion srcVersion, bool nullMapping)
         {
-            OdbcParameter param = new OdbcParameter(name, type);
-            param.Direction = direction;
-            param.SourceColumn = srcColumn;
-            param.SourceVersion = srcVersion;
-            param.SourceColumnNullMapping = nullMapping;
+            OdbcParameter param = new(name, type)
+            {
+                Direction = direction,
+                SourceColumn = srcColumn,
+                SourceVersion = srcVersion,
+                SourceColumnNullMapping = nullMapping
+            };
             return param;
         }
 
         private OdbcParameter CreateParameter(string name, object value, ParameterDirection direction,
             string srcColumn, DataRowVersion srcVersion, bool nullMapping)
         {
-            OdbcParameter param = new OdbcParameter(name, value);
-            param.Direction = direction;
-            param.SourceColumn = srcColumn;
-            param.SourceVersion = srcVersion;
-            param.SourceColumnNullMapping = nullMapping;
+            OdbcParameter param = new(name, value)
+            {
+                Direction = direction,
+                SourceColumn = srcColumn,
+                SourceVersion = srcVersion,
+                SourceColumnNullMapping = nullMapping
+            };
             return param;
         }
 
@@ -443,7 +458,7 @@ namespace HLU.Data.Connection
             try
             {
                 _errorMessage = String.Empty;
-                if (table == null) table = new T();
+                table ??= new T();
                 if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
                 OdbcDataAdapter adapter = UpdateAdapter(table);
                 if (adapter != null)
@@ -458,8 +473,10 @@ namespace HLU.Data.Connection
                     _command.CommandText = sql;
                     _command.CommandType = CommandType.Text;
                     if (_transaction != null) _command.Transaction = _transaction;
-                    _adapter = new OdbcDataAdapter(_command);
-                    _adapter.MissingSchemaAction = MissingSchemaAction.AddWithKey;
+                    _adapter = new(_command)
+                    {
+                        MissingSchemaAction = MissingSchemaAction.AddWithKey
+                    };
                     _adapter.FillSchema(table, schemaType);
                 }
                 return true;
@@ -479,7 +496,7 @@ namespace HLU.Data.Connection
             try
             {
                 _errorMessage = String.Empty;
-                if (table == null) table = new T();
+                table ??= new T();
                 _command.CommandText = sql;
                 _command.CommandType = CommandType.Text;
                 if (_transaction != null) _command.Transaction = _transaction;
@@ -491,7 +508,7 @@ namespace HLU.Data.Connection
                 }
                 else
                 {
-                    _adapter = new OdbcDataAdapter(_command);
+                    _adapter = new(_command);
                     return _adapter.Fill(table);
                 }
             }
@@ -673,8 +690,9 @@ namespace HLU.Data.Connection
             }
             catch (Exception ex)
             {
+                //TODO: throw ex;
                 _errorMessage = ex.Message;
-                throw ex;
+                return false;
             }
             finally { if (previousConnectionState == ConnectionState.Closed) _connection.Close(); }
         }
@@ -687,16 +705,16 @@ namespace HLU.Data.Connection
 
             if ((table == null) || (table.Rows.Count == 0)) return 0;
             if (_adapter == null) return -1;
-            
+
             try
             {
                 if (!String.IsNullOrEmpty(insertCommand))
-                    _adapter.InsertCommand = new OdbcCommand(insertCommand);
+                    _adapter.InsertCommand = new(insertCommand);
                 if (!String.IsNullOrEmpty(updateCommand))
-                    _adapter.UpdateCommand = new OdbcCommand(updateCommand);
+                    _adapter.UpdateCommand = new(updateCommand);
                 if (!String.IsNullOrEmpty(deleteCommand))
-                    _adapter.DeleteCommand = new OdbcCommand(deleteCommand);
-                
+                    _adapter.DeleteCommand = new(deleteCommand);
+
                 return _adapter.Update(table); ;
             }
             catch (Exception ex)
@@ -814,14 +832,19 @@ namespace HLU.Data.Connection
         {
             try
             {
-                _connWindow = new HLU.UI.View.Connection.ViewConnectOdbc();
-                if ((_connWindow.Owner = App.GetActiveWindow()) == null)
-                    throw (new Exception("No parent window loaded"));
-                _connWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                _connWindow = new()
+                {
+                    //TODO: Window owner
+                    //if ((_connWindow.Owner = App.GetActiveWindow()) == null)
+                    //    throw (new Exception("No parent window loaded"));
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                };
 
                 // create ViewModel to which main window binds
-                _connViewModel = new HLU.UI.ViewModel.ViewModelConnectOdbc();
-                _connViewModel.DisplayName = "ODBC Connection";
+                _connViewModel = new()
+                {
+                    DisplayName = "ODBC Connection"
+                };
 
                 // when ViewModel asks to be closed, close window
                 _connViewModel.RequestClose +=
@@ -949,7 +972,7 @@ namespace HLU.Data.Connection
 
             GetMetaData(typeof(OdbcType), _connection, _transaction);
 
-            Dictionary<Type, int> typeMapSystemToSQLAdd = new Dictionary<Type, int>();
+            Dictionary<Type, int> typeMapSystemToSQLAdd = [];
             typeMapSystemToSQLAdd.Add(typeof(Object), (int)OdbcType.VarBinary);
             typeMapSystemToSQLAdd.Add(typeof(Boolean), (int)OdbcType.Bit);
             typeMapSystemToSQLAdd.Add(typeof(SByte), (int)OdbcType.Int);
@@ -980,7 +1003,7 @@ namespace HLU.Data.Connection
                 typeMapSystemToSQLAdd.Add(typeof(Char[]), (int)OdbcType.Text);
             }
 
-            Dictionary<int, Type> typeMapSQLToSystemAdd = new Dictionary<int, Type>();
+            Dictionary<int, Type> typeMapSQLToSystemAdd = [];
             typeMapSQLToSystemAdd.Add((int)OdbcType.BigInt, typeof(Int64));
             typeMapSQLToSystemAdd.Add((int)OdbcType.Binary, typeof(Byte[]));
             typeMapSQLToSystemAdd.Add((int)OdbcType.Bit, typeof(Boolean));
@@ -1005,7 +1028,7 @@ namespace HLU.Data.Connection
             typeMapSQLToSystemAdd.Add((int)OdbcType.VarBinary, typeof(Byte[]));
             typeMapSQLToSystemAdd.Add((int)OdbcType.VarChar, typeof(String));
 
-            Dictionary<string, int> sqlSynonymsAdd = new Dictionary<string, int>();
+            Dictionary<string, int> sqlSynonymsAdd = [];
             sqlSynonymsAdd.Add("bit", (int)OdbcType.Bit);
             sqlSynonymsAdd.Add("character", (int)OdbcType.Char);
             sqlSynonymsAdd.Add("char", (int)OdbcType.Char);
@@ -1065,8 +1088,8 @@ namespace HLU.Data.Connection
                     _sqlSynonyms.Add(kv.Key, kv.Value);
             }
 
-            _typeMapSQLToSQLCode = new Dictionary<int, string>();
-            _typeMapSQLCodeToSQL = new Dictionary<string, int>();
+            _typeMapSQLToSQLCode = [];
+            _typeMapSQLCodeToSQL = [];
 
             _typeMapSQLToSQLCode.Add((int)OdbcType.BigInt, "INTEGER");
             _typeMapSQLToSQLCode.Add((int)OdbcType.Bit, "BIT");
@@ -1092,7 +1115,7 @@ namespace HLU.Data.Connection
             _typeMapSQLCodeToSQL.Add("REAL", (int)OdbcType.Real);
             _typeMapSQLCodeToSQL.Add("SMALLINT", (int)OdbcType.SmallInt);
             //_typeMapSQLCodeToSQL.Add("SMALLINT", (int)OdbcType.TinyInt);
-            
+
             if (binaryLength > 0)
             {
                 _typeMapSQLToSQLCode.Add((int)OdbcType.Binary, String.Format("BIT VARYING ({0})", binaryLength));

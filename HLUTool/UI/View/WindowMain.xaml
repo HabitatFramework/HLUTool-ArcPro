@@ -525,7 +525,7 @@
                                             Mode=OneWay,
 											ValidatesOnDataErrors=True}"
 							 TextAlignment="Left"
-							 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+							 Tag="ErrorContent"
 							 ToolTipService.ShowOnDisabled="True" />
                     <Label x:Name="LabelBulkUpdateStatusToidMap"
                            Grid.Row="1"
@@ -545,7 +545,7 @@
                                             Mode=OneWay,
 											ValidatesOnDataErrors=True}"
                              TextAlignment="Left"
-							 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+							 Tag="ErrorContent"
 							 ToolTipService.ShowOnDisabled="True" />
                     <Label x:Name="LabelBulkUpdateStatusFragMap"
                            Grid.Row="2"
@@ -565,7 +565,7 @@
                                             Mode=OneWay,
 											ValidatesOnDataErrors=True}"
                              TextAlignment="Left"
-							 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+							 Tag="ErrorContent"
 							 ToolTipService.ShowOnDisabled="True" />
                     </Grid>
                 </Grid>
@@ -787,7 +787,7 @@
                               SelectedValue="{Binding Reason,
                                                       ValidatesOnDataErrors=True}"
                               SelectedValuePath="code"
-                              Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                              Tag="ErrorContent"
                               ToolTipService.ShowOnDisabled="True" />
 
                     <Label x:Name="LabelProcess"
@@ -812,7 +812,7 @@
                               SelectedValue="{Binding Process,
                                                       ValidatesOnDataErrors=True}"
                               SelectedValuePath="code"
-                              Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                              Tag="ErrorContent"
                               ToolTipService.ShowOnDisabled="True" />
                 </Grid>
             </GroupBox>
@@ -930,7 +930,7 @@
 							Text="{Binding IncidOSMMUpdateStatus,
 								  Mode=OneWay,
 								  ValidatesOnDataErrors=True}"
-							Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+							Tag="ErrorContent"
 							ToolTipService.ShowOnDisabled="True" />
             		</Grid>
 
@@ -1002,7 +1002,7 @@
                                                      ValidatesOnDataErrors=True}"
                                    FontSize="13"
                                    Padding="4,2,4,4"
-                                   Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                   Tag="ErrorContent"
                                    ToolTipService.ShowOnDisabled="True" />
                         </StackPanel>
                     </TabItem.Header>
@@ -1091,7 +1091,7 @@
                                                                           Converter={StaticResource codeNameDescriptionConverter},
                                                                           ValidatesOnDataErrors=True}"
                                                   SelectedValuePath="code"
-                                                  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                  Tag="ErrorContent"
                                                   ToolTipService.ShowOnDisabled="True" />
                                     </Grid>
                                 </GroupBox>
@@ -1141,7 +1141,7 @@
                                                                           Converter={StaticResource codeDescriptionConverter},
                                                                           ValidatesOnDataErrors=True}"
                                                   SelectedValuePath="code"
-                                                  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                  Tag="ErrorContent"
                                                   ToolTipService.ShowOnDisabled="True" />
                                         <CheckBox x:Name="CheckBoxCopyPrimary"
                                                   Grid.Row="0"
@@ -1214,7 +1214,7 @@
 												    Mode=OneWay,
 												    ValidatesOnDataErrors=True}"
 													Visibility="Visible"
-													Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+													Tag="ErrorContent"
 													ToolTipService.ShowOnDisabled="True" />
 
                                         <Label x:Name="LabelHabitatSecondariesSuggested"
@@ -1297,7 +1297,7 @@
                                                                           Converter={StaticResource codeDescriptionConverter},
                                                                           ValidatesOnDataErrors=True}"
                                                       SelectedValuePath="code"
-                                                      Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                      Tag="ErrorContent"
 													  ToolTip="{Binding Path=SelectedItem.description, RelativeSource={RelativeSource Self}}"
                                                       ToolTipService.ShowOnDisabled="True" />
                                         </Grid>
@@ -1508,7 +1508,7 @@
                                                   SelectedValue="{Binding IncidLegacyHabitat,
                                                                           ValidatesOnDataErrors=True}"
                                                   SelectedValuePath="code"
-                                                  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                  Tag="ErrorContent"
                                                   ToolTipService.ShowOnDisabled="True" />
                                         <CheckBox x:Name="CheckBoxCopyLegacyHabitat"
                                                   Grid.Row="0"
@@ -1540,7 +1540,7 @@
                                    Content="{Binding IHSTabLabel}"
                                    FontSize="13"
                                    Padding="4,2,4,4"
-                                   Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                   Tag="ErrorContent"
                                    ToolTipService.ShowOnDisabled="True" />
                         </StackPanel>
                     </TabItem.Header>
@@ -2229,7 +2229,7 @@
                                                                 UpdateSourceTrigger=PropertyChanged,
                                                                 ValidatesOnDataErrors=True}"
                                                  TextWrapping="Wrap"
-                                                 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                 Tag="ErrorContent"
                                                  ToolTipService.ShowOnDisabled="True" />
                                         <CheckBox x:Name="CheckBoxCopyGeneralComments"
                                                   Grid.Row="0"
@@ -2292,7 +2292,7 @@
                                                       SelectedValue="{Binding IncidBoundaryBaseMap,
                                                                               ValidatesOnDataErrors=True}"
                                                       SelectedValuePath="code"
-                                                      Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                      Tag="ErrorContent"
                                                       ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox x:Name="CheckBoxCopyBoundaryBaseMap"
                                                       Grid.Row="0"
@@ -2323,7 +2323,7 @@
                                                       SelectedValue="{Binding IncidDigitisationBaseMap,
                                                                               ValidatesOnDataErrors=True}"
                                                       SelectedValuePath="code"
-                                                      Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                      Tag="ErrorContent"
                                                       ToolTipService.ShowOnDisabled="True" />
                                         </Grid>
                                         <CheckBox x:Name="CheckBoxCopyDigitisationBaseMap"
@@ -2378,7 +2378,7 @@
                                                                 Mode=TwoWay,
                                                                 UpdateSourceTrigger=PropertyChanged,
                                                                 ValidatesOnDataErrors=True}"
-                                                 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                 Tag="ErrorContent"
                                                  ToolTipService.ShowOnDisabled="True" />
                                         <CheckBox x:Name="CheckBoxCopyIncidSiteRef"
                                                   Grid.Row="0"
@@ -2410,7 +2410,7 @@
                                                                 UpdateSourceTrigger=PropertyChanged,
                                                                 ValidatesOnDataErrors=True}"
                                                  TextWrapping="Wrap"
-                                                 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                 Tag="ErrorContent"
                                                  ToolTipService.ShowOnDisabled="True" />
                                         <CheckBox x:Name="CheckBoxCopyIncidSiteName"
                                                   Grid.Row="1"
@@ -2474,7 +2474,7 @@
                                                       SelectedValue="{Binding IncidCondition,
                                                                               ValidatesOnDataErrors=True}"
                                                       SelectedValuePath="code"
-                                                      Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                      Tag="ErrorContent"
                                                       ToolTipService.ShowOnDisabled="True" />
 											<CheckBox x:Name="CheckBoxCopyCondition"
 													  Grid.Row="0"
@@ -2508,7 +2508,7 @@
                                                       SelectedValue="{Binding IncidConditionQualifier,
                                                                               ValidatesOnDataErrors=True}"
                                                       SelectedValuePath="code"
-                                                      Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                      Tag="ErrorContent"
                                                       ToolTipService.ShowOnDisabled="True" />
                                         </Grid>
 										<CheckBox x:Name="CheckBoxCopyConditionQualifier"
@@ -2552,7 +2552,7 @@
 																	Mode=TwoWay,
 																	UpdateSourceTrigger=LostFocus,
 																	ValidatesOnDataErrors=True}"
-													 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+													 Tag="ErrorContent"
 													 ToolTipService.ShowOnDisabled="True" />
 											<CheckBox x:Name="CheckBoxCopyConditionDate"
 													  Grid.Row="1"
@@ -2620,7 +2620,7 @@
                                                       SelectedValue="{Binding IncidQualityDetermination,
                                                                               ValidatesOnDataErrors=True}"
                                                       SelectedValuePath="code"
-                                                      Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                      Tag="ErrorContent"
                                                       ToolTipService.ShowOnDisabled="True" />
 											<CheckBox x:Name="CheckBoxCopyQualityDetermination"
 													  Grid.Row="0"
@@ -2652,7 +2652,7 @@
                                                       SelectedValue="{Binding IncidQualityInterpretation,
                                                                               ValidatesOnDataErrors=True}"
                                                       SelectedValuePath="code"
-                                                      Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                      Tag="ErrorContent"
                                                       ToolTipService.ShowOnDisabled="True" />
 										<CheckBox x:Name="CheckBoxCopyQualityInterpretation"
 													Grid.Row="1"
@@ -2697,7 +2697,7 @@
 																	UpdateSourceTrigger=PropertyChanged,
 																	ValidatesOnDataErrors=True}"
 													 TextWrapping="Wrap"
-													 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+													 Tag="ErrorContent"
 													 ToolTipService.ShowOnDisabled="True" />
 											<CheckBox x:Name="CheckBoxCopyQualityComments"
 													  Grid.Row="1"
@@ -2727,7 +2727,7 @@
                                                      ValidatesOnDataErrors=True}"
                                    FontSize="13"
                                    Padding="4,2,4,4"
-                                   Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                   Tag="ErrorContent"
                                    ToolTipService.ShowOnDisabled="True" />
                         </StackPanel>
                     </TabItem.Header>
@@ -2798,7 +2798,7 @@
                                                   SelectedValue="{Binding IncidSource1Id,
                                                                           ValidatesOnDataErrors=True}"
                                                   SelectedValuePath="source_id"
-                                                  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                  Tag="ErrorContent"
                                                   ToolTipService.ShowOnDisabled="True" />
                                         <CheckBox x:Name="CheckBoxCopyIncidSource1Name"
                                                   Grid.Row="0"
@@ -2832,7 +2832,7 @@
                                                                 Mode=TwoWay,
                                                                 UpdateSourceTrigger=LostFocus,
                                                                 ValidatesOnDataErrors=True}"
-                                                 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                 Tag="ErrorContent"
                                                  ToolTipService.ShowOnDisabled="True" />
                                         <CheckBox x:Name="CheckBoxCopySource1Date"
                                                   Grid.Row="1"
@@ -2868,7 +2868,7 @@
                                                   SelectedValue="{Binding IncidSource1HabitatClass,
                                                                           ValidatesOnDataErrors=True}"
                                                   SelectedValuePath="code"
-                                                  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                  Tag="ErrorContent"
                                                   ToolTipService.ShowOnDisabled="True" />
                                         <CheckBox x:Name="CheckBoxCopySource1HabitatClass"
                                                   Grid.Row="2"
@@ -2909,7 +2909,7 @@
                                                                           Converter={StaticResource codeNameDescriptionConverter},
                                                                           ValidatesOnDataErrors=True}"
                                                   SelectedValuePath="code"
-                                                  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                  Tag="ErrorContent"
                                                   ToolTipService.ShowOnDisabled="True" />
                                         <CheckBox x:Name="CheckBoxCopyIncidSource1HabitatType"
                                                   Grid.Row="3"
@@ -2956,7 +2956,7 @@
                                                       SelectedValue="{Binding IncidSource1BoundaryImportance,
                                                                               ValidatesOnDataErrors=True}"
                                                       SelectedValuePath="code"
-                                                      Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                      Tag="ErrorContent"
                                                       ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox x:Name="CheckBoxCopySource1BoundaryImportance"
                                                       Grid.Row="0"
@@ -2990,7 +2990,7 @@
                                                       SelectedValue="{Binding IncidSource1HabitatImportance,
                                                                               ValidatesOnDataErrors=True}"
                                                       SelectedValuePath="code"
-                                                      Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                      Tag="ErrorContent"
                                                       ToolTipService.ShowOnDisabled="True" />
                                         </Grid>
                                         <CheckBox x:Name="CheckBoxCopySource1HabitatImportance"
@@ -3058,7 +3058,7 @@
                                                   SelectedValue="{Binding IncidSource2Id,
                                                                           ValidatesOnDataErrors=True}"
                                                   SelectedValuePath="source_id"
-                                                  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                  Tag="ErrorContent"
                                                   ToolTipService.ShowOnDisabled="True" />
                                         <CheckBox x:Name="CheckBoxCopyIncidSource2Name"
                                                   Grid.Row="0"
@@ -3092,7 +3092,7 @@
                                                                 Mode=TwoWay,
                                                                 UpdateSourceTrigger=LostFocus,
                                                                 ValidatesOnDataErrors=True}"
-                                                 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                 Tag="ErrorContent"
                                                  ToolTipService.ShowOnDisabled="True" />
                                         <CheckBox x:Name="CheckBoxCopySource2Date"
                                                   Grid.Row="1"
@@ -3128,7 +3128,7 @@
                                                   SelectedValue="{Binding IncidSource2HabitatClass,
                                                                           ValidatesOnDataErrors=True}"
                                                   SelectedValuePath="code"
-                                                  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                  Tag="ErrorContent"
                                                   ToolTipService.ShowOnDisabled="True" />
                                         <CheckBox x:Name="CheckBoxCopySource2HabitatClass"
                                                   Grid.Row="2"
@@ -3169,7 +3169,7 @@
                                                                           Converter={StaticResource codeNameDescriptionConverter},
                                                                           ValidatesOnDataErrors=True}"
                                                   SelectedValuePath="code"
-                                                  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                  Tag="ErrorContent"
                                                   ToolTipService.ShowOnDisabled="True" />
                                         <CheckBox x:Name="CheckBoxCopyIncidSource2HabitatType"
                                                   Grid.Row="3"
@@ -3216,7 +3216,7 @@
                                                       SelectedValue="{Binding IncidSource2BoundaryImportance,
                                                                               ValidatesOnDataErrors=True}"
                                                       SelectedValuePath="code"
-                                                      Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                      Tag="ErrorContent"
                                                       ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox x:Name="CheckBoxCopySource2BoundaryImportance"
                                                       Grid.Row="0"
@@ -3250,7 +3250,7 @@
                                                       SelectedValue="{Binding IncidSource2HabitatImportance,
                                                                               ValidatesOnDataErrors=True}"
                                                       SelectedValuePath="code"
-                                                      Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                      Tag="ErrorContent"
                                                       ToolTipService.ShowOnDisabled="True" />
                                         </Grid>
                                         <CheckBox x:Name="CheckBoxCopySource2HabitatImportance"
@@ -3318,7 +3318,7 @@
                                                   SelectedValue="{Binding IncidSource3Id,
                                                                           ValidatesOnDataErrors=True}"
                                                   SelectedValuePath="source_id"
-                                                  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                  Tag="ErrorContent"
                                                   ToolTipService.ShowOnDisabled="True" />
                                         <CheckBox x:Name="CheckBoxCopyIncidSource3Name"
                                                   Grid.Row="0"
@@ -3352,7 +3352,7 @@
                                                                 Mode=TwoWay,
                                                                 UpdateSourceTrigger=LostFocus,
                                                                 ValidatesOnDataErrors=True}"
-                                                 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                 Tag="ErrorContent"
                                                  ToolTipService.ShowOnDisabled="True" />
                                         <CheckBox x:Name="CheckBoxCopySource3Date"
                                                   Grid.Row="1"
@@ -3388,7 +3388,7 @@
                                                   SelectedValue="{Binding IncidSource3HabitatClass,
                                                                           ValidatesOnDataErrors=True}"
                                                   SelectedValuePath="code"
-                                                  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                  Tag="ErrorContent"
                                                   ToolTipService.ShowOnDisabled="True" />
                                         <CheckBox x:Name="CheckBoxCopySource3HabitatClass"
                                                   Grid.Row="2"
@@ -3429,7 +3429,7 @@
                                                                           Converter={StaticResource codeNameDescriptionConverter},
                                                                           ValidatesOnDataErrors=True}"
                                                   SelectedValuePath="code"
-                                                  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                  Tag="ErrorContent"
                                                   ToolTipService.ShowOnDisabled="True" />
                                         <CheckBox x:Name="CheckBoxCopyIncidSource3HabitatType"
                                                   Grid.Row="3"
@@ -3476,7 +3476,7 @@
                                                       SelectedValue="{Binding IncidSource3BoundaryImportance,
                                                                               ValidatesOnDataErrors=True}"
                                                       SelectedValuePath="code"
-                                                      Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                      Tag="ErrorContent"
                                                       ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox x:Name="CheckBoxCopySource3BoundaryImportance"
                                                       Grid.Row="0"
@@ -3511,7 +3511,7 @@
                                                       SelectedValue="{Binding IncidSource3HabitatImportance,
                                                                               ValidatesOnDataErrors=True}"
                                                       SelectedValuePath="code"
-                                                      Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                                      Tag="ErrorContent"
                                                       ToolTipService.ShowOnDisabled="True" />
                                         </Grid>
                                         <CheckBox x:Name="CheckBoxCopySource3HabitatImportance"
@@ -3673,7 +3673,7 @@
                              Text="{Binding IncidCurrentRowIndex,
                                             Mode=TwoWay,
                                             ValidatesOnDataErrors=True}"
-                             Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                             Tag="ErrorContent"
                              TextAlignment="Center" />
                     <Button x:Name="ButtonNextRecord"
                             Grid.Column="4"

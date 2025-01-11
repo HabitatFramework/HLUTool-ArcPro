@@ -24,30 +24,17 @@ using HLU.Data.Model;
 
 namespace HLU.UI.ViewModel
 {
-    class ViewModelCompletePhysicalSplit : ViewModelBase, IDataErrorInfo
+    class ViewModelCompletePhysicalSplit(string reason, string process,
+        HluDataSet.lut_reasonRow[] reasonCodes, HluDataSet.lut_processRow[] processCodes) : ViewModelBase, IDataErrorInfo
     {
         #region Fields
 
         string _displayName = "Physical Split: required values";
-        private HluDataSet.lut_reasonRow[] _reasonCodes;
-        private HluDataSet.lut_processRow[] _processCodes;
-        private string _reason;
-        private string _process;
+        private HluDataSet.lut_reasonRow[] _reasonCodes = reasonCodes;
+        private HluDataSet.lut_processRow[] _processCodes = processCodes;
+        private string _reason = reason;
+        private string _process = process;
         private ICommand _okCommand;
-        //private ICommand _cancelCommand;
-
-        #endregion
-
-        #region ctor
-
-        public ViewModelCompletePhysicalSplit(string reason, string process, 
-            HluDataSet.lut_reasonRow[] reasonCodes, HluDataSet.lut_processRow[] processCodes)
-        {
-            _reason = reason;
-            _process = process;
-            _reasonCodes = reasonCodes;
-            _processCodes = processCodes;
-        }
 
         #endregion
 
@@ -88,8 +75,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_okCommand == null)
                 {
-                    Action<object> okAction = new Action<object>(this.OkCommandClick);
-                    _okCommand = new RelayCommand(okAction, param => this.CanOk);
+                    Action<object> okAction = new(this.OkCommandClick);
+                    _okCommand = new(okAction, param => this.CanOk);
                 }
 
                 return _okCommand;
@@ -103,8 +90,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void OkCommandClick(object param)
         {
-            if (this.RequestClose != null)
-                this.RequestClose(_reason, _process);
+            this.RequestClose?.Invoke(_reason, _process);
         }
 
         /// <summary>
@@ -151,7 +137,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                StringBuilder error = new StringBuilder();
+                StringBuilder error = new();
                 if (String.IsNullOrEmpty(_reason))
                     error.Append("Please select a value for Reason.");
                 if (String.IsNullOrEmpty(_process))

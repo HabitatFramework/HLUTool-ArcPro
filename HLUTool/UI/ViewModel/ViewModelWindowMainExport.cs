@@ -3,19 +3,19 @@
 // Copyright © 2014, 2018 Sussex Biodiversity Record Centre
 // Copyright © 2019 London & South East Record Centres (LaSER)
 // Copyright © 2019-2022 Greenspace Information for Greater London CIC
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -205,7 +205,7 @@ namespace HLU.UI.ViewModel
                 int[] complexOrdinals;
                 int[] bapOrdinals;
                 int[] sourceOrdinals;
-                List<ExportField> exportFields = new List<ExportField>();
+                List<ExportField> exportFields = [];
                 ExportJoins(tableAlias, ref exportFields, out exportTable,
                     out fieldMapTemplate, out targetList, out fromClause, out sortOrdinals, out conditionOrdinals,
                     out matrixOrdinals, out formationOrdinals, out managementOrdinals, out complexOrdinals,
@@ -266,7 +266,7 @@ namespace HLU.UI.ViewModel
                     rowCount = _viewModelMain.IncidsSelectedMapCount;
                 else
                     rowCount = _viewModelMain.IncidRowCount(false);
-                
+
                 // Warn the user if the export is VERY large.
                 if (rowCount > 50000)
                 {
@@ -318,8 +318,8 @@ namespace HLU.UI.ViewModel
                 // Remove the current record filter.
                 //_viewModelMain.IncidSelection = null;
                 //_viewModelMain.GisSelection = null;
-                //_viewModelMain.OnPropertyChanged("IsFiltered");
-                //_viewModelMain.OnPropertyChanged("StatusIncid");
+                //_viewModelMain.OnPropertyChanged(nameof(IsFiltered));
+                //_viewModelMain.OnPropertyChanged(nameof(StatusIncid));
             }
             catch (Exception ex)
             {
@@ -352,11 +352,11 @@ namespace HLU.UI.ViewModel
             out int[] managementOrdinals, out int[] complexOrdinals,
             out int[] bapOrdinals, out int[] sourceOrdinals)
         {
-            exportTable = new DataTable("HluExport");
-            targetList = new StringBuilder();
-            List<string> fromList = new List<string>();
-            List<string> leftJoined = new List<string>();
-            fromClause = new StringBuilder();
+            exportTable = new("HluExport");
+            targetList = new();
+            List<string> fromList = [];
+            List<string> leftJoined = [];
+            fromClause = new();
             sortOrdinals = null;
             conditionOrdinals = null;
             matrixOrdinals = null;
@@ -413,7 +413,7 @@ namespace HLU.UI.ViewModel
                     var incidRelation = _viewModelMain.HluDataset.incid.ChildRelations.Cast<DataRelation>()
                         .Where(dr => dr.ChildTable.TableName == r.table_name);
 
-                    if (incidRelation.Count() == 0)
+                    if (!incidRelation.Any())
                     {
                         fromClause.Append(currTable);
                     }
@@ -423,7 +423,7 @@ namespace HLU.UI.ViewModel
                         if (firstJoin)
                             firstJoin = false;
                         else
-                            fromClause.Insert(0, "(").Append(")");
+                            fromClause.Insert(0, "(").Append(')');
                         fromClause.Append(RelationJoinClause("LEFT", currTable, true,
                             _viewModelMain.DataBase.QuoteIdentifier(
                             incidRel.ParentTable.TableName), incidRel, fromList));
@@ -628,7 +628,7 @@ namespace HLU.UI.ViewModel
                         if (firstJoin)
                             firstJoin = false;
                         else
-                            fromClause.Insert(0, "(").Append(")");
+                            fromClause.Insert(0, "(").Append(')');
 
                         fromClause.Append(RelationJoinClause(joinType, currTable,
                             false, parentTableAlias, lutRelation, fromList));
@@ -661,18 +661,18 @@ namespace HLU.UI.ViewModel
             _bapTypeOrdinal = -1;
             _bapQualityOrdinal = -1;
             _sourceIdOrdinal = -1;
-            _sourceDateStartOrdinals = new List<int>();
-            _sourceDateEndOrdinals = new List<int>();
-            _sourceDateTypeOrdinals = new List<int>();
+            _sourceDateStartOrdinals = [];
+            _sourceDateEndOrdinals = [];
+            _sourceDateTypeOrdinals = [];
             int sourceSortOrderOrdinal = -1;
-            List<int> sortFields = new List<int>();
-            List<int> conditionFields = new List<int>();
-            List<int> matrixFields = new List<int>();
-            List<int> formationFields = new List<int>();
-            List<int> managementFields = new List<int>();
-            List<int> complexFields = new List<int>();
-            List<int> bapFields = new List<int>();
-            List<int> sourceFields = new List<int>();
+            List<int> sortFields = [];
+            List<int> conditionFields = [];
+            List<int> matrixFields = [];
+            List<int> formationFields = [];
+            List<int> managementFields = [];
+            List<int> complexFields = [];
+            List<int> bapFields = [];
+            List<int> sourceFields = [];
             foreach (ExportField f in exportFields.OrderBy(f => f.FieldOrder))
             {
                 // Create a new data column for the field.
@@ -846,7 +846,7 @@ namespace HLU.UI.ViewModel
                     fieldMap = fieldMapTemplate[f.FieldOrdinal].ToList();
                 else
                 {
-                    fieldMap = new List<int>();
+                    fieldMap = [];
                     fieldMap.Add(f.FieldOrdinal);
                 }
 
@@ -1140,7 +1140,7 @@ namespace HLU.UI.ViewModel
                 //
                 // If the source_date_start column is not included then add
                 // it for use later.
-                if ((_sourceDateStartOrdinals == null) || (_sourceDateStartOrdinals.Count() == 0))
+                if ((_sourceDateStartOrdinals == null) || (_sourceDateStartOrdinals.Count == 0))
                 {
                     // Add the field to the input table.
                     targetList.Append(String.Format(",{0}.{1} AS {2}", _viewModelMain.HluDataset.incid_sources.TableName,
@@ -1152,7 +1152,7 @@ namespace HLU.UI.ViewModel
 
                 // If the source_date_end column is not included then add
                 // it for use later.
-                if ((_sourceDateEndOrdinals == null) || (_sourceDateEndOrdinals.Count() == 0))
+                if ((_sourceDateEndOrdinals == null) || (_sourceDateEndOrdinals.Count == 0))
                 {
                     // Add the field to the input table.
                     targetList.Append(String.Format(",{0}.{1} AS {2}", _viewModelMain.HluDataset.incid_sources.TableName,
@@ -1164,7 +1164,7 @@ namespace HLU.UI.ViewModel
 
                 // If the source_date_type column is not included then add
                 // it for use later.
-                if ((_sourceDateTypeOrdinals == null) || (_sourceDateTypeOrdinals.Count() == 0))
+                if ((_sourceDateTypeOrdinals == null) || (_sourceDateTypeOrdinals.Count == 0))
                 {
                     // Add the field to the input table.
                     targetList.Append(String.Format(",{0}.{1} AS {2}", _viewModelMain.HluDataset.incid_sources.TableName,
@@ -1321,7 +1321,7 @@ namespace HLU.UI.ViewModel
                 {
                     try
                     {
-                        List<SqlFilterCondition> whereCond = new List<SqlFilterCondition>();
+                        List<SqlFilterCondition> whereCond = [];
                         whereCond = exportFilter[0];
                         exportFilter = whereCond.ChunkClause(240).ToList();
                     }
@@ -1465,17 +1465,17 @@ namespace HLU.UI.ViewModel
                             // formatting the attribute data.
                             //
                             // Get the current source date start.
-                            if ((_sourceDateStartOrdinals.Count() > 0) &&
+                            if ((_sourceDateStartOrdinals.Any()) &&
                                 !reader.IsDBNull(_sourceDateStartOrdinals[0]))
                                 currSourceDateStart = reader.GetInt32(_sourceDateStartOrdinals[0]);
 
                             // Get the current source date end.
-                            if ((_sourceDateEndOrdinals.Count() > 0) &&
+                            if ((_sourceDateEndOrdinals.Any()) &&
                                 !reader.IsDBNull(_sourceDateEndOrdinals[0]))
                                 currSourceDateEnd = reader.GetInt32(_sourceDateEndOrdinals[0]);
 
                             // Get the current source date type.
-                            if ((_sourceDateTypeOrdinals.Count() > 0) &&
+                            if ((_sourceDateTypeOrdinals.Any()) &&
                                 !reader.IsDBNull(_sourceDateTypeOrdinals[0]))
                                 currSourceDateType = reader.GetString(_sourceDateTypeOrdinals[0]);
 
@@ -1516,13 +1516,13 @@ namespace HLU.UI.ViewModel
                                 // Store the last incid.
                                 prevIncid = currIncid;
 
-                                conditionIds = new List<int>();
-                                matrixIds = new List<int>();
-                                formationIds = new List<int>();
-                                managementIds = new List<int>();
-                                complexIds = new List<int>();
-                                bapIds = new List<int>();
-                                sourceIds = new List<int>();
+                                conditionIds = [];
+                                matrixIds = [];
+                                formationIds = [];
+                                managementIds = [];
+                                complexIds = [];
+                                bapIds = [];
+                                sourceIds = [];
 
                                 // Reset the field map indexes to the start of the array.
                                 for (int k = 0; k < fieldMap.Length; k++)
@@ -2138,7 +2138,7 @@ namespace HLU.UI.ViewModel
                     else
                     {
                         // If the input is an IHS code that is blank (i.e. only the
-                        // separator character is retrieved) then return null.
+                        // _separator character is retrieved) then return null.
                         if (inValue.ToString() == " : ")
                             return null;
                         else
@@ -2304,7 +2304,7 @@ namespace HLU.UI.ViewModel
         private string RelationJoinClause(string joinType, string currTable, bool parentLeft,
             string parentTableAlias, DataRelation rel, List<string> fromList)
         {
-            StringBuilder joinClausePart = new StringBuilder();
+            StringBuilder joinClausePart = new();
 
             for (int i = 0; i < rel.ParentColumns.Length; i++)
             {

@@ -41,7 +41,7 @@ namespace HLU.UI.ViewModel
         private string[] _encodings;
         private string _encoding = "<default>";
         private string[] _databases = new string[] { };
-        private List<String> _schemata = new List<String>();
+        private List<String> _schemata = new();
 
         private NpgsqlConnectionStringBuilder _connStrBuilder;
 
@@ -105,8 +105,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_okCommand == null)
                 {
-                    Action<object> okAction = new Action<object>(this.OkCommandClick);
-                    _okCommand = new RelayCommand(okAction, param => this.CanOk);
+                    Action<object> okAction = new(this.OkCommandClick);
+                    _okCommand = new(okAction, param => this.CanOk);
                 }
 
                 return _okCommand;
@@ -174,8 +174,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_cancelCommand == null)
                 {
-                    Action<object> cancelAction = new Action<object>(this.CancelCommandClick);
-                    _cancelCommand = new RelayCommand(cancelAction);
+                    Action<object> cancelAction = new(this.CancelCommandClick);
+                    _cancelCommand = new(cancelAction);
                 }
 
                 return _cancelCommand;
@@ -294,10 +294,10 @@ namespace HLU.UI.ViewModel
                 if ((cn != null) && (cn.State != ConnectionState.Closed)) cn.Close();
 
                 _databases = databaseList;
-                OnPropertyChanged("Databases");
+                OnPropertyChanged(nameof(Databases));
 
                 if (_databases.Length == 1) _connStrBuilder.Database = _databases[0];
-                OnPropertyChanged("Database");
+                OnPropertyChanged(nameof(Database));
             }
         }
 
@@ -371,7 +371,7 @@ namespace HLU.UI.ViewModel
 
         private void LoadSchemata()
         {
-            List<String> schemaList = new List<String>();
+            List<String> schemaList = new();
             NpgsqlConnection cn = null;
 
             try
@@ -387,7 +387,7 @@ namespace HLU.UI.ViewModel
                                         " WHERE schema_name !~* '^(pg|information)_'" +
                                         " AND catalog_name = '" + _connStrBuilder.Database + "'";
                     NpgsqlDataAdapter adapter = new NpgsqlDataAdapter(cmd);
-                    DataTable dbTable = new DataTable();
+                    DataTable dbTable = new();
                     
                     try
                     {
@@ -412,10 +412,10 @@ namespace HLU.UI.ViewModel
                 if ((cn != null) && (cn.State != ConnectionState.Closed)) cn.Close();
 
                 _schemata = schemaList;
-                OnPropertyChanged("Schemata");
+                OnPropertyChanged(nameof(Schemata));
 
                 if (_schemata.Count == 1) _connStrBuilder.SearchPath = _schemata[0];
-                OnPropertyChanged("SearchPath");
+                OnPropertyChanged(nameof(SearchPath));
             }
         }
 
@@ -446,7 +446,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                StringBuilder error = new StringBuilder();
+                StringBuilder error = new();
 
                 if (String.IsNullOrEmpty(_connStrBuilder.Host))
                     error.Append(", host name");

@@ -2,19 +2,19 @@
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2013 Thames Valley Environmental Records Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -36,8 +36,7 @@ namespace HLU.GISApplication
         private static string _scratchMdbPath;
         private static string _scratchSelTable = "HluSelection";
         private static DbBase _scratchDb;
-        private static HluGISLayer.incid_mm_polygonsDataTable _hluLayerStructure = 
-            new HluGISLayer.incid_mm_polygonsDataTable();
+        private static HluGISLayer.incid_mm_polygonsDataTable _hluLayerStructure = new();
         private static HluDataSet.incidDataTable _incidTable;
         private static HluDataSet.incid_mm_polygonsDataTable _incidMMTable;
 
@@ -51,7 +50,7 @@ namespace HLU.GISApplication
             get { return _scratchSelTable; }
         }
 
-        public static bool CreateScratchMdb(HluDataSet.incidDataTable incidTable, 
+        public static bool CreateScratchMdb(HluDataSet.incidDataTable incidTable,
             HluDataSet.incid_mm_polygonsDataTable incidMMTable)
         {
             try
@@ -69,14 +68,14 @@ namespace HLU.GISApplication
 
                 _scratchMdbPath += Path.GetFileNameWithoutExtension(Path.GetRandomFileName()) + ".mdb";
 
-                OdbcCP32 odbc = new OdbcCP32();
+                OdbcCP32 odbc = new();
                 odbc.CreateDatabase(_scratchMdbPath);
                 string connString = String.Format(@"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};", _scratchMdbPath);
                 string defaultSchema = "";
                 bool promptPwd = false;
 
                 _scratchDb = new DbOleDb(ref connString, ref defaultSchema, ref promptPwd,
-                    Properties.Resources.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders,
+                    Settings.Default.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders,
                     true, Settings.Default.DbIsUnicode, Settings.Default.DbUseTimeZone, 255,
                     Settings.Default.DbBinaryLength, Settings.Default.DbTimePrecision,
                     Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale);
@@ -115,7 +114,7 @@ namespace HLU.GISApplication
                 else
                 {
                     var q = idList.Columns.Cast<DataColumn>().Where(c => c.ColumnName.EndsWith(
-                        Resources.ColumnTableNameSeparator + _incidTable.incidColumn.ColumnName) &&
+                        Settings.Default.ColumnTableNameSeparator + _incidTable.incidColumn.ColumnName) &&
                         c.DataType == _incidTable.incidColumn.DataType);
                     if (q.Count() == 1)
                         incidOrdinal = q.ElementAt(0).Ordinal;
@@ -137,13 +136,13 @@ namespace HLU.GISApplication
                 if (String.IsNullOrEmpty(idList.TableName)) idList.TableName = _scratchSelTable;
 
                 if ((idList.PrimaryKey == null) || (idList.PrimaryKey.Length == 0))
-                    idList.PrimaryKey = new DataColumn[] { idList.Columns[incidOrdinal] };
+                    idList.PrimaryKey = [idList.Columns[incidOrdinal]];
 
                 if (!_scratchDb.CreateTable(idList)) return;
 
                 DataTable scratchTable = idList.Clone();
 
-                DataSet datasetOut = new DataSet(_scratchSelTable);
+                DataSet datasetOut = new(_scratchSelTable);
                 IDbDataAdapter adapterOut = _scratchDb.CreateAdapter(scratchTable);
                 adapterOut.Fill(datasetOut);
                 adapterOut.TableMappings.Clear();
@@ -176,10 +175,10 @@ namespace HLU.GISApplication
         /// </returns>
         public static List<SqlFilterCondition> GisWhereClause(DataTable incidSelection, GISApp gisApp, bool useIncidTable)
         {
-            List<SqlFilterCondition> whereClause = new List<SqlFilterCondition>();
-            SqlFilterCondition cond = new SqlFilterCondition();
+            List<SqlFilterCondition> whereClause = [];
+            SqlFilterCondition cond = new();
 
-            //StringBuilder incidList = new StringBuilder();
+            //StringBuilder incidList = new();
 
             // Split the table of selected Incids into chunks of continuous Incids so
             // that each chunk contains a continuous series of one or more Incids.
@@ -190,7 +189,7 @@ namespace HLU.GISApplication
             }).ChunkBy(r => r.RowIndex);
 
             // Create a temporary list for storing some of the Incids.
-            List<string> inList = new List<string>();
+            List<string> inList = [];
 
             // Determine which table to base the conditions on.
             DataTable condTable;
@@ -215,26 +214,30 @@ namespace HLU.GISApplication
                 }
                 else
                 {
-                    cond = new SqlFilterCondition();
-                    cond.BooleanOperator = "OR";
-                    cond.OpenParentheses = "(";
-                    cond.Column = _incidMMTable.incidColumn;
-                    cond.Table = condTable;
-                    cond.ColumnSystemType = _incidMMTable.incidColumn.DataType;
-                    cond.Operator = ">=";
-                    cond.Value = item.First().Incid;
-                    cond.CloseParentheses = String.Empty;
+                    cond = new()
+                    {
+                        BooleanOperator = "OR",
+                        OpenParentheses = "(",
+                        Column = _incidMMTable.incidColumn,
+                        Table = condTable,
+                        ColumnSystemType = _incidMMTable.incidColumn.DataType,
+                        Operator = ">=",
+                        Value = item.First().Incid,
+                        CloseParentheses = String.Empty
+                    };
                     whereClause.Add(cond);
 
-                    cond = new SqlFilterCondition();
-                    cond.BooleanOperator = "AND";
-                    cond.OpenParentheses = String.Empty;
-                    cond.Column = _incidMMTable.incidColumn;
-                    cond.Table = condTable;
-                    cond.ColumnSystemType = _incidMMTable.incidColumn.DataType;
-                    cond.Operator = "<=";
-                    cond.Value = item.Last().Incid;
-                    cond.CloseParentheses = ")";
+                    cond = new()
+                    {
+                        BooleanOperator = "AND",
+                        OpenParentheses = String.Empty,
+                        Column = _incidMMTable.incidColumn,
+                        Table = condTable,
+                        ColumnSystemType = _incidMMTable.incidColumn.DataType,
+                        Operator = "<=",
+                        Value = item.Last().Incid,
+                        CloseParentheses = ")"
+                    };
                     whereClause.Add(cond);
                 }
             }
@@ -251,12 +254,14 @@ namespace HLU.GISApplication
                 string[] oneList = new string[numElems];
                 inList.CopyTo(i, oneList, 0, numElems);
 
-                cond = new SqlFilterCondition();
-                cond.BooleanOperator = "OR";
-                cond.OpenParentheses = "(";
-                cond.Column = _incidMMTable.incidColumn;
-                cond.Table = condTable;
-                cond.ColumnSystemType = _incidMMTable.incidColumn.DataType;
+                cond = new()
+                {
+                    BooleanOperator = "OR",
+                    OpenParentheses = "(",
+                    Column = _incidMMTable.incidColumn,
+                    Table = condTable,
+                    ColumnSystemType = _incidMMTable.incidColumn.DataType
+                };
 
                 // Use " INCID =" in SQL statement instrad of "INCID IN ()"
                 // if there is only on item in the list (as it is much quicker)
@@ -292,7 +297,7 @@ namespace HLU.GISApplication
             // CHANGED: CR43 (Sort multiple fields in exports)
             //
             // Add order by from list of sort ordinals.
-            StringBuilder sql = new StringBuilder();
+            StringBuilder sql = new();
             // Sort negative sortOrdinals in descending order
             //sql.Append(String.Format("SELECT {0} FROM {1}{2}", targetList, fromClause, db.WhereClause(true, true, true, IncidSelectionWhereClause)))
             //        .Append(sortOrdinals != null ? String.Format(" ORDER BY {0}", string.Join(", ", sortOrdinals.Select(x => x.ToString()).ToArray())) : String.Empty);

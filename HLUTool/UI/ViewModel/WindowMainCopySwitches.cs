@@ -815,7 +815,7 @@ namespace HLU.UI.ViewModel
 
         internal void CopyValues(ViewModelWindowMain vmMain)
         {
-            List<string> errorProps = new List<string>();
+            List<string> errorProps = [];
             string propertyName = null;
             object copyValue = null;
 
@@ -856,12 +856,12 @@ namespace HLU.UI.ViewModel
                     String.Join(", ", errorProps.ToArray())), "HLU: Copy Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
 
-            vmMain.OnPropertyChanged("CanPaste");
+            vmMain.OnPropertyChanged(nameof(CanPaste));
         }
 
         internal void PasteValues(ViewModelWindowMain vmMain)
         {
-            List<string> errorProps = new List<string>();
+            List<string> errorProps = [];
             string propertyName = null;
 
             foreach (PropertyInfo pi in this.GetType().GetProperties().Where(p => p.Name.StartsWith("Copy")))

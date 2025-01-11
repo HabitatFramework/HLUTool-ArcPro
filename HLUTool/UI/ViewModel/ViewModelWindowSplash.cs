@@ -45,7 +45,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _progressText = value;
-                OnPropertyChanged("ProgressText");
+                OnPropertyChanged(nameof(ProgressText));
             }
         }
     }

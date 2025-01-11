@@ -236,12 +236,12 @@ namespace HLU.UI.ViewModel
                     vmHist.HistoryWrite(fixedValues, historyTable, ViewModelWindowMain.Operations.LogicalMerge, nowDtTm);
 
                     // Count incid records no longer in use
-                    string sqlCount = new StringBuilder(String.Format("SELECT {0}.{1} FROM {0} LEFT JOIN {2} ON {2}.{3} = {0}.{1} WHERE {0}.{1} IN ({4}) GROUP BY {0}.{1} HAVING COUNT({2}.{3}) = 0",
+                    string sqlCount = new(String.Format("SELECT {0}.{1} FROM {0} LEFT JOIN {2} ON {2}.{3} = {0}.{1} WHERE {0}.{1} IN ({4}) GROUP BY {0}.{1} HAVING COUNT({2}.{3}) = 0",
                         _viewModelMain.DataBase.QualifyTableName(_viewModelMain.IncidTable.TableName),
                         _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.incidColumn.ColumnName),
                         _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
                         _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.incidColumn.ColumnName),
-                        selectTable.Where(r => r.incid != keepIncid).Aggregate(new StringBuilder(), (sb, r) => sb.Append("," +
+                        selectTable.Where(r => r.incid != keepIncid).Aggregate(new(), (sb, r) => sb.Append("," +
                             _viewModelMain.DataBase.QuoteValue(r.incid))).Remove(0, 1))).ToString();
 
                     IDataReader delReader = _viewModelMain.DataBase.ExecuteReader(sqlCount,
@@ -250,7 +250,7 @@ namespace HLU.UI.ViewModel
                     if (delReader == null) throw new Exception("Error counting incid and incid_mm_polygons database records.");
 
                     // Build a list of the incids to delete
-                    List<string> deleteIncids = new List<string>();
+                    List<string> deleteIncids = [];
                     while (delReader.Read())
                         deleteIncids.Add(delReader.GetString(0));
                     delReader.Close();
@@ -258,7 +258,7 @@ namespace HLU.UI.ViewModel
                     if (deleteIncids.Count > 0)
                     {
                         // Delete any incid records no longer in use
-                        string deleteStatement = new StringBuilder(String.Format(
+                        string deleteStatement = new(String.Format(
                             "DELETE FROM {0} WHERE {1} IN ({2})",
                             _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid.TableName),
                             _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.incidColumn.ColumnName),

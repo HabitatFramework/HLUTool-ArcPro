@@ -206,7 +206,7 @@ namespace HLU.GISApplication
         protected List<SqlFilterCondition> MapWhereClauseFields(
             HluGISLayer.incid_mm_polygonsDataTable _hluLayerStructure, List<SqlFilterCondition> whereClause)
         {
-            List<SqlFilterCondition> outWhereClause = new List<SqlFilterCondition>();
+            List<SqlFilterCondition> outWhereClause = [];
             for (int i = 0; i < whereClause.Count; i++)
             {
                 SqlFilterCondition cond = whereClause[i];

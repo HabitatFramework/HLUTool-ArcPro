@@ -1,19 +1,19 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -41,19 +41,19 @@ namespace HLU.Data.Connection
         private NpgsqlCommandBuilder _commandBuilder;
         private NpgsqlTransaction _transaction;
         private string _encoding;
-        private Dictionary<Type, NpgsqlDataAdapter> _adaptersDic = new Dictionary<Type, NpgsqlDataAdapter>();
+        private Dictionary<Type, NpgsqlDataAdapter> _adaptersDic = [];
 
         private HLU.UI.View.Connection.ViewConnectPgSql _connWindow;
         private HLU.UI.ViewModel.ViewModelConnectPgSql _connViewModel;
-       
+
         #endregion
 
         #region Constructor
 
         public DbPgSql(ref string connString, ref string defaultSchema, ref bool promptPwd, string pwdMask,
-            bool useCommandBuilder, bool useColumnNames, bool isUnicode, bool useTimeZone, uint textLength, 
+            bool useCommandBuilder, bool useColumnNames, bool isUnicode, bool useTimeZone, uint textLength,
             uint binaryLength, uint timePrecision, uint numericPrecision, uint numericScale)
-            : base(ref connString, ref defaultSchema, ref promptPwd, pwdMask, useCommandBuilder, useColumnNames, 
+            : base(ref connString, ref defaultSchema, ref promptPwd, pwdMask, useCommandBuilder, useColumnNames,
             isUnicode, useTimeZone, textLength, binaryLength, timePrecision, numericPrecision, numericScale)
         {
             if (String.IsNullOrEmpty(ConnectionString)) throw (new Exception("No connection string"));
@@ -67,8 +67,8 @@ namespace HLU.Data.Connection
                 SetPgClientEncoding();
 
                 _command = _connection.CreateCommand();
-                _adapter = new NpgsqlDataAdapter(_command);
-                _commandBuilder = new NpgsqlCommandBuilder(_adapter);
+                _adapter = new(_command);
+                _commandBuilder = new(_adapter);
 
                 connString = MaskPassword(_connStrBuilder, pwdMask);
                 defaultSchema = DefaultSchema;
@@ -89,12 +89,12 @@ namespace HLU.Data.Connection
 
             try
             {
-                DataTable schemaTable = GetSchema("Columns", 
+                DataTable schemaTable = GetSchema("Columns",
                     _restrictionNameSchema, DefaultSchema, _connection, _transaction);
 
                 var dbSchema = schemaTable.AsEnumerable();
 
-                StringBuilder messageText = new StringBuilder();
+                StringBuilder messageText = new();
 
                 foreach (DataTable t in ds.Tables)
                 {
@@ -109,7 +109,7 @@ namespace HLU.Data.Connection
                                            DataType = r.Field<string>("DATA_TYPE")
                                        };
 
-                    if (dbSchemaCols.Count() == 0)
+                    if (dbSchemaCols.Any())
                     {
                         messageText.Append(String.Format("\n\nMissing table: {0}", QuoteIdentifier(t.TableName)));
                     }
@@ -120,7 +120,7 @@ namespace HLU.Data.Connection
                                                               where dbCol.ColumnName == dsCol.ColumnName &&
                                                               DbToSystemType(SQLCodeToSQLType(dbCol.DataType)) == dsCol.DataType
                                                               select dbCol
-                                                 where dbCols.Count() == 0
+                                                 where !dbCols.Any()
                                                  select QuoteIdentifier(dsCol.ColumnName) + " (" +
                                                  ((SqlDbType)SystemToDbType(dsCol.DataType) + ")").ToString()).ToArray();
                         if (checkColumns.Length > 0) messageText.Append(String.Format("\n\nTable: {0}\nColumns: {1}",
@@ -161,40 +161,43 @@ namespace HLU.Data.Connection
                 return new NpgsqlCommand();
         }
 
-        public override IDbDataAdapter CreateAdapter()
-        {
-            return new NpgsqlDataAdapter();
-        }
+        //TODO: CreateAdapter
+        //public override IDbDataAdapter CreateAdapter()
+        //{
+        //    return new NpgsqlDataAdapter();
+        //}
 
         public override IDbDataAdapter CreateAdapter<T>(T table)
         {
-            if (table == null) table = new T();
+            table ??= new T();
 
             NpgsqlDataAdapter adapter;
 
             if (!_adaptersDic.TryGetValue(typeof(T), out adapter))
             {
-                adapter = new NpgsqlDataAdapter();
+                adapter = new();
 
                 DataColumn[] pk = table.PrimaryKey;
                 if ((pk == null) || (pk.Length == 0)) return null;
 
-                DataTableMapping tableMapping = new DataTableMapping();
-                tableMapping.SourceTable = table.TableName; // "Table";
-                tableMapping.DataSetTable = table.TableName; // "Exports";
+                DataTableMapping tableMapping = new()
+                {
+                    SourceTable = table.TableName, // "Table";
+                    DataSetTable = table.TableName // "Exports";
+                };
 
-                List<NpgsqlParameter> deleteParams = new List<NpgsqlParameter>();
-                List<NpgsqlParameter> insertParams = new List<NpgsqlParameter>();
-                List<NpgsqlParameter> updateParams = new List<NpgsqlParameter>();
-                List<NpgsqlParameter> updateParamsOrig = new List<NpgsqlParameter>();
+                List<NpgsqlParameter> deleteParams = [];
+                List<NpgsqlParameter> insertParams = [];
+                List<NpgsqlParameter> updateParams = [];
+                List<NpgsqlParameter> updateParamsOrig = [];
 
-                StringBuilder sbTargetList = new StringBuilder();
-                StringBuilder sbInsValues = new StringBuilder();
-                StringBuilder sbUpdSetList = new StringBuilder();
-                StringBuilder sbWhereDel = new StringBuilder();
-                StringBuilder sbWhereUpd = new StringBuilder();
-                StringBuilder sbWherePkUpd = new StringBuilder();
-                StringBuilder sbWherePkIns = new StringBuilder();
+                StringBuilder sbTargetList = new();
+                StringBuilder sbInsValues = new();
+                StringBuilder sbUpdSetList = new();
+                StringBuilder sbWhereDel = new();
+                StringBuilder sbWhereUpd = new();
+                StringBuilder sbWherePkUpd = new();
+                StringBuilder sbWherePkIns = new();
 
                 string tableName = QualifyTableName(table.TableName);
 
@@ -261,7 +264,7 @@ namespace HLU.Data.Connection
                         (NpgsqlDbType)colType, ParameterDirection.Input, c.ColumnName, DataRowVersion.Current, false));
 
                     updOrigParamName = ParameterName(_parameterPrefixOrig, c.ColumnName, i + _startParamNo + columnCount + nullParamCount);
-                    updateParamsOrig.Add(CreateParameter(updOrigParamName, 
+                    updateParamsOrig.Add(CreateParameter(updOrigParamName,
                         (NpgsqlDbType)colType, ParameterDirection.Input, c.ColumnName, DataRowVersion.Original, false));
 
                     sbTargetList.Append(", ").Append(colName);
@@ -288,36 +291,44 @@ namespace HLU.Data.Connection
 
                 adapter.TableMappings.Add(tableMapping);
 
-                adapter.SelectCommand = new NpgsqlCommand();
-                adapter.SelectCommand.CommandType = CommandType.Text;
-                adapter.SelectCommand.Connection = _connection;
-                adapter.SelectCommand.CommandText = String.Format("SELECT {0} FROM {1}", sbTargetList, tableName);
+                adapter.SelectCommand = new()
+                {
+                    CommandType = CommandType.Text,
+                    Connection = _connection,
+                    CommandText = String.Format("SELECT {0} FROM {1}", sbTargetList, tableName)
+                };
 
                 if (!_useCommandBuilder)
                 {
-                    adapter.DeleteCommand = new NpgsqlCommand();
-                    adapter.DeleteCommand.CommandType = CommandType.Text;
-                    adapter.DeleteCommand.Connection = _connection;
-                    adapter.DeleteCommand.CommandText = String.Format("DELETE FROM {0} WHERE {1}", tableName, sbWhereDel);
+                    adapter.DeleteCommand = new()
+                    {
+                        CommandType = CommandType.Text,
+                        Connection = _connection,
+                        CommandText = String.Format("DELETE FROM {0} WHERE {1}", tableName, sbWhereDel)
+                    };
                     adapter.DeleteCommand.Parameters.AddRange(deleteParams.ToArray());
 
-                    adapter.UpdateCommand = new NpgsqlCommand();
-                    adapter.UpdateCommand.Connection = _connection;
-                    adapter.UpdateCommand.CommandType = CommandType.Text;
-                    adapter.UpdateCommand.CommandText =
-                        String.Format("UPDATE {0} SET {1} WHERE {2}", tableName, sbUpdSetList, sbWhereUpd);
+                    adapter.UpdateCommand = new()
+                    {
+                        Connection = _connection,
+                        CommandType = CommandType.Text,
+                        CommandText =
+                        String.Format("UPDATE {0} SET {1} WHERE {2}", tableName, sbUpdSetList, sbWhereUpd)
+                    };
                     adapter.UpdateCommand.Parameters.AddRange(updateParams.ToArray());
 
-                    adapter.InsertCommand = new NpgsqlCommand();
-                    adapter.InsertCommand.CommandType = CommandType.Text;
-                    adapter.InsertCommand.Connection = _connection;
-                    adapter.InsertCommand.CommandText = String.Format("INSERT INTO {0} ({1}) VALUES ({2})",
-                        tableName, sbTargetList, sbInsValues);
+                    adapter.InsertCommand = new()
+                    {
+                        CommandType = CommandType.Text,
+                        Connection = _connection,
+                        CommandText = String.Format("INSERT INTO {0} ({1}) VALUES ({2})",
+                        tableName, sbTargetList, sbInsValues)
+                    };
                     adapter.InsertCommand.Parameters.AddRange(insertParams.ToArray());
                 }
                 else
                 {
-                    NpgsqlCommandBuilder cmdBuilder = new NpgsqlCommandBuilder(adapter);
+                    NpgsqlCommandBuilder cmdBuilder = new(adapter);
                     adapter.DeleteCommand = cmdBuilder.GetDeleteCommand(_useColumnNames);
                     adapter.UpdateCommand = cmdBuilder.GetUpdateCommand(_useColumnNames);
                     adapter.InsertCommand = cmdBuilder.GetInsertCommand(_useColumnNames);
@@ -338,22 +349,26 @@ namespace HLU.Data.Connection
         private NpgsqlParameter CreateParameter(string name, NpgsqlDbType type, ParameterDirection direction,
             string srcColumn, DataRowVersion srcVersion, bool nullMapping)
         {
-            NpgsqlParameter param = new NpgsqlParameter(name, type);
-            param.Direction = direction;
-            param.SourceColumn = srcColumn;
-            param.SourceVersion = srcVersion;
-            param.SourceColumnNullMapping = nullMapping;
+            NpgsqlParameter param = new(name, type)
+            {
+                Direction = direction,
+                SourceColumn = srcColumn,
+                SourceVersion = srcVersion,
+                SourceColumnNullMapping = nullMapping
+            };
             return param;
         }
 
         private NpgsqlParameter CreateParameter(string name, object value, ParameterDirection direction,
             string srcColumn, DataRowVersion srcVersion, bool nullMapping)
         {
-            NpgsqlParameter param = new NpgsqlParameter(name, value);
-            param.Direction = direction;
-            param.SourceColumn = srcColumn;
-            param.SourceVersion = srcVersion;
-            param.SourceColumnNullMapping = nullMapping;
+            NpgsqlParameter param = new(name, value)
+            {
+                Direction = direction,
+                SourceColumn = srcColumn,
+                SourceVersion = srcVersion,
+                SourceColumnNullMapping = nullMapping
+            };
             return param;
         }
 
@@ -377,7 +392,7 @@ namespace HLU.Data.Connection
             try
             {
                 _errorMessage = String.Empty;
-                if (table == null) table = new T();
+                table ??= new T();
                 if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
                 NpgsqlDataAdapter adapter = UpdateAdapter(table);
                 if (adapter != null)
@@ -392,8 +407,10 @@ namespace HLU.Data.Connection
                     _command.CommandText = sql;
                     _command.CommandType = CommandType.Text;
                     if (_transaction != null) _command.Transaction = _transaction;
-                    _adapter = new NpgsqlDataAdapter(_command);
-                    _adapter.MissingSchemaAction = MissingSchemaAction.AddWithKey;
+                    _adapter = new(_command)
+                    {
+                        MissingSchemaAction = MissingSchemaAction.AddWithKey
+                    };
                     _adapter.FillSchema(table, schemaType);
                 }
                 return true;
@@ -413,7 +430,7 @@ namespace HLU.Data.Connection
             try
             {
                 _errorMessage = String.Empty;
-                if (table == null) table = new T();
+                table ??= new T();
                 if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
                 NpgsqlDataAdapter adapter = UpdateAdapter(table);
                 if (adapter != null)
@@ -427,7 +444,7 @@ namespace HLU.Data.Connection
                     _command.CommandText = sql;
                     _command.CommandType = CommandType.Text;
                     if (_transaction != null) _command.Transaction = _transaction;
-                    _adapter = new NpgsqlDataAdapter(_command);
+                    _adapter = new(_command);
                     return _adapter.Fill(table);
                 }
             }
@@ -522,7 +539,7 @@ namespace HLU.Data.Connection
                     _command.Transaction = _transaction;
                     _commandBuilder.RefreshSchema();
                 }
-                
+
                 return _command.ExecuteReader() as IDataReader;
             }
             catch (Exception ex)
@@ -545,10 +562,10 @@ namespace HLU.Data.Connection
                 _command.CommandText = sql;
 
                 if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
-                
+
                 if (_transaction != null) _command.Transaction = _transaction;
                 _commandBuilder.RefreshSchema();
-                
+
                 return _command.ExecuteNonQuery();
             }
             catch (Exception ex)
@@ -571,10 +588,10 @@ namespace HLU.Data.Connection
                 _command.CommandText = sql;
 
                 if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
-                
+
                 if (_transaction != null) _command.Transaction = _transaction;
                 _commandBuilder.RefreshSchema();
-                
+
                 return _command.ExecuteScalar();
             }
             catch (Exception ex)
@@ -621,7 +638,8 @@ namespace HLU.Data.Connection
             catch (Exception ex)
             {
                 _errorMessage = ex.Message;
-                throw ex;
+                //TODO: throw ex;
+                return false;
             }
             finally { if (previousConnectionState == ConnectionState.Closed) _connection.Close(); }
         }
@@ -638,11 +656,11 @@ namespace HLU.Data.Connection
             try
             {
                 if (!String.IsNullOrEmpty(insertCommand))
-                    _adapter.InsertCommand = new NpgsqlCommand(insertCommand);
+                    _adapter.InsertCommand = new(insertCommand);
                 if (!String.IsNullOrEmpty(updateCommand))
-                    _adapter.UpdateCommand = new NpgsqlCommand(updateCommand);
+                    _adapter.UpdateCommand = new(updateCommand);
                 if (!String.IsNullOrEmpty(deleteCommand))
-                    _adapter.DeleteCommand = new NpgsqlCommand(deleteCommand);
+                    _adapter.DeleteCommand = new(deleteCommand);
 
                 return _adapter.Update(table);
             }
@@ -748,7 +766,7 @@ namespace HLU.Data.Connection
 
             return adapter;
         }
-        
+
         #endregion
 
         #region Protected Members
@@ -764,14 +782,19 @@ namespace HLU.Data.Connection
         {
             try
             {
-                _connWindow = new HLU.UI.View.Connection.ViewConnectPgSql();
-                if ((_connWindow.Owner = App.GetActiveWindow()) == null)
-                    throw (new Exception("No parent window loaded"));
-                _connWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                _connWindow = new()
+                {
+                    //TODO: App.GetActiveWindow
+                    //if ((_connWindow.Owner = App.GetActiveWindow()) == null)
+                    //    throw (new Exception("No parent window loaded"));
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                };
 
                 // create ViewModel to which main window binds
-                _connViewModel = new HLU.UI.ViewModel.ViewModelConnectPgSql();
-                _connViewModel.DisplayName = "PostgreSQL Connection";
+                _connViewModel = new()
+                {
+                    DisplayName = "PostgreSQL Connection"
+                };
 
                 // when ViewModel asks to be closed, close window
                 _connViewModel.RequestClose +=
@@ -797,7 +820,7 @@ namespace HLU.Data.Connection
             }
         }
 
-        protected void _connViewModel_RequestClose(string connString, string encoding, 
+        protected void _connViewModel_RequestClose(string connString, string encoding,
             string defaultSchema, string errorMsg)
         {
             _connViewModel.RequestClose -= _connViewModel_RequestClose;
@@ -818,13 +841,13 @@ namespace HLU.Data.Connection
         #endregion
 
         #endregion
-        
+
         #endregion
 
         #region SQLBuilder Members
-        
+
         #region Public Members
-        
+
         public override string QuotePrefix { get { return "\""; } }
 
         public override string QuoteSuffix { get { return "\""; } }
@@ -869,8 +892,8 @@ namespace HLU.Data.Connection
                     case NpgsqlDbType.Date:
                     case NpgsqlDbType.Time:
                     case NpgsqlDbType.Timestamp:
-                    case NpgsqlDbType.TimestampTZ:
-                    case NpgsqlDbType.TimeTZ:
+                    case NpgsqlDbType.TimestampTz:
+                    case NpgsqlDbType.TimeTz:
                         if (s.Length == 0) return DateLiteralPrefix + DateLiteralSuffix;
                         if (!s.StartsWith(DateLiteralPrefix)) s = DateLiteralPrefix + s;
                         if (!s.EndsWith(DateLiteralSuffix)) s += DateLiteralSuffix;
@@ -884,25 +907,25 @@ namespace HLU.Data.Connection
                 return value.ToString();
             }
         }
-        
+
         #endregion
 
         #endregion
 
         #region Private Methods
 
-        private void PopulateTypeMaps(bool isUnicode, bool useTimeZone, uint textLength, 
+        private void PopulateTypeMaps(bool isUnicode, bool useTimeZone, uint textLength,
             uint binaryLength, uint timePrecision, uint numericPrecision, uint numericScale)
         {
             string timeZoneSuffix = useTimeZone ? "tz" : "";
 
             GetMetaData(typeof(NpgsqlDbType), _connection, _transaction);
 
-            Dictionary<Type, int> typeMapSystemToSQLAdd = new Dictionary<Type, int>();
+            Dictionary<Type, int> typeMapSystemToSQLAdd = [];
             typeMapSystemToSQLAdd.Add(typeof(Boolean), (int)NpgsqlDbType.Boolean);
             typeMapSystemToSQLAdd.Add(typeof(Byte), (int) NpgsqlDbType.Smallint);
             typeMapSystemToSQLAdd.Add(typeof(Char), (int) NpgsqlDbType.Char);
-            typeMapSystemToSQLAdd.Add(typeof(DateTime), (int)(useTimeZone ? NpgsqlDbType.TimestampTZ : NpgsqlDbType.Timestamp));
+            typeMapSystemToSQLAdd.Add(typeof(DateTime), (int)(useTimeZone ? NpgsqlDbType.TimestampTz : NpgsqlDbType.Timestamp));
             typeMapSystemToSQLAdd.Add(typeof(TimeSpan), (int)NpgsqlDbType.Interval);
             typeMapSystemToSQLAdd.Add(typeof(Decimal), (int) NpgsqlDbType.Numeric);
             typeMapSystemToSQLAdd.Add(typeof(Double), (int) NpgsqlDbType.Numeric);
@@ -920,7 +943,7 @@ namespace HLU.Data.Connection
             typeMapSystemToSQLAdd.Add(typeof(Char[]), (int) NpgsqlDbType.Varchar);
             typeMapSystemToSQLAdd.Add(typeof(Guid), (int)NpgsqlDbType.Uuid);
 
-            Dictionary<int, Type> typeMapSQLToSystemAdd = new Dictionary<int, Type>();
+            Dictionary<int, Type> typeMapSQLToSystemAdd = [];
             typeMapSQLToSystemAdd.Add((int)NpgsqlDbType.Bigint, typeof(Int64));
             typeMapSQLToSystemAdd.Add((int)NpgsqlDbType.Bit, typeof(Boolean));
             typeMapSQLToSystemAdd.Add((int)NpgsqlDbType.Boolean, typeof(Boolean));
@@ -937,11 +960,11 @@ namespace HLU.Data.Connection
             typeMapSQLToSystemAdd.Add((int)NpgsqlDbType.Interval, typeof(TimeSpan));
             typeMapSQLToSystemAdd.Add((int)NpgsqlDbType.Time, typeof(DateTime));
             typeMapSQLToSystemAdd.Add((int)NpgsqlDbType.Timestamp, typeof(DateTime));
-            typeMapSQLToSystemAdd.Add((int)NpgsqlDbType.TimestampTZ, typeof(DateTime));
+            typeMapSQLToSystemAdd.Add((int)NpgsqlDbType.TimestampTz, typeof(DateTime));
             typeMapSQLToSystemAdd.Add((int)NpgsqlDbType.Uuid, typeof(Guid));
             typeMapSQLToSystemAdd.Add((int)NpgsqlDbType.Varchar, typeof(String));
 
-            Dictionary<string, int> sqlSynonymsAdd = new Dictionary<string, int>();
+            Dictionary<string, int> sqlSynonymsAdd = [];
             sqlSynonymsAdd.Add("bigint", (int)NpgsqlDbType.Bigint);
             sqlSynonymsAdd.Add("bigserial", (int)NpgsqlDbType.Bigint);
             sqlSynonymsAdd.Add("bit varying", (int)NpgsqlDbType.Bytea); // ??
@@ -980,14 +1003,14 @@ namespace HLU.Data.Connection
             sqlSynonymsAdd.Add("serial8", (int)NpgsqlDbType.Bigint);
             sqlSynonymsAdd.Add("smallint", (int)NpgsqlDbType.Smallint);
             sqlSynonymsAdd.Add("text", (int)NpgsqlDbType.Text);
-            sqlSynonymsAdd.Add("time with time zone", (int)NpgsqlDbType.TimeTZ);
+            sqlSynonymsAdd.Add("time with time zone", (int)NpgsqlDbType.TimeTz);
             sqlSynonymsAdd.Add("time without time zone", (int)NpgsqlDbType.Time);
             sqlSynonymsAdd.Add("time", (int)NpgsqlDbType.Time);
-            sqlSynonymsAdd.Add("timestamp with time zone", (int)NpgsqlDbType.TimestampTZ);
+            sqlSynonymsAdd.Add("timestamp with time zone", (int)NpgsqlDbType.TimestampTz);
             sqlSynonymsAdd.Add("timestamp without time zone", (int)NpgsqlDbType.Timestamp);
             sqlSynonymsAdd.Add("timestamp", (int)NpgsqlDbType.Timestamp);
-            sqlSynonymsAdd.Add("timestamptz", (int)NpgsqlDbType.TimestampTZ);
-            sqlSynonymsAdd.Add("timetz", (int)NpgsqlDbType.TimeTZ);
+            sqlSynonymsAdd.Add("TimestampTz", (int)NpgsqlDbType.TimestampTz);
+            sqlSynonymsAdd.Add("timetz", (int)NpgsqlDbType.TimeTz);
             sqlSynonymsAdd.Add("uuid", (int)NpgsqlDbType.Uuid);
             sqlSynonymsAdd.Add("varbit", (int)NpgsqlDbType.Bytea); // ??
             sqlSynonymsAdd.Add("varchar", (int)NpgsqlDbType.Varchar);
@@ -999,7 +1022,7 @@ namespace HLU.Data.Connection
                     _typeMapSystemToSQL.Add(kv.Key, kv.Value);
             }
 
-            ReplaceType(typeof(DateTime), (int)(useTimeZone ? NpgsqlDbType.TimestampTZ : 
+            ReplaceType(typeof(DateTime), (int)(useTimeZone ? NpgsqlDbType.TimestampTz :
                 NpgsqlDbType.Timestamp), _typeMapSystemToSQL);
 
             foreach (KeyValuePair<int, Type> kv in typeMapSQLToSystemAdd)
@@ -1014,9 +1037,9 @@ namespace HLU.Data.Connection
                     _sqlSynonyms.Add(kv.Key, kv.Value);
             }
 
-            _typeMapSQLToSQLCode = new Dictionary<int, string>();
-            _typeMapSQLCodeToSQL = new Dictionary<string, int>();
-            
+            _typeMapSQLToSQLCode = [];
+            _typeMapSQLCodeToSQL = [];
+
             _typeMapSQLToSQLCode.Add((int)NpgsqlDbType.Bigint, "bigint");
             _typeMapSQLToSQLCode.Add((int)NpgsqlDbType.Bit, "boolean");
             _typeMapSQLToSQLCode.Add((int)NpgsqlDbType.Boolean, "boolean");
@@ -1035,7 +1058,7 @@ namespace HLU.Data.Connection
             _typeMapSQLCodeToSQL.Add("date", (int)NpgsqlDbType.Date);
             _typeMapSQLCodeToSQL.Add("integer", (int)NpgsqlDbType.Integer);
             _typeMapSQLCodeToSQL.Add("money", (int)NpgsqlDbType.Money);
-            
+
             if ((numericPrecision > 0) && (numericScale > 0))
             {
                 _typeMapSQLToSQLCode.Add((int)NpgsqlDbType.Numeric, String.Format("numeric ({0},{1})", numericPrecision, numericScale));
@@ -1063,21 +1086,21 @@ namespace HLU.Data.Connection
             {
                 _typeMapSQLToSQLCode.Add((int)NpgsqlDbType.Time, String.Format("time{0} ({1})", timeZoneSuffix, timePrecision));
                 _typeMapSQLToSQLCode.Add((int)NpgsqlDbType.Timestamp, String.Format("timestamp ({0})", timePrecision));
-                _typeMapSQLToSQLCode.Add((int)NpgsqlDbType.TimestampTZ, String.Format("timestamptz ({0})", timePrecision));
-                
+                _typeMapSQLToSQLCode.Add((int)NpgsqlDbType.TimestampTz, String.Format("TimestampTz ({0})", timePrecision));
+
                 _typeMapSQLCodeToSQL.Add(String.Format("time{0} ({1})", timeZoneSuffix, timePrecision), (int)NpgsqlDbType.Time);
                 _typeMapSQLCodeToSQL.Add(String.Format("timestamp ({0})", timePrecision), (int)NpgsqlDbType.Timestamp);
-                _typeMapSQLCodeToSQL.Add(String.Format("timestamptz ({0})", timePrecision), (int)NpgsqlDbType.TimestampTZ);
+                _typeMapSQLCodeToSQL.Add(String.Format("TimestampTz ({0})", timePrecision), (int)NpgsqlDbType.TimestampTz);
             }
             else
             {
                 _typeMapSQLToSQLCode.Add((int)NpgsqlDbType.Time, String.Format("time{0}", timeZoneSuffix));
                 _typeMapSQLToSQLCode.Add((int)NpgsqlDbType.Timestamp, "timestamp");
-                _typeMapSQLToSQLCode.Add((int)NpgsqlDbType.TimestampTZ, "timestamptz");
-                
+                _typeMapSQLToSQLCode.Add((int)NpgsqlDbType.TimestampTz, "TimestampTz");
+
                 _typeMapSQLCodeToSQL.Add(String.Format("time{0}", timeZoneSuffix), (int)NpgsqlDbType.Time);
                 _typeMapSQLCodeToSQL.Add("timestamp", (int)NpgsqlDbType.Timestamp);
-                _typeMapSQLCodeToSQL.Add("timestamptz", (int)NpgsqlDbType.TimestampTZ);
+                _typeMapSQLCodeToSQL.Add("TimestampTz", (int)NpgsqlDbType.TimestampTz);
             }
             if (textLength > 0)
             {
@@ -1105,9 +1128,10 @@ namespace HLU.Data.Connection
                 _command.ExecuteNonQuery();
             }
             catch { }
-            finally { if (previousConnectionState != ConnectionState.Open) _connection.Clone(); }
+            //DONE: _connection.Clone()
+            finally { if (previousConnectionState != ConnectionState.Open) _connection.Open() ; }
         }
-        
+
         #endregion
     }
 }

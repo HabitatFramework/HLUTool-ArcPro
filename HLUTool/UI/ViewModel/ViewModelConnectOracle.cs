@@ -1,18 +1,18 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -26,7 +26,7 @@ using System.Windows;
 using System.Windows.Input;
 using HLU.Data.Connection;
 using HLU.Properties;
-using Oracle.DataAccess.Client;
+using Oracle.ManagedDataAccess.Client;
 
 namespace HLU.UI.ViewModel
 {
@@ -45,7 +45,7 @@ namespace HLU.UI.ViewModel
         private RelayCommand _cancelCommand;
         private Dictionary<string, string> _dataSourcesDic;
         private string[] _dataSources;
-        private List<String> _schemata = new List<string>();
+        private List<String> _schemata = [];
         private string _defaultSchema;
         private OracleConnectionStringBuilder _connStrBuilder;
 
@@ -106,8 +106,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_okCommand == null)
                 {
-                    Action<object> okAction = new Action<object>(this.OkCommandClick);
-                    _okCommand = new RelayCommand(okAction, param => this.CanOk);
+                    Action<object> okAction = new(this.OkCommandClick);
+                    _okCommand = new(okAction, param => this.CanOk);
                 }
 
                 return _okCommand;
@@ -178,8 +178,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_cancelCommand == null)
                 {
-                    Action<object> cancelAction = new Action<object>(this.CancelCommandClick);
-                    _cancelCommand = new RelayCommand(cancelAction);
+                    Action<object> cancelAction = new(this.CancelCommandClick);
+                    _cancelCommand = new(cancelAction);
                 }
 
                 return _cancelCommand;
@@ -229,7 +229,7 @@ namespace HLU.UI.ViewModel
                         DataTable dt = dataSourceEnumarator.GetDataSources();
                         _dataSourcesDic = DbOracle.GetConnectionStrings(dt);
                         _dataSources = _dataSourcesDic.Keys.ToArray();
-                        OnPropertyChanged("DataSources");
+                        OnPropertyChanged(nameof(DataSources));
                     }
                     else
                     {
@@ -266,12 +266,12 @@ namespace HLU.UI.ViewModel
                     if (String.IsNullOrEmpty(_defaultSchema) && (_schemata != null) && (_schemata.Count > 0))
                     {
                         _defaultSchema = _connStrBuilder.UserID;
-                        OnPropertyChanged("DefaultSchema");
+                        OnPropertyChanged(nameof(DefaultSchema));
                     }
                     if (DbOracle.GetUserId(_connStrBuilder.UserID) == "SYS")
                     {
                         _connStrBuilder.DBAPrivilege = DBAPrivilege.SYSDBA.ToString();
-                        OnPropertyChanged("DBAPrivilegeOption");
+                        OnPropertyChanged(nameof(DBAPrivilegeOption));
                     }
                 }
             }
@@ -331,7 +331,7 @@ namespace HLU.UI.ViewModel
 
         private void LoadSchemata()
         {
-            List<String> schemaList = new List<String>();
+            List<String> schemaList = new();
             OracleConnection cn = null;
 
             try
@@ -344,8 +344,8 @@ namespace HLU.UI.ViewModel
                     OracleCommand cmd = cn.CreateCommand();
                     cmd.CommandType = CommandType.Text;
                     cmd.CommandText = "SELECT username FROM all_users";
-                    OracleDataAdapter adapter = new OracleDataAdapter(cmd);
-                    DataTable dbTable = new DataTable();
+                    OracleDataAdapter adapter = new(cmd);
+                    DataTable dbTable = new();
 
                     try
                     {
@@ -370,10 +370,10 @@ namespace HLU.UI.ViewModel
                 if ((cn != null) && (cn.State != ConnectionState.Closed)) cn.Close();
 
                 _schemata = schemaList;
-                OnPropertyChanged("Schemata");
+                OnPropertyChanged(nameof(Schemata));
 
                 if (_schemata.Count == 1) _defaultSchema = _schemata[0];
-                OnPropertyChanged("DefaultSchema");
+                OnPropertyChanged(nameof(DefaultSchema));
             }
         }
 
@@ -385,7 +385,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                StringBuilder error = new StringBuilder();
+                StringBuilder error = new();
 
                 if (String.IsNullOrEmpty(_connStrBuilder.DataSource))
                     error.Append(", data source");

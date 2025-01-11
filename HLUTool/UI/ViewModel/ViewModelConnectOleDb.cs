@@ -1,19 +1,19 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -47,7 +47,7 @@ namespace HLU.UI.ViewModel
         private RelayCommand _browseConnCommand;
         private ADODB.Connection _connAdo;
         private Backends _backend = Backends.UndeterminedOleDb;
-        private List<String> _schemata = new List<string>();
+        private List<String> _schemata = [];
         private string _defaultSchema;
 
         private OleDbConnectionStringBuilder _connStrBuilder;
@@ -58,7 +58,7 @@ namespace HLU.UI.ViewModel
 
         public ViewModelConnectOleDb()
         {
-            _connStrBuilder = new OleDbConnectionStringBuilder();
+            _connStrBuilder = [];
         }
 
         #endregion
@@ -109,8 +109,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_okCommand == null)
                 {
-                    Action<object> okAction = new Action<object>(this.OkCommandClick);
-                    _okCommand = new RelayCommand(okAction, param => this.CanOk);
+                    Action<object> okAction = new(this.OkCommandClick);
+                    _okCommand = new(okAction, param => this.CanOk);
                 }
 
                 return _okCommand;
@@ -198,8 +198,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_cancelCommand == null)
                 {
-                    Action<object> cancelAction = new Action<object>(this.CancelCommandClick);
-                    _cancelCommand = new RelayCommand(cancelAction);
+                    Action<object> cancelAction = new(this.CancelCommandClick);
+                    _cancelCommand = new(cancelAction);
                 }
 
                 return _cancelCommand;
@@ -232,8 +232,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_createConnCommand == null)
                 {
-                    Action<object> createConnAction = new Action<object>(this.CreateConnCommandClick);
-                    _createConnCommand = new RelayCommand(createConnAction);
+                    Action<object> createConnAction = new(this.CreateConnCommandClick);
+                    _createConnCommand = new(createConnAction);
                 }
 
                 return _createConnCommand;
@@ -255,8 +255,8 @@ namespace HLU.UI.ViewModel
             if ((_connAdo != null) && TestConnection(_connAdo.ConnectionString))
             {
                 _connStrBuilder.ConnectionString = _connAdo.ConnectionString;
-                OnPropertyChanged("ConnectionString");
-                OnPropertyChanged("SupportsSchemata");
+                OnPropertyChanged(nameof(ConnectionString));
+                OnPropertyChanged(nameof(SupportsSchemata));
             }
         }
 
@@ -276,8 +276,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_browseConnCommand == null)
                 {
-                    Action<object> browseConnAction = new Action<object>(this.BrowseConnCommandClick);
-                    _browseConnCommand = new RelayCommand(browseConnAction);
+                    Action<object> browseConnAction = new(this.BrowseConnCommandClick);
+                    _browseConnCommand = new(browseConnAction);
                 }
 
                 return _browseConnCommand;
@@ -302,8 +302,8 @@ namespace HLU.UI.ViewModel
             if (TestConnection(testString))
             {
                 _connStrBuilder.ConnectionString = testString;
-                OnPropertyChanged("ConnectionString");
-                OnPropertyChanged("SupportsSchemata");
+                OnPropertyChanged(nameof(ConnectionString));
+                OnPropertyChanged(nameof(SupportsSchemata));
             }
         }
 
@@ -323,8 +323,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_editConnCommand == null)
                 {
-                    Action<object> editConnAction = new Action<object>(this.EditConnCommandClick);
-                    _editConnCommand = new RelayCommand(editConnAction, param => this.CanEditConn);
+                    Action<object> editConnAction = new(this.EditConnCommandClick);
+                    _editConnCommand = new(editConnAction, param => this.CanEditConn);
                 }
 
                 return _editConnCommand;
@@ -351,8 +351,8 @@ namespace HLU.UI.ViewModel
                     if (TestConnection(_connAdo.ConnectionString))
                     {
                         _connStrBuilder.ConnectionString = _connAdo.ConnectionString;
-                        OnPropertyChanged("ConnectionString");
-                        OnPropertyChanged("SupportsSchemata");
+                        OnPropertyChanged(nameof(ConnectionString));
+                        OnPropertyChanged(nameof(SupportsSchemata));
                     }
                 }
             }
@@ -428,7 +428,7 @@ namespace HLU.UI.ViewModel
 
         private void LoadSchemata()
         {
-            List<String> schemaList = new List<String>();
+            List<String> schemaList = new();
             OleDbConnection cn = null;
 
             try
@@ -447,7 +447,7 @@ namespace HLU.UI.ViewModel
                         cmd.CommandText = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA" +
                                             " WHERE SCHEMA_NAME <> 'INFORMATION_SCHEMA'";
                         OleDbDataAdapter adapter = new OleDbDataAdapter(cmd);
-                        DataTable dbTable = new DataTable();
+                        DataTable dbTable = new();
                         try
                         {
                             adapter.Fill(dbTable);
@@ -473,10 +473,10 @@ namespace HLU.UI.ViewModel
                 if ((cn != null) && (cn.State != ConnectionState.Closed)) cn.Close();
 
                 _schemata = schemaList;
-                OnPropertyChanged("Schemata");
+                OnPropertyChanged(nameof(Schemata));
 
                 if (_schemata.Count == 1) _defaultSchema = _schemata[0];
-                OnPropertyChanged("DefaultSchema");
+                OnPropertyChanged(nameof(DefaultSchema));
             }
         }
 
@@ -497,7 +497,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                StringBuilder error = new StringBuilder();
+                StringBuilder error = new();
 
                 if (String.IsNullOrEmpty(_connStrBuilder.ConnectionString))
                     error.Append(", connection");

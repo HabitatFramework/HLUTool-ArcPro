@@ -1,19 +1,19 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2014 Sussex Biodiversity Record Centre
 // Copyright © 2019 Greenspace Information for Greater London CIC
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -61,7 +61,7 @@ namespace HLU.UI.ViewModel
         private ICommand _addOperatorCommand;
         private ICommand _addValueCommand;
 
-        private Dictionary<Type, Int32> _typeMapSystemToSQL = new Dictionary<Type, int>();
+        private Dictionary<Type, Int32> _typeMapSystemToSQL = [];
 
         private string _displayName = "Advanced Query Builder";
         private Cursor _cursorType = Cursors.Arrow;
@@ -139,8 +139,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_getValuesCommand == null)
                 {
-                    Action<object> getValuesAction = new Action<object>(this.GetValuesCommandClick);
-                    _getValuesCommand = new RelayCommand(getValuesAction, param => this.CanGetValues);
+                    Action<object> getValuesAction = new(this.GetValuesCommandClick);
+                    _getValuesCommand = new(getValuesAction, param => this.CanGetValues);
                 }
 
                 return _getValuesCommand;
@@ -253,7 +253,7 @@ namespace HLU.UI.ViewModel
                 _lastValueCounter = 0;
             }
 
-            OnPropertyChanged("QueryValues");
+            OnPropertyChanged(nameof(QueryValues));
 
         }
 
@@ -289,7 +289,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Update the button tool tip.
-                OnPropertyChanged("GetValuesToolTip");
+                OnPropertyChanged(nameof(GetValuesToolTip));
 
                 return canGet;
             }
@@ -345,8 +345,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_clearCommand == null)
                 {
-                    Action<object> clearAction = new Action<object>(this.ClearCommandClick);
-                    _clearCommand = new RelayCommand(clearAction, param => this.CanClear);
+                    Action<object> clearAction = new(this.ClearCommandClick);
+                    _clearCommand = new(clearAction, param => this.CanClear);
                 }
 
                 return _clearCommand;
@@ -365,10 +365,10 @@ namespace HLU.UI.ViewModel
             SqlFromTables = null;
             SqlWhereClause = null;
 
-            OnPropertyChanged("Table");
-            OnPropertyChanged("ComparisonOperator");
-            OnPropertyChanged("SqlFromTables");
-            OnPropertyChanged("SqlWhereClause");
+            OnPropertyChanged(nameof(Table));
+            OnPropertyChanged(nameof(ComparisonOperator));
+            OnPropertyChanged(nameof(SqlFromTables));
+            OnPropertyChanged(nameof(SqlWhereClause));
         }
 
         /// <summary>
@@ -395,8 +395,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_verifyCommand == null)
                 {
-                    Action<object> verifyAction = new Action<object>(this.VerifyCommandClick);
-                    _verifyCommand = new RelayCommand(verifyAction, param => this.CanVerify);
+                    Action<object> verifyAction = new(this.VerifyCommandClick);
+                    _verifyCommand = new(verifyAction, param => this.CanVerify);
                 }
 
                 return _verifyCommand;
@@ -418,7 +418,7 @@ namespace HLU.UI.ViewModel
                     ChangeCursor(Cursors.Wait);
 
                     // Get a list of all the possible query tables.
-                    List<DataTable> tables = new List<DataTable>();
+                    List<DataTable> tables = [];
                     if ((ViewModelWindowQueryAdvanced.HluDatasetStatic != null))
                     {
                         tables = ViewModelWindowQueryAdvanced.HluDatasetStatic.incid.ChildRelations
@@ -434,7 +434,7 @@ namespace HLU.UI.ViewModel
                     List<DataTable> whereTables = tables.Where(t => fromTables.Contains(t.TableName)).ToList();
 
                     // Parse the SQL to see if it is valid.
-                    if (whereTables.Count() > 0)
+                    if (whereTables.Any())
                     {
                         // Replace any connection type specific qualifiers and delimiters.
                         string newWhereClause = null;
@@ -515,8 +515,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_okCommand == null)
                 {
-                    Action<object> okAction = new Action<object>(this.OkCommandClick);
-                    _okCommand = new RelayCommand(okAction, param => this.CanOk);
+                    Action<object> okAction = new(this.OkCommandClick);
+                    _okCommand = new(okAction, param => this.CanOk);
                 }
 
                 return _okCommand;
@@ -558,8 +558,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_cancelCommand == null)
                 {
-                    Action<object> cancelAction = new Action<object>(this.CancelCommandClick);
-                    _cancelCommand = new RelayCommand(cancelAction);
+                    Action<object> cancelAction = new(this.CancelCommandClick);
+                    _cancelCommand = new(cancelAction);
                 }
 
                 return _cancelCommand;
@@ -592,8 +592,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_loadCommand == null)
                 {
-                    Action<object> loadAction = new Action<object>(this.LoadCommandClick);
-                    _loadCommand = new RelayCommand(loadAction);
+                    Action<object> loadAction = new(this.LoadCommandClick);
+                    _loadCommand = new(loadAction);
                 }
 
                 return _loadCommand;
@@ -626,8 +626,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_saveCommand == null)
                 {
-                    Action<object> saveAction = new Action<object>(this.SaveCommandClick);
-                    _saveCommand = new RelayCommand(saveAction, param => this.CanSave);
+                    Action<object> saveAction = new(this.SaveCommandClick);
+                    _saveCommand = new(saveAction, param => this.CanSave);
                 }
 
                 return _saveCommand;
@@ -691,14 +691,14 @@ namespace HLU.UI.ViewModel
             {
                 _table = value;
                 _column = null;
-                OnPropertyChanged("Table");
-                OnPropertyChanged("Columns");
-                OnPropertyChanged("ColumnIsEnabled");
+                OnPropertyChanged(nameof(Table));
+                OnPropertyChanged(nameof(Columns));
+                OnPropertyChanged(nameof(ColumnIsEnabled));
 
                 _queryValues = null;
                 _lastValueCounter = 0;
-                OnPropertyChanged("QueryValues");
-                //OnPropertyChanged("QueryValueIsEnabled");
+                OnPropertyChanged(nameof(QueryValues));
+                //OnPropertyChanged(nameof(QueryValueIsEnabled));
             }
         }
 
@@ -742,13 +742,13 @@ namespace HLU.UI.ViewModel
                     Table.Columns.Contains(column.ColumnName))
                 {
                     _column = column;
-                    OnPropertyChanged("Column");
+                    OnPropertyChanged(nameof(Column));
 
                     _queryValues = null;
                     _lastValueCounter = 0;
-                    OnPropertyChanged("QueryValues");
-                    //OnPropertyChanged("QueryValueIsEnabled");
-                    OnPropertyChanged("CanGetValues");
+                    OnPropertyChanged(nameof(QueryValues));
+                    //OnPropertyChanged(nameof(QueryValueIsEnabled));
+                    OnPropertyChanged(nameof(CanGetValues));
                 }
             }
         }
@@ -799,7 +799,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _comparisonOperator = value;
-                OnPropertyChanged("ComparisonOperator");
+                OnPropertyChanged(nameof(ComparisonOperator));
             }
         }
 
@@ -911,7 +911,7 @@ namespace HLU.UI.ViewModel
                     }
                 }
 
-                OnPropertyChanged("QueryValueIsEnabled");
+                OnPropertyChanged(nameof(QueryValueIsEnabled));
                 return _queryValues;
             }
             set
@@ -932,7 +932,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _queryValue = value;
-                OnPropertyChanged("QueryValue");
+                OnPropertyChanged(nameof(QueryValue));
             }
         }
 
@@ -965,8 +965,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_addTableCommand == null)
                 {
-                    Action<object> addTableAction = new Action<object>(this.AddTableCommandClick);
-                    _addTableCommand = new RelayCommand(addTableAction, param => this.CanAddTable);
+                    Action<object> addTableAction = new(this.AddTableCommandClick);
+                    _addTableCommand = new(addTableAction, param => this.CanAddTable);
                 }
 
                 return _addTableCommand;
@@ -988,7 +988,7 @@ namespace HLU.UI.ViewModel
                 else
                     SqlFromTables += String.Concat(", ", Table.TableName);
 
-                OnPropertyChanged("SqlFromTables");
+                OnPropertyChanged(nameof(SqlFromTables));
             }
         }
 
@@ -1019,8 +1019,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_addColumnCommand == null)
                 {
-                    Action<object> addColumnAction = new Action<object>(this.AddColumnCommandClick);
-                    _addColumnCommand = new RelayCommand(addColumnAction, param => this.CanAddColumn);
+                    Action<object> addColumnAction = new(this.AddColumnCommandClick);
+                    _addColumnCommand = new(addColumnAction, param => this.CanAddColumn);
                 }
 
                 return _addColumnCommand;
@@ -1039,7 +1039,7 @@ namespace HLU.UI.ViewModel
             else
                 SqlWhereClause += String.Concat(" ", QuoteIdentifier(Table.TableName), ".", Column.ColumnName);
 
-            OnPropertyChanged("SqlWhereClause");
+            OnPropertyChanged(nameof(SqlWhereClause));
         }
 
         /// <summary>
@@ -1069,8 +1069,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_addOperatorCommand == null)
                 {
-                    Action<object> addOperatorAction = new Action<object>(this.AddOperatorCommandClick);
-                    _addOperatorCommand = new RelayCommand(addOperatorAction, param => this.CanAddOperator);
+                    Action<object> addOperatorAction = new(this.AddOperatorCommandClick);
+                    _addOperatorCommand = new(addOperatorAction, param => this.CanAddOperator);
                 }
 
                 return _addOperatorCommand;
@@ -1089,7 +1089,7 @@ namespace HLU.UI.ViewModel
             else
                 SqlWhereClause += String.Concat(" ", ComparisonOperator);
 
-            OnPropertyChanged("SqlWhereClause");
+            OnPropertyChanged(nameof(SqlWhereClause));
         }
 
         /// <summary>
@@ -1119,8 +1119,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_addValueCommand == null)
                 {
-                    Action<object> addValueAction = new Action<object>(this.AddValueCommandClick);
-                    _addValueCommand = new RelayCommand(addValueAction, param => this.CanAddValue);
+                    Action<object> addValueAction = new(this.AddValueCommandClick);
+                    _addValueCommand = new(addValueAction, param => this.CanAddValue);
                 }
 
                 return _addValueCommand;
@@ -1140,7 +1140,7 @@ namespace HLU.UI.ViewModel
                 SqlWhereClause += String.Concat(" ", QuoteValue(QueryValue));
 
 
-            OnPropertyChanged("SqlWhereClause");
+            OnPropertyChanged(nameof(SqlWhereClause));
         }
 
         /// <summary>
@@ -1260,8 +1260,8 @@ namespace HLU.UI.ViewModel
                                 break;
                         }
                     }
-                    OnPropertyChanged("SqlFromTables");
-                    OnPropertyChanged("SqlWhereClause");
+                    OnPropertyChanged(nameof(SqlFromTables));
+                    OnPropertyChanged(nameof(SqlWhereClause));
                 }
             }
 
@@ -1585,9 +1585,9 @@ namespace HLU.UI.ViewModel
             Type valueType = value.GetType();
             int colType;
 
-            if (_typeMapSystemToSQL == null || _typeMapSystemToSQL.Count() == 0)
+            if (_typeMapSystemToSQL == null || _typeMapSystemToSQL.Count == 0)
             {
-                Dictionary<Type, int> typeMapSystemToSQLAdd = new Dictionary<Type, int>();
+                Dictionary<Type, int> typeMapSystemToSQLAdd = [];
                 typeMapSystemToSQLAdd.Add(typeof(Object), (int)OdbcType.VarBinary);
                 typeMapSystemToSQLAdd.Add(typeof(Boolean), (int)OdbcType.Bit);
                 typeMapSystemToSQLAdd.Add(typeof(SByte), (int)OdbcType.Int);
@@ -1703,7 +1703,7 @@ namespace HLU.UI.ViewModel
         public void ChangeCursor(Cursor cursorType)
         {
             _cursorType = cursorType;
-            OnPropertyChanged("WindowCursor");
+            OnPropertyChanged(nameof(WindowCursor));
             if (cursorType == Cursors.Wait)
                 DispatcherHelper.DoEvents();
         }
@@ -1716,7 +1716,7 @@ namespace HLU.UI.ViewModel
         {
             get 
             {
-                StringBuilder error = new StringBuilder();
+                StringBuilder error = new();
 
                 if (error.Length > 0)
                     return error.ToString();

@@ -98,8 +98,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_yesCommand == null)
                 {
-                    Action<object> yesAction = new Action<object>(this.YesCommandClick);
-                    _yesCommand = new RelayCommand(yesAction);
+                    Action<object> yesAction = new(this.YesCommandClick);
+                    _yesCommand = new(yesAction);
                 }
 
                 return _yesCommand;
@@ -137,8 +137,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_noCommand == null)
                 {
-                    Action<object> noAction = new Action<object>(this.NoCommandClick);
-                    _noCommand = new RelayCommand(noAction);
+                    Action<object> noAction = new(this.NoCommandClick);
+                    _noCommand = new(noAction);
                 }
 
                 return _noCommand;
@@ -172,7 +172,7 @@ namespace HLU.UI.ViewModel
                 // Display the expected number of features and/or the expected
                 // number of incids to be selected in GIS, depending upon which
                 // values are valid.
-                StringBuilder labelMsg = new StringBuilder();
+                StringBuilder labelMsg = new();
                 if (_gisFeaturesNum < 0 && _gisIncidNum < 0)
                 {
                     labelMsg.Append(String.Format("Could not determine the number of {0}{1} or incids expected to be " +

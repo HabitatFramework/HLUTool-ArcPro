@@ -3,19 +3,19 @@
 // Copyright © 2013 Thames Valley Environmental Records Centre
 // Copyright © 2019 London & South East Record Centres (LaSER)
 // Copyright © 2020 Greenspace Information for Greater London CIC
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -81,7 +81,7 @@ namespace HLU.UI.ViewModel
             //---------------------------------------------------------------------
             // CHANGED: CR49 Process proposed OSMM Updates
             // Functionality for applying pending OSMM Bulk Updates.
-            //    
+            //
             // Store whether we are starting in OSMM Bulk update
             // mode or just standard Bulk Update mode
             _osmmBulkUpdateMode = osmmBulkUpdateMode;
@@ -283,13 +283,13 @@ namespace HLU.UI.ViewModel
                         !_viewModelMain.IncidCurrentRow.IsNull(c.Ordinal));
 
                 // Build an UPDATE statement for the incid table
-                string updateCommandIncid = incidUpdateCols.Count() == 0 ? String.Empty :
-                    new StringBuilder(String.Format("UPDATE {0} SET ",
+                string updateCommandIncid = incidUpdateCols.Any() ? String.Empty :
+                    new(String.Format("UPDATE {0} SET ",
                     _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid.TableName)))
                     .Append(_viewModelMain.HluDataset.incid.Columns.Cast<DataColumn>()
                     .Where(c => c.Ordinal != _viewModelMain.HluDataset.incid.incidColumn.Ordinal &&
                         !_viewModelMain.IncidCurrentRow.IsNull(c.Ordinal))
-                    .Aggregate(new StringBuilder(), (sb, c) => sb.Append(String.Format(", {0} = {1}",
+                    .Aggregate(new(), (sb, c) => sb.Append(String.Format(", {0} = {1}",
                         _viewModelMain.DataBase.QuoteIdentifier(c.ColumnName),
                         _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidCurrentRow[c.Ordinal]))))
                         .Remove(0, 2)).ToString();
@@ -298,7 +298,7 @@ namespace HLU.UI.ViewModel
                 // the secondary habitat summary to the list of columns to update
                 if ((_bulkDeleteSecondaryCodes) && (_viewModelMain.IncidCurrentRow.habitat_secondaries == null))
                 {
-                    updateCommandIncid = new StringBuilder(updateCommandIncid)
+                    updateCommandIncid = new(updateCommandIncid)
                         .Append(String.Format(", {0} = {1}",
                         _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.habitat_secondariesColumn.ColumnName),
                         _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidCurrentRow.habitat_secondaries)))
@@ -311,7 +311,7 @@ namespace HLU.UI.ViewModel
                 {
                     _viewModelMain.IncidCurrentRow.ihs_habitat = null;
 
-                    updateCommandIncid = new StringBuilder(updateCommandIncid)
+                    updateCommandIncid = new(updateCommandIncid)
                         .Append(String.Format(", {0} = {1}",
                         _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.ihs_habitatColumn.ColumnName),
                         _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidCurrentRow.ihs_habitat)))
@@ -319,10 +319,10 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Finally, add the where clause to the update command
-                updateCommandIncid = new StringBuilder(updateCommandIncid).Append(incidWhereClause).ToString();
+                updateCommandIncid = new(updateCommandIncid).Append(incidWhereClause).ToString();
 
                 // Build DELETE statements for all IHS multiplex rows
-                List<string> ihsMultiplexDeleteStatements = new List<string>();
+                List<string> ihsMultiplexDeleteStatements = [];
 
                 // If all IHS multiplex codes are to be deleted build
                 // DELETE statements for all IHS multiplex rows
@@ -469,7 +469,7 @@ namespace HLU.UI.ViewModel
         //---------------------------------------------------------------------
         // CHANGED: CR49 Process proposed OSMM Updates
         // Functionality for applying pending OSMM Bulk Updates.
-        //    
+        //
         /// <summary>
         /// Applies the osmm bulk update.
         /// </summary>
@@ -512,13 +512,13 @@ namespace HLU.UI.ViewModel
 
                 // If all IHS codes are to be deleted clear
                 string updateIHSHabitat = "";
-                List<string> ihsMultiplexDeleteStatements = new List<string>();
+                List<string> ihsMultiplexDeleteStatements = [];
                 if (_bulkDeleteIHSCodes)
                 {
                     // Build a statement to update the IHS habitat code
                     _viewModelMain.IncidCurrentRow.ihs_habitat = null;
 
-                    updateIHSHabitat = new StringBuilder(String.Format(", {0} = {1}",
+                    updateIHSHabitat = new(String.Format(", {0} = {1}",
                         _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.ihs_habitatColumn.ColumnName),
                         _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidCurrentRow.ihs_habitat)))
                         .ToString();
@@ -557,7 +557,7 @@ namespace HLU.UI.ViewModel
                 if (_bulkDeleteSecondaryCodes)
                 {
                     // Build DELETE statement for all secondary habitat rows.
-                    secondaryDelStatement = new StringBuilder(
+                    secondaryDelStatement = new(
                         String.Format("DELETE FROM {0} WHERE {1} = {2}",
                         _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_secondary.TableName),
                         _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_secondary.incidColumn.ColumnName),
@@ -565,7 +565,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Build an UPDATE statement for the incid_osmm_updates table
-                string updateCommandIncidOSMMUpdates = new StringBuilder(String.Format("UPDATE {0} SET {1} = -1, {2} = {3}, {4} = {5}",
+                string updateCommandIncidOSMMUpdates = new(String.Format("UPDATE {0} SET {1} = -1, {2} = {3}, {4} = {5}",
                     _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_osmm_updates.TableName),
                     _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_osmm_updates.statusColumn.ColumnName),
                     _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_osmm_updates.last_modified_dateColumn.ColumnName),
@@ -608,13 +608,13 @@ namespace HLU.UI.ViewModel
                         _viewModelMain.IncidCurrentRow.habitat_primary = newIncidHabitatPrimary;
 
                         // Build an UPDATE statement for the incid table
-                        string updateCommandIncid = incidUpdateCols.Count() == 0 ? String.Empty :
-                            new StringBuilder(String.Format("UPDATE {0} SET ",
+                        string updateCommandIncid = incidUpdateCols.Any() ? String.Empty :
+                            new(String.Format("UPDATE {0} SET ",
                             _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid.TableName)))
                             .Append(_viewModelMain.HluDataset.incid.Columns.Cast<DataColumn>()
                             .Where(c => c.Ordinal != _viewModelMain.HluDataset.incid.incidColumn.Ordinal &&
                                 !_viewModelMain.IncidCurrentRow.IsNull(c.Ordinal))
-                            .Aggregate(new StringBuilder(), (sb, c) => sb.Append(String.Format(", {0} = {1}",
+                            .Aggregate(new(), (sb, c) => sb.Append(String.Format(", {0} = {1}",
                                 _viewModelMain.DataBase.QuoteIdentifier(c.ColumnName),
                                 _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidCurrentRow[c.Ordinal]))))
                                 .Remove(0, 2)).ToString();
@@ -635,7 +635,7 @@ namespace HLU.UI.ViewModel
                         {
                             _viewModelMain.IncidCurrentRow.habitat_secondaries = null;
 
-                            updateHabitatSecondaries = new StringBuilder(String.Format(", {0} = {1}",
+                            updateHabitatSecondaries = new(String.Format(", {0} = {1}",
                                 _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.habitat_secondariesColumn.ColumnName),
                                 _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidCurrentRow.habitat_secondaries)))
                                 .ToString();
@@ -643,7 +643,7 @@ namespace HLU.UI.ViewModel
                         else
                         {
                             // Split secondaries string into list of secondary codes
-                            List<string> insertSecondaryStatements = new List<string>();
+                            List<string> insertSecondaryStatements = [];
 
                             // Create new rows in the secondary table
                             try
@@ -670,7 +670,7 @@ namespace HLU.UI.ViewModel
 
                                         // If the secondary group has been found
                                         string secondaryGroup = null;
-                                        if ((q != null) && (q.Count() > 0))
+                                        if ((q != null) && (q.Any()))
                                         {
                                             secondaryGroup = q.First();
 
@@ -698,7 +698,7 @@ namespace HLU.UI.ViewModel
                                 // Build an update string to set the secondary habitat
                                 _viewModelMain.IncidCurrentRow.habitat_secondaries = secondarySummary;
 
-                                updateHabitatSecondaries = new StringBuilder(String.Format(", {0} = {1}",
+                                updateHabitatSecondaries = new(String.Format(", {0} = {1}",
                                     _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.habitat_secondariesColumn.ColumnName),
                                     _viewModelMain.DataBase.QuoteValue(secondarySummary)))
                                     .ToString();
@@ -706,13 +706,13 @@ namespace HLU.UI.ViewModel
                         }
 
                         // Add the secondary habitat update to the update command
-                        updateCommandIncid = new StringBuilder(updateCommandIncid).Append(updateHabitatSecondaries).ToString();
+                        updateCommandIncid = new(updateCommandIncid).Append(updateHabitatSecondaries).ToString();
 
                         // Add the IHS habitat update string to the update command
-                        updateCommandIncid = new StringBuilder(updateCommandIncid).Append(updateIHSHabitat).ToString();
+                        updateCommandIncid = new(updateCommandIncid).Append(updateIHSHabitat).ToString();
 
                         // Finally, add the where clause to the update command
-                        updateCommandIncid = new StringBuilder(updateCommandIncid).Append(incidWhereClause).ToString();
+                        updateCommandIncid = new(updateCommandIncid).Append(incidWhereClause).ToString();
 
                         // Filter out any rows not set (because the maximum number of blank rows are
                         // created above so any not used need to be removed)
@@ -786,7 +786,7 @@ namespace HLU.UI.ViewModel
             // to the first incid in the database.
             _viewModelMain.BulkUpdateMode = null;
             _viewModelMain.OSMMBulkUpdateMode = false;
-            
+
             // Clear the active filter.
             _viewModelMain.ClearFilter(true);
 
@@ -1141,7 +1141,7 @@ namespace HLU.UI.ViewModel
             {
                 // Create a cloned set of rows for the supplied incid
                 T newRows = CloneUpdateRows<T, R>(uiRows, currIncid);
-                
+
                 // Load the child rows for the required data table for the supplied incid
                 _viewModelMain.GetIncidChildRowsDb(relValues, adapter, ref dbTable);
 
@@ -1528,7 +1528,7 @@ namespace HLU.UI.ViewModel
                 incidMMPolygonsUpdateCmdTemplate = String.Format("UPDATE {0} SET {1} WHERE {2}",
                     _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
                     updateColumns.Select((c, index) => new string[] { _viewModelMain.DataBase.QuoteIdentifier(c.ColumnName),
-                    _viewModelMain.DataBase.QuoteValue(updateDBValues[index]) }).Aggregate(new StringBuilder(), (sb, a) =>
+                    _viewModelMain.DataBase.QuoteValue(updateDBValues[index]) }).Aggregate(new(), (sb, a) =>
                             sb.Append(String.Format(", {0} = {1}", a[0], a[1]))).Remove(0, 2), "{0}");
 
                 // Build a WHERE clause for the rows to update in the DB shadow copy of GIS layer
@@ -1582,9 +1582,9 @@ namespace HLU.UI.ViewModel
         /// <param name="updateValues">The values to update.</param>
         private void BulkUpdateGisColumns(bool deleteSecondaryCodes, out DataColumn[] updateColumns, out object[] updateDBValues, out object[] updateGISValues)
         {
-            List<DataColumn> updateColumnList = new List<DataColumn>();
-            List<object> updateDBValueList = new List<object>();
-            List<object> updateGISValueList = new List<object>();
+            List<DataColumn> updateColumnList = [];
+            List<object> updateDBValueList = [];
+            List<object> updateGISValueList = [];
 
             // Check if a new primary habitat has been set
             if (!_viewModelMain.IncidCurrentRow.Ishabitat_primaryNull())
@@ -1639,7 +1639,7 @@ namespace HLU.UI.ViewModel
                 _viewModelMain.IncidCurrentRow.Table.Columns.Contains(h.ColumnName) && 
                 !_viewModelMain.IncidCurrentRow.IsNull(h.ColumnName));
 
-            if (addCols.Count() > 0)
+            if (addCols.Any())
             {
                 updateColumnList.AddRange(addCols);
                 updateDBValueList.AddRange(_viewModelMain.HistoryColumns.Where(h =>
@@ -1722,7 +1722,7 @@ namespace HLU.UI.ViewModel
 
             // Set the property name for the primary key
             string recordIdPropertyName = dbRows.TableName.Split('_')
-                .Aggregate(new StringBuilder(), (sb, s) => sb.Append(char.ToUpper(s[0])).Append(s.Substring(1)))
+                .Aggregate(new(), (sb, s) => sb.Append(char.ToUpper(s[0])).Append(s.Substring(1)))
                 .Insert(0, "Next").Append("Id").ToString();
 
             // Set the property info for the primary key property name
@@ -1803,7 +1803,7 @@ namespace HLU.UI.ViewModel
             // Accept any changes outstanding for the table
             if (pkMax >= 0)
             {
-                if (newRows.Count() > 0 )
+                if (newRows.Any() )
                     newRows[0].Table.AcceptChanges();
                 else
                     oldRows[0].Table.AcceptChanges();
@@ -1867,11 +1867,11 @@ namespace HLU.UI.ViewModel
                 R dbRow = dbRowsEnum[(int)newRowsNoDups[i][pkOrdinal]];
                 if (_viewModelMain.DataBase.ExecuteNonQuery(dbRows.Columns.Cast<DataColumn>()
                     .Where(c => pk.Count(k => k.Ordinal == c.Ordinal) == 0 && !newRow.IsNull(c.Ordinal))
-                    .Aggregate(new StringBuilder(), (sb, c) => sb.Append(String.Format(", {0} = {1}",
+                    .Aggregate(new(), (sb, c) => sb.Append(String.Format(", {0} = {1}",
                         _viewModelMain.DataBase.QuoteIdentifier(c.ColumnName),
                         _viewModelMain.DataBase.QuoteValue(newRow[c.Ordinal])))).Remove(0, 2)
                         .Append(String.Format(" WHERE {0} = {1}", dbRows.PrimaryKey.Aggregate(
-                        new StringBuilder(), (sb, c) => sb.Append(String.Format("AND {0} = {1}",
+                        new(), (sb, c) => sb.Append(String.Format("AND {0} = {1}",
                             _viewModelMain.DataBase.QuoteIdentifier(c.ColumnName),
                             _viewModelMain.DataBase.QuoteValue(dbRow[c.Ordinal])))).Remove(0, 4)))
                             .Insert(0, updateCommand).ToString(), _viewModelMain.DataBase.Connection.ConnectionTimeout,
@@ -1882,7 +1882,7 @@ namespace HLU.UI.ViewModel
             if (numRowsNew > numRowsDb) // user entered new values
             {
                 string recordIdPropertyName = dbRows.TableName.Split('_')
-                    .Aggregate(new StringBuilder(), (sb, s) => sb.Append(char.ToUpper(s[0])).Append(s.Substring(1)))
+                    .Aggregate(new(), (sb, s) => sb.Append(char.ToUpper(s[0])).Append(s.Substring(1)))
                     .Insert(0, "Next").Append("Id").ToString();
 
                 PropertyInfo recordIDPropInfo = typeof(RecordIds).GetProperty(recordIdPropertyName);
@@ -1896,8 +1896,8 @@ namespace HLU.UI.ViewModel
                 {
                     R newRow = newRows[i];
 
-                    StringBuilder columnNames = new StringBuilder();
-                    StringBuilder columnValues = new StringBuilder();
+                    StringBuilder columnNames = new();
+                    StringBuilder columnValues = new();
                     for (int j = 0; j < dbRows.Columns.Count; j++)
                     {
                         columnNames.Append(String.Format(", {0}",
@@ -1920,7 +1920,7 @@ namespace HLU.UI.ViewModel
             }
             else if ((deleteExistingRows) && (numRowsDb > numRowsNew))
             {
-                StringBuilder deleteCommand = new StringBuilder(String.Format(
+                StringBuilder deleteCommand = new(String.Format(
                     "DELETE FROM {0} WHERE ", _viewModelMain.DataBase.QualifyTableName(dbRows.TableName)));
 
                 for (int i = numRowsNew; i < numRowsDb; i++)
@@ -1928,7 +1928,7 @@ namespace HLU.UI.ViewModel
                     R dbRow = (R)dbRows.Rows[i];
 
                     deleteCommand.Append(String.Format("{0} = {1}", dbRows.PrimaryKey.Aggregate(
-                        new StringBuilder(), (sb, c) => sb.Append(String.Format("AND {0} = {1}",
+                        new(), (sb, c) => sb.Append(String.Format("AND {0} = {1}",
                             _viewModelMain.DataBase.QuoteIdentifier(c.ColumnName),
                             _viewModelMain.DataBase.QuoteValue(dbRow[c.Ordinal])))))).Remove(0, 4);
 

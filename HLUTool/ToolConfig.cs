@@ -29,7 +29,7 @@ using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 // Does it show a dropdown list to choose a configuration file, or does it
 // load a default profile straight away?
 
-namespace DataTools
+namespace HLU
 {
     /// <summary>
     /// This class reads the tool XML file and stores the results.

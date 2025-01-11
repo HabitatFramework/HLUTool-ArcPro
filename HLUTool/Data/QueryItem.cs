@@ -1,19 +1,19 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2019 Greenspace Information for Greater London CIC
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -47,7 +47,7 @@ namespace HLU.Data
     //    private string _descriptionFieldName = Settings.Default.LutDescriptionFieldName;
     //    private int _descriptionFieldOrdinal = Settings.Default.LutDescriptionFieldOrdinal;
     //    private Regex _queryValueRegex = new Regex(@"\s+:\s+", RegexOptions.IgnoreCase); // @"\A(?<code>[^:\s]+)\s+:\s+(?<desc>[^:]+)\z", RegexOptions.IgnoreCase);
-        
+
     //    #endregion
 
     //    #region Constructor
@@ -140,7 +140,7 @@ namespace HLU.Data
     //                _sqlCond.Operator.ToUpper().EndsWith("NULL"))) return null;
 
     //            _cursorType = Cursors.Wait;
-    //            OnPropertyChanged("CursorType");
+    //            OnPropertyChanged(nameof(CursorType));
 
     //            // Find the related lookup tables for the selected table and column
     //            IEnumerable<DataRelation> parentRelations = Table.ParentRelations.Cast<DataRelation>();
@@ -190,7 +190,7 @@ namespace HLU.Data
     //            return null;
     //        }
     //    }
-        
+
     //    #endregion
 
     //    public Cursor CursorType
@@ -226,9 +226,9 @@ namespace HLU.Data
     //                ViewModelWindowQueryBuilder.HluDatasetStatic.Tables.Contains(_sqlCond.Table.TableName))
     //            {
     //                _table = _sqlCond.Table;
-    //                OnPropertyChanged("Table");
-    //                OnPropertyChanged("Columns");
-    //                OnPropertyChanged("ColumnIsEnabled");
+    //                OnPropertyChanged(nameof(Table));
+    //                OnPropertyChanged(nameof(Columns));
+    //                OnPropertyChanged(nameof(ColumnIsEnabled));
     //            }
     //        }
     //    }
@@ -243,9 +243,9 @@ namespace HLU.Data
     //                Table.Columns.Contains(_sqlCond.Column.ColumnName))
     //            {
     //                _column = _sqlCond.Column;
-    //                OnPropertyChanged("Column");
-    //                OnPropertyChanged("Values");
-    //                OnPropertyChanged("ComparisonOperatorIsEnabled");
+    //                OnPropertyChanged(nameof(Column));
+    //                OnPropertyChanged(nameof(Values));
+    //                OnPropertyChanged(nameof(ComparisonOperatorIsEnabled));
     //            }
     //        }
     //    }
@@ -261,9 +261,9 @@ namespace HLU.Data
     //        set
     //        {
     //            _sqlCond.Operator = value;
-    //            OnPropertyChanged("ComparisonOperator");
-    //            OnPropertyChanged("Values");
-    //            OnPropertyChanged("QueryValueIsEnabled");
+    //            OnPropertyChanged(nameof(ComparisonOperator));
+    //            OnPropertyChanged(nameof(Values));
+    //            OnPropertyChanged(nameof(QueryValueIsEnabled));
     //        }
     //    }
 
@@ -280,9 +280,9 @@ namespace HLU.Data
     //            if (String.IsNullOrEmpty(_queryValueText) || (_queryValueRegex.Split(_queryValueText).Length > 1))
     //                _sqlCond.Value = value;
     //            _cursorType = Cursors.Arrow;
-    //            OnPropertyChanged("CursorType");
-    //            OnPropertyChanged("QueryValue");
-    //            OnPropertyChanged("QueryValueText");
+    //            OnPropertyChanged(nameof(CursorType));
+    //            OnPropertyChanged(nameof(QueryValue));
+    //            OnPropertyChanged(nameof(QueryValueText));
     //        }
     //    }
 
@@ -292,7 +292,7 @@ namespace HLU.Data
     //        set
     //        {
     //            _cursorType = Cursors.Arrow;
-    //            OnPropertyChanged("CursorType");
+    //            OnPropertyChanged(nameof(CursorType));
 
     //            if ((_queryValueText == null) || !_queryValueText.Equals(value))
     //            {
@@ -302,7 +302,7 @@ namespace HLU.Data
     //                    _queryValueText = value;
 
     //                _sqlCond.Value = _queryValueText;
-    //                OnPropertyChanged("QueryValueText");
+    //                OnPropertyChanged(nameof(QueryValueText));
     //            }
     //        }
     //    }

@@ -25,15 +25,13 @@ using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Controls;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
-using DataTools;
+using HLU;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
-
-//using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -215,7 +213,7 @@ namespace HLU.UI
         /// <summary>
         /// ID of the DockPane.
         /// </summary>
-        private const string _dockPaneID = "DataSync_UI_DockpaneMain";
+        private const string _dockPaneID = "HLUTool_UI_DockpaneMain";
 
         public static string DockPaneID
         {
@@ -434,7 +432,7 @@ namespace HLU.UI
             if (!FileFunctions.FileExists(sdeFileName))
             {
                 if (message)
-                    MessageBox.Show("SDE connection file '" + sdeFileName + "' not found.", "HLU", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("SDE connection file '" + sdeFileName + "' not found.", "HLUTool", MessageBoxButton.OK, MessageBoxImage.Error);
 
                 _paneH2VM = null;
                 return false;
@@ -446,7 +444,7 @@ namespace HLU.UI
                 if (!await SQLServerFunctions.CheckSDEConnection(sdeFileName))
                 {
                     if (message)
-                        MessageBox.Show("SDE connection file '" + sdeFileName + "' not valid.", "HLU", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("SDE connection file '" + sdeFileName + "' not valid.", "HLUTool", MessageBoxButton.OK, MessageBoxImage.Error);
 
                     _paneH2VM = null;
                     return false;
@@ -455,7 +453,7 @@ namespace HLU.UI
             catch (Exception)
             {
                 if (message)
-                    MessageBox.Show("SDE connection file '" + sdeFileName + "' not valid.", "HLU", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("SDE connection file '" + sdeFileName + "' not valid.", "HLUTool", MessageBoxButton.OK, MessageBoxImage.Error);
 
                 _paneH2VM = null;
                 return false;

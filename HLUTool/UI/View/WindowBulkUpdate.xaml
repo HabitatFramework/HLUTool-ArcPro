@@ -218,7 +218,7 @@
                                   SelectedValue="{Binding DeterminationQuality,
                                                         ValidatesOnDataErrors=True}"
                                   SelectedValuePath="code"
-                                  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                  Tag="ErrorContent"
                                   ToolTipService.ShowOnDisabled="True"
 								  Visibility="{Binding Path=ShowInOSMMBulkUpdateMode}" />
                     </Grid>
@@ -255,7 +255,7 @@
                                   SelectedValue="{Binding InterpretationQuality,
                                                         ValidatesOnDataErrors=True}"
                                   SelectedValuePath="code"
-                                  Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Mode=OneWay, Converter={StaticResource errorMessageConverter}}"
+                                  Tag="ErrorContent"
                                   ToolTipService.ShowOnDisabled="True"
 								  Visibility="{Binding Path=ShowInOSMMBulkUpdateMode}" />
                     </Grid>
