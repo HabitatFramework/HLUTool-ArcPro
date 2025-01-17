@@ -1,19 +1,19 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2013 Thames Valley Environmental Records Centre
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -77,15 +77,12 @@ namespace HLU.GISApplication
                 else
                     Settings.Default.Save();
 
-                switch (_gisApp)
+                return _gisApp switch
                 {
-                    case GISApplications.ArcGIS:
-                        return new ArcMapApp(Settings.Default.MapPath);
-                    case GISApplications.MapInfo:
-                        return new MapInfoApp(Settings.Default.MapPath);
-                    default:
-                        return null;
-                }
+                    GISApplications.ArcGIS => new ArcMapApp(Settings.Default.MapPath),
+                    GISApplications.MapInfo => new MapInfoApp(Settings.Default.MapPath),
+                    _ => null
+                };
             }
             catch (Exception ex)
             {
@@ -117,9 +114,12 @@ namespace HLU.GISApplication
 
         private static void SelectGISApp()
         {
-            _windowSelGIS = new WindowSelectGIS();
-            _windowSelGIS.Owner = App.Current.MainWindow;
-            _windowSelGIS.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            _windowSelGIS = new WindowSelectGIS
+            {
+                //TODO: App.Current.MainWindow
+                //_windowSelGIS.Owner = App.Current.MainWindow;
+                WindowStartupLocation = WindowStartupLocation.CenterScreen
+            };
 
             _viewModelSelGIS = new ViewModelWindowSelectGIS();
             _viewModelSelGIS.RequestClose +=
@@ -147,19 +147,19 @@ namespace HLU.GISApplication
 
                 if (File.Exists(mapPath))
                 {
-                    FileInfo mapFile = new FileInfo(mapPath);
+                    FileInfo mapFile = new(mapPath);
                     switch (gisApp)
                     {
                         case GISApplications.ArcGIS:
-                            if (mapFile.Extension.ToLower() == ".mxd") return mapPath;
+                            if (mapFile.Extension.Equals(".mxd", StringComparison.CurrentCultureIgnoreCase)) return mapPath;
                             break;
                         case GISApplications.MapInfo:
-                            if (mapFile.Extension.ToLower() == ".wor") return mapPath;
+                            if (mapFile.Extension.Equals(".wor", StringComparison.CurrentCultureIgnoreCase)) return mapPath;
                             break;
                     }
                 }
 
-                OpenFileDialog openFileDlg = new OpenFileDialog();
+                OpenFileDialog openFileDlg = new();
                 switch (gisApp)
                 {
                     case GISApplications.ArcGIS:

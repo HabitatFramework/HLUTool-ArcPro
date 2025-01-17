@@ -1037,6 +1037,129 @@ namespace HLU
         }
 
         /// <summary>
+        /// Get a field in a feature class by name.
+        /// </summary>
+        /// <param name="layerPath"></param>
+        /// <param name="fieldName"></param>
+        /// <returns>bool</returns>
+        public async Task<Field> GetFieldAsync(string layerPath, string fieldName)
+        {
+            // Check there is an input feature layer path.
+            if (String.IsNullOrEmpty(layerPath))
+                return null;
+
+            // Check there is an input field name.
+            if (String.IsNullOrEmpty(fieldName))
+                return null;
+
+            try
+            {
+                // Find the feature layer by name if it exists. Only search existing layers.
+                FeatureLayer featurelayer = FindLayer(layerPath);
+
+                if (featurelayer == null)
+                    return null;
+
+                Field field = null;
+
+                await QueuedTask.Run(() =>
+                {
+                    // Get the underlying feature class as a table.
+                    using ArcGIS.Core.Data.Table table = featurelayer.GetTable();
+                    if (table != null)
+                    {
+                        // Get the table definition of the table.
+                        using TableDefinition tableDef = table.GetDefinition();
+
+                        // Get the fields in the table.
+                        IReadOnlyList<ArcGIS.Core.Data.Field> fields = tableDef.GetFields();
+
+                        // Loop through all fields looking for a name match.
+                        foreach (ArcGIS.Core.Data.Field fld in fields)
+                        {
+                            if (fld.Name.Equals(fieldName, StringComparison.OrdinalIgnoreCase) ||
+                                fld.AliasName.Equals(fieldName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                field = fld;
+                                break;
+                            }
+                        }
+                    }
+                });
+
+                return field;
+            }
+            catch
+            {
+                // Handle Exception.
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Get a field position in a feature class by name.
+        /// </summary>
+        /// <param name="layerPath"></param>
+        /// <param name="fieldName"></param>
+        /// <returns>bool</returns>
+        public async Task<int> GetFieldOrdinalAsync(string layerPath, string fieldName)
+        {
+            // Check there is an input feature layer path.
+            if (String.IsNullOrEmpty(layerPath))
+                return -1;
+
+            // Check there is an input field name.
+            if (String.IsNullOrEmpty(fieldName))
+                return -1;
+
+            try
+            {
+                // Find the feature layer by name if it exists. Only search existing layers.
+                FeatureLayer featurelayer = FindLayer(layerPath);
+
+                if (featurelayer == null)
+                    return -1;
+
+                int fieldOrd = -1;
+
+                await QueuedTask.Run(() =>
+                {
+                    // Get the underlying feature class as a table.
+                    using ArcGIS.Core.Data.Table table = featurelayer.GetTable();
+                    if (table != null)
+                    {
+                        // Get the table definition of the table.
+                        using TableDefinition tableDef = table.GetDefinition();
+
+                        // Get the fields in the table.
+                        IReadOnlyList<ArcGIS.Core.Data.Field> fields = tableDef.GetFields();
+
+                        // Loop through all fields looking for a name match.
+                        int fieldNum = 0;
+                        foreach (ArcGIS.Core.Data.Field fld in fields)
+                        {
+                            if (fld.Name.Equals(fieldName, StringComparison.OrdinalIgnoreCase) ||
+                                fld.AliasName.Equals(fieldName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                fieldOrd = fieldNum;
+                                break;
+                            }
+
+                            fieldNum += 1;
+                        }
+                    }
+                });
+
+                return fieldOrd;
+            }
+            catch
+            {
+                // Handle Exception.
+                return -1;
+            }
+        }
+
+        /// <summary>
         /// Check if a list of fields exists in a feature class and
         /// return a list of those that do.
         /// </summary>

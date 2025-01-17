@@ -3,19 +3,19 @@
 // Copyright © 2013, 2016 Thames Valley Environmental Records Centre
 // Copyright © 2014, 2018 Sussex Biodiversity Record Centre
 // Copyright © 2019-2022 Greenspace Information for Greater London CIC
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -23,6 +23,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using HLU.Data;
 using HLU.Data.Model;
 using HLU.Properties;
@@ -33,7 +34,7 @@ namespace HLU.GISApplication
     {
         public enum DistanceUnits
         {
-            Chains, Centimeters, Feet, Inches, Kilometers, Links, Meters, 
+            Chains, Centimeters, Feet, Inches, Kilometers, Links, Meters,
             Miles, Millimeters, NauticalMiles, Rods, SurveyFeet, Yards
         }
 
@@ -58,15 +59,17 @@ namespace HLU.GISApplication
         /// </summary>
         public abstract GISApplications ApplicationType { get; }
 
-        /// <summary>
-        /// Reference to the running GIS application object.
-        /// </summary>
-        public abstract object ApplicationObject { get; }
+        //TODO: ApplicationObject
+        ///// <summary>
+        ///// Reference to the running GIS application object.
+        ///// </summary>
+        //public abstract object ApplicationObject { get; }
 
-        /// <summary>
-        /// True if the GIS application is running, otherwise false.
-        /// </summary>
-        public abstract bool IsRunning { get; }
+        //TODO: ArcGIS
+        ///// <summary>
+        ///// True if the GIS application is running, otherwise false.
+        ///// </summary>
+        //public abstract bool IsRunning { get; }
 
         /// <summary>
         /// True if GIS application is in editing session.
@@ -74,28 +77,36 @@ namespace HLU.GISApplication
         /// </summary>
         public abstract bool IsEditing { get; }
 
-        /// <summary>
-        /// Launches an instance of the GIS application.
-        /// </summary>
-        /// <param name="waitSeconds">Number of seconds to wait for the GIS application process to load before an exception is thrown.</param>
-        /// <returns>true if GIS application launched ok, otherwise false.</returns>
-        public abstract bool Start(ProcessWindowStyle windowStyle);
+        //TODO: ArcGIS
+        ///// <summary>
+        ///// Launches an instance of the GIS application.
+        ///// </summary>
+        ///// <param name="waitSeconds">Number of seconds to wait for the GIS application process to load before an exception is thrown.</param>
+        ///// <returns>true if GIS application launched ok, otherwise false.</returns>
+        //public abstract bool Start(ProcessWindowStyle windowStyle);
 
-        public abstract void Window(ProcessWindowStyle windowStyle, IntPtr sideBySideWith);
+        //TODO: ArcGIS
+        //public abstract void Window(ProcessWindowStyle windowStyle, IntPtr sideBySideWith);
 
-        public abstract IntPtr hWnd { get; }
+        //TODO: ArcGIS
+        //public abstract IntPtr hWnd { get; }
 
-        public abstract void Activate();
+        //TODO: ArcGIS
+        //public abstract void Activate();
 
-        public abstract bool Close();
+        //TODO: ArcGIS
+        //public abstract bool Close();
 
-        public abstract bool OpenWorkspace(string path);
+        //TODO: ArcGIS
+        //public abstract bool OpenWorkspace(string path);
 
-        public abstract bool SaveWorkspace();
+        //TODO: ArcGIS
+        //public abstract bool SaveWorkspace();
 
         public abstract string HluLayerName { get; }
 
-        public abstract string IncidFieldName { get; }
+        //TODO: ArcPro
+        public abstract Task<string> IncidFieldName();
 
         /// <summary>
         /// Reads the map selection.
@@ -133,18 +144,18 @@ namespace HLU.GISApplication
 
         public abstract int MapWindowsCount { get; }
 
-        public abstract DataTable UpdateFeatures(DataColumn[] updateColumns, 
+        public abstract DataTable UpdateFeatures(DataColumn[] updateColumns,
             object[] updateValues, DataColumn[] historyColumns);
 
-        public abstract DataTable UpdateFeatures(DataColumn[] updateColumns, object[] updateValues, 
+        public abstract DataTable UpdateFeatures(DataColumn[] updateColumns, object[] updateValues,
             DataColumn[] historyColumns, List<SqlFilterCondition> selectionWhereClause);
 
-        public abstract DataTable UpdateFeatures(DataColumn[] updateColumns, object[] updateValues, 
+        public abstract DataTable UpdateFeatures(DataColumn[] updateColumns, object[] updateValues,
             DataColumn[] historyColumns, string tempMdbPathName, string selectionTableName);
 
         /// <summary>
-        /// Following a feature split performed by the user with regular GIS tools, updates the toidfragid of 
-        /// the newly created feature(s), incrementing from the highest toidfragid for that toid passed as 
+        /// Following a feature split performed by the user with regular GIS tools, updates the toidfragid of
+        /// the newly created feature(s), incrementing from the highest toidfragid for that toid passed as
         /// parameter lastToidFragmentID.
         /// </summary>
         /// <param name="currentToidFragmentID">Current toidfragid for the selected toid.</param>
@@ -163,7 +174,7 @@ namespace HLU.GISApplication
 
         public abstract DataTable SplitFeaturesLogically(string oldIncid, string newIncid, DataColumn[] historyColumns);
 
-        public abstract DataTable MergeFeatures(string newToidFragmentID, 
+        public abstract DataTable MergeFeatures(string newToidFragmentID,
             List<SqlFilterCondition> resultWhereClause, DataColumn[] historyColumns);
 
         public abstract DataTable MergeFeaturesLogically(string keepIncid, DataColumn[] historyColumns);

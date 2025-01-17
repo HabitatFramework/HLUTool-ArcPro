@@ -26,6 +26,16 @@ using HLU.UI.ViewModel;
 
 namespace HLU.Data
 {
+
+    #region Enums
+
+    /// <summary>
+    /// Geometry types.
+    /// </summary>
+    public enum GeometryTypes { Point, Line, Polygon, Unknown };
+
+    #endregion
+
     class RecordIds
     {
         #region Fields
@@ -33,7 +43,7 @@ namespace HLU.Data
         private string _siteID;
         DbBase _db;
         HluDataSet _hluDataset;
-        ViewModelWindowMain.GeometryTypes _gisLayerType;
+        GeometryTypes _gisLayerType;
         TableAdapterManager _hluTableAdapterMgr;
         private string _habitatVersion;
         private int _incidCurrentNumber = -1;
@@ -47,11 +57,11 @@ namespace HLU.Data
         #region ctor
 
         public RecordIds(DbBase db, HluDataSet hluDataset,
-            TableAdapterManager hluTableAdapterMgr, ViewModelWindowMain.GeometryTypes gisLayerType)
+            TableAdapterManager hluTableAdapterMgr, GeometryTypes gisLayerType)
         {
-            if (db == null) throw new ArgumentException("db");
-            if (hluDataset == null) throw new ArgumentException("hluDataset");
-            if (hluTableAdapterMgr == null) throw new ArgumentException("hluTableAdapterMgr");
+            if (db == null) throw new ArgumentException("db is null", nameof(db));
+            if (hluDataset == null) throw new ArgumentException("hluDataset is null", nameof(hluDataset));
+            if (hluTableAdapterMgr == null) throw new ArgumentException("hluTableAdapterMgr is null", nameof(hluTableAdapterMgr));
 
             _db = db;
             _hluDataset = hluDataset;
@@ -127,13 +137,13 @@ namespace HLU.Data
                     {
                         switch (_gisLayerType)
                         {
-                            case ViewModelWindowMain.GeometryTypes.Point:
+                            case GeometryTypes.Point:
                                 _siteID = _hluDataset.lut_site_id.ElementAt(_hluDataset.lut_site_id.Count - 1).site_id_point;
                                 break;
-                            case ViewModelWindowMain.GeometryTypes.Line:
+                            case GeometryTypes.Line:
                                 _siteID = _hluDataset.lut_site_id.ElementAt(_hluDataset.lut_site_id.Count - 1).site_id_line;
                                 break;
-                            case ViewModelWindowMain.GeometryTypes.Polygon:
+                            case GeometryTypes.Polygon:
                                 _siteID = _hluDataset.lut_site_id.ElementAt(_hluDataset.lut_site_id.Count - 1).site_id_polygon;
                                 break;
                         }

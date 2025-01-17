@@ -1,18 +1,18 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -28,7 +28,7 @@ namespace HLU.GISApplication
         public enum WindowStates
         {
             /// <summary>
-            /// Windows 2000/XP: Minimizes a window, even if the thread that owns the window is not responding. 
+            /// Windows 2000/XP: Minimizes a window, even if the thread that owns the window is not responding.
             /// This flag should only be used when minimizing windows from a different thread.
             /// </summary>
             SW_FORCEMINIMIZE,
@@ -45,18 +45,18 @@ namespace HLU.GISApplication
             /// </summary>
             SW_MINIMIZE = 6,
             /// <summary>
-            /// Activates and displays the window. If the window is minimized or maximized, 
-            /// the system restores it to its original size and position. An application should 
+            /// Activates and displays the window. If the window is minimized or maximized,
+            /// the system restores it to its original size and position. An application should
             /// specify this flag when restoring a minimized window.
             /// </summary>
             SW_RESTORE = 9,
             /// <summary>
-            /// Activates the window and displays it in its current size and position. 
+            /// Activates the window and displays it in its current size and position.
             /// </summary>
             SW_SHOW = 5,
             /// <summary>
-            /// Sets the show state based on the SW_ value specified in the STARTUPINFO structure 
-            /// passed to the CreateProcess function by the program that started the application. 
+            /// Sets the show state based on the SW_ value specified in the STARTUPINFO structure
+            /// passed to the CreateProcess function by the program that started the application.
             /// </summary>
             SW_SHOWDEFAULT = 10,
             /// <summary>
@@ -68,23 +68,23 @@ namespace HLU.GISApplication
             /// </summary>
             SW_SHOWMINIMIZED = 2,
             /// <summary>
-            /// Displays the window as a minimized window. This value is similar to SW_SHOWMINIMIZED, 
+            /// Displays the window as a minimized window. This value is similar to SW_SHOWMINIMIZED,
             /// except the window is not activated.
             /// </summary>
             SW_SHOWMINNOACTIVE = 7,
             /// <summary>
-            /// Displays the window in its current size and position. This value is similar to SW_SHOW, 
+            /// Displays the window in its current size and position. This value is similar to SW_SHOW,
             /// except the window is not activated.
             /// </summary>
             SW_SHOWNA = 8,
             /// <summary>
-            /// Displays a window in its most recent size and position. This value is similar 
+            /// Displays a window in its most recent size and position. This value is similar
             /// to SW_SHOWNORMAL, except the window is not actived.
             /// </summary>
             SW_SHOWNOACTIVATE = 4,
             /// <summary>
-            /// Activates and displays a window. If the window is minimized or maximized, 
-            /// the system restores it to its original size and position. An application 
+            /// Activates and displays a window. If the window is minimized or maximized,
+            /// the system restores it to its original size and position. An application
             /// should specify this flag when displaying the window for the first time.
             /// </summary>
             SW_SHOWNORMAL = 1
@@ -265,7 +265,7 @@ namespace HLU.GISApplication
             {
                 return Rectangle.Left == _Left && Rectangle.Top == _Top && Rectangle.Right == _Right && Rectangle.Bottom == _Bottom;
             }
-            
+
             public override bool Equals(object Object)
             {
                 if (Object is RECT)
@@ -295,7 +295,7 @@ namespace HLU.GISApplication
             {
                 get
                 {
-                    WINDOWPLACEMENT result = new WINDOWPLACEMENT();
+                    WINDOWPLACEMENT result = new();
                     result.length = Marshal.SizeOf(result);
                     return result;
                 }
@@ -343,7 +343,7 @@ namespace HLU.GISApplication
         /// <returns></returns>
         [DllImport("user32", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern int GetWindowText(IntPtr hWnd,
-            [Out, MarshalAs(UnmanagedType.LPTStr)] StringBuilder lpString, int nMaxCount);
+            [Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder lpString, int nMaxCount);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern int GetWindowThreadProcessId(IntPtr hWnd, out int processId);

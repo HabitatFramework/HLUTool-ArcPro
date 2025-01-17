@@ -1,18 +1,18 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -24,7 +24,7 @@ namespace HLU.UI.ViewModel
 {
     /// <summary>
     /// Base class for all ViewModel classes in the application.
-    /// It provides support for property change notifications 
+    /// It provides support for property change notifications
     /// and has a DisplayName property. This class is abstract.
     /// </summary>
     public abstract class ViewModelBase : INotifyPropertyChanged, IDisposable
@@ -64,14 +64,14 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Warns the developer if this object does not have
-        /// a public property with the specified name. This 
+        /// a public property with the specified name. This
         /// method does not exist in a Release build.
         /// </summary>
         [Conditional("DEBUG")]
         [DebuggerStepThrough]
         public void VerifyPropertyName(string propertyName)
         {
-            // Verify that the property name matches a real,  
+            // Verify that the property name matches a real,
             // public, instance property on this object.
             if (TypeDescriptor.GetProperties(this)[propertyName] == null)
             {
@@ -87,7 +87,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Returns whether an exception is thrown, or if a Debug.Fail() is used
         /// when an invalid property name is passed to the VerifyPropertyName method.
-        /// The default value is false, but subclasses used by unit tests might 
+        /// The default value is false, but subclasses used by unit tests might
         /// override this property's getter to return true.
         /// </summary>
         protected virtual bool ThrowOnInvalidPropertyName { get; private set; }
@@ -132,7 +132,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Child classes can override this method to perform 
+        /// Child classes can override this method to perform
         /// clean-up logic, such as removing event handlers.
         /// </summary>
         protected virtual void OnDispose()
