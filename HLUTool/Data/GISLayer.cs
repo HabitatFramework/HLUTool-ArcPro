@@ -24,6 +24,15 @@ using System.Text;
 
 namespace HLU.Data
 {
+    #region Enums
+
+    /// <summary>
+    /// Geometry types.
+    /// </summary>
+    public enum GeometryTypes { Point, Line, Polygon, Unknown };
+
+    #endregion
+
     //---------------------------------------------------------------------
     // CHANGED: CR31 (Switching between GIS layers)
     // Enable the user to switch between different HLU layers, where

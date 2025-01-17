@@ -24,7 +24,7 @@ namespace HLU.UI.View
     /// <summary>
     /// Interaction logic for MessageWindow.xaml
     /// </summary>
-    public partial class MessageWindow : System.Windows.Controls.UserControl
+    public partial class MessageWindow : Window
     {
         public MessageWindow()
         {

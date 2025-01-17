@@ -26,16 +26,6 @@ using HLU.UI.ViewModel;
 
 namespace HLU.Data
 {
-
-    #region Enums
-
-    /// <summary>
-    /// Geometry types.
-    /// </summary>
-    public enum GeometryTypes { Point, Line, Polygon, Unknown };
-
-    #endregion
-
     class RecordIds
     {
         #region Fields

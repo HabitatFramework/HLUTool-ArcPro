@@ -11,55 +11,6 @@
     <RootNamespace>HLU</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="UI\ViewModel\ViewModelCompletePhysicalSplit.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelConnectOdbc.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelConnectOleDb.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelConnectOracle.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelConnectPgSql.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelConnectSqlServer.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelExport.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelMergeFeatures.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelOptions.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelPassword.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowEditPotentialHabitats.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowEditPriorityHabitats.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowMain.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowMainBulkUpdate.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowMainExport.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowMainHelpers.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowMainHistory.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowMainMerge.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowMainOSMMUpdate.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowMainSplit.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowMainUpdate.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowNotifyOnSplitMerge.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowQueryAdvanced.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowQueryIncid.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowQueryOSMM.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowQuerySecondaries.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowSplash.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowSwitchGISLayer.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowWarnOnGISSelect.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowWarnOnSubsetUpdate.cs" />
-    <Compile Remove="UI\ViewModel\WindowMainCopySwitches.cs" />
-    <Compile Remove="UI\View\WindowCompletePhysicalSplit.xaml.cs" />
-    <Compile Remove="UI\View\WindowEditPotentialHabitats.xaml.cs" />
-    <Compile Remove="UI\View\WindowEditPriorityHabitats.xaml.cs" />
-    <Compile Remove="UI\View\WindowExport.xaml.cs" />
-    <Compile Remove="UI\View\WindowMain.xaml.cs" />
-    <Compile Remove="UI\View\WindowMergeFeatures.xaml.cs" />
-    <Compile Remove="UI\View\WindowNotifyOnSplitMerge.xaml.cs" />
-    <Compile Remove="UI\View\WindowOptions.xaml.cs" />
-    <Compile Remove="UI\View\WindowQueryAdvanced.xaml.cs" />
-    <Compile Remove="UI\View\WindowQueryIncid.xaml.cs" />
-    <Compile Remove="UI\View\WindowQueryOSMM.xaml.cs" />
-    <Compile Remove="UI\View\WindowQuerySecondaries.xaml.cs" />
-    <Compile Remove="UI\View\WindowSplash.xaml.cs" />
-    <Compile Remove="UI\View\WindowSwitchGISLayer.xaml.cs" />
-    <Compile Remove="UI\View\WindowWarnOnGISSelect.xaml.cs" />
-    <Compile Remove="UI\View\WindowWarnOnSubsetUpdate.xaml.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <None Remove="DarkImages\AddInDesktop16.png" />
     <None Remove="DarkImages\AddInDesktop32.png" />
     <None Remove="DarkImages\HLUTool16.png" />
@@ -72,24 +23,6 @@
     <None Remove="Images\Error32.png" />
     <None Remove="Images\Success32.png" />
     <None Remove="Images\Warning32.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Page Remove="UI\View\WindowCompletePhysicalSplit.xaml" />
-    <Page Remove="UI\View\WindowEditPotentialHabitats.xaml" />
-    <Page Remove="UI\View\WindowEditPriorityHabitats.xaml" />
-    <Page Remove="UI\View\WindowExport.xaml" />
-    <Page Remove="UI\View\WindowMain.xaml" />
-    <Page Remove="UI\View\WindowMergeFeatures.xaml" />
-    <Page Remove="UI\View\WindowNotifyOnSplitMerge.xaml" />
-    <Page Remove="UI\View\WindowOptions.xaml" />
-    <Page Remove="UI\View\WindowQueryAdvanced.xaml" />
-    <Page Remove="UI\View\WindowQueryIncid.xaml" />
-    <Page Remove="UI\View\WindowQueryOSMM.xaml" />
-    <Page Remove="UI\View\WindowQuerySecondaries.xaml" />
-    <Page Remove="UI\View\WindowSplash.xaml" />
-    <Page Remove="UI\View\WindowSwitchGISLayer.xaml" />
-    <Page Remove="UI\View\WindowWarnOnGISSelect.xaml" />
-    <Page Remove="UI\View\WindowWarnOnSubsetUpdate.xaml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Config.daml" />

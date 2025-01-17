@@ -22,6 +22,7 @@ using System.Text;
 using System.Globalization;
 using System.Windows.Input;
 using HLU.Properties;
+using HLU.Data;
 
 namespace HLU.UI.ViewModel
 {
@@ -41,7 +42,7 @@ namespace HLU.UI.ViewModel
 
         #region ctor
 
-        public ViewModelWindowWarnOnGISSelect(int numFeatures, int numIncids, ViewModelWindowMain.GeometryTypes typeFeatures, bool selectByjoin)
+        public ViewModelWindowWarnOnGISSelect(int numFeatures, int numIncids, GeometryTypes typeFeatures, bool selectByjoin)
         {
             // Store the expected number of features to be selected in GIS.
             _gisFeaturesNum = numFeatures;
@@ -50,7 +51,7 @@ namespace HLU.UI.ViewModel
             // Store the expected number of incids to be selected in GIS.
             _gisIncidNum = numIncids;
             // If the type of feature is not known then just use 'feature'.
-            if (typeFeatures != ViewModelWindowMain.GeometryTypes.Unknown)
+            if (typeFeatures != GeometryTypes.Unknown)
                 _gisFeaturesType = typeFeatures.ToString().ToLower();
             else
                 _gisFeaturesType = "feature";

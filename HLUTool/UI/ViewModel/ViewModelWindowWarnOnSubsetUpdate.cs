@@ -20,6 +20,7 @@ using System;
 using System.Globalization;
 using System.Windows.Input;
 using HLU.Properties;
+using HLU.Data;
 
 namespace HLU.UI.ViewModel
 {
@@ -42,7 +43,7 @@ namespace HLU.UI.ViewModel
 
         #region ctor
 
-        public ViewModelWindowWarnOnSubsetUpdate(int numFrags, int numToids, int numTotalFrags, int numTotToids, ViewModelWindowMain.GeometryTypes typeFeatures)
+        public ViewModelWindowWarnOnSubsetUpdate(int numFrags, int numToids, int numTotalFrags, int numTotToids, GeometryTypes typeFeatures)
         {
             _numFrags = numFrags;
             _numToids = numToids;

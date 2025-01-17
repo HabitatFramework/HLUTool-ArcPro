@@ -126,15 +126,10 @@ namespace HLU.UI.ViewModel
     {
         #region Enums
 
-        /// <summary>
-        /// Geometry types.
-        /// </summary>
-        public enum GeometryTypes { Point, Line, Polygon, Unknown };
-
         //---------------------------------------------------------------------
         // CHANGED: CR49 Process proposed OSMM Updates
         // Functionality to process proposed OSMM Updates.
-        //    
+        //
         /// <summary>
         /// Update operations.
         /// </summary>
@@ -275,7 +270,6 @@ namespace HLU.UI.ViewModel
         // Dates options
         // None
 
-        private string _logoPath = String.Empty;
         private DbBase _db;
         private GISApp _gisApp;
         private GeometryTypes _gisLayerType = GeometryTypes.Polygon;
@@ -416,8 +410,7 @@ namespace HLU.UI.ViewModel
         private int _fragsIncidGisCount = 0;
         private int _toidsIncidDbCount = 0;
         private int _fragsIncidDbCount = 0;
-        
-        private int _origIncidSecondaryCount = 0;
+
         private int _origIncidConditionCount = 0;
         private int _origIncidIhsMatrixCount = 0;
         private int _origIncidIhsFormationCount = 0;
@@ -645,25 +638,26 @@ namespace HLU.UI.ViewModel
                     DispatcherHelper.DoEvents();
                 }
 
-                // start the GIS application
-                _gisApp = GISAppFactory.CreateGisApp();
-                if (_gisApp == null)
-                {
-                    GISAppFactory.ClearSettings();
-                    return false;
-                }
-                else if (!_gisApp.Start(ProcessWindowStyle.Maximized))
-                {
-                    string gisAppName = "GIS application";
-                    if (_gisApp != null)
-                    {
-                        gisAppName = _gisApp.ApplicationType.ToString();
-                        _gisApp.Close();
-                    }
-                    MessageBox.Show(String.Format("{0} failed to open a valid HLU workspace.\nShutting down.",
-                        gisAppName), "HLU: Initialise GIS", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                    return false;
-                }
+                //TODO: ArcGIS
+                //// start the GIS application
+                //_gisApp = GISAppFactory.CreateGisApp();
+                //if (_gisApp == null)
+                //{
+                //    GISAppFactory.ClearSettings();
+                //    return false;
+                //}
+                //else if (!_gisApp.Start(ProcessWindowStyle.Maximized))
+                //{
+                //    string gisAppName = "GIS application";
+                //    if (_gisApp != null)
+                //    {
+                //        gisAppName = _gisApp.ApplicationType.ToString();
+                //        _gisApp.Close();
+                //    }
+                //    MessageBox.Show(String.Format("{0} failed to open a valid HLU workspace.\nShutting down.",
+                //        gisAppName), "HLU: Initialise GIS", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                //    return false;
+                //}
 
                 // Initialise the main update view model
                 _viewModelUpd = new ViewModelWindowMainUpdate(this);
@@ -772,7 +766,7 @@ namespace HLU.UI.ViewModel
         {
             // Get the assembly version.
             Version assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
-            _betaVersion = assemblyVersion.Revision == 0 ? false : true;
+            _betaVersion = assemblyVersion.Revision != 0;
 
             // Get the application, database and data versions from the database.
             String lutAppVersion = "0.0.0";
@@ -835,7 +829,7 @@ namespace HLU.UI.ViewModel
                         _hluTableAdapterMgr.lut_boundary_mapTableAdapter =
                             new HluTableAdapter<HluDataSet.lut_boundary_mapDataTable, HluDataSet.lut_boundary_mapRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset,
-                        new Type[] { typeof(HluDataSet.lut_boundary_mapDataTable) }, false);
+                        [typeof(HluDataSet.lut_boundary_mapDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -852,7 +846,7 @@ namespace HLU.UI.ViewModel
                     if (_hluTableAdapterMgr.lut_conditionTableAdapter == null)
                         _hluTableAdapterMgr.lut_conditionTableAdapter =
                             new HluTableAdapter<HluDataSet.lut_conditionDataTable, HluDataSet.lut_conditionRow>(_db);
-                    _hluTableAdapterMgr.Fill(HluDataset, new Type[] { typeof(HluDataSet.lut_conditionDataTable) }, false);
+                    _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_conditionDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -871,7 +865,7 @@ namespace HLU.UI.ViewModel
                     if (_hluTableAdapterMgr.lut_condition_qualifierTableAdapter == null)
                         _hluTableAdapterMgr.lut_condition_qualifierTableAdapter =
                             new HluTableAdapter<HluDataSet.lut_condition_qualifierDataTable, HluDataSet.lut_condition_qualifierRow>(_db);
-                    _hluTableAdapterMgr.Fill(HluDataset, new Type[] { typeof(HluDataSet.lut_condition_qualifierDataTable) }, false);
+                    _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_condition_qualifierDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -890,7 +884,7 @@ namespace HLU.UI.ViewModel
                     if (_hluTableAdapterMgr.lut_habitat_classTableAdapter == null)
                         _hluTableAdapterMgr.lut_habitat_classTableAdapter =
                             new HluTableAdapter<HluDataSet.lut_habitat_classDataTable, HluDataSet.lut_habitat_classRow>(_db);
-                    _hluTableAdapterMgr.Fill(HluDataset, new Type[] { typeof(HluDataSet.lut_habitat_classDataTable) }, false);
+                    _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_habitat_classDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -909,7 +903,7 @@ namespace HLU.UI.ViewModel
                     if (_hluTableAdapterMgr.lut_habitat_typeTableAdapter == null)
                         _hluTableAdapterMgr.lut_habitat_typeTableAdapter =
                             new HluTableAdapter<HluDataSet.lut_habitat_typeDataTable, HluDataSet.lut_habitat_typeRow>(_db);
-                    _hluTableAdapterMgr.Fill(HluDataset, new Type[] { typeof(HluDataSet.lut_habitat_typeDataTable) }, false);
+                    _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_habitat_typeDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -928,7 +922,7 @@ namespace HLU.UI.ViewModel
                     if (_hluTableAdapterMgr.lut_habitat_type_primaryTableAdapter == null)
                         _hluTableAdapterMgr.lut_habitat_type_primaryTableAdapter =
                             new HluTableAdapter<HluDataSet.lut_habitat_type_primaryDataTable, HluDataSet.lut_habitat_type_primaryRow>(_db);
-                    _hluTableAdapterMgr.Fill(HluDataset, new Type[] { typeof(HluDataSet.lut_habitat_type_primaryDataTable) }, false);
+                    _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_habitat_type_primaryDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -947,7 +941,7 @@ namespace HLU.UI.ViewModel
                     if (_hluTableAdapterMgr.lut_habitat_type_secondaryTableAdapter == null)
                         _hluTableAdapterMgr.lut_habitat_type_secondaryTableAdapter =
                             new HluTableAdapter<HluDataSet.lut_habitat_type_secondaryDataTable, HluDataSet.lut_habitat_type_secondaryRow>(_db);
-                    _hluTableAdapterMgr.Fill(HluDataset, new Type[] { typeof(HluDataSet.lut_habitat_type_secondaryDataTable) }, false);
+                    _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_habitat_type_secondaryDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -965,7 +959,7 @@ namespace HLU.UI.ViewModel
                     // Load the lookup table.
                     _hluTableAdapterMgr.lut_ihs_complexTableAdapter =
                             new HluTableAdapter<HluDataSet.lut_ihs_complexDataTable, HluDataSet.lut_ihs_complexRow>(_db);
-                    _hluTableAdapterMgr.Fill(HluDataset, new Type[] { typeof(HluDataSet.lut_ihs_complexDataTable) }, false);
+                    _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_ihs_complexDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -983,7 +977,7 @@ namespace HLU.UI.ViewModel
                     if (_hluTableAdapterMgr.lut_ihs_formationTableAdapter == null)
                         _hluTableAdapterMgr.lut_ihs_formationTableAdapter =
                             new HluTableAdapter<HluDataSet.lut_ihs_formationDataTable, HluDataSet.lut_ihs_formationRow>(_db);
-                    _hluTableAdapterMgr.Fill(HluDataset, new Type[] { typeof(HluDataSet.lut_ihs_formationDataTable) }, false);
+                    _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_ihs_formationDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -1001,7 +995,7 @@ namespace HLU.UI.ViewModel
                     if (_hluTableAdapterMgr.lut_ihs_habitatTableAdapter == null)
                         _hluTableAdapterMgr.lut_ihs_habitatTableAdapter =
                             new HluTableAdapter<HluDataSet.lut_ihs_habitatDataTable, HluDataSet.lut_ihs_habitatRow>(_db);
-                    _hluTableAdapterMgr.Fill(HluDataset, new Type[] { typeof(HluDataSet.lut_ihs_habitatDataTable) }, false);
+                    _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_ihs_habitatDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -1020,7 +1014,7 @@ namespace HLU.UI.ViewModel
                     if (_hluTableAdapterMgr.lut_ihs_managementTableAdapter == null)
                         _hluTableAdapterMgr.lut_ihs_managementTableAdapter =
                             new HluTableAdapter<HluDataSet.lut_ihs_managementDataTable, HluDataSet.lut_ihs_managementRow>(_db);
-                    _hluTableAdapterMgr.Fill(HluDataset, new Type[] { typeof(HluDataSet.lut_ihs_managementDataTable) }, false);
+                    _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_ihs_managementDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -1038,7 +1032,7 @@ namespace HLU.UI.ViewModel
                     if (_hluTableAdapterMgr.lut_ihs_matrixTableAdapter == null)
                         _hluTableAdapterMgr.lut_ihs_matrixTableAdapter =
                             new HluTableAdapter<HluDataSet.lut_ihs_matrixDataTable, HluDataSet.lut_ihs_matrixRow>(_db);
-                    _hluTableAdapterMgr.Fill(HluDataset, new Type[] { typeof(HluDataSet.lut_ihs_matrixDataTable) }, false);
+                    _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_ihs_matrixDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -1059,7 +1053,7 @@ namespace HLU.UI.ViewModel
                             new HluTableAdapter<HluDataSet.lut_importanceDataTable,
                                 HluDataSet.lut_importanceRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset,
-                        new Type[] { typeof(HluDataSet.lut_importanceDataTable) }, false);
+                        [typeof(HluDataSet.lut_importanceDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -1077,7 +1071,7 @@ namespace HLU.UI.ViewModel
                         _hluTableAdapterMgr.lut_legacy_habitatTableAdapter =
                             new HluTableAdapter<HluDataSet.lut_legacy_habitatDataTable, HluDataSet.lut_legacy_habitatRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset,
-                        new Type[] { typeof(HluDataSet.lut_legacy_habitatDataTable) }, false);
+                        [typeof(HluDataSet.lut_legacy_habitatDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -1094,7 +1088,7 @@ namespace HLU.UI.ViewModel
                     if (_hluTableAdapterMgr.lut_osmm_habitat_xrefTableAdapter == null)
                         _hluTableAdapterMgr.lut_osmm_habitat_xrefTableAdapter =
                             new HluTableAdapter<HluDataSet.lut_osmm_habitat_xrefDataTable, HluDataSet.lut_osmm_habitat_xrefRow>(_db);
-                    _hluTableAdapterMgr.Fill(HluDataset, new Type[] { typeof(HluDataSet.lut_osmm_habitat_xrefDataTable) }, false);
+                    _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_osmm_habitat_xrefDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -1113,7 +1107,7 @@ namespace HLU.UI.ViewModel
                     if (_hluTableAdapterMgr.lut_primaryTableAdapter == null)
                         _hluTableAdapterMgr.lut_primaryTableAdapter =
                             new HluTableAdapter<HluDataSet.lut_primaryDataTable, HluDataSet.lut_primaryRow>(_db);
-                    _hluTableAdapterMgr.Fill(HluDataset, new Type[] { typeof(HluDataSet.lut_primaryDataTable) }, false);
+                    _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_primaryDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -1132,7 +1126,7 @@ namespace HLU.UI.ViewModel
                     if (_hluTableAdapterMgr.lut_primary_bap_habitatTableAdapter == null)
                         _hluTableAdapterMgr.lut_primary_bap_habitatTableAdapter =
                             new HluTableAdapter<HluDataSet.lut_primary_bap_habitatDataTable, HluDataSet.lut_primary_bap_habitatRow>(_db);
-                    _hluTableAdapterMgr.Fill(HluDataset, new Type[] { typeof(HluDataSet.lut_primary_bap_habitatDataTable) }, false);
+                    _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_primary_bap_habitatDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -1150,7 +1144,7 @@ namespace HLU.UI.ViewModel
                     if (_hluTableAdapterMgr.lut_primary_categoryTableAdapter == null)
                         _hluTableAdapterMgr.lut_primary_categoryTableAdapter =
                             new HluTableAdapter<HluDataSet.lut_primary_categoryDataTable, HluDataSet.lut_primary_categoryRow>(_db);
-                    _hluTableAdapterMgr.Fill(HluDataset, new Type[] { typeof(HluDataSet.lut_primary_categoryDataTable) }, false);
+                    _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_primary_categoryDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -1169,7 +1163,7 @@ namespace HLU.UI.ViewModel
                     if (_hluTableAdapterMgr.lut_primary_secondaryTableAdapter == null)
                         _hluTableAdapterMgr.lut_primary_secondaryTableAdapter =
                             new HluTableAdapter<HluDataSet.lut_primary_secondaryDataTable, HluDataSet.lut_primary_secondaryRow>(_db);
-                    _hluTableAdapterMgr.Fill(HluDataset, new Type[] { typeof(HluDataSet.lut_primary_secondaryDataTable) }, false);
+                    _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_primary_secondaryDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -1188,7 +1182,7 @@ namespace HLU.UI.ViewModel
                     if (_hluTableAdapterMgr.lut_processTableAdapter == null)
                         _hluTableAdapterMgr.lut_processTableAdapter =
                             new HluTableAdapter<HluDataSet.lut_processDataTable, HluDataSet.lut_processRow>(_db);
-                    _hluTableAdapterMgr.Fill(HluDataset, new Type[] { typeof(HluDataSet.lut_processDataTable) }, false);
+                    _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_processDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -1208,7 +1202,7 @@ namespace HLU.UI.ViewModel
                             new HluTableAdapter<HluDataSet.lut_quality_determinationDataTable,
                                 HluDataSet.lut_quality_determinationRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset,
-                        new Type[] { typeof(HluDataSet.lut_quality_determinationDataTable) }, false);
+                        [typeof(HluDataSet.lut_quality_determinationDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -1228,7 +1222,7 @@ namespace HLU.UI.ViewModel
                             new HluTableAdapter<HluDataSet.lut_quality_interpretationDataTable,
                                 HluDataSet.lut_quality_interpretationRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset,
-                        new Type[] { typeof(HluDataSet.lut_quality_interpretationDataTable) }, false);
+                        [typeof(HluDataSet.lut_quality_interpretationDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -1245,7 +1239,7 @@ namespace HLU.UI.ViewModel
                     if (_hluTableAdapterMgr.lut_reasonTableAdapter == null)
                         _hluTableAdapterMgr.lut_reasonTableAdapter =
                             new HluTableAdapter<HluDataSet.lut_reasonDataTable, HluDataSet.lut_reasonRow>(_db);
-                    _hluTableAdapterMgr.Fill(HluDataset, new Type[] { typeof(HluDataSet.lut_reasonDataTable) }, false);
+                    _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_reasonDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -1262,7 +1256,7 @@ namespace HLU.UI.ViewModel
                     if (_hluTableAdapterMgr.lut_secondaryTableAdapter == null)
                         _hluTableAdapterMgr.lut_secondaryTableAdapter =
                             new HluTableAdapter<HluDataSet.lut_secondaryDataTable, HluDataSet.lut_secondaryRow>(_db);
-                    _hluTableAdapterMgr.Fill(HluDataset, new Type[] { typeof(HluDataSet.lut_secondaryDataTable) }, false);
+                    _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_secondaryDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -1281,7 +1275,7 @@ namespace HLU.UI.ViewModel
                     if (_hluTableAdapterMgr.lut_secondary_bap_habitatTableAdapter == null)
                         _hluTableAdapterMgr.lut_secondary_bap_habitatTableAdapter =
                             new HluTableAdapter<HluDataSet.lut_secondary_bap_habitatDataTable, HluDataSet.lut_secondary_bap_habitatRow>(_db);
-                    _hluTableAdapterMgr.Fill(HluDataset, new Type[] { typeof(HluDataSet.lut_secondary_bap_habitatDataTable) }, false);
+                    _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_secondary_bap_habitatDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -1299,7 +1293,7 @@ namespace HLU.UI.ViewModel
                     if (_hluTableAdapterMgr.lut_secondary_groupTableAdapter == null)
                         _hluTableAdapterMgr.lut_secondary_groupTableAdapter =
                             new HluTableAdapter<HluDataSet.lut_secondary_groupDataTable, HluDataSet.lut_secondary_groupRow>(_db);
-                    _hluTableAdapterMgr.Fill(HluDataset, new Type[] { typeof(HluDataSet.lut_secondary_groupDataTable) }, false);
+                    _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_secondary_groupDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -1321,7 +1315,7 @@ namespace HLU.UI.ViewModel
                             new HluTableAdapter<HluDataSet.lut_sourcesDataTable,
                                 HluDataSet.lut_sourcesRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset,
-                        new Type[] { typeof(HluDataSet.lut_sourcesDataTable) }, false);
+                        [typeof(HluDataSet.lut_sourcesDataTable)], false);
                 }
 
                 // Get the list of values from the lookup table.
@@ -2008,26 +2002,28 @@ namespace HLU.UI.ViewModel
                             return;
                     }
 
-                    if (HaveGisApp && MessageBox.Show(String.Format("Close {0} as well?",
-                        _gisApp.ApplicationType), "HLU: Exit", MessageBoxButton.YesNo,
-                        MessageBoxImage.Question) == MessageBoxResult.Yes)
-                    {
-                        _gisApp.Close();
+                    //TODO: ArcGIS
+                    //if (HaveGisApp && MessageBox.Show(String.Format("Close {0} as well?",
+                    //    _gisApp.ApplicationType), "HLU: Exit", MessageBoxButton.YesNo,
+                    //    MessageBoxImage.Question) == MessageBoxResult.Yes)
+                    //{
+                    //    _gisApp.Close();
 
-                        ScratchDb.CleanUp();
+                    //    ScratchDb.CleanUp();
 
-                        if (_exportMdbs != null)
-                        {
-                            foreach (string path in _exportMdbs)
-                            {
-                                try { File.Delete(path); }
-                                catch { }
-                            }
-                        }
-                    }
+                    //    if (_exportMdbs != null)
+                    //    {
+                    //        foreach (string path in _exportMdbs)
+                    //        {
+                    //            try { File.Delete(path); }
+                    //            catch { }
+                    //        }
+                    //    }
+                    //}
 
-                    // Call the event handle to close the application
-                    handler(this, EventArgs.Empty);
+                    //TODO: ArcGIS
+                    //// Call the event handle to close the application
+                    //handler(this, EventArgs.Empty);
                 }
             }
         }
@@ -2090,8 +2086,8 @@ namespace HLU.UI.ViewModel
             {
                 return IncidCurrentRow != null && _copySwitches != null &&
                     typeof(WindowMainCopySwitches).GetProperties().Where(p => p.Name.StartsWith("Copy"))
-                    .Count(p => (bool)typeof(WindowMainCopySwitches).GetProperty(p.Name)
-                        .GetValue(_copySwitches, null)) > 0;
+                    .Any(p => (bool)typeof(WindowMainCopySwitches).GetProperty(p.Name)
+                        .GetValue(_copySwitches, null));
             }
         }
 
@@ -2122,8 +2118,8 @@ namespace HLU.UI.ViewModel
             {
                 return IncidCurrentRow != null && _copySwitches != null &&
                     typeof(WindowMainCopySwitches).GetProperties().Where(p => !p.Name.StartsWith("Copy"))
-                    .Count(p => typeof(WindowMainCopySwitches).GetProperty(p.Name)
-                        .GetValue(_copySwitches, null) != null) > 0;
+                    .Any(p => typeof(WindowMainCopySwitches).GetProperty(p.Name)
+                        .GetValue(_copySwitches, null) != null);
             }
         }
 
@@ -2405,7 +2401,7 @@ namespace HLU.UI.ViewModel
             get
             {
                 return (_bulkUpdateMode == false && _osmmUpdateMode == false) &&
-                    HaveGisApp && EditMode && !String.IsNullOrEmpty(Reason) && !String.IsNullOrEmpty(Process) &&
+                    EditMode && !String.IsNullOrEmpty(Reason) && !String.IsNullOrEmpty(Process) &&
                     (_gisSelection != null) && (_incidsSelectedMapCount == 1) &&
                     ((_gisSelection.Rows.Count > 0) && ((_toidsSelectedMapCount > 1) || (_fragsSelectedMapCount > 0)) ||
                     (_gisSelection.Rows.Count == 1)) &&
@@ -2429,7 +2425,7 @@ namespace HLU.UI.ViewModel
             get
             {
                 return (_bulkUpdateMode == false && _osmmUpdateMode == false) &&
-                    HaveGisApp && EditMode && !String.IsNullOrEmpty(Reason) && !String.IsNullOrEmpty(Process) &&
+                    EditMode && !String.IsNullOrEmpty(Reason) && !String.IsNullOrEmpty(Process) &&
                     (_gisSelection != null) && (_gisSelection.Rows.Count > 1) &&
                     // Only enable split/merge after select from map
                     (_filterByMap == true) &&
@@ -2535,7 +2531,7 @@ namespace HLU.UI.ViewModel
             get
             {
                 return (_bulkUpdateMode == false && _osmmUpdateMode == false) &&
-                    HaveGisApp && EditMode && !String.IsNullOrEmpty(Reason) && !String.IsNullOrEmpty(Process) &&
+                    EditMode && !String.IsNullOrEmpty(Reason) && !String.IsNullOrEmpty(Process) &&
                     _gisSelection != null && _gisSelection.Rows.Count > 1 &&
                     // Only enable split/merge after select from map
                     (_filterByMap == true) &&
@@ -2551,7 +2547,7 @@ namespace HLU.UI.ViewModel
             get
             {
                 return (_bulkUpdateMode == false && _osmmUpdateMode == false) &&
-                    HaveGisApp && EditMode && !String.IsNullOrEmpty(Reason) && !String.IsNullOrEmpty(Process) &&
+                    EditMode && !String.IsNullOrEmpty(Reason) && !String.IsNullOrEmpty(Process) &&
                     _gisSelection != null && _gisSelection.Rows.Count > 1 &&
                     // Only enable split/merge after select from map
                     (_filterByMap == true) &&
@@ -2889,7 +2885,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                bool editMode = IsAuthorisedUser && HaveGisApp && _gisApp.IsEditing;
+                bool editMode = IsAuthorisedUser && _gisApp.IsEditing;
                 if (_editMode != editMode)
                 {
                     _editMode = editMode;
@@ -4168,7 +4164,8 @@ namespace HLU.UI.ViewModel
             Settings.Default.Save();
         }
 
-        public bool CanAutoZoomSelected { get { return HaveGisApp; } }
+        //TODO: Unneeded
+        public bool CanAutoZoomSelected { get { return true; } }
 
         public ICommand AutoSelectOnGisCommand
         {
@@ -4194,7 +4191,8 @@ namespace HLU.UI.ViewModel
 
         }
 
-        public bool CanAutoSelectOnGis { get { return HaveGisApp; } }
+        //TODO: Unneeded
+        public bool CanAutoSelectOnGis { get { return true; } }
 
         public ICommand ZoomSelectionCommand
         {
@@ -4217,7 +4215,7 @@ namespace HLU.UI.ViewModel
             _gisApp.ZoomSelected(_minZoom, distUnits, true);
         }
 
-        public bool CanZoomSelection { get { return HaveGisApp && _gisSelection != null; } }
+        public bool CanZoomSelection { get { return _gisSelection != null; } }
 
         public ICommand GisWinSideBySideCommand
         {
@@ -4239,7 +4237,8 @@ namespace HLU.UI.ViewModel
             //    new WindowInteropHelper(App.Current.MainWindow).Handle);
         }
 
-        public bool CanGisWinSideBySide { get { return HaveGisApp; } }
+        //TODO: Unneeded
+        public bool CanGisWinSideBySide { get { return true; } }
 
         public ICommand ResetToolWindowCommand
         {
@@ -4267,27 +4266,31 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(WindowWidth));
         }
 
-        public bool CanResetToolWindow { get { return HaveGisApp; } }
+        //TODO: Unneeded
+        public bool CanResetToolWindow { get { return true; } }
 
-        public ICommand GisWinSwitchToCommand
-        {
-            get
-            {
-                if (_gisWinSwitchToCommand == null)
-                {
-                    Action<object> gisWinSwitchToAction = new(this.GisWinSwitchToClicked);
-                    _gisWinSwitchToCommand = new RelayCommand(gisWinSwitchToAction, param => this.CanGisWinSwitchTo);
-                }
-                return _gisWinSwitchToCommand;
-            }
-        }
+        //TODO: ArcGIS
+        //public ICommand GisWinSwitchToCommand
+        //{
+        //    get
+        //    {
+        //        if (_gisWinSwitchToCommand == null)
+        //        {
+        //            Action<object> gisWinSwitchToAction = new(this.GisWinSwitchToClicked);
+        //            _gisWinSwitchToCommand = new RelayCommand(gisWinSwitchToAction, param => this.CanGisWinSwitchTo);
+        //        }
+        //        return _gisWinSwitchToCommand;
+        //    }
+        //}
 
-        private void GisWinSwitchToClicked(object param)
-        {
-            _gisApp.Activate();
-        }
+        //TODO: ArcGIS
+        //private void GisWinSwitchToClicked(object param)
+        //{
+        //    _gisApp.Activate();
+        //}
 
-        public bool CanGisWinSwitchTo { get { return HaveGisApp; } }
+        //TODO: ArcGIS
+        //public bool CanGisWinSwitchTo { get { return HaveGisApp; } }
 
         #endregion
 
@@ -4518,7 +4521,8 @@ namespace HLU.UI.ViewModel
             {
                 //TODO: App.Current.MainWindow
                 //_windowAbout.Owner = App.Current.MainWindow;
-                WindowStartupLocation = WindowStartupLocation.CenterScreen
+                //TODO: ArcGIS
+                //WindowStartupLocation = WindowStartupLocation.CenterScreen
             };
 
             // Create ViewModel to which main window binds
@@ -4590,7 +4594,7 @@ namespace HLU.UI.ViewModel
             viewModelExport.InitiateExport();
         }
 
-        public bool CanExport { get { return _bulkUpdateMode == false && _osmmUpdateMode == false && _hluDS != null && HaveGisApp; } }
+        public bool CanExport { get { return _bulkUpdateMode == false && _osmmUpdateMode == false && _hluDS != null; } }
 
         #endregion
 
@@ -4780,7 +4784,7 @@ namespace HLU.UI.ViewModel
                         newWhereClause = ReplaceStringQualifiers(sqlWhereClause);
 
                     // create a selection DataTable of PK values of IncidTable
-                    if (whereTables.Any())
+                    if (whereTables.Count > 0)
                     {
                         // Create a selection DataTable of PK values of IncidTable.
                         _incidSelection = _db.SqlSelect(true, IncidTable.PrimaryKey, whereTables, newWhereClause);
@@ -5479,7 +5483,7 @@ namespace HLU.UI.ViewModel
 
                     // Include the incid_osmm_updates table to use in the query.
                     if (fromTables.Contains(IncidOSMMUpdatesTable.TableName) == false)
-                        fromTables = fromTables.Concat(new string[] { IncidOSMMUpdatesTable.TableName }).ToArray();
+                        fromTables = fromTables.Concat([IncidOSMMUpdatesTable.TableName]).ToArray();
 
                     // Select only the database tables that are in the query array.
                     List<DataTable> whereTables = tables.Where(t => fromTables.Contains(t.TableName)).ToList();
@@ -5964,7 +5968,7 @@ namespace HLU.UI.ViewModel
 
             // Clear the secondary habitats table and the secondary habitat
             // rows for the class
-            _incidSecondaryHabitats = new ObservableCollection<SecondaryHabitat>();
+            _incidSecondaryHabitats = [];
             SecondaryHabitat.SecondaryHabitatList = _incidSecondaryHabitats;
 
             // Clear the secondary groups list and disable the drop-down.
@@ -6076,7 +6080,7 @@ namespace HLU.UI.ViewModel
 
         private bool CanSelectOnMap
         {
-            get { return _bulkUpdateMode == false && _osmmUpdateMode == false && HaveGisApp && IncidCurrentRow != null; }
+            get { return _bulkUpdateMode == false && _osmmUpdateMode == false && IncidCurrentRow != null; }
         }
 
         /// <summary>
@@ -6250,9 +6254,9 @@ namespace HLU.UI.ViewModel
         {
                 //---------------------------------------------------------------------
                 // FIX: 101 Enable get map selection when in OSMM update mode.
-                //--------------------------------------------------------------            
+                //--------------------------------------------------------------
                 //get { return _bulkUpdateMode == false && _osmmUpdateMode == false && HaveGisApp; }
-                get { return _bulkUpdateMode == false && HaveGisApp; }
+                get { return _bulkUpdateMode == false; }
                 //---------------------------------------------------------------------
         }
 
@@ -6509,7 +6513,7 @@ namespace HLU.UI.ViewModel
 
         private bool CanEditPriorityHabitats
         {
-            get { return _bulkUpdateMode == false && _osmmUpdateMode == false && HaveGisApp && BapHabitatsAutoEnabled; }
+            get { return _bulkUpdateMode == false && _osmmUpdateMode == false && BapHabitatsAutoEnabled; }
         }
 
         #endregion
@@ -6593,7 +6597,7 @@ namespace HLU.UI.ViewModel
 
         private bool CanEditPotentialHabitats
         {
-            get { return _bulkUpdateMode == false && _osmmUpdateMode == false && HaveGisApp && BapHabitatsUserEnabled; }
+            get { return _bulkUpdateMode == false && _osmmUpdateMode == false && BapHabitatsUserEnabled; }
         }
         //---------------------------------------------------------------------
 
@@ -6623,7 +6627,7 @@ namespace HLU.UI.ViewModel
             {
                 // Check not in OSMM update mode and GIS present and primary
                 // code and secondary habitat group and code have been set.
-                return (_osmmUpdateMode == false && HaveGisApp
+                return (_osmmUpdateMode == false
                     && _incidPrimary != null && _secondaryGroup != null && _secondaryHabitat != null);
             }
         }
@@ -6652,7 +6656,7 @@ namespace HLU.UI.ViewModel
 
                     // Add secondary habitat to table if it isn't already in the table
                     if (SecondaryHabitat.SecondaryHabitatList == null ||
-                        SecondaryHabitat.SecondaryHabitatList.Count(sh => sh.secondary_habitat == _secondaryHabitat) == 0)
+                        !SecondaryHabitat.SecondaryHabitatList.Any(sh => sh.secondary_habitat == _secondaryHabitat))
                         AddSecondaryHabitat(false, -1, Incid, _secondaryHabitat, secondaryGroup);
 
                     // Refresh secondary table and summary.
@@ -6697,7 +6701,7 @@ namespace HLU.UI.ViewModel
             {
                 // Check not in OSMM update mode and GIS present and primary
                 // code and secondary habitat group and code have been set.
-                return (_osmmUpdateMode == false && HaveGisApp
+                return (_osmmUpdateMode == false
                     && _incidPrimary != null);
             }
         }
@@ -6710,11 +6714,13 @@ namespace HLU.UI.ViewModel
         {
             try
             {
-                _windowQuerySecondaries = new WindowQuerySecondaries();
-                //TODO: App.GetActiveWindow
-                //if ((_windowQuerySecondaries.Owner = App.GetActiveWindow()) == null)
-                //    throw (new Exception("No parent window loaded"));
-                _windowQuerySecondaries.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                _windowQuerySecondaries = new()
+                {
+                    //TODO: App.GetActiveWindow
+                    //if ((_windowQuerySecondaries.Owner = App.GetActiveWindow()) == null)
+                    //    throw (new Exception("No parent window loaded"));
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen
+                };
 
                 // create ViewModel to which main window binds
                 _viewModelWinQuerySecondaries = new()
@@ -6758,7 +6764,7 @@ namespace HLU.UI.ViewModel
 
                     // Split the list by spaces, commas or points
                     string pattern = @"\s|\.|\,";
-                    Regex rgx = new Regex(pattern);
+                    Regex rgx = new(pattern);
 
                     // Process each secondary habitat code
                     string[] secondaryHabitats = rgx.Split(querySecondaries);
@@ -6781,7 +6787,7 @@ namespace HLU.UI.ViewModel
 
                                 // Add secondary habitat if it isn't already in the table
                                 if (SecondaryHabitat.SecondaryHabitatList == null ||
-                                    SecondaryHabitat.SecondaryHabitatList.Count(sh => sh.secondary_habitat == secondaryHabitat) == 0)
+                                    !SecondaryHabitat.SecondaryHabitatList.Any(sh => sh.secondary_habitat == secondaryHabitat))
                                 {
                                     // Add secondary habitat to table if it isn't already in the table
                                     bool err;
@@ -6820,14 +6826,14 @@ namespace HLU.UI.ViewModel
                             // Sort the distinct secondary codes in error numerically
                             errorCodes = errorCodes.Distinct().OrderBy(e => e.PadLeft(5, '0')).ToList();
                             // Message the user, depending on if there is one or more
-                            if (errorCodes.Count() == 1)
+                            if (errorCodes.Count == 1)
                                 MessageBox.Show("Code '" +
                                     errorCodes.FirstOrDefault() + "' is a duplicate or unknown and has not been added.",
                                     "HLU: Add Secondary Habitats",
                                     MessageBoxButton.OK, MessageBoxImage.Information);
                             else
                                 MessageBox.Show("Codes '" +
-                                    String.Join(", ", errorCodes.Take(errorCodes.Count() - 1)) + " and " + errorCodes.Last() + "' are duplicates or unknown and have not been added.",
+                                    String.Join(", ", errorCodes.Take(errorCodes.Count - 1)) + " and " + errorCodes.Last() + "' are duplicates or unknown and have not been added.",
                                     "HLU: Add Secondary Habitats",
                                     MessageBoxButton.OK, MessageBoxImage.Information);
                         }
@@ -6888,8 +6894,7 @@ namespace HLU.UI.ViewModel
                     DataTable incidSelectionBackup = _incidSelection;
 
                     // Build a where clause list for the incids to be selected.
-                    List<List<SqlFilterCondition>> whereClause = new List<List<SqlFilterCondition>>();
-                    whereClause.Add(ScratchDb.GisWhereClause(_incidSelection, null, false));
+                    List<List<SqlFilterCondition>> whereClause = [ScratchDb.GisWhereClause(_incidSelection, null, false)];
 
                     // Find the expected number of features to be selected in GIS.
                     int expectedNumToids = -1;
@@ -7176,7 +7181,7 @@ namespace HLU.UI.ViewModel
         {
             _incidSelection = NewIncidSelectionTable();
             foreach (string s in _incidsSelectedMap)
-                _incidSelection.Rows.Add(new object[] { s });
+                _incidSelection.Rows.Add([s]);
         }
 
         private DataTable NewIncidSelectionTable()
@@ -7208,7 +7213,7 @@ namespace HLU.UI.ViewModel
         /// <returns>An integer of the number of GIS features to be selected.</returns>
         private void ExpectedSelectionFeatures(List<List<SqlFilterCondition>> whereClause, ref int numToids, ref int numFragments)
         {
-            if (HaveGisApp && (_incidSelection != null) && (_incidSelection.Rows.Count > 0) &&
+            if ((_incidSelection != null) && (_incidSelection.Rows.Count > 0) &&
                 (whereClause != null) && (whereClause.Count > 0))
             {
                 try
@@ -7284,7 +7289,7 @@ namespace HLU.UI.ViewModel
         /// <returns>An integer of the number of GIS features to be selected.</returns>
         private void ExpectedSelectionFeatures(List<DataTable> sqlFromTables, string sqlWhereClause, ref int numToids, ref int numFragments)
         {
-            if (HaveGisApp && (_incidSelection != null) && (_incidSelection.Rows.Count > 0) &&
+            if ((_incidSelection != null) && (_incidSelection.Rows.Count > 0) &&
                 sqlFromTables.Any())
             {
                 try
@@ -7462,7 +7467,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_bulkUpdateMode == false && _osmmUpdateMode == false && HaveGisApp)
+                if (_bulkUpdateMode == false && _osmmUpdateMode == false)
                 {
                     // Get the total number of map layers
                     int mapLayersCount = _gisApp.ListHluLayers();
@@ -7992,14 +7997,6 @@ namespace HLU.UI.ViewModel
                     else
                         userResponse = MessageBoxResult.Cancel;
                 }
-                else if (!HaveGisApp)
-                {
-                    MessageBox.Show("There is no GIS application known to be running.\n" +
-                        "Without a GIS application the GIS layer cannot be synchronized.\n" +
-                        "Therefore updates are disabled.", "HLU: Selection",
-                        MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                    userResponse = MessageBoxResult.Cancel;
-                }
                 else
                 {
                     userResponse = MessageBox.Show("The current record has been changed, " +
@@ -8223,10 +8220,10 @@ namespace HLU.UI.ViewModel
                 int fragsIncidSelectionDbCount = 0;
                 int toidsIncidSelectionDbCount = 0;
 
-                string sqlFragsDbCount = new(String.Format("SELECT COUNT(*) FROM {0} WHERE {0}.{1} = {2}",
+                string sqlFragsDbCount = String.Format("SELECT COUNT(*) FROM {0} WHERE {0}.{1} = {2}",
                     _db.QualifyTableName(_hluDS.incid_mm_polygons.TableName),
                     _db.QuoteIdentifier(_hluDS.incid_mm_polygons.incidColumn.ColumnName),
-                    _db.QuoteValue(incid))).ToString();
+                    _db.QuoteValue(incid));
 
                 // Count the total number of fragments in the database for
                 // this incid.
@@ -8235,12 +8232,12 @@ namespace HLU.UI.ViewModel
 
                 // Count the total number of toids in the database for
                 // this incid.
-                string _sqlToidsDbCount = new(String.Format(
+                string _sqlToidsDbCount = String.Format(
                     "SELECT COUNT(*) FROM (SELECT DISTINCT {0} FROM {1} WHERE {2} = {3}) AS T",
                     _db.QuoteIdentifier(_hluDS.incid_mm_polygons.toidColumn.ColumnName),
                     _db.QualifyTableName(_hluDS.incid_mm_polygons.TableName),
                     _db.QuoteIdentifier(_hluDS.incid_mm_polygons.incidColumn.ColumnName),
-                    _db.QuoteValue(incid))).ToString();
+                    _db.QuoteValue(incid));
 
                 toidsIncidSelectionDbCount = (int)_db.ExecuteScalar(_sqlToidsDbCount,
                     _db.Connection.ConnectionTimeout, CommandType.Text);
@@ -8539,41 +8536,69 @@ namespace HLU.UI.ViewModel
         {
             Dictionary<Type, string> childRowOrberByDict = new Dictionary<Type, string>();
 
-            childRowOrberByDict.Add(typeof(HluDataSet.incid_secondaryDataTable), _hluDS.incid_secondary.PrimaryKey
-                .Aggregate(new(), (sb, c) => sb.Append("," + _db.QuoteIdentifier(c.ColumnName)))
-                .Remove(0, 1).ToString());
+            //TODO: Aggregate
+            childRowOrberByDict.Add(typeof(HluDataSet.incid_secondaryDataTable),
+                string.Join(",", _hluDS.incid_secondary.PrimaryKey.Select(c => _db.QuoteIdentifier(c.ColumnName))));
 
-            childRowOrberByDict.Add(typeof(HluDataSet.incid_conditionDataTable), _hluDS.incid_condition.PrimaryKey
-                .Aggregate(new(), (sb, c) => sb.Append("," + String.Format("{0} DESC", _db.QuoteIdentifier(c.ColumnName))))
-                .Remove(0, 1).ToString());
+            childRowOrberByDict.Add(typeof(HluDataSet.incid_conditionDataTable),
+                string.Join(",", _hluDS.incid_condition.PrimaryKey.Select(c => String.Format("{0} DESC", _db.QuoteIdentifier(c.ColumnName)))));
 
-            childRowOrberByDict.Add(typeof(HluDataSet.incid_ihs_matrixDataTable), _hluDS.incid_ihs_matrix.PrimaryKey
-                .Aggregate(new(), (sb, c) => sb.Append("," + _db.QuoteIdentifier(c.ColumnName)))
-                .Remove(0, 1).ToString());
+            childRowOrberByDict.Add(typeof(HluDataSet.incid_ihs_matrixDataTable),
+                string.Join(",", _hluDS.incid_ihs_matrix.PrimaryKey.Select(c => _db.QuoteIdentifier(c.ColumnName))));
 
-            childRowOrberByDict.Add(typeof(HluDataSet.incid_ihs_formationDataTable), _hluDS.incid_ihs_formation.PrimaryKey
-                .Aggregate(new(), (sb, c) => sb.Append("," + _db.QuoteIdentifier(c.ColumnName)))
-                .Remove(0, 1).ToString());
+            childRowOrberByDict.Add(typeof(HluDataSet.incid_ihs_formationDataTable),
+                string.Join(",", _hluDS.incid_ihs_formation.PrimaryKey.Select(c => _db.QuoteIdentifier(c.ColumnName))));
 
-            childRowOrberByDict.Add(typeof(HluDataSet.incid_ihs_managementDataTable), _hluDS.incid_ihs_management.PrimaryKey
-                .Aggregate(new(), (sb, c) => sb.Append("," + _db.QuoteIdentifier(c.ColumnName)))
-                .Remove(0, 1).ToString());
+            childRowOrberByDict.Add(typeof(HluDataSet.incid_ihs_managementDataTable),
+                string.Join(",", _hluDS.incid_ihs_management.PrimaryKey.Select(c => _db.QuoteIdentifier(c.ColumnName))));
 
-            childRowOrberByDict.Add(typeof(HluDataSet.incid_ihs_complexDataTable), _hluDS.incid_ihs_complex.PrimaryKey
-                .Aggregate(new(), (sb, c) => sb.Append("," + _db.QuoteIdentifier(c.ColumnName)))
-                .Remove(0, 1).ToString());
+            childRowOrberByDict.Add(typeof(HluDataSet.incid_ihs_complexDataTable),
+                string.Join(",", _hluDS.incid_ihs_complex.PrimaryKey.Select(c => _db.QuoteIdentifier(c.ColumnName))));
 
-            childRowOrberByDict.Add(typeof(HluDataSet.incid_bapDataTable), _hluDS.incid_bap.PrimaryKey
-                .Aggregate(new(), (sb, c) => sb.Append("," + _db.QuoteIdentifier(c.ColumnName)))
-                .Remove(0, 1).ToString());
+            childRowOrberByDict.Add(typeof(HluDataSet.incid_bapDataTable),
+                string.Join(",", _hluDS.incid_bap.PrimaryKey.Select(c => _db.QuoteIdentifier(c.ColumnName))));
 
-            childRowOrberByDict.Add(typeof(HluDataSet.incid_sourcesDataTable), _hluDS.incid_sources.PrimaryKey
-                .Aggregate(new(), (sb, c) => sb.Append("," + _db.QuoteIdentifier(c.ColumnName)))
-                .Remove(0, 1).ToString());
+            childRowOrberByDict.Add(typeof(HluDataSet.incid_sourcesDataTable),
+                string.Join(",", _hluDS.incid_sources.PrimaryKey.Select(c => _db.QuoteIdentifier(c.ColumnName))));
 
-            childRowOrberByDict.Add(typeof(HluDataSet.incid_osmm_updatesDataTable), _hluDS.incid_osmm_updates.PrimaryKey
-                .Aggregate(new(), (sb, c) => sb.Append("," + _db.QuoteIdentifier(c.ColumnName)))
-                .Remove(0, 1).ToString());
+            childRowOrberByDict.Add(typeof(HluDataSet.incid_osmm_updatesDataTable),
+                string.Join(",", _hluDS.incid_osmm_updates.PrimaryKey.Select(c => _db.QuoteIdentifier(c.ColumnName))));
+
+            //childRowOrberByDict.Add(typeof(HluDataSet.incid_secondaryDataTable), _hluDS.incid_secondary.PrimaryKey
+            //    .Aggregate(new(), (sb, c) => sb.Append("," + _db.QuoteIdentifier(c.ColumnName)))
+            //    .Remove(0, 1).ToString());
+
+            //childRowOrberByDict.Add(typeof(HluDataSet.incid_conditionDataTable), _hluDS.incid_condition.PrimaryKey
+            //    .Aggregate(new(), (sb, c) => sb.Append("," + String.Format("{0} DESC", _db.QuoteIdentifier(c.ColumnName))))
+            //    .Remove(0, 1).ToString());
+
+            //childRowOrberByDict.Add(typeof(HluDataSet.incid_ihs_matrixDataTable), _hluDS.incid_ihs_matrix.PrimaryKey
+            //    .Aggregate(new(), (sb, c) => sb.Append("," + _db.QuoteIdentifier(c.ColumnName)))
+            //    .Remove(0, 1).ToString());
+
+            //childRowOrberByDict.Add(typeof(HluDataSet.incid_ihs_formationDataTable), _hluDS.incid_ihs_formation.PrimaryKey
+            //    .Aggregate(new(), (sb, c) => sb.Append("," + _db.QuoteIdentifier(c.ColumnName)))
+            //    .Remove(0, 1).ToString());
+
+            //childRowOrberByDict.Add(typeof(HluDataSet.incid_ihs_managementDataTable), _hluDS.incid_ihs_management.PrimaryKey
+            //    .Aggregate(new(), (sb, c) => sb.Append("," + _db.QuoteIdentifier(c.ColumnName)))
+            //    .Remove(0, 1).ToString());
+
+            //childRowOrberByDict.Add(typeof(HluDataSet.incid_ihs_complexDataTable), _hluDS.incid_ihs_complex.PrimaryKey
+            //    .Aggregate(new(), (sb, c) => sb.Append("," + _db.QuoteIdentifier(c.ColumnName)))
+            //    .Remove(0, 1).ToString());
+
+            //childRowOrberByDict.Add(typeof(HluDataSet.incid_bapDataTable), _hluDS.incid_bap.PrimaryKey
+            //    .Aggregate(new(), (sb, c) => sb.Append("," + _db.QuoteIdentifier(c.ColumnName)))
+            //    .Remove(0, 1).ToString());
+
+            //childRowOrberByDict.Add(typeof(HluDataSet.incid_sourcesDataTable), _hluDS.incid_sources.PrimaryKey
+            //    .Aggregate(new(), (sb, c) => sb.Append("," + _db.QuoteIdentifier(c.ColumnName)))
+            //    .Remove(0, 1).ToString());
+
+            //childRowOrberByDict.Add(typeof(HluDataSet.incid_osmm_updatesDataTable), _hluDS.incid_osmm_updates.PrimaryKey
+            //    .Aggregate(new(), (sb, c) => sb.Append("," + _db.QuoteIdentifier(c.ColumnName)))
+            //    .Remove(0, 1).ToString());
 
             return childRowOrberByDict;
         }
@@ -8683,7 +8708,6 @@ namespace HLU.UI.ViewModel
             HluDataSet.incid_secondaryDataTable secondaryTable = _hluDS.incid_secondary;
             _incidSecondaryRows = GetIncidChildRowsDb(relValues,
                _hluTableAdapterMgr.incid_secondaryTableAdapter, ref secondaryTable);
-            _origIncidSecondaryCount = _incidSecondaryRows.Length;
 
             GetSecondaryHabitats();
 
@@ -12339,15 +12363,22 @@ namespace HLU.UI.ViewModel
                 else
                     DelErrorList(ref _priorityErrors, "BapUser");
 
-                // Check if there are any duplicates between the primary and 
+                // Check if there are any duplicates between the primary and
                 // secondary BAP records.
                 if (_incidBapRowsAuto != null && _incidBapRowsAuto.Count > 0)
                 {
-                    StringBuilder beDups = (from be in _incidBapRowsAuto.Concat(_incidBapRowsUser)
+                    //TODO: Aggregate
+                    List<string> beDups = (from be in _incidBapRowsAuto.Concat(_incidBapRowsUser)
                                             group be by be.bap_habitat into g
                                             where g.Count() > 1
-                                            select g.Key).Aggregate(new(), (sb, code) => sb.Append(", " + code));
-                    if (beDups.Length > 2)
+                                            select g.Key).ToList();
+
+                    //StringBuilder beDups = (from be in _incidBapRowsAuto.Concat(_incidBapRowsUser)
+                    //                        group be by be.bap_habitat into g
+                    //                        where g.Count() > 1
+                    //                        select g.Key).Aggregate(new(), (sb, code) => sb.Append(", " + code));
+
+                    if (beDups.Count > 2)
                         AddErrorList(ref _priorityErrors, "BapUserDup");
                     else
                         DelErrorList(ref _priorityErrors, "BapUserDup");
@@ -12368,7 +12399,7 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Track when the BAP primary records have changed so that the apply
-        /// button will appear.        
+        /// button will appear.
         /// </summary>
         private void _incidBapRowsAuto_DataChanged(bool BapChanged)
         {
@@ -12409,11 +12440,18 @@ namespace HLU.UI.ViewModel
                 // secondary BAP records.
                 if (_incidBapRowsAuto != null && _incidBapRowsAuto.Count > 0)
                 {
-                    StringBuilder beDups = (from be in _incidBapRowsAuto.Concat(_incidBapRowsUser)
+                    //TODO: Aggregate
+                    List<string> beDups = (from be in _incidBapRowsAuto.Concat(_incidBapRowsUser)
                                             group be by be.bap_habitat into g
                                             where g.Count() > 1
-                                            select g.Key).Aggregate(new(), (sb, code) => sb.Append(", " + code));
-                    if (beDups.Length > 2)
+                                            select g.Key).ToList();
+
+                    //StringBuilder beDups = (from be in _incidBapRowsAuto.Concat(_incidBapRowsUser)
+                    //                        group be by be.bap_habitat into g
+                    //                        where g.Count() > 1
+                    //                        select g.Key).Aggregate(new(), (sb, code) => sb.Append(", " + code));
+
+                    if (beDups.Count > 2)
                         AddErrorList(ref _priorityErrors, "BapUserDup");
                     else
                         DelErrorList(ref _priorityErrors, "BapUserDup");
@@ -12547,11 +12585,18 @@ namespace HLU.UI.ViewModel
                 // secondary BAP records.
                 if (_incidBapRowsAuto != null && _incidBapRowsAuto.Count > 0)
                 {
-                    StringBuilder beDups = (from be in _incidBapRowsAuto.Concat(_incidBapRowsUser)
+                    //TODO: Aggregate
+                    List<string> beDups = (from be in _incidBapRowsAuto.Concat(_incidBapRowsUser)
                                             group be by be.bap_habitat into g
                                             where g.Count() > 1
-                                            select g.Key).Aggregate(new(), (sb, code) => sb.Append(", " + code));
-                    if (beDups.Length > 2)
+                                            select g.Key).ToList();
+
+                    //StringBuilder beDups = (from be in _incidBapRowsAuto.Concat(_incidBapRowsUser)
+                    //                        group be by be.bap_habitat into g
+                    //                        where g.Count() > 1
+                    //                        select g.Key).Aggregate(new(), (sb, code) => sb.Append(", " + code));
+
+                    if (beDups.Count > 2)
                         AddErrorList(ref _priorityErrors, "BapUserDup");
                     else
                         DelErrorList(ref _priorityErrors, "BapUserDup");
@@ -14521,10 +14566,11 @@ namespace HLU.UI.ViewModel
 
         #region Validation
 
-        internal bool HaveGisApp
-        {
-            get { return _gisApp != null && _gisApp.IsRunning; }
-        }
+        //TODO: ArcMap
+        //internal bool HaveGisApp
+        //{
+        //    get { return _gisApp != null && _gisApp.IsRunning; }
+        //}
 
         internal bool IsCompleteRow(DataRow r)
         {
@@ -14831,9 +14877,13 @@ namespace HLU.UI.ViewModel
             string[] split = propNamePat.Split(new string[] { propNamePatWildcard }, StringSplitOptions.None);
             string errMsg = String.Format("Error: {0}", split[split.Length - 1]);
 
-            errMsg = Regex.Matches(errMsg, @"[A-Z][^A-Z\s]*").Cast<Match>()
-                .Aggregate(new(), (sb, m) => sb.Append(errMsg.Substring(m.Index, m.Length)).Append(' '))
-                .AppendFormat("must be applied in the order {0}, {1} then {2}", ord1val, ord2val, ord3val).ToString();
+            //TODO: Aggregate
+            errMsg = string.Join(" ", Regex.Matches(errMsg, @"[A-Z][^A-Z\s]*").Cast<Match>().Select(m => errMsg.Substring(m.Index, m.Length)
+                .Concat(string.Format(" must be applied in the order {0}, {1} then {2}", ord1val, ord2val, ord3val))));
+
+            //errMsg = Regex.Matches(errMsg, @"[A-Z][^A-Z\s]*").Cast<Match>()
+            //    .Aggregate(new(), (sb, m) => sb.Append(errMsg.Substring(m.Index, m.Length)).Append(' '))
+            //    .AppendFormat("must be applied in the order {0}, {1} then {2}", ord1val, ord2val, ord3val).ToString();
 
             if (!String.IsNullOrEmpty(ord1val))
             {
@@ -14892,9 +14942,13 @@ namespace HLU.UI.ViewModel
             string[] split = propNamePat.Split(new string[] { propNamePatWildcard }, StringSplitOptions.None);
             string errMsg = String.Format("Error: {0}", split[split.Length - 1]);
 
-            errMsg = Regex.Matches(errMsg, @"[A-Z][^A-Z\s]*").Cast<Match>()
-                .Aggregate(new(), (sb, m) => sb.Append(errMsg.Substring(m.Index, m.Length)).Append(' '))
-                .Append("of two sources cannot be equal for the same INCID").ToString();
+            //TODO: Aggregate
+            errMsg = string.Join(" ", Regex.Matches(errMsg, @"[A-Z][^A-Z\s]*").Cast<Match>().Select(m => errMsg.Substring(m.Index, m.Length)
+                .Concat(" of two sources cannot be equal for the same INCID")));
+
+            //errMsg = Regex.Matches(errMsg, @"[A-Z][^A-Z\s]*").Cast<Match>()
+            //    .Aggregate(new(), (sb, m) => sb.Append(errMsg.Substring(m.Index, m.Length)).Append(' '))
+            //    .Append("of two sources cannot be equal for the same INCID").ToString();
 
             foreach (PropertyInfo pi in this.GetType().GetProperties().Where(pn => pn.Name != propNameCheck && Regex.IsMatch(pn.Name, propNamePat)))
             {
