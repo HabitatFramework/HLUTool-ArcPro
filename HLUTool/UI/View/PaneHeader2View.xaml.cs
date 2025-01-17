@@ -25,8 +25,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using HLU.UI.ViewModel;
 
-namespace HLU.UI
+namespace HLU.UI.View
 {
     /// <summary>
     /// Interaction logic for PaneHeader2View.xaml

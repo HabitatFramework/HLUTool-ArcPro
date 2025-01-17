@@ -17,13 +17,14 @@
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using System.Windows;
+using System.Windows.Forms;
 
 namespace HLU.UI.View
 {
     /// <summary>
     /// Interaction logic for MessageWindow.xaml
     /// </summary>
-    public partial class MessageWindow : Window
+    public partial class MessageWindow : System.Windows.Controls.UserControl
     {
         public MessageWindow()
         {

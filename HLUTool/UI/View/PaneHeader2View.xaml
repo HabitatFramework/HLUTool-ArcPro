@@ -1,12 +1,12 @@
-﻿<UserControl x:Class="HLU.UI.PaneHeader2View"
+﻿<UserControl x:Class="HLU.UI.View.PaneHeader2View"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
-             xmlns:local="clr-namespace:HLU.UI"
-             xmlns:converter="clr-namespace:HLU"
-             d:DataContext="{d:DesignInstance Type=local:PaneHeader2ViewModel}"
+             xmlns:converter="clr-namespace:HLU.Converters"
+             xmlns:local="clr-namespace:HLU.UI.ViewModel"
+             d:DataContext="{d:DesignInstance}"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="300">
 

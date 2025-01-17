@@ -1,19 +1,19 @@
-﻿<Window x:Class="HLU.UI.View.WindowAbout"
+﻿<UserControl x:Class="HLU.UI.View.WindowAbout"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:hlu="clr-namespace:HLU.UI.UserControls;assembly="
         Width="460"
 		Height="Auto"
-		Focusable="True"
-		ResizeMode="NoResize"
+		Focusable="True">
+<!--    ResizeMode="NoResize"
 		SizeToContent="Height" 
         ShowInTaskbar="False"
 		WindowStartupLocation="CenterScreen"
 		WindowStyle="SingleBorderWindow" 
         Title="{Binding Path=WindowTitle}"
-		Icon="..\..\Icons\HLUIcon.png">
+		Icon="..\..\Icons\HLUIcon.png"> -->
 
-    <Window.Resources>
+    <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Dictionary\ErrorMessageConverterDictionary.xaml" />
@@ -21,7 +21,7 @@
                 <ResourceDictionary Source="Dictionary\HluTheme.xaml" />-->
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
-    </Window.Resources>
+    </UserControl.Resources>
 
     <DockPanel HorizontalAlignment="Stretch"
 	           VerticalAlignment="Stretch"
@@ -266,4 +266,4 @@
 			</Grid>
         </Grid>
     </DockPanel>
-</Window>
+</UserControl>

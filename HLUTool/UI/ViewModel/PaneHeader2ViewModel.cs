@@ -40,7 +40,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
-namespace HLU.UI
+namespace HLU.UI.ViewModel
 {
     internal class PaneHeader2ViewModel : PanelViewModelBase, INotifyPropertyChanged
     {

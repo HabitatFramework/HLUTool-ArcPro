@@ -1,10 +1,10 @@
-﻿<UserControl x:Class="HLU.UI.PaneHeader1View"
+﻿<UserControl x:Class="HLU.UI.View.PaneHeader1View"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:local="clr-namespace:HLU.UI"
-             d:DataContext="{d:DesignInstance Type=local:PaneHeader1ViewModel}"
+             xmlns:local="clr-namespace:HLU.UI.ViewModel"
+             d:DataContext="{d:DesignInstance}"
              mc:Ignorable="d"
              d:DesignHeight="200" d:DesignWidth="300">
 

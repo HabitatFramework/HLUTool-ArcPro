@@ -36,7 +36,7 @@ namespace HLU
                 //if ((_messageWindow.Owner = App.GetActiveWindow()) == null)
                 //    throw (new Exception("No parent window loaded"));
 
-                WindowStartupLocation = WindowStartupLocation.CenterScreen
+                //WindowStartupLocation = WindowStartupLocation.CenterScreen
             };
 
             // Create ViewModel to which main window binds
@@ -53,7 +53,7 @@ namespace HLU
             _messageWindow.DataContext = _messageWindowViewModel;
 
             // Show window
-            _messageWindow.ShowDialog();
+            //_messageWindow.ShowDialog();
         }
 
         /// <summary>
@@ -65,7 +65,7 @@ namespace HLU
         internal static void CloseMessageWindow(object sender, EventArgs e)
         {
             _messageWindowViewModel.RequestClose -= CloseMessageWindow;
-            _messageWindow.Close();
+            //_messageWindow.Close();
         }
     }
 }

@@ -12,21 +12,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="GISApplication\**" />
-    <Compile Remove="UI\View\Dictionary\GeometryTypeConverterDictionary.xaml" />
-    <Compile Remove="UI\View\Dictionary\SpatialReferenceConverterDictionary.xaml" />
-    <Compile Remove="UI\View\Dictionary\LayerConverterDictionary.xaml" />
     <EmbeddedResource Remove="GISApplication\**" />
-    <EmbeddedResource Remove="UI\View\Dictionary\GeometryTypeConverterDictionary.xaml" />
-    <EmbeddedResource Remove="UI\View\Dictionary\SpatialReferenceConverterDictionary.xaml" />
-    <EmbeddedResource Remove="UI\View\Dictionary\LayerConverterDictionary.xaml" />
     <None Remove="GISApplication\**" />
-    <None Remove="UI\View\Dictionary\GeometryTypeConverterDictionary.xaml" />
-    <None Remove="UI\View\Dictionary\SpatialReferenceConverterDictionary.xaml" />
-    <None Remove="UI\View\Dictionary\LayerConverterDictionary.xaml" />
     <Page Remove="GISApplication\**" />
-    <Page Remove="UI\View\Dictionary\GeometryTypeConverterDictionary.xaml" />
-    <Page Remove="UI\View\Dictionary\SpatialReferenceConverterDictionary.xaml" />
-    <Page Remove="UI\View\Dictionary\LayerConverterDictionary.xaml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Base36.cs" />
@@ -164,12 +152,10 @@
     <PackageReference Include="Azure.Identity" Version="1.11.4" />
     <PackageReference Include="Esri.ArcGISPro.Extensions30" Version="3.3.0.52636" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.0" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.61.3" />
     <PackageReference Include="Npgsql" Version="9.0.2" />
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.6.1" />
     <PackageReference Include="System.Collections" Version="4.3.0" />
-    <PackageReference Include="System.Data.Odbc" Version="9.0.1" />
     <PackageReference Include="System.Data.OleDb" Version="9.0.0" />
     <PackageReference Include="System.Linq" Version="4.3.0" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />

@@ -49,11 +49,11 @@ namespace HLU.Data.Connection
         #region Constructor
 
         public DbOracle(ref string connString, ref string defaultSchema, ref bool promptPwd,
-            string pwdMask, bool useCommandBuilder, bool useColumnNames, bool isUnicode, 
-            bool useTimeZone, uint textLength, uint binaryLength, uint timePrecision, 
+            string pwdMask, bool useCommandBuilder, bool useColumnNames, bool isUnicode,
+            bool useTimeZone, uint textLength, uint binaryLength, uint timePrecision,
             uint numericPrecision, uint numericScale)
-            : base(ref connString, ref defaultSchema, ref promptPwd, pwdMask, useCommandBuilder, 
-            useColumnNames, isUnicode, useTimeZone, textLength, binaryLength, timePrecision, 
+            : base(ref connString, ref defaultSchema, ref promptPwd, pwdMask, useCommandBuilder,
+            useColumnNames, isUnicode, useTimeZone, textLength, binaryLength, timePrecision,
             numericPrecision, numericScale)
         {
             if (String.IsNullOrEmpty(ConnectionString)) throw (new Exception("No connection string"));
@@ -87,8 +87,8 @@ namespace HLU.Data.Connection
         public static Dictionary<string, string> GetConnectionStrings(DataTable dataSources)
         {
             return (from r in dataSources.AsEnumerable()
-                    select BuildConnectionString(r.Field<string>("InstanceName"), 
-                    r.Field<string>("Protocol"), r.Field<string>("ServerName"), 
+                    select BuildConnectionString(r.Field<string>("InstanceName"),
+                    r.Field<string>("Protocol"), r.Field<string>("ServerName"),
                     r.Field<string>("Port"), r.Field<string>("ServiceName"))
                     ).ToDictionary(kv => kv.Key, kv => kv.Value);
         }
@@ -96,7 +96,7 @@ namespace HLU.Data.Connection
         public static KeyValuePair<string, string> BuildConnectionString(string instanceName, string protocol,
             string serverName, string port, string serviceName)
         {
-            return new KeyValuePair<string, string>(instanceName, 
+            return new KeyValuePair<string, string>(instanceName,
                 String.Format("(DESCRIPTION = (ADDRESS_LIST = (ADDRESS = (PROTOCOL = {0})" +
                 "(HOST = {1})(PORT = {2}))) (CONNECT_DATA = (SERVICE_NAME = {3})))", protocol,
                 serverName, port, serviceName));
@@ -170,7 +170,7 @@ namespace HLU.Data.Connection
                         string[] checkColumns = (from dsCol in t.Columns.Cast<DataColumn>()
                                                  let dbCols = from dbCol in dbSchemaCols
                                                               where dbCol.ColumnName == dsCol.ColumnName &&
-                                                              TypeMatch(SystemDataType(dbCol.DataType), dbCol.ColumnLength, 
+                                                              TypeMatch(SystemDataType(dbCol.DataType), dbCol.ColumnLength,
                                                                         dbCol.NumericScale, dsCol.DataType, dsCol.MaxLength)
                                                               select dbCol
                                                  where dbCols.Any()
@@ -308,12 +308,12 @@ namespace HLU.Data.Connection
 
                     if (c.AllowDBNull)
                     {
-                        delIsNullParamName = ParameterName(_parameterPrefixNull, c.ColumnName, 
+                        delIsNullParamName = ParameterName(_parameterPrefixNull, c.ColumnName,
                             deleteParams.Count + _startParamNo);
                         deleteParams.Add(CreateParameter(delIsNullParamName, isNullType,
                             ParameterDirection.Input, c.ColumnName, DataRowVersion.Original, true));
 
-                        updIsNullParamName = ParameterName(_parameterPrefixNull, c.ColumnName, 
+                        updIsNullParamName = ParameterName(_parameterPrefixNull, c.ColumnName,
                             i + columnCount + nullParamCount + _startParamNo);
                         updateParamsOrig.Add(CreateParameter(updIsNullParamName, isNullType,
                             ParameterDirection.Input, c.ColumnName, DataRowVersion.Original, true));
@@ -517,7 +517,7 @@ namespace HLU.Data.Connection
                 OracleDataAdapter adapter = UpdateAdapter(table);
                 if (adapter != null)
                 {
-                    if (_transaction != null) 
+                    if (_transaction != null)
                         adapter.SelectCommand.Transaction = _transaction;
                     return adapter.Fill(table);
                 }
@@ -626,7 +626,7 @@ namespace HLU.Data.Connection
             }
             catch (Exception ex)
             {
-                if (previousConnectionState == ConnectionState.Closed) _connection.Close(); 
+                if (previousConnectionState == ConnectionState.Closed) _connection.Close();
                 _errorMessage = ex.Message;
                 return null;
             }
@@ -1104,9 +1104,9 @@ namespace HLU.Data.Connection
                     _typeMapSystemToSQL.Add(kv.Key, kv.Value);
             }
 
-            ReplaceType(typeof(DateTime), (int)(useTimeZone ? OracleDbType.TimeStampTZ : 
+            ReplaceType(typeof(DateTime), (int)(useTimeZone ? OracleDbType.TimeStampTZ :
                 OracleDbType.TimeStamp), _typeMapSystemToSQL);
-            ReplaceType(typeof(String), (int)(isUnicode ? OracleDbType.NVarchar2 : 
+            ReplaceType(typeof(String), (int)(isUnicode ? OracleDbType.NVarchar2 :
                 OracleDbType.Varchar2), _typeMapSystemToSQL);
 
             foreach (KeyValuePair<int, Type> kv in typeMapSQLToSystemAdd)

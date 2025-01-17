@@ -23,7 +23,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.DDL;
 using ArcGIS.Core.Data.Exceptions;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
-using HLU.UI;
+using HLU.UI.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.IO;

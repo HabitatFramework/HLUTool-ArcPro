@@ -31,7 +31,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
-namespace HLU.UI
+namespace HLU.UI.ViewModel
 {
     /// <summary>
     /// Load the XML file and prompt the user to select

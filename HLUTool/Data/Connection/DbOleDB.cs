@@ -59,16 +59,16 @@ namespace HLU.Data.Connection
         #region Constructor
 
         public DbOleDb(ref string connString, ref string defaultSchema, ref bool promptPwd, string pwdMask,
-            bool useCommandBuilder, bool useColumnNames, bool isUnicode, bool useTimeZone, uint textLength, 
+            bool useCommandBuilder, bool useColumnNames, bool isUnicode, bool useTimeZone, uint textLength,
             uint binaryLength, uint timePrecision, uint numericPrecision, uint numericScale)
-            : base(ref connString, ref defaultSchema, ref promptPwd, pwdMask, useCommandBuilder, useColumnNames, 
+            : base(ref connString, ref defaultSchema, ref promptPwd, pwdMask, useCommandBuilder, useColumnNames,
             isUnicode, useTimeZone, textLength, binaryLength, timePrecision, numericPrecision, numericScale)
         {
             if (String.IsNullOrEmpty(ConnectionString)) throw (new Exception("No connection string"));
 
             try
             {
-                Login(_backend == Backends.Oracle ? "User ID" : "User name", ConnectionString, 
+                Login(_backend == Backends.Oracle ? "User ID" : "User name", ConnectionString,
                     ref promptPwd, ref _connStrBuilder, ref _connection);
 
                 PopulateTypeMaps(IsUnicode, UseTimeZone, TextLength, BinaryLength,
@@ -157,7 +157,7 @@ namespace HLU.Data.Connection
 
             try
             {
-                DataTable schemaTable = GetSchema("Columns", 
+                DataTable schemaTable = GetSchema("Columns",
                     _restrictionNameSchema, DefaultSchema, _connection, _transaction);
                 var dbSchema = schemaTable.AsEnumerable();
 
@@ -403,9 +403,9 @@ namespace HLU.Data.Connection
 
                 if (_backend != Backends.Access)
                 {
-                    adapter.UpdateCommand.CommandText += ";\r\n" + 
+                    adapter.UpdateCommand.CommandText += ";\r\n" +
                         String.Format("SELECT {0} FROM {1} WHERE {2}", sbTargetList, tableName, sbWherePkUpd);
-                    adapter.InsertCommand.CommandText += ";\r\n" + 
+                    adapter.InsertCommand.CommandText += ";\r\n" +
                         String.Format("SELECT {0} FROM {1} WHERE {2}", sbTargetList, tableName, sbWherePkIns);
                 }
 
@@ -416,7 +416,7 @@ namespace HLU.Data.Connection
             return adapter;
         }
 
-        private OleDbParameter CreateParameter(string name, OleDbType type, ParameterDirection direction, 
+        private OleDbParameter CreateParameter(string name, OleDbType type, ParameterDirection direction,
             string srcColumn, DataRowVersion srcVersion, bool nullMapping)
         {
             OleDbParameter param = new(name, type)
@@ -720,11 +720,11 @@ namespace HLU.Data.Connection
 
             try
             {
-                if (!String.IsNullOrEmpty(insertCommand)) 
+                if (!String.IsNullOrEmpty(insertCommand))
                     _adapter.InsertCommand = new(insertCommand);
-                if (!String.IsNullOrEmpty(updateCommand)) 
+                if (!String.IsNullOrEmpty(updateCommand))
                     _adapter.UpdateCommand = new(updateCommand);
-                if (!String.IsNullOrEmpty(deleteCommand)) 
+                if (!String.IsNullOrEmpty(deleteCommand))
                     _adapter.DeleteCommand = new(deleteCommand);
 
                 return _adapter.Update(table);
@@ -816,13 +816,13 @@ namespace HLU.Data.Connection
 
             if (_transaction != null)
             {
-                if ((adapter.InsertCommand != null) && 
+                if ((adapter.InsertCommand != null) &&
                     ((adapter.InsertCommand.Transaction == null) || !adapter.InsertCommand.Transaction.Equals(_transaction)))
                     adapter.InsertCommand.Transaction = _transaction;
-                if ((adapter.UpdateCommand != null) && 
+                if ((adapter.UpdateCommand != null) &&
                     ((adapter.UpdateCommand.Transaction == null) || !adapter.UpdateCommand.Transaction.Equals(_transaction)))
                     adapter.UpdateCommand.Transaction = _transaction;
-                if ((adapter.DeleteCommand != null) && 
+                if ((adapter.DeleteCommand != null) &&
                     ((adapter.DeleteCommand.Transaction == null) || !adapter.DeleteCommand.Transaction.Equals(_transaction)))
                     adapter.DeleteCommand.Transaction = _transaction;
             }
@@ -975,9 +975,9 @@ namespace HLU.Data.Connection
                 return value.ToString();
             }
         }
-        
+
         #endregion
-        
+
         #endregion
 
         #region Private Methods

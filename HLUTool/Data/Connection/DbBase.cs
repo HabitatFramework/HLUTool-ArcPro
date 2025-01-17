@@ -163,15 +163,17 @@ namespace HLU.Data.Connection
             if (IsIntegratedSecurity(connStringBuilder) || !HasPasswordKey(connStringBuilder))
                 return connStringBuilder.ConnectionString;
 
-            DbConnectionStringBuilder tmpConnStrBuilder =
-                new(connStringBuilder is OdbcConnectionStringBuilder)
-                {
-                    ConnectionString = connStringBuilder.ConnectionString
-                };
-            tmpConnStrBuilder.Remove("Password");
-            tmpConnStrBuilder.Add("Password", maskString);
+            //TODO: OdbcConnectionStringBuilder
+            //DbConnectionStringBuilder tmpConnStrBuilder =
+            //    new(connStringBuilder is OdbcConnectionStringBuilder)
+            //    {
+            //        ConnectionString = connStringBuilder.ConnectionString
+            //    };
+            //tmpConnStrBuilder.Remove("Password");
+            //tmpConnStrBuilder.Add("Password", maskString);
 
-            return tmpConnStrBuilder.ConnectionString;
+            //return tmpConnStrBuilder.ConnectionString;
+            return null;
         }
 
         private static bool IsIntegratedSecurity(DbConnectionStringBuilder connStringBuilder)

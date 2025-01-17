@@ -21,7 +21,7 @@
 
 using ArcGIS.Desktop.Framework.Contracts;
 
-namespace HLU.UI
+namespace HLU.UI.ViewModel
 {
     /// <summary>
     /// Abstract base class for panel view-models.

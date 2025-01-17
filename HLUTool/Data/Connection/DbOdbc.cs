@@ -58,18 +58,18 @@ namespace HLU.Data.Connection
         #region Constructor
 
         public DbOdbc(ref string connString, ref string defaultSchema, ref bool promptPwd,
-            string pwdMask, bool useCommandBuilder, bool useColumnNames, bool isUnicode, 
-            bool useTimeZone, uint textLength, uint binaryLength, uint timePrecision, 
+            string pwdMask, bool useCommandBuilder, bool useColumnNames, bool isUnicode,
+            bool useTimeZone, uint textLength, uint binaryLength, uint timePrecision,
             uint numericPrecision, uint numericScale)
-            : base(ref connString, ref defaultSchema, ref promptPwd, pwdMask, 
-            useCommandBuilder, useColumnNames, isUnicode, useTimeZone, textLength, 
+            : base(ref connString, ref defaultSchema, ref promptPwd, pwdMask,
+            useCommandBuilder, useColumnNames, isUnicode, useTimeZone, textLength,
             binaryLength, timePrecision, numericPrecision, numericScale)
         {
             if (String.IsNullOrEmpty(ConnectionString)) throw (new Exception("No connection string"));
 
             try
             {
-                Login(_backend == Backends.Oracle ? "User ID" : "User name", ConnectionString, 
+                Login(_backend == Backends.Oracle ? "User ID" : "User name", ConnectionString,
                     ref promptPwd, ref _connStrBuilder, ref _connection);
 
                 PopulateTypeMaps(IsUnicode, UseTimeZone, TextLength, BinaryLength,
@@ -85,7 +85,7 @@ namespace HLU.Data.Connection
             }
             catch { throw; }
         }
-        
+
         #endregion
 
         #region DbBase Members
@@ -95,12 +95,12 @@ namespace HLU.Data.Connection
         public static Backends GetBackend(OdbcConnection cn)
         {
             ConnectionState previousConnectionState = cn.State;
-            if (String.IsNullOrEmpty(cn.Driver) && 
+            if (String.IsNullOrEmpty(cn.Driver) &&
                 (previousConnectionState != ConnectionState.Open)) cn.Open();
-            
+
             string driver = cn.Driver.ToLower();
 
-            if ((cn.State == ConnectionState.Open) && 
+            if ((cn.State == ConnectionState.Open) &&
                 (previousConnectionState != ConnectionState.Open)) cn.Close();
 
             if (driver.StartsWith("odbcjt32"))
@@ -154,7 +154,7 @@ namespace HLU.Data.Connection
 
             try
             {
-                DataTable schemaTable = GetSchema("Columns", 
+                DataTable schemaTable = GetSchema("Columns",
                     _restrictionNameSchema, DefaultSchema, _connection, _transaction);
                 var dbSchema = schemaTable.AsEnumerable();
 
@@ -750,7 +750,7 @@ namespace HLU.Data.Connection
             ConnectionState previousConnectionState = _connection.State;
             if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
 
-            if ((dataSet == null) || String.IsNullOrEmpty(sourceTable) || 
+            if ((dataSet == null) || String.IsNullOrEmpty(sourceTable) ||
                 !dataSet.Tables.Contains(sourceTable)) return 0;
 
             try
@@ -816,7 +816,7 @@ namespace HLU.Data.Connection
 
             return adapter;
         }
-        
+
         #endregion
 
         #region Protected Members
@@ -958,13 +958,13 @@ namespace HLU.Data.Connection
                 return value.ToString();
             }
         }
-        
+
         #endregion
-        
+
         #endregion
 
         #region Private Methods
-        
+
         private void PopulateTypeMaps(bool isUnicode, bool useTimeZone, uint textLength, uint binaryLength,
             uint timePrecision, uint numericPrecision, uint numericScale)
         {
@@ -1234,7 +1234,7 @@ namespace HLU.Data.Connection
                     break;
             }
         }
-        
+
         #endregion
     }
 }

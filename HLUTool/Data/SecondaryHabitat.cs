@@ -210,8 +210,7 @@ namespace HLU.Data
 
                 // Flag that the current record has changed so that the apply button
                 // will appear.
-                if (this.DataChanged != null)
-                    this.DataChanged(true);
+                this.DataChanged?.Invoke(true);
             }
         }
 

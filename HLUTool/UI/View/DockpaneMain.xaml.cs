@@ -21,7 +21,7 @@
 
 using System.Windows.Controls;
 
-namespace HLU.UI
+namespace HLU.UI.View
 {
     /// <summary>
     /// Interaction logic for DockpaneMainView.xaml

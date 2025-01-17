@@ -37,7 +37,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
-namespace HLU.UI
+namespace HLU.UI.ViewModel
 {
     /// <summary>
     /// Build the DockPane.

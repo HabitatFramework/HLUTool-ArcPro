@@ -827,7 +827,7 @@ namespace HLU.Data.Connection
         #endregion
 
         #region SQLBuilder Members
-        
+
         #region Public Members
         
         public override string QuotePrefix { get { return "["; } }
