@@ -40,8 +40,8 @@ namespace HLU.UI.ViewModel
         private string[] _sslModes;
         private string[] _encodings;
         private string _encoding = "<default>";
-        private string[] _databases = new string[] { };
-        private List<String> _schemata = new();
+        private string[] _databases = [];
+        private List<String> _schemata = [];
 
         private NpgsqlConnectionStringBuilder _connStrBuilder;
 
@@ -51,10 +51,12 @@ namespace HLU.UI.ViewModel
 
         public ViewModelConnectPgSql()
         {
-            _connStrBuilder = new NpgsqlConnectionStringBuilder();
-            _connStrBuilder.Host = "localhost";
-            _connStrBuilder.Port = 5432;
-            _connStrBuilder.SslMode = Npgsql.SslMode.Prefer;
+            _connStrBuilder = new()
+            {
+                Host = "localhost",
+                Port = 5432,
+                SslMode = Npgsql.SslMode.Prefer
+            };
         }
 
         #endregion
@@ -153,7 +155,7 @@ namespace HLU.UI.ViewModel
             get
             {
                 return !(String.IsNullOrEmpty(_connStrBuilder.Host) || (_connStrBuilder.Port == 0) || 
-                    String.IsNullOrEmpty(_connStrBuilder.Database) || String.IsNullOrEmpty(_connStrBuilder.UserName) || 
+                    String.IsNullOrEmpty(_connStrBuilder.Database) || String.IsNullOrEmpty(_connStrBuilder.Username) || 
                     String.IsNullOrEmpty(_connStrBuilder.SearchPath)); 
             }
         }
@@ -214,10 +216,10 @@ namespace HLU.UI.ViewModel
 
         public string[] SslModes
         {
-            get 
+            get
             {
                 if (_sslModes == null)
-                    _sslModes = new string[] { "Allow", "Disable", "Prefer", "Require" };
+                    _sslModes = ["Allow", "Disable", "Prefer", "Require"];
                 return _sslModes;
             }
             set { }
@@ -231,10 +233,12 @@ namespace HLU.UI.ViewModel
                 if (Enum.IsDefined(typeof(Npgsql.SslMode), value))
                 {
                     _connStrBuilder.SslMode = (Npgsql.SslMode)Enum.Parse(typeof(Npgsql.SslMode), value);
-                    if (_connStrBuilder.SslMode == Npgsql.SslMode.Require)
-                        _connStrBuilder.SSL = true;
-                    else if (_connStrBuilder.SslMode == Npgsql.SslMode.Disable)
-                        _connStrBuilder.SSL = false;
+
+                    //TODO: PgSql SSL = true/false
+                    //if (_connStrBuilder.SslMode == Npgsql.SslMode.Require)
+                    //    _connStrBuilder.SSL = true;
+                    //else if (_connStrBuilder.SslMode == Npgsql.SslMode.Disable)
+                    //    _connStrBuilder.SSL = false;
                 }
 
             }
@@ -265,9 +269,9 @@ namespace HLU.UI.ViewModel
 
         private void LoadDatabases()
         {
-            string[] databaseList = new string[] { };
+            string[] databaseList = [];
             NpgsqlConnection cn = null;
-           
+
             try
             {
                 if ((_connStrBuilder != null) && !String.IsNullOrEmpty(_connStrBuilder.Host))
@@ -278,7 +282,7 @@ namespace HLU.UI.ViewModel
                     DataTable databases = cn.GetSchema("Databases", null);
                     databaseList = (from r in databases.AsEnumerable()
                                     let dbName = r.Field<string>("database_name")
-                                    where !dbName.ToLower().StartsWith("template")
+                                    where !dbName.StartsWith("template", StringComparison.CurrentCultureIgnoreCase)
                                     select dbName).OrderBy(t => t).ToArray();
                 }
             }
@@ -311,14 +315,14 @@ namespace HLU.UI.ViewModel
             {
                 if (_encodings == null)
                 {
-                    _encodings = new string[] { "<default>", "BIG5", "EUC_CN", "EUC_JP", "EUC_KR", "EUC_TW",
+                    _encodings = [ "<default>", "BIG5", "EUC_CN", "EUC_JP", "EUC_KR", "EUC_TW",
                         "GB18030", "GBK", "ISO_8859_5", "ISO_8859_6", "ISO_8859_7", "ISO_8859_8", "JOHAB",
                         "KOI8", "LATIN1", "LATIN2", "LATIN3", "LATIN4", "LATIN5", "LATIN6", "LATIN7", "LATIN8",
                         "LATIN9", "LATIN10", "MULE_INTERNAL", "SJIS", "SQL_ASCII", "UHC", "UTF8", "WIN866",
                         "WIN874", "WIN1250", "WIN1251", "WIN1252", "WIN1253", "WIN1254", "WIN1255", "WIN1256",
-                        "WIN1257","WIN1258" };
+                        "WIN1257","WIN1258" ];
                 }
-                return _encodings; 
+                return _encodings;
             }
             set { }
         }
@@ -339,11 +343,11 @@ namespace HLU.UI.ViewModel
 
         public string UserName
         {
-            get { return _connStrBuilder.UserName; }
+            get { return _connStrBuilder.Username; }
             set
             {
-                if (!String.IsNullOrEmpty(value) && (value != _connStrBuilder.UserName))
-                    _connStrBuilder.UserName = value;
+                if (!String.IsNullOrEmpty(value) && (value != _connStrBuilder.Username))
+                    _connStrBuilder.Username = value;
             }
         }
 
@@ -371,7 +375,7 @@ namespace HLU.UI.ViewModel
 
         private void LoadSchemata()
         {
-            List<String> schemaList = new();
+            List<String> schemaList = [];
             NpgsqlConnection cn = null;
 
             try
@@ -386,9 +390,9 @@ namespace HLU.UI.ViewModel
                     cmd.CommandText = "SELECT schema_name FROM information_schema.schemata" +
                                         " WHERE schema_name !~* '^(pg|information)_'" +
                                         " AND catalog_name = '" + _connStrBuilder.Database + "'";
-                    NpgsqlDataAdapter adapter = new NpgsqlDataAdapter(cmd);
+                    NpgsqlDataAdapter adapter = new(cmd);
                     DataTable dbTable = new();
-                    
+
                     try
                     {
                         adapter.Fill(dbTable);
@@ -454,7 +458,7 @@ namespace HLU.UI.ViewModel
                     error.Append(", port");
                 if (String.IsNullOrEmpty(_connStrBuilder.Database))
                     error.Append(", database name");
-                if (String.IsNullOrEmpty(_connStrBuilder.UserName))
+                if (String.IsNullOrEmpty(_connStrBuilder.Username))
                     error.Append(", user name");
                 if (String.IsNullOrEmpty(_connStrBuilder.SearchPath))
                     error.Append(", search path");
@@ -487,7 +491,7 @@ namespace HLU.UI.ViewModel
                             error = "Error: You must provide a database name";
                         break;
                     case "UserName":
-                        if (String.IsNullOrEmpty(_connStrBuilder.UserName))
+                        if (String.IsNullOrEmpty(_connStrBuilder.Username))
                             error = "Error: You must provide a user name";
                         break;
                     case "SearchPath":

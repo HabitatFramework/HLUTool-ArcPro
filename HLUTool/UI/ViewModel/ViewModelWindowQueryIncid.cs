@@ -1,18 +1,18 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2019 London & South East Record Centres (LaSER)
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -28,7 +28,7 @@ using HLU.Data.Model;
 
 namespace HLU.UI.ViewModel
 {
-    class ViewModelWindowQueryIncid : ViewModelBase, IDataErrorInfo
+    partial class ViewModelWindowQueryIncid : ViewModelBase, IDataErrorInfo
     {
         #region Fields
 
@@ -79,7 +79,7 @@ namespace HLU.UI.ViewModel
                 if (_okCommand == null)
                 {
                     Action<object> okAction = new(this.OkCommandClick);
-                    _okCommand = new(okAction, param => this.CanOk);
+                    _okCommand = new RelayCommand(okAction, param => this.CanOk);
                 }
 
                 return _okCommand;
@@ -97,17 +97,17 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <value></value>
         /// <returns></returns>
         /// <remarks></remarks>
         private bool CanOk
-        { 
-            get 
+        {
+            get
             {
                 return (String.IsNullOrEmpty(Error) && (_queryIncid != null));
-            } 
+            }
         }
 
         #endregion
@@ -127,7 +127,7 @@ namespace HLU.UI.ViewModel
                 if (_cancelCommand == null)
                 {
                     Action<object> cancelAction = new(this.CancelCommandClick);
-                    _cancelCommand = new(cancelAction);
+                    _cancelCommand = new RelayCommand(cancelAction);
                 }
                 return _cancelCommand;
             }
@@ -161,7 +161,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if ((!String.IsNullOrEmpty(QueryIncid)) && (!Regex.IsMatch(QueryIncid, @"[0-9]{4}:[0-9]{7}", RegexOptions.IgnoreCase)))
+                if ((!String.IsNullOrEmpty(QueryIncid)) && (!validIncidRegex().IsMatch(QueryIncid)))
                     return "Please enter a valid incid with format {nnnn:nnnnnnn}.";
                 else return null;
             }
@@ -176,7 +176,7 @@ namespace HLU.UI.ViewModel
                 switch (columnName)
                 {
                     case "QueryIncid":
-                        if ((!String.IsNullOrEmpty(QueryIncid)) && (!Regex.IsMatch(QueryIncid, @"[0-9]{4}:[0-9]{7}", RegexOptions.IgnoreCase)))
+                        if ((!String.IsNullOrEmpty(QueryIncid)) && (!validIncidRegex().IsMatch(QueryIncid)))
                             error = "Error: You must enter a valid incid with format {nnnn:nnnnnnn}.";
                         break;
                 }
@@ -187,6 +187,9 @@ namespace HLU.UI.ViewModel
                 return error;
             }
         }
+
+        [GeneratedRegex(@"[0-9]{4}:[0-9]{7}", RegexOptions.IgnoreCase, "en-GB")]
+        private static partial Regex validIncidRegex();
 
         #endregion
     }

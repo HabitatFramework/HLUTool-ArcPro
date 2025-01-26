@@ -26,7 +26,7 @@ using HLU.Data.Model;
 
 namespace HLU.UI.ViewModel
 {
-    static class ViewModelWindowMainHelpers
+    static partial class ViewModelWindowMainHelpers
     {
         public static List<List<SqlFilterCondition>> GisSelectionToWhereClause<T>(
             DataRow[] selectedRows, int[] keyColumOrdinals, int blockSize, T targetTable)
@@ -34,7 +34,7 @@ namespace HLU.UI.ViewModel
         {
             DataTable selectionTable = selectedRows[0].Table;
 
-            List<List<SqlFilterCondition>> whereClause = new List<List<SqlFilterCondition>>();
+            List<List<SqlFilterCondition>> whereClause = [];
 
             int i = 0;
             while (i < selectedRows.Length)
@@ -48,7 +48,7 @@ namespace HLU.UI.ViewModel
 
                     for (int k = 0; k < keyColumOrdinals.Length; k++)
                     {
-                        SqlFilterCondition cond = new SqlFilterCondition();
+                        SqlFilterCondition cond = new();
 
                         if (k == 0)
                         {
@@ -103,8 +103,12 @@ namespace HLU.UI.ViewModel
 
         public static string IhsSummary(string[] ihsCodes)
         {
-            StringBuilder buildSummary = ihsCodes.Where(c => !String.IsNullOrEmpty(c))
-                .Aggregate(new(), (sb, c) => sb.Append(String.Format(".{0}", c)));
+            //DONE: Aggregate
+            StringBuilder buildSummary = new StringBuilder().Append(String.Join(".", ihsCodes.Where(c => !String.IsNullOrEmpty(c))));
+
+            //StringBuilder buildSummary = ihsCodes.Where(c => !String.IsNullOrEmpty(c))
+            //    .Aggregate(new(), (sb, c) => sb.Append(String.Format(".{0}", c)));
+
             if (buildSummary.Length > 1)
                 return buildSummary.Remove(0, 1).ToString();
             else
@@ -148,9 +152,15 @@ namespace HLU.UI.ViewModel
             if ((hluDS == null) || (hluDS.lut_operation == null)) return null;
 
             string operationName = Enum.GetName(typeof(ViewModelWindowMain.Operations), modifyOperation);
-            string descriptionPattern = Regex.Matches(operationName, "[A-Z][^A-Z]*").Cast<Match>()
-                .Aggregate(new(), (sb, m) => sb.Append(@"\s*" + operationName.Substring(m.Index, m.Length)))
-                .Append(@"\s*").ToString();
+
+            //DONE: Aggregate
+            string descriptionPattern = string.Join(@"\s*", CapitalisedRegex().Matches(operationName).Cast<Match>()
+                .Select(m => operationName.Substring(m.Index, m.Length))
+                .Append(@"\s*").ToString());
+
+            //string descriptionPattern = CapitalisedRegex().Matches(operationName).Cast<Match>()
+            //    .Aggregate(new(), (sb, m) => sb.Append(@"\s*" + operationName.Substring(m.Index, m.Length)))
+            //    .Append(@"\s*").ToString();
 
             var o = hluDS.lut_operation
                 .Where(r => Regex.IsMatch(r.description, descriptionPattern, RegexOptions.IgnoreCase));
@@ -159,5 +169,8 @@ namespace HLU.UI.ViewModel
             else
                 return null;
         }
+
+        [GeneratedRegex("[A-Z][^A-Z]*")]
+        private static partial Regex CapitalisedRegex();
     }
 }

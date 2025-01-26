@@ -1,19 +1,19 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2019 London & South East Record Centres (LaSER)
 // Copyright © 2019-2022 Greenspace Information for Greater London CIC
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -37,7 +37,7 @@ namespace HLU.UI.ViewModel
     //---------------------------------------------------------------------
     // CHANGED: CR49 Process proposed OSMM Updates
     // Functionality to process proposed OSMM Updates.
-    //    
+    //
     class ViewModelWindowMainOSMMUpdate
     {
         private ViewModelWindowMain _viewModelMain;
@@ -84,7 +84,7 @@ namespace HLU.UI.ViewModel
                 // Fractions of a second can cause rounding differences when
                 // comparing DateTime fields later in some databases.
                 DateTime currDtTm = DateTime.Now;
-                DateTime nowDtTm = new DateTime(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
+                DateTime nowDtTm = new(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
                 //---------------------------------------------------------------------
                 _viewModelMain.IncidOSMMUpdatesRows[0].last_modified_date = nowDtTm;
                 _viewModelMain.IncidOSMMUpdatesRows[0].last_modified_user_id = _viewModelMain.UserID;
@@ -95,7 +95,7 @@ namespace HLU.UI.ViewModel
                 {
                     case 1:     // Skip update
                         if (newStatus > 0)
-                            newStatus = newStatus + 1;
+                            newStatus += 1;
                         break;
                     case 0:    // Accept update
                         newStatus = 0;
@@ -195,7 +195,7 @@ namespace HLU.UI.ViewModel
             // Fractions of a second can cause rounding differences when
             // comparing DateTime fields later in some databases.
             DateTime currDtTm = DateTime.Now;
-            DateTime nowDtTm = new DateTime(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
+            DateTime nowDtTm = new(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
 
             // Get the current userid
             string user_id = _viewModelMain.UserID;

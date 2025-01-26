@@ -53,6 +53,9 @@ dotnet_diagnostic.IDE0251.severity = silent
 # IDE0290: Use primary constructor 
 dotnet_diagnostic.IDE0290.severity = silent
 
+# IDE0270: Null check can be simplified
+dotnet_diagnostic.IDE0270.severity = silent
+
 # IDE0305 Collection initialization can be simplified
 dotnet_diagnostic.IDE0305.severity = silent
 

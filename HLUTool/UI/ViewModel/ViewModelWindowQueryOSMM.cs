@@ -3,19 +3,19 @@
 // Copyright © 2013, 2016 Thames Valley Environmental Records Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
 // Copyright © 2019 London & South East Record Centres (LaSER)
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -43,7 +43,7 @@ namespace HLU.UI.ViewModel
     //---------------------------------------------------------------------
     // CHANGED: CR49 Process proposed OSMM Updates
     // Functionality to process proposed OSMM Updates.
-    //    
+    //
 
     public class OSMMUpdates
     {
@@ -133,7 +133,6 @@ namespace HLU.UI.ViewModel
 
             // Count the incid_osmm_update rows for the initial values.
             CountOSMMUpdates();
-            
         }
 
         public void OSMMUpdatesSelectedRow(OSMMUpdates selectedRow)
@@ -193,7 +192,7 @@ namespace HLU.UI.ViewModel
                 if (_applyOSMMFilterCommand == null)
                 {
                     Action<object> applyOSMMFilterAction = new(this.ApplyOSMMFilterClicked);
-                    _applyOSMMFilterCommand = new(applyOSMMFilterAction, param => this.CanApplyOSMMFilter);
+                    _applyOSMMFilterCommand = new RelayCommand(applyOSMMFilterAction, param => this.CanApplyOSMMFilter);
                 }
                 return _applyOSMMFilterCommand;
             }
@@ -232,7 +231,7 @@ namespace HLU.UI.ViewModel
                 if (_resetOSMMFilterCommand == null)
                 {
                     Action<object> resetOSMMFilterAction = new(this.ResetOSMMFilterClicked);
-                    _resetOSMMFilterCommand = new(resetOSMMFilterAction, param => this.CanResetOSMMFilter);
+                    _resetOSMMFilterCommand = new RelayCommand(resetOSMMFilterAction, param => this.CanResetOSMMFilter);
                 }
                 return _resetOSMMFilterCommand;
             }
@@ -287,7 +286,7 @@ namespace HLU.UI.ViewModel
                 if (_cancelOSMMFilterCommand == null)
                 {
                     Action<object> cancelOSMMFilterAction = new(this.CancelCommandClicked);
-                    _cancelOSMMFilterCommand = new(cancelOSMMFilterAction);
+                    _cancelOSMMFilterCommand = new RelayCommand(cancelOSMMFilterAction);
                 }
 
                 return _cancelOSMMFilterCommand;
@@ -410,7 +409,7 @@ namespace HLU.UI.ViewModel
             {
                 string[] osmmUpdateStatuses;
                 if (_viewModelMain.OSMMBulkUpdateMode == true)
-                    osmmUpdateStatuses = new[] { "Pending" };
+                    osmmUpdateStatuses = ["Pending"];
                 else
                     osmmUpdateStatuses = Settings.Default.OSMMUpdatesStatuses.Cast<string>().ToArray();
 
@@ -443,7 +442,7 @@ namespace HLU.UI.ViewModel
             anyRow.code = _codeAnyRow;
             anyRow.sort_order = sortOrder;
             anyRow.description = String.Empty;
-            return new HluDataSet.lut_osmm_updates_processRow[] { anyRow };
+            return [anyRow];
         }
 
         private HluDataSet.lut_osmm_updates_spatialRow[] AnyRowOSMMUpdatesSpatial(int sortOrder)
@@ -452,7 +451,7 @@ namespace HLU.UI.ViewModel
             anyRow.code = _codeAnyRow;
             anyRow.sort_order = sortOrder;
             anyRow.description = String.Empty;
-            return new HluDataSet.lut_osmm_updates_spatialRow[] { anyRow };
+            return [anyRow];
         }
 
         private HluDataSet.lut_osmm_updates_changeRow[] AnyRowOSMMUpdatesChange(int sortOrder)
@@ -461,7 +460,7 @@ namespace HLU.UI.ViewModel
             anyRow.code = _codeAnyRow;
             anyRow.sort_order = sortOrder;
             anyRow.description = String.Empty;
-            return new HluDataSet.lut_osmm_updates_changeRow[] { anyRow };
+            return [anyRow];
         }
 
         public string IncidOSMMUpdatesRejectedCount
@@ -710,25 +709,27 @@ namespace HLU.UI.ViewModel
                         if (processFlag != lastProcessFlag || spatialFlag != lastSpatialFlag || changeFlag != lastChangeFlag)
                         {
                             // Add the results as a new row.
-                            dataRow = new OSMMUpdates();
-                            dataRow.Process = lastProcessFlag;
-                            dataRow.Spatial = lastSpatialFlag;
-                            dataRow.Change = lastChangeFlag;
-                            dataRow.Rejected = rejectedCount;
-                            dataRow.Ignored = ignoredCount;
-                            dataRow.Proposed = proposedCount;
-                            dataRow.Pending = pendingCount;
-                            dataRow.Applied = appliedCount;
-                            dataRow.Total = allCount;
+                            dataRow = new()
+                            {
+                                Process = lastProcessFlag,
+                                Spatial = lastSpatialFlag,
+                                Change = lastChangeFlag,
+                                Rejected = rejectedCount,
+                                Ignored = ignoredCount,
+                                Proposed = proposedCount,
+                                Pending = pendingCount,
+                                Applied = appliedCount,
+                                Total = allCount
+                            };
                             dataTable.Add(dataRow);
 
                             // Update the totals.
-                            rejectedTotal = rejectedTotal + rejectedCount;
-                            ignoredTotal = ignoredTotal + ignoredCount;
-                            proposedTotal = proposedTotal + proposedCount;
-                            pendingTotal = pendingTotal + pendingCount;
-                            appliedTotal = appliedTotal + appliedCount;
-                            allTotal = allTotal + allCount;
+                            rejectedTotal += rejectedCount;
+                            ignoredTotal += ignoredCount;
+                            proposedTotal += proposedCount;
+                            pendingTotal += pendingCount;
+                            appliedTotal += appliedCount;
+                            allTotal += allCount;
 
                             // Reset the counts.
                             rejectedCount = 0;
@@ -754,44 +755,48 @@ namespace HLU.UI.ViewModel
                         if (status == -1)
                             appliedCount = recs;
                         if (status > 0)
-                            proposedCount = proposedCount + recs;
-                        allCount = allCount + recs;
+                            proposedCount += recs;
+                        allCount += recs;
 
                     }
 
                     // Add the last results as a new row.
-                    dataRow = new OSMMUpdates();
-                    dataRow.Process = lastProcessFlag;
-                    dataRow.Spatial = lastSpatialFlag;
-                    dataRow.Change = lastChangeFlag;
-                    dataRow.Rejected = rejectedCount;
-                    dataRow.Ignored = ignoredCount;
-                    dataRow.Proposed = proposedCount;
-                    dataRow.Pending = pendingCount;
-                    dataRow.Applied = appliedCount;
-                    dataRow.Total = allCount;
+                    dataRow = new OSMMUpdates
+                    {
+                        Process = lastProcessFlag,
+                        Spatial = lastSpatialFlag,
+                        Change = lastChangeFlag,
+                        Rejected = rejectedCount,
+                        Ignored = ignoredCount,
+                        Proposed = proposedCount,
+                        Pending = pendingCount,
+                        Applied = appliedCount,
+                        Total = allCount
+                    };
                     dataTable.Add(dataRow);
 
                     // Update the totals.
-                    rejectedTotal = rejectedTotal + rejectedCount;
-                    ignoredTotal = ignoredTotal + ignoredCount;
-                    proposedTotal = proposedTotal + proposedCount;
-                    pendingTotal = pendingTotal + pendingCount;
-                    appliedTotal = appliedTotal + appliedCount;
-                    allTotal = allTotal + allCount;
+                    rejectedTotal += rejectedCount;
+                    ignoredTotal += ignoredCount;
+                    proposedTotal += proposedCount;
+                    pendingTotal += pendingCount;
+                    appliedTotal += appliedCount;
+                    allTotal += allCount;
 
                     // Add the totals as a new row.
                     _tableTotal = [];
-                    dataRow = new OSMMUpdates();
-                    dataRow.Process = "";
-                    dataRow.Change = "";
-                    dataRow.Spatial = "Total";
-                    dataRow.Rejected = rejectedTotal;
-                    dataRow.Ignored = ignoredTotal;
-                    dataRow.Proposed = proposedTotal;
-                    dataRow.Pending = pendingTotal;
-                    dataRow.Applied = appliedTotal;
-                    dataRow.Total = allTotal;
+                    dataRow = new OSMMUpdates
+                    {
+                        Process = "",
+                        Change = "",
+                        Spatial = "Total",
+                        Rejected = rejectedTotal,
+                        Ignored = ignoredTotal,
+                        Proposed = proposedTotal,
+                        Pending = pendingTotal,
+                        Applied = appliedTotal,
+                        Total = allTotal
+                    };
                     _tableTotal.Add(dataRow);
 
                     // Reset the cursor back to normal.

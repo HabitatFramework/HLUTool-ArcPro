@@ -84,7 +84,7 @@ namespace HLU.UI.ViewModel
         private string _descriptionFieldName = Settings.Default.LutDescriptionFieldName;
         private int _descriptionFieldOrdinal = Settings.Default.LutDescriptionFieldOrdinal;
         private string _sortOrderFieldName = Settings.Default.LutSortOrderFieldName;
-        private Regex _queryValueRegex = new Regex(@"\s+:\s+", RegexOptions.IgnoreCase); // @"\A(?<code>[^:\s]+)\s+:\s+(?<desc>[^:]+)\z", RegexOptions.IgnoreCase);
+        //private Regex _queryValueRegex = new Regex(@"\s+:\s+", RegexOptions.IgnoreCase); // @"\A(?<code>[^:\s]+)\s+:\s+(?<desc>[^:]+)\z", RegexOptions.IgnoreCase);
 
         private long _lastValueCounter = 0;
 
@@ -140,7 +140,7 @@ namespace HLU.UI.ViewModel
                 if (_getValuesCommand == null)
                 {
                     Action<object> getValuesAction = new(this.GetValuesCommandClick);
-                    _getValuesCommand = new(getValuesAction, param => this.CanGetValues);
+                    _getValuesCommand = new RelayCommand(getValuesAction, param => this.CanGetValues);
                 }
 
                 return _getValuesCommand;
@@ -178,7 +178,7 @@ namespace HLU.UI.ViewModel
                     if (dataReader == null) throw new Exception(String.Format("Error reading values from {0}.{1}", Table.TableName, Column.ColumnName));
 
                     // Define a new dictionary to hold the column values.
-                    Dictionary<string, object> q = new Dictionary<string, object>();
+                    Dictionary<string, object> q = [];
 
                     // Load the dictionary with the first/next n values
                     // (based on the max value in the user settings.
@@ -189,28 +189,17 @@ namespace HLU.UI.ViewModel
                         {
                             // Add the key (string) and value (object) to the dictionary
                             // (if the key already exists the value will be updated).
-                            if ((Table.TableName.ToLower() == "incid_osmm_updates") &&
-                               (Column.ColumnName.ToLower() == "status"))
+                            if ((Table.TableName.Equals("incid_osmm_updates", StringComparison.CurrentCultureIgnoreCase)) &&
+                               (Column.ColumnName.Equals("status", StringComparison.CurrentCultureIgnoreCase)))
                             {
-                                String status;
-                                switch (dataReader.GetValue(0).ToString())
+                                String status = dataReader.GetValue(0).ToString() switch
                                 {
-                                case "-99":
-                                    status = "Rejected";
-                                    break;
-                                case "-2":
-                                    status = "Ignored";
-                                    break;
-                                case "-1":
-                                    status = "Applied";
-                                    break;
-                                case "0":
-                                    status = "Pending";
-                                    break;
-                                default:
-                                    status = "Proposed";
-                                    break;
-                                }
+                                    "-99" => "Rejected",
+                                    "-2" => "Ignored",
+                                    "-1" => "Applied",
+                                    "0" => "Pending",
+                                    _ => "Proposed"
+                                };
                                 q[dataReader.GetValue(0).ToString() + " : " + status] = dataReader.GetValue(0);
                             }
                             else
@@ -346,7 +335,7 @@ namespace HLU.UI.ViewModel
                 if (_clearCommand == null)
                 {
                     Action<object> clearAction = new(this.ClearCommandClick);
-                    _clearCommand = new(clearAction, param => this.CanClear);
+                    _clearCommand = new RelayCommand(clearAction, param => this.CanClear);
                 }
 
                 return _clearCommand;
@@ -396,7 +385,7 @@ namespace HLU.UI.ViewModel
                 if (_verifyCommand == null)
                 {
                     Action<object> verifyAction = new(this.VerifyCommandClick);
-                    _verifyCommand = new(verifyAction, param => this.CanVerify);
+                    _verifyCommand = new RelayCommand(verifyAction, param => this.CanVerify);
                 }
 
                 return _verifyCommand;
@@ -434,7 +423,7 @@ namespace HLU.UI.ViewModel
                     List<DataTable> whereTables = tables.Where(t => fromTables.Contains(t.TableName)).ToList();
 
                     // Parse the SQL to see if it is valid.
-                    if (whereTables.Any())
+                    if (whereTables.Count != 0)
                     {
                         // Replace any connection type specific qualifiers and delimiters.
                         string newWhereClause = null;
@@ -451,21 +440,24 @@ namespace HLU.UI.ViewModel
                         if (validity == "1")
                         {
                             // Warn the user that the SQL is invalid.
-                            MessageBox.Show(App.GetActiveWindow(), "SQL is valid.", "HLU Query",
+                            //TODO: App.GetActiveWindow removed as window owner
+                            MessageBox.Show("SQL is valid.", "HLU Query",
                                 MessageBoxButton.OK, MessageBoxImage.Information);
                         }
                         // The SQL is valid but did not return any rows.
                         else if (validity == "0")
                         {
                             // Warn the user that no rows were returned.
-                            MessageBox.Show(App.GetActiveWindow(), "SQL is valid but no records were returned.", "HLU Query",
+                            //TODO: App.GetActiveWindow removed as window owner
+                            MessageBox.Show("SQL is valid but no records were returned.", "HLU Query",
                                 MessageBoxButton.OK, MessageBoxImage.Warning);
                         }
                         // The SQL is not valid.
                         else if (validity != null)
                         {
                             // Warn the user that the SQL is invalid.
-                            MessageBox.Show(App.GetActiveWindow(), String.Format("Sql is invalid.\n\n{0}", validity), "HLU Query",
+                            //TODO: App.GetActiveWindow removed as window owner
+                            MessageBox.Show(String.Format("Sql is invalid.\n\n{0}", validity), "HLU Query",
                                 MessageBoxButton.OK, MessageBoxImage.Error);
                         }
                     }
@@ -475,7 +467,8 @@ namespace HLU.UI.ViewModel
                         ChangeCursor(Cursors.Arrow);
 
                         // Warn the user that the no valid tables were found.
-                        MessageBox.Show(App.GetActiveWindow(), "No valid tables were found.", "HLU Query",
+                        //TODO: App.GetActiveWindow removed as window owner
+                        MessageBox.Show("No valid tables were found.", "HLU Query",
                             MessageBoxButton.OK, MessageBoxImage.Warning);
                     }
                 }
@@ -484,7 +477,8 @@ namespace HLU.UI.ViewModel
                     // Reset the cursor back to normal.
                     ChangeCursor(Cursors.Arrow);
 
-                    MessageBox.Show(App.GetActiveWindow(), ex.Message, "HLU Query",
+                    //TODO: App.GetActiveWindow removed as window owner
+                    MessageBox.Show(ex.Message, "HLU Query",
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
                 finally { }
@@ -516,7 +510,7 @@ namespace HLU.UI.ViewModel
                 if (_okCommand == null)
                 {
                     Action<object> okAction = new(this.OkCommandClick);
-                    _okCommand = new(okAction, param => this.CanOk);
+                    _okCommand = new RelayCommand(okAction, param => this.CanOk);
                 }
 
                 return _okCommand;
@@ -559,7 +553,7 @@ namespace HLU.UI.ViewModel
                 if (_cancelCommand == null)
                 {
                     Action<object> cancelAction = new(this.CancelCommandClick);
-                    _cancelCommand = new(cancelAction);
+                    _cancelCommand = new RelayCommand(cancelAction);
                 }
 
                 return _cancelCommand;
@@ -593,7 +587,7 @@ namespace HLU.UI.ViewModel
                 if (_loadCommand == null)
                 {
                     Action<object> loadAction = new(this.LoadCommandClick);
-                    _loadCommand = new(loadAction);
+                    _loadCommand = new RelayCommand(loadAction);
                 }
 
                 return _loadCommand;
@@ -627,7 +621,7 @@ namespace HLU.UI.ViewModel
                 if (_saveCommand == null)
                 {
                     Action<object> saveAction = new(this.SaveCommandClick);
-                    _saveCommand = new(saveAction, param => this.CanSave);
+                    _saveCommand = new RelayCommand(saveAction, param => this.CanSave);
                 }
 
                 return _saveCommand;
@@ -780,8 +774,8 @@ namespace HLU.UI.ViewModel
             {
                 if (_comparisonOperators == null)
                 {
-                    _comparisonOperators = new string[] { "=", "<", ">", "<=", ">=", "<>", "(", ")", "AND", "OR",
-                        "IS NULL", "IS NOT NULL", "LIKE", "NOT LIKE", "IN ()", "NOT IN ()" };
+                    _comparisonOperators = [ "=", "<", ">", "<=", ">=", "<>", "(", ")", "AND", "OR",
+                        "IS NULL", "IS NOT NULL", "LIKE", "NOT LIKE", "IN ()", "NOT IN ()" ];
                 }
                 return _comparisonOperators;
             }
@@ -859,8 +853,8 @@ namespace HLU.UI.ViewModel
                         DataColumn testColumn = null;
                         DataColumn descriptionColumn = lut.Columns.Contains(_descriptionFieldName) ?
                             lut.Columns[_descriptionFieldName] : (testColumn =
-                            lut.Columns.Cast<DataColumn>().FirstOrDefault(c => c.ColumnName.IndexOf("_name",
-                                StringComparison.CurrentCultureIgnoreCase) != -1)) != null ? testColumn :
+                            lut.Columns.Cast<DataColumn>().FirstOrDefault(c => c.ColumnName.Contains("_name",
+                            StringComparison.CurrentCultureIgnoreCase))) != null ? testColumn :
                             _descriptionFieldOrdinal < lut.Columns.Count ?
                             lut.Columns[_descriptionFieldOrdinal] : lutColumn.Ordinal < lut.Columns.Count - 1 ?
                             lut.Columns[lutColumn.Ordinal + 1] : lutColumn;
@@ -928,7 +922,7 @@ namespace HLU.UI.ViewModel
         /// </value>
         public object QueryValue
         {
-            get { return _queryValue != null ? _queryValue : null; }
+            get { return _queryValue ?? null; }
             set
             {
                 _queryValue = value;
@@ -966,7 +960,7 @@ namespace HLU.UI.ViewModel
                 if (_addTableCommand == null)
                 {
                     Action<object> addTableAction = new(this.AddTableCommandClick);
-                    _addTableCommand = new(addTableAction, param => this.CanAddTable);
+                    _addTableCommand = new RelayCommand(addTableAction, param => this.CanAddTable);
                 }
 
                 return _addTableCommand;
@@ -983,7 +977,7 @@ namespace HLU.UI.ViewModel
             // Only add the table if it's not already in the list
             if (SqlFromTables == null || SqlFromTables.Split(',').Contains(Table.TableName) == false)
             {
-                if (string.IsNullOrEmpty(SqlFromTables) || SqlFromTables.TrimEnd(' ').EndsWith(","))
+                if (string.IsNullOrEmpty(SqlFromTables) || SqlFromTables.TrimEnd(' ').EndsWith(','))
                     SqlFromTables += Table.TableName;
                 else
                     SqlFromTables += String.Concat(", ", Table.TableName);
@@ -1020,7 +1014,7 @@ namespace HLU.UI.ViewModel
                 if (_addColumnCommand == null)
                 {
                     Action<object> addColumnAction = new(this.AddColumnCommandClick);
-                    _addColumnCommand = new(addColumnAction, param => this.CanAddColumn);
+                    _addColumnCommand = new RelayCommand(addColumnAction, param => this.CanAddColumn);
                 }
 
                 return _addColumnCommand;
@@ -1034,7 +1028,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void AddColumnCommandClick(object param)
         {
-            if (string.IsNullOrEmpty(SqlWhereClause) || SqlWhereClause.EndsWith(" "))
+            if (string.IsNullOrEmpty(SqlWhereClause) || SqlWhereClause.EndsWith(' '))
                 SqlWhereClause += QuoteIdentifier(Table.TableName) + "." + Column.ColumnName;
             else
                 SqlWhereClause += String.Concat(" ", QuoteIdentifier(Table.TableName), ".", Column.ColumnName);
@@ -1070,7 +1064,7 @@ namespace HLU.UI.ViewModel
                 if (_addOperatorCommand == null)
                 {
                     Action<object> addOperatorAction = new(this.AddOperatorCommandClick);
-                    _addOperatorCommand = new(addOperatorAction, param => this.CanAddOperator);
+                    _addOperatorCommand = new RelayCommand(addOperatorAction, param => this.CanAddOperator);
                 }
 
                 return _addOperatorCommand;
@@ -1084,7 +1078,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void AddOperatorCommandClick(object param)
         {
-            if (string.IsNullOrEmpty(SqlWhereClause) || SqlWhereClause.EndsWith(" "))
+            if (string.IsNullOrEmpty(SqlWhereClause) || SqlWhereClause.EndsWith(' '))
                 SqlWhereClause += ComparisonOperator;
             else
                 SqlWhereClause += String.Concat(" ", ComparisonOperator);
@@ -1120,7 +1114,7 @@ namespace HLU.UI.ViewModel
                 if (_addValueCommand == null)
                 {
                     Action<object> addValueAction = new(this.AddValueCommandClick);
-                    _addValueCommand = new(addValueAction, param => this.CanAddValue);
+                    _addValueCommand = new RelayCommand(addValueAction, param => this.CanAddValue);
                 }
 
                 return _addValueCommand;
@@ -1134,7 +1128,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void AddValueCommandClick(object param)
         {
-            if (string.IsNullOrEmpty(SqlWhereClause) || SqlWhereClause.EndsWith(" "))
+            if (string.IsNullOrEmpty(SqlWhereClause) || SqlWhereClause.EndsWith(' '))
                 SqlWhereClause += QuoteValue(QueryValue);
             else
                 SqlWhereClause += String.Concat(" ", QuoteValue(QueryValue));
@@ -1148,10 +1142,10 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <value></value>
         /// <returns></returns>
-        /// <remarks></remarks>        
+        /// <remarks></remarks>
         private bool CanAddValue
-        { 
-            get { return QueryValue != null; } 
+        {
+            get { return QueryValue != null; }
         }
 
         #endregion
@@ -1267,7 +1261,8 @@ namespace HLU.UI.ViewModel
 
             catch (Exception ex)
             {
-                MessageBox.Show(App.GetActiveWindow(), ex.Message, "HLU Query",
+                //TODO: App.GetActiveWindow removed as window owner
+                MessageBox.Show(ex.Message, "HLU Query",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally 
@@ -1293,15 +1288,17 @@ namespace HLU.UI.ViewModel
         {
             try
             {
-                OpenFileDialog openFileDlg = new OpenFileDialog();
-                openFileDlg.Title = "Load Dialog from Query File";
-                openFileDlg.Filter = "HLUTool SQL Query (*.hsq)|*.hsq";
-                openFileDlg.CheckPathExists = true;
-                openFileDlg.CheckFileExists = true;
-                openFileDlg.ValidateNames = true;
-                openFileDlg.Multiselect = false;
-                openFileDlg.RestoreDirectory = false;
-                openFileDlg.InitialDirectory = queryPath;
+                OpenFileDialog openFileDlg = new()
+                {
+                    Title = "Load Dialog from Query File",
+                    Filter = "HLUTool SQL Query (*.hsq)|*.hsq",
+                    CheckPathExists = true,
+                    CheckFileExists = true,
+                    ValidateNames = true,
+                    Multiselect = false,
+                    RestoreDirectory = false,
+                    InitialDirectory = queryPath
+                };
 
                 bool? ok = openFileDlg.ShowDialog();
                 if (ok == true)
@@ -1339,11 +1336,12 @@ namespace HLU.UI.ViewModel
                 if (SaveSQLQueryFile(ref filePath, ref fileName))
                 {
                     // Create an array of lines.
-                    string[] lines = new string[2];
-
-                    // Store the dialog values to the array.
-                    lines[0] = String.Format("Tables {0}{1}{2}", "{", SqlFromTables, "}");
-                    lines[1] = String.Format("Where {0}{1}{2}", "{", SqlWhereClause, "}");
+                    string[] lines =
+                    [
+                        // Store the dialog values to the array.
+                        String.Format("Tables {0}{1}{2}", "{", SqlFromTables, "}"),
+                        String.Format("Where {0}{1}{2}", "{", SqlWhereClause, "}"),
+                    ];
 
                     // Write all the lines in the array to the script file.
                     File.WriteAllLines(fileName, lines);
@@ -1357,7 +1355,8 @@ namespace HLU.UI.ViewModel
 
             catch (Exception ex)
             {
-                MessageBox.Show(App.GetActiveWindow(), ex.Message, "HLU Query",
+                //TODO: App.GetActiveWindow removed as window owner
+                MessageBox.Show(ex.Message, "HLU Query",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -1383,12 +1382,14 @@ namespace HLU.UI.ViewModel
         {
             try
             {
-                SaveFileDialog saveFileDlg = new SaveFileDialog();
-                saveFileDlg.Title = "Save Dialog to Query File";
-                saveFileDlg.Filter = "HLUTool SQL Query (*.hsq)|*.hsq";
-                saveFileDlg.CheckPathExists = true;
-                saveFileDlg.RestoreDirectory = false;
-                saveFileDlg.InitialDirectory = queryPath;
+                SaveFileDialog saveFileDlg = new()
+                {
+                    Title = "Save Dialog to Query File",
+                    Filter = "HLUTool SQL Query (*.hsq)|*.hsq",
+                    CheckPathExists = true,
+                    RestoreDirectory = false,
+                    InitialDirectory = queryPath
+                };
 
                 bool ?ok = saveFileDlg.ShowDialog();
                 if (ok == true)
@@ -1428,10 +1429,10 @@ namespace HLU.UI.ViewModel
 
             while ((i1 != -1) && (i2 != -1))
             {
-                i1 = sqlcmd.IndexOf("[", i2);
+                i1 = sqlcmd.IndexOf('[', i2);
                 if (i1 != -1)
                 {
-                    i2 = sqlcmd.IndexOf("]", i1 + 1);
+                    i2 = sqlcmd.IndexOf(']', i1 + 1);
                     if (i2 != -1)
                     {
                         // Strip out the table name.
@@ -1464,10 +1465,10 @@ namespace HLU.UI.ViewModel
 
             while ((i1 != -1) && (i2 != -1))
             {
-                i1 = sqlcmd.IndexOf("'", i2);
+                i1 = sqlcmd.IndexOf('\'', i2);
                 if (i1 != -1)
                 {
-                    i2 = sqlcmd.IndexOf("'", i1 + 1);
+                    i2 = sqlcmd.IndexOf('\'', i1 + 1);
                     if (i2 != -1)
                     {
                         // Strip out the text string.
@@ -1487,8 +1488,8 @@ namespace HLU.UI.ViewModel
                         // Replace any wild characters found in the text.
                         if (start.TrimEnd().EndsWith(" LIKE"))
                         {
-                            text.Replace("_", _db.WildcardSingleMatch);
-                            text.Replace("%", _db.WildcardManyMatch);
+                            text = text.Replace("_", _db.WildcardSingleMatch);
+                            text = text.Replace("%", _db.WildcardManyMatch);
                         }
 
                         // Replace the text delimiters with the correct delimiters.
@@ -1507,32 +1508,34 @@ namespace HLU.UI.ViewModel
 
             while ((i1 != -1) && (i2 != -1))
             {
-                i1 = sqlcmd.IndexOf("#", i2);
+                i1 = sqlcmd.IndexOf('#', i2);
                 if (i1 != -1)
                 {
-                    i2 = sqlcmd.IndexOf("#", i1 + 1);
+                    i2 = sqlcmd.IndexOf('#', i1 + 1);
                     if (i2 != -1)
                     {
                         // Strip out the date string.
                         DateTime dt;
-                        DateTime.TryParse(sqlcmd.Substring(i1 + 1, i2 - i1 - 1), out dt);
+                        //DONE: Added success check on TryParse
+                        if (DateTime.TryParse(sqlcmd.AsSpan(i1 + 1, i2 - i1 - 1), out dt))
+                        {
+                            // Split the date string from the rest of the sql command.
+                            if (i1 == 0)
+                                start = String.Empty;
+                            else
+                                start = sqlcmd.Substring(0, i1);
 
-                        // Split the date string from the rest of the sql command.
-                        if (i1 == 0)
-                            start = String.Empty;
-                        else
-                            start = sqlcmd.Substring(0, i1);
+                            if (i2 == sqlcmd.Length - 1)
+                                end = String.Empty;
+                            else
+                                end = sqlcmd.Substring(i2 + 1);
 
-                        if (i2 == sqlcmd.Length - 1)
-                            end = String.Empty;
-                        else
-                            end = sqlcmd.Substring(i2 + 1);
+                            // Replace the date delimiters with the correct delimiters.
+                            sqlcmd = start + _db.QuoteValue(dt) + end;
 
-                        // Replace the date delimiters with the correct delimiters.
-                        sqlcmd = start + _db.QuoteValue(dt) + end;
-
-                        // Reposition the last index.
-                        i2 = sqlcmd.Length - end.Length;
+                            // Reposition the last index.
+                            i2 = sqlcmd.Length - end.Length;
+                        }
                     }
                 }
             }

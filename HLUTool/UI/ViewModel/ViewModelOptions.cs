@@ -3,19 +3,19 @@
 // Copyright © 2013, 2016 Thames Valley Environmental Records Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
 // Copyright © 2019 London & South East Record Centres (LaSER)
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -39,7 +39,7 @@ using HLU.UI.UserControls;
 
 namespace HLU.UI.ViewModel
 {
-    class ViewModelOptions : ViewModelBase, IDataErrorInfo
+    partial class ViewModelOptions : ViewModelBase, IDataErrorInfo
     {
         #region Fields
 
@@ -52,8 +52,7 @@ namespace HLU.UI.ViewModel
         private ICommand _browseSqlPathCommand;
         private string _displayName = "Options";
 
-        private HluDataSet.incid_mm_polygonsDataTable _incidMMPolygonsTable = 
-            new HluDataSet.incid_mm_polygonsDataTable();
+        private HluDataSet.incid_mm_polygonsDataTable _incidMMPolygonsTable = new();
         private List<int> _gisIDColumnOrdinals;
 
         // Database options
@@ -138,7 +137,7 @@ namespace HLU.UI.ViewModel
 
             _gisIDColumnOrdinals = Settings.Default.GisIDColumnOrdinals.Cast<string>()
                 .Select(s => Int32.Parse(s)).ToList();
-            
+
             _historyColumns = new SelectionList<string>(_incidMMPolygonsTable.Columns.Cast<DataColumn>()
                 .Where(c => !_gisIDColumnOrdinals.Contains(c.Ordinal)
                     && !c.ColumnName.StartsWith("shape_"))
@@ -152,7 +151,7 @@ namespace HLU.UI.ViewModel
                 si.IsSelected = historyColumnOrdinals.Contains(
                     _incidMMPolygonsTable.Columns[UnescapeAccessKey(si.Item)].Ordinal);
 
-            // Store the map path so that it can be reset if the user 
+            // Store the map path so that it can be reset if the user
             // cancels updates to the options.
             _bakMapPath = _mapPath;
         }
@@ -209,7 +208,7 @@ namespace HLU.UI.ViewModel
                 if (_saveCommand == null)
                 {
                     Action<object> saveAction = new(this.SaveCommandClick);
-                    _saveCommand = new(saveAction, param => this.CanSave);
+                    _saveCommand = new RelayCommand(saveAction, param => this.CanSave);
                 }
 
                 return _saveCommand;
@@ -234,9 +233,11 @@ namespace HLU.UI.ViewModel
             Settings.Default.ExportPath = _exportPath;
 
             // History options
-            Settings.Default.HistoryColumnOrdinals = new StringCollection();
-            Settings.Default.HistoryColumnOrdinals.AddRange(_historyColumns.Where(c => c.IsSelected)
-                .Select(c => _incidMMPolygonsTable.Columns[UnescapeAccessKey(c.Item)].Ordinal.ToString()).ToArray());
+            Settings.Default.HistoryColumnOrdinals =
+            [
+                .. _historyColumns.Where(c => c.IsSelected)
+                    .Select(c => _incidMMPolygonsTable.Columns[UnescapeAccessKey(c.Item)].Ordinal.ToString()).ToArray(),
+            ];
             Settings.Default.HistoryDisplayLastN = (int)_historyDisplayLastN;
 
             // Interface options
@@ -294,7 +295,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <value></value>
         /// <returns></returns>
@@ -318,7 +319,7 @@ namespace HLU.UI.ViewModel
                 if (_cancelCommand == null)
                 {
                     Action<object> cancelAction = new(this.CancelCommandClick);
-                    _cancelCommand = new(cancelAction);
+                    _cancelCommand = new RelayCommand(cancelAction);
                 }
 
                 return _cancelCommand;
@@ -392,7 +393,7 @@ namespace HLU.UI.ViewModel
                 if (_browseMapPathCommand == null)
                 {
                     Action<object> browseMapPathAction = new(this.BrowseMapPathClicked);
-                    _browseMapPathCommand = new(browseMapPathAction, param => this.CanBrowseMapPath);
+                    _browseMapPathCommand = new RelayCommand(browseMapPathAction, param => this.CanBrowseMapPath);
                 }
 
                 return _browseMapPathCommand;
@@ -470,7 +471,7 @@ namespace HLU.UI.ViewModel
                 if (_browseExportPathCommand == null)
                 {
                     Action<object> browseExportPathAction = new(this.BrowseExportPathClicked);
-                    _browseExportPathCommand = new(browseExportPathAction, param => this.CanBrowseExportPath);
+                    _browseExportPathCommand = new RelayCommand(browseExportPathAction, param => this.CanBrowseExportPath);
                 }
 
                 return _browseExportPathCommand;
@@ -486,7 +487,9 @@ namespace HLU.UI.ViewModel
         /// </value>
         public bool CanBrowseExportPath
         {
-            get { return (PreferredGis == GISApplications.MapInfo); }
+            //TODO: MapInfo
+            //get { return (PreferredGis == GISApplications.MapInfo); }
+            get { return false; }
         }
 
         /// <summary>
@@ -528,11 +531,13 @@ namespace HLU.UI.ViewModel
             {
                 string exportPath = Settings.Default.ExportPath;
 
-                FolderBrowserDialog openFolderDlg = new FolderBrowserDialog();
-                openFolderDlg.Description = "Select Export Default Directory";
-                openFolderDlg.SelectedPath = exportPath;
-                //openFolderDlg.RootFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-                openFolderDlg.ShowNewFolderButton = true;
+                FolderBrowserDialog openFolderDlg = new()
+                {
+                    Description = "Select Export Default Directory",
+                    SelectedPath = exportPath,
+                    //openFolderDlg.RootFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                    ShowNewFolderButton = true
+                };
                 if (openFolderDlg.ShowDialog() == DialogResult.OK)
                 {
                     if (Directory.Exists(openFolderDlg.SelectedPath))
@@ -669,7 +674,7 @@ namespace HLU.UI.ViewModel
         // CHANGED: CR49 Process proposed OSMM Updates
         // A new option to enable the user to determine whether to show
         // the OSMM update attributes for the current incid.
-        // 
+        //
         /// <summary>
         /// Gets or sets the list of available show OSMM Update options from
         /// the class.
@@ -1023,7 +1028,7 @@ namespace HLU.UI.ViewModel
         // A new option to enable the user to select how many rows
         // to retrieve when getting values for a data column when
         // building a sql query.
-        // 
+        //
         /// <summary>
         /// Gets or sets the maximum number of value rows to retrieve.
         /// </summary>
@@ -1041,7 +1046,7 @@ namespace HLU.UI.ViewModel
         // CHANGED: CR5 (Select by attributes interface)
         // A new option to enable the user to determine when to warn
         // the user before performing a GIS selection.
-        // 
+        //
         /// <summary>
         /// Gets or sets the list of available warn before GIS selection
         /// options from the enum.
@@ -1079,7 +1084,7 @@ namespace HLU.UI.ViewModel
         // CHANGED: CR5 (Select by attributes interface)
         // A new option to enable the user to set the default
         // folder for saving and loading SQL queries.
-        // 
+        //
         /// <summary>
         /// Get the browse SQL path command.
         /// </summary>
@@ -1093,7 +1098,7 @@ namespace HLU.UI.ViewModel
                 if (_browseSqlPathCommand == null)
                 {
                     Action<object> browseSqlPathAction = new(this.BrowseSqlPathClicked);
-                    _browseSqlPathCommand = new(browseSqlPathAction);
+                    _browseSqlPathCommand = new RelayCommand(browseSqlPathAction);
                 }
 
                 return _browseSqlPathCommand;
@@ -1139,11 +1144,13 @@ namespace HLU.UI.ViewModel
             {
                 string sqlPath = Settings.Default.SqlPath;
 
-                FolderBrowserDialog openFolderDlg = new FolderBrowserDialog();
-                openFolderDlg.Description = "Select Sql Query Default Directory";
-                openFolderDlg.SelectedPath = sqlPath;
-                //openFolderDlg.RootFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-                openFolderDlg.ShowNewFolderButton = true;
+                FolderBrowserDialog openFolderDlg = new()
+                {
+                    Description = "Select Sql Query Default Directory",
+                    SelectedPath = sqlPath,
+                    //openFolderDlg.RootFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                    ShowNewFolderButton = true
+                };
                 if (openFolderDlg.ShowDialog() == DialogResult.OK)
                 {
                     if (Directory.Exists(openFolderDlg.SelectedPath))
@@ -1369,20 +1376,21 @@ namespace HLU.UI.ViewModel
                         return false;
                     }
                     break;
-                case GISApplications.MapInfo:
-                    if (!Path.GetExtension(_mapPath).Equals(".wor", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        message = String.Format("'{0}' does not appear to be a MapInfo workspace.", MapPath);
-                        return false;
-                    }
-                    break;
+                //TODO: MapInfo
+                //case GISApplications.MapInfo:
+                //    if (!Path.GetExtension(_mapPath).Equals(".wor", StringComparison.CurrentCultureIgnoreCase))
+                //    {
+                //        message = String.Format("'{0}' does not appear to be a MapInfo workspace.", MapPath);
+                //        return false;
+                //    }
+                //    break;
             }
             return true;
         }
 
         public string Error
         {
-            get 
+            get
             {
                 StringBuilder error = new();
 
@@ -1430,7 +1438,7 @@ namespace HLU.UI.ViewModel
                     error.Append("\n" + "Secondary code delimiter must be one or two characters.");
                 else
                 {
-                    Match m = Regex.Match(SecondaryCodeDelimiter, @"[a-zA-Z0-9]");
+                    Match m = secondaryCodeDelimeterRegex().Match(SecondaryCodeDelimiter);
                     if (m.Success == true)
                         error.Append("\n" + "Secondary code delimiter cannot contain letters or numbers.");
                 }
@@ -1462,7 +1470,7 @@ namespace HLU.UI.ViewModel
                     error.Append("\n" + "Vague date delimiter must be a single character.");
                 else
                 {
-                    Match m = Regex.Match(VagueDateDelimiter, @"[a-zA-Z0-9]");
+                    Match m = vagueDateDelimeterRegex().Match(VagueDateDelimiter);
                     if (m.Success == true)
                         error.Append("\n" + "Vague date delimiter cannot contain letters or numbers.");
                 }
@@ -1484,7 +1492,7 @@ namespace HLU.UI.ViewModel
 
         public string this[string columnName]
         {
-            get 
+            get
             {
                 string error = null;
 
@@ -1551,7 +1559,7 @@ namespace HLU.UI.ViewModel
                             error = "Error: Secondary code delimiter must be one or two characters.";
                         else
                         {
-                            Match m = Regex.Match(SecondaryCodeDelimiter, @"[a-zA-Z0-9]");
+                            Match m = secondaryCodeDelimeterRegex().Match(SecondaryCodeDelimiter);
                             if (m.Success == true)
                                 error = "Error: Secondary code delimiter cannot contain letters or numbers.";
                         }
@@ -1615,7 +1623,7 @@ namespace HLU.UI.ViewModel
                             error = "Error: Vague date delimiter must be a single character.";
                         else
                         {
-                            Match m = Regex.Match(VagueDateDelimiter, @"[a-zA-Z0-9]");
+                            Match m = vagueDateDelimeterRegex().Match(VagueDateDelimiter);
                             if (m.Success == true)
                                 error = "Error: Vague date delimiter cannot contain letters or numbers.";
                         }
@@ -1638,10 +1646,15 @@ namespace HLU.UI.ViewModel
                 }
 
                 CommandManager.InvalidateRequerySuggested();
-                
+
                 return error;
             }
         }
+
+        [GeneratedRegex(@"[a-zA-Z0-9]")]
+        private static partial Regex secondaryCodeDelimeterRegex();
+        [GeneratedRegex(@"[a-zA-Z0-9]")]
+        private static partial Regex vagueDateDelimeterRegex();
 
         #endregion
     }

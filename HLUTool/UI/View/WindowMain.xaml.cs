@@ -2,19 +2,19 @@
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
 // Copyright © 2019 Greenspace Information for Greater London CIC
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -28,10 +28,9 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.ComponentModel;
 using HLU.UI.UserControls;
-using Microsoft.Windows.Controls;
 using HLU.Properties;
 
-namespace HLU
+namespace HLU.UI.View
 {
     /// <summary>
     /// Interaction logic for Window1.xaml
@@ -40,7 +39,9 @@ namespace HLU
     {
         private ComboBox[] _comboBoxes;
         private MenuItem[] _menuItems;
-        public string _lastStyle = null;
+
+        //DONE: Styling
+        //public string _lastStyle = null;
         public bool _keepOnTop = false;
         public int _autoZoom = 1;
         public bool _autoSelect = false;
@@ -61,15 +62,16 @@ namespace HLU
             // Create an array of all the menu items in the window.
             _menuItems = FindControls.FindLogicalChildren<MenuItem>(this.MenuBar).ToArray();
 
-            // Get the last style to be the default style (already loaded).
-            _lastStyle = Settings.Default.InterfaceStyle;
+            //DONE: Styling
+            //// Get the last style to be the default style (already loaded).
+            //_lastStyle = Settings.Default.InterfaceStyle;
 
-            // Switch the style to the default menu item style.
-            if (App.LoadStyleDictionaryFromFile(_lastStyle))
-            {
-                // Check the menu item for the default style.
-                CheckMenuItem(_lastStyle, true);
-            }
+            //// Switch the style to the default menu item style.
+            //if (App.LoadStyleDictionaryFromFile(_lastStyle))
+            //{
+            //    // Check the menu item for the default style.
+            //    CheckMenuItem(_lastStyle, true);
+            //}
 
             // Get the app keep on top option default value.
             _keepOnTop = Settings.Default.AppKeepOnTop;
@@ -108,7 +110,7 @@ namespace HLU
             Control focusedControl = focusedElement as Control;
 
             // Ignore keyup if focus is on a data grid cell
-            if ((focusedControl != null) && (focusedControl.Parent is Microsoft.Windows.Controls.DataGridCell))
+            if ((focusedControl != null) && (focusedControl.Parent is DataGridCell))
                 return;
 
             // Ignore keyup if any comboboxes are currently open
@@ -195,8 +197,8 @@ namespace HLU
         }
 
         /// <summary>
-        /// Since the IHS multiplex ComboBox controls are set to IsEditable="True" and IsReadOnly="True" 
-        /// (i.e., restricted to list), their text does not get cleared when a repeated value has been 
+        /// Since the IHS multiplex ComboBox controls are set to IsEditable="True" and IsReadOnly="True"
+        /// (i.e., restricted to list), their text does not get cleared when a repeated value has been
         /// chosen and rejected by the view model.
         /// This event handler uses reflection to get the underlying view model property value and sets the
         /// ComboBox text to String.Empty if the view model property is null.
@@ -206,8 +208,7 @@ namespace HLU
         private void ComboBox_DropDownClosed(object sender, EventArgs e)
         {
             string s = ((ComboBox)sender).Text;
-            ComboBox cmb = sender as ComboBox;
-            if (cmb == null) return;
+            if (sender is not ComboBox cmb) return;
 
             object propValue = cmb.DataContext.GetType().GetProperty(cmb.GetBindingExpression(
                 ComboBox.SelectedValueProperty).ParentBinding.Path.Path).GetValue(cmb.DataContext, null);
@@ -380,33 +381,34 @@ namespace HLU
             }
         }
 
-        //---------------------------------------------------------------------
-        // FIXED: KI15 (User Interface Style)
-        // Switch the interface style to the style selected by the user
-        // based on the menu item name.
-        //
-        /// <summary>
-        /// Handles the Click event of the MenuItem_Style control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
-        private void MenuItem_Style_Click(object sender, RoutedEventArgs e)
-        {
-            // Set the style name from the menu item name.
-            MenuItem mi = sender as MenuItem;
-            string styleName = string.Format("{0}", mi.Name);
+        //DONE: Styling
+        ////---------------------------------------------------------------------
+        //// FIXED: KI15 (User Interface Style)
+        //// Switch the interface style to the style selected by the user
+        //// based on the menu item name.
+        ////
+        ///// <summary>
+        ///// Handles the Click event of the MenuItem_Style control.
+        ///// </summary>
+        ///// <param name="sender">The source of the event.</param>
+        ///// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
+        //private void MenuItem_Style_Click(object sender, RoutedEventArgs e)
+        //{
+        //    // Set the style name from the menu item name.
+        //    MenuItem mi = sender as MenuItem;
+        //    string styleName = string.Format("{0}", mi.Name);
 
-            // Switch the style to the selected menu item style.
-            if (App.LoadStyleDictionaryFromFile(styleName))
-            {
-                // Clear the check against the last menu item style.
-                CheckMenuItem(_lastStyle, false);
+        //    // Switch the style to the selected menu item style.
+        //    if (App.LoadStyleDictionaryFromFile(styleName))
+        //    {
+        //        // Clear the check against the last menu item style.
+        //        CheckMenuItem(_lastStyle, false);
 
-                // Store the last style as the current menu item.
-                _lastStyle = mi.Name;
-            }
-        }
-        //---------------------------------------------------------------------
+        //        // Store the last style as the current menu item.
+        //        _lastStyle = mi.Name;
+        //    }
+        //}
+        ////---------------------------------------------------------------------
 
         /// <summary>
         /// Handles the Click event of the MenuItem_Zoom control.
@@ -450,7 +452,7 @@ namespace HLU
         {
             foreach (MenuItem mItem in _menuItems)
             {
-                if ((mItem is MenuItem) && (mItem.Name == mItemName))
+                if ((mItem is not null) && (mItem.Name == mItemName))
                 {
                     if (check)
                         mItem.IsChecked = true;

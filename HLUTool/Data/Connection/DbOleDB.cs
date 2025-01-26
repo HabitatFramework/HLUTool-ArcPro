@@ -41,8 +41,9 @@ namespace HLU.Data.Connection
         private OleDbTransaction _transaction;
         private Dictionary<Type, OleDbDataAdapter> _adaptersDic = [];
 
-        HLU.UI.View.Connection.ViewConnectOleDb _connWindow;
-        HLU.UI.ViewModel.ViewModelConnectOleDb _connViewModel;
+        //TODO: OleDB Connection
+        //HLU.UI.View.Connection.ViewConnectOleDb _connWindow;
+        //HLU.UI.ViewModel.ViewModelConnectOleDb _connViewModel;
 
         private Backends _backend;
         private string _quotePrefix;
@@ -845,36 +846,37 @@ namespace HLU.Data.Connection
         {
             try
             {
-                _connWindow = new()
-                {
-                    //TODO: App.GetActiveWindow
-                    //if ((_connWindow.Owner = App.GetActiveWindow()) == null)
-                    //    throw (new Exception("No parent window loaded"));
+                //TODO: OleDB Connection
+                //_connWindow = new()
+                //{
+                //    //TODO: App.GetActiveWindow
+                //    //if ((_connWindow.Owner = App.GetActiveWindow()) == null)
+                //    //    throw (new Exception("No parent window loaded"));
 
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner
-                };
+                //    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                //};
 
-                // create ViewModel to which main window binds
-                _connViewModel = new()
-                {
-                    DisplayName = "OleDb Connection"
-                };
+                //// create ViewModel to which main window binds
+                //_connViewModel = new()
+                //{
+                //    DisplayName = "OleDb Connection"
+                //};
 
-                // when ViewModel asks to be closed, close window
-                _connViewModel.RequestClose +=
-                    new HLU.UI.ViewModel.ViewModelConnectOleDb.RequestCloseEventHandler(_connViewModel_RequestClose);
+                //// when ViewModel asks to be closed, close window
+                //_connViewModel.RequestClose +=
+                //    new UI.ViewModel.ViewModelConnectOleDb.RequestCloseEventHandler(_connViewModel_RequestClose);
 
-                // allow all controls in window to bind to ViewModel by setting DataContext
-                _connWindow.DataContext = _connViewModel;
+                //// allow all controls in window to bind to ViewModel by setting DataContext
+                //_connWindow.DataContext = _connViewModel;
 
-                _connWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-                _connWindow.Topmost = true;
+                //_connWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                //_connWindow.Topmost = true;
 
-                // show window
-                _connWindow.ShowDialog();
+                //// show window
+                //_connWindow.ShowDialog();
 
-                // throw error if connection failed
-                if (!String.IsNullOrEmpty(_errorMessage)) throw (new Exception(_errorMessage));
+                //// throw error if connection failed
+                //if (!String.IsNullOrEmpty(_errorMessage)) throw (new Exception(_errorMessage));
             }
             catch (Exception ex)
             {
@@ -886,8 +888,9 @@ namespace HLU.Data.Connection
 
         protected void _connViewModel_RequestClose(string connString, string defaultSchema, string errorMsg)
         {
-            _connViewModel.RequestClose -= _connViewModel_RequestClose;
-            _connWindow.Close();
+            //TODO: OleDB Connection
+            //_connViewModel.RequestClose -= _connViewModel_RequestClose;
+            //_connWindow.Close();
 
             if (!String.IsNullOrEmpty(errorMsg))
             {

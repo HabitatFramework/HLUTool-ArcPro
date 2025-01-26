@@ -122,7 +122,7 @@ namespace HLU.UI.ViewModel
         Error
     };
 
-    public class ViewModelWindowMain : ViewModelBase, IDataErrorInfo
+    public partial class ViewModelWindowMain : ViewModelBase, IDataErrorInfo
     {
         #region Enums
 
@@ -340,7 +340,7 @@ namespace HLU.UI.ViewModel
 
         private HluDataSet.lut_secondary_groupRow[] _secondaryGroupsValid;
         private HluDataSet.lut_secondary_groupRow[] _secondaryGroups;
-        public static HluDataSet.lut_secondary_groupRow[] SecondaryGroupsAll; // Used in the options window
+        private static HluDataSet.lut_secondary_groupRow[] _secondaryGroupsAll; // Used in the options window
         private HluDataSet.lut_secondaryRow[] _secondaryCodesAll;
         private HluDataSet.lut_secondaryRow[] _secondaryCodesValid;
         private IEnumerable<string> _secondaryCodesMandatory;
@@ -354,7 +354,7 @@ namespace HLU.UI.ViewModel
 
         private HistoryRowEqualityComparer _histRowEqComp = new();
         private HluDataSet.lut_habitat_classRow[] _habitatClassCodes;
-        public static HluDataSet.lut_habitat_classRow[] HabitatClasses; // Used in the options window
+        private static HluDataSet.lut_habitat_classRow[] _habitatClasses; // Used in the options window
         private HluDataSet.lut_habitat_typeRow[] _habitatTypeCodes;
 
         private double _incidArea;
@@ -447,7 +447,7 @@ namespace HLU.UI.ViewModel
         private Nullable<bool> _isAuthorisedUser;
         private Nullable<bool> _canBulkUpdate;
         private Nullable<bool> _bulkUpdateMode = false;
-        private bool _bulkUpdatePrimaryBap = Settings.Default.BulkUpdatePotentialBap;
+        //private bool _bulkUpdatePrimaryBap = Settings.Default.BulkUpdatePotentialBap;
         private string _osmmAcceptTag = "A_ccept";
         private string _osmmRejectTag = "Re_ject";
         private Nullable<bool> _canOSMMUpdate;
@@ -488,8 +488,8 @@ namespace HLU.UI.ViewModel
         private int _autoZoomSelection = Settings.Default.AutoZoomSelection;
         private bool _autoSelectOnGis = Settings.Default.AutoSelectOnGis;
 
-        public static string HistoryGeometry1ColumnName = Settings.Default.HistoryGeometry1ColumnName;
-        public static string HistoryGeometry2ColumnName = Settings.Default.HistoryGeometry2ColumnName;
+        private static string _historyGeometry1ColumnName = Settings.Default.HistoryGeometry1ColumnName;
+        private static string _historyGeometry2ColumnName = Settings.Default.HistoryGeometry2ColumnName;
         internal static string LutDescriptionFieldName = Settings.Default.LutDescriptionFieldName;
         internal static int LutDescriptionFieldOrdinal = Settings.Default.LutDescriptionFieldOrdinal;
         internal static string LutSourceFieldName = Settings.Default.LutSourceFieldName;
@@ -1508,6 +1508,10 @@ namespace HLU.UI.ViewModel
         {
             get { return _historyColumns; }
         }
+
+        public static string HistoryGeometry1ColumnName { get => _historyGeometry1ColumnName; set => _historyGeometry1ColumnName = value; }
+
+        public static string HistoryGeometry2ColumnName { get => _historyGeometry2ColumnName; set => _historyGeometry2ColumnName = value; }
 
         internal DataTable GisSelection
         {
@@ -2953,7 +2957,7 @@ namespace HLU.UI.ViewModel
 
                 // create ViewModel to which main window binds
                 _viewModelWinWarnSubsetUpdate = new ViewModelWindowWarnOnSubsetUpdate(
-                    _fragsIncidGisCount, _toidsIncidGisCount, _fragsIncidDbCount, _toidsIncidDbCount, _gisLayerType);
+                    _fragsIncidGisCount, _fragsIncidDbCount, _gisLayerType);
 
                 // when ViewModel asks to be closed, close window
                 _viewModelWinWarnSubsetUpdate.RequestClose +=
@@ -4164,7 +4168,7 @@ namespace HLU.UI.ViewModel
             Settings.Default.Save();
         }
 
-        //TODO: Unneeded
+        //TODO: Unneeded?
         public bool CanAutoZoomSelected { get { return true; } }
 
         public ICommand AutoSelectOnGisCommand
@@ -4191,7 +4195,7 @@ namespace HLU.UI.ViewModel
 
         }
 
-        //TODO: Unneeded
+        //TODO: Unneeded?
         public bool CanAutoSelectOnGis { get { return true; } }
 
         public ICommand ZoomSelectionCommand
@@ -4232,12 +4236,12 @@ namespace HLU.UI.ViewModel
 
         private void GisWinSideBySideClicked(object param)
         {
-            //TODO: App.Current.MainWindow
+            //DONE: App.Current.MainWindow
             //_gisApp.Window(ProcessWindowStyle.Normal,
             //    new WindowInteropHelper(App.Current.MainWindow).Handle);
         }
 
-        //TODO: Unneeded
+        //TODO: Unneeded?
         public bool CanGisWinSideBySide { get { return true; } }
 
         public ICommand ResetToolWindowCommand
@@ -4266,7 +4270,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(WindowWidth));
         }
 
-        //TODO: Unneeded
+        //TODO: Unneeded?
         public bool CanResetToolWindow { get { return true; } }
 
         //TODO: ArcGIS
@@ -4323,7 +4327,7 @@ namespace HLU.UI.ViewModel
         {
             _windowOptions = new WindowOptions
             {
-                //TODO: App.Current.MainWindow
+                //DONE: App.Current.MainWindow
                 //_windowOptions.Owner = App.Current.MainWindow;
                 WindowStartupLocation = WindowStartupLocation.CenterScreen
             };
@@ -4519,7 +4523,7 @@ namespace HLU.UI.ViewModel
 
             _windowAbout = new WindowAbout
             {
-                //TODO: App.Current.MainWindow
+                //DONE: App.Current.MainWindow
                 //_windowAbout.Owner = App.Current.MainWindow;
                 //TODO: ArcGIS
                 //WindowStartupLocation = WindowStartupLocation.CenterScreen
@@ -5725,28 +5729,15 @@ namespace HLU.UI.ViewModel
 
                 if (status != null && status != _codeAnyRow)
                 {
-                    int newStatus = 999;
-                    switch (status)
+                    int newStatus = status switch
                     {
-                        case "Rejected":
-                            newStatus = -99;
-                            break;
-                        case "Ignored":
-                            newStatus = -2;
-                            break;
-                        case "Applied":
-                            newStatus = -1;
-                            break;
-                        case "Pending":
-                            newStatus = 0;
-                            break;
-                        case "Proposed":
-                            newStatus = 1;
-                            break;
-                        default:
-                            newStatus = -999;
-                            break;
-                    }
+                        "Rejected" => -99,
+                        "Ignored" => -2,
+                        "Applied" => -1,
+                        "Pending" => 0,
+                        "Proposed" => 1,
+                        _ => -999
+                    };
 
                     if (newStatus == 1)
                         sqlWhereClause = String.Format("{0} AND [incid_osmm_updates].status > 0", sqlWhereClause);
@@ -6340,7 +6331,7 @@ namespace HLU.UI.ViewModel
                             {
                                 _windowCompSplit = new()
                                 {
-                                    //TODO: App.Current.MainWindow
+                                    //DONE: App.Current.MainWindow
                                     //_windowCompSplit.Owner = App.Current.MainWindow;
                                     WindowStartupLocation = WindowStartupLocation.CenterScreen
                                 };
@@ -6458,7 +6449,7 @@ namespace HLU.UI.ViewModel
             {
                 _windowEditPriorityHabitats = new()
                 {
-                    //TODO: App.Current.MainWindow
+                    //DONE: App.Current.MainWindow
                     //_windowEditPriorityHabitats.Owner = App.Current.MainWindow;
                     WindowStartupLocation = WindowStartupLocation.CenterScreen
                 };
@@ -6542,7 +6533,7 @@ namespace HLU.UI.ViewModel
             {
                 _windowEditPotentialHabitats = new()
                 {
-                    //TODO: App.Current.MainWindow
+                    //DONE: App.Current.MainWindow
                     //_windowEditPotentialHabitats.Owner = App.Current.MainWindow;
                     WindowStartupLocation = WindowStartupLocation.CenterScreen
                 };
@@ -7218,7 +7209,7 @@ namespace HLU.UI.ViewModel
             {
                 try
                 {
-                    HluDataSet.incid_mm_polygonsDataTable t = new HluDataSet.incid_mm_polygonsDataTable();
+                    HluDataSet.incid_mm_polygonsDataTable t = new();
                     DataTable[] selTables = new DataTable[] { t }.ToArray();
 
                     IEnumerable<DataTable> queryTables = whereClause.SelectMany(cond => cond.Select(c => c.Table)).Distinct();
@@ -7256,12 +7247,12 @@ namespace HLU.UI.ViewModel
                         // operator before the first where condition to "AND"
                         // and wrap the where conditions in an extra set of
                         // parentheses.
-                        if (joinCond.Count() != 0)
+                        if (joinCond.Any())
                         {
                             List<SqlFilterCondition> whereCond = [];
                             whereCond = whereClause[i];
 
-                            SqlFilterCondition cond = new SqlFilterCondition();
+                            SqlFilterCondition cond = new();
                             cond = whereCond[0];
                             cond.BooleanOperator = "AND";
                             cond.OpenParentheses = "((";
@@ -7290,11 +7281,11 @@ namespace HLU.UI.ViewModel
         private void ExpectedSelectionFeatures(List<DataTable> sqlFromTables, string sqlWhereClause, ref int numToids, ref int numFragments)
         {
             if ((_incidSelection != null) && (_incidSelection.Rows.Count > 0) &&
-                sqlFromTables.Any())
+                sqlFromTables.Count != 0)
             {
                 try
                 {
-                    HluDataSet.incid_mm_polygonsDataTable t = new HluDataSet.incid_mm_polygonsDataTable();
+                    HluDataSet.incid_mm_polygonsDataTable t = new();
                     DataTable[] selTables = new DataTable[] { t }.ToArray();
 
                     var fromTables = sqlFromTables.Distinct().Where(q => !selTables.Select(s => s.TableName).Contains(q.TableName));
@@ -7447,10 +7438,12 @@ namespace HLU.UI.ViewModel
         {
             if (_gisApp.ListHluLayers() > 0)
             {
-                _windowSwitchGISLayer = new WindowSwitchGISLayer();
-                //TODO: App.Current.MainWindow
-                //_windowSwitchGISLayer.Owner = App.Current.MainWindow;
-                _windowSwitchGISLayer.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                _windowSwitchGISLayer = new()
+                {
+                    //DONE: App.Current.MainWindow
+                    //_windowSwitchGISLayer.Owner = App.Current.MainWindow;
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen
+                };
 
                 // Pass the total number of map windows to the view model
                 _viewModelSwitchGISLayer = new ViewModelWindowSwitchGISLayer(_gisApp.ValidHluLayers, _gisApp.CurrentHluLayer, _mapWindowsCount);
@@ -8534,35 +8527,46 @@ namespace HLU.UI.ViewModel
 
         private Dictionary<Type, string> BuildChildRowOrderByClauses()
         {
-            Dictionary<Type, string> childRowOrberByDict = new Dictionary<Type, string>();
-
-            //TODO: Aggregate
-            childRowOrberByDict.Add(typeof(HluDataSet.incid_secondaryDataTable),
-                string.Join(",", _hluDS.incid_secondary.PrimaryKey.Select(c => _db.QuoteIdentifier(c.ColumnName))));
-
-            childRowOrberByDict.Add(typeof(HluDataSet.incid_conditionDataTable),
-                string.Join(",", _hluDS.incid_condition.PrimaryKey.Select(c => String.Format("{0} DESC", _db.QuoteIdentifier(c.ColumnName)))));
-
-            childRowOrberByDict.Add(typeof(HluDataSet.incid_ihs_matrixDataTable),
-                string.Join(",", _hluDS.incid_ihs_matrix.PrimaryKey.Select(c => _db.QuoteIdentifier(c.ColumnName))));
-
-            childRowOrberByDict.Add(typeof(HluDataSet.incid_ihs_formationDataTable),
-                string.Join(",", _hluDS.incid_ihs_formation.PrimaryKey.Select(c => _db.QuoteIdentifier(c.ColumnName))));
-
-            childRowOrberByDict.Add(typeof(HluDataSet.incid_ihs_managementDataTable),
-                string.Join(",", _hluDS.incid_ihs_management.PrimaryKey.Select(c => _db.QuoteIdentifier(c.ColumnName))));
-
-            childRowOrberByDict.Add(typeof(HluDataSet.incid_ihs_complexDataTable),
-                string.Join(",", _hluDS.incid_ihs_complex.PrimaryKey.Select(c => _db.QuoteIdentifier(c.ColumnName))));
-
-            childRowOrberByDict.Add(typeof(HluDataSet.incid_bapDataTable),
-                string.Join(",", _hluDS.incid_bap.PrimaryKey.Select(c => _db.QuoteIdentifier(c.ColumnName))));
-
-            childRowOrberByDict.Add(typeof(HluDataSet.incid_sourcesDataTable),
-                string.Join(",", _hluDS.incid_sources.PrimaryKey.Select(c => _db.QuoteIdentifier(c.ColumnName))));
-
-            childRowOrberByDict.Add(typeof(HluDataSet.incid_osmm_updatesDataTable),
-                string.Join(",", _hluDS.incid_osmm_updates.PrimaryKey.Select(c => _db.QuoteIdentifier(c.ColumnName))));
+            Dictionary<Type, string> childRowOrberByDict = new()
+            {
+                //DONE: Aggregate
+                {
+                    typeof(HluDataSet.incid_secondaryDataTable),
+                    string.Join(",", _hluDS.incid_secondary.PrimaryKey.Select(c => _db.QuoteIdentifier(c.ColumnName)))
+                },
+                {
+                    typeof(HluDataSet.incid_conditionDataTable),
+                    string.Join(",", _hluDS.incid_condition.PrimaryKey.Select(c => String.Format("{0} DESC", _db.QuoteIdentifier(c.ColumnName))))
+                },
+                {
+                    typeof(HluDataSet.incid_ihs_matrixDataTable),
+                    string.Join(",", _hluDS.incid_ihs_matrix.PrimaryKey.Select(c => _db.QuoteIdentifier(c.ColumnName)))
+                },
+                {
+                    typeof(HluDataSet.incid_ihs_formationDataTable),
+                    string.Join(",", _hluDS.incid_ihs_formation.PrimaryKey.Select(c => _db.QuoteIdentifier(c.ColumnName)))
+                },
+                {
+                    typeof(HluDataSet.incid_ihs_managementDataTable),
+                    string.Join(",", _hluDS.incid_ihs_management.PrimaryKey.Select(c => _db.QuoteIdentifier(c.ColumnName)))
+                },
+                {
+                    typeof(HluDataSet.incid_ihs_complexDataTable),
+                    string.Join(",", _hluDS.incid_ihs_complex.PrimaryKey.Select(c => _db.QuoteIdentifier(c.ColumnName)))
+                },
+                {
+                    typeof(HluDataSet.incid_bapDataTable),
+                    string.Join(",", _hluDS.incid_bap.PrimaryKey.Select(c => _db.QuoteIdentifier(c.ColumnName)))
+                },
+                {
+                    typeof(HluDataSet.incid_sourcesDataTable),
+                    string.Join(",", _hluDS.incid_sources.PrimaryKey.Select(c => _db.QuoteIdentifier(c.ColumnName)))
+                },
+                {
+                    typeof(HluDataSet.incid_osmm_updatesDataTable),
+                    string.Join(",", _hluDS.incid_osmm_updates.PrimaryKey.Select(c => _db.QuoteIdentifier(c.ColumnName)))
+                }
+            };
 
             //childRowOrberByDict.Add(typeof(HluDataSet.incid_secondaryDataTable), _hluDS.incid_secondary.PrimaryKey
             //    .Aggregate(new(), (sb, c) => sb.Append("," + _db.QuoteIdentifier(c.ColumnName)))
@@ -8606,45 +8610,59 @@ namespace HLU.UI.ViewModel
         private Dictionary<Type, List<SqlFilterCondition>> BuildChildRowFilters()
         {
             Dictionary<Type, List<SqlFilterCondition>> childRowFilterDict =
-                new Dictionary<Type, List<SqlFilterCondition>>();
+                new()
+                {
+                    {
+                        typeof(HluDataSet.incid_secondaryDataTable),
+                        ChildRowFilter(_hluDS.incid, _hluDS.incid_secondary)
+                    },
+                    {
+                        typeof(HluDataSet.incid_conditionDataTable),
+                        ChildRowFilter(_hluDS.incid, _hluDS.incid_condition)
+                    },
+                    {
+                        typeof(HluDataSet.incid_ihs_matrixDataTable),
+                        ChildRowFilter(_hluDS.incid, _hluDS.incid_ihs_matrix)
+                    },
+                    {
+                        typeof(HluDataSet.incid_ihs_formationDataTable),
+                        ChildRowFilter(_hluDS.incid, _hluDS.incid_ihs_formation)
+                    },
+                    {
+                        typeof(HluDataSet.incid_ihs_managementDataTable),
+                        ChildRowFilter(_hluDS.incid, _hluDS.incid_ihs_management)
+                    },
+                    {
+                        typeof(HluDataSet.incid_ihs_complexDataTable),
+                        ChildRowFilter(_hluDS.incid, _hluDS.incid_ihs_complex)
+                    },
+                    {
+                        typeof(HluDataSet.incid_bapDataTable),
+                        ChildRowFilter(_hluDS.incid, _hluDS.incid_bap)
+                    },
+                    {
+                        typeof(HluDataSet.incid_sourcesDataTable),
+                        ChildRowFilter(_hluDS.incid, _hluDS.incid_sources)
+                    },
+                    {
+                        typeof(HluDataSet.incid_osmm_updatesDataTable),
+                        ChildRowFilter(_hluDS.incid, _hluDS.incid_osmm_updates)
+                    },
+                    {
+                        typeof(HluDataSet.historyDataTable),
+                        ChildRowFilter(_hluDS.incid, _hluDS.history)
+                    }
+                };
 
-            childRowFilterDict.Add(typeof(HluDataSet.incid_secondaryDataTable),
-                ChildRowFilter(_hluDS.incid, _hluDS.incid_secondary));
-
-            childRowFilterDict.Add(typeof(HluDataSet.incid_conditionDataTable),
-                ChildRowFilter(_hluDS.incid, _hluDS.incid_condition));
-
-            childRowFilterDict.Add(typeof(HluDataSet.incid_ihs_matrixDataTable),
-                ChildRowFilter(_hluDS.incid, _hluDS.incid_ihs_matrix));
-
-            childRowFilterDict.Add(typeof(HluDataSet.incid_ihs_formationDataTable),
-                ChildRowFilter(_hluDS.incid, _hluDS.incid_ihs_formation));
-
-            childRowFilterDict.Add(typeof(HluDataSet.incid_ihs_managementDataTable),
-                ChildRowFilter(_hluDS.incid, _hluDS.incid_ihs_management));
-
-            childRowFilterDict.Add(typeof(HluDataSet.incid_ihs_complexDataTable),
-                ChildRowFilter(_hluDS.incid, _hluDS.incid_ihs_complex));
-
-            childRowFilterDict.Add(typeof(HluDataSet.incid_bapDataTable),
-                ChildRowFilter(_hluDS.incid, _hluDS.incid_bap));
-
-            childRowFilterDict.Add(typeof(HluDataSet.incid_sourcesDataTable),
-                ChildRowFilter(_hluDS.incid, _hluDS.incid_sources));
-
-            childRowFilterDict.Add(typeof(HluDataSet.incid_osmm_updatesDataTable),
-                ChildRowFilter(_hluDS.incid, _hluDS.incid_osmm_updates));
-
-            childRowFilterDict.Add(typeof(HluDataSet.historyDataTable),
-                ChildRowFilter(_hluDS.incid, _hluDS.history));
-
-            _incidMMPolygonsIncidFilter = new SqlFilterCondition();
-            _incidMMPolygonsIncidFilter.BooleanOperator = "OR";
-            _incidMMPolygonsIncidFilter.OpenParentheses = "(";
-            _incidMMPolygonsIncidFilter.Column = _hluDS.incid_mm_polygons.incidColumn;
-            _incidMMPolygonsIncidFilter.Table = _hluDS.incid_mm_polygons;
-            _incidMMPolygonsIncidFilter.Value = String.Empty;
-            _incidMMPolygonsIncidFilter.CloseParentheses = ")";
+            _incidMMPolygonsIncidFilter = new()
+            {
+                BooleanOperator = "OR",
+                OpenParentheses = "(",
+                Column = _hluDS.incid_mm_polygons.incidColumn,
+                Table = _hluDS.incid_mm_polygons,
+                Value = String.Empty,
+                CloseParentheses = ")"
+            };
 
             return childRowFilterDict;
         }
@@ -8652,13 +8670,15 @@ namespace HLU.UI.ViewModel
         internal SqlFilterCondition ChildRowFilter<T>(T table, DataColumn incidColumn)
             where T : DataTable
         {
-            SqlFilterCondition cond = new SqlFilterCondition();
-            cond.BooleanOperator = "OR";
-            cond.OpenParentheses = "(";
-            cond.Column = incidColumn;
-            cond.Table = table;
-            cond.Value = String.Empty;
-            cond.CloseParentheses = ")";
+            SqlFilterCondition cond = new()
+            {
+                BooleanOperator = "OR",
+                OpenParentheses = "(",
+                Column = incidColumn,
+                Table = table,
+                Value = String.Empty,
+                CloseParentheses = ")"
+            };
             return cond;
         }
 
@@ -8672,7 +8692,7 @@ namespace HLU.UI.ViewModel
             for (int i = 0; i < rel.ChildColumns.Length; i++)
             {
                 DataColumn c = rel.ChildColumns[i];
-                SqlFilterCondition cond = new SqlFilterCondition();
+                SqlFilterCondition cond = new();
                 if (i == 0)
                 {
                     cond.BooleanOperator = "OR";
@@ -8703,7 +8723,7 @@ namespace HLU.UI.ViewModel
         {
             if (incidRow == null) return;
 
-            string[] relValues = new string[] { incidRow.incid };
+            string[] relValues = [incidRow.incid];
 
             HluDataSet.incid_secondaryDataTable secondaryTable = _hluDS.incid_secondary;
             _incidSecondaryRows = GetIncidChildRowsDb(relValues,
@@ -8781,7 +8801,7 @@ namespace HLU.UI.ViewModel
             if (rel != null)
                 return (R[])IncidCurrentRow.GetChildRows(rel, DataRowVersion.Default);
             else
-                return new R[0];
+                return [];
         }
 
         internal R[] GetIncidChildRowsDb<C, R>(object[] relValues, HluTableAdapter<C, R> adapter, ref C childTable)
@@ -8811,7 +8831,7 @@ namespace HLU.UI.ViewModel
             }
             else
             {
-                return new R[0];
+                return [];
             }
         }
 
@@ -8938,7 +8958,7 @@ namespace HLU.UI.ViewModel
             }
             return _origIncidIhsComplexCount != 0;
         }
-        
+
         /// <summary>
         /// Determines whether the incid secondary table is dirty.
         /// </summary>
@@ -8947,15 +8967,15 @@ namespace HLU.UI.ViewModel
         /// </returns>
         internal bool IsDirtyIncidSecondary()
         {
-            if (_incidSecondaryRows.Count(r => r.RowState == DataRowState.Deleted) > 0) return true;
+            if (_incidSecondaryRows.Any(r => r.RowState == DataRowState.Deleted)) return true;
 
             if (_incidSecondaryHabitats != null)
             {
-                if (_incidSecondaryHabitats.Count(sh => IncidSecondaryRowDirty(sh)) > 0) return true;
+                if (_incidSecondaryHabitats.Any(sh => IncidSecondaryRowDirty(sh))) return true;
             }
 
             if ((_incidSecondaryRows != null) && (_incidSecondaryHabitats.Count !=
-                _incidSecondaryRows.Count())) return true;
+                _incidSecondaryRows.Length)) return true;
 
             if (_incidSecondaryRows != null)
             {
@@ -8993,22 +9013,22 @@ namespace HLU.UI.ViewModel
         /// </returns>
         internal bool IsDirtyIncidBap()
         {
-            if (_incidBapRows.Count(r => r.RowState == DataRowState.Deleted) > 0) return true;
+            if (_incidBapRows.Any(r => r.RowState == DataRowState.Deleted)) return true;
             int incidBapRowsAutoNum = 0;
             if (_incidBapRowsAuto != null)
             {
                 incidBapRowsAutoNum = _incidBapRowsAuto.Count;
-                if (_incidBapRowsAuto.Count(be => IncidBapRowDirty(be)) > 0) return true;
+                if (_incidBapRowsAuto.Any(be => IncidBapRowDirty(be))) return true;
             }
             int incidBapRowsAutoUserNum = 0;
             if (_incidBapRowsUser != null)
             {
                 incidBapRowsAutoUserNum = _incidBapRowsUser.Count;
-                if (_incidBapRowsUser.Count(be => IncidBapRowDirty(be)) > 0) return true;
+                if (_incidBapRowsUser.Any(be => IncidBapRowDirty(be))) return true;
             }
 
             if ((_incidBapRows != null) && (incidBapRowsAutoNum + incidBapRowsAutoUserNum !=
-                _incidBapRows.Count())) return true;
+                _incidBapRows.Length)) return true;
 
             if (_incidBapRows != null)
             {
@@ -9596,9 +9616,8 @@ namespace HLU.UI.ViewModel
             HluDataSet.incid_mm_polygonsDataTable table = HluDataset.incid_mm_polygons;
 
             List<SqlFilterCondition> incidCond =
-                new List<SqlFilterCondition>(new SqlFilterCondition[] { _incidMMPolygonsIncidFilter });
-            List<List<SqlFilterCondition>> incidCondList = new List<List<SqlFilterCondition>>();
-            incidCondList.Add(incidCond);
+                new([_incidMMPolygonsIncidFilter]);
+            List<List<SqlFilterCondition>> incidCondList = [incidCond];
             GetIncidMMPolygonRows(incidCondList, ref table);
 
             _incidArea = 0;
@@ -9907,19 +9926,14 @@ namespace HLU.UI.ViewModel
                         return "Proposed";
                     else
                     {
-                        switch (_incidOSMMUpdatesStatus)
+                        return _incidOSMMUpdatesStatus switch
                         {
-                            case 0:
-                                return "Pending";
-                            case -1:
-                                return "Applied";
-                            case -2:
-                                return "Ignored";
-                            case -99:
-                                return "Rejected";
-                            default:
-                                return null;
-                        }
+                            0 => "Pending",
+                            -1 => "Applied",
+                            -2 => "Ignored",
+                            -99 => "Rejected",
+                            _ => null
+                        };
                     }
                 }
                 else
@@ -10082,6 +10096,13 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        public static HluDataSet.lut_habitat_classRow[] HabitatClasses
+        {
+            get => _habitatClasses;
+            set => _habitatClasses = value;
+        }
+
+
         /// <summary>
         /// Gets or sets the habitat class which will then load the list
         /// of habitat types related to that class.
@@ -10123,7 +10144,7 @@ namespace HLU.UI.ViewModel
                     OnPropertyChanged(nameof(HabitatTypeCodes));
                 }
 
-                if ((_habitatTypeCodes != null) && (_habitatTypeCodes.Count() == 1))
+                if ((_habitatTypeCodes != null) && (_habitatTypeCodes.Length == 1))
                     OnPropertyChanged(nameof(HabitatType));
             }
         }
@@ -10181,7 +10202,7 @@ namespace HLU.UI.ViewModel
                                     from htp in _lutHabitatTypePrimary
                                     where htp.code_habitat_type == _habitatType
                                     && (p.code == htp.code_primary
-                                    || (htp.code_primary.EndsWith("*") && Regex.IsMatch(p.code, @"\A" + htp.code_primary.TrimEnd('*') + @"") == true))
+                                    || (htp.code_primary.EndsWith('*') && Regex.IsMatch(p.code, @"\A" + htp.code_primary.TrimEnd('*') + @"")))
                                     select p).ToArray();
 
                     // Load all secondary habitat codes where the habitat type
@@ -10388,7 +10409,7 @@ namespace HLU.UI.ViewModel
             {
                 if (IncidCurrentRow != null)
                 {
-                    if (_pasting && (_primaryCodes == null || _primaryCodes.Count(r => r.code == value) == 0))
+                    if (_pasting && (_primaryCodes == null || !_primaryCodes.Any(r => r.code == value)))
                     {
                         _pasting = false;
                     }
@@ -10628,7 +10649,7 @@ namespace HLU.UI.ViewModel
                     _secondaryGroupsValid = (from sg in _lutSecondaryGroup
                                              join s in _lutSecondary on sg.code equals s.code_group
                                              join ps in _lutPrimarySecondary on s.code equals ps.code_secondary
-                                             where ((ps.code_primary == IncidPrimary) || (ps.code_primary.EndsWith("*") && Regex.IsMatch(IncidPrimary, @"\A" + ps.code_primary.TrimEnd('*') + @"") == true))
+                                             where ((ps.code_primary == IncidPrimary) || (ps.code_primary.EndsWith('*') && Regex.IsMatch(IncidPrimary, @"\A" + ps.code_primary.TrimEnd('*') + @"") == true))
                                              select sg).OrderBy(r => r.sort_order).ThenBy(r => r.description).Distinct().ToArray();
 
                     if (_secondaryGroupsValid != null)
@@ -10659,6 +10680,12 @@ namespace HLU.UI.ViewModel
             {
                 return _secondaryGroups;
             }
+        }
+
+        public static HluDataSet.lut_secondary_groupRow[] SecondaryGroupsAll
+        {
+            get => _secondaryGroupsAll;
+            set => _secondaryGroupsAll = value;
         }
 
         /// <summary>
@@ -10895,31 +10922,23 @@ namespace HLU.UI.ViewModel
             if (incidSecondaryRowsUndel != null)
             {
                 // Order the secondary codes as required
-                switch (_secondaryCodeOrder)
+                _incidSecondaryHabitats = _secondaryCodeOrder switch
                 {
-                    case "As entered":
-                        _incidSecondaryHabitats = new ObservableCollection<SecondaryHabitat>(
-                           incidSecondaryRowsUndel.OrderBy(r => r.secondary_id).Select(r => new SecondaryHabitat(_bulkUpdateMode == true, r)));
-                        break;
-                    case "By group then code":
-                        _incidSecondaryHabitats = new ObservableCollection<SecondaryHabitat>(
-                           incidSecondaryRowsUndel.OrderBy(r => r.secondary_group).ThenBy(r => r.secondary).Select(r => new SecondaryHabitat(_bulkUpdateMode == true, r)));
-                        break;
-                    case "By code":
-                        _incidSecondaryHabitats = new ObservableCollection<SecondaryHabitat>(
-                           incidSecondaryRowsUndel.OrderBy(r => r.secondary).Select(r => new SecondaryHabitat(_bulkUpdateMode == true, r)));
-                        break;
-                    default:
-                        _incidSecondaryHabitats = new ObservableCollection<SecondaryHabitat>(
-                           incidSecondaryRowsUndel.OrderBy(r => r.secondary_id).Select(r => new SecondaryHabitat(_bulkUpdateMode == true, r)));
-                        break;
-                }
+                    "As entered" => new ObservableCollection<SecondaryHabitat>(
+                           incidSecondaryRowsUndel.OrderBy(r => r.secondary_id).Select(r => new SecondaryHabitat(_bulkUpdateMode == true, r))),
+                    "By group then code" => new ObservableCollection<SecondaryHabitat>(
+                           incidSecondaryRowsUndel.OrderBy(r => r.secondary_group).ThenBy(r => r.secondary).Select(r => new SecondaryHabitat(_bulkUpdateMode == true, r))),
+                    "By code" => new ObservableCollection<SecondaryHabitat>(
+                           incidSecondaryRowsUndel.OrderBy(r => r.secondary).Select(r => new SecondaryHabitat(_bulkUpdateMode == true, r))),
+                    _ => new ObservableCollection<SecondaryHabitat>(
+                           incidSecondaryRowsUndel.OrderBy(r => r.secondary_id).Select(r => new SecondaryHabitat(_bulkUpdateMode == true, r)))
+                };
             }
             else
             {
                 // Otherwise there can't be any secondary habitat rows so
                 // set a new collection.
-                _incidSecondaryHabitats = new ObservableCollection<SecondaryHabitat>();
+                _incidSecondaryHabitats = [];
             }
 
             // Track any changes to the user rows collection.
@@ -10969,8 +10988,7 @@ namespace HLU.UI.ViewModel
             {
                 // Otherwise there can't be any secondary habitat rows so
                 // just create a new collection and add the new row.
-                _incidSecondaryHabitats = new ObservableCollection<SecondaryHabitat>();
-                _incidSecondaryHabitats.Add(new SecondaryHabitat(bulkUpdateMode, -1, Incid, secondary_habitat, secondary_group));
+                _incidSecondaryHabitats = [new SecondaryHabitat(bulkUpdateMode, -1, Incid, secondary_habitat, secondary_group)];
             }
 
             // Track any changes to the user rows collection.
@@ -10998,25 +11016,17 @@ namespace HLU.UI.ViewModel
                 _incidSecondaryHabitats.CollectionChanged -= _incidSecondaryHabitats_CollectionChanged;
 
                 // Order the secondary codes as required
-                switch (_secondaryCodeOrder)
+                _incidSecondaryHabitats = _secondaryCodeOrder switch
                 {
-                    case "As entered":
-                        _incidSecondaryHabitats = new ObservableCollection<SecondaryHabitat>(
-                            _incidSecondaryHabitats.OrderBy(r => r.secondary_id));
-                        break;
-                    case "By group then code":
-                        _incidSecondaryHabitats = new ObservableCollection<SecondaryHabitat>(
-                            _incidSecondaryHabitats.OrderBy(r => r.secondary_group).ThenBy(r => r.secondary_habitat_int));
-                        break;
-                    case "By code":
-                        _incidSecondaryHabitats = new ObservableCollection<SecondaryHabitat>(
-                            _incidSecondaryHabitats.OrderBy(r => r.secondary_habitat_int));
-                        break;
-                    default:
-                        _incidSecondaryHabitats = new ObservableCollection<SecondaryHabitat>(
-                            _incidSecondaryHabitats.OrderBy(r => r.secondary_id));
-                        break;
-                }
+                    "As entered" => new ObservableCollection<SecondaryHabitat>(
+                            _incidSecondaryHabitats.OrderBy(r => r.secondary_id)),
+                    "By group then code" => new ObservableCollection<SecondaryHabitat>(
+                            _incidSecondaryHabitats.OrderBy(r => r.secondary_group).ThenBy(r => r.secondary_habitat_int)),
+                    "By code" => new ObservableCollection<SecondaryHabitat>(
+                            _incidSecondaryHabitats.OrderBy(r => r.secondary_habitat_int)),
+                    _ => new ObservableCollection<SecondaryHabitat>(
+                            _incidSecondaryHabitats.OrderBy(r => r.secondary_id))
+                };
 
                 // Track any changes to the user rows collection.
                 _incidSecondaryHabitats.CollectionChanged += _incidSecondaryHabitats_CollectionChanged;
@@ -11433,7 +11443,7 @@ namespace HLU.UI.ViewModel
             if (_incidIhsMatrixRows == null)
             {
                 HluDataSet.incid_ihs_matrixDataTable ihsMatrixTable = _hluDS.incid_ihs_matrix;
-                GetIncidChildRowsDb(new object[] { Incid },
+                GetIncidChildRowsDb([Incid],
                     _hluTableAdapterMgr.incid_ihs_matrixTableAdapter, ref ihsMatrixTable);
             }
 
@@ -11577,7 +11587,7 @@ namespace HLU.UI.ViewModel
             if (_incidIhsFormationRows == null)
             {
                 HluDataSet.incid_ihs_formationDataTable ihsFormationTable = _hluDS.incid_ihs_formation;
-                GetIncidChildRowsDb(new object[] { Incid },
+                GetIncidChildRowsDb([Incid],
                     _hluTableAdapterMgr.incid_ihs_formationTableAdapter, ref ihsFormationTable);
             }
             return _incidIhsFormationRows != null;
@@ -11719,7 +11729,7 @@ namespace HLU.UI.ViewModel
             if (_incidIhsManagementRows == null)
             {
                 HluDataSet.incid_ihs_managementDataTable ihsManagementTable = _hluDS.incid_ihs_management;
-                GetIncidChildRowsDb(new object[] { Incid },
+                GetIncidChildRowsDb([Incid],
                     _hluTableAdapterMgr.incid_ihs_managementTableAdapter, ref ihsManagementTable);
             }
 
@@ -11862,7 +11872,7 @@ namespace HLU.UI.ViewModel
             if (_incidIhsComplexRows == null)
             {
                 HluDataSet.incid_ihs_complexDataTable ihsComplexTable = _hluDS.incid_ihs_complex;
-                GetIncidChildRowsDb(new object[] { Incid },
+                GetIncidChildRowsDb([Incid],
                     _hluTableAdapterMgr.incid_ihs_complexTableAdapter, ref ihsComplexTable);
             }
 
@@ -11918,7 +11928,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return ViewModelWindowMainHelpers.IhsSummary(new string[] { 
+                return ViewModelWindowMainHelpers.IhsSummary([
                     IncidIhsHabitat,
                     IncidIhsMatrix1,
                     IncidIhsMatrix2,
@@ -11928,7 +11938,7 @@ namespace HLU.UI.ViewModel
                     IncidIhsManagement1,
                     IncidIhsManagement2,
                     IncidIhsComplex1,
-                    IncidIhsComplex2 });
+                    IncidIhsComplex2 ]);
             }
         }
 
@@ -12147,8 +12157,8 @@ namespace HLU.UI.ViewModel
                 IEnumerable<BapEnvironment> newBapRowsAuto = null;
                 if (incidBapRowsUndel == null)
                 {
-                    prevBapRowsAuto = new BapEnvironment[0].AsEnumerable();
-                    newBapRowsAuto = new BapEnvironment[0].AsEnumerable();
+                    prevBapRowsAuto = Array.Empty<BapEnvironment>().AsEnumerable();
+                    newBapRowsAuto = Array.Empty<BapEnvironment>().AsEnumerable();
                 }
                 else
                 {
@@ -12164,15 +12174,15 @@ namespace HLU.UI.ViewModel
                     // rows as a result of changes to the IHS codes.
                     newBapRowsAuto = from r in incidBapRowsUndel
                                      join pot in mandatoryBap on r.bap_habitat equals pot
-                                     where prevBapRowsAuto.Count(p => p.bap_habitat == r.bap_habitat) == 0
+                                     where !prevBapRowsAuto.Any(p => p.bap_habitat == r.bap_habitat)
                                      select new BapEnvironment(false, false, r);
                 }
 
                 // Determine if there are any potential BAP rows that should
                 // be added as a result of changes to the IHS codes.
                 var potBap = from p in mandatoryBap
-                             where prevBapRowsAuto.Count(a => a.bap_habitat == p) == 0
-                             where incidBapRowsUndel.Count(row => row.bap_habitat == p) == 0
+                             where !prevBapRowsAuto.Any(a => a.bap_habitat == p)
+                             where !incidBapRowsUndel.Any(row => row.bap_habitat == p)
                              select new BapEnvironment(false, false, -1, Incid, p, null, null, null);
 
                 // Remove any existing handlers before assigning a new collection.
@@ -12203,7 +12213,7 @@ namespace HLU.UI.ViewModel
                 // As there should be no primary BAP rows according to the
                 // IHS codes then the auto rows should be blank (because any
                 // undeleted rows must therefore now be considered as user rows.
-                _incidBapRowsAuto = new ObservableCollection<BapEnvironment>();
+                _incidBapRowsAuto = [];
             }
             else if ((mandatoryBap != null) && (mandatoryBap.Any()))
             {
@@ -12236,7 +12246,7 @@ namespace HLU.UI.ViewModel
                 // There shouldn't be any primary BAP rows according to the IHS
                 // codes, and there are no existing undeleted rows, so there are
                 // no auto rows.
-                _incidBapRowsAuto = new ObservableCollection<BapEnvironment>();
+                _incidBapRowsAuto = [];
             }
 
             // Track any changes to the auto rows collection.
@@ -12282,7 +12292,7 @@ namespace HLU.UI.ViewModel
                     // which of them have not been promoted to auto rows.
                     prevBapRowsUser = (from r in _incidBapRowsUser
                                        where _incidCurrentRow.incid != null && r.incid == _incidCurrentRow.incid
-                                       where _incidBapRowsAuto.Count(row => row.bap_habitat == r.bap_habitat) == 0
+                                       where !_incidBapRowsAuto.Any(row => row.bap_habitat == r.bap_habitat)
                                        select r).ToList();
                     prevBapRowsUser.ForEach(delegate(BapEnvironment be)
                     {
@@ -12308,8 +12318,8 @@ namespace HLU.UI.ViewModel
                 // undeleted rows that are not auto rows.
                 _incidBapRowsUser = new ObservableCollection<BapEnvironment>(prevBapRowsUser.Concat(
                     from r in incidBapRowsUndel
-                    where _incidBapRowsAuto.Count(a => a.bap_habitat == r.bap_habitat) == 0
-                    where prevBapRowsUser.Count(p => p.bap_habitat == r.bap_habitat) == 0
+                    where !_incidBapRowsAuto.Any(a => a.bap_habitat == r.bap_habitat)
+                    where !prevBapRowsUser.Any(p => p.bap_habitat == r.bap_habitat)
                     select new BapEnvironment(_bulkUpdateMode == true, true, r)));
             }
             // If thereare undeleted rows but no auto rows then all the
@@ -12340,7 +12350,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Otherwise there can't be any user added rows.
-                _incidBapRowsUser = new ObservableCollection<BapEnvironment>();
+                _incidBapRowsUser = [];
             }
 
             // Track any changes to the user rows collection.
@@ -12367,7 +12377,7 @@ namespace HLU.UI.ViewModel
                 // secondary BAP records.
                 if (_incidBapRowsAuto != null && _incidBapRowsAuto.Count > 0)
                 {
-                    //TODO: Aggregate
+                    //DONE: Aggregate
                     List<string> beDups = (from be in _incidBapRowsAuto.Concat(_incidBapRowsUser)
                                             group be by be.bap_habitat into g
                                             where g.Count() > 1
@@ -12440,7 +12450,7 @@ namespace HLU.UI.ViewModel
                 // secondary BAP records.
                 if (_incidBapRowsAuto != null && _incidBapRowsAuto.Count > 0)
                 {
-                    //TODO: Aggregate
+                    //DONE: Aggregate
                     List<string> beDups = (from be in _incidBapRowsAuto.Concat(_incidBapRowsUser)
                                             group be by be.bap_habitat into g
                                             where g.Count() > 1
@@ -12489,7 +12499,7 @@ namespace HLU.UI.ViewModel
 
                     // If any primary bap habitats have been found
                     primaryBap = null;
-                    if ((q != null) && (q.Any()))
+                    if ((q != null) && (q.Length != 0))
                         primaryBap = q;
                     //---------------------------------------------------------------------
                 }
@@ -12507,7 +12517,7 @@ namespace HLU.UI.ViewModel
 
                     // If any secondary bap habitats have been found
                     secondaryBap = null;
-                    if ((q != null) && (q.Any()))
+                    if ((q != null) && (q.Length != 0))
                         secondaryBap = q;
                 }
                 catch { }
@@ -12518,7 +12528,7 @@ namespace HLU.UI.ViewModel
             if (allBap != null)
                 return allBap.Distinct();
             else
-                return new string[0];
+                return [];
         }
 
         private void _incidBapRowsAuto_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -12585,7 +12595,7 @@ namespace HLU.UI.ViewModel
                 // secondary BAP records.
                 if (_incidBapRowsAuto != null && _incidBapRowsAuto.Count > 0)
                 {
-                    //TODO: Aggregate
+                    //DONE: Aggregate
                     List<string> beDups = (from be in _incidBapRowsAuto.Concat(_incidBapRowsUser)
                                             group be by be.bap_habitat into g
                                             where g.Count() > 1
@@ -12837,7 +12847,7 @@ namespace HLU.UI.ViewModel
                     return null;
             }
         }
-        
+
         /// <summary>
         /// Check if there are any valid condition rows.
         /// </summary>
@@ -12849,13 +12859,13 @@ namespace HLU.UI.ViewModel
             if (_incidConditionRows == null)
             {
                 HluDataSet.incid_conditionDataTable incidConditionTable = _hluDS.incid_condition;
-                _incidConditionRows = GetIncidChildRowsDb(new object[] { Incid },
+                _incidConditionRows = GetIncidChildRowsDb([Incid],
                     _hluTableAdapterMgr.incid_conditionTableAdapter, ref incidConditionTable);
             }
 
             return _incidConditionRows != null;
         }
-        
+
         /// <summary>
         /// Gets the list of condition codes.
         /// </summary>
@@ -12999,7 +13009,7 @@ namespace HLU.UI.ViewModel
                 Changed = true;
             }
         }
-        
+
         /// <summary>
         /// Gets or sets the incid condition date.
         /// </summary>
@@ -13016,9 +13026,9 @@ namespace HLU.UI.ViewModel
                     !_incidConditionRows[0].IsNull(HluDataset.incid_condition.condition_date_endColumn) &&
                     !_incidConditionRows[0].IsNull(HluDataset.incid_condition.condition_date_typeColumn))
                 {
-                    Date.VagueDateInstance vd = new Date.VagueDateInstance(_incidConditionRows[0].condition_date_start,
+                    Date.VagueDateInstance vd = new(_incidConditionRows[0].condition_date_start,
                         _incidConditionRows[0].condition_date_end, _incidConditionRows[0].condition_date_type,
-                        _incidConditionDateEntered != null ? _incidConditionDateEntered.UserEntry : null);
+                        _incidConditionDateEntered?.UserEntry);
                     return vd;
                 }
                 else
@@ -13037,7 +13047,7 @@ namespace HLU.UI.ViewModel
                 Changed = true;
             }
         }
-        
+
         /// <summary>
         /// Updates the incid condition row.
         /// </summary>
@@ -13092,8 +13102,7 @@ namespace HLU.UI.ViewModel
                 if ((columnOrdinal == HluDataset.incid_condition.condition_date_startColumn.Ordinal) ||
                     (columnOrdinal == HluDataset.incid_condition.condition_date_endColumn.Ordinal))
                 {
-                    Date.VagueDateInstance vd = newValue as Date.VagueDateInstance;
-                    if (vd != null)
+                    if (newValue is Date.VagueDateInstance vd)
                     {
                         _incidConditionRows[rowNumber].condition_date_start = vd.StartDate;
                         _incidConditionRows[rowNumber].condition_date_end = vd.EndDate;
@@ -13347,7 +13356,7 @@ namespace HLU.UI.ViewModel
         }
 
         #region Sources
-        
+
         /// <summary>
         /// Checks if there are any valid source rows.
         /// </summary>
@@ -13359,12 +13368,12 @@ namespace HLU.UI.ViewModel
             if (_incidSourcesRows == null)
             {
                 HluDataSet.incid_sourcesDataTable incidSourcesTable = _hluDS.incid_sources;
-                _incidSourcesRows = GetIncidChildRowsDb(new object[] { Incid },
+                _incidSourcesRows = GetIncidChildRowsDb([Incid],
                     _hluTableAdapterMgr.incid_sourcesTableAdapter, ref incidSourcesTable);
             }
             return _incidSourcesRows != null;
         }
-        
+
         /// <summary>
         /// Returns the default date for a given source.
         /// </summary>
@@ -13445,8 +13454,7 @@ namespace HLU.UI.ViewModel
                 if ((columnOrdinal == HluDataset.incid_sources.source_date_startColumn.Ordinal) ||
                     (columnOrdinal == HluDataset.incid_sources.source_date_endColumn.Ordinal))
                 {
-                    Date.VagueDateInstance vd = newValue as Date.VagueDateInstance;
-                    if (vd != null)
+                    if (newValue is Date.VagueDateInstance vd)
                     {
                         _incidSourcesRows[rowNumber].source_date_start = vd.StartDate;
                         _incidSourcesRows[rowNumber].source_date_end = vd.EndDate;
@@ -13598,7 +13606,7 @@ namespace HLU.UI.ViewModel
                         _hluTableAdapterMgr.lut_sourcesTableAdapter =
                             new HluTableAdapter<HluDataSet.lut_sourcesDataTable, HluDataSet.lut_sourcesRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset,
-                        new Type[] { typeof(HluDataSet.lut_sourcesDataTable) }, false);
+                        [typeof(HluDataSet.lut_sourcesDataTable)], false);
                 }
 
                 // Return the list of source names, with the clear row if applicable, but
@@ -13693,9 +13701,9 @@ namespace HLU.UI.ViewModel
                     !_incidSourcesRows[0].IsNull(HluDataset.incid_sources.source_date_endColumn) &&
                     !_incidSourcesRows[0].IsNull(HluDataset.incid_sources.source_date_typeColumn))
                 {
-                    Date.VagueDateInstance vd = new Date.VagueDateInstance(_incidSourcesRows[0].source_date_start,
+                    Date.VagueDateInstance vd = new(_incidSourcesRows[0].source_date_start,
                         _incidSourcesRows[0].source_date_end, _incidSourcesRows[0].source_date_type,
-                        _incidSource1DateEntered != null ? _incidSource1DateEntered.UserEntry : null);
+                        _incidSource1DateEntered?.UserEntry);
                     return vd;
                 }
                 else
@@ -13937,9 +13945,9 @@ namespace HLU.UI.ViewModel
                     !_incidSourcesRows[1].IsNull(HluDataset.incid_sources.source_date_endColumn) &&
                     !_incidSourcesRows[1].IsNull(HluDataset.incid_sources.source_date_typeColumn))
                 {
-                    Date.VagueDateInstance vd = new Date.VagueDateInstance(_incidSourcesRows[1].source_date_start,
+                    Date.VagueDateInstance vd = new(_incidSourcesRows[1].source_date_start,
                         _incidSourcesRows[1].source_date_end, _incidSourcesRows[1].source_date_type,
-                        _incidSource2DateEntered != null ? _incidSource2DateEntered.UserEntry : null);
+                        _incidSource2DateEntered?.UserEntry);
                     return vd;
                 }
                 else
@@ -14181,9 +14189,9 @@ namespace HLU.UI.ViewModel
                     !_incidSourcesRows[2].IsNull(HluDataset.incid_sources.source_date_endColumn) &&
                     !_incidSourcesRows[2].IsNull(HluDataset.incid_sources.source_date_typeColumn))
                 {
-                    Date.VagueDateInstance vd = new Date.VagueDateInstance(_incidSourcesRows[2].source_date_start,
+                    Date.VagueDateInstance vd = new(_incidSourcesRows[2].source_date_start,
                         _incidSourcesRows[2].source_date_end, _incidSourcesRows[2].source_date_type,
-                        _incidSource3DateEntered != null ? _incidSource3DateEntered.UserEntry : null);
+                        _incidSource3DateEntered?.UserEntry);
                     return vd;
                 }
                 else
@@ -14349,7 +14357,7 @@ namespace HLU.UI.ViewModel
                     return (from r in _incidHistoryRows.OrderByDescending(r => r.history_id)
                             group r by new
                             {
-                                incid = r.incid,
+                                r.incid,
                                 // Display the modified_date column from the history with both the
                                 // date and time to avoid separate updates with identical details
                                 // (except the time) being merged together when displayed.
@@ -14451,10 +14459,10 @@ namespace HLU.UI.ViewModel
 
             while ((i1 != -1) && (i2 != -1))
             {
-                i1 = sqlcmd.IndexOf("[", i2);
+                i1 = sqlcmd.IndexOf('[', i2);
                 if (i1 != -1)
                 {
-                    i2 = sqlcmd.IndexOf("]", i1 + 1);
+                    i2 = sqlcmd.IndexOf(']', i1 + 1);
                     if (i2 != -1)
                     {
                         // Strip out the table name.
@@ -14487,10 +14495,10 @@ namespace HLU.UI.ViewModel
 
             while ((i1 != -1) && (i2 != -1))
             {
-                i1 = sqlcmd.IndexOf("'", i2);
+                i1 = sqlcmd.IndexOf('\'', i2);
                 if (i1 != -1)
                 {
-                    i2 = sqlcmd.IndexOf("'", i1 + 1);
+                    i2 = sqlcmd.IndexOf('\'', i1 + 1);
                     if (i2 != -1)
                     {
                         // Strip out the text string.
@@ -14510,8 +14518,8 @@ namespace HLU.UI.ViewModel
                         // Replace any wild characters found in the text.
                         if (start.TrimEnd().EndsWith(" LIKE"))
                         {
-                            text.Replace("_", _db.WildcardSingleMatch);
-                            text.Replace("%", _db.WildcardManyMatch);
+                            text = text.Replace("_", _db.WildcardSingleMatch);
+                            text = text.Replace("%", _db.WildcardManyMatch);
                         }
 
                         // Replace the text delimiters with the correct delimiters.
@@ -14530,32 +14538,34 @@ namespace HLU.UI.ViewModel
 
             while ((i1 != -1) && (i2 != -1))
             {
-                i1 = sqlcmd.IndexOf("#", i2);
+                i1 = sqlcmd.IndexOf('#', i2);
                 if (i1 != -1)
                 {
-                    i2 = sqlcmd.IndexOf("#", i1 + 1);
+                    i2 = sqlcmd.IndexOf('#', i1 + 1);
                     if (i2 != -1)
                     {
                         // Strip out the date string.
                         DateTime dt;
-                        DateTime.TryParse(sqlcmd.Substring(i1 + 1, i2 - i1 - 1), out dt);
+                        //DONE: Added success check on TryParse
+                        if (DateTime.TryParse(sqlcmd.AsSpan(i1 + 1, i2 - i1 - 1), out dt))
+                        {
+                            // Split the date string from the rest of the sql command.
+                            if (i1 == 0)
+                                start = String.Empty;
+                            else
+                                start = sqlcmd.Substring(0, i1);
 
-                        // Split the date string from the rest of the sql command.
-                        if (i1 == 0)
-                            start = String.Empty;
-                        else
-                            start = sqlcmd.Substring(0, i1);
+                            if (i2 == sqlcmd.Length - 1)
+                                end = String.Empty;
+                            else
+                                end = sqlcmd.Substring(i2 + 1);
 
-                        if (i2 == sqlcmd.Length - 1)
-                            end = String.Empty;
-                        else
-                            end = sqlcmd.Substring(i2 + 1);
+                            // Replace the date delimiters with the correct delimiters.
+                            sqlcmd = start + _db.QuoteValue(dt) + end;
 
-                        // Replace the date delimiters with the correct delimiters.
-                        sqlcmd = start + _db.QuoteValue(dt) + end;
-
-                        // Reposition the last index.
-                        i2 = sqlcmd.Length - end.Length;
+                            // Reposition the last index.
+                            i2 = sqlcmd.Length - end.Length;
+                        }
                     }
                 }
             }
@@ -14566,7 +14576,7 @@ namespace HLU.UI.ViewModel
 
         #region Validation
 
-        //TODO: ArcMap
+        //TODO: ArcGIS
         //internal bool HaveGisApp
         //{
         //    get { return _gisApp != null && _gisApp.IsRunning; }
@@ -14586,25 +14596,25 @@ namespace HLU.UI.ViewModel
 
         private List<string[]> ValidateCondition()
         {
-            List<string[]> errors = new List<string[]>();
+            List<string[]> errors = [];
 
             // Validate the condition fields if no condition has been entered
             if (IncidCondition == null)
             {
                 if (IncidConditionQualifier != null)
-                    errors.Add(new string[] { "IncidConditionQualifier", "Error: Condition qualifier is not valid without a condition" });
+                    errors.Add(["IncidConditionQualifier", "Error: Condition qualifier is not valid without a condition"]);
                 if (IncidConditionDate != null)
-                    errors.Add(new string[] { "IncidConditionDate", "Error: Condition date is not valid without a condition" });
+                    errors.Add(["IncidConditionDate", "Error: Condition date is not valid without a condition"]);
             }
             else
             {
                 // Check the condition fields if a condition has been entered
                 if (IncidConditionQualifier == null)
-                    errors.Add(new string[] { "IncidConditionQualifier", "Error: Condition qualifier is mandatory for a condition" });
+                    errors.Add(["IncidConditionQualifier", "Error: Condition qualifier is mandatory for a condition"]);
                 if (IncidConditionDate == null)
-                    errors.Add(new string[] { "IncidConditionDate", "Error: Condition date is mandatory for a condition" });
+                    errors.Add(["IncidConditionDate", "Error: Condition date is mandatory for a condition"]);
                 else if (IncidConditionDate.IsBad)
-                    errors.Add(new string[] { "IncidConditionDate", "Error: Invalid condition vague date" });
+                    errors.Add(["IncidConditionDate", "Error: Invalid condition vague date"]);
             }
 
             return errors;
@@ -14612,7 +14622,7 @@ namespace HLU.UI.ViewModel
 
         private List<string[]> ValidateSource1()
         {
-            List<string[]> errors = new List<string[]>();
+            List<string[]> errors = [];
 
             // Validate the source if it is real
             if (IncidSource1Id != null && IncidSource1Id != Int32.MinValue)
@@ -14621,21 +14631,21 @@ namespace HLU.UI.ViewModel
                 EnumerableRowCollection<HluDataSet.lut_sourcesRow> rows =
                     HluDataset.lut_sources.Where(r => r.source_id == IncidSource1Id);
                 if (!rows.Any())
-                    errors.Add(new string[] { "IncidSource1Id", "Error: Source name is mandatory for each source" });
+                    errors.Add(["IncidSource1Id", "Error: Source name is mandatory for each source"]);
                 if (IncidSource1Date == null)
-                    errors.Add(new string[] { "IncidSource1Date", "Error: Date is mandatory for each source" });
+                    errors.Add(["IncidSource1Date", "Error: Date is mandatory for each source"]);
                 else if (IncidSource1Date.IsBad)
-                    errors.Add(new string[] { "IncidSource1Date", "Error: Invalid vague date" });
+                    errors.Add(["IncidSource1Date", "Error: Invalid vague date"]);
                 if (String.IsNullOrEmpty(IncidSource1HabitatClass))
-                    errors.Add(new string[] { "IncidSource1HabitatClass", "Error: Habitat class is mandatory for each source" });
-                else if ((IncidSource1HabitatClass.ToLower() == "none") != String.IsNullOrEmpty(IncidSource1HabitatType))
-                    errors.Add(new string[] { "IncidSource1HabitatType", "Error: Habitat type is mandatory if habitat class is filled in" });
+                    errors.Add(["IncidSource1HabitatClass", "Error: Habitat class is mandatory for each source"]);
+                else if ((IncidSource1HabitatClass.Equals("none", StringComparison.CurrentCultureIgnoreCase)) != String.IsNullOrEmpty(IncidSource1HabitatType))
+                    errors.Add(["IncidSource1HabitatType", "Error: Habitat type is mandatory if habitat class is filled in"]);
 
                 // Use the skip value from settings
                 string skipVal = Settings.Default.SourceImportanceSkip;
                 if (String.IsNullOrEmpty(IncidSource1BoundaryImportance))
                 {
-                    errors.Add(new string[] { "IncidSource1BoundaryImportance", "Error: Boundary importance is mandatory for each source" });
+                    errors.Add(["IncidSource1BoundaryImportance", "Error: Boundary importance is mandatory for each source"]);
                 }
                 else
                 {
@@ -14649,8 +14659,8 @@ namespace HLU.UI.ViewModel
                 }
                 if (String.IsNullOrEmpty(IncidSource1HabitatImportance))
                 {
-                    errors.Add(new string[] { "IncidSource1HabitatImportance", 
-                        "Error: Habitat importance is mandatory for each source" });
+                    errors.Add([ "IncidSource1HabitatImportance",
+                        "Error: Habitat importance is mandatory for each source" ]);
                 }
                 else
                 {
@@ -14668,27 +14678,27 @@ namespace HLU.UI.ViewModel
                 //---------------------------------------------------------------------
                 // CHANGED: CR49 Process proposed OSMM Updates
                 // Validation for OSMM Bulk Update mode.
-                //    
+                //
                 if ((OSMMBulkUpdateMode == true) &&
                     (IncidSource2Id == null || IncidSource2Id == Int32.MinValue) &&
                     (IncidSource3Id == null || IncidSource3Id == Int32.MinValue))
-                    errors.Add(new string[] { "IncidSource1Id", 
-                        "Error: At least one source must be specified" });
+                    errors.Add([ "IncidSource1Id",
+                        "Error: At least one source must be specified" ]);
                 if (IncidSource1Date != null)
-                    errors.Add(new string[] { "IncidSource1Date", 
-                        "Error: Date cannot be filled in if no source has been specified" });
+                    errors.Add([ "IncidSource1Date",
+                        "Error: Date cannot be filled in if no source has been specified" ]);
                 if (!String.IsNullOrEmpty(IncidSource1HabitatClass))
-                    errors.Add(new string[] { "IncidSource1HabitatClass", 
-                        "Error: Habitat class cannot be filled in if no source has been specified" });
+                    errors.Add([ "IncidSource1HabitatClass",
+                        "Error: Habitat class cannot be filled in if no source has been specified" ]);
                 if (!String.IsNullOrEmpty(IncidSource1HabitatType))
-                    errors.Add(new string[] { "IncidSource1HabitatType", 
-                        "Error: Habitat type cannot be filled in if no source has been specified" });
+                    errors.Add([ "IncidSource1HabitatType",
+                        "Error: Habitat type cannot be filled in if no source has been specified" ]);
                 if (!String.IsNullOrEmpty(IncidSource1BoundaryImportance))
-                    errors.Add(new string[] { "IncidSource1BoundaryImportance", 
-                        "Error: Boundary importance cannot be filled in if no source has been specified" });
+                    errors.Add([ "IncidSource1BoundaryImportance",
+                        "Error: Boundary importance cannot be filled in if no source has been specified" ]);
                 if (!String.IsNullOrEmpty(IncidSource1HabitatImportance))
-                    errors.Add(new string[] { "IncidSource1HabitatImportance", 
-                        "Error: Habitat importance cannot be filled in if no source has been specified" });
+                    errors.Add([ "IncidSource1HabitatImportance",
+                        "Error: Habitat importance cannot be filled in if no source has been specified" ]);
                 //---------------------------------------------------------------------
             }
 
@@ -14697,7 +14707,7 @@ namespace HLU.UI.ViewModel
 
         private List<string[]> ValidateSource2()
         {
-            List<string[]> errors = new List<string[]>();
+            List<string[]> errors = [];
 
             // Validate the source if it is real
             if (IncidSource2Id != null && IncidSource2Id != Int32.MinValue)
@@ -14706,21 +14716,21 @@ namespace HLU.UI.ViewModel
                 EnumerableRowCollection<HluDataSet.lut_sourcesRow> rows =
                     HluDataset.lut_sources.Where(r => r.source_id == IncidSource2Id);
                 if (!rows.Any())
-                    errors.Add(new string[] { "IncidSource1Id", "Error: Source name is mandatory for each source" });
+                    errors.Add(["IncidSource1Id", "Error: Source name is mandatory for each source"]);
                 if (IncidSource2Date == null)
-                    errors.Add(new string[] { "IncidSource2Date", "Error: Date is mandatory for each source" });
+                    errors.Add(["IncidSource2Date", "Error: Date is mandatory for each source"]);
                 else if (IncidSource2Date.IsBad)
-                    errors.Add(new string[] { "IncidSource2Date", "Error: Invalid vague date" });
+                    errors.Add(["IncidSource2Date", "Error: Invalid vague date"]);
                 if (String.IsNullOrEmpty(IncidSource2HabitatClass))
-                    errors.Add(new string[] { "IncidSource2HabitatClass", "Error: Habitat class is mandatory for each source" });
-                else if ((IncidSource2HabitatClass.ToLower() == "none") != String.IsNullOrEmpty(IncidSource2HabitatType))
-                    errors.Add(new string[] { "IncidSource2HabitatType", "Error: Habitat type is mandatory if habitat class is filled in" });
+                    errors.Add(["IncidSource2HabitatClass", "Error: Habitat class is mandatory for each source"]);
+                else if ((IncidSource2HabitatClass.Equals("none", StringComparison.CurrentCultureIgnoreCase)) != String.IsNullOrEmpty(IncidSource2HabitatType))
+                    errors.Add(["IncidSource2HabitatType", "Error: Habitat type is mandatory if habitat class is filled in"]);
 
                 // Use the skip value from settings
                 string skipVal = Settings.Default.SourceImportanceSkip;
                 if (String.IsNullOrEmpty(IncidSource2BoundaryImportance))
                 {
-                    errors.Add(new string[] { "IncidSource2BoundaryImportance", "Error: Boundary importance is mandatory for each source" });
+                    errors.Add(["IncidSource2BoundaryImportance", "Error: Boundary importance is mandatory for each source"]);
                 }
                 else
                 {
@@ -14734,8 +14744,8 @@ namespace HLU.UI.ViewModel
                 }
                 if (String.IsNullOrEmpty(IncidSource2HabitatImportance))
                 {
-                    errors.Add(new string[] { "IncidSource2HabitatImportance", 
-                        "Error: Habitat importance is mandatory for each source" });
+                    errors.Add([ "IncidSource2HabitatImportance",
+                        "Error: Habitat importance is mandatory for each source" ]);
                 }
                 else
                 {
@@ -14751,20 +14761,20 @@ namespace HLU.UI.ViewModel
             else
             {
                 if (IncidSource2Date != null)
-                    errors.Add(new string[] { "IncidSource2Date", 
-                        "Error: Date cannot be filled in if no source has been specified" });
+                    errors.Add([ "IncidSource2Date",
+                        "Error: Date cannot be filled in if no source has been specified" ]);
                 if (!String.IsNullOrEmpty(IncidSource2HabitatClass))
-                    errors.Add(new string[] { "IncidSource2HabitatClass", 
-                        "Error: Habitat class cannot be filled in if no source has been specified" });
+                    errors.Add([ "IncidSource2HabitatClass",
+                        "Error: Habitat class cannot be filled in if no source has been specified" ]);
                 if (!String.IsNullOrEmpty(IncidSource2HabitatType))
-                    errors.Add(new string[] { "IncidSource2HabitatType", 
-                        "Error: Habitat type cannot be filled in if no source has been specified" });
+                    errors.Add([ "IncidSource2HabitatType",
+                        "Error: Habitat type cannot be filled in if no source has been specified" ]);
                 if (!String.IsNullOrEmpty(IncidSource2BoundaryImportance))
-                    errors.Add(new string[] { "IncidSource2BoundaryImportance", 
-                        "Error: Boundary importance cannot be filled in if no source has been specified" });
+                    errors.Add([ "IncidSource2BoundaryImportance",
+                        "Error: Boundary importance cannot be filled in if no source has been specified" ]);
                 if (!String.IsNullOrEmpty(IncidSource2HabitatImportance))
-                    errors.Add(new string[] { "IncidSource2HabitatImportance", 
-                        "Error: Habitat importance cannot be filled in if no source has been specified" });
+                    errors.Add([ "IncidSource2HabitatImportance",
+                        "Error: Habitat importance cannot be filled in if no source has been specified" ]);
             }
 
             return errors;
@@ -14772,7 +14782,7 @@ namespace HLU.UI.ViewModel
 
         private List<string[]> ValidateSource3()
         {
-            List<string[]> errors = new List<string[]>();
+            List<string[]> errors = [];
 
             // Validate the source if it is real
             if (IncidSource3Id != null && IncidSource3Id != Int32.MinValue)
@@ -14781,21 +14791,21 @@ namespace HLU.UI.ViewModel
                 EnumerableRowCollection<HluDataSet.lut_sourcesRow> rows =
                     HluDataset.lut_sources.Where(r => r.source_id == IncidSource3Id);
                 if (!rows.Any())
-                    errors.Add(new string[] { "IncidSource1Id", "Error: Source name is mandatory for each source" });
+                    errors.Add(["IncidSource1Id", "Error: Source name is mandatory for each source"]);
                 if (IncidSource3Date == null)
-                    errors.Add(new string[] { "IncidSource3Date", "Error: Date is mandatory for each source" });
+                    errors.Add(["IncidSource3Date", "Error: Date is mandatory for each source"]);
                 else if (IncidSource3Date.IsBad)
-                    errors.Add(new string[] { "IncidSource3Date", "Error: Invalid vague date" });
+                    errors.Add(["IncidSource3Date", "Error: Invalid vague date"]);
                 if (String.IsNullOrEmpty(IncidSource3HabitatClass))
-                    errors.Add(new string[] { "IncidSource3HabitatClass", "Error: Habitat class is mandatory for each source" });
-                else if ((IncidSource3HabitatClass.ToLower() == "none") != String.IsNullOrEmpty(IncidSource3HabitatType))
-                    errors.Add(new string[] { "IncidSource3HabitatType", "Error: Habitat type is mandatory if habitat class is filled in" });
+                    errors.Add(["IncidSource3HabitatClass", "Error: Habitat class is mandatory for each source"]);
+                else if ((IncidSource3HabitatClass.Equals("none", StringComparison.CurrentCultureIgnoreCase)) != String.IsNullOrEmpty(IncidSource3HabitatType))
+                    errors.Add(["IncidSource3HabitatType", "Error: Habitat type is mandatory if habitat class is filled in"]);
 
                 // Use the skip value from settings
                 string skipVal = Settings.Default.SourceImportanceSkip;
                 if (String.IsNullOrEmpty(IncidSource3BoundaryImportance))
                 {
-                    errors.Add(new string[] { "IncidSource3BoundaryImportance", "Error: Boundary importance is mandatory for each source" });
+                    errors.Add(["IncidSource3BoundaryImportance", "Error: Boundary importance is mandatory for each source"]);
                 }
                 else
                 {
@@ -14809,8 +14819,8 @@ namespace HLU.UI.ViewModel
                 }
                 if (String.IsNullOrEmpty(IncidSource3HabitatImportance))
                 {
-                    errors.Add(new string[] { "IncidSource3HabitatImportance", 
-                        "Error: Habitat importance is mandatory for each source" });
+                    errors.Add([ "IncidSource3HabitatImportance",
+                        "Error: Habitat importance is mandatory for each source" ]);
                 }
                 else
                 {
@@ -14826,20 +14836,20 @@ namespace HLU.UI.ViewModel
             else
             {
                 if (IncidSource3Date != null)
-                    errors.Add(new string[] { "IncidSource3Date", 
-                        "Error: Date cannot be filled in if no source has been specified" });
+                    errors.Add([ "IncidSource3Date",
+                        "Error: Date cannot be filled in if no source has been specified" ]);
                 if (!String.IsNullOrEmpty(IncidSource3HabitatClass))
-                    errors.Add(new string[] { "IncidSource3HabitatClass", 
-                        "Error: Habitat class cannot be filled in if no source has been specified" });
+                    errors.Add([ "IncidSource3HabitatClass",
+                        "Error: Habitat class cannot be filled in if no source has been specified" ]);
                 if (!String.IsNullOrEmpty(IncidSource3HabitatType))
-                    errors.Add(new string[] { "IncidSource3HabitatType", 
-                        "Error: Habitat type cannot be filled in if no source has been specified" });
+                    errors.Add([ "IncidSource3HabitatType",
+                        "Error: Habitat type cannot be filled in if no source has been specified" ]);
                 if (!String.IsNullOrEmpty(IncidSource3BoundaryImportance))
-                    errors.Add(new string[] { "IncidSource3BoundaryImportance", 
-                        "Error: Boundary importance cannot be filled in if no source has been specified" });
+                    errors.Add([ "IncidSource3BoundaryImportance",
+                        "Error: Boundary importance cannot be filled in if no source has been specified" ]);
                 if (!String.IsNullOrEmpty(IncidSource3HabitatImportance))
-                    errors.Add(new string[] { "IncidSource3HabitatImportance", 
-                        "Error: Habitat importance cannot be filled in if no source has been specified" });
+                    errors.Add([ "IncidSource3HabitatImportance",
+                        "Error: Habitat importance cannot be filled in if no source has been specified" ]);
             }
 
             return errors;
@@ -14856,9 +14866,9 @@ namespace HLU.UI.ViewModel
         /// <param name="propNamePatWildcard">Wildcard element in propNamePat.</param>
         /// <param name="propNameWildcardValCurrProp">Value of propNamePatWildcard for current property to be validated.</param>
         /// <param name="errors">List of errors, composed of name of property in error and error message.
-        /// The error message is built by splitting propNamePat on propNamePatWildcard and prepending the 
+        /// The error message is built by splitting propNamePat on propNamePatWildcard and prepending the
         /// last element of the split array with blanks added in front of capital letters to the string
-        /// "of two sources cannot be equal for the same INCID".</param>
+        /// "must be applied in the order ...".</param>
         private void ValidateSourceImportances(string propNamePat, string propNamePatWildcard,
             string propNameWildcardValCurrProp, List<string[]> errors)
         {
@@ -14874,11 +14884,11 @@ namespace HLU.UI.ViewModel
             object checkVal = propInf.GetValue(this, null);
             if ((checkVal == null) || checkVal.Equals(skipVal)) return;
 
-            string[] split = propNamePat.Split(new string[] { propNamePatWildcard }, StringSplitOptions.None);
+            string[] split = propNamePat.Split([propNamePatWildcard], StringSplitOptions.None);
             string errMsg = String.Format("Error: {0}", split[split.Length - 1]);
 
-            //TODO: Aggregate
-            errMsg = string.Join(" ", Regex.Matches(errMsg, @"[A-Z][^A-Z\s]*").Cast<Match>().Select(m => errMsg.Substring(m.Index, m.Length)
+            //DONE: Aggregate
+            errMsg = string.Join(" ", CapitalisedRegex().Matches(errMsg).Cast<Match>().Select(m => errMsg.Substring(m.Index, m.Length)
                 .Concat(string.Format(" must be applied in the order {0}, {1} then {2}", ord1val, ord2val, ord3val))));
 
             //errMsg = Regex.Matches(errMsg, @"[A-Z][^A-Z\s]*").Cast<Match>()
@@ -14897,7 +14907,7 @@ namespace HLU.UI.ViewModel
                     }
                 }
                 if (ord1Sources == 0 && checkVal.Equals(ord2val))
-                    errors.Add(new string[] { propNameCheck, errMsg });
+                    errors.Add([propNameCheck, errMsg]);
             }
 
             if (!String.IsNullOrEmpty(ord2val))
@@ -14912,7 +14922,7 @@ namespace HLU.UI.ViewModel
                     }
                 }
                 if (ord2Sources == 0 && checkVal.Equals(ord3val))
-                    errors.Add(new string[] { propNameCheck, errMsg });
+                    errors.Add([propNameCheck, errMsg]);
             }
 
         }
@@ -14926,7 +14936,7 @@ namespace HLU.UI.ViewModel
         /// <param name="propNameWildcardValCurrProp">Value of propNamePatWildcard for current property to be validated.</param>
         /// <param name="skipVal">Value that may occur repeatedly (e.g. "none").</param>
         /// <param name="errors">List of errors, composed of name of property in error and error message.
-        /// The error message is built by splitting propNamePat on propNamePatWildcard and prepending the 
+        /// The error message is built by splitting propNamePat on propNamePatWildcard and prepending the
         /// last element of the split array with blanks added in front of capital letters to the string
         /// "of two sources cannot be equal for the same INCID".</param>
         private void ValidateSourceDuplicates(string propNamePat, string propNamePatWildcard,
@@ -14942,8 +14952,8 @@ namespace HLU.UI.ViewModel
             string[] split = propNamePat.Split(new string[] { propNamePatWildcard }, StringSplitOptions.None);
             string errMsg = String.Format("Error: {0}", split[split.Length - 1]);
 
-            //TODO: Aggregate
-            errMsg = string.Join(" ", Regex.Matches(errMsg, @"[A-Z][^A-Z\s]*").Cast<Match>().Select(m => errMsg.Substring(m.Index, m.Length)
+            //DONE: Aggregate
+            errMsg = string.Join(" ", CapitalisedRegex().Matches(errMsg).Cast<Match>().Select(m => errMsg.Substring(m.Index, m.Length)
                 .Concat(" of two sources cannot be equal for the same INCID")));
 
             //errMsg = Regex.Matches(errMsg, @"[A-Z][^A-Z\s]*").Cast<Match>()
@@ -14957,8 +14967,8 @@ namespace HLU.UI.ViewModel
                 object compVal = pi.GetValue(this, null);
                 if ((compVal != null) && !compVal.Equals(skipVal) && compVal.Equals(checkVal))
                 {
-                    errors.Add(new string[] { propNameCheck, errMsg });
-                    errors.Add(new string[] { pi.Name, errMsg });
+                    errors.Add([propNameCheck, errMsg]);
+                    errors.Add([pi.Name, errMsg]);
                 }
             }
         }
@@ -15389,8 +15399,7 @@ namespace HLU.UI.ViewModel
 
         public void DelErrorList(ref List<string> errorList, string columnName)
         {
-            if (errorList.Contains(columnName))
-                errorList.Remove(columnName);
+            errorList.Remove(columnName);
         }
 
         public void ResetWarningsErrors()
@@ -15410,6 +15419,9 @@ namespace HLU.UI.ViewModel
             _source2Errors = null;
             _source3Errors = null;
         }
+
+        [GeneratedRegex(@"[A-Z][^A-Z\s]*")]
+        private static partial Regex CapitalisedRegex();
 
         #endregion
 

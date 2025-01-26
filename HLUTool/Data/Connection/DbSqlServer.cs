@@ -49,9 +49,9 @@ namespace HLU.Data.Connection
         #region Constructor
 
         public DbSqlServer(ref string connString, ref string defaultSchema, ref bool promptPwd, string pwdMask,
-            bool useCommandBuilder, bool useColumnNames, bool isUnicode, bool useTimeZone, uint textLength, 
+            bool useCommandBuilder, bool useColumnNames, bool isUnicode, bool useTimeZone, uint textLength,
             uint binaryLength, uint timePrecision, uint numericPrecision, uint numericScale)
-            : base(ref connString, ref defaultSchema, ref promptPwd, pwdMask, useCommandBuilder, useColumnNames, 
+            : base(ref connString, ref defaultSchema, ref promptPwd, pwdMask, useCommandBuilder, useColumnNames,
             isUnicode, useTimeZone, textLength, binaryLength,timePrecision, numericPrecision, numericScale)
         {
             if (String.IsNullOrEmpty(ConnectionString)) throw (new Exception("No connection string"));
@@ -87,7 +87,7 @@ namespace HLU.Data.Connection
 
             try
             {
-                DataTable schemaTable = GetSchema("Columns", 
+                DataTable schemaTable = GetSchema("Columns",
                     _restrictionNameSchema, DefaultSchema, _connection, _transaction);
                 var dbSchema = schemaTable.AsEnumerable();
 
@@ -829,7 +829,7 @@ namespace HLU.Data.Connection
         #region SQLBuilder Members
 
         #region Public Members
-        
+
         public override string QuotePrefix { get { return "["; } }
 
         public override string QuoteSuffix { get { return "]"; } }
@@ -896,7 +896,7 @@ namespace HLU.Data.Connection
                 return value.ToString();
             }
         }
-        
+
         #endregion
 
         #endregion

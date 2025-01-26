@@ -43,7 +43,7 @@ namespace HLU.UI.ViewModel
         public ViewModelSelectConnection()
         {
             _connectionTypes = Enum.GetValues(typeof(ConnectionTypes)).Cast<ConnectionTypes>()
-                .Where(t => t != HLU.Data.Connection.ConnectionTypes.Unknown).ToArray();
+                .Where(t => t != Data.Connection.ConnectionTypes.Unknown).ToArray();
             object initVal = Enum.Parse(typeof(ConnectionTypes), Settings.Default.DefaultConnectionType, true);
             if (initVal != null) _connectionType = (ConnectionTypes)initVal;
         }
@@ -114,7 +114,7 @@ namespace HLU.UI.ViewModel
         /// <value></value>
         /// <returns></returns>
         /// <remarks></remarks>
-        private bool CanOk { get { return _connectionType != HLU.Data.Connection.ConnectionTypes.Unknown; } }
+        private bool CanOk { get { return _connectionType != Data.Connection.ConnectionTypes.Unknown; } }
 
         #endregion
 
@@ -147,7 +147,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void CancelCommandClick(object param)
         {
-            this.RequestClose(HLU.Data.Connection.ConnectionTypes.Unknown, null);
+            this.RequestClose(Data.Connection.ConnectionTypes.Unknown, null);
         }
 
         #endregion
@@ -190,7 +190,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_connectionType == HLU.Data.Connection.ConnectionTypes.Unknown)
+                if (_connectionType == Data.Connection.ConnectionTypes.Unknown)
                     return "Please choose a connection type";
                 else
                     return null;
@@ -206,7 +206,7 @@ namespace HLU.UI.ViewModel
                 switch (columnName)
                 {
                     case "ConnectionType":
-                        if (_connectionType == HLU.Data.Connection.ConnectionTypes.Unknown)
+                        if (_connectionType == Data.Connection.ConnectionTypes.Unknown)
                             error = "Error: You must choose a connection type";
                         break;
                 }

@@ -21,7 +21,8 @@ using System;
 using System.IO;
 using System.Windows;
 using HLU.GISApplication.ArcGIS;
-using HLU.GISApplication.MapInfo;
+//DONE: MapInfo
+//using HLU.GISApplication.MapInfo;
 using HLU.Properties;
 using HLU.UI.View;
 using HLU.UI.ViewModel;
@@ -33,7 +34,8 @@ namespace HLU.GISApplication
     {
         None,
         ArcGIS,
-        MapInfo
+        //DONE: MapInfo
+        //        MapInfo
     };
 
     class GISAppFactory
@@ -64,10 +66,11 @@ namespace HLU.GISApplication
                     {
                         _gisApp = GISApplications.ArcGIS;
                     }
-                    else if (MapInfoInstalled)
-                    {
-                        _gisApp = GISApplications.MapInfo;
-                    }
+                    //DONE: MapInfo
+                    //else if (MapInfoInstalled)
+                    //{
+                    //    _gisApp = GISApplications.MapInfo;
+                    //}
 
                     Settings.Default.PreferredGis = (int)_gisApp;
                 }
@@ -80,7 +83,8 @@ namespace HLU.GISApplication
                 return _gisApp switch
                 {
                     GISApplications.ArcGIS => new ArcMapApp(Settings.Default.MapPath),
-                    GISApplications.MapInfo => new MapInfoApp(Settings.Default.MapPath),
+                    //DONE: MapInfo
+                    //GISApplications.MapInfo => new MapInfoApp(Settings.Default.MapPath),
                     _ => null
                 };
             }
@@ -116,7 +120,7 @@ namespace HLU.GISApplication
         {
             _windowSelGIS = new WindowSelectGIS
             {
-                //TODO: App.Current.MainWindow
+                //DONE: App.Current.MainWindow
                 //_windowSelGIS.Owner = App.Current.MainWindow;
                 WindowStartupLocation = WindowStartupLocation.CenterScreen
             };
@@ -153,9 +157,10 @@ namespace HLU.GISApplication
                         case GISApplications.ArcGIS:
                             if (mapFile.Extension.Equals(".mxd", StringComparison.CurrentCultureIgnoreCase)) return mapPath;
                             break;
-                        case GISApplications.MapInfo:
-                            if (mapFile.Extension.Equals(".wor", StringComparison.CurrentCultureIgnoreCase)) return mapPath;
-                            break;
+                        //DONE: MapInfo
+                        //case GISApplications.MapInfo:
+                        //    if (mapFile.Extension.Equals(".wor", StringComparison.CurrentCultureIgnoreCase)) return mapPath;
+                        //    break;
                     }
                 }
 
@@ -166,10 +171,11 @@ namespace HLU.GISApplication
                         openFileDlg.Filter = "ESRI ArcMap Documents (*.mxd)|*.mxd";
                         openFileDlg.Title = "Open HLU Map Document";
                         break;
-                    case GISApplications.MapInfo:
-                        openFileDlg.Filter = "MapInfo Workspaces (*.wor)|*.wor";
-                        openFileDlg.Title = "Open HLU Workspace";
-                        break;
+                    //DONE: MapInfo
+                    //case GISApplications.MapInfo:
+                    //    openFileDlg.Filter = "MapInfo Workspaces (*.wor)|*.wor";
+                    //    openFileDlg.Title = "Open HLU Workspace";
+                    //    break;
                     default:
                         return null;
                 }

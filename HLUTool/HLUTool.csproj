@@ -8,8 +8,18 @@
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <NoWarn>CA1416</NoWarn>
-    <RootNamespace>HLU</RootNamespace>
+    <RootNamespace></RootNamespace>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="GISApplication\MapInfo\**" />
+    <EmbeddedResource Remove="GISApplication\MapInfo\**" />
+    <None Remove="GISApplication\MapInfo\**" />
+    <Page Remove="GISApplication\MapInfo\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="UI\ViewModel\ViewModelConnectOleDb.cs" />
+    <Compile Remove="UI\View\Connection\ViewConnectOleDb.xaml.cs" />
+  </ItemGroup>
   <ItemGroup>
     <None Remove="DarkImages\AddInDesktop16.png" />
     <None Remove="DarkImages\AddInDesktop32.png" />
@@ -23,6 +33,9 @@
     <None Remove="Images\Error32.png" />
     <None Remove="Images\Success32.png" />
     <None Remove="Images\Warning32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Remove="UI\View\Connection\ViewConnectOleDb.xaml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Config.daml" />
@@ -67,6 +80,7 @@
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.0" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.61.3" />
+    <PackageReference Include="Microsoft.Office.Interop.Access.Dao" Version="15.0.4420.1018" />
     <PackageReference Include="Npgsql" Version="9.0.2" />
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.6.1" />
     <PackageReference Include="System.Collections" Version="4.3.0" />

@@ -33,11 +33,11 @@ namespace HLU.Data.Connection
 
     public enum ConnectionTypes
     {
-        ODBC = 2, 
-        OleDb = 4, 
-        Oracle = 8, 
-        PostgreSQL = 16, 
-        SQLServer = 32, 
+        ODBC = 2,
+        OleDb = 4,
+        Oracle = 8,
+        PostgreSQL = 16,
+        SQLServer = 32,
         Unknown = 0
     }
 
@@ -73,8 +73,8 @@ namespace HLU.Data.Connection
 
         #region Constructor
 
-        protected DbBase(ref string connString, ref string defaultSchema, ref bool promptPwd, string pwdMask, 
-            bool useCommandBuilder, bool useColumnNames, bool isUnicode, bool useTimeZone, uint textLength, 
+        protected DbBase(ref string connString, ref string defaultSchema, ref bool promptPwd, string pwdMask,
+            bool useCommandBuilder, bool useColumnNames, bool isUnicode, bool useTimeZone, uint textLength,
             uint binaryLength, uint timePrecision, uint numericPrecision, uint numericScale)
         {
             try
@@ -1011,7 +1011,7 @@ namespace HLU.Data.Connection
         // CHANGED: CR5 (Select by attributes interface)
         // Count the number of database rows using a WHERE statement
         // based on both a list of conditions and a free-text string.
-        // 
+        //
         /// <summary>
         /// Select database records using a SQL statement based on an array
         /// of target columns to select, a list of tables to select from, and
@@ -1186,7 +1186,7 @@ namespace HLU.Data.Connection
         // CHANGED: CR5 (Select by attributes interface)
         // Execute the SQL statement to check if it is valid and
         // see if it returns at least one record.
-        // 
+        //
         /// <summary>
         /// SQLs the validate.
         /// </summary>

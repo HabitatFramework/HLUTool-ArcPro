@@ -2,19 +2,19 @@
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2013 Thames Valley Environmental Records Centre
 // Copyright © 2019 London & South East Record Centres (LaSER)
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -69,7 +69,7 @@ namespace HLU.UI.ViewModel
                 // Fractions of a second can cause rounding differences when
                 // comparing DateTime fields later in some databases.
                 DateTime currDtTm = DateTime.Now;
-                DateTime nowDtTm = new DateTime(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
+                DateTime nowDtTm = new(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
                 _viewModelMain.IncidCurrentRow.last_modified_date = nowDtTm;
                 _viewModelMain.IncidCurrentRow.last_modified_user_id = _viewModelMain.UserID;
 
@@ -110,7 +110,7 @@ namespace HLU.UI.ViewModel
                         throw new Exception(String.Format("Failed to update '{0}' table.",
                             _viewModelMain.HluDataset.incid_ihs_complex.TableName));
                 }
-                
+
                 // Update condition rows
                 if ((_viewModelMain.IncidConditionRows != null) && _viewModelMain.IsDirtyIncidCondition())
                 {
@@ -136,13 +136,13 @@ namespace HLU.UI.ViewModel
 
                     if (_viewModelMain.HluTableAdapterManager.incid_sourcesTableAdapter.Update(
                         (HluDataSet.incid_sourcesDataTable)_viewModelMain.IncidSourcesTable.GetChanges()) == -1)
-                        throw new Exception(String.Format("Failed to update {0} table.", 
+                        throw new Exception(String.Format("Failed to update {0} table.",
                             _viewModelMain.HluDataset.incid_sources.TableName));
                 }
 
                 //---------------------------------------------------------------------
                 // CHANGED: CR49 Process proposed OSMM Updates
-                // 
+                //
                 // If there are OSMM update rows for this incid, and
                 // if the OSMM update status is to be reset after manual
                 // updates, and if the OSMM update status > 0 (proposed)
@@ -172,20 +172,20 @@ namespace HLU.UI.ViewModel
                 //---------------------------------------------------------------------
 
                 // Set the SQL condition for the update
-                List<SqlFilterCondition> incidCond = new List<SqlFilterCondition>(new SqlFilterCondition[] { 
-                    new SqlFilterCondition(_viewModelMain.HluDataset.incid_mm_polygons, 
-                        _viewModelMain.HluDataset.incid_mm_polygons.incidColumn, _viewModelMain.Incid) });
+                List<SqlFilterCondition> incidCond = new([
+                    new SqlFilterCondition(_viewModelMain.HluDataset.incid_mm_polygons,
+                        _viewModelMain.HluDataset.incid_mm_polygons.incidColumn, _viewModelMain.Incid) ]);
 
                 // Update the GIS layer
-                DataTable historyTable = _viewModelMain.GISApplication.UpdateFeatures(new DataColumn[] { 
+                DataTable historyTable = _viewModelMain.GISApplication.UpdateFeatures([
                     _viewModelMain.HluDataset.incid_mm_polygons.habprimaryColumn,
                     _viewModelMain.HluDataset.incid_mm_polygons.habsecondColumn,
                     _viewModelMain.HluDataset.incid_mm_polygons.determqtyColumn,
-                    _viewModelMain.HluDataset.incid_mm_polygons.interpqtyColumn },
-                    new object[] { _viewModelMain.IncidPrimary != null ? _viewModelMain.IncidPrimary : "",
-                        _viewModelMain.IncidSecondarySummary != null ? _viewModelMain.IncidSecondarySummary : "",
-                        _viewModelMain.IncidQualityDetermination != null ? _viewModelMain.IncidQualityDetermination : "",
-                        _viewModelMain.IncidQualityInterpretation != null ? _viewModelMain.IncidQualityInterpretation : ""},
+                    _viewModelMain.HluDataset.incid_mm_polygons.interpqtyColumn ],
+                    [ _viewModelMain.IncidPrimary ?? "",
+                        _viewModelMain.IncidSecondarySummary ?? "",
+                        _viewModelMain.IncidQualityDetermination ?? "",
+                        _viewModelMain.IncidQualityInterpretation ?? ""],
                     _viewModelMain.HistoryColumns, incidCond);
 
                 // Check if a history table was returned from updating
@@ -214,9 +214,11 @@ namespace HLU.UI.ViewModel
                     throw new Exception("Failed to update database copy of GIS layer.");
 
                 // Save the history returned from GIS
-                Dictionary<int, string> fixedValues = new Dictionary<int, string>();
-                fixedValues.Add(_viewModelMain.HluDataset.history.incidColumn.Ordinal, _viewModelMain.Incid);
-                ViewModelWindowMainHistory vmHist = new ViewModelWindowMainHistory(_viewModelMain);
+                Dictionary<int, string> fixedValues = new()
+                {
+                    { _viewModelMain.HluDataset.history.incidColumn.Ordinal, _viewModelMain.Incid }
+                };
+                ViewModelWindowMainHistory vmHist = new(_viewModelMain);
                 vmHist.HistoryWrite(fixedValues, historyTable, ViewModelWindowMain.Operations.AttributeUpdate, nowDtTm);
 
                 // Commit the transation and accept the changes
@@ -235,17 +237,18 @@ namespace HLU.UI.ViewModel
             catch (Exception ex)
             {
                 _viewModelMain.DataBase.RollbackTransaction();
-                if (_viewModelMain.HaveGisApp)
-                {
-                    _viewModelMain.Saved = false;
-                    MessageBox.Show("Your changes could not be saved. The error message returned was:\n\n" +
-                        ex.Message, "HLU: Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    return false;
-                }
-                else
-                {
-                    return true;
-                }
+                //TODO: ArcGIS
+                //if (_viewModelMain.HaveGisApp)
+                //{
+                _viewModelMain.Saved = false;
+                MessageBox.Show("Your changes could not be saved. The error message returned was:\n\n" +
+                    ex.Message, "HLU: Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return false;
+                //}
+                //else
+                //{
+                //    return true;
+                //}
             }
             finally
             {
@@ -261,9 +264,9 @@ namespace HLU.UI.ViewModel
         private void UpdateBap()
         {
             if (_viewModelMain.IncidBapRowsAuto == null)
-                _viewModelMain.IncidBapRowsAuto = new ObservableCollection<BapEnvironment>();
+                _viewModelMain.IncidBapRowsAuto = [];
             if (_viewModelMain.IncidBapHabitatsUser == null)
-                _viewModelMain.IncidBapHabitatsUser = new ObservableCollection<BapEnvironment>();
+                _viewModelMain.IncidBapHabitatsUser = [];
 
             // remove duplicate codes
             IEnumerable<BapEnvironment> beAuto = from b in _viewModelMain.IncidBapRowsAuto
@@ -271,14 +274,14 @@ namespace HLU.UI.ViewModel
                                                  select habs.First();
 
             IEnumerable<BapEnvironment> beUser = from b in _viewModelMain.IncidBapHabitatsUser
-                                                 where beAuto.Count(a => a.bap_habitat == b.bap_habitat) == 0
+                                                 where !beAuto.Any(a => a.bap_habitat == b.bap_habitat)
                                                  group b by b.bap_habitat into habs
                                                  select habs.First();
 
             var currentBapRows = beAuto.Concat(beUser);
 
-            List<HluDataSet.incid_bapRow> newRows = new List<HluDataSet.incid_bapRow>();
-            List<HluDataSet.incid_bapRow> updateRows = new List<HluDataSet.incid_bapRow>();
+            List<HluDataSet.incid_bapRow> newRows = [];
+            List<HluDataSet.incid_bapRow> updateRows = [];
             HluDataSet.incid_bapRow updateRow;
 
             foreach (BapEnvironment be in currentBapRows)
@@ -303,9 +306,9 @@ namespace HLU.UI.ViewModel
             // Delete any rows that haven't been marked as deleted but are
             // no longer in the current rows.
             _viewModelMain.IncidBapRows.Where(r => r.RowState != DataRowState.Deleted &&
-                currentBapRows.Count(g => g.bap_id == r.bap_id) == 0).ToList()
+                !currentBapRows.Any(g => g.bap_id == r.bap_id)).ToList()
                 .ForEach(delegate(HluDataSet.incid_bapRow row) { row.Delete(); });
-            
+
             // Update the table to remove the deleted rows.
             if (_viewModelMain.HluTableAdapterManager.incid_bapTableAdapter.Update(
                 _viewModelMain.IncidBapRows.Where(r => r.RowState == DataRowState.Deleted).ToArray()) == -1)
@@ -331,15 +334,15 @@ namespace HLU.UI.ViewModel
         private void UpdateSecondary()
         {
             if (_viewModelMain.IncidSecondaryHabitats == null)
-                _viewModelMain.IncidSecondaryHabitats = new ObservableCollection<SecondaryHabitat>();
+                _viewModelMain.IncidSecondaryHabitats = [];
 
             // remove duplicate codes
             IEnumerable<SecondaryHabitat> currSecondaryRows = from s in _viewModelMain.IncidSecondaryHabitats
                                                         group s by new { s.secondary_group, s.secondary_habitat } into secs
                                                         select secs.First();
 
-            List<HluDataSet.incid_secondaryRow> newRows = new List<HluDataSet.incid_secondaryRow>();
-            List<HluDataSet.incid_secondaryRow> updateRows = new List<HluDataSet.incid_secondaryRow>();
+            List<HluDataSet.incid_secondaryRow> newRows = [];
+            List<HluDataSet.incid_secondaryRow> updateRows = [];
             HluDataSet.incid_secondaryRow updateRow;
 
             foreach (SecondaryHabitat sh in currSecondaryRows)
@@ -365,7 +368,7 @@ namespace HLU.UI.ViewModel
             // Delete any rows that haven't been marked as deleted but are
             // no longer in the current rows.
             _viewModelMain.IncidSecondaryRows.Where(r => r.RowState != DataRowState.Deleted &&
-                currSecondaryRows.Count(g => g.secondary_id == r.secondary_id) == 0).ToList()
+                !currSecondaryRows.Any(g => g.secondary_id == r.secondary_id)).ToList()
                 .ForEach(delegate(HluDataSet.incid_secondaryRow row) { row.Delete(); });
 
             // Update the table to remove the deleted rows.
@@ -429,7 +432,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Updates those columns of IncidCurrentRow in main view model that are not directly updated 
+        /// Updates those columns of IncidCurrentRow in main view model that are not directly updated
         /// by properties (to enable undo if update cancelled).
         /// </summary>
         /// <param name="viewModelMain">Reference to main window view model.</param>

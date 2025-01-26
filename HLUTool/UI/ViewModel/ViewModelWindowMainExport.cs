@@ -36,11 +36,13 @@ using HLU.Properties;
 using HLU.UI.View;
 using HLU.Data;
 using HLU.Date;
-using DAO;
+
+//DONE: using Microsoft.Office.Interop.Access.Dao
+using Microsoft.Office.Interop.Access.Dao;
 
 namespace HLU.UI.ViewModel
 {
-    class ViewModelWindowMainExport
+    partial class ViewModelWindowMainExport
     {
         public static HluDataSet HluDatasetStatic = null;
 
@@ -76,9 +78,12 @@ namespace HLU.UI.ViewModel
 
         public void InitiateExport()
         {
-            _windowExport = new WindowExport();
-            _windowExport.Owner = App.Current.MainWindow;
-            _windowExport.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            _windowExport = new WindowExport
+            {
+                //DONE: App.Current.MainWindow
+                //_windowExport.Owner = App.Current.MainWindow;
+                WindowStartupLocation = WindowStartupLocation.CenterScreen
+            };
 
             // Fill all export formats if there are any export fields
             // defined for the export format.
@@ -107,13 +112,15 @@ namespace HLU.UI.ViewModel
             int fragCount = 0;
             _viewModelMain.GISApplication.CountMapSelection(ref fragCount);
             //_viewModelExport = new ViewModelExport(_viewModelMain.GisSelection == null ? 0 :
-                //_viewModelMain.GisSelection.Rows.Count, _viewModelMain.GISApplication.HluLayerName,
-                //_viewModelMain.GISApplication.ApplicationType, _viewModelMain.HluDataset.exports);
-            _viewModelExport = new ViewModelExport(_viewModelMain.GisSelection == null ? 0 :
+            //_viewModelMain.GisSelection.Rows.Count, _viewModelMain.GISApplication.HluLayerName,
+            //_viewModelMain.GISApplication.ApplicationType, _viewModelMain.HluDataset.exports);
+            _viewModelExport = new(_viewModelMain.GisSelection == null ? 0 :
                 fragCount, _viewModelMain.GISApplication.HluLayerName,
-                _viewModelMain.GISApplication.ApplicationType, _viewModelMain.HluDataset.exports);
+                _viewModelMain.GISApplication.ApplicationType, _viewModelMain.HluDataset.exports)
+            {
+                DisplayName = "Export"
+            };
             //---------------------------------------------------------------------
-            _viewModelExport.DisplayName = "Export";
             _viewModelExport.RequestClose += new ViewModelExport.RequestCloseEventHandler(_viewModelExport_RequestClose);
 
             _windowExport.DataContext = _viewModelExport;
@@ -174,7 +181,7 @@ namespace HLU.UI.ViewModel
                 _viewModelMain.HluTableAdapterManager.exports_fieldsTableAdapter.Fill(
                     _viewModelMain.HluDataset.exports_fields, String.Format("{0} = {1} ORDER BY {2}, {3}",
                     _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.exports_fields.export_idColumn.ColumnName),
-                    userExportId, 
+                    userExportId,
                     _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.exports_fields.table_nameColumn.ColumnName),
                     _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.exports_fields.field_ordinalColumn.ColumnName)));
 
@@ -185,7 +192,7 @@ namespace HLU.UI.ViewModel
                         _viewModelMain.HluDataset.exports.FindByexport_id(userExportId).export_name));
 
                 // Exit if there is no incid field for this format.
-                if (_viewModelMain.HluDataset.exports_fields.Count(f => f.column_name == _viewModelMain.IncidTable.incidColumn.ColumnName) == 0)
+                if (!_viewModelMain.HluDataset.exports_fields.Any(f => f.column_name == _viewModelMain.IncidTable.incidColumn.ColumnName))
                     throw new Exception(String.Format("The export format '{0}' does not contain the column 'incid'",
                         _viewModelMain.HluDataset.exports.FindByexport_id(userExportId).export_name));
 
@@ -245,17 +252,18 @@ namespace HLU.UI.ViewModel
                         // Combine all the where clauses into a single list (so
                         // that it can be re-chunked later into larger chunks
                         // than the standard chunk based on the IncidPageSize.
-                        exportFilter = new List<List<SqlFilterCondition>>();
-                        exportFilter.Add(_viewModelMain.IncidSelectionWhereClause.SelectMany(l => l).ToList());
+                        exportFilter = [_viewModelMain.IncidSelectionWhereClause.SelectMany(l => l).ToList()];
                     }
                 }
                 else
                 {
-                    SqlFilterCondition cond = new SqlFilterCondition("AND",
-                        _viewModelMain.IncidTable, _viewModelMain.IncidTable.incidColumn, null);
-                    cond.Operator = "IS NOT NULL";
-                    exportFilter = new List<List<SqlFilterCondition>>(new List<SqlFilterCondition>[] { 
-                        new List<SqlFilterCondition>(new SqlFilterCondition[] { cond }) });
+                    SqlFilterCondition cond = new("AND",
+                        _viewModelMain.IncidTable, _viewModelMain.IncidTable.incidColumn, null)
+                    {
+                        Operator = "IS NOT NULL"
+                    };
+                    exportFilter = new List<List<SqlFilterCondition>>([
+                        new List<SqlFilterCondition>([cond]) ]);
                 }
 
                 // Warn the user when the export will be very large.
@@ -382,7 +390,7 @@ namespace HLU.UI.ViewModel
                 fieldLength = GetFieldLength(r.table_name, r.column_ordinal);
 
                 // Enable new 'empty' fields to be included in exports.
-                if (r.table_name.ToLower() == "<none>")
+                if (r.table_name.Equals("<none>", StringComparison.CurrentCultureIgnoreCase))
                 {
                     // Override the input field length(s) if an export
                     // field length has been set.
@@ -439,9 +447,10 @@ namespace HLU.UI.ViewModel
                 // Enable users to specify if individual fields should be
                 // exported with descriptions in the exports_fields table.
                 //
-                var relations = ((fieldFormat != null) && (fieldFormat.ToLower() == "both" || fieldFormat.ToLower() == "lookup")) ? _viewModelMain.HluDataRelations.Where(rel =>
+                var relations = ((fieldFormat != null) && (fieldFormat.Equals("both", StringComparison.CurrentCultureIgnoreCase)
+                    || fieldFormat.Equals("lookup", StringComparison.CurrentCultureIgnoreCase))) ? _viewModelMain.HluDataRelations.Where(rel =>
                     rel.ChildTable.TableName == r.table_name && rel.ChildColumns
-                    .Count(ch => ch.ColumnName == r.column_name) == 1) : new DataRelation[0];
+                    .Count(ch => ch.ColumnName == r.column_name) == 1) : [];
                 //---------------------------------------------------------------------
 
                 switch (relations.Count())
@@ -479,12 +488,12 @@ namespace HLU.UI.ViewModel
                         // field ordinal.
                         string lutFieldName;
                         int lutFieldOrdinal;
-                        if ((r.table_name == _viewModelMain.HluDataset.incid_sources.TableName) && (Regex.IsMatch(r.column_name, @"(_id)", RegexOptions.IgnoreCase)))
+                        if ((r.table_name == _viewModelMain.HluDataset.incid_sources.TableName) && (idSuffixRegex().IsMatch(r.column_name)))
                         {
                             lutFieldName = ViewModelWindowMain.LutSourceFieldName;
                             lutFieldOrdinal = ViewModelWindowMain.LutSourceFieldOrdinal - 1;
                         }
-                        else if ((r.table_name == _viewModelMain.HluDataset.incid.TableName) && (Regex.IsMatch(r.column_name, @"(_user_id)", RegexOptions.IgnoreCase)))
+                        else if ((r.table_name == _viewModelMain.HluDataset.incid.TableName) && (useridSuffixRegex().IsMatch(r.column_name)))
                         {
                             lutFieldName = ViewModelWindowMain.LutUserFieldName;
                             lutFieldOrdinal = ViewModelWindowMain.LutUserFieldOrdinal - 1;
@@ -511,7 +520,7 @@ namespace HLU.UI.ViewModel
                             // If both the original field and it's corresponding lookup
                             // table field are required then add them both to the sql
                             // target list.
-                            if ((fieldFormat != null) && (fieldFormat.ToLower() == "both"))
+                            if ((fieldFormat != null) && (fieldFormat.Equals("both", StringComparison.CurrentCultureIgnoreCase)))
                             {
                                 // Add the corresponding lookup table field to the sql
                                 // target list.
@@ -570,7 +579,7 @@ namespace HLU.UI.ViewModel
                             // If both the original field and it's corresponding lookup
                             // table field are required then add them both to the sql
                             // target list.
-                            if ((fieldFormat != null) && (fieldFormat.ToLower() == "both"))
+                            if ((fieldFormat != null) && (fieldFormat.Equals("both", StringComparison.CurrentCultureIgnoreCase)))
                             {
                                 // Add the corresponding lookup table field to the sql
                                 // target list.
@@ -676,7 +685,7 @@ namespace HLU.UI.ViewModel
             foreach (ExportField f in exportFields.OrderBy(f => f.FieldOrder))
             {
                 // Create a new data column for the field.
-                DataColumn c = new DataColumn(f.FieldName, f.FieldType);
+                DataColumn c = new(f.FieldName, f.FieldType);
 
                 // If the field is an autonumber set the relevant
                 // auto increment properties.
@@ -820,7 +829,7 @@ namespace HLU.UI.ViewModel
                     // the input field ordinal for use later as the unique
                     // incid_source field ordinal.
                     if ((f.ColumnName == _viewModelMain.HluDataset.incid_sources.source_idColumn.ColumnName) &&
-                        ((string.IsNullOrEmpty(f.FieldFormat)) || (f.FieldFormat.ToLower() == "code")))
+                        ((string.IsNullOrEmpty(f.FieldFormat)) || (f.FieldFormat.Equals("code", StringComparison.CurrentCultureIgnoreCase))))
                         _sourceIdOrdinal = f.FieldOrdinal;
                     // If the field refers to the source_sort_order column then
                     // store the input field ordinal for use later.
@@ -865,7 +874,7 @@ namespace HLU.UI.ViewModel
             int lastFieldOrdinal = exportFields.Max(e => e.FieldOrdinal);
 
             // If any incid_condition fields are in the export file.
-            if ((exportFields.Count(f => f.TableName == _viewModelMain.HluDataset.incid_condition.TableName) != 0))
+            if ((exportFields.Any(f => f.TableName == _viewModelMain.HluDataset.incid_condition.TableName)))
             {
                 // If the incid_condition_id column is not included then add
                 // it so that different conditions can be identified.
@@ -926,7 +935,7 @@ namespace HLU.UI.ViewModel
             }
 
             // If any incid_ihs_matrix fields are in the export file.
-            if ((exportFields.Count(f => f.TableName == _viewModelMain.HluDataset.incid_ihs_matrix.TableName) != 0))
+            if ((exportFields.Any(f => f.TableName == _viewModelMain.HluDataset.incid_ihs_matrix.TableName)))
             {
                 // If the matrix_id column is not included then add
                 // it so that different matrixs can be identified.
@@ -951,7 +960,7 @@ namespace HLU.UI.ViewModel
             }
 
             // If any incid_ihs_formation fields are in the export file.
-            if ((exportFields.Count(f => f.TableName == _viewModelMain.HluDataset.incid_ihs_formation.TableName) != 0))
+            if ((exportFields.Any(f => f.TableName == _viewModelMain.HluDataset.incid_ihs_formation.TableName)))
             {
                 // If the formation_id column is not included then add
                 // it so that different formations can be identified.
@@ -976,7 +985,7 @@ namespace HLU.UI.ViewModel
             }
 
             // If any incid_ihs_management fields are in the export file.
-            if ((exportFields.Count(f => f.TableName == _viewModelMain.HluDataset.incid_ihs_management.TableName) != 0))
+            if ((exportFields.Any(f => f.TableName == _viewModelMain.HluDataset.incid_ihs_management.TableName)))
             {
                 // If the management_id column is not included then add
                 // it so that different managements can be identified.
@@ -1001,7 +1010,7 @@ namespace HLU.UI.ViewModel
             }
 
             // If any incid_ihs_complex fields are in the export file.
-            if ((exportFields.Count(f => f.TableName == _viewModelMain.HluDataset.incid_ihs_complex.TableName) != 0))
+            if ((exportFields.Any(f => f.TableName == _viewModelMain.HluDataset.incid_ihs_complex.TableName)))
             {
                 // If the complex_id column is not included then add
                 // it so that different complexs can be identified.
@@ -1026,7 +1035,7 @@ namespace HLU.UI.ViewModel
             }
 
             // If any incid_bap fields are in the export file.
-            if ((exportFields.Count(f => f.TableName == _viewModelMain.HluDataset.incid_bap.TableName) != 0))
+            if ((exportFields.Any(f => f.TableName == _viewModelMain.HluDataset.incid_bap.TableName)))
             {
                 // If the bap_habitat_quality column is not included then
                 // add it so that the baps can be sorted by quality.
@@ -1035,8 +1044,8 @@ namespace HLU.UI.ViewModel
                     // Add a field to the input table to get the determination
                     // quality of the bap habitat so that 'not present' habitats
                     // are listed after 'present' habitats.
-                    if ((DbFactory.ConnectionType.ToString().ToLower() == "access") ||
-                        (DbFactory.Backend.ToString().ToLower() == "access"))
+                    if ((DbFactory.ConnectionType.ToString().Equals("access", StringComparison.CurrentCultureIgnoreCase)) ||
+                        (DbFactory.Backend.ToString().Equals("access", StringComparison.CurrentCultureIgnoreCase)))
                         targetList.Append(String.Format(", IIF({0}.{1} = {2}, 2, IIF({0}.{1} = {3}, 1, 0)) AS {4}",
                             _viewModelMain.HluDataset.incid_bap.TableName,
                             _viewModelMain.HluDataset.incid_bap.quality_determinationColumn.ColumnName,
@@ -1097,7 +1106,7 @@ namespace HLU.UI.ViewModel
             }
 
             // If any incid_source fields are in the export file.
-            if ((exportFields.Count(f => f.TableName == _viewModelMain.HluDataset.incid_sources.TableName) != 0))
+            if ((exportFields.Any(f => f.TableName == _viewModelMain.HluDataset.incid_sources.TableName)))
             {
                 // If the source_id column is not included then add
                 // it so that different sources can be identified.
@@ -1196,7 +1205,7 @@ namespace HLU.UI.ViewModel
 
             // Set the incid field as the primary key to the table.
             if (primaryKeyOrdinal != -1)
-                exportTable.PrimaryKey = new DataColumn[] { exportTable.Columns[primaryKeyOrdinal] };
+                exportTable.PrimaryKey = [exportTable.Columns[primaryKeyOrdinal]];
 
             // Remove the leading comma from the target list of fields.
             if (targetList.Length > 1) targetList.Remove(0, 1);
@@ -1214,13 +1223,13 @@ namespace HLU.UI.ViewModel
             try
             {
                 if (File.Exists(tempPath)) File.Delete(tempPath);
-                OdbcCP32 odbc = new OdbcCP32();
+                OdbcCP32 odbc = new();
                 odbc.CreateDatabase(tempPath);
                 string connString = String.Format(@"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};", tempPath);
                 string defaultSchema = "";
                 bool promptPwd = false;
                 dbOut = new DbOleDb(ref connString, ref defaultSchema, ref promptPwd,
-                    Properties.Resources.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders,
+                    Settings.Default.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders,
                     true, Settings.Default.DbIsUnicode, Settings.Default.DbUseTimeZone, 255,
                     Settings.Default.DbBinaryLength, Settings.Default.DbTimePrecision,
                     Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale);
@@ -1229,7 +1238,7 @@ namespace HLU.UI.ViewModel
                 if (!dbOut.CreateTable(exportTable))
                     throw new Exception("Error creating the temporary export table");
 
-                DataSet datasetOut = new DataSet("Export");
+                DataSet datasetOut = new("Export");
 
                 IDbDataAdapter adapterOut = dbOut.CreateAdapter(exportTable);
                 adapterOut.MissingSchemaAction = MissingSchemaAction.AddWithKey;
@@ -1306,14 +1315,14 @@ namespace HLU.UI.ViewModel
         {
             int outputRowCount = 0;
 
-        	DAO.DBEngine dbEngine = new DAO.DBEngine();
+            DBEngine dbEngine = new();
 
             try
             {
 
-            	DAO.Database db = dbEngine.OpenDatabase(tempPath);
-            	DAO.Recordset AccesssRecordset = db.OpenRecordset(exportTable.TableName);
-            	DAO.Field[] AccesssFields;
+            	Database db = dbEngine.OpenDatabase(tempPath);
+            	Recordset AccesssRecordset = db.OpenRecordset(exportTable.TableName);
+            	Field[] AccesssFields;
 
                 // If there is only one long list then chunk
                 // it up into smaller lists.
@@ -1341,7 +1350,7 @@ namespace HLU.UI.ViewModel
 
                 for (int j = 0; j < exportFilter.Count; j++)
                 {
-                    AccesssFields = new DAO.Field[exportTable.Columns.Count];
+                    AccesssFields = new Field[exportTable.Columns.Count];
                 	AccesssRecordset.AddNew();
                     bool rowAdded = false;
 
@@ -1465,17 +1474,17 @@ namespace HLU.UI.ViewModel
                             // formatting the attribute data.
                             //
                             // Get the current source date start.
-                            if ((_sourceDateStartOrdinals.Any()) &&
+                            if ((_sourceDateStartOrdinals.Count != 0) &&
                                 !reader.IsDBNull(_sourceDateStartOrdinals[0]))
                                 currSourceDateStart = reader.GetInt32(_sourceDateStartOrdinals[0]);
 
                             // Get the current source date end.
-                            if ((_sourceDateEndOrdinals.Any()) &&
+                            if ((_sourceDateEndOrdinals.Count != 0) &&
                                 !reader.IsDBNull(_sourceDateEndOrdinals[0]))
                                 currSourceDateEnd = reader.GetInt32(_sourceDateEndOrdinals[0]);
 
                             // Get the current source date type.
-                            if ((_sourceDateTypeOrdinals.Any()) &&
+                            if ((_sourceDateTypeOrdinals.Count != 0) &&
                                 !reader.IsDBNull(_sourceDateTypeOrdinals[0]))
                                 currSourceDateType = reader.GetString(_sourceDateTypeOrdinals[0]);
 
@@ -1570,7 +1579,7 @@ namespace HLU.UI.ViewModel
                                     object outValue;
                                     outValue = ConvertInput(fieldMap[i][0], inValue, reader.GetFieldType(fieldMap[i][0]),
                                         exportTable.Columns[exportColumn].DataType,
-                                        (exportField != null) ? exportField.FieldFormat : null,
+                                        exportField?.FieldFormat,
                                         currSourceDateStart, currSourceDateEnd, currSourceDateType,
                                         currConditionDateStart, currConditionDateEnd, currConditionDateType);
 
@@ -1671,7 +1680,7 @@ namespace HLU.UI.ViewModel
                                         object outValue;
                                         outValue = ConvertInput(fieldMap[i][0], inValue, reader.GetFieldType(fieldMap[i][0]),
                                             exportTable.Columns[exportColumn].DataType,
-                                            (exportField != null) ? exportField.FieldFormat : null,
+                                            exportField?.FieldFormat,
                                             currSourceDateStart, currSourceDateEnd, currSourceDateType,
                                             currConditionDateStart, currConditionDateEnd, currConditionDateType);
 
@@ -1828,7 +1837,7 @@ namespace HLU.UI.ViewModel
 
                     // Convert the value to a vague date instance.
                     string vt = "D";
-                    VagueDateInstance vd = new VagueDateInstance(inInt, inInt, vt);
+                    VagueDateInstance vd = new(inInt, inInt, vt);
 
                     // If the vague date is invalid then return null.
                     if ((vd == null) || (vd.IsBad) || (vd.IsUnknown))
@@ -1856,7 +1865,7 @@ namespace HLU.UI.ViewModel
 
                     // Convert the value to a vague date instance.
                     string vt = "D";
-                    VagueDateInstance vd = new VagueDateInstance(inInt, inInt, vt);
+                    VagueDateInstance vd = new(inInt, inInt, vt);
 
                     // If the vague date is invalid then return null.
                     if ((vd == null) || (vd.IsBad) || (vd.IsUnknown))
@@ -1902,9 +1911,8 @@ namespace HLU.UI.ViewModel
                 {
                     // If the input value is a valid DateTime then
                     // convert it to a string of the required format.
-                    if (inValue is DateTime)
+                    if (inValue is DateTime inDate)
                     {
-                        DateTime inDate = (DateTime)inValue;
                         string inStr = inDate.ToString(outFormat);
                         if (inStr != null)
                             return inStr;
@@ -1937,7 +1945,7 @@ namespace HLU.UI.ViewModel
                     int inInt = (int)inValue;
 
                     // Convert the value to a vague date instance.
-                    VagueDateInstance vd = new VagueDateInstance(sourceDateStart, sourceDateEnd, sourceDateType);
+                    VagueDateInstance vd = new(sourceDateStart, sourceDateEnd, sourceDateType);
 
                     // If the vague date is invalid then set the output
                     // field to null.
@@ -1949,7 +1957,7 @@ namespace HLU.UI.ViewModel
                     {
                         // If the output format is 'v' or 'V' then format the dates according
                         // to the source date type.
-                        if (outFormat.ToLower() == "v")
+                        if (outFormat.Equals("v", StringComparison.CurrentCultureIgnoreCase))
                         {
                             return VagueDate.FromVagueDateInstance(vd, VagueDate.DateType.Vague);
                         }
@@ -2044,7 +2052,7 @@ namespace HLU.UI.ViewModel
                     int inInt = (int)inValue;
 
                     // Convert the value to a vague date instance.
-                    VagueDateInstance vd = new VagueDateInstance(conditionDateStart, conditionDateEnd, conditionDateType);
+                    VagueDateInstance vd = new(conditionDateStart, conditionDateEnd, conditionDateType);
 
                     // If the vague date is invalid then set the output
                     // field to null.
@@ -2056,7 +2064,7 @@ namespace HLU.UI.ViewModel
                     {
                         // If the output format is 'v' or 'V' then format the dates according
                         // to the condition date type.
-                        if (outFormat.ToLower() == "v")
+                        if (outFormat.Equals("v", StringComparison.CurrentCultureIgnoreCase))
                         {
                             return VagueDate.FromVagueDateInstance(vd, VagueDate.DateType.Vague);
                         }
@@ -2224,10 +2232,10 @@ namespace HLU.UI.ViewModel
 
                 for (int i = 1; i <= numFields; i++)
                 {
-                    ExportField fld = new ExportField();
+                    ExportField fld = new();
 
                     // Enable new 'empty' fields to be included in exports.
-                    if (tableName.ToLower() == "<none>")
+                    if (tableName.Equals("<none>", StringComparison.CurrentCultureIgnoreCase))
                         fld.FieldOrdinal = -1;
                     else
                         fld.FieldOrdinal = _fieldCount;
@@ -2237,7 +2245,7 @@ namespace HLU.UI.ViewModel
 
                     // Include the occurrence counter in the field name, either
                     // where the user chooses or at the end.
-                    if (Regex.IsMatch(fieldName, @"(<no>)", RegexOptions.IgnoreCase))
+                    if (occurrenceCounterRegex().IsMatch(fieldName))
                         fld.FieldName = fieldName.Replace("<no>", i.ToString());
                     else
                     {
@@ -2265,10 +2273,10 @@ namespace HLU.UI.ViewModel
             }
             else
             {
-                ExportField fld = new ExportField();
+                ExportField fld = new();
 
                 // Enable new 'empty' fields to be included in exports.
-                if (tableName.ToLower() == "<none>")
+                if (tableName.Equals("<none>", StringComparison.CurrentCultureIgnoreCase))
                     fld.FieldOrdinal = -1;
                 else
                     fld.FieldOrdinal = _fieldCount;
@@ -2296,7 +2304,7 @@ namespace HLU.UI.ViewModel
             _lastTableName = tableName;
 
             // Increment the field counter.
-            if (tableName.ToLower() != "<none>")
+            if (!tableName.Equals("<none>", StringComparison.CurrentCultureIgnoreCase))
                 _fieldCount += 1;
 
         }
@@ -2348,9 +2356,9 @@ namespace HLU.UI.ViewModel
                     char[] testCharArray = new char[i];
                     for (int k = 0; k < i; k++)
                         testCharArray[k] = (char)j;
-                    string testString = new string(testCharArray);
-                    if (_viewModelMain.HluDataset.Tables.Cast<DataTable>().Count(t => Regex.IsMatch(t.TableName,
-                        testString + "[0-9]+", RegexOptions.IgnoreCase)) == 0)
+                    string testString = new(testCharArray);
+                    if (!_viewModelMain.HluDataset.Tables.Cast<DataTable>().Any(t => Regex.IsMatch(t.TableName,
+                        testString + "[0-9]+", RegexOptions.IgnoreCase)))
                     {
                         return testString;
                     }
@@ -2358,5 +2366,12 @@ namespace HLU.UI.ViewModel
             }
             return null;
         }
+
+        [GeneratedRegex(@"(_id)", RegexOptions.IgnoreCase, "en-GB")]
+        private static partial Regex idSuffixRegex();
+        [GeneratedRegex(@"(_user_id)", RegexOptions.IgnoreCase, "en-GB")]
+        private static partial Regex useridSuffixRegex();
+        [GeneratedRegex(@"(<no>)", RegexOptions.IgnoreCase, "en-GB")]
+        private static partial Regex occurrenceCounterRegex();
     }
 }

@@ -871,7 +871,7 @@ namespace HLU.GISApplication.ArcGIS
                     "sl",
                     oldIncid,
                     newIncid,
-                    //TODO: Aggregate
+                    //DONE: Aggregate
                     //historyColumns.Aggregate(new(), (sb, c) =>
                     //    sb.Append("," + c.ColumnName)).Remove(0, 1).ToString(),
                     string.Join(",", historyColumns.Select(c => c.ColumnName)),
@@ -1152,7 +1152,7 @@ namespace HLU.GISApplication.ArcGIS
         private void ThrowPipeError(List<string> pipeData)
         {
             if ((pipeData.Count > 0) && (pipeData[0][0] == PipeErrorSymbol))
-                //TODO: Aggregate
+                //DONE: Aggregate
                 //throw new Exception(pipeData.Skip(1).Aggregate(new(), (sb, m) => sb.Append(m)).ToString());
                 throw new Exception(string.Join(",", pipeData.Skip(1)));
         }
@@ -2183,7 +2183,7 @@ namespace HLU.GISApplication.ArcGIS
         {
             try
             {
-                //TODO: Result is always false
+                //DONE: Result is always false
                 //if (value == null)
                 //    return "NULL";
                 //else
@@ -2782,7 +2782,7 @@ namespace HLU.GISApplication.ArcGIS
         //    }
         //}
 
-        //TODO: AppROTEvent
+        //TODO: appROTEvent
         //private void appROTEvent_AppAdded(AppRef app)
         //{
         //    if ((app is IMxApplication) && (_arcMap == null))

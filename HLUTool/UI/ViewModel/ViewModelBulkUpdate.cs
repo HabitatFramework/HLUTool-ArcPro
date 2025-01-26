@@ -141,7 +141,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <value></value>
         /// <returns></returns>

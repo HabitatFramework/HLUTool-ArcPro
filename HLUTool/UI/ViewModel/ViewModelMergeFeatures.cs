@@ -1,19 +1,19 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2013 Thames Valley Environmental Records Centre
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -51,7 +51,7 @@ namespace HLU.UI.ViewModel
 
         #region Constructor
 
-        public ViewModelMergeFeatures(T selectedFeatures, int[] keyOrdinals, int incidOrdinal, 
+        public ViewModelMergeFeatures(T selectedFeatures, int[] keyOrdinals, int incidOrdinal,
             HluDataSet.incid_mm_polygonsRow[] childRows, GISApp gisApp)
         {
             _selectedFeatures = selectedFeatures;
@@ -98,7 +98,7 @@ namespace HLU.UI.ViewModel
                 if (_okCommand == null)
                 {
                     Action<object> okAction = new(this.OkCommandClick);
-                    _okCommand = new(okAction, param => this.CanOk);
+                    _okCommand = new RelayCommand(okAction, param => this.CanOk);
                 }
 
                 return _okCommand;
@@ -134,7 +134,7 @@ namespace HLU.UI.ViewModel
                 if (_cancelCommand == null)
                 {
                     Action<object> cancelAction = new(this.CancelCommandClick);
-                    _cancelCommand = new(cancelAction);
+                    _cancelCommand = new RelayCommand(cancelAction);
                 }
 
                 return _cancelCommand;
@@ -162,7 +162,7 @@ namespace HLU.UI.ViewModel
                 if (_flashFeatureCommand == null)
                 {
                     Action<object> flashFeatureAction = new(this.FlashFeature);
-                    _flashFeatureCommand = new(flashFeatureAction, param => this.CanFlashFeature);
+                    _flashFeatureCommand = new RelayCommand(flashFeatureAction, param => this.CanFlashFeature);
                 }
 
                 return _flashFeatureCommand;
@@ -171,10 +171,10 @@ namespace HLU.UI.ViewModel
 
         private bool CanFlashFeature
         {
-            get 
-            { 
+            get
+            {
                 return _resultFeature != null && (_resultFeature is HluDataSet.incid_mm_polygonsRow ||
-                    ((_currChildRows != null) && (_currChildRows.Length > 0))); 
+                    ((_currChildRows != null) && (_currChildRows.Length > 0)));
             }
         }
 
@@ -184,8 +184,8 @@ namespace HLU.UI.ViewModel
 
             if (_resultFeature is HluDataSet.incid_mm_polygonsRow)
             {
-                List<List<SqlFilterCondition>> whereClause = 
-                    ViewModelWindowMainHelpers.GisSelectionToWhereClause(new R[] { _resultFeature },
+                List<List<SqlFilterCondition>> whereClause =
+                    ViewModelWindowMainHelpers.GisSelectionToWhereClause([_resultFeature],
                     _keyOrdinals, 10, _selectedFeatures);
 
                 // Flash all the features relating to the where clause together.
@@ -233,7 +233,7 @@ namespace HLU.UI.ViewModel
         public int SelectedIndex
         {
             get { return _selectedIndex; }
-            set 
+            set
             {
                 _selectedIndex = value;
                 _resultFeature = (R)_selectedFeatures.Rows[_selectedIndex];
@@ -251,7 +251,7 @@ namespace HLU.UI.ViewModel
 
         public string Error
         {
-            get 
+            get
             {
                 string error = String.Empty;
 
@@ -282,7 +282,7 @@ namespace HLU.UI.ViewModel
 
                 // dirty commands registered with CommandManager so they are queried to see if they can execute now
                 CommandManager.InvalidateRequerySuggested();
-                
+
                 return error;
             }
         }

@@ -2,19 +2,19 @@
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
 // Copyright © 2016 Thames Valley Environmental Records Centre
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -121,7 +121,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidPrimary = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidPrimary"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidPrimary)));
             }
         }
 
@@ -131,7 +131,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidSecondaryHabitats = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidSecondaryHabitats"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidSecondaryHabitats)));
             }
         }
 
@@ -144,7 +144,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidLegacyHabitat = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidLegacyHabitat"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidLegacyHabitat)));
             }
         }
         //---------------------------------------------------------------------
@@ -155,7 +155,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidBapHabitatsUser = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidBapHabitatsUser"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidBapHabitatsUser)));
             }
         }
 
@@ -165,7 +165,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidGeneralComments = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidGeneralComments"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidGeneralComments)));
             }
         }
 
@@ -175,7 +175,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidBoundaryBaseMap = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidBoundaryBaseMap"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidBoundaryBaseMap)));
             }
         }
 
@@ -185,7 +185,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidDigitisationBaseMap = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidDigitisationBaseMaps"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidDigitisationBaseMap)));
             }
         }
 
@@ -198,7 +198,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidSiteRef = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidSiteRef"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidSiteRef)));
             }
         }
         //---------------------------------------------------------------------
@@ -209,7 +209,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidSiteName = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidSiteName"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidSiteName)));
             }
         }
 
@@ -219,7 +219,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidCondition = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidCondition"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidCondition)));
             }
         }
 
@@ -229,7 +229,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidConditionQualifier = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidConditionQualifier"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidConditionQualifier)));
             }
         }
 
@@ -239,7 +239,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidConditionDate = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidConditionDate"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidConditionDate)));
             }
         }
 
@@ -249,7 +249,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidQualityDetermination = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidQualityDetermination"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidQualityDetermination)));
             }
         }
 
@@ -259,7 +259,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidQualityInterpretation = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidQualityInterpretation"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidQualityInterpretation)));
             }
         }
 
@@ -269,7 +269,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidQualityComments = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidQualityComments"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidQualityComments)));
             }
         }
 
@@ -279,7 +279,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidSource1Id = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidSource1Id"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidSource1Id)));
             }
         }
 
@@ -289,7 +289,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidSource1Date = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidSource1Date"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidSource1Date)));
             }
         }
 
@@ -299,7 +299,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidSource1HabitatClass = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidSource1HabitatClass"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidSource1HabitatClass)));
             }
         }
 
@@ -309,7 +309,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidSource1HabitatType = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidSource1HabitatType"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidSource1HabitatType)));
             }
         }
 
@@ -319,7 +319,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidSource1BoundaryImportance = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidSource1BoundaryImportance"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidSource1BoundaryImportance)));
             }
         }
 
@@ -329,7 +329,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidSource1HabitatImportance = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidSource1HabitatImportance"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidSource1HabitatImportance)));
             }
         }
 
@@ -339,7 +339,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidSource2Id = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidSource2Id"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidSource2Id)));
             }
         }
 
@@ -349,7 +349,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidSource2Date = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidSource2Date"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidSource2Date)));
             }
         }
 
@@ -359,7 +359,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidSource2HabitatClass = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidSource2HabitatClass"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidSource2HabitatClass)));
             }
         }
 
@@ -369,7 +369,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidSource2HabitatType = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidSource2HabitatType"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidSource2HabitatType)));
             }
         }
 
@@ -379,7 +379,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidSource2BoundaryImportance = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidSource2BoundaryImportance"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidSource2BoundaryImportance)));
             }
         }
 
@@ -389,7 +389,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidSource2HabitatImportance = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidSource2HabitatImportance"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidSource2HabitatImportance)));
             }
         }
 
@@ -399,7 +399,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidSource3Id = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidSource3Id"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidSource3Id)));
             }
         }
 
@@ -409,7 +409,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidSource3Date = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidSource3Date"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidSource3Date)));
             }
         }
 
@@ -419,7 +419,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidSource3HabitatClass = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidSource3HabitatClass"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidSource3HabitatClass)));
             }
         }
 
@@ -429,7 +429,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidSource3HabitatType = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidSource3HabitatType"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidSource3HabitatType)));
             }
         }
 
@@ -439,7 +439,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidSource3BoundaryImportance = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidSource3BoundaryImportance"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidSource3BoundaryImportance)));
             }
         }
 
@@ -449,7 +449,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyIncidSource3HabitatImportance = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("CopyIncidSource3HabitatImportance"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidSource3HabitatImportance)));
             }
         }
 
@@ -463,7 +463,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidPrimary = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidPrimary"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidPrimary)));
             }
         }
 
@@ -472,14 +472,14 @@ namespace HLU.UI.ViewModel
             get { return _copyIncidSecondaryHabitats ? _incidSecondaryHabitats : null; }
             set
             {
-                ObservableCollection<SecondaryHabitat> newSH = new ObservableCollection<SecondaryHabitat>();
+                ObservableCollection<SecondaryHabitat> newSH = [];
                 foreach (var sh in value)
                 {
                     SecondaryHabitat shClone = (SecondaryHabitat)sh.Clone();
                     newSH.Add(shClone);
                 }
                 _incidSecondaryHabitats = newSH;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidSecondaryHabitats"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidSecondaryHabitats)));
             }
         }
 
@@ -492,7 +492,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidLegacyHabitat = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidLegacyHabitat"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidLegacyHabitat)));
             }
         }
         //---------------------------------------------------------------------
@@ -502,14 +502,14 @@ namespace HLU.UI.ViewModel
             get { return _copyIncidBapHabitatsUser ? _incidBapHabitatsUser : null; }
             set
             {
-                ObservableCollection<BapEnvironment> newBH = new ObservableCollection<BapEnvironment>();
+                ObservableCollection<BapEnvironment> newBH = [];
                 foreach (var bh in value)
                 {
                     BapEnvironment bhClone = (BapEnvironment)bh.Clone();
                     newBH.Add(bhClone);
                 }
                 _incidBapHabitatsUser = newBH;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidBapHabitatsUser"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidBapHabitatsUser)));
  }
         }
 
@@ -519,7 +519,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidGeneralComments = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidGeneralComments"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidGeneralComments)));
             }
         }
 
@@ -529,7 +529,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidBoundaryBaseMap = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidBoundaryBaseMap"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidBoundaryBaseMap)));
             }
         }
 
@@ -539,7 +539,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidDigitisationBaseMap = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidDigitisationBaseMap"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidDigitisationBaseMap)));
             }
         }
 
@@ -552,7 +552,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidSiteRef = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidSiteRef"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidSiteRef)));
             }
         }
         //---------------------------------------------------------------------
@@ -563,7 +563,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidSiteName = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidSiteName"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidSiteName)));
             }
         }
 
@@ -573,7 +573,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidCondition = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidCondition"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidCondition)));
             }
         }
 
@@ -583,7 +583,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidConditionQualifier = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidConditionQualifier"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidConditionQualifier)));
             }
         }
 
@@ -593,7 +593,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidConditionDate = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidConditionDate"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidConditionDate)));
             }
         }
 
@@ -603,7 +603,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidQualityDetermination = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidQualityDetermination"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidQualityDetermination)));
             }
         }
 
@@ -613,7 +613,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidQualityInterpretation = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidQualityInterpretation"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidQualityInterpretation)));
             }
         }
 
@@ -623,7 +623,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidQualityComments = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidQualityComments"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidQualityComments)));
             }
         }
 
@@ -633,7 +633,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidSource1Id = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidSource1Id"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidSource1Id)));
             }
         }
 
@@ -643,7 +643,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidSource1Date = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidSource1Date"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidSource1Date)));
             }
         }
 
@@ -653,7 +653,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidSource1HabitatClass = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidSource1HabitatClass"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidSource1HabitatClass)));
             }
         }
 
@@ -663,7 +663,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidSource1HabitatType = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidSource1HabitatType"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidSource1HabitatType)));
             }
         }
 
@@ -673,7 +673,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidSource1BoundaryImportance = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidSource1BoundaryImportance"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidSource1BoundaryImportance)));
             }
         }
 
@@ -683,7 +683,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidSource1HabitatImportance = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidSource1HabitatImportance"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidSource1HabitatImportance)));
             }
         }
 
@@ -693,7 +693,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidSource2Id = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidSource2Id"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidSource2Id)));
             }
         }
 
@@ -703,7 +703,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidSource2Date = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidSource2Date"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidSource2Date)));
             }
         }
 
@@ -713,7 +713,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidSource2HabitatClass = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidSource2HabitatClass"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidSource2HabitatClass)));
             }
         }
 
@@ -723,7 +723,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidSource2HabitatType = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidSource2HabitatType"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidSource2HabitatType)));
             }
         }
 
@@ -733,7 +733,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidSource2BoundaryImportance = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidSource2BoundaryImportance"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidSource2BoundaryImportance)));
             }
         }
 
@@ -743,7 +743,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidSource2HabitatImportance = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidSource2HabitatImportance"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidSource2HabitatImportance)));
             }
         }
 
@@ -753,7 +753,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidSource3Id = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidSource3Id"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidSource3Id)));
             }
         }
 
@@ -763,7 +763,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidSource3Date = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidSource3Date"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidSource3Date)));
             }
         }
 
@@ -773,7 +773,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidSource3HabitatClass = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidSource3HabitatClass"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidSource3HabitatClass)));
             }
         }
 
@@ -783,7 +783,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidSource3HabitatType = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidSource3HabitatType"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidSource3HabitatType)));
             }
         }
 
@@ -793,7 +793,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidSource3BoundaryImportance = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidSource3BoundaryImportance"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidSource3BoundaryImportance)));
             }
         }
 
@@ -803,7 +803,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _incidSource3HabitatImportance = value;
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs("IncidSource3HabitatImportance"));
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidSource3HabitatImportance)));
             }
         }
 
@@ -856,7 +856,8 @@ namespace HLU.UI.ViewModel
                     String.Join(", ", errorProps.ToArray())), "HLU: Copy Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
 
-            vmMain.OnPropertyChanged(nameof(CanPaste));
+            //TODO: Compile dependency?
+            //vmMain.OnPropertyChanged(nameof(CanPaste));
         }
 
         internal void PasteValues(ViewModelWindowMain vmMain)
@@ -878,7 +879,7 @@ namespace HLU.UI.ViewModel
                         if ((bool)pi.GetValue(this, null))
                         {
                             vmMain.Pasting = true;
-                            
+
                             valuePI.SetValue(vmMain, copyPI.GetValue(this, null), null);
 
                             //// Refresh the secondary habitat table if they have been pasted

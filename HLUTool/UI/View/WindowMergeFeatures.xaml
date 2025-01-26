@@ -30,7 +30,7 @@
                   Grid.Row="0"
                   Grid.Column="0"
                   Header="Feature Attributes">
-            <tkit:DataGrid Name="DataGridQueryBuilder"
+            <DataGrid Name="DataGridQueryBuilder"
                            Grid.Row="0"
                            Grid.Column="0"
                            Margin="4,0,4,4"
@@ -56,10 +56,10 @@
                                                   UpdateSourceTrigger=PropertyChanged}"
                            SelectionMode="Single"
                            SelectionUnit="FullRow">
-                <tkit:DataGrid.RowValidationRules>
+                <DataGrid.RowValidationRules>
                     <DataErrorValidationRule />
-                </tkit:DataGrid.RowValidationRules>
-            </tkit:DataGrid>
+                </DataGrid.RowValidationRules>
+            </DataGrid>
         </GroupBox>
 
         <Grid Name="GridButtons"

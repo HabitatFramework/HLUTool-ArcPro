@@ -1,4 +1,4 @@
-﻿<Window x:Class="HLU.WindowMain"
+﻿<Window x:Class="HLU.UI.View.WindowMain"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -188,6 +188,7 @@
                           IsEnabled="{Binding Path=CanSwitchGISLayer}"
                           Header="Switch _GIS Layer" />
                 <Separator />
+                <!--
                 <MenuItem x:Name="MenuItemStyles" Header="_Styles">
                     <MenuItem Name="Original"
                               Click="MenuItem_Style_Click"
@@ -206,6 +207,7 @@
                               Header="Shiny _Blue"
                               IsCheckable="True" />
                 </MenuItem>
+                -->
                 <Separator />
                 <MenuItem x:Name="MenuItemAbout"
                           Command="{Binding Path=AboutCommand}"
@@ -1323,7 +1325,7 @@
 										</Button>
 
 										<!-- <ScrollViewer VerticalScrollBarVisibility="Auto"> -->
-                                        <tkit:DataGrid x:Name="DataGridSecondaryHabitats"
+                                        <DataGrid x:Name="DataGridSecondaryHabitats"
                                                        Grid.Row="3"
                                                        Grid.Column="0"
                                                        Grid.ColumnSpan="2"
@@ -1347,23 +1349,22 @@
                                                        RowDetailsVisibilityMode="Visible"
                                                        RowHeaderWidth="20"
                                                        RowHeight="24">
-                                            <tkit:DataGrid.RowValidationRules>
+                                            <DataGrid.RowValidationRules>
                                                 <DataErrorValidationRule />
-                                            </tkit:DataGrid.RowValidationRules>
-                                            <tkit:DataGrid.Columns>
-                                                <tkit:DataGridTextColumn Binding="{Binding secondary_id}"
+                                            </DataGrid.RowValidationRules>
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Binding="{Binding secondary_id}"
                                                                          Header="secondary_id"
                                                                          IsReadOnly="True"
                                                                          Visibility="Collapsed" />
-                                                <tkit:DataGridTextColumn Binding="{Binding incid}"
+                                                <DataGridTextColumn Binding="{Binding incid}"
                                                                          Header="INCID"
                                                                          IsReadOnly="True"
                                                                          Visibility="Collapsed" />
-                                                <hlu:DataGridComboBoxColumnWithBinding Width="117"
+                                                <DataGridComboBoxColumn Width="117"
 																					   IsReadOnly="True"
                                                                                        CanUserResize="True"
                                                                                        DisplayMemberPath="description"
-                                                                                       EditingElementStyle="{DynamicResource ComboBoxStyle}"
                                                                                        Header="Group"
                                                                                        ItemsSource="{Binding DataContext.SecondaryGroupCodesAll,
 																											 IsAsync=true,
@@ -1375,12 +1376,12 @@
                                                                                                                       UpdateSourceTrigger=PropertyChanged,
                                                                                                                       ValidatesOnDataErrors=True}"
                                                                                        SelectedValuePath="code" />
-																					   <!-- Visibility="{Binding ShowSecondaryGroupColumn}" -->
-                                                <hlu:DataGridComboBoxColumnWithBinding Width="*"
+                                                <!-- EditingElementStyle="{DynamicResource ComboBoxStyle}" -->
+                                                <!-- Visibility="{Binding ShowSecondaryGroupColumn}" -->
+                                                <DataGridComboBoxColumn Width="*"
 																					   IsReadOnly="True"
                                                                                        CanUserResize="True"
                                                                                        DisplayMemberPath="description"
-                                                                                       EditingElementStyle="{DynamicResource ComboBoxStyle}"
                                                                                        Header="Code"
 																					   SortDirection="Ascending"
                                                                                        ItemsSource="{Binding DataContext.SecondaryHabitatCodesAll,
@@ -1395,8 +1396,9 @@
                                                                                                                       UpdateSourceTrigger=PropertyChanged,
                                                                                                                       ValidatesOnDataErrors=True}"
                                                                                        SelectedValuePath="code" />
-                                            </tkit:DataGrid.Columns>
-                                        </tkit:DataGrid>
+                                                <!-- EditingElementStyle="{DynamicResource ComboBoxStyle}" -->
+                                            </DataGrid.Columns>
+                                        </DataGrid>
 				                        <!-- </ScrollViewer> -->
 
 										<!--  ButtonAddSecondaryHabitatList  -->
@@ -1909,7 +1911,7 @@
                                             <ColumnDefinition />
                                             <ColumnDefinition Width="22" />
                                         </Grid.ColumnDefinitions>
-                                        <tkit:DataGrid x:Name="DataGridPrimaryBapHabitats"
+                                        <DataGrid x:Name="DataGridPrimaryBapHabitats"
                                                        Grid.Row="0"
                                                        Grid.Column="0"
                                                        Grid.ColumnSpan="2"
@@ -1930,23 +1932,22 @@
                                                        RowDetailsVisibilityMode="Visible"
                                                        RowHeaderWidth="20"
                                                        RowHeight="24">
-                                            <tkit:DataGrid.RowValidationRules>
+                                            <DataGrid.RowValidationRules>
                                                 <DataErrorValidationRule />
-                                            </tkit:DataGrid.RowValidationRules>
-                                            <tkit:DataGrid.Columns>
-                                                <tkit:DataGridTextColumn Binding="{Binding bap_id}"
+                                            </DataGrid.RowValidationRules>
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Binding="{Binding bap_id}"
                                                                          Header="bap_id"
                                                                          IsReadOnly="True"
                                                                          Visibility="Collapsed" />
-                                                <tkit:DataGridTextColumn Binding="{Binding incid}"
+                                                <DataGridTextColumn Binding="{Binding incid}"
                                                                          Header="INCID"
                                                                          IsReadOnly="True"
                                                                          Visibility="Collapsed" />
-                                                <hlu:DataGridComboBoxColumnWithBinding Width="SizeToHeader"
+                                                <DataGridComboBoxColumn Width="SizeToHeader"
                                                                                        MinWidth="100"
                                                                                        CanUserResize="True"
                                                                                        DisplayMemberPath="description"
-                                                                                       EditingElementStyle="{DynamicResource ComboBoxStyle}"
                                                                                        Header="Habitat"
                                                                                        IsReadOnly="True"
                                                                                        ItemsSource="{Binding DataContext.BapHabitatCodes,
@@ -1956,11 +1957,11 @@
                                                                                        SelectedValueBinding="{Binding bap_habitat,
                                                                                                                       UpdateSourceTrigger=PropertyChanged}"
                                                                                        SelectedValuePath="code" />
-                                                <hlu:DataGridComboBoxColumnWithBinding Width="SizeToHeader"
+                                                <!-- EditingElementStyle="{DynamicResource ComboBoxStyle}" -->
+                                                <DataGridComboBoxColumn Width="SizeToHeader"
                                                                                        MinWidth="100"
                                                                                        CanUserResize="True"
                                                                                        DisplayMemberPath="description"
-                                                                                       EditingElementStyle="{DynamicResource ComboBoxStyle}"
                                                                                        Header="Determ. Quality"
                                                                                        ItemsSource="{Binding DataContext.BapDeterminationQualityCodesAuto,
                                                                                                              IsAsync=true,
@@ -1970,11 +1971,11 @@
                                                                                                                       UpdateSourceTrigger=PropertyChanged,
                                                                                                                       ValidatesOnDataErrors=True}"
                                                                                        SelectedValuePath="code" />
-                                                <hlu:DataGridComboBoxColumnWithBinding Width="SizeToHeader"
+                                                <!-- EditingElementStyle="{DynamicResource ComboBoxStyle}" -->
+                                                <DataGridComboBoxColumn Width="SizeToHeader"
                                                                                        MinWidth="80"
                                                                                        CanUserResize="True"
                                                                                        DisplayMemberPath="description"
-                                                                                       EditingElementStyle="{DynamicResource ComboBoxStyle}"
                                                                                        Header="Interp. Quality"
                                                                                        ItemsSource="{Binding DataContext.BapInterpretationQualityCodes,
                                                                                                              IsAsync=true,
@@ -1984,16 +1985,17 @@
                                                                                                                       UpdateSourceTrigger=PropertyChanged,
                                                                                                                       ValidatesOnDataErrors=True}"
                                                                                        SelectedValuePath="code" />
-                                                <tkit:DataGridTextColumn Width="SizeToHeader"
+                                                <!-- EditingElementStyle="{DynamicResource ComboBoxStyle}" -->
+                                                <DataGridTextColumn Width="SizeToHeader"
                                                                          MinWidth="100"
                                                                          Binding="{Binding interpretation_comments,
                                                                                            UpdateSourceTrigger=PropertyChanged,
                                                                                            ValidatesOnDataErrors=True}"
                                                                          CanUserResize="True"
-                                                                         EditingElementStyle="{DynamicResource TextBoxStyle}"
                                                                          Header="Interp. Comments" />
-                                            </tkit:DataGrid.Columns>
-                                        </tkit:DataGrid>
+                                                <!-- EditingElementStyle="{DynamicResource TextBoxStyle}" -->
+                                            </DataGrid.Columns>
+                                        </DataGrid>
 
 										<!--  ButtonEditPriorityHabitats  -->
 										<Button x:Name="ButtonEditPriorityHabitats"
@@ -2034,7 +2036,7 @@
                                             <ColumnDefinition />
                                             <ColumnDefinition Width="22" />
                                         </Grid.ColumnDefinitions>
-                                        <tkit:DataGrid x:Name="DataGridUserBapHabitats"
+                                        <DataGrid x:Name="DataGridUserBapHabitats"
                                                        Grid.Row="0"
                                                        Grid.Column="0"
                                                        Grid.ColumnSpan="2"
@@ -2055,23 +2057,22 @@
                                                        RowDetailsVisibilityMode="Visible"
                                                        RowHeaderWidth="20"
                                                        RowHeight="24">
-                                            <tkit:DataGrid.RowValidationRules>
+                                            <DataGrid.RowValidationRules>
                                                 <DataErrorValidationRule />
-                                            </tkit:DataGrid.RowValidationRules>
-                                            <tkit:DataGrid.Columns>
-                                                <tkit:DataGridTextColumn Binding="{Binding bap_id}"
+                                            </DataGrid.RowValidationRules>
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Binding="{Binding bap_id}"
                                                                          Header="bap_id"
                                                                          IsReadOnly="True"
                                                                          Visibility="Collapsed" />
-                                                <tkit:DataGridTextColumn Binding="{Binding incid}"
+                                                <DataGridTextColumn Binding="{Binding incid}"
                                                                          Header="INCID"
                                                                          IsReadOnly="True"
                                                                          Visibility="Collapsed" />
-                                                <hlu:DataGridComboBoxColumnWithBinding Width="SizeToHeader"
+                                                <DataGridComboBoxColumn Width="SizeToHeader"
                                                                                        MinWidth="100"
                                                                                        CanUserResize="True"
                                                                                        DisplayMemberPath="description"
-                                                                                       EditingElementStyle="{DynamicResource ComboBoxStyle}"
                                                                                        Header="Habitat"
                                                                                        IsReadOnly="False"
                                                                                        ItemsSource="{Binding DataContext.BapHabitatCodes,
@@ -2082,11 +2083,11 @@
                                                                                                                       UpdateSourceTrigger=PropertyChanged,
                                                                                                                       ValidatesOnDataErrors=True}"
                                                                                        SelectedValuePath="code" />
-                                                <hlu:DataGridComboBoxColumnWithBinding Width="SizeToHeader"
+                                                <!-- EditingElementStyle="{DynamicResource ComboBoxStyle}" -->
+                                                <DataGridComboBoxColumn Width="SizeToHeader"
                                                                                        MinWidth="100"
                                                                                        CanUserResize="True"
                                                                                        DisplayMemberPath="description"
-                                                                                       EditingElementStyle="{DynamicResource ComboBoxStyle}"
                                                                                        Header="Determ. Quality"
                                                                                        ItemsSource="{Binding DataContext.BapDeterminationQualityCodesUser,
                                                                                                              IsAsync=true,
@@ -2096,11 +2097,11 @@
                                                                                                                       UpdateSourceTrigger=PropertyChanged,
                                                                                                                       ValidatesOnDataErrors=True}"
                                                                                        SelectedValuePath="code" />
-                                                <hlu:DataGridComboBoxColumnWithBinding Width="SizeToHeader"
+                                                <!-- EditingElementStyle="{DynamicResource ComboBoxStyle}" -->
+                                                <DataGridComboBoxColumn Width="SizeToHeader"
                                                                                        MinWidth="80"
                                                                                        CanUserResize="True"
                                                                                        DisplayMemberPath="description"
-                                                                                       EditingElementStyle="{DynamicResource ComboBoxStyle}"
                                                                                        Header="Interp. Quality"
                                                                                        ItemsSource="{Binding DataContext.BapInterpretationQualityCodes,
                                                                                                              IsAsync=true,
@@ -2110,16 +2111,17 @@
                                                                                                                       UpdateSourceTrigger=PropertyChanged,
                                                                                                                       ValidatesOnDataErrors=True}"
                                                                                        SelectedValuePath="code" />
-                                                <tkit:DataGridTextColumn Width="*"
+                                                <!-- EditingElementStyle="{DynamicResource ComboBoxStyle}" -->
+                                                <DataGridTextColumn Width="*"
                                                                          MinWidth="100"
                                                                          Binding="{Binding interpretation_comments,
                                                                                            UpdateSourceTrigger=PropertyChanged,
                                                                                            ValidatesOnDataErrors=True}"
                                                                          CanUserResize="True"
-                                                                         EditingElementStyle="{DynamicResource TextBoxStyle}"
                                                                          Header="Interp. Comments" />
-                                            </tkit:DataGrid.Columns>
-                                        </tkit:DataGrid>
+                                                <!-- EditingElementStyle="{DynamicResource TextBoxStyle}" -->
+                                            </DataGrid.Columns>
+                                        </DataGrid>
 
 										<!--  ButtonEditPriorityHabitats  -->
 										<Button x:Name="ButtonEditPotentialHabitats"
@@ -2158,11 +2160,11 @@
                 		</ScrollViewer>
                 	</AdornerDecorator>
                 </TabItem>
-				
+
                 <!--  TabItemDetails  -->
                 <TabItem x:Name="TabItemDetails"
 				         IsEnabled="{Binding TabItemDetailsEnabled}">
-					
+
                     <TabItem.Header>
                         <StackPanel>
                         	<Label x:Name="DetailsTabLabel"
@@ -3632,8 +3634,8 @@
                            VerticalAlignment="Center"
                            Content="Bulk Update Affected:"
                            FontStretch="UltraExpanded"
-                           FontWeight="Bold"
-                           Style="{DynamicResource LabelReverseStyle}" />
+                           FontWeight="Bold" />
+                    <!-- Style="{DynamicResource LabelReverseStyle}" /> -->
                 </Grid>
 
                 <Grid x:Name="GridNavigation"
@@ -3654,8 +3656,8 @@
                            Margin="0,0,4,0"
                            HorizontalAlignment="Right"
                            VerticalAlignment="Center"
-                           Content="INCID:"
-                           Style="{DynamicResource LabelReverseStyle}" />
+                           Content="INCID:" />
+                    <!-- Style="{DynamicResource LabelReverseStyle}" /> -->
                     <Button x:Name="ButtonFirstRecord"
                             Grid.Column="1"
                             Margin="0,0,1,0"
@@ -3701,9 +3703,9 @@
                            Content="{Binding StatusIncid,
                                              UpdateSourceTrigger=PropertyChanged}"
                            MouseDoubleClick="LabelStatusIncid_MouseDoubleClick"
-                           Style="{DynamicResource LabelReverseStyle}"
                            ToolTip="{Binding StatusIncidToolTip,
                                              UpdateSourceTrigger=PropertyChanged}" />
+                    <!-- Style="{DynamicResource LabelReverseStyle}" -->
                 </Grid>
 
                 <Grid x:Name="GridCommandButtons"
@@ -3760,8 +3762,8 @@
                            Margin="0,0,4,0"
                            HorizontalAlignment="Right"
                            VerticalAlignment="Center"
-                           Content="INCID:"
-                           Style="{DynamicResource LabelReverseStyle}" />
+                           Content="INCID:" />
+                    <!-- Style="{DynamicResource LabelReverseStyle}" /> -->
                     <TextBox x:Name="TextBoxOSMMRecordNumber"
                              Grid.Column="1"
                              Margin="2,0,0,0"
@@ -3784,9 +3786,9 @@
                            Content="{Binding StatusIncid,
                                              UpdateSourceTrigger=PropertyChanged}"
                            MouseDoubleClick="LabelStatusIncid_MouseDoubleClick"
-                           Style="{DynamicResource LabelReverseStyle}"
                            ToolTip="{Binding StatusIncidToolTip,
                                              UpdateSourceTrigger=PropertyChanged}" />
+                    <!-- Style="{DynamicResource LabelReverseStyle}" -->
                 </Grid>
 
                 <Grid x:Name="GridOSMMCommandButtons"
@@ -3857,8 +3859,8 @@
                            Margin="4,0,0,0"
                            HorizontalAlignment="Left"
                            VerticalAlignment="Center"
-						   Content="{Binding StatusBar}"
-						   Style="{DynamicResource LabelReverseStyle}">
+						   Content="{Binding StatusBar}">
+                        <!-- Style="{DynamicResource LabelReverseStyle}"> -->
 <!--                        <TextBlock x:Name="TextBlockStatusBar" Text="{Binding StatusBar}">
                             <TextBlock.Triggers>
                                 <EventTrigger RoutedEvent="FrameworkElement.Loaded">
@@ -3882,8 +3884,8 @@
                             Margin="0,0,4,0"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center"
-                            Content="Active Layer:"
-							Style="{DynamicResource LabelReverseStyle}" />
+                            Content="Active Layer:" />
+                    <!-- Style="{DynamicResource LabelReverseStyle}" /> -->
                     <TextBox x:Name="TextBoxLayerName"
                              Grid.Column="2"
                              Margin="2,0,0,0"

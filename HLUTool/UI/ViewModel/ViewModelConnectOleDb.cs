@@ -30,7 +30,9 @@ using System.Windows.Interop;
 using HLU.Data.Connection;
 using HLU.Properties;
 using Microsoft.Win32;
-using MSDASC;
+//DONE: ADODB.Connection
+//using MSDASC;
+using Microsoft.Data.SqlClient;
 
 namespace HLU.UI.ViewModel
 {
@@ -45,12 +47,12 @@ namespace HLU.UI.ViewModel
         private RelayCommand _editConnCommand;
         private RelayCommand _createConnCommand;
         private RelayCommand _browseConnCommand;
-        private ADODB.Connection _connAdo;
+        private SqlConnection _connAdo;
         private Backends _backend = Backends.UndeterminedOleDb;
         private List<String> _schemata = [];
         private string _defaultSchema;
 
-        private OleDbConnectionStringBuilder _connStrBuilder;
+        private SqlConnectionStringBuilder _connStrBuilder;
 
         #endregion
 
@@ -65,7 +67,7 @@ namespace HLU.UI.ViewModel
 
         #region Connection String Builder
 
-        public OleDbConnectionStringBuilder ConnectionStringBuilder { get { return _connStrBuilder; } }
+        public SqlConnectionStringBuilder ConnectionStringBuilder { get { return _connStrBuilder; } }
 
         #endregion
 
@@ -159,28 +161,32 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return !String.IsNullOrEmpty(_connStrBuilder.ConnectionString) && 
+                return !String.IsNullOrEmpty(_connStrBuilder.ConnectionString) &&
                     (IsMsAccess(_connAdo) || !String.IsNullOrEmpty(_defaultSchema));
             }
         }
 
-        private bool IsMsAccess(ADODB.Connection connection)
+        private bool IsMsAccess(SqlConnection connection)
         {
             if (connection == null)
                 return false;
             else
-                // Enable connection using Microsoft ACE driver.
-                return (connection.Provider.ToLower().StartsWith("microsoft.jet.oledb") ||
-                    (connection.Provider.ToLower().StartsWith("microsoft.ace.oledb.12.0")));
+                //DONE: ADODB.Connection
+                //// Enable connection using Microsoft ACE driver.
+                //connection.ConnectionString
+                //return (connection.Provider.ToLower().StartsWith("microsoft.jet.oledb") ||
+                //    (connection.Provider.ToLower().StartsWith("microsoft.ace.oledb.12.0")));
+                return true;
         }
 
-        private bool IsSqlServer(ADODB.Connection connection)
-        {
-            if (connection == null)
-                return false;
-            else
-                return connection.Provider.ToLower().StartsWith("sqloledb");
-        }
+        //DONE: ADODB.Connection
+        //private bool IsSqlServer(ADODB.Connection connection)
+        //{
+        //    if (connection == null)
+        //        return false;
+        //    else
+        //        return connection.Provider.ToLower().StartsWith("sqloledb");
+        //}
 
         #endregion
 
@@ -247,8 +253,8 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void CreateConnCommandClick(object param)
         {
-            DataLinks udl = new DataLinksClass();
-            udl.hWnd = _windowHandle != IntPtr.Zero ? _windowHandle.ToInt32() : 
+            DataLinks udl = new();
+            udl.hWnd = _windowHandle != IntPtr.Zero ? _windowHandle.ToInt32() :
                 new WindowInteropHelper(App.Current.MainWindow).Handle.ToInt32();
             _connAdo = udl.PromptNew() as ADODB.Connection;
 
@@ -291,10 +297,12 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void BrowseConnCommandClick(object param)
         {
-            OpenFileDialog openFileDlg = new OpenFileDialog();
-            openFileDlg.Filter = "Microsoft Data Links (*.udl)|*.udl";
-            openFileDlg.Multiselect = false;
-            openFileDlg.RestoreDirectory = true;
+            OpenFileDialog openFileDlg = new()
+            {
+                Filter = "Microsoft Data Links (*.udl)|*.udl",
+                Multiselect = false,
+                RestoreDirectory = true
+            };
 
             if (openFileDlg.ShowDialog() != true) return;
 
@@ -341,8 +349,8 @@ namespace HLU.UI.ViewModel
             try
             {
                 object adoDbConn = (object)_connAdo;
-                
-                DataLinks udl = new DataLinksClass();
+
+                DataLinks udl = new();
                 udl.hWnd = _windowHandle != IntPtr.Zero ? _windowHandle.ToInt32() :
                     new WindowInteropHelper(App.Current.MainWindow).Handle.ToInt32();
 
@@ -373,7 +381,7 @@ namespace HLU.UI.ViewModel
 
         public string ConnectionString
         {
-            get { return HLU.Data.Connection.DbBase.MaskPassword(_connStrBuilder, Resources.PasswordMaskString); }
+            get { return HLU.Data.Connection.DbBase.MaskPassword(_connStrBuilder, Settings.Default.PasswordMaskString); }
             set { }
         }
 
@@ -383,13 +391,14 @@ namespace HLU.UI.ViewModel
 
             try
             {
-                OleDbConnection cn = new OleDbConnection(connectionString);
+                OleDbConnection cn = new(connectionString);
                 cn.Open();
                 cn.Close();
 
-                _connAdo = new ADODB.Connection();
+                _connAdo = new();
                 _connAdo.ConnectionString = connectionString;
-                _connAdo.Provider = cn.Provider;
+                //DONE: ADODB.Connection
+                //_connAdo.Provider = cn.Provider;
             }
             catch (OleDbException exOleDb)
             {
@@ -428,7 +437,7 @@ namespace HLU.UI.ViewModel
 
         private void LoadSchemata()
         {
-            List<String> schemaList = new();
+            List<String> schemaList = [];
             OleDbConnection cn = null;
 
             try
@@ -446,7 +455,7 @@ namespace HLU.UI.ViewModel
                         cmd.CommandType = CommandType.Text;
                         cmd.CommandText = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA" +
                                             " WHERE SCHEMA_NAME <> 'INFORMATION_SCHEMA'";
-                        OleDbDataAdapter adapter = new OleDbDataAdapter(cmd);
+                        OleDbDataAdapter adapter = new(cmd);
                         DataTable dbTable = new();
                         try
                         {

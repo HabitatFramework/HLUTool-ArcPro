@@ -1,19 +1,19 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2013 Thames Valley Environmental Records Centre
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using HLU.Data;
 using HLU.Data.Model;
 
 namespace HLU.UI.ViewModel
@@ -39,7 +40,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="fixedValues">Dictionary of insert values that will be equal for all new rows.</param>
         /// <param name="newHistoryRecords">DataTable containing the new history rows to be inserted.</param>
-        /// <param name="operation">One of the members of the Operations enum describing the operation 
+        /// <param name="operation">One of the members of the Operations enum describing the operation
         /// that created the new history records.</param>
         internal void HistoryWrite(Dictionary<int, string> fixedValues,
             DataTable newHistoryRecords,
@@ -55,7 +56,7 @@ namespace HLU.UI.ViewModel
             try
             {
                 // create dictionary of insert values that will be equal for all new rows
-                Dictionary<int, object> fixedValueDict = new Dictionary<int, object>();
+                Dictionary<int, object> fixedValueDict = [];
                 if (fixedValues != null)
                 {
                     foreach (KeyValuePair<int, string> kv in fixedValues)
@@ -92,10 +93,10 @@ namespace HLU.UI.ViewModel
                 HistoryRenameGeometryPropertyColumns(_viewModelMain.HluDataset.history.modified_lengthColumn.ColumnName,
                     _viewModelMain.HluDataset.history.modified_areaColumn.ColumnName, ref newHistoryRecords);
 
-                // get an array of column ordinals in the new history table as they match columns 
+                // get an array of column ordinals in the new history table as they match columns
                 // in DB history table and are not among the fixed values (fixedValueDic)
-                // a new history column named "<columnName>" will match both DB history columns named 
-                // "<columnName>" *and* "modified_<columnName>" as long as there is no column named 
+                // a new history column named "<columnName>" will match both DB history columns named
+                // "<columnName>" *and* "modified_<columnName>" as long as there is no column named
                 // "modified_<columnName>" in the new history table
                 int[] newHistoryColumns = (from t in _viewModelMain.HluDataset.history.Columns.Cast<DataColumn>()
                                            let gisCols = (from g in newHistoryRecords.Columns.Cast<DataColumn>()
@@ -120,7 +121,7 @@ namespace HLU.UI.ViewModel
                 int historyId = objHistId != DBNull.Value && objHistId != null ? (int)objHistId : 1;
 
                 // append new history rows to a history table
-                HluDataSet.historyDataTable historyTable = new HluDataSet.historyDataTable();
+                HluDataSet.historyDataTable historyTable = new();
                 foreach (DataRow r in newHistoryRecords.Rows)
                 {
                     HluDataSet.historyRow newRow = historyTable.NewhistoryRow();
@@ -173,13 +174,13 @@ namespace HLU.UI.ViewModel
             if (table == null) return;
             switch (_viewModelMain.GisLayerType)
             {
-                case ViewModelWindowMain.GeometryTypes.Point:
+                case GeometryTypes.Point:
                     break;
-                case ViewModelWindowMain.GeometryTypes.Line:
+                case GeometryTypes.Line:
                     if (table.Columns.Contains(ViewModelWindowMain.HistoryGeometry1ColumnName))
                         table.Columns[ViewModelWindowMain.HistoryGeometry1ColumnName].ColumnName = newGeom1ColumnName;
                     break;
-                case ViewModelWindowMain.GeometryTypes.Polygon:
+                case GeometryTypes.Polygon:
                     if (table.Columns.Contains(ViewModelWindowMain.HistoryGeometry1ColumnName))
                         table.Columns[ViewModelWindowMain.HistoryGeometry1ColumnName].ColumnName = newGeom1ColumnName;
                     if (table.Columns.Contains(ViewModelWindowMain.HistoryGeometry2ColumnName))

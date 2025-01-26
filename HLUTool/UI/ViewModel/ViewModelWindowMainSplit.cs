@@ -4,19 +4,19 @@
 // Copyright © 2014 Sussex Biodiversity Record Centre
 // Copyright © 2019 London & South East Record Centres (LaSER)
 // Copyright © 2019-2022 Greenspace Information for Greater London CIC
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -59,8 +59,8 @@ namespace HLU.UI.ViewModel
                     "HLU: Logical Split", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 return false;
             }
-            if ((_viewModelMain.IncidsSelectedMapCount == 1) && 
-                ((_viewModelMain.GisSelection.Rows.Count > 1) && ((_viewModelMain.ToidsSelectedMapCount > 1) || (_viewModelMain.FragsSelectedMapCount > 1))) || 
+            if ((_viewModelMain.IncidsSelectedMapCount == 1) &&
+                ((_viewModelMain.GisSelection.Rows.Count > 1) && ((_viewModelMain.ToidsSelectedMapCount > 1) || (_viewModelMain.FragsSelectedMapCount > 1))) ||
                 (_viewModelMain.GisSelection.Rows.Count == 1))
             {
                 // all features in selection share same incid, but *not* toid and toidfragid
@@ -119,7 +119,7 @@ namespace HLU.UI.ViewModel
                 // Fractions of a second can cause rounding differences when
                 // comparing DateTime fields later in some databases.
                 DateTime currDtTm = DateTime.Now;
-                DateTime nowDtTm = new DateTime(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
+                DateTime nowDtTm = new(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
 
                 // find the last used toidfragid for the selected toid
                 string lastToidFragmentID = _viewModelMain.RecIDs.MaxToidFragmentId(_viewModelMain.ToidsSelectedMap.ElementAt(0));
@@ -152,21 +152,21 @@ namespace HLU.UI.ViewModel
                     throw new Exception("Failed to update GIS layer.");
 
                 // Rename the geometry columns
-                ViewModelWindowMainHistory vmHist = new ViewModelWindowMainHistory(_viewModelMain);
+                ViewModelWindowMainHistory vmHist = new(_viewModelMain);
                 vmHist.HistoryRenameGeometryPropertyColumns(
                     _viewModelMain.HluDataset.incid_mm_polygons.shape_lengthColumn.ColumnName,
                     _viewModelMain.HluDataset.incid_mm_polygons.shape_areaColumn.ColumnName, ref newFeatures);
 
                 // get a where clause for the original split feature
                 List<List<SqlFilterCondition>> originalFeatureWhereClause = ViewModelWindowMainHelpers.GisSelectionToWhereClause(
-                    _viewModelMain.GisSelection.AsEnumerable().Take(1).ToArray(), _viewModelMain.GisIDColumnOrdinals, 
+                    _viewModelMain.GisSelection.AsEnumerable().Take(1).ToArray(), _viewModelMain.GisIDColumnOrdinals,
                     ViewModelWindowMain.IncidPageSize, _viewModelMain.HluDataset.incid_mm_polygons);
 
                 if (originalFeatureWhereClause.Count != 1)
                     throw new Exception("Error finding features in database.");
 
                 // get the attributes of the split feature
-                HluDataSet.incid_mm_polygonsDataTable updTable = new HluDataSet.incid_mm_polygonsDataTable();
+                HluDataSet.incid_mm_polygonsDataTable updTable = new();
                 _viewModelMain.GetIncidMMPolygonRows(originalFeatureWhereClause, ref updTable);
 
                 if ((updTable == null) || (updTable.Rows.Count != 1))
@@ -190,10 +190,10 @@ namespace HLU.UI.ViewModel
                     String.Join(",", newFeatures.Rows[0].ItemArray.Select((i, index) =>
                         new
                         {
-                            ColumnName = newFeatures.Columns[index].ColumnName,
+                            newFeatures.Columns[index].ColumnName,
                             value = String.IsNullOrEmpty(i.ToString()) ? null : i
                         })
-                    .Where(a => _viewModelMain.GisIDColumns.Count(c => c.ColumnName == a.ColumnName) == 0)
+                    .Where(a => !_viewModelMain.GisIDColumns.Any(c => c.ColumnName == a.ColumnName))
                     .Select(a => String.Format("{0} = {1}", _viewModelMain.DataBase.QuoteIdentifier(a.ColumnName),
                         _viewModelMain.DataBase.QuoteValue(a.value))).ToArray()),
                     _viewModelMain.DataBase.WhereClause(false, true, true, originalFeatureWhereClause[0]));
@@ -203,9 +203,9 @@ namespace HLU.UI.ViewModel
                     throw new Exception("Failed to update original row in database copy of GIS layer.");
 
                 // build an insert statement for DB shadow copy of GIS layer
-                string insertCommand = String.Format("INSERT INTO {0} ({1}) VALUES (", 
+                string insertCommand = String.Format("INSERT INTO {0} ({1}) VALUES (",
                     _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
-                    String.Join(",", newFeatures.Columns.Cast<DataColumn>().Select(c => 
+                    String.Join(",", newFeatures.Columns.Cast<DataColumn>().Select(c =>
                     _viewModelMain.DataBase.QuoteIdentifier(c.ColumnName)).ToArray())) + "{0})";
 
                 int toidFragID = Int32.Parse(lastToidFragmentID);
@@ -291,7 +291,7 @@ namespace HLU.UI.ViewModel
                 // Fractions of a second can cause rounding differences when
                 // comparing DateTime fields later in some databases.
                 DateTime currDtTm = DateTime.Now;
-                DateTime nowDtTm = new DateTime(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
+                DateTime nowDtTm = new(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
 
                 // The incid modified columns (i.e. last modified user and date)
                 // should be updated for the active incid
@@ -310,12 +310,12 @@ namespace HLU.UI.ViewModel
                 //
                 // update GIS layer
                 DataTable historyTable = _viewModelMain.GISApplication.SplitFeaturesLogically(_viewModelMain.Incid, newIncid,
-                    _viewModelMain.HistoryColumns.Concat(new DataColumn[] { new DataColumn(
+                    _viewModelMain.HistoryColumns.Concat([ new(
                             _viewModelMain.HluDataset.history.modified_toidfragidColumn.ColumnName.Replace(
-                            _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.ColumnName, String.Empty) + 
-                            GISApplication.GISApp.HistoryAdditionalFieldsDelimiter + 
-                            _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.ColumnName, 
-                            _viewModelMain.HluDataset.history.modified_toidfragidColumn.DataType)}).ToArray());
+                            _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.ColumnName, String.Empty) +
+                            GISApplication.GISApp.HistoryAdditionalFieldsDelimiter +
+                            _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.ColumnName,
+                            _viewModelMain.HluDataset.history.modified_toidfragidColumn.DataType)]).ToArray());
 
                 // If an error occurred when updating the GIS layer or
                 // if no history row were collected then throw an exception.
@@ -324,7 +324,7 @@ namespace HLU.UI.ViewModel
                 //---------------------------------------------------------------------
 
                 // update DB shadow copy of GIS layer
-                HluDataSet.incid_mm_polygonsDataTable polygons = new HluDataSet.incid_mm_polygonsDataTable();
+                HluDataSet.incid_mm_polygonsDataTable polygons = new();
                 _viewModelMain.GetIncidMMPolygonRows(ViewModelWindowMainHelpers.GisSelectionToWhereClause(
                     _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals,
                     ViewModelWindowMain.IncidPageSize, polygons), ref polygons);
@@ -355,11 +355,13 @@ namespace HLU.UI.ViewModel
                 //    historyTable.Rows[0][_viewModelMain.HluDataset.history.incidColumn.ColumnName].ToString());
 
                 // write history
-                Dictionary<int, string> fixedValues = new Dictionary<int, string>();
-                fixedValues.Add(_viewModelMain.HluDataset.history.incidColumn.Ordinal, newIncid);
+                Dictionary<int, string> fixedValues = new()
+                {
+                    { _viewModelMain.HluDataset.history.incidColumn.Ordinal, newIncid }
+                };
                 historyTable.Columns[_viewModelMain.HluDataset.history.incidColumn.ColumnName].ColumnName =
                     _viewModelMain.HluDataset.history.modified_incidColumn.ColumnName;
-                ViewModelWindowMainHistory vmHist = new ViewModelWindowMainHistory(_viewModelMain);
+                ViewModelWindowMainHistory vmHist = new(_viewModelMain);
                 vmHist.HistoryWrite(fixedValues, historyTable, ViewModelWindowMain.Operations.LogicalSplit, nowDtTm);
 
                 _viewModelMain.DataBase.CommitTransaction();
@@ -451,7 +453,7 @@ namespace HLU.UI.ViewModel
                 // Fractions of a second can cause rounding differences when
                 // comparing DateTime fields later in some databases.
                 DateTime currDtTm = DateTime.Now;
-                DateTime nowDtTm = new DateTime(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
+                DateTime nowDtTm = new(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
 
                 newIncidRow.created_date = nowDtTm;
                 newIncidRow.created_user_id = _viewModelMain.UserID;
@@ -478,7 +480,7 @@ namespace HLU.UI.ViewModel
                     //    _viewModelMain.IncidIhsMatrixRows.Where(r => r != null).ToArray();
 
                     // Create a local copy of the IncidIhsMatrix rows.
-                    List<HluDataSet.incid_ihs_matrixRow> ihsMatrixRows = new List<HluDataSet.incid_ihs_matrixRow>();
+                    List<HluDataSet.incid_ihs_matrixRow> ihsMatrixRows = [];
 
                     // Copy the column values for each row in the IncidIhsMatrix table.
                     foreach (HluDataSet.incid_ihs_matrixRow row in _viewModelMain.IncidIhsMatrixRows)
@@ -499,7 +501,7 @@ namespace HLU.UI.ViewModel
 
                     // Remove any rows added by the edit that have been discarded but
                     // are still in the rows array.
-                    for (int i = 0; i < _viewModelMain.IncidIhsMatrixRows.Count(); i++)
+                    for (int i = 0; i < _viewModelMain.IncidIhsMatrixRows.Length; i++)
                     {
                         if ((_viewModelMain.IncidIhsMatrixRows[i] != null) && (_viewModelMain.IncidIhsMatrixRows[i].incidRow == null))
                         {
@@ -534,7 +536,7 @@ namespace HLU.UI.ViewModel
                     //    _viewModelMain.IncidIhsFormationRows.Where(r => r != null).ToArray();
 
                     // Create a local copy of the IncidIhsFormation rows.
-                    List<HluDataSet.incid_ihs_formationRow> ihsFormationRows = new List<HluDataSet.incid_ihs_formationRow>();
+                    List<HluDataSet.incid_ihs_formationRow> ihsFormationRows = [];
 
                     // Copy the column values for each row in the IncidIhsFormation table.
                     foreach (HluDataSet.incid_ihs_formationRow row in _viewModelMain.IncidIhsFormationRows)
@@ -555,7 +557,7 @@ namespace HLU.UI.ViewModel
 
                     // Remove any rows added by the edit that have been discarded but
                     // are still in the rows array.
-                    for (int i = 0; i < _viewModelMain.IncidIhsFormationRows.Count(); i++)
+                    for (int i = 0; i < _viewModelMain.IncidIhsFormationRows.Length; i++)
                     {
                         if ((_viewModelMain.IncidIhsFormationRows[i] != null) && (_viewModelMain.IncidIhsFormationRows[i].incidRow == null))
                         {
@@ -590,7 +592,7 @@ namespace HLU.UI.ViewModel
                     //    _viewModelMain.IncidIhsManagementRows.Where(r => r != null).ToArray();
 
                     // Create a local copy of the IncidIhsManagement rows.
-                    List<HluDataSet.incid_ihs_managementRow> ihsManagementRows = new List<HluDataSet.incid_ihs_managementRow>();
+                    List<HluDataSet.incid_ihs_managementRow> ihsManagementRows = [];
 
                     // Copy the column values for each row in the IncidIhsManagement table.
                     foreach (HluDataSet.incid_ihs_managementRow row in _viewModelMain.IncidIhsManagementRows)
@@ -611,7 +613,7 @@ namespace HLU.UI.ViewModel
 
                     // Remove any rows added by the edit that have been discarded but
                     // are still in the rows array.
-                    for (int i = 0; i < _viewModelMain.IncidIhsManagementRows.Count(); i++)
+                    for (int i = 0; i < _viewModelMain.IncidIhsManagementRows.Length; i++)
                     {
                         if ((_viewModelMain.IncidIhsManagementRows[i] != null) && (_viewModelMain.IncidIhsManagementRows[i].incidRow == null))
                         {
@@ -646,7 +648,7 @@ namespace HLU.UI.ViewModel
                     //    _viewModelMain.IncidIhsComplexRows.Where(r => r != null).ToArray();
 
                     // Create a local copy of the IncidIhsComplex rows.
-                    List<HluDataSet.incid_ihs_complexRow> ihsComplexRows = new List<HluDataSet.incid_ihs_complexRow>();
+                    List<HluDataSet.incid_ihs_complexRow> ihsComplexRows = [];
 
                     // Copy the column values for each row in the IncidIhsComplex table.
                     foreach (HluDataSet.incid_ihs_complexRow row in _viewModelMain.IncidIhsComplexRows)
@@ -667,7 +669,7 @@ namespace HLU.UI.ViewModel
 
                     // Remove any rows added by the edit that have been discarded but
                     // are still in the rows array.
-                    for (int i = 0; i < _viewModelMain.IncidIhsComplexRows.Count(); i++)
+                    for (int i = 0; i < _viewModelMain.IncidIhsComplexRows.Length; i++)
                     {
                         if ((_viewModelMain.IncidIhsComplexRows[i] != null) && (_viewModelMain.IncidIhsComplexRows[i].incidRow == null))
                         {
@@ -699,7 +701,7 @@ namespace HLU.UI.ViewModel
                     // to the rows can be discarded afterwards.
 
                     // Create a local copy of the IncidSecondary rows.
-                    List<HluDataSet.incid_secondaryRow> secondaryRows = new List<HluDataSet.incid_secondaryRow>();
+                    List<HluDataSet.incid_secondaryRow> secondaryRows = [];
 
                     // Copy the column values for each row in the IncidSources table.
                     foreach (HluDataSet.incid_secondaryRow row in _viewModelMain.IncidSecondaryRows)
@@ -720,7 +722,7 @@ namespace HLU.UI.ViewModel
 
                     // Remove any rows added by the edit that have been discarded but
                     // are still in the rows array.
-                    for (int i = 0; i < _viewModelMain.IncidSecondaryRows.Count(); i++)
+                    for (int i = 0; i < _viewModelMain.IncidSecondaryRows.Length; i++)
                     {
                         if ((_viewModelMain.IncidSecondaryRows[i] != null) && (_viewModelMain.IncidSecondaryRows[i].incidRow == null))
                         {
@@ -750,7 +752,7 @@ namespace HLU.UI.ViewModel
                 // to the rows can be discarded afterwards.
 
                 // Create a local copy of the IncidBap rows.
-                List<HluDataSet.incid_bapRow> bapRows = new List<HluDataSet.incid_bapRow>();
+                List<HluDataSet.incid_bapRow> bapRows = [];
 
                 IEnumerable<BapEnvironment> beAuto = null;
                 IEnumerable<BapEnvironment> beUser = null;
@@ -761,8 +763,8 @@ namespace HLU.UI.ViewModel
                 if (_viewModelMain.IncidBapRowsAuto != null)
                 {
                     beAuto = from b in _viewModelMain.IncidBapRowsAuto
-                                                            group b by b.bap_habitat into habs
-                                                            select habs.First();
+                                       group b by b.bap_habitat into habs
+                                       select habs.First();
                 }
 
                 // Get a list of the user BAP rows, removing any duplicate
@@ -770,9 +772,9 @@ namespace HLU.UI.ViewModel
                 if (_viewModelMain.IncidBapHabitatsUser != null)
                 {
                     beUser = from b in _viewModelMain.IncidBapHabitatsUser
-                                                            where beAuto.Count(a => a.bap_habitat == b.bap_habitat) == 0
-                                                            group b by b.bap_habitat into habs
-                                                            select habs.First();
+                             where !beAuto.Any(a => a.bap_habitat == b.bap_habitat)
+                             group b by b.bap_habitat into habs
+                             select habs.First();
                 }
 
                 // Concatenate the two BAP lists together.
@@ -809,7 +811,7 @@ namespace HLU.UI.ViewModel
 
                 // Remove any rows added by the edit that have been discarded but
                 // are still in the rows array.
-                for (int i = 0; i < _viewModelMain.IncidBapRows.Count(); i++)
+                for (int i = 0; i < _viewModelMain.IncidBapRows.Length; i++)
                 {
                     if ((_viewModelMain.IncidBapRows[i] != null) && (_viewModelMain.IncidBapRows[i].incidRow == null))
                     {
@@ -846,7 +848,7 @@ namespace HLU.UI.ViewModel
                     // to the rows can be discarded afterwards.
 
                     // Create a local copy of the IncidCondition rows.
-                    List<HluDataSet.incid_conditionRow> conditionRows = new List<HluDataSet.incid_conditionRow>();
+                    List<HluDataSet.incid_conditionRow> conditionRows = [];
 
                     // Copy the column values for each row in the IncidSources table.
                     foreach (HluDataSet.incid_conditionRow row in _viewModelMain.IncidConditionRows)
@@ -867,7 +869,7 @@ namespace HLU.UI.ViewModel
 
                     // Remove any rows added by the edit that have been discarded but
                     // are still in the rows array.
-                    for (int i = 0; i < _viewModelMain.IncidConditionRows.Count(); i++)
+                    for (int i = 0; i < _viewModelMain.IncidConditionRows.Length; i++)
                     {
                         if ((_viewModelMain.IncidConditionRows[i] != null) && (_viewModelMain.IncidConditionRows[i].incidRow == null))
                         {
@@ -899,7 +901,7 @@ namespace HLU.UI.ViewModel
                     // to the rows can be discarded afterwards.
 
                     // Create a local copy of the IncidSources rows.
-                    List<HluDataSet.incid_sourcesRow> sourcesRows = new List<HluDataSet.incid_sourcesRow>();
+                    List<HluDataSet.incid_sourcesRow> sourcesRows = [];
 
                     // Copy the column values for each row in the IncidSources table.
                     foreach (HluDataSet.incid_sourcesRow row in _viewModelMain.IncidSourcesRows)
@@ -920,7 +922,7 @@ namespace HLU.UI.ViewModel
 
                     // Remove any rows added by the edit that have been discarded but
                     // are still in the rows array.
-                    for (int i = 0; i < _viewModelMain.IncidSourcesRows.Count(); i++)
+                    for (int i = 0; i < _viewModelMain.IncidSourcesRows.Length; i++)
                     {
                         if ((_viewModelMain.IncidSourcesRows[i] != null) && (_viewModelMain.IncidSourcesRows[i].incidRow == null))
                         {
@@ -953,7 +955,7 @@ namespace HLU.UI.ViewModel
                     //
 
                     // Create a local copy of the IncidOSMMUpdates rows.
-                    List<HluDataSet.incid_osmm_updatesRow> OSMMUpdatesRows = new List<HluDataSet.incid_osmm_updatesRow>();
+                    List<HluDataSet.incid_osmm_updatesRow> OSMMUpdatesRows = [];
 
                     // Copy the column values for each row in the IncidOSMMUpdates table.
                     foreach (HluDataSet.incid_osmm_updatesRow row in _viewModelMain.IncidOSMMUpdatesRows)
@@ -974,7 +976,7 @@ namespace HLU.UI.ViewModel
 
                     // Remove any rows added by the edit that have been discarded but
                     // are still in the rows array.
-                    for (int i = 0; i < _viewModelMain.IncidOSMMUpdatesRows.Count(); i++)
+                    for (int i = 0; i < _viewModelMain.IncidOSMMUpdatesRows.Length; i++)
                     {
                         if ((_viewModelMain.IncidOSMMUpdatesRows[i] != null) && (_viewModelMain.IncidOSMMUpdatesRows[i].incidRow == null))
                         {

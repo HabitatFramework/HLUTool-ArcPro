@@ -43,8 +43,8 @@ namespace HLU.Data.Connection
         private string _encoding;
         private Dictionary<Type, NpgsqlDataAdapter> _adaptersDic = [];
 
-        private HLU.UI.View.Connection.ViewConnectPgSql _connWindow;
-        private HLU.UI.ViewModel.ViewModelConnectPgSql _connViewModel;
+        private UI.View.Connection.ViewConnectPgSql _connWindow;
+        private UI.ViewModel.ViewModelConnectPgSql _connViewModel;
 
         #endregion
 
@@ -798,7 +798,7 @@ namespace HLU.Data.Connection
 
                 // when ViewModel asks to be closed, close window
                 _connViewModel.RequestClose +=
-                    new HLU.UI.ViewModel.ViewModelConnectPgSql.RequestCloseEventHandler(_connViewModel_RequestClose);
+                    new UI.ViewModel.ViewModelConnectPgSql.RequestCloseEventHandler(_connViewModel_RequestClose);
 
                 // allow all controls in window to bind to ViewModel by setting DataContext
                 _connWindow.DataContext = _connViewModel;

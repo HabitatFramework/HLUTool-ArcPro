@@ -3,19 +3,19 @@
 // Copyright © 2014 Sussex Biodiversity Record Centre
 // Copyright © 2019 London & South East Record Centres (LaSER)
 // Copyright © 2019-2022 Greenspace Information for Greater London CIC
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -26,6 +26,7 @@ using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Input;
+using HLU.Data;
 using HLU.Data.Model;
 using HLU.UI.View;
 
@@ -36,7 +37,7 @@ namespace HLU.UI.ViewModel
         private ViewModelWindowMain _viewModelMain;
         private WindowMergeFeatures _mergeFeaturesWindow;
         private ViewModelMergeFeatures<HluDataSet.incidDataTable, HluDataSet.incidRow> _mergeFeaturesViewModelLogical;
-        private ViewModelMergeFeatures<HluDataSet.incid_mm_polygonsDataTable, HluDataSet.incid_mm_polygonsRow> 
+        private ViewModelMergeFeatures<HluDataSet.incid_mm_polygonsDataTable, HluDataSet.incid_mm_polygonsRow>
             _mergeFeaturesViewModelPhysical;
         private int _mergeResultFeatureIndex;
 
@@ -145,26 +146,31 @@ namespace HLU.UI.ViewModel
                     return false;
 
                 // Prompt the user to choose which incid to keep
-                _mergeFeaturesWindow = new WindowMergeFeatures();
-                _mergeFeaturesWindow.Owner = App.Current.MainWindow;
-                _mergeFeaturesWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-                _mergeFeaturesWindow.MaxHeight = App.Current.MainWindow.ActualHeight;
+                _mergeFeaturesWindow = new WindowMergeFeatures
+                {
+                    //DONE: App.Current.MainWindow
+                    //Owner = App.Current.MainWindow;
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen
+                    //DONE: App.Current.MainWindow
+                    //MaxHeight = App.Current.MainWindow.ActualHeight;
+                };
 
-                HluDataSet.incidDataTable selectTable = new HluDataSet.incidDataTable();
+                HluDataSet.incidDataTable selectTable = new();
                 _viewModelMain.HluTableAdapterManager.incidTableAdapter.Fill(selectTable,
                     ViewModelWindowMainHelpers.IncidSelectionToWhereClause(ViewModelWindowMain.IncidPageSize,
                     _viewModelMain.IncidTable.incidColumn.Ordinal, _viewModelMain.IncidTable, _viewModelMain.IncidsSelectedMap));
 
-                HluDataSet.incid_mm_polygonsDataTable polygons = new HluDataSet.incid_mm_polygonsDataTable();
+                HluDataSet.incid_mm_polygonsDataTable polygons = new();
                 _viewModelMain.GetIncidMMPolygonRows(ViewModelWindowMainHelpers.GisSelectionToWhereClause(
-                    _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals, 
+                    _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals,
                     ViewModelWindowMain.IncidPageSize, polygons), ref polygons);
 
-                _mergeFeaturesViewModelLogical = new ViewModelMergeFeatures<HluDataSet.incidDataTable,
-                    HluDataSet.incidRow>(selectTable, _viewModelMain.GisIDColumnOrdinals, 
-                    _viewModelMain.IncidTable.incidColumn.Ordinal, polygons.Select(r => r).ToArray(), 
-                    _viewModelMain.GISApplication);
-                _mergeFeaturesViewModelLogical.DisplayName = "Select INCID To Keep";
+                _mergeFeaturesViewModelLogical = new(selectTable, _viewModelMain.GisIDColumnOrdinals,
+                    _viewModelMain.IncidTable.incidColumn.Ordinal, polygons.Select(r => r).ToArray(),
+                    _viewModelMain.GISApplication)
+                {
+                    DisplayName = "Select INCID To Keep"
+                };
                 _mergeFeaturesViewModelLogical.RequestClose += new ViewModelMergeFeatures<HluDataSet.incidDataTable,
                         HluDataSet.incidRow>.RequestCloseEventHandler(_mergeFeaturesViewModelLogical_RequestClose);
 
@@ -189,7 +195,7 @@ namespace HLU.UI.ViewModel
                     // Fractions of a second can cause rounding differences when
                     // comparing DateTime fields later in some databases.
                     DateTime currDtTm = DateTime.Now;
-                    DateTime nowDtTm = new DateTime(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
+                    DateTime nowDtTm = new(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
 
                     // assign selected incid to selected features except keepIncid
                     DataTable historyTable = _viewModelMain.GISApplication.MergeFeaturesLogically(
@@ -199,7 +205,7 @@ namespace HLU.UI.ViewModel
                         throw new Exception("Failed to update GIS layer.");
 
                     // Build a list of the columns to update (not the key columns or the length/area)
-                    List<KeyValuePair<int, object>> updateFields = new List<KeyValuePair<int,object>>();
+                    List<KeyValuePair<int, object>> updateFields = [];
                     var keepPolygon = polygons.FirstOrDefault(r => r.incid == keepIncid);
                     if (keepPolygon != null)
                     {
@@ -230,19 +236,30 @@ namespace HLU.UI.ViewModel
                         throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid_mm_polygons.TableName));
 
                     // insert history rows (fixed value keepIncid)
-                    Dictionary<int, string> fixedValues = new Dictionary<int, string>();
-                    fixedValues.Add(_viewModelMain.HluDataset.history.incidColumn.Ordinal, keepIncid);
-                    ViewModelWindowMainHistory vmHist = new ViewModelWindowMainHistory(_viewModelMain);
+                    Dictionary<int, string> fixedValues = new()
+                    {
+                        { _viewModelMain.HluDataset.history.incidColumn.Ordinal, keepIncid }
+                    };
+                    ViewModelWindowMainHistory vmHist = new(_viewModelMain);
                     vmHist.HistoryWrite(fixedValues, historyTable, ViewModelWindowMain.Operations.LogicalMerge, nowDtTm);
 
                     // Count incid records no longer in use
+                    //DONE: Aggregate
                     string sqlCount = new(String.Format("SELECT {0}.{1} FROM {0} LEFT JOIN {2} ON {2}.{3} = {0}.{1} WHERE {0}.{1} IN ({4}) GROUP BY {0}.{1} HAVING COUNT({2}.{3}) = 0",
                         _viewModelMain.DataBase.QualifyTableName(_viewModelMain.IncidTable.TableName),
                         _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.incidColumn.ColumnName),
                         _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
                         _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.incidColumn.ColumnName),
-                        selectTable.Where(r => r.incid != keepIncid).Aggregate(new(), (sb, r) => sb.Append("," +
-                            _viewModelMain.DataBase.QuoteValue(r.incid))).Remove(0, 1))).ToString();
+                        string.Join(",", selectTable.Where(r => r.incid != keepIncid).Select(r =>
+                            _viewModelMain.DataBase.QuoteValue(r.incid))).Remove(0, 1)));
+
+                    //string sqlCount = new(String.Format("SELECT {0}.{1} FROM {0} LEFT JOIN {2} ON {2}.{3} = {0}.{1} WHERE {0}.{1} IN ({4}) GROUP BY {0}.{1} HAVING COUNT({2}.{3}) = 0",
+                    //    _viewModelMain.DataBase.QualifyTableName(_viewModelMain.IncidTable.TableName),
+                    //    _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.incidColumn.ColumnName),
+                    //    _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
+                    //    _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.incidColumn.ColumnName),
+                    //    selectTable.Where(r => r.incid != keepIncid).Aggregate(new(), (sb, r) => sb.Append("," +
+                    //        _viewModelMain.DataBase.QuoteValue(r.incid))).Remove(0, 1))).ToString();
 
                     IDataReader delReader = _viewModelMain.DataBase.ExecuteReader(sqlCount,
                         _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text);
@@ -258,11 +275,11 @@ namespace HLU.UI.ViewModel
                     if (deleteIncids.Count > 0)
                     {
                         // Delete any incid records no longer in use
-                        string deleteStatement = new(String.Format(
+                        string deleteStatement = String.Format(
                             "DELETE FROM {0} WHERE {1} IN ({2})",
                             _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid.TableName),
                             _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.incidColumn.ColumnName),
-                            String.Join(",", deleteIncids.Select(i => _viewModelMain.DataBase.QuoteValue(i)).ToArray()))).ToString();
+                            String.Join(",", deleteIncids.Select(i => _viewModelMain.DataBase.QuoteValue(i)).ToArray()));
 
                         int numAffected = _viewModelMain.DataBase.ExecuteNonQuery(deleteStatement,
                             _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text);
@@ -348,16 +365,16 @@ namespace HLU.UI.ViewModel
             try
             {
                 // Get the DB copy rows to update
-                HluDataSet.incid_mm_polygonsDataTable selectTable = new HluDataSet.incid_mm_polygonsDataTable();
+                HluDataSet.incid_mm_polygonsDataTable selectTable = new();
                 _viewModelMain.GetIncidMMPolygonRows(ViewModelWindowMainHelpers.GisSelectionToWhereClause(
-                    _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals, 
+                    _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals,
                     ViewModelWindowMain.IncidPageSize, selectTable), ref selectTable);
 
                 // Check the GIS layer and DB are in sync
                 if (selectTable.Count == 0)
                     return false;
                 else if (selectTable.Count != _viewModelMain.GisSelection.Rows.Count)
-                    throw new Exception(String.Format("GIS Layer and database are out of sync:\n{0} map polygons, {1} rows in table {2}.", 
+                    throw new Exception(String.Format("GIS Layer and database are out of sync:\n{0} map polygons, {1} rows in table {2}.",
                         _viewModelMain.FragsSelectedMapCount, selectTable.Count, _viewModelMain.HluDataset.incid_mm_polygons.TableName));
 
                 // lowest toidfragid in selection assigned to result feature
@@ -367,20 +384,24 @@ namespace HLU.UI.ViewModel
                 if (selectTable.GroupBy(r => r.incid).Count() == 1)
                 {
                     int minFragmID = Int32.Parse(newToidFragmentID);
-                    _mergeResultFeatureIndex = selectTable.Select((r, index) => 
+                    _mergeResultFeatureIndex = selectTable.Select((r, index) =>
                         Int32.Parse(r.toidfragid) == minFragmID ? index : -1).First(i => i != -1);
                 }
                 else
                 {
-                    _mergeFeaturesWindow = new WindowMergeFeatures();
-                    _mergeFeaturesWindow.Owner = App.Current.MainWindow;
-                    _mergeFeaturesWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                    _mergeFeaturesWindow = new WindowMergeFeatures
+                    {
+                        //DONE: App.Current.MainWindow
+                        //Owner = App.Current.MainWindow;
+                        WindowStartupLocation = WindowStartupLocation.CenterScreen
+                    };
 
-                    _mergeFeaturesViewModelPhysical = new ViewModelMergeFeatures
-                        <HluDataSet.incid_mm_polygonsDataTable, HluDataSet.incid_mm_polygonsRow>(selectTable,
+                    _mergeFeaturesViewModelPhysical = new(selectTable,
                         _viewModelMain.GisIDColumnOrdinals, _viewModelMain.IncidTable.incidColumn.Ordinal,
-                        null, _viewModelMain.GISApplication);
-                    _mergeFeaturesViewModelPhysical.DisplayName = "Select Feature To Keep";
+                        null, _viewModelMain.GISApplication)
+                    {
+                        DisplayName = "Select Feature To Keep"
+                    };
                     _mergeFeaturesViewModelPhysical.RequestClose += new ViewModelMergeFeatures
                         <HluDataSet.incid_mm_polygonsDataTable, HluDataSet.incid_mm_polygonsRow>
                         .RequestCloseEventHandler(_mergeFeaturesViewModelPhysical_RequestClose);
@@ -405,7 +426,7 @@ namespace HLU.UI.ViewModel
                         // Fractions of a second can cause rounding differences when
                         // comparing DateTime fields later in some databases.
                         DateTime currDtTm = DateTime.Now;
-                        DateTime nowDtTm = new DateTime(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
+                        DateTime nowDtTm = new(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
 
                         // Update the last modified details of the kept incid
                         _viewModelMain.ViewModelUpdate.UpdateIncidModifiedColumns(_viewModelMain.IncidsSelectedMap.ElementAt(0), nowDtTm);
@@ -413,7 +434,7 @@ namespace HLU.UI.ViewModel
                         // Build a where clause of features to keep
                         List<List<SqlFilterCondition>> resultFeatureWhereClause =
                             ViewModelWindowMainHelpers.GisSelectionToWhereClause(
-                            new HluDataSet.incid_mm_polygonsRow[] { selectTable[_mergeResultFeatureIndex] },
+                            [selectTable[_mergeResultFeatureIndex]],
                                 _viewModelMain.GisIDColumnOrdinals, ViewModelWindowMain.IncidPageSize, selectTable);
 
                         if (resultFeatureWhereClause.Count != 1)
@@ -427,7 +448,7 @@ namespace HLU.UI.ViewModel
 
                         // historyTable contains rows of features merged into result feature (i.e. no longer existing)
                         // and last row with data of result feature (remaining in GIS, lowest toidfragid of merged features)
-                        // this last row must be removed before writing history 
+                        // this last row must be removed before writing history
                         // but is needed to update geometry fields in incid_mm_polygons
                         DataTable historyTable = _viewModelMain.GISApplication.MergeFeatures(newToidFragmentID,
                             resultFeatureWhereClause[0].Select(c => c.Clone()).ToList(), _viewModelMain.HistoryColumns);
@@ -449,11 +470,13 @@ namespace HLU.UI.ViewModel
                             resultFeatureWhereClause[0], mergeFeaturesWhereClause);
 
                         // insert history rows (fixed values incid, toid, newToidFragmentID)
-                        Dictionary<int, string> fixedValues = new Dictionary<int, string>();
-                        fixedValues.Add(_viewModelMain.HluDataset.history.incidColumn.Ordinal, selectTable[0].incid);
-                        fixedValues.Add(_viewModelMain.HluDataset.history.toidColumn.Ordinal, selectTable[0].toid);
-                        fixedValues.Add(_viewModelMain.HluDataset.history.toidfragidColumn.Ordinal, newToidFragmentID);
-                        ViewModelWindowMainHistory vmHist = new ViewModelWindowMainHistory(_viewModelMain);
+                        Dictionary<int, string> fixedValues = new()
+                        {
+                            { _viewModelMain.HluDataset.history.incidColumn.Ordinal, selectTable[0].incid },
+                            { _viewModelMain.HluDataset.history.toidColumn.Ordinal, selectTable[0].toid },
+                            { _viewModelMain.HluDataset.history.toidfragidColumn.Ordinal, newToidFragmentID }
+                        };
+                        ViewModelWindowMainHistory vmHist = new(_viewModelMain);
                         vmHist.HistoryWrite(fixedValues, historyTable, ViewModelWindowMain.Operations.PhysicalMerge, nowDtTm);
 
                         // Commit the changes
@@ -509,20 +532,20 @@ namespace HLU.UI.ViewModel
             DataTable resultTable, string newToidFragmentID, List<SqlFilterCondition> resultFeatureWhereClause,
             List<List<SqlFilterCondition>> mergeFeaturesWhereClause)
         {
-            // build an update statement for the result feature: lowest toidfragid 
+            // build an update statement for the result feature: lowest toidfragid
             // in the selection set and sum of shape_length/shape_area of merged features
             string updateWhereClause = _viewModelMain.DataBase.WhereClause(false, true, true, resultFeatureWhereClause);
             string updateStatement = null;
             switch (_viewModelMain.GisLayerType)
             {
-                case ViewModelWindowMain.GeometryTypes.Point:
+                case GeometryTypes.Point:
                     updateStatement = String.Format("UPDATE {0} SET {1} = {2} WHERE {3}",
                         _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
                         _viewModelMain.DataBase.QuoteIdentifier(
                             _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.ColumnName),
                         _viewModelMain.DataBase.QuoteValue(newToidFragmentID), updateWhereClause);
                     break;
-                case ViewModelWindowMain.GeometryTypes.Line:
+                case GeometryTypes.Line:
                     double plineLength = resultTable.Rows[0].Field<double>(ViewModelWindowMain.HistoryGeometry1ColumnName);
                     updateStatement = String.Format("UPDATE {0} SET {1} = {2}, {3} = {4} WHERE {5}",
                         _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
@@ -533,7 +556,7 @@ namespace HLU.UI.ViewModel
                             _viewModelMain.HluDataset.incid_mm_polygons.shape_lengthColumn.ColumnName),
                         plineLength, updateWhereClause);
                     break;
-                case ViewModelWindowMain.GeometryTypes.Polygon:
+                case GeometryTypes.Polygon:
                     double shapeLength = resultTable.Rows[0].Field<double>(ViewModelWindowMain.HistoryGeometry1ColumnName);
                     double shapeArea = resultTable.Rows[0].Field<double>(ViewModelWindowMain.HistoryGeometry2ColumnName);
                     updateStatement = String.Format("UPDATE {0} SET {1} = {2}, {3} = {4}, {5} = {6} WHERE {7}",
@@ -564,14 +587,14 @@ namespace HLU.UI.ViewModel
 
                     if (_viewModelMain.DataBase.ExecuteNonQuery(deleteStatement,
                         _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text) == -1)
-                        throw new Exception(String.Format("Failed to delete from table {0}.", 
+                        throw new Exception(String.Format("Failed to delete from table {0}.",
                             _viewModelMain.HluDataset.incid_mm_polygons.TableName));
                 }
 
                 // update the result feature
-                if (_viewModelMain.DataBase.ExecuteNonQuery(updateStatement, 
+                if (_viewModelMain.DataBase.ExecuteNonQuery(updateStatement,
                     _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text) == -1)
-                    throw new Exception(String.Format("Failed to update table {0}.", 
+                    throw new Exception(String.Format("Failed to update table {0}.",
                         _viewModelMain.HluDataset.incid_mm_polygons.TableName));
 
                 if (startTransaction) _viewModelMain.DataBase.CommitTransaction();

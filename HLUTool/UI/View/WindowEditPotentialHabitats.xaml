@@ -34,7 +34,7 @@
                   Grid.Row="0"
                   Grid.Column="0"
                   Header="Potential Priority Habitats">
-                <tkit:DataGrid x:Name="DataGridUserBapHabitats"
+                <DataGrid x:Name="DataGridUserBapHabitats"
                                 Grid.Row="0"
                                 Grid.Column="0"
                                 Grid.ColumnSpan="2"
@@ -55,23 +55,22 @@
                                 RowDetailsVisibilityMode="Visible"
                                 RowHeaderWidth="20"
                                 RowHeight="24">
-                    <tkit:DataGrid.RowValidationRules>
+                    <DataGrid.RowValidationRules>
                         <DataErrorValidationRule />
-                    </tkit:DataGrid.RowValidationRules>
-                    <tkit:DataGrid.Columns>
-                        <tkit:DataGridTextColumn Binding="{Binding bap_id}"
+                    </DataGrid.RowValidationRules>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Binding="{Binding bap_id}"
                                                     Header="bap_id"
                                                     IsReadOnly="True"
                                                     Visibility="Collapsed" />
-                        <tkit:DataGridTextColumn Binding="{Binding incid}"
+                        <DataGridTextColumn Binding="{Binding incid}"
                                                     Header="INCID"
                                                     IsReadOnly="True"
                                                     Visibility="Collapsed" />
-                        <hlu:DataGridComboBoxColumnWithBinding Width="SizeToCells"
+                        <DataGridComboBoxColumn Width="SizeToCells"
                                                                 MinWidth="250"
                                                                 CanUserResize="True"
                                                                 DisplayMemberPath="description"
-                                                                EditingElementStyle="{DynamicResource ComboBoxStyle}"
                                                                 Header="Habitat"
                                                                 IsReadOnly="False"
                                                                 ItemsSource="{Binding DataContext.BapHabitatCodes,
@@ -82,11 +81,11 @@
                                                                                                 UpdateSourceTrigger=PropertyChanged,
                                                                                                 ValidatesOnDataErrors=True}"
                                                                 SelectedValuePath="code" />
-                        <hlu:DataGridComboBoxColumnWithBinding Width="SizeToCells"
+                    <!--EditingElementStyle="{DynamicResource ComboBoxStyle}" -->
+                    <DataGridComboBoxColumn Width="SizeToCells"
                                                                 MinWidth="200"
                                                                 CanUserResize="True"
                                                                 DisplayMemberPath="description"
-                                                                EditingElementStyle="{DynamicResource ComboBoxStyle}"
                                                                 Header="Determ. Quality"
                                                                 ItemsSource="{Binding DataContext.BapDeterminationQualityCodesUser,
                                                                                         IsAsync=true,
@@ -96,11 +95,11 @@
                                                                                                 UpdateSourceTrigger=PropertyChanged,
                                                                                                 ValidatesOnDataErrors=True}"
                                                                 SelectedValuePath="code" />
-                        <hlu:DataGridComboBoxColumnWithBinding Width="SizeToCells"
+                    <!--EditingElementStyle="{DynamicResource ComboBoxStyle}" -->
+                    <DataGridComboBoxColumn Width="SizeToCells"
                                                                 MinWidth="100"
                                                                 CanUserResize="True"
                                                                 DisplayMemberPath="description"
-                                                                EditingElementStyle="{DynamicResource ComboBoxStyle}"
                                                                 Header="Interp. Quality"
                                                                 ItemsSource="{Binding DataContext.BapInterpretationQualityCodes,
                                                                                         IsAsync=true,
@@ -110,16 +109,17 @@
                                                                                                 UpdateSourceTrigger=PropertyChanged,
                                                                                                 ValidatesOnDataErrors=True}"
                                                                 SelectedValuePath="code" />
-                        <tkit:DataGridTextColumn Width="SizeToCells"
+                    <!--EditingElementStyle="{DynamicResource ComboBoxStyle}" -->
+                    <DataGridTextColumn Width="SizeToCells"
                                                     MinWidth="200"
                                                     Binding="{Binding interpretation_comments,
                                                                     UpdateSourceTrigger=PropertyChanged,
                                                                     ValidatesOnDataErrors=True}"
                                                     CanUserResize="True"
-                                                    EditingElementStyle="{DynamicResource TextBoxStyle}"
                                                     Header="Interp. Comments" />
-                    </tkit:DataGrid.Columns>
-                </tkit:DataGrid>
+                    <!--EditingElementStyle="{DynamicResource TextBoxStyle}" -->
+                </DataGrid.Columns>
+                </DataGrid>
 		</GroupBox>
 
         <Grid Name="GridButtons"

@@ -1,19 +1,19 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -28,7 +28,7 @@ namespace HLU.UI.ViewModel
     class ViewModelExport : ViewModelBase, IDataErrorInfo
     {
         #region Fields
-        
+
         private ICommand _okCommand;
         private ICommand _cancelCommand;
         private string _displayName = "Export";
@@ -37,19 +37,19 @@ namespace HLU.UI.ViewModel
         private int _exportID = -1;
         private bool _selectedOnly;
         private int _selectedNumber;
-        private GISApplications _gisApp;
+        //private GISApplications _gisApp;
 
         #endregion
 
         #region Constructor
 
-        public ViewModelExport(int numberSelected, string layerName, 
+        public ViewModelExport(int numberSelected, string layerName,
             GISApplications gisApp, HluDataSet.exportsDataTable exportFormats)
         {
             _selectedNumber = numberSelected;
             _selectedOnly = _selectedNumber > 0;
             _layerName = layerName;
-            _gisApp = gisApp;
+            //_gisApp = gisApp;
             _exportFormats = exportFormats;
             if (_exportFormats.Count == 1)
                 _exportID = _exportFormats[0].export_id;
@@ -103,7 +103,7 @@ namespace HLU.UI.ViewModel
                 if (_okCommand == null)
                 {
                     Action<object> okAction = new(this.OkCommandClick);
-                    _okCommand = new(okAction, param => this.CanOk);
+                    _okCommand = new RelayCommand(okAction, param => this.CanOk);
                 }
 
                 return _okCommand;
@@ -129,7 +129,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <value></value>
         /// <returns></returns>
@@ -153,7 +153,7 @@ namespace HLU.UI.ViewModel
                 if (_cancelCommand == null)
                 {
                     Action<object> cancelAction = new(this.CancelCommandClick);
-                    _cancelCommand = new(cancelAction);
+                    _cancelCommand = new RelayCommand(cancelAction);
                 }
                 return _cancelCommand;
             }

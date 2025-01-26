@@ -39,7 +39,6 @@ namespace HLU.UI.ViewModel
 
         #region private Members
 
-        private IntPtr _windowHandle;
         private string _displayName;
         private RelayCommand _okCommand;
         private RelayCommand _cancelCommand;
@@ -55,7 +54,7 @@ namespace HLU.UI.ViewModel
 
         public ViewModelConnectOracle()
         {
-            _connStrBuilder = new OracleConnectionStringBuilder();
+            _connStrBuilder = [];
         }
 
         #endregion
@@ -154,8 +153,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                //return !((String.IsNullOrEmpty(_connStrBuilder.DataSource)) || 
-                //    (!_connStrBuilder.IntegratedSecurity && String.IsNullOrEmpty(_connStrBuilder.UserID)) || 
+                //return !((String.IsNullOrEmpty(_connStrBuilder.DataSource)) ||
+                //    (!_connStrBuilder.IntegratedSecurity && String.IsNullOrEmpty(_connStrBuilder.UserID)) ||
                 //    String.IsNullOrEmpty(_defaultSchema));
                 return !((String.IsNullOrEmpty(_connStrBuilder.DataSource)) || String.IsNullOrEmpty(_connStrBuilder.UserID) ||
                     String.IsNullOrEmpty(_defaultSchema));
@@ -202,8 +201,6 @@ namespace HLU.UI.ViewModel
 
         public void ViewEvents(IntPtr windowHandle, string propertyName)
         {
-            if (windowHandle != IntPtr.Zero) _windowHandle = windowHandle;
-
             switch (propertyName)
             {
                 case "DefaultSchema":
@@ -218,11 +215,11 @@ namespace HLU.UI.ViewModel
 
         public string[] DataSources
         {
-            get 
+            get
             {
                 if (_dataSources == null)
                 {
-                    OracleClientFactory factory = new OracleClientFactory();
+                    OracleClientFactory factory = new();
                     if (factory.CanCreateDataSourceEnumerator)
                     {
                         System.Data.Common.DbDataSourceEnumerator dataSourceEnumarator = factory.CreateDataSourceEnumerator();
@@ -233,7 +230,7 @@ namespace HLU.UI.ViewModel
                     }
                     else
                     {
-                        _dataSources = new string[] { };
+                        _dataSources = [];
                     }
                 }
                 return _dataSources;
@@ -331,7 +328,7 @@ namespace HLU.UI.ViewModel
 
         private void LoadSchemata()
         {
-            List<String> schemaList = new();
+            List<String> schemaList = [];
             OracleConnection cn = null;
 
             try

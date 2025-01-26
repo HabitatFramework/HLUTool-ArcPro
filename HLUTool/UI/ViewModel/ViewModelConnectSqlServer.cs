@@ -20,7 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Data.Sql;
+using Microsoft.Data.Sql;
 using Microsoft.Data.SqlClient;
 using System.Linq;
 using System.Windows;
@@ -34,13 +34,13 @@ namespace HLU.UI.ViewModel
     {
         #region private Members
 
-        private IntPtr _windowHandle;
+        //private IntPtr _windowHandle;
         private string _displayName;
         private RelayCommand _okCommand;
         private RelayCommand _cancelCommand;
         private List<String> _servers;
-        private List<String> _databases = new();
-        private List<String> _schemata = new();
+        private List<String> _databases = [];
+        private List<String> _schemata = [];
         private string _defaultSchema;
         private SqlConnectionStringBuilder _connStrBuilder;
 
@@ -50,7 +50,7 @@ namespace HLU.UI.ViewModel
 
         public ViewModelConnectSqlServer()
         {
-            _connStrBuilder = new SqlConnectionStringBuilder();
+            _connStrBuilder = [];
         }
 
         #endregion
@@ -305,9 +305,9 @@ namespace HLU.UI.ViewModel
             {
                 if (_connStrBuilder != null)
                 {
-                    SqlConnection cn = new SqlConnection(_connStrBuilder.ConnectionString);
+                    SqlConnection cn = new(_connStrBuilder.ConnectionString);
 
-                    List<String> DatabaseList = new();
+                    List<String> DatabaseList = [];
                     cn.Open();
 
                     DataTable dbTable = cn.GetSchema("Databases");
@@ -320,7 +320,7 @@ namespace HLU.UI.ViewModel
             }
             catch (Exception ex)
             {
-                _databases = new();
+                _databases = [];
                 MessageBox.Show("SQL Server responded with an error: " + ex.Message,
                     "SQL Server Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
@@ -348,7 +348,7 @@ namespace HLU.UI.ViewModel
 
         private void LoadSchemata()
         {
-            List<String> schemaList = new();
+            List<String> schemaList = [];
             SqlConnection cn = null;
 
             try
@@ -391,7 +391,7 @@ namespace HLU.UI.ViewModel
 
         public void ViewEvents(IntPtr windowHandle, string propertyName)
         {
-            if (windowHandle != IntPtr.Zero) _windowHandle = windowHandle;
+            //if (windowHandle != IntPtr.Zero) _windowHandle = windowHandle;
 
             switch (propertyName)
             {

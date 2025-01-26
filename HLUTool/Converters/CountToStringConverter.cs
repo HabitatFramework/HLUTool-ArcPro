@@ -8,7 +8,7 @@ using System.Windows.Data;
 
 namespace HLU.Converters
 {
-    internal class CountToStringConverter : IValueConverter
+    public class CountToStringConverter : IValueConverter
     {
         #region IValueConverter Members
 
@@ -26,7 +26,7 @@ namespace HLU.Converters
         #endregion
     }
 
-    internal class AreaToStringConverter : IValueConverter
+    public class AreaToStringConverter : IValueConverter
     {
         #region IValueConverter Members
 
