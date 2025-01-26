@@ -41,8 +41,8 @@ namespace HLU.Data.Connection
         private OdbcTransaction _transaction;
         private Dictionary<Type, OdbcDataAdapter> _adaptersDic = [];
 
-        private HLU.UI.View.Connection.ViewConnectOdbc _connWindow;
-        private HLU.UI.ViewModel.ViewModelConnectOdbc _connViewModel;
+        private UI.View.Connection.ViewConnectOdbc _connWindow;
+        private UI.ViewModel.ViewModelConnectOdbc _connViewModel;
 
         private Backends _backend;
         private string _quotePrefix;
@@ -848,7 +848,7 @@ namespace HLU.Data.Connection
 
                 // when ViewModel asks to be closed, close window
                 _connViewModel.RequestClose +=
-                    new HLU.UI.ViewModel.ViewModelConnectOdbc.RequestCloseEventHandler(_connViewModel_RequestClose);
+                    new UI.ViewModel.ViewModelConnectOdbc.RequestCloseEventHandler(_connViewModel_RequestClose);
 
                 // allow all controls in window to bind to ViewModel by setting DataContext
                 _connWindow.DataContext = _connViewModel;

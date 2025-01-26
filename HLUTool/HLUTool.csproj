@@ -8,7 +8,7 @@
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <NoWarn>CA1416</NoWarn>
-    <RootNamespace></RootNamespace>
+    <RootNamespace>HLU</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="GISApplication\MapInfo\**" />

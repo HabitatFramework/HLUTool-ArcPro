@@ -41,8 +41,8 @@ namespace HLU.Data.Connection
         private SqlTransaction _transaction;
         private Dictionary<Type, SqlDataAdapter> _adaptersDic = [];
 
-        private HLU.UI.View.Connection.ViewConnectSqlServer _connWindow;
-        private HLU.UI.ViewModel.ViewModelConnectSqlServer _connViewModel;
+        private UI.View.Connection.ViewConnectSqlServer _connWindow;
+        private UI.ViewModel.ViewModelConnectSqlServer _connViewModel;
 
         #endregion
 
@@ -782,7 +782,7 @@ namespace HLU.Data.Connection
 
                 // when ViewModel asks to be closed, close window
                 _connViewModel.RequestClose +=
-                    new HLU.UI.ViewModel.ViewModelConnectSqlServer.RequestCloseEventHandler(_connViewModel_RequestClose);
+                    new UI.ViewModel.ViewModelConnectSqlServer.RequestCloseEventHandler(_connViewModel_RequestClose);
 
                 // allow all controls in window to bind to ViewModel by setting DataContext
                 _connWindow.DataContext = _connViewModel;

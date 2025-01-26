@@ -41,8 +41,8 @@ namespace HLU.Data.Connection
         private OracleTransaction _transaction;
         private Dictionary<Type, OracleDataAdapter> _adaptersDic = [];
 
-        private HLU.UI.View.Connection.ViewConnectOracle _connWindow;
-        private HLU.UI.ViewModel.ViewModelConnectOracle _connViewModel;
+        private UI.View.Connection.ViewConnectOracle _connWindow;
+        private UI.ViewModel.ViewModelConnectOracle _connViewModel;
 
         #endregion
 
@@ -864,7 +864,7 @@ namespace HLU.Data.Connection
         {
             try
             {
-                _connWindow = new HLU.UI.View.Connection.ViewConnectOracle
+                _connWindow = new UI.View.Connection.ViewConnectOracle
                 {
                     //TODO: App.GetActiveWindow
                     //if ((_connWindow.Owner = App.GetActiveWindow()) == null)
@@ -880,7 +880,7 @@ namespace HLU.Data.Connection
 
                 // when ViewModel asks to be closed, close window
                 _connViewModel.RequestClose +=
-                    new HLU.UI.ViewModel.ViewModelConnectOracle.RequestCloseEventHandler(_connViewModel_RequestClose);
+                    new UI.ViewModel.ViewModelConnectOracle.RequestCloseEventHandler(_connViewModel_RequestClose);
 
                 // allow all controls in window to bind to ViewModel by setting DataContext
                 _connWindow.DataContext = _connViewModel;

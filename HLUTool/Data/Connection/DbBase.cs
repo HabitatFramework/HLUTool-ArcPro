@@ -66,8 +66,8 @@ namespace HLU.Data.Connection
         protected Dictionary<string, string> _replaceDataTypes;
         protected Regex _sqlTypeRegex;
 
-        private HLU.UI.View.Connection.ViewPassword _pwdWindow;
-        private HLU.UI.ViewModel.ViewModelPassword _pwdViewModel;
+        private UI.View.Connection.ViewPassword _pwdWindow;
+        private UI.ViewModel.ViewModelPassword _pwdViewModel;
 
         #endregion
 
@@ -764,13 +764,13 @@ namespace HLU.Data.Connection
                 if (connStrBuilder.ContainsKey("Password"))
                     connStrBuilder.Remove("Password");
 
-                _pwdWindow = new HLU.UI.View.Connection.ViewPassword();
+                _pwdWindow = new UI.View.Connection.ViewPassword();
                 //TODO: App.GetActiveWindow
                 //if ((_pwdWindow.Owner = App.GetActiveWindow()) == null)
                 //    throw (new Exception("No parent window loaded"));
 
                 // create ViewModel to which main window binds
-                _pwdViewModel = new HLU.UI.ViewModel.ViewModelPassword();
+                _pwdViewModel = new UI.ViewModel.ViewModelPassword();
                 object dataSource;
                 if (connStrBuilder.TryGetValue("Data Source", out dataSource) ||
                     connStrBuilder.TryGetValue("DataSource", out dataSource) ||
@@ -792,7 +792,7 @@ namespace HLU.Data.Connection
 
                 // when ViewModel asks to be closed, close window
                 _pwdViewModel.RequestClose +=
-                    new HLU.UI.ViewModel.ViewModelPassword.RequestCloseEventHandler(_pwdViewModel_RequestClose);
+                    new UI.ViewModel.ViewModelPassword.RequestCloseEventHandler(_pwdViewModel_RequestClose);
 
                 // allow all controls in window to bind to ViewModel by setting DataContext
                 _pwdWindow.DataContext = _pwdViewModel;
