@@ -79,11 +79,6 @@ namespace HLU.GISApplication.ArcGIS
 
         MapFunctions _mapFunctions;
 
-        /// <summary>
-        /// UIDs of ArcGIS workspaces that the application is designed to handle. Populated in PopulateValidWorkspaces().
-        /// </summary>
-        private object[] _validWorkspaces;
-
         //TODO: ArcGIS
         ///// <summary>
         ///// Full path to the HLU map document.
@@ -211,11 +206,6 @@ namespace HLU.GISApplication.ArcGIS
         private string[] _hluFieldNames;
 
         /// <summary>
-        /// Name of the pipe between database and ArcMap, composed of a base name and the ArcMap hWnd.
-        /// </summary>
-        private static string _pipeName;
-
-        /// <summary>
         /// Area unit of measurement (currently unused).
         /// </summary>
         private int _unitArea;
@@ -261,123 +251,6 @@ namespace HLU.GISApplication.ArcGIS
 //            // add Handler for ArcMap instances being removed
 //            _rot.AppRemoved += new IAppROTEvents_AppRemovedEventHandler(appROTEvent_AppRemoved);
         }
-
-        #endregion
-
-        //TODO: ArcGIS
-        #region Enable extension
-
-        //        private void EnableExtension(string extensionCLSID)
-        //        {
-        //            EnableExtension(extensionCLSID, -1, null);
-        //        }
-
-        //        private void EnableExtension(string extensionCLSID, int arcVersion, string arcVersionString)
-        //        {
-        //            if (!String.IsNullOrEmpty(extensionCLSID))
-        //            {
-        //                try
-        //                {
-        //                    if ((arcVersion < 9) || String.IsNullOrEmpty(arcVersionString))
-        //                    {
-        //                        arcVersion = GetArcGISVersion(out arcVersionString);
-        //                    }
-
-        //                    int enabledValue = 1;
-        //                    RegistryKey rk = null;
-        //                    switch (arcVersion)
-        //                    {
-        //                        case 9:
-        //                            rk = Registry.CurrentUser.OpenSubKey(@"Software\ESRI\ArcMap\Extensions", true);
-        //                            break;
-        //                        case 10:
-        //                            rk = Registry.CurrentUser.OpenSubKey(
-        //                                String.Format(@"Software\ESRI\Desktop{0}\ArcMap\Extensions", arcVersionString), true);
-        //                            break;
-        //                    }
-
-        //                    if (rk != null)
-        //                    {
-        //                        if (!IsGuid(ref extensionCLSID))
-        //                        {
-        //                            RegistryKey progIDkey = Registry.LocalMachine.OpenSubKey(String.Format(@"SOFTWARE\Classes\{0}\CLSID", extensionCLSID));
-        //                            if (progIDkey != null)
-        //                            {
-        //                                extensionCLSID = progIDkey.GetValue(String.Empty, String.Empty).ToString();
-        //                            }
-        //                        }
-        //                        if (IsGuid(ref extensionCLSID))
-        //                        {
-        //                            object extEnabled = rk.GetValue(extensionCLSID);
-        //                            if ((extEnabled == null) || ((int)extEnabled != enabledValue))
-        //                            {
-        //                                rk.SetValue(extensionCLSID, enabledValue);
-        //                            }
-        //                        }
-        //                    }
-        //                }
-        //                catch { }
-        //            }
-        //        }
-
-        //        private bool IsGuid(ref string guidString)
-        //        {
-        //            if (String.IsNullOrEmpty(guidString)) return false;
-        //            Match m = Regex.Match(guidString, @"\A\{*(?<guid>[\dA-Fa-f]{8}-([\dA-Fa-f]{4}-){3}[\dA-Fa-f]{12})\}*\z");
-        //            if (m.Groups["guid"].Success)
-        //            {
-        //                guidString = "{" + m.Groups["guid"].Value + "}";
-        //                return true;
-        //            }
-        //            else
-        //            {
-        //                return false;
-        //            }
-        //        }
-
-        //        private int GetArcGISVersion(out string versionString)
-        //        {
-        //            int arcVersion = -1;
-        //            versionString = String.Empty;
-        //            try
-        //            {
-        //                RegistryKey rk = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\ESRI\ArcGIS");
-        //                if (rk != null)
-        //                {
-        //                    object rkVal = rk.GetValue("RealVersion");
-        //                    if (rkVal != null)
-        //                    {
-        //                        string rkString = rkVal.ToString();
-        //                        string[] versionArray = rkString.Split('.');
-        //                        if ((rkVal == null) || !Int32.TryParse(versionArray[0], out arcVersion)) arcVersion = -1;
-        //                        versionString = versionArray.Length > 1 ?
-        //                            rkString.Remove(rkString.Length - versionArray[versionArray.Length - 1].Length - 1) : rkString;
-        //                    }
-        //                }
-        //            }
-        //            catch { }
-        //            return arcVersion;
-        //        }
-
-        //#if ARC10
-        //        private int InitialiseArcObjects(out string versionString)
-        //        {
-        //            int arcVersion = -1;
-        //            versionString = String.Empty;
-        //            try
-        //            {
-
-        //                arcVersion = GetArcGISVersion(out versionString);
-        //                if (arcVersion > 9)
-        //                {
-        //                    try { RuntimeManager.Bind(ProductCode.Desktop); }
-        //                    catch { }
-        //                }
-        //            }
-        //            catch { }
-        //            return arcVersion;
-        //        }
-        //#endif
 
         #endregion
 
@@ -1464,11 +1337,6 @@ namespace HLU.GISApplication.ArcGIS
         //    get { return _arcMap; }
         //}
 
-        public override GISApplications ApplicationType
-        {
-            get { return GISApplications.ArcGIS; }
-        }
-
         public override string HluLayerName
         {
             get { return _hluLayer?.Name; }
@@ -1564,7 +1432,7 @@ namespace HLU.GISApplication.ArcGIS
         /// <summary>
         /// Launches an instance of ArcMap.
         /// </summary>
-        /// <param name="waitSeconds">Number of seconds to wait for the ArcMap process to load before an exception is thrown.</param>
+        /// <param name = "waitSeconds" > Number of seconds to wait for the ArcMap process to load before an exception is thrown.</param>
         /// <returns>true if ArcMap launched ok, otherwise false.</returns>
         //public override bool Start(ProcessWindowStyle windowStyle)
         //{
@@ -1718,7 +1586,7 @@ namespace HLU.GISApplication.ArcGIS
         //    }
         //    catch (Exception ex)
         //    {
-        //        MessageBox.Show(ex.Message, "Error Opening Map Document", 
+        //        MessageBox.Show(ex.Message, "Error Opening Map Document",
         //            MessageBoxButton.OK, MessageBoxImage.Error);
         //        return false;
         //    }
@@ -1814,7 +1682,7 @@ namespace HLU.GISApplication.ArcGIS
         /// and _hluFieldNames.
         /// </summary>
         /// <returns>True if the current document contains a valid HLU layer, otherwise false.</returns>
-        protected override bool IsHluWorkspace()
+        public override bool IsHluWorkspace()
         {
             if (_hluLayerStructure == null)
                 _hluLayerStructure = new();

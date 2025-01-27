@@ -11,8 +11,6 @@
                          Mode=TwoWay}"
         Height="{Binding WindowHeight,
                          Mode=TwoWay}"
-        Topmost="{Binding ElementName=MenuItemAppKeepOnTop,
-                          Path=IsChecked}"
         WindowStyle="SingleBorderWindow"> <!-- d:DesignHeight="800" -->
     <!--  SizeToContent="Height"  -->
     <!--  Style="{DynamicResource WindowStyle}"  -->
@@ -88,23 +86,6 @@
                           IsEnabled="{Binding CanBulkUpdateMode}" />
             </MenuItem>
             <MenuItem Header="_View">
-                <MenuItem x:Name="MenuItemGisSideBySide"
-                          Command="{Binding GisWinSideBySideCommand}"
-                          Header="Windows _Side By Side"
-                          IsEnabled="{Binding CanGisWinSideBySide}" />
-                <MenuItem x:Name="MenuItemResetToolWindow"
-                          Command="{Binding ResetToolWindowCommand}"
-                          Header="Reset Tool Window Size"
-                          IsEnabled="{Binding CanResetToolWindow}" />
-                <MenuItem x:Name="MenuItemGisSwitchTo"
-                          Command="{Binding GisWinSwitchToCommand}"
-                          Header="S_witch To GIS Window"
-                          IsEnabled="{Binding CanGisWinSwitchTo}" />
-                <Separator />
-                <MenuItem x:Name="MenuItemAppKeepOnTop"
-                          Command="{Binding AppKeepOnTopCommand}"
-                          Header="_Keep Tool Window on Top"
-                          IsCheckable="True" />
                 <MenuItem x:Name="MenuItemAutoZoomSelected" Header="Auto _Zoom To Selection">
                     <MenuItem Name="ZoomOff"
                               Click="MenuItem_Zoom_Click"
@@ -188,27 +169,6 @@
                           IsEnabled="{Binding Path=CanSwitchGISLayer}"
                           Header="Switch _GIS Layer" />
                 <Separator />
-                <!--
-                <MenuItem x:Name="MenuItemStyles" Header="_Styles">
-                    <MenuItem Name="Original"
-                              Click="MenuItem_Style_Click"
-                              Header="Original"
-                              IsCheckable="True" />
-                    <MenuItem Name="LightGrey"
-                              Click="MenuItem_Style_Click"
-                              Header="_Light Grey"
-                              IsCheckable="True" />
-                    <MenuItem Name="DarkGrey"
-                              Click="MenuItem_Style_Click"
-                              Header="_Dark Grey"
-                              IsCheckable="True" />
-                    <MenuItem Name="ShinyBlue"
-                              Click="MenuItem_Style_Click"
-                              Header="Shiny _Blue"
-                              IsCheckable="True" />
-                </MenuItem>
-                -->
-                <Separator />
                 <MenuItem x:Name="MenuItemAbout"
                           Command="{Binding Path=AboutCommand}"
                           Header="_About" />
@@ -271,26 +231,6 @@
             <ToolBar x:Name="ToolBarView"
                      Band="1"
                      BandIndex="2">
-                <Button Name="ButtonGisSideBySide"
-                        Command="{Binding Path=GisWinSideBySideCommand}"
-                        IsEnabled="{Binding Path=CanGisWinSideBySide}"
-                        ToolTip="Windows Side By Side"
-                        ToolTipService.ShowOnDisabled="True">
-                    <Image Width="16"
-                           Height="16"
-                           Source="..\..\Icons\GisWinSideBySide.png" />
-                </Button>
-                <!--
-                    <Button Name="ButtonGisSwitchTo"
-                    Command="{Binding Path=GisWinSwitchToCommand}"
-                    IsEnabled="{Binding Path=CanGisWinSwitchTo}"
-                    ToolTip="Switch To GIS Window"
-                    ToolTipService.ShowOnDisabled="True">
-                    <Image Width="16"
-                    Height="16"
-                    Source="..\..\Icons\GisWinSwitchTo.png" />
-                    </Button>
-                -->
                 <Button x:Name="ButtonZoomSelected"
                         Command="{Binding ZoomSelectionCommand}"
                         IsEnabled="{Binding CanZoomSelection}"

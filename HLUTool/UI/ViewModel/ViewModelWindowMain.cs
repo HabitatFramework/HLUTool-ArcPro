@@ -42,6 +42,7 @@ using HLU.Data.Model;
 using HLU.Data.Model.HluDataSetTableAdapters;
 using HLU.Date;
 using HLU.GISApplication;
+using HLU.GISApplication.ArcGIS;
 using HLU.Properties;
 using HLU.UI.View;
 
@@ -179,15 +180,11 @@ namespace HLU.UI.ViewModel
         private ICommand _closeCommand;
         private ICommand _copyCommand;
         private ICommand _pasteCommand;
-        private ICommand _appKeepOnTopCommand;
         private ICommand _autoZoomSelectedOffCommand;
         private ICommand _autoZoomSelectedWhenCommand;
         private ICommand _autoZoomSelectedAlwaysCommand;
         private ICommand _autoSelectOnGisCommand;
         private ICommand _zoomSelectionCommand;
-        private ICommand _gisWinSideBySideCommand;
-        private ICommand _gisWinSwitchToCommand;
-        private ICommand _resetToolWindowCommand;
         private ICommand _optionsCommand;
         private ICommand _aboutCommand;
 
@@ -484,7 +481,6 @@ namespace HLU.UI.ViewModel
         private bool _updateCancelled = true;
         private bool _updateAllFeatures = true;
         private bool _refillIncidTable = false;
-        private bool _appKeepOnTop = Settings.Default.AppKeepOnTop;
         private int _autoZoomSelection = Settings.Default.AutoZoomSelection;
         private bool _autoSelectOnGis = Settings.Default.AutoSelectOnGis;
 
@@ -630,34 +626,27 @@ namespace HLU.UI.ViewModel
                 // move to first row
                 IncidCurrentRowIndex = 1;
 
-                // open the GIS application
+                // Check the GIS workspace
                 if (haveSplashWin)
                 {
                     //TODO: App.SplashViewModel
-                    //App.SplashViewModel.ProgressText = "Opening GIS application...";
+                    //App.SplashViewModel.ProgressText = "Checking GIS workspace...";
                     DispatcherHelper.DoEvents();
                 }
 
                 //TODO: ArcGIS
-                //// start the GIS application
-                //_gisApp = GISAppFactory.CreateGisApp();
-                //if (_gisApp == null)
-                //{
-                //    GISAppFactory.ClearSettings();
-                //    return false;
-                //}
-                //else if (!_gisApp.Start(ProcessWindowStyle.Maximized))
-                //{
-                //    string gisAppName = "GIS application";
-                //    if (_gisApp != null)
-                //    {
-                //        gisAppName = _gisApp.ApplicationType.ToString();
-                //        _gisApp.Close();
-                //    }
-                //    MessageBox.Show(String.Format("{0} failed to open a valid HLU workspace.\nShutting down.",
-                //        gisAppName), "HLU: Initialise GIS", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                //    return false;
-                //}
+                _gisApp = new ArcMapApp(Settings.Default.MapPath);
+                if (_gisApp == null)
+                    return false;
+
+                //TODO: ArcGIS
+                // Check if the GIS workspace is valid
+                if (!_gisApp.IsHluWorkspace())
+                {
+                    MessageBox.Show(String.Format("{0} Invalid HLU workspace.",
+                        "ArcGIS Pro"), "HLU: Initialise GIS", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    return false;
+                }
 
                 // Initialise the main update view model
                 _viewModelUpd = new ViewModelWindowMainUpdate(this);
@@ -4075,30 +4064,6 @@ namespace HLU.UI.ViewModel
 
         #region View
 
-        public ICommand AppKeepOnTopCommand
-        {
-            get
-            {
-                if (_appKeepOnTopCommand == null)
-                {
-                    Action<object> appKeepOnTopAction = new(this.AppKeepOnTopClicked);
-                    _appKeepOnTopCommand = new RelayCommand(appKeepOnTopAction);
-                }
-                return _appKeepOnTopCommand;
-            }
-        }
-
-        private void AppKeepOnTopClicked(object param)
-        {
-            // Update the keep app on top option.
-            _appKeepOnTop = !_appKeepOnTop;
-
-            // Save the keep app window on top option in the user settings.
-            Settings.Default.AppKeepOnTop = _appKeepOnTop;
-            Settings.Default.Save();
-
-        }
-
         public ICommand AutoZoomSelectedOffCommand
         {
             get
@@ -4220,81 +4185,6 @@ namespace HLU.UI.ViewModel
         }
 
         public bool CanZoomSelection { get { return _gisSelection != null; } }
-
-        public ICommand GisWinSideBySideCommand
-        {
-            get
-            {
-                if (_gisWinSideBySideCommand == null)
-                {
-                    Action<object> gisWinSideBySideAction = new(this.GisWinSideBySideClicked);
-                    _gisWinSideBySideCommand = new RelayCommand(gisWinSideBySideAction, param => this.CanGisWinSideBySide);
-                }
-                return _gisWinSideBySideCommand;
-            }
-        }
-
-        private void GisWinSideBySideClicked(object param)
-        {
-            //DONE: App.Current.MainWindow
-            //_gisApp.Window(ProcessWindowStyle.Normal,
-            //    new WindowInteropHelper(App.Current.MainWindow).Handle);
-        }
-
-        //TODO: Unneeded?
-        public bool CanGisWinSideBySide { get { return true; } }
-
-        public ICommand ResetToolWindowCommand
-        {
-            get
-            {
-                if (_resetToolWindowCommand == null)
-                {
-                    Action<object> resetToolWindowAction = new(this.ResetToolWindowClicked);
-                    _resetToolWindowCommand = new RelayCommand(resetToolWindowAction, param => this.CanResetToolWindow);
-                }
-                return _resetToolWindowCommand;
-            }
-        }
-
-        private void ResetToolWindowClicked(object param)
-        {
-            // Adjust the window height.
-            AdjustWindowHeight(true);
-            OnPropertyChanged(nameof(WindowHeight));
-
-            // Adjust the secondary table height to fill the space.
-            OnPropertyChanged(nameof(SecondaryTableHeight));
-
-            WindowWidth = 0;
-            OnPropertyChanged(nameof(WindowWidth));
-        }
-
-        //TODO: Unneeded?
-        public bool CanResetToolWindow { get { return true; } }
-
-        //TODO: ArcGIS
-        //public ICommand GisWinSwitchToCommand
-        //{
-        //    get
-        //    {
-        //        if (_gisWinSwitchToCommand == null)
-        //        {
-        //            Action<object> gisWinSwitchToAction = new(this.GisWinSwitchToClicked);
-        //            _gisWinSwitchToCommand = new RelayCommand(gisWinSwitchToAction, param => this.CanGisWinSwitchTo);
-        //        }
-        //        return _gisWinSwitchToCommand;
-        //    }
-        //}
-
-        //TODO: ArcGIS
-        //private void GisWinSwitchToClicked(object param)
-        //{
-        //    _gisApp.Activate();
-        //}
-
-        //TODO: ArcGIS
-        //public bool CanGisWinSwitchTo { get { return HaveGisApp; } }
 
         #endregion
 

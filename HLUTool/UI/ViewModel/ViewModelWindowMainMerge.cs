@@ -459,8 +459,7 @@ namespace HLU.UI.ViewModel
                         DataTable resultTable = historyTable.Clone();
                         DataRow resultRow = historyTable.AsEnumerable().FirstOrDefault(r =>
                             r.Field<string>(_viewModelMain.HluDataset.history.toidfragidColumn.ColumnName) == newToidFragmentID);
-                        if (resultRow == null) throw new Exception(String.Format(
-                            "Failed to obtain geometry data of result feature from {0}.", _viewModelMain.GISApplication.ApplicationType));
+                        if (resultRow == null) throw new Exception("Failed to obtain geometry data of result feature from GIS.");
                         resultTable.LoadDataRow(resultRow.ItemArray, true);
                         resultRow.Delete();
                         historyTable.AcceptChanges();

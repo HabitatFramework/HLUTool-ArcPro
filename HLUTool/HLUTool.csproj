@@ -18,8 +18,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Data\Model\DataSet1.Designer.cs" />
+    <Compile Remove="GISApplication\GISAppFactory.cs" />
     <Compile Remove="UI\ViewModel\ViewModelConnectOleDb.cs" />
+    <Compile Remove="UI\ViewModel\ViewModelWindowSelectGIS.cs" />
     <Compile Remove="UI\View\Connection\ViewConnectOleDb.xaml.cs" />
+    <Compile Remove="UI\View\WindowSelectGIS.xaml.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="DarkImages\AddInDesktop16.png" />
@@ -43,6 +46,7 @@
     <Page Remove="UI\View\Dictionary\GeometryTypeConverterDictionary.xaml" />
     <Page Remove="UI\View\Dictionary\LayerConverterDictionary.xaml" />
     <Page Remove="UI\View\Dictionary\SpatialReferenceConverterDictionary.xaml" />
+    <Page Remove="UI\View\WindowSelectGIS.xaml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Config.daml" />

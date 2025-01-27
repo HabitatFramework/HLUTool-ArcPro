@@ -54,11 +54,6 @@ namespace HLU.GISApplication
         /// </summary>
         public abstract int MaxSqlLength { get; }
 
-        /// <summary>
-        /// Type of GIS application.
-        /// </summary>
-        public abstract GISApplications ApplicationType { get; }
-
         //TODO: ApplicationObject
         ///// <summary>
         ///// Reference to the running GIS application object.
@@ -204,7 +199,7 @@ namespace HLU.GISApplication
         public abstract int SqlLength(DataColumn[] targetColumns, List<SqlFilterCondition> whereConds);
         //---------------------------------------------------------------------
 
-        protected abstract bool IsHluWorkspace();
+        public abstract bool IsHluWorkspace();
 
         public abstract int ListHluLayers();
 

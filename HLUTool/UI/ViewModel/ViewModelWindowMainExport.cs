@@ -116,7 +116,7 @@ namespace HLU.UI.ViewModel
             //_viewModelMain.GISApplication.ApplicationType, _viewModelMain.HluDataset.exports);
             _viewModelExport = new(_viewModelMain.GisSelection == null ? 0 :
                 fragCount, _viewModelMain.GISApplication.HluLayerName,
-                _viewModelMain.GISApplication.ApplicationType, _viewModelMain.HluDataset.exports)
+                _viewModelMain.HluDataset.exports)
             {
                 DisplayName = "Export"
             };

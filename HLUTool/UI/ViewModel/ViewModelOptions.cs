@@ -359,78 +359,6 @@ namespace HLU.UI.ViewModel
 
         #region GIS/Export
 
-        public GISApplications PreferredGis
-        {
-            get { return (GISApplications)_preferredGis; }
-            set
-            {
-                _preferredGis = (int)value;
-                OnPropertyChanged(nameof(CanBrowseMapPath));
-                OnPropertyChanged(nameof(MapDocument));
-                OnPropertyChanged(nameof(CanBrowseExportPath));
-            }
-        }
-
-        public GISApplications[] GisApps
-        {
-            get
-            {
-                return Enum.GetValues(typeof(GISApplications)).Cast<GISApplications>()
-                    .Where(t => t != GISApplications.None).ToArray();
-            }
-            set { }
-        }
-
-        public bool GisAppsEnabled
-        {
-            get { return GISAppFactory.ArcGisInstalled && GISAppFactory.MapInfoInstalled; }
-        }
-
-        public ICommand BrowseMapPathCommand
-        {
-            get
-            {
-                if (_browseMapPathCommand == null)
-                {
-                    Action<object> browseMapPathAction = new(this.BrowseMapPathClicked);
-                    _browseMapPathCommand = new RelayCommand(browseMapPathAction, param => this.CanBrowseMapPath);
-                }
-
-                return _browseMapPathCommand;
-            }
-        }
-
-        public bool CanBrowseMapPath
-        {
-            get { return _preferredGis != (int)GISApplications.None; }
-        }
-
-        private void BrowseMapPathClicked(object param)
-        {
-            _bakMapPath = _mapPath;
-            Settings.Default.MapPath = String.Empty;
-            MapDocument = String.Empty;
-            MapDocument = GISAppFactory.GetMapPath((GISApplications)_preferredGis);
-            if (String.IsNullOrEmpty(MapDocument))
-            {
-                Settings.Default.MapPath = _bakMapPath;
-                MapDocument = _bakMapPath;
-            }
-            OnPropertyChanged(nameof(MapDocument));
-        }
-
-        public string MapDocument
-        {
-            get { return Path.GetFileName(_mapPath); }
-            set { _mapPath = value; }
-        }
-
-        public string MapPath
-        {
-            get { return _mapPath; }
-            set { _mapPath = value; }
-        }
-
         /// <summary>
         /// Gets the default minimum auto zoom scale text.
         /// </summary>
@@ -456,97 +384,6 @@ namespace HLU.UI.ViewModel
         {
             get { return _minAutoZoom; }
             set { _minAutoZoom = value; }
-        }
-
-        /// <summary>
-        /// Get the browse Export Path command.
-        /// </summary>
-        /// <value>
-        /// The browse Export path command.
-        /// </value>
-        public ICommand BrowseExportPathCommand
-        {
-            get
-            {
-                if (_browseExportPathCommand == null)
-                {
-                    Action<object> browseExportPathAction = new(this.BrowseExportPathClicked);
-                    _browseExportPathCommand = new RelayCommand(browseExportPathAction, param => this.CanBrowseExportPath);
-                }
-
-                return _browseExportPathCommand;
-            }
-        }
-
-        /// <summary>
-        /// Gets a value indicating whether the user can browse for
-        /// the default Export path.
-        /// </summary>
-        /// <value>
-        /// <c>true</c> if the user can browse for the default Export path; otherwise, <c>false</c>.
-        /// </value>
-        public bool CanBrowseExportPath
-        {
-            //TODO: MapInfo
-            //get { return (PreferredGis == GISApplications.MapInfo); }
-            get { return false; }
-        }
-
-        /// <summary>
-        /// Action when the browse SQL button is clicked.
-        /// </summary>
-        /// <param name="param"></param>
-        private void BrowseExportPathClicked(object param)
-        {
-            _bakExportPath = _exportPath;
-            ExportPath = String.Empty;
-            ExportPath = GetExportPath();
-
-            if (String.IsNullOrEmpty(ExportPath))
-            {
-                ExportPath = _bakExportPath;
-            }
-            OnPropertyChanged(nameof(ExportPath));
-        }
-
-        /// <summary>
-        /// Gets or sets the default Export path.
-        /// </summary>
-        /// <value>
-        /// The Export path.
-        /// </value>
-        public string ExportPath
-        {
-            get { return _exportPath; }
-            set { _exportPath = value; }
-        }
-
-        /// <summary>
-        /// Prompt the user to set the default Export path.
-        /// </summary>
-        /// <returns></returns>
-        public static string GetExportPath()
-        {
-            try
-            {
-                string exportPath = Settings.Default.ExportPath;
-
-                FolderBrowserDialog openFolderDlg = new()
-                {
-                    Description = "Select Export Default Directory",
-                    SelectedPath = exportPath,
-                    //openFolderDlg.RootFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-                    ShowNewFolderButton = true
-                };
-                if (openFolderDlg.ShowDialog() == DialogResult.OK)
-                {
-                    if (Directory.Exists(openFolderDlg.SelectedPath))
-                        return openFolderDlg.SelectedPath;
-                }
-            }
-            catch { }
-
-            return null;
         }
 
         #endregion
@@ -1364,30 +1201,6 @@ namespace HLU.UI.ViewModel
 
         #region IDataErrorInfo Members
 
-        private bool ValidateMapPath(out string message)
-        {
-            message = null;
-            switch (PreferredGis)
-            {
-                case GISApplications.ArcGIS:
-                    if (!Path.GetExtension(_mapPath).Equals(".mxd", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        message = String.Format("'{0}' does not appear to be an ArcGIS map document.", MapPath);
-                        return false;
-                    }
-                    break;
-                //TODO: MapInfo
-                //case GISApplications.MapInfo:
-                //    if (!Path.GetExtension(_mapPath).Equals(".wor", StringComparison.CurrentCultureIgnoreCase))
-                //    {
-                //        message = String.Format("'{0}' does not appear to be a MapInfo workspace.", MapPath);
-                //        return false;
-                //    }
-                //    break;
-            }
-            return true;
-        }
-
         public string Error
         {
             get
@@ -1400,18 +1213,7 @@ namespace HLU.UI.ViewModel
                 if (Convert.ToInt32(IncidTablePageSize) <= 0 || IncidTablePageSize == null)
                     error.Append("\n" + "Enter a database page size greater than 0 rows.");
 
-                // GIS/Export options
-                if (GisAppsEnabled && (PreferredGis == GISApplications.None))
-                    error.Append("\n" + "Select your preferred GIS application.");
-                if (String.IsNullOrEmpty(_mapPath))
-                {
-                    error.Append("\n" + "Enter a path to a GIS workspace.");
-                }
-                else
-                {
-                    string msg;
-                    if (!ValidateMapPath(out msg)) error.Append(msg);
-                }
+                // GIS options
                 if (Convert.ToInt32(MinAutoZoom) < 100 || MinAutoZoom == null)
                     error.Append("\n" + "Minimum auto zoom scale must be at least 100.");
                 if (Convert.ToInt32(MinAutoZoom) > Settings.Default.MaxAutoZoom)
@@ -1510,22 +1312,7 @@ namespace HLU.UI.ViewModel
                             error = "Error: Enter a database page size no more than 1000 rows.";
                         break;
 
-                    // GIS/Export options
-                    case "PreferredGis":
-                        if (GisAppsEnabled && (PreferredGis == GISApplications.None))
-                            error = "Error: Select your preferred GIS application.";
-                        break;
-                    case "MapDocument":
-                        if (String.IsNullOrEmpty(MapDocument))
-                        {
-                            error = "Error: Enter a path to a GIS workspace.";
-                        }
-                        else
-                        {
-                            string msg;
-                            if (!ValidateMapPath(out msg)) error = msg;
-                        }
-                        break;
+                    // GIS options
                     case "MinAutoZoom":
                         if (Convert.ToInt32(MinAutoZoom) < 100 || MinAutoZoom == null)
                             error = "Error: Minimum auto zoom scale must be at least 100.";

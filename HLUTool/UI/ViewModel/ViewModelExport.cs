@@ -44,12 +44,11 @@ namespace HLU.UI.ViewModel
         #region Constructor
 
         public ViewModelExport(int numberSelected, string layerName,
-            GISApplications gisApp, HluDataSet.exportsDataTable exportFormats)
+            HluDataSet.exportsDataTable exportFormats)
         {
             _selectedNumber = numberSelected;
             _selectedOnly = _selectedNumber > 0;
             _layerName = layerName;
-            //_gisApp = gisApp;
             _exportFormats = exportFormats;
             if (_exportFormats.Count == 1)
                 _exportID = _exportFormats[0].export_id;

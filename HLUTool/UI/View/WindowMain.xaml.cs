@@ -381,35 +381,6 @@ namespace HLU.UI.View
             }
         }
 
-        //DONE: Styling
-        ////---------------------------------------------------------------------
-        //// FIXED: KI15 (User Interface Style)
-        //// Switch the interface style to the style selected by the user
-        //// based on the menu item name.
-        ////
-        ///// <summary>
-        ///// Handles the Click event of the MenuItem_Style control.
-        ///// </summary>
-        ///// <param name="sender">The source of the event.</param>
-        ///// <param name="e">The <see cref="RoutedEventArgs"/> instance containing the event data.</param>
-        //private void MenuItem_Style_Click(object sender, RoutedEventArgs e)
-        //{
-        //    // Set the style name from the menu item name.
-        //    MenuItem mi = sender as MenuItem;
-        //    string styleName = string.Format("{0}", mi.Name);
-
-        //    // Switch the style to the selected menu item style.
-        //    if (App.LoadStyleDictionaryFromFile(styleName))
-        //    {
-        //        // Clear the check against the last menu item style.
-        //        CheckMenuItem(_lastStyle, false);
-
-        //        // Store the last style as the current menu item.
-        //        _lastStyle = mi.Name;
-        //    }
-        //}
-        ////---------------------------------------------------------------------
-
         /// <summary>
         /// Handles the Click event of the MenuItem_Zoom control.
         /// </summary>
