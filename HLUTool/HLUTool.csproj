@@ -17,6 +17,7 @@
     <Page Remove="GISApplication\MapInfo\**" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Remove="Data\Model\DataSet1.Designer.cs" />
     <Compile Remove="UI\ViewModel\ViewModelConnectOleDb.cs" />
     <Compile Remove="UI\View\Connection\ViewConnectOleDb.xaml.cs" />
   </ItemGroup>
@@ -28,6 +29,9 @@
     <None Remove="DarkImages\Error32.png" />
     <None Remove="DarkImages\Success32.png" />
     <None Remove="DarkImages\Warning32.png" />
+    <None Remove="Data\Model\DataSet1.xsc" />
+    <None Remove="Data\Model\DataSet1.xsd" />
+    <None Remove="Data\Model\DataSet1.xss" />
     <None Remove="Images\AddInDesktop16.png" />
     <None Remove="Images\AddInDesktop32.png" />
     <None Remove="Images\Error32.png" />
@@ -36,6 +40,9 @@
   </ItemGroup>
   <ItemGroup>
     <Page Remove="UI\View\Connection\ViewConnectOleDb.xaml" />
+    <Page Remove="UI\View\Dictionary\GeometryTypeConverterDictionary.xaml" />
+    <Page Remove="UI\View\Dictionary\LayerConverterDictionary.xaml" />
+    <Page Remove="UI\View\Dictionary\SpatialReferenceConverterDictionary.xaml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Config.daml" />
@@ -90,6 +97,16 @@
     <PackageReference Include="System.Runtime" Version="4.3.1" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="Data\Model\HluDataSet.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>HluDataSet.xsd</DependentUpon>
+    </Compile>
+    <Compile Update="Data\Model\HluGISLayer.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>HluGISLayer.xsd</DependentUpon>
+    </Compile>
     <Compile Update="Properties\Settings.Designer.cs">
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <AutoGen>True</AutoGen>
@@ -97,6 +114,14 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <None Update="Data\Model\HluDataSet.xsd">
+      <Generator>MSDataSetGenerator</Generator>
+      <LastGenOutput>HluDataSet.Designer.cs</LastGenOutput>
+    </None>
+    <None Update="Data\Model\HluGISLayer.xsd">
+      <Generator>MSDataSetGenerator</Generator>
+      <LastGenOutput>HluGISLayer.Designer.cs</LastGenOutput>
+    </None>
     <None Update="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

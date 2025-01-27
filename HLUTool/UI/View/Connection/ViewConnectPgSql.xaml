@@ -5,14 +5,13 @@
         Title="{Binding Path=WindowTitle}"
         Width="392"
         Height="512"
-        Activated="Window_Activated"
-        Background="{DynamicResource WindowBackgroundBrush}"
-        Icon="..\..\..\Icons\HLUIcon.png"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
         SizeToContent="Height"
         Visibility="Collapsed"
         WindowStartupLocation="CenterScreen">
+        <!-- Background="{DynamicResource WindowBackgroundBrush}" -->
+        <!-- Icon="..\..\..\Icons\HLUIcon.png" -->
 
     <Window.Resources>
         <ResourceDictionary>

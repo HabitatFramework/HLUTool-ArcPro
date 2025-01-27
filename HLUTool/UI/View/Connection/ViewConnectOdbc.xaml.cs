@@ -21,6 +21,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Interop;
+using HLU.UI.ViewModel;
 
 namespace HLU.UI.View.Connection
 {
@@ -41,7 +42,7 @@ namespace HLU.UI.View.Connection
             HwndSource hwndSrc = PresentationSource.FromVisual(this) as HwndSource;
             if (hwndSrc != null) _windowHandle = hwndSrc.Handle;
 
-            ((HLU.UI.ViewModel.ViewModelConnectOdbc)this.DataContext).ViewEvents(_windowHandle, null);
+            ((ViewModelConnectOdbc)this.DataContext).ViewEvents(_windowHandle, null);
 
             if ((this.ComboBoxDsn.Items.Count == 1) && (String.IsNullOrEmpty(this.ComboBoxDsn.Text) ||
                 this.ComboBoxDsn.Items.Contains(this.ComboBoxDsn.Text))) this.ComboBoxDsn.SelectedIndex = 0;
@@ -51,9 +52,9 @@ namespace HLU.UI.View.Connection
         {
             Binding bnd = BindingOperations.GetBinding((ComboBox)sender, ComboBox.SelectedItemProperty);
             if (bnd != null)
-                ((HLU.UI.ViewModel.ViewModelConnectOdbc)this.DataContext).ViewEvents(_windowHandle, bnd.Path.Path);
+                ((ViewModel.ViewModelConnectOdbc)this.DataContext).ViewEvents(_windowHandle, bnd.Path.Path);
             else
-                ((HLU.UI.ViewModel.ViewModelConnectOdbc)this.DataContext).ViewEvents(_windowHandle, null);
+                ((ViewModel.ViewModelConnectOdbc)this.DataContext).ViewEvents(_windowHandle, null);
         }
     }
 }

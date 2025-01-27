@@ -1,11 +1,19 @@
 ﻿<Window x:Class="HLU.UI.View.Connection.ViewSelectConnection"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:hlu="clr-namespace:HLU.UI.UserControls;assembly="
-    Title="{Binding Path=WindowTitle}"
-        Height="136" MinWidth="300" WindowStartupLocation="CenterScreen" Visibility="Collapsed" SizeToContent="WidthAndHeight"
-        ShowInTaskbar="False" ResizeMode="NoResize" Background="{DynamicResource WindowBackgroundBrush}"
-        Icon="..\..\..\Icons\HLUIcon.png" Activated="Window_Activated" WindowStyle="SingleBorderWindow">
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:hlu="clr-namespace:HLU.UI.UserControls;assembly="
+        Title="{Binding Path=WindowTitle}"
+        Height="136"
+        MinWidth="300"
+        WindowStartupLocation="CenterScreen"
+        Visibility="Collapsed"
+        SizeToContent="WidthAndHeight"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        WindowStyle="SingleBorderWindow">
+        <!-- Background="{DynamicResource WindowBackgroundBrush}" -->
+        <!-- Icon="..\..\..\Icons\HLUIcon.png" -->
+        <!-- Activated="Window_Activated" -->
 
     <Window.Resources>
         <ResourceDictionary>

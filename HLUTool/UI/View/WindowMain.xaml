@@ -11,16 +11,16 @@
                          Mode=TwoWay}"
         Height="{Binding WindowHeight,
                          Mode=TwoWay}"
-        Icon="..\..\Icons\HLUIcon.png"
-        KeyUp="Window_KeyUp"
-        KeyDown="Window_KeyDown"
-        Loaded="Window_Loaded"
-        Closing="OnClosing"
         Topmost="{Binding ElementName=MenuItemAppKeepOnTop,
                           Path=IsChecked}"
         WindowStyle="SingleBorderWindow"> <!-- d:DesignHeight="800" -->
     <!--  SizeToContent="Height"  -->
     <!--  Style="{DynamicResource WindowStyle}"  -->
+    <!-- ="..\..\Icons\HLUIcon.png" -->
+    <!-- KeyUp="Window_KeyUp"
+        KeyDown="Window_KeyDown"
+        Loaded="Window_Loaded"
+        Closing="OnClosing" -->
 
     <Window.Resources>
         <ResourceDictionary>

@@ -16,7 +16,8 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace HLU.Data.Model {
+namespace HLU.Data.Model
+{
 
     public partial class HluDataSet
     {

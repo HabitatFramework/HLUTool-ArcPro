@@ -4,8 +4,8 @@
     xmlns:hlu="clr-namespace:HLU.UI.UserControls;assembly="
     Title="{Binding Path=WindowTitle}"
         Height="287" Width="392" WindowStartupLocation="CenterScreen" Visibility="Collapsed" SizeToContent="Height"
-        ShowInTaskbar="False" ResizeMode="NoResize"
-        Icon="..\..\..\Icons\HLUIcon.png" Activated="Window_Activated">
+        ShowInTaskbar="False" ResizeMode="NoResize">
+    <!-- Icon="..\..\..\Icons\HLUIcon.png" Activated="Window_Activated"> -->
     <!-- Background="{DynamicResource WindowBackgroundBrush}" -->
 
     <Window.Resources>
