@@ -18,7 +18,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Data\Model\DataSet1.Designer.cs" />
+    <Compile Remove="GISApplication\GISApp.cs" />
     <Compile Remove="GISApplication\GISAppFactory.cs" />
+    <Compile Remove="GISApplication\WinAPI.cs" />
     <Compile Remove="UI\ViewModel\ViewModelConnectOleDb.cs" />
     <Compile Remove="UI\ViewModel\ViewModelWindowSelectGIS.cs" />
     <Compile Remove="UI\View\Connection\ViewConnectOleDb.xaml.cs" />

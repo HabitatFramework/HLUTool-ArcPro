@@ -28,6 +28,7 @@ using System.Linq;
 using System.Windows;
 using HLU.Data;
 using HLU.Data.Model;
+using HLU.GISApplication.ArcGIS;
 
 namespace HLU.UI.ViewModel
 {
@@ -313,7 +314,7 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.HistoryColumns.Concat([ new(
                             _viewModelMain.HluDataset.history.modified_toidfragidColumn.ColumnName.Replace(
                             _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.ColumnName, String.Empty) +
-                            GISApplication.GISApp.HistoryAdditionalFieldsDelimiter +
+                            ArcMapApp.HistoryAdditionalFieldsDelimiter +
                             _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.ColumnName,
                             _viewModelMain.HluDataset.history.modified_toidfragidColumn.DataType)]).ToArray());
 

@@ -25,6 +25,7 @@ using System.Linq;
 using System.Windows.Input;
 using HLU.Data.Model;
 using HLU.GISApplication;
+using HLU.GISApplication.ArcGIS;
 
 namespace HLU.UI.ViewModel
 {
@@ -45,14 +46,14 @@ namespace HLU.UI.ViewModel
         private int _incidOrdinal;
         private int _selectedIndex = -1;
         private int[] _keyOrdinals;
-        private GISApp _gisApp;
+        private ArcMapApp _gisApp;
 
         #endregion
 
         #region Constructor
 
         public ViewModelMergeFeatures(T selectedFeatures, int[] keyOrdinals, int incidOrdinal,
-            HluDataSet.incid_mm_polygonsRow[] childRows, GISApp gisApp)
+            HluDataSet.incid_mm_polygonsRow[] childRows, ArcMapApp gisApp)
         {
             _selectedFeatures = selectedFeatures;
             _keyOrdinals = keyOrdinals;

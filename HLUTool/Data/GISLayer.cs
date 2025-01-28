@@ -115,9 +115,7 @@ namespace HLU.Data
             {
                 string mapName = null;
 
-                // If there is no map window name (MapInfo) then set
-                // the map name to the window number, otherwise (ArcGIS)
-                // set the map name to the window name and number.
+                // Set the map name to the window name and number.
                 if (_mapName == null)
                     mapName = string.Format(" [{0}]", _mapNum);
                 else

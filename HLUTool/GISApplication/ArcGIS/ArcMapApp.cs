@@ -19,10 +19,6 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-//Comment out the line below if compiling for versions of ArcGIS 9.3 or
-//earlier and remove the comments for versions of ArcGIS 10.0 or later.
-#define ARC10
-
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -46,13 +42,10 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ArcGIS.Desktop.Internal.Framework.Controls;
+//using ArcGIS.Desktop.Internal.Framework.Controls;
 using ArcGIS.Desktop.Mapping;
 
 //TODO: ArcGIS
-//#if ARC10
-//using ESRI.ArcGIS;
-//#endif
 //using ESRI.ArcGIS.ADF;
 //using ESRI.ArcGIS.ArcMapUI;
 //using ESRI.ArcGIS.Carto;
@@ -70,11 +63,25 @@ using HLU.Data.Model;
 using HLU.Properties;
 using Microsoft.Win32;
 using System.Linq.Expressions;
+//using ArcGIS.Core.Internal.CIM;
 
 namespace HLU.GISApplication.ArcGIS
 {
-    public class ArcMapApp : GISApp
+    public class ArcMapApp : SqlBuilder
     {
+        public enum DistanceUnits
+        {
+            Chains, Centimeters, Feet, Inches, Kilometers, Links, Meters,
+            Miles, Millimeters, NauticalMiles, Rods, SurveyFeet, Yards
+        }
+
+        public enum AreaUnits
+        {
+            Acres, Hectares, Perches, Roods, SquareChains, SquareCentimeters,
+            SquareFeet, SquareInches, SquareKilometers, SquareLinks, SquareMeters,
+            SquareMiles, SquareMillimeters, SquareRods, SquareSurveyFeet, SquareYards
+        }
+
         #region Private Fields
 
         MapFunctions _mapFunctions;
@@ -224,32 +231,9 @@ namespace HLU.GISApplication.ArcGIS
 
         #region Constructor
 
-        public ArcMapApp(string mapPath)
+        public ArcMapApp()
         {
             _mapFunctions = new();
-
-            //TODO: ArcGIS
-            //_mapPath = mapPath;
-
-//#if ARC10
-//            string arcVersionString;
-//            int arcVersion = InitialiseArcObjects(out arcVersionString);
-//            EnableExtension("HLU.HluArcMapExtensionV4", arcVersion, arcVersionString);
-//#else
-//            EnableExtension("BFEE12C7-B9B4-4C10-BF23-0F466280ADE8");
-//#endif
-
-//            ArcMapAppHelperClass.GetValidWorkspaces(out _validWorkspaces);
-//            ArcMapAppHelperClass.GetTypeMaps(out _sqlPredicates, out _typeMapSystemToSQL, out _typeMapSQLToSystem);
-
-//            // Create delegates and add to AppAdded and AppRemoved events
-//            _rot = new AppROTClass();
-
-//            // add Handler for ArcMap instances being added
-//            _rot.AppAdded += new IAppROTEvents_AppAddedEventHandler(appROTEvent_AppAdded);
-
-//            // add Handler for ArcMap instances being removed
-//            _rot.AppRemoved += new IAppROTEvents_AppRemovedEventHandler(appROTEvent_AppRemoved);
         }
 
         #endregion
@@ -467,7 +451,7 @@ namespace HLU.GISApplication.ArcGIS
         /// <param name="targetList">The target list of data columns.</param>
         /// <param name="whereConds">The SQL WHERE conditions.</param>
         /// <returns></returns>
-        public override DataTable SqlSelect(bool selectDistinct, bool addGeometryInfo,
+        public DataTable SqlSelect(bool selectDistinct, bool addGeometryInfo,
             DataColumn[] targetList, List<SqlFilterCondition> whereConds)
         {
             //TODO: _arcMap
@@ -543,51 +527,67 @@ namespace HLU.GISApplication.ArcGIS
             }
             else // single table
             {
-                selectionList = IpcArcMap([ "qf", subFields,
-                    WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, whereConds)), "false" ]);
+            //    selectionList = IpcArcMap([ "qf", subFields,
+            //        WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, whereConds)), "false" ]);
+
+            //    try
+            //    {
+            //        CreateSelectionFieldList(_pipeData[1]);
+            //        IQueryFilter queryFilter = new QueryFilterClass();
+            //        queryFilter.SubFields = String.Join(",", _selectFields);
+            //        queryFilter.WhereClause = _pipeData[2];
+            //        _sendColumnHeaders = _pipeData[3] == "true";
+            //        _pipeData.Clear();
+
+            //        _dummyControl.Invoke(_selByQFilterDel, new object[] { queryFilter });
+            //    }
+            //    catch (Exception ex) { PipeException(ex); }
             }
 
-            ThrowPipeError(selectionList);
+            //ThrowPipeError(selectionList);
 
-            foreach (string s in selectionList)
-            {
-                string[] items = s.Split(PipeFieldDelimiter);
-                resultTable.Rows.Add(items);
-            }
+            //foreach (string s in selectionList)
+            //{
+            //    string[] items = s.Split(PipeFieldDelimiter);
+            //    resultTable.Rows.Add(items);
+            //}
         }
 
         #endregion
 
-        public override DataTable SqlSelect(string scratchMdbPath,
+        public static readonly string HistoryAdditionalFieldsDelimiter = Settings.Default.HistoryAdditionalFieldsDelimiter;
+
+        public DataTable SqlSelect(string scratchMdbPath,
             string selectionTableName, DataColumn[] targetColumns)
         {
-            try
-            {
-                bool qualifyColumns = false;
-                DataTable resultTable;
-                string subFields = TargetList(targetColumns, false, true,
-                    ref qualifyColumns, out resultTable);
+            //try
+            //{
+            //    bool qualifyColumns = false;
+            //    DataTable resultTable;
+            //    string subFields = TargetList(targetColumns, false, true,
+            //        ref qualifyColumns, out resultTable);
 
-                List<string> selectionList = IpcArcMap([ "sj", scratchMdbPath,
-                    selectionTableName, subFields, "false" ]);
+            //    List<string> selectionList = IpcArcMap([ "sj", scratchMdbPath,
+            //        selectionTableName, subFields, "false" ]);
 
-                ThrowPipeError(selectionList);
+            //    ThrowPipeError(selectionList);
 
-                foreach (string s in selectionList)
-                {
-                    string[] items = s.Split(PipeFieldDelimiter);
-                    resultTable.Rows.Add(items);
-                }
+            //    foreach (string s in selectionList)
+            //    {
+            //        string[] items = s.Split(PipeFieldDelimiter);
+            //        resultTable.Rows.Add(items);
+            //    }
 
-                return resultTable;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(String.Format("Map selection failed. " +
-                    "ArcMap returned the following error message:\n\n{0}", ex.Message),
-                    "HLU: Selection Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                return null;
-            }
+            //    return resultTable;
+            //}
+            //catch (Exception ex)
+            //{
+            //    MessageBox.Show(String.Format("Map selection failed. " +
+            //        "ArcMap returned the following error message:\n\n{0}", ex.Message),
+            //        "HLU: Selection Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            //    return null;
+            //}
+            return null;
         }
 
         //---------------------------------------------------------------------
@@ -603,7 +603,7 @@ namespace HLU.GISApplication.ArcGIS
         /// <param name="whereConds">The SQL WHERE conditions.</param>
         /// <returns>Integer of the approximate length of the SQL statement that will
         /// meet the where conditions.</returns>
-        public override int SqlLength(DataColumn[] targetList, List<SqlFilterCondition> whereConds)
+        public int SqlLength(DataColumn[] targetList, List<SqlFilterCondition> whereConds)
         {
             //TODO: _arcMap
             if ((_hluLayer == null) || (_hluView == null) ||
@@ -631,33 +631,33 @@ namespace HLU.GISApplication.ArcGIS
         }
         //---------------------------------------------------------------------
 
-        public override void ReadMapSelection(ref DataTable resultTable)
+        public void ReadMapSelection(ref DataTable resultTable)
         {
             if (resultTable == null) return;
 
-            try
-            {
-                //MessageBox.Show("Requesting read of map selection", "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Information);
+            //try
+            //{
+            //    //MessageBox.Show("Requesting read of map selection", "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Information);
 
-                List<string> selectionList = IpcArcMap(new string[] { "rs" }.Concat(
-                    resultTable.Columns.Cast<DataColumn>().Select(c => c.ColumnName)).ToArray());
+            //    List<string> selectionList = IpcArcMap(new string[] { "rs" }.Concat(
+            //        resultTable.Columns.Cast<DataColumn>().Select(c => c.ColumnName)).ToArray());
 
-                if (selectionList == null)
-                {
-                    //MessageBox.Show("Returned selection list is null", "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Information);
+            //    if (selectionList == null)
+            //    {
+            //        //MessageBox.Show("Returned selection list is null", "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Information);
 
-                    return;
-                }
+            //        return;
+            //    }
 
-                //MessageBox.Show(string.Format("Returned selection list has {0} records", selectionList.Count), "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Information);
+            //    //MessageBox.Show(string.Format("Returned selection list has {0} records", selectionList.Count), "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Information);
 
-                foreach (string s in selectionList)
-                {
-                    string[] items = s.Split(PipeFieldDelimiter);
-                    resultTable.Rows.Add(items);
-                }
-            }
-            catch { throw; }
+            //    foreach (string s in selectionList)
+            //    {
+            //        string[] items = s.Split(PipeFieldDelimiter);
+            //        resultTable.Rows.Add(items);
+            //    }
+            //}
+            //catch { throw; }
         }
 
         //---------------------------------------------------------------------
@@ -666,9 +666,9 @@ namespace HLU.GISApplication.ArcGIS
         /// <summary>
         /// Clears the currently selected map features.
         /// </summary>
-        public override void ClearMapSelection()
+        public void ClearMapSelection()
         {
-            IpcArcMap(["cs"]);
+            //IpcArcMap(["cs"]);
         }
         //---------------------------------------------------------------------
 
@@ -678,13 +678,13 @@ namespace HLU.GISApplication.ArcGIS
         /// <summary>
         /// Counts the currently selected map features.
         /// </summary>
-        public override void CountMapSelection(ref int fragCount)
+        public void CountMapSelection(ref int fragCount)
         {
-            List<string> retList = IpcArcMap(["qs"]);
-            if (retList.Count > 0)
-                fragCount = Convert.ToInt32(retList[0]);
-            else
-                fragCount = 0;
+            //List<string> retList = IpcArcMap(["qs"]);
+            //if (retList.Count > 0)
+            //    fragCount = Convert.ToInt32(retList[0]);
+            //else
+            //    fragCount = 0;
         }
         //---------------------------------------------------------------------
 
@@ -693,41 +693,43 @@ namespace HLU.GISApplication.ArcGIS
         /// any potential data integrity problems.
         /// </summary>
         /// <returns></returns>
-        public override bool SelectedRowsUnique()
+        public bool SelectedRowsUnique()
         {
-            try
-            {
-                List<string> retList = IpcArcMap(["su"]);
-                if (retList.Count > 0)
-                    return Convert.ToBoolean(retList[0]);
-                else
-                    return true;
-            }
-            catch { return true; }
+            //try
+            //{
+            //    List<string> retList = IpcArcMap(["su"]);
+            //    if (retList.Count > 0)
+            //        return Convert.ToBoolean(retList[0]);
+            //    else
+            //        return true;
+            //}
+            //catch { return true; }
+            return false;
         }
         //---------------------------------------------------------------------
 
-        public override void FlashSelectedFeature(List<SqlFilterCondition> whereClause)
+        public void FlashSelectedFeature(List<SqlFilterCondition> whereClause)
         {
-            List<string> resultList = IpcArcMap([ "fl",
-                WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, whereClause)) ]);
+            //List<string> resultList = IpcArcMap([ "fl",
+            //    WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, whereClause)) ]);
         }
 
-        public override void FlashSelectedFeatures(List<List<SqlFilterCondition>> whereClauses)
+        public void FlashSelectedFeatures(List<List<SqlFilterCondition>> whereClauses)
         {
-            foreach (List<SqlFilterCondition> whereClause in whereClauses)
-            {
-                List<string> resultList = IpcArcMap([ "fl",
-                    WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, whereClause)) ]);
-            }
+            //foreach (List<SqlFilterCondition> whereClause in whereClauses)
+            //{
+            //    List<string> resultList = IpcArcMap([ "fl",
+            //        WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, whereClause)) ]);
+            //}
         }
 
-        public override DataTable SplitFeature(string currentToidFragmentID, string lastToidFragmentID,
+        public DataTable SplitFeature(string currentToidFragmentID, string lastToidFragmentID,
             List<SqlFilterCondition> selectionWhereClause, DataColumn[] historyColumns)
         {
-            return ResultTableFromList(IpcArcMap([ "sp",
-                WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, selectionWhereClause)),
-                lastToidFragmentID, String.Join(",", historyColumns.Select(c => c.ColumnName).ToArray()) ]));
+            //return ResultTableFromList(IpcArcMap([ "sp",
+            //    WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, selectionWhereClause)),
+            //    lastToidFragmentID, String.Join(",", historyColumns.Select(c => c.ColumnName).ToArray()) ]));
+            return null;
         }
 
         //---------------------------------------------------------------------
@@ -735,138 +737,144 @@ namespace HLU.GISApplication.ArcGIS
         // Pass the old incid number together with the new incid number
         // so that only features belonging to the old incid are
         // updated.
-        public override DataTable SplitFeaturesLogically(string oldIncid, string newIncid, DataColumn[] historyColumns)
+        public DataTable SplitFeaturesLogically(string oldIncid, string newIncid, DataColumn[] historyColumns)
         {
-            try
-            {
-                string[] sendList =
-                [
-                    "sl",
-                    oldIncid,
-                    newIncid,
-                    //DONE: Aggregate
-                    //historyColumns.Aggregate(new(), (sb, c) =>
-                    //    sb.Append("," + c.ColumnName)).Remove(0, 1).ToString(),
-                    string.Join(",", historyColumns.Select(c => c.ColumnName)),
-                ];
-                return ResultTableFromList(IpcArcMap(sendList));
-            }
-            catch { throw; }
+            //try
+            //{
+            //    string[] sendList =
+            //    [
+            //        "sl",
+            //        oldIncid,
+            //        newIncid,
+            //        //DONE: Aggregate
+            //        //historyColumns.Aggregate(new(), (sb, c) =>
+            //        //    sb.Append("," + c.ColumnName)).Remove(0, 1).ToString(),
+            //        string.Join(",", historyColumns.Select(c => c.ColumnName)),
+            //    ];
+            //    return ResultTableFromList(IpcArcMap(sendList));
+            //}
+            //catch { throw; }
+            return null;
         }
         //---------------------------------------------------------------------
 
-        public override DataTable MergeFeatures(string newToidFragmentID,
+        public DataTable MergeFeatures(string newToidFragmentID,
             List<SqlFilterCondition> resultWhereClause, DataColumn[] historyColumns)
         {
-            return ResultTableFromList(IpcArcMap([ "mg",
-                WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, resultWhereClause)),
-                newToidFragmentID, String.Join(",", historyColumns.Select(c => c.ColumnName).ToArray())]));
+            //return ResultTableFromList(IpcArcMap([ "mg",
+            //    WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, resultWhereClause)),
+            //    newToidFragmentID, String.Join(",", historyColumns.Select(c => c.ColumnName).ToArray())]));
+            return null;
         }
 
-        public override DataTable MergeFeaturesLogically(string keepIncid, DataColumn[] historyColumns)
+        public DataTable MergeFeaturesLogically(string keepIncid, DataColumn[] historyColumns)
         {
-            string[] sendList =
-            [
-                "ml",
-                keepIncid,
-                String.Join(",", historyColumns.Select(c => c.ColumnName).ToArray()),
-            ];
-            return ResultTableFromList(IpcArcMap(sendList));
+            //string[] sendList =
+            //[
+            //    "ml",
+            //    keepIncid,
+            //    String.Join(",", historyColumns.Select(c => c.ColumnName).ToArray()),
+            //];
+            //return ResultTableFromList(IpcArcMap(sendList));
+            return null;
         }
 
         private DataTable ResultTableFromList(List<string> resultList)
         {
-            try
-            {
-                if ((resultList != null) && (resultList.Count > 1))
-                {
-                    // Create a new result table
-                    DataTable resultTable = new();
+            //try
+            //{
+            //    if ((resultList != null) && (resultList.Count > 1))
+            //    {
+            //        // Create a new result table
+            //        DataTable resultTable = new();
 
-                    // Define the result table by adding the columns
-                    int i = 0;
-                    string s;
-                    while ((i < resultList.Count) && ((s = resultList[i++]) != PipeTransmissionInterrupt))
-                    {
-                        string[] items = s.Split(PipeFieldDelimiter);
-                        resultTable.Columns.Add(new DataColumn(items[0], Type.GetType(items[1])));
-                    }
+            //        // Define the result table by adding the columns
+            //        int i = 0;
+            //        string s;
+            //        while ((i < resultList.Count) && ((s = resultList[i++]) != PipeTransmissionInterrupt))
+            //        {
+            //            string[] items = s.Split(PipeFieldDelimiter);
+            //            resultTable.Columns.Add(new DataColumn(items[0], Type.GetType(items[1])));
+            //        }
 
-                    // Add the values to the result table
-                    while (i < resultList.Count)
-                    {
-                        // Split the final resultlist string and trim spaces
-                        string[] items = resultList[i++].Split(PipeFieldDelimiter).Select(r => r.Trim()).ToArray();
-                        resultTable.Rows.Add(items);
-                    }
+            //        // Add the values to the result table
+            //        while (i < resultList.Count)
+            //        {
+            //            // Split the final resultlist string and trim spaces
+            //            string[] items = resultList[i++].Split(PipeFieldDelimiter).Select(r => r.Trim()).ToArray();
+            //            resultTable.Rows.Add(items);
+            //        }
 
-                    return resultTable;
-                }
-            }
-            catch { }
+            //        return resultTable;
+            //    }
+            //}
+            //catch { }
 
             return null;
         }
 
-        public override DataTable UpdateFeatures(DataColumn[] updateColumns, object[] updateValues, 
+        public DataTable UpdateFeatures(DataColumn[] updateColumns, object[] updateValues, 
             DataColumn[] historyColumns)
         {
-            try
-            {
-                string delimiter = PipeFieldDelimiter.ToString();
+            //try
+            //{
+            //    string delimiter = PipeFieldDelimiter.ToString();
 
-                return ResultTableFromList(IpcArcMap(new string[] { "us" }
-                    .Concat(updateColumns.Select(c => c.ColumnName))
-                    .Concat([PipeTransmissionInterrupt])
-                    .Concat(updateValues.Select(o => o.ToString()))
-                    .Concat([PipeTransmissionInterrupt])
-                    .Concat(historyColumns.Select(c => c.ColumnName)).ToArray()));
-            }
-            catch { throw; }
+            //    return ResultTableFromList(IpcArcMap(new string[] { "us" }
+            //        .Concat(updateColumns.Select(c => c.ColumnName))
+            //        .Concat([PipeTransmissionInterrupt])
+            //        .Concat(updateValues.Select(o => o.ToString()))
+            //        .Concat([PipeTransmissionInterrupt])
+            //        .Concat(historyColumns.Select(c => c.ColumnName)).ToArray()));
+            //}
+            //catch { throw; }
+            return null;
         }
 
-        public override DataTable UpdateFeatures(DataColumn[] updateColumns, object[] updateValues,
+        public DataTable UpdateFeatures(DataColumn[] updateColumns, object[] updateValues,
             DataColumn[] historyColumns, List<SqlFilterCondition> selectionWhereClause)
         {
-            try
-            {
-                string delimiter = PipeFieldDelimiter.ToString();
+            //try
+            //{
+            //    string delimiter = PipeFieldDelimiter.ToString();
 
-                return ResultTableFromList(IpcArcMap(new string[] { "up",
-                    WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, selectionWhereClause)) }
-                    .Concat(updateColumns.Select(c => c.ColumnName))
-                    .Concat([PipeTransmissionInterrupt])
-                    .Concat(updateValues.Select(o => o.ToString()))
-                    .Concat([PipeTransmissionInterrupt])
-                    .Concat(historyColumns.Select(c => c.ColumnName)).ToArray()));
-            }
-            catch { throw; }
+            //    return ResultTableFromList(IpcArcMap(new string[] { "up",
+            //        WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, selectionWhereClause)) }
+            //        .Concat(updateColumns.Select(c => c.ColumnName))
+            //        .Concat([PipeTransmissionInterrupt])
+            //        .Concat(updateValues.Select(o => o.ToString()))
+            //        .Concat([PipeTransmissionInterrupt])
+            //        .Concat(historyColumns.Select(c => c.ColumnName)).ToArray()));
+            //}
+            //catch { throw; }
+            return null;
         }
 
-        public override DataTable UpdateFeatures(DataColumn[] updateColumns, object[] updateValues,
+        public DataTable UpdateFeatures(DataColumn[] updateColumns, object[] updateValues,
             DataColumn[] historyColumns, string tempMdbPathName, string selectionTableName)
         {
-            string delimiter = PipeFieldDelimiter.ToString();
+            //string delimiter = PipeFieldDelimiter.ToString();
 
-            try
-            {
-                return ResultTableFromList(IpcArcMap(new string[] { "ub", tempMdbPathName, selectionTableName }
-                    .Concat(updateColumns.Select(c => c.ColumnName))
-                    .Concat([PipeTransmissionInterrupt])
-                    .Concat(updateValues.Select(o => o == null ? String.Empty : o.ToString()))
-                    .Concat([PipeTransmissionInterrupt])
-                    .Concat(historyColumns.Select(c => c.ColumnName)).ToArray()));
-            }
-            catch { throw; }
+            //try
+            //{
+            //    return ResultTableFromList(IpcArcMap(new string[] { "ub", tempMdbPathName, selectionTableName }
+            //        .Concat(updateColumns.Select(c => c.ColumnName))
+            //        .Concat([PipeTransmissionInterrupt])
+            //        .Concat(updateValues.Select(o => o == null ? String.Empty : o.ToString()))
+            //        .Concat([PipeTransmissionInterrupt])
+            //        .Concat(historyColumns.Select(c => c.ColumnName)).ToArray()));
+            //}
+            //catch { throw; }
+            return null;
         }
 
-        public override void ZoomSelected(int minZoom, string distUnits, bool alwaysZoom)
+        public void ZoomSelected(int minZoom, string distUnits, bool alwaysZoom)
         {
-            // Enable auto zoom when selecting features on map.
-            if (alwaysZoom)
-                IpcArcMap(["zs", minZoom.ToString(), distUnits, "always"]);
-            else
-                IpcArcMap(["zs", minZoom.ToString(), distUnits, "when"]);
+            //// Enable auto zoom when selecting features on map.
+            //if (alwaysZoom)
+            //    IpcArcMap(["zs", minZoom.ToString(), distUnits, "always"]);
+            //else
+            //    IpcArcMap(["zs", minZoom.ToString(), distUnits, "when"]);
         }
 
         /// <summary>
@@ -877,28 +885,29 @@ namespace HLU.GISApplication.ArcGIS
         /// <param name="attributeDatasetName">Name of the attribute dataset.</param>
         /// <param name="attributesLength">Length of the attribute data row.</param>
         /// <returns></returns>
-        public override bool ExportPrompt(string tempMdbPathName, string attributeDatasetName, int attributesLength, bool selectedOnly)
+        public bool ExportPrompt(string tempMdbPathName, string attributeDatasetName, int attributesLength, bool selectedOnly)
         {
-            List<string> returnList = IpcArcMap(
-                ["ep", tempMdbPathName, attributeDatasetName]);
+            //List<string> returnList = IpcArcMap(
+            //    ["ep", tempMdbPathName, attributeDatasetName]);
 
-            if ((returnList.Count > 0) && (returnList[0] == "cancelled"))
-            {
-                // Display message if no output layer is entered by the user.
-                MessageBox.Show("Export cancelled. No output table selected.",
-                    "HLU: Export", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
-            }
-            else if (returnList.Count > 0)
-            {
-                MessageBox.Show(String.Format("The export operation failed. The Message returned was:\n\n{0}",
-                    returnList[0]), "HLU: Export", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
-            }
-            else
-            {
-                return true;
-            }
+            //if ((returnList.Count > 0) && (returnList[0] == "cancelled"))
+            //{
+            //    // Display message if no output layer is entered by the user.
+            //    MessageBox.Show("Export cancelled. No output table selected.",
+            //        "HLU: Export", MessageBoxButton.OK, MessageBoxImage.Error);
+            //    return false;
+            //}
+            //else if (returnList.Count > 0)
+            //{
+            //    MessageBox.Show(String.Format("The export operation failed. The Message returned was:\n\n{0}",
+            //        returnList[0]), "HLU: Export", MessageBoxButton.OK, MessageBoxImage.Error);
+            //    return false;
+            //}
+            //else
+            //{
+            //    return true;
+            //}
+            return false;
         }
 
         /// <summary>
@@ -910,127 +919,37 @@ namespace HLU.GISApplication.ArcGIS
         /// <param name="selectedOnly">If set to <c>true</c> only selected features
         /// will be exported.</param>
         /// <returns></returns>
-        public override bool Export(string tempMdbPathName, string attributeDatasetName, bool selectedOnly)
+        public bool Export(string tempMdbPathName, string attributeDatasetName, bool selectedOnly)
         {
-            List<string> returnList = IpcArcMap(
-                ["ex", tempMdbPathName, attributeDatasetName, (selectedOnly ? "true" : "false")]);
+            //List<string> returnList = IpcArcMap(
+            //    ["ex", tempMdbPathName, attributeDatasetName, (selectedOnly ? "true" : "false")]);
 
-            if ((returnList.Count > 0) && (returnList[0] == "cancelled"))
-            {
-                // Display message if no output layer is entered by the user.
-                MessageBox.Show("Export cancelled.", "HLU: Export",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
-                return true;
-            }
-            else if ((returnList.Count > 0) && (returnList[0] == "noselection"))
-            {
-                // Display message if no selected features are found.
-                MessageBox.Show("Export cancelled. No features selected.", "HLU: Export",
-                    MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                return true;
-            }
-            else if (returnList.Count > 0)
-            {
-                MessageBox.Show(String.Format("The export operation failed. The Message returned was:\n\n{0}",
-                    returnList[0]), "HLU: Export", MessageBoxButton.OK, MessageBoxImage.Error);
-                return false;
-            }
-            else
-            {
-                return true;
-            }
-        }
-
-        #region IPC
-
-        /// <summary>
-        /// Name of the pipe between database and ArcMap, composed of a base name and the ArcMap hWnd.
-        /// </summary>
-        public static readonly string PipeBaseName = Settings.Default.PipeBaseName;
-
-        /// <summary>
-        /// End of transmission block (list, table, array etc.) signal for IPC
-        /// </summary>
-        public static readonly string PipeTransmissionInterrupt = Settings.Default.PipeTransmissionInterrupt;
-
-        /// <summary>
-        /// Signals that string is being sent in pieces that need to be assembled 
-        /// until either _pipeTransmissionInterrupt or _pipeTransmissionEnd is received.
-        /// </summary>
-        public static readonly char PipeStringContinue = Settings.Default.PipeStringContinue;
-
-        /// <summary>
-        /// End of transmission signal for IPC.
-        /// </summary>
-        public static readonly string PipeTransmissionEnd = Settings.Default.PipeTransmissionEnd;
-
-        /// <summary>
-        /// Field delimiter for data lists returned from ArcMap extension via IPC.
-        /// </summary>
-        public static readonly char PipeFieldDelimiter = Settings.Default.PipeFieldDelimiter;
-
-        /// <summary>
-        /// Error symbol for pipe transmissions.
-        /// </summary>
-        public static readonly char PipeErrorSymbol = Settings.Default.PipeErrorInit;
-
-        /// <summary>
-        /// Maximum number of bytes that can be sent through the pipe.
-        /// </summary>
-        public static readonly int PipeMaxReadBytes = Settings.Default.PipeMaxReadBytes;
-
-        /// <summary>
-        /// Name of the HLU DB executable.
-        /// </summary>
-        public static readonly string HluDbAppName = Assembly.GetExecutingAssembly().GetName().ToString().Split(',')[0];
-
-        //TODO: ArcGIS
-        /// <summary>
-        /// Handles communication with database via named pipe.
-        /// </summary>
-        /// <param name="sendList">List of requests to be sent to ArcMap.</param>
-        /// <returns>List of responses from ArcMap.</returns>
-        private List<string> IpcArcMap(string[] sendList)
-        {
-            //IInterProcessConnection clientConnection = null;
-            //try
+            //if ((returnList.Count > 0) && (returnList[0] == "cancelled"))
             //{
-            //    PipeList pipeList = new(sendList);
-            //    List<string> prepSendList = pipeList.List;
-
-            //    clientConnection = new ClientPipeConnection(_pipeName, ".");
-            //    clientConnection.Connect();
-
-            //    foreach (string send in prepSendList)
-            //        clientConnection.Write(send);
-
-            //    List<string> responseList = [];
-            //    string response;
-            //    while ((response = clientConnection.Read()) != PipeTransmissionEnd)
-            //        responseList.Add(response);
-            //    clientConnection.Close();
-
-            //    return responseList;
+            //    // Display message if no output layer is entered by the user.
+            //    MessageBox.Show("Export cancelled.", "HLU: Export",
+            //        MessageBoxButton.OK, MessageBoxImage.Information);
+            //    return true;
             //}
-            //catch
+            //else if ((returnList.Count > 0) && (returnList[0] == "noselection"))
             //{
-            //    clientConnection.Dispose();
-            //    MessageBox.Show("No response from ArcMap.", "ArcMap Connection Error", 
-            //        MessageBoxButton.OK, MessageBoxImage.Error);
-            //    return null;
+            //    // Display message if no selected features are found.
+            //    MessageBox.Show("Export cancelled. No features selected.", "HLU: Export",
+            //        MessageBoxButton.OK, MessageBoxImage.Exclamation);
+            //    return true;
             //}
-            return null;
+            //else if (returnList.Count > 0)
+            //{
+            //    MessageBox.Show(String.Format("The export operation failed. The Message returned was:\n\n{0}",
+            //        returnList[0]), "HLU: Export", MessageBoxButton.OK, MessageBoxImage.Error);
+            //    return false;
+            //}
+            //else
+            //{
+            //    return true;
+            //}
+            return false;
         }
-
-        private void ThrowPipeError(List<string> pipeData)
-        {
-            if ((pipeData.Count > 0) && (pipeData[0][0] == PipeErrorSymbol))
-                //DONE: Aggregate
-                //throw new Exception(pipeData.Skip(1).Aggregate(new(), (sb, m) => sb.Append(m)).ToString());
-                throw new Exception(string.Join(",", pipeData.Skip(1)));
-        }
-
-        #endregion
 
         #region Private Methods
 
@@ -1206,7 +1125,7 @@ namespace HLU.GISApplication.ArcGIS
         /// <summary>
         /// Units in which history reports polygon areas.  Defaults to squared linear unit of HLU layer.
         /// </summary>
-        public override AreaUnits AreaUnit
+        public AreaUnits AreaUnit
         {
             set
             {
@@ -1264,7 +1183,7 @@ namespace HLU.GISApplication.ArcGIS
         /// <summary>
         /// Units in which history reports polyline lengths and polygon perimeters. Defaults to linear unit of HLU layer.
         /// </summary>
-        public override DistanceUnits DistanceUnit
+        public DistanceUnits DistanceUnit
         {
             set
             {
@@ -1322,7 +1241,7 @@ namespace HLU.GISApplication.ArcGIS
         /// <summary>
         /// Maximum (nominal) allowable length of a SQL query.
         /// </summary>
-        public override int MaxSqlLength
+        public int MaxSqlLength
         {
             get { return _maxSqlLength; }
         }
@@ -1331,19 +1250,19 @@ namespace HLU.GISApplication.ArcGIS
         ///// <summary>
         ///// Reference to the running IApplication object.
         ///// </summary>
-        //public override object ApplicationObject
+        //public object ApplicationObject
         //{
         //    //TODO: _arcMap
         //    get { return _arcMap; }
         //}
 
-        public override string HluLayerName
+        public string HluLayerName
         {
             get { return _hluLayer?.Name; }
         }
 
         //TODO: ArcPro
-        public async override Task<string> IncidFieldName()
+        public async Task<string> IncidFieldName()
         {
             Field field = await GetFieldAsync(_hluLayerStructure.incidColumn.Ordinal);
             return field.Name;
@@ -1352,7 +1271,7 @@ namespace HLU.GISApplication.ArcGIS
         /// <summary>
         /// The number of valid hlu layers.
         /// </summary>
-        public override int HluLayerCount
+        public int HluLayerCount
         {
             get { return _hluLayerList.Count; }
         }
@@ -1360,7 +1279,7 @@ namespace HLU.GISApplication.ArcGIS
         /// <summary>
         /// The list of valid hlu layers.
         /// </summary>
-        public override List<GISLayer> ValidHluLayers
+        public List<GISLayer> ValidHluLayers
         {
             get { return _hluLayerList; }
         }
@@ -1368,7 +1287,7 @@ namespace HLU.GISApplication.ArcGIS
         /// <summary>
         /// The properties of the current hlu layer.
         /// </summary>
-        public override GISLayer CurrentHluLayer
+        public GISLayer CurrentHluLayer
         {
             get { return _hluCurrentLayer; }
         }
@@ -1376,7 +1295,7 @@ namespace HLU.GISApplication.ArcGIS
         /// <summary>
         /// The total number of map windows in the current workspace.
         /// </summary>
-        public override int MapWindowsCount
+        public int MapWindowsCount
         {
             get { return _mapWindowsCount; }
         }
@@ -1385,7 +1304,7 @@ namespace HLU.GISApplication.ArcGIS
         ///// <summary>
         ///// True if ArcMap is running, otherwise false.
         ///// </summary>
-        //public override bool IsRunning
+        //public bool IsRunning
         //{
         //    get
         //    {
@@ -1412,19 +1331,20 @@ namespace HLU.GISApplication.ArcGIS
         /// <summary>
         /// True if HLU layer is being edited in user initiated edit session.
         /// </summary>
-        public override bool IsEditing
+        public bool IsEditing
         {
             get
             {
-                try
-                {
-                    List<string> retList = IpcArcMap(["ie"]);
-                    if (retList.Count > 0)
-                        return Convert.ToBoolean(retList[0]);
-                    else
-                        return false;
-                }
-                catch { return false; }
+                //try
+                //{
+                //    List<string> retList = IpcArcMap(["ie"]);
+                //    if (retList.Count > 0)
+                //        return Convert.ToBoolean(retList[0]);
+                //    else
+                //        return false;
+                //}
+                //catch { return false; }
+                return false;
             }
         }
 
@@ -1434,7 +1354,7 @@ namespace HLU.GISApplication.ArcGIS
         /// </summary>
         /// <param name = "waitSeconds" > Number of seconds to wait for the ArcMap process to load before an exception is thrown.</param>
         /// <returns>true if ArcMap launched ok, otherwise false.</returns>
-        //public override bool Start(ProcessWindowStyle windowStyle)
+        //public bool Start(ProcessWindowStyle windowStyle)
         //{
         //    try
         //    {
@@ -1465,7 +1385,7 @@ namespace HLU.GISApplication.ArcGIS
         //}
 
         //TODO: ArcGIS
-        //public override bool Close()
+        //public bool Close()
         //{
         //    try
         //    {
@@ -1497,10 +1417,10 @@ namespace HLU.GISApplication.ArcGIS
         //}
 
         //TODO: _arcMapWindow
-        //public override IntPtr hWnd { get { return _arcMapWindow; } }
+        //public IntPtr hWnd { get { return _arcMapWindow; } }
 
         //TODO: ArcGIS
-        //public override void Window(ProcessWindowStyle windowStyle, IntPtr sideBySideWith)
+        //public void Window(ProcessWindowStyle windowStyle, IntPtr sideBySideWith)
         //{
         //    if ((_arcMapWindow == null) || !WinAPI.IsWindow(_arcMapWindow) || !_arcMap.Visible)
         //    {
@@ -1562,13 +1482,13 @@ namespace HLU.GISApplication.ArcGIS
         //}
 
         //TODO: ArcGIS
-        //public override void Activate()
+        //public void Activate()
         //{
         //    WinAPI.SetForegroundWindow(_arcMapWindow);
         //}
 
         //TODO: ArcGIS
-        //public override bool OpenWorkspace(string path)
+        //public bool OpenWorkspace(string path)
         //{
         //    if (_arcMap == null) return false;
 
@@ -1593,7 +1513,7 @@ namespace HLU.GISApplication.ArcGIS
         //}
 
         //TODO: ArcGIS
-        //public override bool SaveWorkspace()
+        //public bool SaveWorkspace()
         //{
         //    try
         //    {
@@ -1682,7 +1602,7 @@ namespace HLU.GISApplication.ArcGIS
         /// and _hluFieldNames.
         /// </summary>
         /// <returns>True if the current document contains a valid HLU layer, otherwise false.</returns>
-        public override bool IsHluWorkspace()
+        public bool IsHluWorkspace()
         {
             if (_hluLayerStructure == null)
                 _hluLayerStructure = new();
@@ -1761,51 +1681,52 @@ namespace HLU.GISApplication.ArcGIS
         /// between.
         /// </summary>
         /// <returns>The number of valid HLU layers in the list</returns>
-        public override int ListHluLayers()
+        public int ListHluLayers()
         {
-            if (_hluLayerStructure == null)
-                _hluLayerStructure = new HluGISLayer.incid_mm_polygonsDataTable();
+            //if (_hluLayerStructure == null)
+            //    _hluLayerStructure = new HluGISLayer.incid_mm_polygonsDataTable();
 
-            if (_hluLayerList == null)
-                _hluLayerList = [];
+            //if (_hluLayerList == null)
+            //    _hluLayerList = [];
 
-            try
-            {
-                List<string> retList = IpcArcMap(["ll"]);
-                if ((retList != null) && (retList.Count > 3))
-                {
-                    if (Int32.Parse(retList[0]) > 0)
-                    {
-                        // Store the total number of map windows.
-                        _mapWindowsCount = Int32.Parse(retList[1]);
+            //try
+            //{
+            //    List<string> retList = IpcArcMap(["ll"]);
+            //    if ((retList != null) && (retList.Count > 3))
+            //    {
+            //        if (Int32.Parse(retList[0]) > 0)
+            //        {
+            //            // Store the total number of map windows.
+            //            _mapWindowsCount = Int32.Parse(retList[1]);
 
-                        // Split each layer into constituent parts and add them to the list
-                        // of valid layers.
-                        if (_hluLayerList == null)
-                            _hluLayerList = [];
-                        else
-                            _hluLayerList.Clear();
+            //            // Split each layer into constituent parts and add them to the list
+            //            // of valid layers.
+            //            if (_hluLayerList == null)
+            //                _hluLayerList = [];
+            //            else
+            //                _hluLayerList.Clear();
 
-                        for (int i = 3; i < retList.Count; i++)
-                        {
-                            // Increment the map number by 1 so that it starts with 1 instead
-                            // of 0 to be more user-friendly when displayed.
-                            string[] layerParts = retList[i].ToString().Split(new string[] { "::" }, StringSplitOptions.None);
-                            _hluLayerList.Add(new GISLayer(Int32.Parse(layerParts[0]) + 1, layerParts[1], Int32.Parse(layerParts[2]), layerParts[3]));
-                        }
-                    }
-                }
-                else
-                {
-                    _hluCurrentLayer = null;
-                    return 0;
-                }
-            }
-            catch { }
+            //            for (int i = 3; i < retList.Count; i++)
+            //            {
+            //                // Increment the map number by 1 so that it starts with 1 instead
+            //                // of 0 to be more user-friendly when displayed.
+            //                string[] layerParts = retList[i].ToString().Split(["::"], StringSplitOptions.None);
+            //                _hluLayerList.Add(new GISLayer(Int32.Parse(layerParts[0]) + 1, layerParts[1], Int32.Parse(layerParts[2]), layerParts[3]));
+            //            }
+            //        }
+            //    }
+            //    else
+            //    {
+            //        _hluCurrentLayer = null;
+            //        return 0;
+            //    }
+            //}
+            //catch { }
 
-            if (_hluCurrentLayer == null)
-                _hluCurrentLayer = _hluLayerList[0];
-            return _hluLayerList.Count;
+            //if (_hluCurrentLayer == null)
+            //    _hluCurrentLayer = _hluLayerList[0];
+            //return _hluLayerList.Count;
+            return 0;
         }
         //---------------------------------------------------------------------
 
@@ -1821,7 +1742,7 @@ namespace HLU.GISApplication.ArcGIS
         /// </summary>
         /// <param name="newGISLayer">The new gis layer to test for validity.</param>
         /// <returns>True if the GIS layer is a valid HLU layer, otherwise False</returns>
-        public override bool IsHluLayer(GISLayer newGISLayer)
+        public bool IsHluLayer(GISLayer newGISLayer)
         {
             //if (_hluLayerStructure == null)
             //    _hluLayerStructure = new HluGISLayer.incid_mm_polygonsDataTable();
@@ -1925,7 +1846,7 @@ namespace HLU.GISApplication.ArcGIS
         /// </summary>
         /// <param name="columnOrdinal">Ordinal of the column in _hluLayerStructure.</param>
         /// <returns>Name of the field of _hluFeatureClass corresponding to column _hluLayerStructure[columnOrdinal].</returns>
-        protected override string GetFieldName(int columnOrdinal)
+        protected string GetFieldName(int columnOrdinal)
         {
             if ((_hluFieldNames == null) || (_hluFieldMap == null) || (columnOrdinal < 0) ||
                 (columnOrdinal > _hluFieldNames.Length - 1)) return null;
@@ -2122,6 +2043,39 @@ namespace HLU.GISApplication.ArcGIS
             //        SetDefaultsSde(ws);
             //        break;
             //}
+        }
+
+        protected List<SqlFilterCondition> MapWhereClauseFields(
+            HluGISLayer.incid_mm_polygonsDataTable _hluLayerStructure, List<SqlFilterCondition> whereClause)
+        {
+            List<SqlFilterCondition> outWhereClause = [];
+            for (int i = 0; i < whereClause.Count; i++)
+            {
+                SqlFilterCondition cond = whereClause[i];
+                if (!_hluLayerStructure.Columns.Contains(cond.Column.ColumnName))
+                {
+                    if ((!String.IsNullOrEmpty(cond.CloseParentheses)) && (outWhereClause.Count > 0))
+                    {
+                        SqlFilterCondition condPrev = outWhereClause[outWhereClause.Count - 1];
+                        condPrev.CloseParentheses += cond.CloseParentheses;
+                        outWhereClause[outWhereClause.Count - 1] = condPrev;
+                    }
+                    if ((!String.IsNullOrEmpty(cond.OpenParentheses)) && (i < whereClause.Count - 1))
+                    {
+                        SqlFilterCondition condNext = whereClause[i + 1];
+                        condNext.OpenParentheses += cond.OpenParentheses;
+                        whereClause[i + 1] = condNext;
+                    }
+                    continue;
+                }
+                string columnName = GetFieldName(_hluLayerStructure.Columns[cond.Column.ColumnName].Ordinal);
+                if (!String.IsNullOrEmpty(columnName))
+                {
+                    cond.Column = new DataColumn(columnName, cond.Column.DataType);
+                    outWhereClause.Add(cond);
+                }
+            }
+            return outWhereClause;
         }
 
         #region SDE

@@ -41,7 +41,7 @@ using HLU.Data.Connection;
 using HLU.Data.Model;
 using HLU.Data.Model.HluDataSetTableAdapters;
 using HLU.Date;
-using HLU.GISApplication;
+//using HLU.GISApplication;
 using HLU.GISApplication.ArcGIS;
 using HLU.Properties;
 using HLU.UI.View;
@@ -268,7 +268,7 @@ namespace HLU.UI.ViewModel
         // None
 
         private DbBase _db;
-        private GISApp _gisApp;
+        private ArcMapApp _gisApp;
         private GeometryTypes _gisLayerType = GeometryTypes.Polygon;
         private HluDataSet _hluDS;
         private TableAdapterManager _hluTableAdapterMgr;
@@ -634,8 +634,7 @@ namespace HLU.UI.ViewModel
                     DispatcherHelper.DoEvents();
                 }
 
-                //TODO: ArcGIS
-                _gisApp = new ArcMapApp(Settings.Default.MapPath);
+                _gisApp = new ArcMapApp();
                 if (_gisApp == null)
                     return false;
 
@@ -734,11 +733,6 @@ namespace HLU.UI.ViewModel
             //        case "/arcgis": // start with ArcGIS
             //            Settings.Default.PreferredGis = (int)GISApplications.ArcGIS;
             //            if (Settings.Default.MapPath.ToLower().EndsWith(".wor"))
-            //                Settings.Default.MapPath = String.Empty;
-            //            break;
-            //        case "/mapinfo": // start with MapInfo
-            //            Settings.Default.PreferredGis = (int)GISApplications.MapInfo;
-            //            if (Settings.Default.MapPath.ToLower().EndsWith(".mxd"))
             //                Settings.Default.MapPath = String.Empty;
             //            break;
             //    }
@@ -1454,7 +1448,7 @@ namespace HLU.UI.ViewModel
 
         #region Internal properties
 
-        internal GISApp GISApplication
+        internal ArcMapApp GISApplication
         {
             get { return _gisApp; }
         }
@@ -14839,7 +14833,7 @@ namespace HLU.UI.ViewModel
             object checkVal = propInf.GetValue(this, null);
             if ((checkVal == null) || checkVal.Equals(skipVal)) return;
 
-            string[] split = propNamePat.Split(new string[] { propNamePatWildcard }, StringSplitOptions.None);
+            string[] split = propNamePat.Split([propNamePatWildcard], StringSplitOptions.None);
             string errMsg = String.Format("Error: {0}", split[split.Length - 1]);
 
             //DONE: Aggregate

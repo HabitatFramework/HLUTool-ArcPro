@@ -29,7 +29,7 @@ using HLU.Data.Connection;
 using HLU.Data.Model;
 using HLU.Properties;
 
-namespace HLU.GISApplication
+namespace HLU.GISApplication.ArcGIS
 {
     static class ScratchDb
     {
@@ -173,7 +173,7 @@ namespace HLU.GISApplication
         /// <returns>
         /// A list of sql filter conditions.
         /// </returns>
-        public static List<SqlFilterCondition> GisWhereClause(DataTable incidSelection, GISApp gisApp, bool useIncidTable)
+        public static List<SqlFilterCondition> GisWhereClause(DataTable incidSelection, ArcMapApp gisApp, bool useIncidTable)
         {
             List<SqlFilterCondition> whereClause = [];
             SqlFilterCondition cond = new();
