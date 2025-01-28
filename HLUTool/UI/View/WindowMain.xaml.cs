@@ -42,7 +42,6 @@ namespace HLU.UI.View
 
         //DONE: Styling
         //public string _lastStyle = null;
-        public bool _keepOnTop = false;
         public int _autoZoom = 1;
         public bool _autoSelect = false;
 
@@ -72,12 +71,6 @@ namespace HLU.UI.View
             //    // Check the menu item for the default style.
             //    CheckMenuItem(_lastStyle, true);
             //}
-
-            // Get the app keep on top option default value.
-            _keepOnTop = Settings.Default.AppKeepOnTop;
-
-            // Check the menu item for the app keep on top option.
-            CheckMenuItem("MenuItemAppKeepOnTop", _keepOnTop);
 
             // Get the auto zoom option default value.
             _autoZoom = Settings.Default.AutoZoomSelection;

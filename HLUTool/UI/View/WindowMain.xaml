@@ -4,8 +4,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:hlu="clr-namespace:HLU.UI.UserControls;assembly="
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:tkit="http://schemas.microsoft.com/wpf/2008/toolkit"
-        xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
+        xmlns:local="clr-namespace:HLU.UI.ViewModel"
+        xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
+        xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
         xmlns:viewModel="clr-namespace:HLU.UI.ViewModel"
         d:DataContext="{d:DesignInstance}"
         xmlns:view="clr-namespace:HLU.UI.View"
@@ -21,6 +22,7 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <extensions:DesignOnlyResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
                 <ResourceDictionary Source="Dictionary\CodeDescriptionConverterDictionary.xaml" />
                 <ResourceDictionary Source="Dictionary\CodeNameDescriptionConverterDictionary.xaml" />
                 <ResourceDictionary Source="Dictionary\VagueDateConverterDictionary.xaml" />

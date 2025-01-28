@@ -547,8 +547,6 @@ namespace HLU.UI.ViewModel
         /// </summary>
         internal static void Show()
         {
-            ReadOnlyObservableCollection<DockPane> temp = FrameworkApplication.DockPaneManager.DockPanes;
-
             // Get the dockpane DAML id.
             DockPane pane = FrameworkApplication.DockPaneManager.Find(_dockPaneID);
             if (pane == null)

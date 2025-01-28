@@ -1107,7 +1107,7 @@ namespace HLU.UI.ViewModel
             string oldKeyColumn = "KeyOld";
             string newAreaColumn = "AreaNew";
             string oldAreaColumn = "AreaOld";
-            _resultDetail = await _sqlFunctions.GetSyncResultsAsync(resultsTable, typeColumn, orderColumn, descColumn, newKeyColumn, oldKeyColumn, newAreaColumn, oldAreaColumn);
+            //_resultDetail = await _sqlFunctions.GetSyncResultsAsync(resultsTable, typeColumn, orderColumn, descColumn, newKeyColumn, oldKeyColumn, newAreaColumn, oldAreaColumn);
 
             // If there are no results then the tables are identical.
             if (_resultDetail == null || _resultDetail.Count == 0)
