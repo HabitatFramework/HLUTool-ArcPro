@@ -35,7 +35,7 @@ namespace HLU.UI.View
     /// <summary>
     /// Interaction logic for Window1.xaml
     /// </summary>
-    public partial class WindowMain : Window
+    public partial class WindowMain : UserControl
     {
         private ComboBox[] _comboBoxes;
         private MenuItem[] _menuItems;

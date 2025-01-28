@@ -20,6 +20,8 @@ using System;
 using System.ComponentModel;
 using System.Diagnostics;
 
+using ArcGIS.Desktop.Framework.Contracts;
+
 namespace HLU.UI.ViewModel
 {
     /// <summary>
@@ -27,12 +29,13 @@ namespace HLU.UI.ViewModel
     /// It provides support for property change notifications
     /// and has a DisplayName property. This class is abstract.
     /// </summary>
-    public abstract class ViewModelBase : INotifyPropertyChanged, IDisposable
+    public abstract partial class ViewModelBase : DockPane, INotifyPropertyChanged, IDisposable
     {
         #region Constructor
 
         protected ViewModelBase()
         {
+            bool temp2 = true;
         }
 
         #endregion // Constructor
@@ -99,7 +102,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Raised when a property on this object has a new value.
         /// </summary>
-        public event PropertyChangedEventHandler PropertyChanged;
+        public new event PropertyChangedEventHandler PropertyChanged;
 
         /// <summary>
         /// Raises this object's PropertyChanged event.

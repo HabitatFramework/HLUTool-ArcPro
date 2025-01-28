@@ -45,9 +45,24 @@ using HLU.Date;
 using HLU.GISApplication.ArcGIS;
 using HLU.Properties;
 using HLU.UI.View;
+using HLU.UI.ViewModel;
+
+using ArcGIS.Desktop.Core.Events;
+using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Framework.Contracts;
+using ArcGIS.Desktop.Framework.Controls;
+using ArcGIS.Desktop.Mapping;
+using ArcGIS.Desktop.Mapping.Events;
+using System.Windows.Threading;
+using System.Windows.Media;
+
+using CommandType = System.Data.CommandType;
+
 
 namespace HLU.UI.ViewModel
 {
+    #region enums
+
     /// <summary>
     /// An enumeration of the different options for what to do when
     /// attempting to update a subset of features for an incid.
@@ -123,6 +138,8 @@ namespace HLU.UI.ViewModel
         Error
     };
 
+    #endregion enums
+
     public partial class ViewModelWindowMain : ViewModelBase, IDataErrorInfo
     {
         #region Enums
@@ -145,6 +162,14 @@ namespace HLU.UI.ViewModel
         #endregion
 
         #region Fields
+
+        private ViewModelWindowMain _dockPane;
+
+        private bool _mapEventsSubscribed;
+        private bool _projectClosedEventsSubscribed;
+
+        //TODO: Move to ArcGISApp?
+        private MapView _activeMapView;
 
         private ICommand _navigateFirstCommand;
         private ICommand _navigatePreviousCommand;
@@ -219,11 +244,7 @@ namespace HLU.UI.ViewModel
         private WindowEditPotentialHabitats _windowEditPotentialHabitats;
         private ViewModelWindowEditPotentialHabitats _viewModelWinEditPotentialHabitats;
 
-        private bool haveSplashWin;
         private string _displayName = "HLU Tool";
-        private int _windowHeight;
-        private int _defaultWindowHeight;
-        private int _windowWidth;
         private int _mapWindowsCount;
         private bool _showingReasonProcessGroup = false;
         private bool _showingOSMMPendingGroup = false;
@@ -496,41 +517,283 @@ namespace HLU.UI.ViewModel
 
         #endregion
 
-        #region Constructor
+        #region ViewModelBase Members
 
-        public ViewModelWindowMain()
+        /// <summary>
+        /// Set the global variables.
+        /// </summary>
+        protected ViewModelWindowMain()
         {
+            //TODO: Switch with Initialize()?
+            InitializeComponentAsync();
+            Initialize();
         }
+
+        /// <summary>
+        /// Initialise the DockPane components.
+        /// </summary>
+        public async void InitializeComponentAsync()
+        {
+            _dockPane = this;
+            _initialised = false;
+            _inError = false;
+
+            // Indicate that the dockpane has been initialised.
+            _initialised = true;
+        }
+
+        /// <summary>
+        /// Show the DockPane.
+        /// </summary>
+        internal static void Show()
+        {
+            ReadOnlyObservableCollection<DockPane> temp = FrameworkApplication.DockPaneManager.DockPanes;
+
+            // Get the dockpane DAML id.
+            DockPane pane = FrameworkApplication.DockPaneManager.Find(_dockPaneID);
+            if (pane == null)
+                return;
+
+            // Get the ViewModel by casting the dockpane.
+            ViewModelWindowMain vm = pane as ViewModelWindowMain;
+
+            // If the ViewModel is uninitialised then initialise it.
+            if (!vm.Initialised)
+                vm.InitializeComponentAsync();
+
+            // If the ViewModel is in error then don't show the dockpane.
+            if (vm.InError)
+            {
+                pane = null;
+                return;
+            }
+
+            // Active the dockpane.
+            pane.Activate();
+        }
+
+        protected override void OnShow(bool isVisible)
+        {
+            // Hide the dockpane if there is no active map.
+            //if (MapView.Active == null)
+            //    DockpaneVisibility = Visibility.Hidden;
+
+            // Is the dockpane visible (or is the window not showing the map).
+            if (isVisible)
+            {
+                if (!_mapEventsSubscribed)
+                {
+                    _mapEventsSubscribed = true;
+
+                    // Subscribe from map changed events.
+                    ActiveMapViewChangedEvent.Subscribe(OnActiveMapViewChanged);
+                }
+
+                if (!_projectClosedEventsSubscribed)
+                {
+                    _projectClosedEventsSubscribed = true;
+
+                    // Suscribe to project closed events.
+                    ProjectClosedEvent.Subscribe(OnProjectClosed);
+                }
+            }
+            else
+            {
+                if (_mapEventsSubscribed)
+                {
+                    _mapEventsSubscribed = false;
+
+                    // Unsubscribe from map changed events.
+                    ActiveMapViewChangedEvent.Unsubscribe(OnActiveMapViewChanged);
+                }
+            }
+
+            base.OnShow(isVisible);
+        }
+
+        private void OnActiveMapViewChanged(ActiveMapViewChangedEventArgs obj)
+        {
+            if (MapView.Active == null)
+            {
+                DockpaneVisibility = Visibility.Hidden;
+
+                // Clear the form lists.
+                //_paneH2VM?.ClearFormLists();
+            }
+            else
+            {
+                DockpaneVisibility = Visibility.Visible;
+
+                //TODO: Recheck HLU layers present in active map window
+                // Recheck the active map window is valid (don't wait).
+                if (MapView.Active != _activeMapView)
+                {
+                    //_paneH2VM?.LoadTableCountsAsync(true, false);
+                }
+
+                // Save the active map view.
+                _activeMapView = MapView.Active;
+            }
+        }
+
+        private void OnProjectClosed(ProjectEventArgs obj)
+        {
+            if (MapView.Active == null)
+            {
+                DockpaneVisibility = Visibility.Hidden;
+
+                //TODO: Disable form?
+                // Disable the form.
+                //_paneH2VM?.ClearFormLists();
+            }
+
+            _projectClosedEventsSubscribed = false;
+
+            ProjectClosedEvent.Unsubscribe(OnProjectClosed);
+        }
+
+        private Visibility _dockpaneVisibility = Visibility.Visible;
+
+        public Visibility DockpaneVisibility
+        {
+            get { return _dockpaneVisibility; }
+            set
+            {
+                _dockpaneVisibility = value;
+                OnPropertyChanged(nameof(DockpaneVisibility));
+            }
+        }
+
+        #endregion ViewModelBase Members
+
+        #region Properties
+
+        /// <summary>
+        /// ID of the DockPane.
+        /// </summary>
+        private const string _dockPaneID = "HLUTool_UI_DockpaneMain";
+
+        public static string DockPaneID
+        {
+            get => _dockPaneID;
+        }
+
+        /// <summary>
+        /// Override the default behavior when the dockpane's help icon is clicked
+        /// or the F1 key is pressed.
+        /// </summary>
+        protected override void OnHelpRequested()
+        {
+            if (_helpURL != null)
+            {
+                System.Diagnostics.Process.Start(new ProcessStartInfo
+                {
+                    FileName = _helpURL,
+                    UseShellExecute = true
+                });
+            }
+        }
+
+        private bool _initialised = false;
+
+        /// <summary>
+        /// Has the DockPane been initialised?
+        /// </summary>
+        public bool Initialised
+        {
+            get { return _initialised; }
+            set
+            {
+                _initialised = value;
+            }
+        }
+
+        private bool _inError = false;
+
+        /// <summary>
+        /// Is the DockPane in error?
+        /// </summary>
+        public bool InError
+        {
+            get { return _inError; }
+            set
+            {
+                _inError = value;
+            }
+        }
+
+        private bool _formLoading;
+
+        /// <summary>
+        /// Is the form loading?
+        /// </summary>
+        public bool FormLoading
+        {
+            get { return _formLoading; }
+            set { _formLoading = value; }
+        }
+
+        private bool _compareRunning;
+
+        /// <summary>
+        /// Is the compare running?
+        /// </summary>
+        public bool CompareRunning
+        {
+            get { return _compareRunning; }
+            set { _compareRunning = value; }
+        }
+
+        private bool _syncRunning;
+
+        /// <summary>
+        /// Is the sync running?
+        /// </summary>
+        public bool SyncRunning
+        {
+            get { return _syncRunning; }
+            set { _syncRunning = value; }
+        }
+
+        private string _helpURL;
+
+        /// <summary>
+        /// The URL of the help page.
+        /// </summary>
+        public string HelpURL
+        {
+            get { return _helpURL; }
+            set { _helpURL = value; }
+        }
+
+        /// <summary>
+        /// Get the image for the Run button.
+        /// </summary>
+        public static ImageSource ButtonRunImg
+        {
+            get
+            {
+                var imageSource = Application.Current.Resources["GenericRun16"] as ImageSource;
+                return imageSource;
+            }
+        }
+
+        #endregion Properties
+
+        #region Constructor
 
         internal bool Initialize()
         {
             try
             {
-                ProcessStartupArguments();
-
-                //TODO: App.SplashViewModel
-                //haveSplashWin = App.SplashViewModel != null;
-
                 // open database connection and test whether it points to a valid HLU database
                 while (true)
                 {
-                    if (haveSplashWin)
-                    {
-                        DispatcherHelper.DoEvents();
-                        //TODO: App.SplashViewModel
-                        //App.SplashViewModel.ProgressText = "Opening database connection...";
-                    }
                     if ((_db = DbFactory.CreateConnection()) == null)
                         throw new Exception("No database connection.");
 
                     _hluDS = new HluDataSet();
 
-                    if (haveSplashWin)
-                    {
-                        //TODO: App.SplashViewModel
-                        //App.SplashViewModel.ProgressText = "Inspecting database schema...";
-                        DispatcherHelper.DoEvents();
-                    }
                     string errorMessage;
                     if (!_db.ContainsDataSet(_hluDS, out errorMessage))
                     {
@@ -560,16 +823,7 @@ namespace HLU.UI.ViewModel
                     }
                 }
 
-                if (haveSplashWin)
-                {
-                    //TODO: App.SplashViewModel
-                    //App.SplashViewModel.ProgressText = "Populating dataset...";
-                    DispatcherHelper.DoEvents();
-                }
-                else
-                {
-                    ChangeCursor(Cursors.Wait, "Initiating ...");
-                }
+                ChangeCursor(Cursors.Wait, "Initiating ...");
 
                 // create table adapter manager for the dataset and connection
                 _hluTableAdapterMgr = new TableAdapterManager(_db, TableAdapterManager.Scope.AllButMMPolygonsHistory);
@@ -609,12 +863,7 @@ namespace HLU.UI.ViewModel
                 // columns to be displayed in history (always includes _gisIDColumns)
                 _historyColumns = InitializeHistoryColumns(_historyColumns);
 
-                if (haveSplashWin)
-                {
-                    //TODO: App.SplashViewModel
-                    //App.SplashViewModel.ProgressText = "Creating scratch database...";
-                    DispatcherHelper.DoEvents();
-                }
+                // Create scratch database
                 ScratchDb.CreateScratchMdb(_hluDS.incid, _hluDS.incid_mm_polygons);
 
                 // count rows of incid table
@@ -627,12 +876,7 @@ namespace HLU.UI.ViewModel
                 IncidCurrentRowIndex = 1;
 
                 // Check the GIS workspace
-                if (haveSplashWin)
-                {
-                    //TODO: App.SplashViewModel
-                    //App.SplashViewModel.ProgressText = "Checking GIS workspace...";
-                    DispatcherHelper.DoEvents();
-                }
+                ChangeCursor(Cursors.Wait, "Checking GIS workspace ...");
 
                 _gisApp = new ArcMapApp();
                 if (_gisApp == null)
@@ -657,24 +901,10 @@ namespace HLU.UI.ViewModel
                 BapEnvironment.PotentialPriorityDetermQtyValidation = _potentialPriorityDetermQtyValidation;
 
                 // Read the selected features from the map
-                if (haveSplashWin)
-                {
-                    //TODO: App.SplashViewModel
-                    //App.SplashViewModel.ProgressText = "Reading map selection...";
-                    DispatcherHelper.DoEvents();
-                }
-                // Get the GIS layer selection
                 ReadMapSelection(false);
 
-                // Clear the splash window status bar (or reset the cursor to an arrow)
-                if (haveSplashWin)
-                {
-                    //TODO: App.SplashViewModel
-                    //App.SplashViewModel.ProgressText = String.Empty;
-                    haveSplashWin = false;
-                }
-                else
-                    ChangeCursor(Cursors.Arrow, null);
+                // Clear the status bar (or reset the cursor to an arrow)
+                ChangeCursor(Cursors.Arrow, null);
 
                 return true;
             }
@@ -706,37 +936,6 @@ namespace HLU.UI.ViewModel
                         && !c.ColumnName.StartsWith("shape_"))).ToArray();
             }
             catch { return historyColumns; }
-        }
-
-        /// <summary>
-        /// Processes the startup arguments.
-        /// </summary>
-        private void ProcessStartupArguments()
-        {
-            //TODO: App.Current.Shutdown
-            //foreach (string s in App.StartupArguments)
-            //{
-            //    switch (s.Replace(" ", String.Empty).ToLower())
-            //    {
-            //        // Allow the user to reset only the database settings "/d"
-            //        // or only the GIS settings "/g" instead of always both "/c"
-            //        case "/d":
-            //            DbFactory.ClearSettings();
-            //            break;
-            //        case "/g":
-            //            GISAppFactory.ClearSettings();
-            //            break;
-            //        case "/c":
-            //            DbFactory.ClearSettings();
-            //            GISAppFactory.ClearSettings();
-            //            break;
-            //        case "/arcgis": // start with ArcGIS
-            //            Settings.Default.PreferredGis = (int)GISApplications.ArcGIS;
-            //            if (Settings.Default.MapPath.ToLower().EndsWith(".wor"))
-            //                Settings.Default.MapPath = String.Empty;
-            //            break;
-            //    }
-            //}
         }
 
         //---------------------------------------------------------------------
@@ -1363,86 +1562,6 @@ namespace HLU.UI.ViewModel
                 //---------------------------------------------------------------------
             }
         }
-        /// <summary>
-        /// Get and set the window height, adjusting it for any optional
-        /// areas.
-        /// </summary>
-        public int WindowHeight
-        {
-            get
-            {
-                // Set the initial window height if not already set.
-                if (_windowHeight == 0)
-                    AdjustWindowHeight(true);
-
-                return _windowHeight;
-            }
-            set
-            {
-                _windowHeight = value;
-
-                // Adjust the secondary table height to fill the space.
-                OnPropertyChanged(nameof(SecondaryTableHeight));
-            }
-        }
-
-        /// <summary>
-        /// Adjusts the window height for any optional groups/fields.
-        /// </summary>
-        public void AdjustWindowHeight(bool resetWindow)
-        {
-            int _newWindowHeight = 945;
-
-            // Adjust the minimum height if the group headers are not showing.
-            if (!_showGroupHeaders)
-                _newWindowHeight -= 78;
-
-            // Adjust the minimum height if the Reason and Process group is not showing.
-            if (!_showingReasonProcessGroup)
-                _newWindowHeight -= 56;
-
-            // Adjust the minimum height if the OSMM Updates group is not showing.
-            if (!_showingOSMMPendingGroup)
-                _newWindowHeight -= 85;
-
-            // Adjust the standard height for older versions of Windows.
-            if (System.Environment.OSVersion.Version.Major < 10)
-                _newWindowHeight += 10;
-
-            //// Adjust the minimum height when in bulk update mode
-            //if (_bulkUpdateMode == true)
-            //    _newWindowHeight += 20;
-
-            // Only adjust the window height if the user hasn't
-            // changed it manually or if the user has specified
-            // if should be reset.
-            if (_windowHeight == _defaultWindowHeight || resetWindow)
-                _windowHeight = _newWindowHeight;
-
-            // Set the new default window height.
-            _defaultWindowHeight = _newWindowHeight;
-        }
-
-        /// <summary>
-        /// Get and set the window width.
-        /// </summary>
-        public int WindowWidth
-        {
-            get
-            {
-                // Set the initial window width if not already set.
-                if (_windowWidth == 0)
-                {
-                    _windowWidth = 492;
-                }
-
-                return _windowWidth;
-            }
-            set
-            {
-                _windowWidth = value;
-            }
-        }
 
         #endregion
 
@@ -1833,27 +1952,182 @@ namespace HLU.UI.ViewModel
 
         #region Cursor
 
-        public Cursor WindowCursor { get { return _windowCursor; } }
-
-        public bool WindowEnabled { get { return _windowEnabled; } }
-
         public void ChangeCursor(Cursor cursorType, string processingMessage)
         {
-            _windowCursor = cursorType;
-            _windowEnabled = cursorType != Cursors.Wait;
-            OnPropertyChanged(nameof(WindowCursor));
-            OnPropertyChanged(nameof(WindowEnabled));
-            OnPropertyChanged(nameof(TabControlDataEnabled));
-            if (cursorType == Cursors.Arrow)
-                _processingMsg = "Processing ...";
-            else
-                _processingMsg = processingMessage;
-            OnPropertyChanged(nameof(StatusBar));
-            if (cursorType == Cursors.Wait)
-                DispatcherHelper.DoEvents();
+            ProgressUpdate(processingMessage, -1, -1);
+
+            //_windowCursor = cursorType;
+            //_windowEnabled = cursorType != Cursors.Wait;
+
+            //OnPropertyChanged(nameof(TabControlDataEnabled));
+            //if (cursorType == Cursors.Arrow)
+            //    _processingMsg = "Processing ...";
+            //else
+            //    _processingMsg = processingMessage;
+
+            //OnPropertyChanged(nameof(StatusBar));
+            //if (cursorType == Cursors.Wait)
+            //    DispatcherHelper.DoEvents();
         }
 
         #endregion
+
+        #region Processing
+
+        /// <summary>
+        /// Is the form processing?
+        /// </summary>
+        public Visibility IsProcessing
+        {
+            get
+            {
+                if (_processStatus != null)
+                    return Visibility.Visible;
+                else
+                    return Visibility.Collapsed;
+            }
+        }
+
+        private double _progressValue;
+
+        /// <summary>
+        /// Gets the value to set on the progress
+        /// </summary>
+        public double ProgressValue
+        {
+            get
+            {
+                return _progressValue;
+            }
+            set
+            {
+                _progressValue = value;
+
+                OnPropertyChanged(nameof(ProgressValue));
+            }
+        }
+
+        private double _maxProgressValue;
+
+        /// <summary>
+        /// Gets the max value to set on the progress
+        /// </summary>
+        public double MaxProgressValue
+        {
+            get
+            {
+                return _maxProgressValue;
+            }
+            set
+            {
+                _maxProgressValue = value;
+
+                OnPropertyChanged(nameof(MaxProgressValue));
+            }
+        }
+
+        private string _processStatus;
+
+        /// <summary>
+        /// ProgressStatus Text
+        /// </summary>
+        public string ProcessStatus
+        {
+            get
+            {
+                return _processStatus;
+            }
+            set
+            {
+                _processStatus = value;
+
+                OnPropertyChanged(nameof(ProcessStatus));
+                OnPropertyChanged(nameof(IsProcessing));
+                OnPropertyChanged(nameof(ProgressText));
+                OnPropertyChanged(nameof(ProgressAnimating));
+            }
+        }
+
+        private string _progressText;
+
+        /// <summary>
+        /// Progress bar Text
+        /// </summary>
+        public string ProgressText
+        {
+            get
+            {
+                return _progressText;
+            }
+            set
+            {
+                _progressText = value;
+
+                OnPropertyChanged(nameof(ProgressText));
+            }
+        }
+
+        /// <summary>
+        /// Is the progress wheel animating?
+        /// </summary>
+        public Visibility ProgressAnimating
+        {
+            get
+            {
+                if (_progressText != null)
+                    return Visibility.Visible;
+                else
+                    return Visibility.Collapsed;
+            }
+        }
+
+        /// <summary>
+        /// Update the progress bar.
+        /// </summary>
+        /// <param name="processText"></param>
+        /// <param name="progressValue"></param>
+        /// <param name="maxProgressValue"></param>
+        public void ProgressUpdate(string processText = null, int progressValue = -1, int maxProgressValue = -1)
+        {
+            if (Application.Current.Dispatcher.CheckAccess())
+            {
+                // Check if the values have changed and update them if they have.
+                if (progressValue >= 0)
+                    ProgressValue = progressValue;
+
+                if (maxProgressValue != 0)
+                    MaxProgressValue = maxProgressValue;
+
+                if (_maxProgressValue > 0)
+                    ProgressText = _progressValue == _maxProgressValue ? "Done" : $@"{_progressValue * 100 / _maxProgressValue:0}%";
+                else
+                    ProgressText = null;
+
+                ProcessStatus = processText;
+            }
+            else
+            {
+                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background,
+                  () =>
+                  {
+                      // Check if the values have changed and update them if they have.
+                      if (progressValue >= 0)
+                          ProgressValue = progressValue;
+
+                      if (maxProgressValue != 0)
+                          MaxProgressValue = maxProgressValue;
+
+                      if (_maxProgressValue > 0)
+                          ProgressText = _progressValue == _maxProgressValue ? "Done" : $@"{_progressValue * 100 / _maxProgressValue:0}%";
+                      else
+                          ProgressText = null;
+
+                      ProcessStatus = processText;
+                  });
+            }
+        }
+
+        #endregion Processing
 
         #region User ID
 
@@ -4321,13 +4595,6 @@ namespace HLU.UI.ViewModel
                 OnPropertyChanged(nameof(IncidQualityDetermination));
                 OnPropertyChanged(nameof(IncidQualityInterpretation));
                 OnPropertyChanged(nameof(IncidQualityComments));
-
-                // Adjust the window height.
-                AdjustWindowHeight(false);
-                OnPropertyChanged(nameof(WindowHeight));
-
-                // Adjust the secondary table height.
-                OnPropertyChanged(nameof(SecondaryTableHeight));
             }
         }
 
@@ -6264,12 +6531,11 @@ namespace HLU.UI.ViewModel
 
                     // Reset the incid and map selections and move
                     // to the first incid in the database.
-                    if (!haveSplashWin)
-                        ClearFilter(true);
+                    ClearFilter(true);
 
                     //---------------------------------------------------------------------
                     // FIX: 107 Reset filter when no map features selected.
-                    // 
+                    //
                     // Indicate the selection didn't come from the map (but only after
                     // the filter has been cleared and the first incid selected so that
                     // the map doesn't auto zoom to the incid).
@@ -9602,7 +9868,7 @@ namespace HLU.UI.ViewModel
 
         //---------------------------------------------------------------------
         // CHANGED: CR49 Process proposed OSMM Updates
-        // 
+        //
         /// <summary>
         /// Only show the OSMM Updates group if required, otherwise collapse it.
         /// </summary>
@@ -9622,10 +9888,6 @@ namespace HLU.UI.ViewModel
                     if (!_showingOSMMPendingGroup)
                     {
                         _showingOSMMPendingGroup = true;
-
-                        // Adjust the window height.
-                        AdjustWindowHeight(false);
-                        OnPropertyChanged(nameof(WindowHeight));
                     }
 
                     return Visibility.Visible;
@@ -9636,10 +9898,6 @@ namespace HLU.UI.ViewModel
                     if (_showingOSMMPendingGroup)
                     {
                         _showingOSMMPendingGroup = false;
-
-                        // Adjust the window height.
-                        AdjustWindowHeight(false);
-                        OnPropertyChanged(nameof(WindowHeight));
                     }
 
                     return Visibility.Collapsed;
@@ -9855,10 +10113,6 @@ namespace HLU.UI.ViewModel
                     if (!_showingReasonProcessGroup)
                     {
                         _showingReasonProcessGroup = true;
-
-                        // Adjust the window height.
-                        AdjustWindowHeight(false);
-                        OnPropertyChanged(nameof(WindowHeight));
                     }
                     return Visibility.Visible;
                 }
@@ -9867,10 +10121,6 @@ namespace HLU.UI.ViewModel
                     if (_showingReasonProcessGroup)
                     {
                         _showingReasonProcessGroup = false;
-
-                        // Adjust the window height.
-                        AdjustWindowHeight(false);
-                        OnPropertyChanged(nameof(WindowHeight));
                     }
 
                     return Visibility.Collapsed;
@@ -10705,7 +10955,7 @@ namespace HLU.UI.ViewModel
                 OnPropertyChanged(nameof(IncidBapHabitatsUser));
                 OnPropertyChanged(nameof(BapHabitatsAutoEnabled));
                 OnPropertyChanged(nameof(BapHabitatsUserEnabled));
-                
+
                 // Flag that the current record has changed so that the apply button
                 // will appear.
                 Changed = true;
@@ -10720,33 +10970,6 @@ namespace HLU.UI.ViewModel
                     return "Secondary Habitats Summary";
                 else
                     return null;
-            }
-        }
-
-        public int SecondaryTableHeight
-        {
-            get
-            {
-                // Set the default table height
-                int newTableHeight = _windowHeight - _defaultWindowHeight + 280;
-
-                // Adjust the height if the source habitat group is showing.
-                if (_showSourceHabitatGroup)
-                    newTableHeight -= 61;
-
-                // Adjust the height if the habitat secondaries suggested text is showing.
-                if (_showHabitatSecondariesSuggested)
-                    newTableHeight -= 24;
-
-                // Adjust the height if the NVC codes text is showing.
-                if (_showNVCCodes)
-                    newTableHeight -= 24;
-
-                // Adjust the height if the habitat summary text is showing.
-                if (_showHabitatSummary)
-                    newTableHeight -= 35;
-
-                return newTableHeight;
             }
         }
 
@@ -15309,5 +15532,19 @@ namespace HLU.UI.ViewModel
 
         #endregion
 
+    }
+
+    /// <summary>
+    /// Button implementation to show the Main Window.
+    /// </summary>
+    internal class WindowMain_ShowButton : Button
+    {
+        protected override void OnClick()
+        {
+            //string uri = System.Reflection.Assembly.GetExecutingAssembly().Location;
+
+            // Show the dock pane.
+            ViewModelWindowMain.Show();
+        }
     }
 }

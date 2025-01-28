@@ -47,8 +47,8 @@ namespace HLU.UI.ViewModel
 
         private ICommand _saveCommand;
         private ICommand _cancelCommand;
-        private ICommand _browseMapPathCommand;
-        private ICommand _browseExportPathCommand;
+        //private ICommand _browseMapPathCommand;
+        //private ICommand _browseExportPathCommand;
         private ICommand _browseSqlPathCommand;
         private string _displayName = "Options";
 
@@ -120,7 +120,7 @@ namespace HLU.UI.ViewModel
 
         // Backup variables
         private string _bakMapPath;
-        private string _bakExportPath;
+        //private string _bakExportPath;
         private string _bakSqlPath;
 
         #endregion
@@ -1440,6 +1440,7 @@ namespace HLU.UI.ViewModel
 
         [GeneratedRegex(@"[a-zA-Z0-9]")]
         private static partial Regex secondaryCodeDelimeterRegex();
+
         [GeneratedRegex(@"[a-zA-Z0-9]")]
         private static partial Regex vagueDateDelimeterRegex();
 

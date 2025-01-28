@@ -24,14 +24,14 @@ using ArcGIS.Desktop.Framework.Contracts;
 
 namespace HLU
 {
-    internal class HLU : Module
+    internal class HLUTool : Module
     {
-        private static HLU _this = null;
+        private static HLUTool _this = null;
 
         /// <summary>
         /// Retrieve the singleton instance to this module here
         /// </summary>
-        public static HLU Current => _this ??= (HLU)FrameworkApplication.FindModule("HLU_Module");
+        public static HLUTool Current => _this ??= (HLUTool)FrameworkApplication.FindModule("HLUTool_Module");
 
         #region Overrides
 
