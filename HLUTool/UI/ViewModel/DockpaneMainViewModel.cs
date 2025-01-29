@@ -19,6 +19,7 @@
 // You should have received a copy of the GNU General Public License
 // along with with program.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Core.Data.UtilityNetwork;
 using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
@@ -42,7 +43,7 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// Build the DockPane.
     /// </summary>
-    internal class DockpaneMainViewModel : DockPane, INotifyPropertyChanged
+    internal class DockpaneMainViewModel : PanelViewModelBase, INotifyPropertyChanged
     {
         #region Fields
 
@@ -51,12 +52,36 @@ namespace HLU.UI.ViewModel
         private bool _mapEventsSubscribed;
         private bool _projectClosedEventsSubscribed;
 
+        private string _displayName = "HLU Tool";
+        private bool _editMode;
+
         private MapView _activeMapView;
 
         #endregion Fields
 
-        #region ViewModelBase Members
+        #region PanelViewModelBase Members
 
+        /// <summary>
+        /// Returns the user-friendly name of this object.
+        /// Child classes can set this property to a new value,
+        /// or override it to determine the value on-demand.
+        /// </summary>
+        public override string DisplayName
+        {
+            get { return _displayName; }
+            set { _displayName = value; }
+        }
+
+        /// <summary>
+        /// The title of the main window.
+        /// </summary>
+        public override string WindowTitle
+        {
+            get
+            {
+                return String.Format("{0}{1}", DisplayName, _editMode ? String.Empty : " [READONLY]");
+            }
+        }
         /// <summary>
         /// Set the global variables.
         /// </summary>
@@ -109,8 +134,8 @@ namespace HLU.UI.ViewModel
         protected override void OnShow(bool isVisible)
         {
             // Hide the dockpane if there is no active map.
-            //if (MapView.Active == null)
-            //    DockpaneVisibility = Visibility.Hidden;
+            if (MapView.Active == null)
+                DockpaneVisibility = Visibility.Hidden;
 
             // Is the dockpane visible (or is the window not showing the map).
             if (isVisible)
@@ -285,7 +310,7 @@ namespace HLU.UI.ViewModel
 
         #endregion Properties
 
-        #region Methods
+        #region Active Map View
 
         private void OnActiveMapViewChanged(ActiveMapViewChangedEventArgs obj)
         {
@@ -356,7 +381,7 @@ namespace HLU.UI.ViewModel
             vm.Initialised = false;
         }
 
-        #endregion Methods
+        #endregion Active Map View
 
         #region Processing
 
@@ -547,69 +572,11 @@ namespace HLU.UI.ViewModel
         private void RunCommandClick(object param)
         {
             //TODO: UI
-            // Don something when the run button is clicked.
+            // Do something when the run button is clicked.
         }
 
         #endregion Run Command
 
-        #region Debugging Aides
-
-        /// <summary>
-        /// Warns the developer if this object does not have
-        /// a public property with the specified name. This
-        /// method does not exist in a Release build.
-        /// </summary>
-        [Conditional("DEBUG")]
-        [DebuggerStepThrough]
-        public void VerifyPropertyName(string propertyName)
-        {
-            // Verify that the property name matches a real,
-            // public, instance property on this object.
-            if (TypeDescriptor.GetProperties(this)[propertyName] == null)
-            {
-                string msg = "Invalid property name: " + propertyName;
-
-                if (ThrowOnInvalidPropertyName)
-                    throw new(msg);
-                else
-                    Debug.Fail(msg);
-            }
-        }
-
-        /// <summary>
-        /// Returns whether an exception is thrown, or if a Debug.Fail() is used
-        /// when an invalid property name is passed to the VerifyPropertyName method.
-        /// The default value is false, but subclasses used by unit tests might
-        /// override this property's getter to return true.
-        /// </summary>
-        protected virtual bool ThrowOnInvalidPropertyName { get; private set; }
-
-        #endregion Debugging Aides
-
-        #region INotifyPropertyChanged Members
-
-        /// <summary>
-        /// Raised when a property on this object has a new value.
-        /// </summary>
-        public new event PropertyChangedEventHandler PropertyChanged;
-
-        /// <summary>
-        /// Raises this object's PropertyChanged event.
-        /// </summary>
-        /// <param name="propertyName">The property that has a new value.</param>
-        internal virtual void OnPropertyChanged(string propertyName)
-        {
-            VerifyPropertyName(propertyName);
-
-            PropertyChangedEventHandler handler = PropertyChanged;
-            if (handler != null)
-            {
-                PropertyChangedEventArgs e = new(propertyName);
-                handler(this, e);
-            }
-        }
-
-        #endregion INotifyPropertyChanged Members
     }
 
     /// <summary>

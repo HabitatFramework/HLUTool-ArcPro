@@ -35,7 +35,6 @@ namespace HLU.UI.ViewModel
 
         protected ViewModelBase()
         {
-            bool temp2 = true;
         }
 
         #endregion // Constructor
