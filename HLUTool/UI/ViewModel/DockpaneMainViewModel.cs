@@ -48,9 +48,6 @@ namespace HLU.UI.ViewModel
 
         private DockpaneMainViewModel _dockPane;
 
-        private PaneHeader1ViewModel _paneH1VM;
-        private PaneHeader2ViewModel _paneH2VM;
-
         private bool _mapEventsSubscribed;
         private bool _projectClosedEventsSubscribed;
 
@@ -76,38 +73,6 @@ namespace HLU.UI.ViewModel
             _dockPane = this;
             _initialised = false;
             _inError = false;
-
-            // Setup the tab controls.
-            PrimaryMenuList.Clear();
-
-            PrimaryMenuList.Add(new TabControl() { Text = "Profile", Tooltip = "Select XML profile" });
-            PrimaryMenuList.Add(new TabControl() { Text = "Sync", Tooltip = "Run data sync" });
-
-            // Load the default XML profile (or let the user choose a profile.
-            _paneH1VM = new PaneHeader1ViewModel(_dockPane);
-
-            // If the profile was in error.
-            if (_paneH1VM.XMLError)
-            {
-                _inError = true;
-                return;
-            }
-
-            // If the default (and only) profile was loaded.
-            if (_paneH1VM.XMLLoaded)
-            {
-                // Initialise the sync pane.
-                if (!await InitialiseSyncPaneAsync(false))
-                    return;
-
-                // Select the profile tab.
-                SelectedPanelHeaderIndex = 1;
-            }
-            else
-            {
-                // Select the sync tab.
-                SelectedPanelHeaderIndex = 0;
-            }
 
             // Indicate that the dockpane has been initialised.
             _initialised = true;
@@ -194,10 +159,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_paneH2VM == null)
-                    return false;
-
-                return (_paneH2VM.RunButtonEnabled);
+                //TODO: UI
+                return true;
             }
         }
 
@@ -233,51 +196,6 @@ namespace HLU.UI.ViewModel
                     FileName = _helpURL,
                     UseShellExecute = true
                 });
-            }
-        }
-
-        private readonly List<TabControl> _primaryMenuList = [];
-
-        /// <summary>
-        /// Get the list of dock panes.
-        /// </summary>
-        public List<TabControl> PrimaryMenuList
-        {
-            get { return _primaryMenuList; }
-        }
-
-        private int _selectedPanelHeaderIndex = 0;
-
-        /// <summary>
-        /// Get/Set the active pane.
-        /// </summary>
-        public int SelectedPanelHeaderIndex
-        {
-            get { return _selectedPanelHeaderIndex; }
-            set
-            {
-                _selectedPanelHeaderIndex = value;
-                OnPropertyChanged(nameof(SelectedPanelHeaderIndex));
-
-                if (_selectedPanelHeaderIndex == 0)
-                    CurrentPage = _paneH1VM;
-                if (_selectedPanelHeaderIndex == 1)
-                    CurrentPage = _paneH2VM;
-            }
-        }
-
-        private PanelViewModelBase _currentPage;
-
-        /// <summary>
-        /// The currently active DockPane.
-        /// </summary>
-        public PanelViewModelBase CurrentPage
-        {
-            get { return _currentPage; }
-            set
-            {
-                _currentPage = value;
-                OnPropertyChanged(nameof(CurrentPage));
             }
         }
 
@@ -382,9 +300,10 @@ namespace HLU.UI.ViewModel
             {
                 DockpaneVisibility = Visibility.Visible;
 
-                // Reload the local and remote table counts (don't wait).
-                if (MapView.Active != _activeMapView)
-                    _paneH2VM?.LoadTableCountsAsync(true, false);
+
+                //TODO: UI
+                // Do something when the active map view changes
+
 
                 // Save the active map view.
                 _activeMapView = MapView.Active;
@@ -397,8 +316,10 @@ namespace HLU.UI.ViewModel
             {
                 DockpaneVisibility = Visibility.Hidden;
 
-                // Clear the form lists.
-                _paneH2VM?.ClearFormLists();
+
+
+                //TODO: UI
+                // Do something when the active map view closes
             }
 
             _projectClosedEventsSubscribed = false;
@@ -419,61 +340,6 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Initialise the sync pane.
-        /// </summary>
-        /// <returns></returns>
-        public async Task<bool> InitialiseSyncPaneAsync(bool message)
-        {
-            _paneH2VM = new PaneHeader2ViewModel(_dockPane, _paneH1VM.ToolConfig);
-
-            string sdeFileName = _paneH1VM.ToolConfig.SDEFile;
-
-            // Check if the SDE file exists.
-            if (!FileFunctions.FileExists(sdeFileName))
-            {
-                if (message)
-                    MessageBox.Show("SDE connection file '" + sdeFileName + "' not found.", "HLUTool", MessageBoxButton.OK, MessageBoxImage.Error);
-
-                _paneH2VM = null;
-                return false;
-            }
-
-            // Open the SQL Server geodatabase.
-            try
-            {
-                if (!await SQLServerFunctions.CheckSDEConnection(sdeFileName))
-                {
-                    if (message)
-                        MessageBox.Show("SDE connection file '" + sdeFileName + "' not valid.", "HLUTool", MessageBoxButton.OK, MessageBoxImage.Error);
-
-                    _paneH2VM = null;
-                    return false;
-                }
-            }
-            catch (Exception)
-            {
-                if (message)
-                    MessageBox.Show("SDE connection file '" + sdeFileName + "' not valid.", "HLUTool", MessageBoxButton.OK, MessageBoxImage.Error);
-
-                _paneH2VM = null;
-                return false;
-            }
-
-            // Load the form (don't wait for the response).
-            _paneH2VM.ResetFormAsync(false);
-
-            return true;
-        }
-
-        /// <summary>
-        /// Reset the sync pane.
-        /// </summary>
-        public void ClearSyncPane()
-        {
-            _paneH2VM = null;
-        }
-
-        /// <summary>
         /// Event when the DockPane is hidden.
         /// </summary>
         protected override void OnHidden()
@@ -488,11 +354,6 @@ namespace HLU.UI.ViewModel
 
             // Force the dockpane to be re-initialised next time it's shown.
             vm.Initialised = false;
-        }
-
-        public void RefreshPanel1Buttons()
-        {
-            _paneH1VM.RefreshButtons();
         }
 
         #endregion Methods
@@ -685,8 +546,8 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void RunCommandClick(object param)
         {
-            // Run the sync (but don't wait).
-            _paneH2VM.RunSyncAsync();
+            //TODO: UI
+            // Don something when the run button is clicked.
         }
 
         #endregion Run Command

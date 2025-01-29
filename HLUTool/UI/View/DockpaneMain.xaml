@@ -17,12 +17,6 @@
             <ResourceDictionary.MergedDictionaries>
                 <extensions:DesignOnlyResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
             </ResourceDictionary.MergedDictionaries>
-            <DataTemplate DataType="{x:Type viewModel:PaneHeader1ViewModel}">
-                <view:PaneHeader1View />
-            </DataTemplate>
-            <DataTemplate DataType="{x:Type viewModel:PaneHeader2ViewModel}">
-                <view:PaneHeader2View />
-            </DataTemplate>
         </ResourceDictionary>
     </UserControl.Resources>
 
@@ -34,26 +28,6 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-
-        <DockPanel Grid.Row="0" KeyboardNavigation.TabNavigation="Local" Height="26" LastChildFill="False" Margin="5,0,0,5">
-            <!--
-            <controls:BurgerButton DockPanel.Dock="Right"
-				      ToolTip="Options"
-				      PopupMenu="{Binding BurgerButtonPopupMenu}"
-                      HorizontalAlignment="Right" />
--->
-            <ListBox x:Name="primaryNavigator" DockPanel.Dock="Left"
-                     Style="{DynamicResource Esri_ListBoxPanelIndicator}"
-                     ItemsSource="{Binding PrimaryMenuList}"
-                     SelectedIndex="{Binding SelectedPanelHeaderIndex, Mode=TwoWay}"
-                     IsSynchronizedWithCurrentItem="True" />
-        </DockPanel>
-
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel>
-                <ContentPresenter Content="{Binding CurrentPage}"></ContentPresenter>
-            </StackPanel>
-        </ScrollViewer>
 
         <Grid Name="GridProcessStatus" Grid.Row="2" Margin="6,6,6,0" Visibility="{Binding IsProcessing}">
             <Grid.ColumnDefinitions>
