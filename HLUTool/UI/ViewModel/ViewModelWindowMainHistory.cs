@@ -44,7 +44,7 @@ namespace HLU.UI.ViewModel
         /// that created the new history records.</param>
         internal void HistoryWrite(Dictionary<int, string> fixedValues,
             DataTable newHistoryRecords,
-            ViewModelWindowMain.Operations operation,
+            Operations operation,
             DateTime nowDtTm)
         {
             if ((newHistoryRecords == null) || (newHistoryRecords.Rows.Count == 0)) return;

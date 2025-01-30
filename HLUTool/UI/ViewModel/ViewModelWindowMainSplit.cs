@@ -183,7 +183,7 @@ namespace HLU.UI.ViewModel
                 foreach (DataColumn c in delCols)
                     history.Columns.Remove(c);
 
-                vmHist.HistoryWrite(null, history, ViewModelWindowMain.Operations.PhysicalSplit, nowDtTm);
+                vmHist.HistoryWrite(null, history, Operations.PhysicalSplit, nowDtTm);
 
                 // update the original row
                 string updateStatement = String.Format("UPDATE {0} SET {1} WHERE {2}",
@@ -363,7 +363,7 @@ namespace HLU.UI.ViewModel
                 historyTable.Columns[_viewModelMain.HluDataset.history.incidColumn.ColumnName].ColumnName =
                     _viewModelMain.HluDataset.history.modified_incidColumn.ColumnName;
                 ViewModelWindowMainHistory vmHist = new(_viewModelMain);
-                vmHist.HistoryWrite(fixedValues, historyTable, ViewModelWindowMain.Operations.LogicalSplit, nowDtTm);
+                vmHist.HistoryWrite(fixedValues, historyTable, Operations.LogicalSplit, nowDtTm);
 
                 _viewModelMain.DataBase.CommitTransaction();
                 _viewModelMain.HluDataset.AcceptChanges();

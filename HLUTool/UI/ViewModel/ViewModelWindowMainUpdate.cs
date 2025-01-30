@@ -219,7 +219,7 @@ namespace HLU.UI.ViewModel
                     { _viewModelMain.HluDataset.history.incidColumn.Ordinal, _viewModelMain.Incid }
                 };
                 ViewModelWindowMainHistory vmHist = new(_viewModelMain);
-                vmHist.HistoryWrite(fixedValues, historyTable, ViewModelWindowMain.Operations.AttributeUpdate, nowDtTm);
+                vmHist.HistoryWrite(fixedValues, historyTable, Operations.AttributeUpdate, nowDtTm);
 
                 // Commit the transation and accept the changes
                 _viewModelMain.DataBase.CommitTransaction();

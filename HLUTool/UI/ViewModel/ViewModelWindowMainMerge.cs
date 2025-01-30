@@ -241,7 +241,7 @@ namespace HLU.UI.ViewModel
                         { _viewModelMain.HluDataset.history.incidColumn.Ordinal, keepIncid }
                     };
                     ViewModelWindowMainHistory vmHist = new(_viewModelMain);
-                    vmHist.HistoryWrite(fixedValues, historyTable, ViewModelWindowMain.Operations.LogicalMerge, nowDtTm);
+                    vmHist.HistoryWrite(fixedValues, historyTable, Operations.LogicalMerge, nowDtTm);
 
                     // Count incid records no longer in use
                     //DONE: Aggregate
@@ -476,7 +476,7 @@ namespace HLU.UI.ViewModel
                             { _viewModelMain.HluDataset.history.toidfragidColumn.Ordinal, newToidFragmentID }
                         };
                         ViewModelWindowMainHistory vmHist = new(_viewModelMain);
-                        vmHist.HistoryWrite(fixedValues, historyTable, ViewModelWindowMain.Operations.PhysicalMerge, nowDtTm);
+                        vmHist.HistoryWrite(fixedValues, historyTable, Operations.PhysicalMerge, nowDtTm);
 
                         // Commit the changes
                         if (startTransaction)

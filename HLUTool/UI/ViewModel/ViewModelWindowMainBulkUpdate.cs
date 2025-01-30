@@ -413,7 +413,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Perform the bulk updates on the GIS data, shadow copy in DB and history
-                BulkUpdateGis(incidOrdinal, _viewModelMain.IncidSelection, _bulkDeleteSecondaryCodes, _bulkCreateHistory, ViewModelWindowMain.Operations.BulkUpdate, nowDtTm);
+                BulkUpdateGis(incidOrdinal, _viewModelMain.IncidSelection, _bulkDeleteSecondaryCodes, _bulkCreateHistory, Operations.BulkUpdate, nowDtTm);
 
                 // Commit the transaction and accept the changes ???
                 _viewModelMain.DataBase.CommitTransaction();
@@ -759,7 +759,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Perform the bulk updates on the GIS data, shadow copy in DB and history
-                BulkUpdateGis(incidOrdinal, _viewModelMain.IncidSelection, _bulkDeleteSecondaryCodes, _bulkCreateHistory, ViewModelWindowMain.Operations.OSMMUpdate, nowDtTm);
+                BulkUpdateGis(incidOrdinal, _viewModelMain.IncidSelection, _bulkDeleteSecondaryCodes, _bulkCreateHistory, Operations.OSMMUpdate, nowDtTm);
 
                 // Commit the transaction and accept the changes ???
                 _viewModelMain.DataBase.CommitTransaction();
@@ -1494,7 +1494,7 @@ namespace HLU.UI.ViewModel
         /// or
         /// Failed to update GIS layer for incid
         /// </exception>
-        private void BulkUpdateGis(int incidOrdinal, DataTable incidSelection, bool deleteSecondaryCodes, bool createHistory, ViewModelWindowMain.Operations operation, DateTime nowDtTm)
+        private void BulkUpdateGis(int incidOrdinal, DataTable incidSelection, bool deleteSecondaryCodes, bool createHistory, Operations operation, DateTime nowDtTm)
         {
             // Get the columns and values to be updated in GIS
             DataColumn[] updateColumns;

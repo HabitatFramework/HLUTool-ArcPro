@@ -147,11 +147,11 @@ namespace HLU.UI.ViewModel
             return false;
         }
 
-        public static string GetOperationsCode(HluDataSet hluDS, ViewModelWindowMain.Operations modifyOperation)
+        public static string GetOperationsCode(HluDataSet hluDS, Operations modifyOperation)
         {
             if ((hluDS == null) || (hluDS.lut_operation == null)) return null;
 
-            string operationName = Enum.GetName(typeof(ViewModelWindowMain.Operations), modifyOperation);
+            string operationName = Enum.GetName(typeof(Operations), modifyOperation);
 
             //DONE: Aggregate
             string descriptionPattern = string.Join(@"\s*", CapitalisedRegex().Matches(operationName).Cast<Match>()
