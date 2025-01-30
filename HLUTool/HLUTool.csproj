@@ -25,7 +25,6 @@
     <Compile Remove="UI\ViewModel\PaneHeader1ViewModel.cs" />
     <Compile Remove="UI\ViewModel\PaneHeader2ViewModel.cs" />
     <Compile Remove="UI\ViewModel\ViewModelConnectOleDb.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowMain_OLD.cs" />
     <Compile Remove="UI\ViewModel\ViewModelWindowSelectGIS.cs" />
     <Compile Remove="UI\ViewModel\ViewModelWindowSplash.cs" />
     <Compile Remove="UI\View\Connection\ViewConnectOleDb.xaml.cs" />

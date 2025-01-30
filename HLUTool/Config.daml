@@ -29,7 +29,7 @@
 			<controls>
 				<button id="HLUTool_btnHLUToolDockPane"
 						caption="HLU Tool"
-						className="HLU.UI.ViewModel.DockpaneMain_ShowButton"
+						className="HLU.UI.ViewModel.WindowMain_ShowButton"
 						loadOnClick="true"
 						keytip="DY"
 						smallImage="pack://application:,,,/HLUTool;component/Images/HLUTool16.png"
@@ -41,7 +41,7 @@
 				</button>
 			</controls>
 			<dockPanes>
-				<dockPane id="HLUTool_UI_DockpaneMain"
+				<dockPane id="HLUTool_UI_WindowMain"
 						  hasHelp="true"
 						  autoHide="false"
 						  caption="HLU Tool"

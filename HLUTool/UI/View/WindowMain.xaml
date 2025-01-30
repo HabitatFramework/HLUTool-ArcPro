@@ -7,7 +7,7 @@
              xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
              xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
              xmlns:viewModel="clr-namespace:HLU.UI.ViewModel"
-             d:DataContext="{d:DesignInstance}"
+             d:DataContext="{d:DesignInstance Type=local:ViewModelWindowMain}"
              xmlns:view="clr-namespace:HLU.UI.View"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="300">
@@ -30,16 +30,16 @@
                VerticalAlignment="Stretch"
                Cursor="{Binding WindowCursor}">
 
-    <Grid x:Name="GridMain" Visibility="{Binding DockpaneVisibility}">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+        <Grid x:Name="GridMain" Visibility="{Binding DockpaneVisibility}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
             <!--  GroupBoxTopControlsBulkUpdate  -->
             <GroupBox x:Name="GroupBoxTopControlsBulkUpdate"
@@ -62,26 +62,26 @@
 						  Grid.RowSpan="2"
                           HorizontalAlignment="Stretch"
                           VerticalAlignment="Center">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="100"/>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="100"/>
-                    </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="100"/>
+                        </Grid.ColumnDefinitions>
 
-                    <Label x:Name="LabelBulkUpdateStatusIncidDB"
+                        <Label x:Name="LabelBulkUpdateStatusIncidDB"
                            Grid.Row="0"
                            Grid.Column="0"
                            Margin="8,0,0,4"
                            HorizontalAlignment="Right"
                            VerticalAlignment="Center"
                            Content="Database INCIDs" />
-                    <TextBox x:Name="TextBoxBulkUpdateStatusIncidDB"
+                        <TextBox x:Name="TextBoxBulkUpdateStatusIncidDB"
                              Grid.Row="0"
                              Grid.Column="1"
                              Margin="8,0,8,4"
@@ -91,14 +91,14 @@
                              Text="{Binding NumIncidSelectedDB,
                                             Mode=OneWay}"
                              TextAlignment="Left" />
-                    <Label x:Name="LabelBulkUpdateStatusToidDB"
+                        <Label x:Name="LabelBulkUpdateStatusToidDB"
                            Grid.Row="1"
                            Grid.Column="0"
                            Margin="8,0,0,4"
                            HorizontalAlignment="Right"
                            VerticalAlignment="Center"
                            Content="Database TOIDs" />
-                    <TextBox x:Name="TextBoxBulkUpdateStatusToidDB"
+                        <TextBox x:Name="TextBoxBulkUpdateStatusToidDB"
                              Grid.Row="1"
                              Grid.Column="1"
                              Margin="8,0,8,4"
@@ -108,14 +108,14 @@
                              Text="{Binding NumToidSelectedDB,
                                             Mode=OneWay}"
                              TextAlignment="Left" />
-                    <Label x:Name="LabelBulkUpdateStatusFragDB"
+                        <Label x:Name="LabelBulkUpdateStatusFragDB"
                            Grid.Row="2"
                            Grid.Column="0"
                            Margin="8,0,0,2"
                            HorizontalAlignment="Right"
                            VerticalAlignment="Center"
                            Content="Database Fragments" />
-                    <TextBox x:Name="TextBoxBulkUpdateStatusFragDB"
+                        <TextBox x:Name="TextBoxBulkUpdateStatusFragDB"
                              Grid.Row="2"
                              Grid.Column="1"
                              Margin="8,0,8,2"
@@ -126,14 +126,14 @@
                                             Mode=OneWay}"
                              TextAlignment="Left" />
 
-                    <Label x:Name="LabelBulkUpdateStatusMap"
+                        <Label x:Name="LabelBulkUpdateStatusMap"
                            Grid.Row="0"
                            Grid.Column="2"
                            Margin="8,0,0,4"
                            HorizontalAlignment="Right"
                            VerticalAlignment="Center"
                            Content="Map INCIDs" />
-                    <TextBox x:Name="TextBoxBulkUpdateStatusIncidMap"
+                        <TextBox x:Name="TextBoxBulkUpdateStatusIncidMap"
                              Grid.Row="0"
                              Grid.Column="3"
                              Margin="8,0,8,4"
@@ -146,14 +146,14 @@
 							 TextAlignment="Left"
 							 Tag="ErrorContent"
 							 ToolTipService.ShowOnDisabled="True" />
-                    <Label x:Name="LabelBulkUpdateStatusToidMap"
+                        <Label x:Name="LabelBulkUpdateStatusToidMap"
                            Grid.Row="1"
                            Grid.Column="2"
                            Margin="8,0,0,4"
                            HorizontalAlignment="Right"
                            VerticalAlignment="Center"
                            Content="Map TOIDs" />
-                    <TextBox x:Name="TextBoxBulkUpdateStatusToidMap"
+                        <TextBox x:Name="TextBoxBulkUpdateStatusToidMap"
                              Grid.Row="1"
                              Grid.Column="3"
                              Margin="8,0,8,4"
@@ -166,14 +166,14 @@
                              TextAlignment="Left"
 							 Tag="ErrorContent"
 							 ToolTipService.ShowOnDisabled="True" />
-                    <Label x:Name="LabelBulkUpdateStatusFragMap"
+                        <Label x:Name="LabelBulkUpdateStatusFragMap"
                            Grid.Row="2"
                            Grid.Column="2"
                            Margin="8,0,0,2"
                            HorizontalAlignment="Right"
                            VerticalAlignment="Center"
                            Content="Map Fragments" />
-                    <TextBox x:Name="TextBoxBulkUpdateStatusFragMap"
+                        <TextBox x:Name="TextBoxBulkUpdateStatusFragMap"
                              Grid.Row="2"
                              Grid.Column="3"
                              Margin="8,0,8,2"
@@ -571,8 +571,8 @@
                                     <Grid x:Name="GridSecondaryHabitats" Margin="0,2,0,0">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto "/>
-											<RowDefinition Height="Auto" />
-											<RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
                                             <RowDefinition />
                                         </Grid.RowDefinitions>
                                         <Grid.ColumnDefinitions>
@@ -581,7 +581,7 @@
                                             <ColumnDefinition Width="20" />
                                         </Grid.ColumnDefinitions>
 
-										<Label x:Name="LabelHabitatSecondariesMandatory"
+                                        <Label x:Name="LabelHabitatSecondariesMandatory"
 												Grid.Row="0"
 												Grid.Column="0"
 												Margin="0,2,0,2"
@@ -589,7 +589,7 @@
 												VerticalAlignment="Center"
 												Content="Mandatory"
 												Visibility="Visible" />
-										<TextBox x:Name="TextBoxHabitatSecondariesMandatory"
+                                        <TextBox x:Name="TextBoxHabitatSecondariesMandatory"
 													Grid.Row="0"
 													Grid.Column="1"
 													Margin="8,2,8,2"
@@ -628,13 +628,13 @@
                                               Grid.Column="0"
 											  Grid.ColumnSpan="2">
                                             <Grid.ColumnDefinitions>
-												<!--<ColumnDefinition Width="Auto" MinWidth="40" />-->
-												<ColumnDefinition Width="140" />
-												<!--<ColumnDefinition Width="Auto" MinWidth="30" />-->
-												<ColumnDefinition Width="*" />
+                                                <!--<ColumnDefinition Width="Auto" MinWidth="40" />-->
+                                                <ColumnDefinition Width="140" />
+                                                <!--<ColumnDefinition Width="Auto" MinWidth="30" />-->
+                                                <ColumnDefinition Width="*" />
                                             </Grid.ColumnDefinitions>
 
-											<!--<Label x:Name="LabelSecondaryGroup"
+                                            <!--<Label x:Name="LabelSecondaryGroup"
 												   Grid.Row="0"
 												   Grid.Column="0"
                                                    Margin="0,8,0,4"
@@ -688,8 +688,8 @@
                                                       ToolTipService.ShowOnDisabled="True" />
                                         </Grid>
 
-										<!--  ButtonAddSecondaryHabitat  -->
-										<Button x:Name="ButtonAddSecondaryHabitat"
+                                        <!--  ButtonAddSecondaryHabitat  -->
+                                        <Button x:Name="ButtonAddSecondaryHabitat"
 												Grid.Row="2"
 												Grid.Column="2"
 												Width="20"
@@ -701,14 +701,14 @@
 												IsEnabled="{Binding CanAddSecondaryHabitat}"
 												ToolTip="Add Secondary Habitat"
 												ToolTipService.ShowOnDisabled="True">
-                                                <!-- MouseEnter="ButtonAddSecondaryHabitat_MouseEnter"
+                                            <!-- MouseEnter="ButtonAddSecondaryHabitat_MouseEnter"
 												MouseLeave="ButtonAddSecondaryHabitat_MouseLeave" -->
                                             <Image Width="16"
 												   Height="16"
 												   Source="..\..\Icons\AddRowSquare.png" />
-										</Button>
+                                        </Button>
 
-										<!-- <ScrollViewer VerticalScrollBarVisibility="Auto"> -->
+                                        <!-- <ScrollViewer VerticalScrollBarVisibility="Auto"> -->
                                         <DataGrid x:Name="DataGridSecondaryHabitats"
                                                        Grid.Row="3"
                                                        Grid.Column="0"
@@ -783,10 +783,10 @@
                                                 <!-- EditingElementStyle="{DynamicResource ComboBoxStyle}" -->
                                             </DataGrid.Columns>
                                         </DataGrid>
-				                        <!-- </ScrollViewer> -->
+                                        <!-- </ScrollViewer> -->
 
-										<!--  ButtonAddSecondaryHabitatList  -->
-										<Button x:Name="ButtonAddSecondaryHabitatList"
+                                        <!--  ButtonAddSecondaryHabitatList  -->
+                                        <Button x:Name="ButtonAddSecondaryHabitatList"
 												Grid.Row="3"
 												Grid.Column="2"
 												Width="20"
@@ -798,12 +798,12 @@
 												IsEnabled="{Binding CanAddSecondaryHabitatList}"
 												ToolTip="Add Secondary Habitats from List"
 												ToolTipService.ShowOnDisabled="True">
-                                                <!-- MouseEnter="ButtonAddSecondaryHabitatList_MouseEnter"
+                                            <!-- MouseEnter="ButtonAddSecondaryHabitatList_MouseEnter"
 												MouseLeave="ButtonAddSecondaryHabitatList_MouseLeave" -->
                                             <Image Width="16"
 												   Height="16"
 												   Source="..\..\Icons\AddScript.png" />
-										</Button>
+                                        </Button>
 
                                         <CheckBox x:Name="CheckBoxCopySecondaryHabitats"
                                                   Grid.Row="3"
@@ -862,7 +862,7 @@
                                           VerticalAlignment="Stretch"
 										  IsEnabled="{Binding TabHabitatControlsEnabled}"
                                           Header="{Binding LegacyHeader}">
-                                          <!-- Margin="0" -->
+                                    <!-- Margin="0" -->
                                     <Grid x:Name="GridLegacy" Margin="0,2,0,0">
                                         <Grid.RowDefinitions>
                                             <RowDefinition />
@@ -953,7 +953,7 @@
                                           VerticalAlignment="Stretch"
 										  IsEnabled="{Binding TabIhsControlsEnabled}"
                                           Header="{Binding IhsHabitatHeader}">
-									
+
                                     <Grid x:Name="GridIHSHabitat" Margin="0,2,0,0">
                                         <Grid.RowDefinitions>
                                             <RowDefinition />
@@ -1251,12 +1251,12 @@
                 </TabItem>
 
                 <!--  TabItemPriority  -->
-				<TabItem x:Name="TabItemPriority"
+                <TabItem x:Name="TabItemPriority"
                 		 IsEnabled="{Binding TabItemPriorityEnabled}" >
-					
-                	<TabItem.Header>
-                		<StackPanel>
-                			<Label x:Name="PriorityTabLabel"
+
+                    <TabItem.Header>
+                        <StackPanel>
+                            <Label x:Name="PriorityTabLabel"
                 				Margin="2,0,2,0"
                 				VerticalAlignment="Bottom"
                 				Content="{Binding PriorityTabLabel, ValidatesOnDataErrors=True}"
@@ -1264,20 +1264,20 @@
                 				Padding="4,2,4,4"
                 				Tag="{Binding (Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}, Mode=OneWay, RelativeSource={RelativeSource Self}}"
                 				ToolTipService.ShowOnDisabled="True" />
-                		</StackPanel>
-                	</TabItem.Header>
-                	<AdornerDecorator>
-                		<ScrollViewer VerticalScrollBarVisibility="Auto">
-                			<Grid x:Name="GridTabItemPriority">
-                				<Grid.RowDefinitions>
-                					<RowDefinition Height="*" MinHeight="150" />
-                					<RowDefinition Height="*" MinHeight="150" />
-                				</Grid.RowDefinitions>
-                				<Grid.ColumnDefinitions>
-                					<ColumnDefinition Width="*" />
-                					<ColumnDefinition />
-                					<ColumnDefinition Width="20" />
-                				</Grid.ColumnDefinitions>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <AdornerDecorator>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <Grid x:Name="GridTabItemPriority">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" MinHeight="150" />
+                                    <RowDefinition Height="*" MinHeight="150" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition />
+                                    <ColumnDefinition Width="20" />
+                                </Grid.ColumnDefinitions>
 
                                 <GroupBox x:Name="GroupBoxPrimaryBapHabitats"
                                           Grid.Row="0"
@@ -1381,8 +1381,8 @@
                                             </DataGrid.Columns>
                                         </DataGrid>
 
-										<!--  ButtonEditPriorityHabitats  -->
-										<Button x:Name="ButtonEditPriorityHabitats"
+                                        <!--  ButtonEditPriorityHabitats  -->
+                                        <Button x:Name="ButtonEditPriorityHabitats"
 												Grid.Row="0"
 												Grid.Column="2"
 												Width="20"
@@ -1394,12 +1394,12 @@
 												IsEnabled="{Binding CanEditPriorityHabitats}"
 												ToolTip="Priority Habitats"
 												ToolTipService.ShowOnDisabled="True">
-                                                <!-- MouseEnter="ButtonEditPriorityHabitats_MouseEnter"
+                                            <!-- MouseEnter="ButtonEditPriorityHabitats_MouseEnter"
 												MouseLeave="ButtonEditPriorityHabitats_MouseLeave" -->
                                             <Image Width="16"
 												   Height="16"
 												   Source="..\..\Icons\ZoomTable.png" />
-										</Button>
+                                        </Button>
 
                                     </Grid>
                                 </GroupBox>
@@ -1507,8 +1507,8 @@
                                             </DataGrid.Columns>
                                         </DataGrid>
 
-										<!--  ButtonEditPriorityHabitats  -->
-										<Button x:Name="ButtonEditPotentialHabitats"
+                                        <!--  ButtonEditPriorityHabitats  -->
+                                        <Button x:Name="ButtonEditPotentialHabitats"
 												Grid.Row="0"
 												Grid.Column="2"
 												Width="20"
@@ -1520,12 +1520,12 @@
 												IsEnabled="{Binding CanEditPotentialHabitats}"
 												ToolTip="Potential Priority Habitats"
 												ToolTipService.ShowOnDisabled="True">
-                                                <!-- MouseEnter="ButtonEditPotentialHabitats_MouseEnter"
+                                            <!-- MouseEnter="ButtonEditPotentialHabitats_MouseEnter"
 												MouseLeave="ButtonEditPotentialHabitats_MouseLeave" -->
                                             <Image Width="16"
 												   Height="16"
 												   Source="..\..\Icons\ZoomTable.png" />
-										</Button>
+                                        </Button>
 
                                         <CheckBox x:Name="CheckBoxCopyBapHabitatUser"
                                                   Grid.Row="0"
@@ -1540,9 +1540,9 @@
                                     </Grid>
                                 </GroupBox>
 
-                			</Grid>
-                		</ScrollViewer>
-                	</AdornerDecorator>
+                            </Grid>
+                        </ScrollViewer>
+                    </AdornerDecorator>
                 </TabItem>
 
                 <!--  TabItemDetails  -->
@@ -1551,7 +1551,7 @@
 
                     <TabItem.Header>
                         <StackPanel>
-                        	<Label x:Name="DetailsTabLabel"
+                            <Label x:Name="DetailsTabLabel"
                         		Margin="2,0,2,0"
                         		VerticalAlignment="Bottom"
                         		Content="{Binding DetailsTabLabel, ValidatesOnDataErrors=True}"
@@ -1595,14 +1595,14 @@
                                             <ColumnDefinition Width="20" />
                                         </Grid.ColumnDefinitions>
 
-										<Label x:Name="LabelGeneralComments"
+                                        <Label x:Name="LabelGeneralComments"
                                                Grid.Row="0"
                                                Grid.Column="0"
                                                Margin="2,0,4,2"
                                                HorizontalAlignment="Right"
                                                VerticalAlignment="Center"
 											   Content="General&#xa;Comments">
-										</Label>
+                                        </Label>
                                         <TextBox x:Name="TextBoxIncidGeneralComments"
                                                  Grid.Row="0"
                                                  Grid.Column="1"
@@ -1740,7 +1740,7 @@
                                             <ColumnDefinition Width="Auto" MinWidth="82" />
                                             <ColumnDefinition Width="Auto" MinWidth="100" />
                                             <ColumnDefinition Width="20" />
-											<ColumnDefinition Width="*" MinWidth="100" />
+                                            <ColumnDefinition Width="*" MinWidth="100" />
                                             <ColumnDefinition Width="20" />
                                         </Grid.ColumnDefinitions>
 
@@ -1840,7 +1840,7 @@
                                                 <ColumnDefinition Width="*" MinWidth="100" />
                                             </Grid.ColumnDefinitions>
 
-											<Label x:Name="LabelCondition"
+                                            <Label x:Name="LabelCondition"
 												   Grid.Row="0"
 												   Grid.Column="0"
 												   Margin="2,0,4,4"
@@ -1862,7 +1862,7 @@
                                                       SelectedValuePath="code"
                                                       Tag="ErrorContent"
                                                       ToolTipService.ShowOnDisabled="True" />
-											<CheckBox x:Name="CheckBoxCopyCondition"
+                                            <CheckBox x:Name="CheckBoxCopyCondition"
 													  Grid.Row="0"
 													  Grid.Column="2"
 													  Margin="0,0,0,4"
@@ -1872,7 +1872,7 @@
 																		  Mode=TwoWay,
 																		  UpdateSourceTrigger=PropertyChanged}" />
 
-											<Label x:Name="LabelConditionQualifier"
+                                            <Label x:Name="LabelConditionQualifier"
 												   Grid.Row="0"
 												   Grid.Column="3"
 												   Margin="6,0,4,4"
@@ -1897,7 +1897,7 @@
                                                       Tag="ErrorContent"
                                                       ToolTipService.ShowOnDisabled="True" />
                                         </Grid>
-										<CheckBox x:Name="CheckBoxCopyConditionQualifier"
+                                        <CheckBox x:Name="CheckBoxCopyConditionQualifier"
 													Grid.Row="0"
 													Grid.Column="2"
 													Margin="0,0,0,4"
@@ -1917,14 +1917,14 @@
                                                 <ColumnDefinition Width="20" />
                                             </Grid.ColumnDefinitions>
 
-											<Label x:Name="LabelConditionDate"
+                                            <Label x:Name="LabelConditionDate"
 												   Grid.Row="1"
 												   Grid.Column="0"
 												   Margin="2,2,4,2"
 												   HorizontalAlignment="Right"
 												   VerticalAlignment="Center"
 												   Content="Date" />
-											<TextBox x:Name="TextBoxConditionDate"
+                                            <TextBox x:Name="TextBoxConditionDate"
 													 Grid.Row="1"
 													 Grid.Column="1"
 													 Margin="4,2,8,2"
@@ -1940,7 +1940,7 @@
 																	ValidatesOnDataErrors=True}"
 													 Tag="ErrorContent"
 													 ToolTipService.ShowOnDisabled="True" />
-											<CheckBox x:Name="CheckBoxCopyConditionDate"
+                                            <CheckBox x:Name="CheckBoxCopyConditionDate"
 													  Grid.Row="1"
 													  Grid.Column="2"
 													  Margin="0,2,0,2"
@@ -1948,8 +1948,9 @@
 													  VerticalAlignment="Center"
 													  IsChecked="{Binding CopySwitches.CopyIncidConditionDate,
 																		  Mode=TwoWay,
-																		  UpdateSourceTrigger=PropertyChanged}" />                                    </Grid>
+																		  UpdateSourceTrigger=PropertyChanged}" />
                                         </Grid>
+                                    </Grid>
                                 </GroupBox>
 
                                 <!--  GroupBoxQuality  -->
@@ -1974,10 +1975,10 @@
                                               Grid.Row="0"
                                               Grid.Column="0"
                                               Grid.ColumnSpan="3">
-											<Grid.RowDefinitions>
-												<RowDefinition />
-												<RowDefinition />
-											</Grid.RowDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition />
+                                                <RowDefinition />
+                                            </Grid.RowDefinitions>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto" MinWidth="82" />
                                                 <ColumnDefinition Width="*" MinWidth="100" />
@@ -1985,7 +1986,7 @@
                                                 <ColumnDefinition Width="20" />
                                             </Grid.ColumnDefinitions>
 
-											<Label x:Name="LabelQualityDetermination"
+                                            <Label x:Name="LabelQualityDetermination"
 												   Grid.Row="0"
 												   Grid.Column="0"
 												   Margin="2,0,4,4"
@@ -2008,7 +2009,7 @@
                                                       SelectedValuePath="code"
                                                       Tag="ErrorContent"
                                                       ToolTipService.ShowOnDisabled="True" />
-											<CheckBox x:Name="CheckBoxCopyQualityDetermination"
+                                            <CheckBox x:Name="CheckBoxCopyQualityDetermination"
 													  Grid.Row="0"
 													  Grid.Column="3"
 													  Margin="0,0,0,4"
@@ -2018,7 +2019,7 @@
 																		  Mode=TwoWay,
 																		  UpdateSourceTrigger=PropertyChanged}" />
 
-											<Label x:Name="LabelQualityInterpretation"
+                                            <Label x:Name="LabelQualityInterpretation"
 												   Grid.Row="1"
 												   Grid.Column="0"
 												   Margin="2,2,4,4"
@@ -2040,7 +2041,7 @@
                                                       SelectedValuePath="code"
                                                       Tag="ErrorContent"
                                                       ToolTipService.ShowOnDisabled="True" />
-										<CheckBox x:Name="CheckBoxCopyQualityInterpretation"
+                                            <CheckBox x:Name="CheckBoxCopyQualityInterpretation"
 													Grid.Row="1"
 													Grid.Column="3"
 													Margin="0,2,0,4"
@@ -2055,23 +2056,23 @@
                                               Grid.Row="1"
                                               Grid.Column="0"
                                               Grid.ColumnSpan="3">
-											<Grid.RowDefinitions>
-												<RowDefinition MinHeight="70" />
-											</Grid.RowDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition MinHeight="70" />
+                                            </Grid.RowDefinitions>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto" MinWidth="82" />
                                                 <ColumnDefinition Width="*" MinWidth="150" />
                                                 <ColumnDefinition Width="20" />
                                             </Grid.ColumnDefinitions>
 
-											<Label x:Name="LabelQualityComments"
+                                            <Label x:Name="LabelQualityComments"
 												   Grid.Row="1"
 												   Grid.Column="0"
 												   Margin="2,2,4,2"
 												   HorizontalAlignment="Right"
 												   VerticalAlignment="Center"
 												   Content="Interpretation&#xa;Comments" />
-											<TextBox x:Name="TextBoxQualityComments"
+                                            <TextBox x:Name="TextBoxQualityComments"
 													 Grid.Row="1"
 													 Grid.Column="1"
 													 MinHeight="52"
@@ -2085,7 +2086,7 @@
 													 TextWrapping="Wrap"
 													 Tag="ErrorContent"
 													 ToolTipService.ShowOnDisabled="True" />
-											<CheckBox x:Name="CheckBoxCopyQualityComments"
+                                            <CheckBox x:Name="CheckBoxCopyQualityComments"
 													  Grid.Row="1"
 													  Grid.Column="2"
 													  Margin="0,2,0,2"
@@ -2093,8 +2094,9 @@
 													  VerticalAlignment="Center"
 													  IsChecked="{Binding CopySwitches.CopyIncidQualityComments,
 																		  Mode=TwoWay,
-																		  UpdateSourceTrigger=PropertyChanged}" />                                    </Grid>
+																		  UpdateSourceTrigger=PropertyChanged}" />
                                         </Grid>
+                                    </Grid>
                                 </GroupBox>
 
                             </Grid>
@@ -2102,7 +2104,7 @@
                     </AdornerDecorator>
                 </TabItem>
 
-				<!--  TabItemSources  -->
+                <!--  TabItemSources  -->
                 <TabItem x:Name="TabItemSources" IsEnabled="{Binding TabItemSourcesEnabled}">
                     <TabItem.Header>
                         <StackPanel>
@@ -2947,7 +2949,7 @@
                                       Grid.Row="0"
                                       Grid.Column="0"
                                       Grid.ColumnSpan="3">
-                                      <!-- Header="Modification History"> -->
+                                <!-- Header="Modification History"> -->
                                 <ScrollViewer Margin="0,0,-4,-4" VerticalScrollBarVisibility="Auto">
                                     <ItemsControl x:Name="ItemsControlModificationHistory"
                                                   Grid.Row="0"
@@ -2958,7 +2960,7 @@
                                                   ItemsSource="{Binding IncidHistory,
                                                                         Mode=OneWay,
                                                                         UpdateSourceTrigger=PropertyChanged}">
-                                    <!-- <ItemsControl.ItemsPanel>
+                                        <!-- <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
                                                 <hlu:UniformGrid2 Orientation="Horizontal" Columns="1" />
                                         </ItemsPanelTemplate>
@@ -3201,7 +3203,7 @@
                 </Grid>
             </Grid>
 
-			<Separator Grid.Row="3" />
+            <Separator Grid.Row="3" />
 
             <!--  DockPanelStatusBar  -->
             <DockPanel x:Name="DockPanelStatusBar"
@@ -3210,7 +3212,7 @@
                        Margin="0,0,0,0"
                        VerticalAlignment="Top"
                        Panel.ZIndex="5">
-<!--					   MaxHeight="30"	-->
+                <!--					   MaxHeight="30"	-->
                 <Grid x:Name="GridStatusBar">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -3224,7 +3226,7 @@
                            VerticalAlignment="Center"
 						   Content="{Binding StatusBar}">
                         <!-- Style="{DynamicResource LabelReverseStyle}"> -->
-<!--                        <TextBlock x:Name="TextBlockStatusBar" Text="{Binding StatusBar}">
+                        <!--                        <TextBlock x:Name="TextBlockStatusBar" Text="{Binding StatusBar}">
                             <TextBlock.Triggers>
                                 <EventTrigger RoutedEvent="FrameworkElement.Loaded">
                                     <BeginStoryboard>
@@ -3258,30 +3260,30 @@
                 </Grid>
             </DockPanel>
 
-        <Grid Name="GridProcessStatus" Grid.Row="5" Margin="6,6,6,0" Visibility="{Binding IsProcessing}">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="22" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <controls:CircularAnimationControl
+            <Grid Name="GridProcessStatus" Grid.Row="5" Margin="6,6,6,0" Visibility="{Binding IsProcessing}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="22" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <controls:CircularAnimationControl
                 Grid.Column="0"
                 Foreground="{DynamicResource Esri_BorderSelectedBrush }"
                 SpeedRatio="0.5"
                 Width="22"
                 Height="22"
                 Visibility="{Binding IsProcessing}" />
-            <TextBlock Name="TextBlockProcess"
+                <TextBlock Name="TextBlockProcess"
                         Grid.Column="1"
                         Margin="5,0,0,0"
                         VerticalAlignment="Center"
                         Text="{Binding ProcessStatus}" />
-        </Grid>
+            </Grid>
 
-        <Grid Name="GridProgressAnimation" Grid.Row="6" Margin="6,6,6,0" Visibility="{Binding ProgressAnimating}">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <ProgressBar x:Name="ProgressBar"
+            <Grid Name="GridProgressAnimation" Grid.Row="6" Margin="6,6,6,0" Visibility="{Binding ProgressAnimating}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <ProgressBar x:Name="ProgressBar"
                             Grid.Column="0"
                             Height="22"
                             Margin="0,0,6,0"
@@ -3289,20 +3291,20 @@
                             Minimum="0"
                             Maximum="{Binding Path=MaxProgressValue, Mode=OneWay}"
                             Value="{Binding Path=ProgressValue, Mode=OneWay}" />
-            <TextBlock Text="{Binding ProgressText}"
+                <TextBlock Text="{Binding ProgressText}"
                         Grid.Column="0"
                         Margin="0,0,6,0"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center" />
-        </Grid>
+            </Grid>
 
-        <Grid Name="GridButtons" Grid.Row="7" Margin="6,6,6,6">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="70" />
-            </Grid.ColumnDefinitions>
+            <Grid Name="GridButtons" Grid.Row="7" Margin="6,6,6,6">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="70" />
+                </Grid.ColumnDefinitions>
 
-            <Button Name="ButtonRun"
+                <Button Name="ButtonRun"
                     Grid.Column="1"
                     Margin="0,0,0,0"
                     Padding="0"
@@ -3316,17 +3318,17 @@
                     IsEnabled="{Binding Path=RunButtonEnabled}"
                     TabIndex="2"
                     Style="{DynamicResource Esri_SimpleButton}">
-                <StackPanel Orientation="Horizontal">
-                    <Image Source="{Binding ButtonRunImg}" Width="16" Height="16" />
-                    <Label Content="Sync" Padding="4,0,0,0" />
-                </StackPanel>
-                <Button.ToolTip>
-                    <ToolTip>
-                        <TextBlock Text="Run the sync to update the remote table" FontWeight="Normal"></TextBlock>
-                    </ToolTip>
-                </Button.ToolTip>
-            </Button>
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{Binding ButtonRunImg}" Width="16" Height="16" />
+                        <Label Content="Sync" Padding="4,0,0,0" />
+                    </StackPanel>
+                    <Button.ToolTip>
+                        <ToolTip>
+                            <TextBlock Text="Run the sync to update the remote table" FontWeight="Normal"></TextBlock>
+                        </ToolTip>
+                    </Button.ToolTip>
+                </Button>
+            </Grid>
         </Grid>
-</Grid>
     </DockPanel>
 </UserControl>
