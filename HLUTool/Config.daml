@@ -45,7 +45,7 @@
 						  hasHelp="true"
 						  autoHide="false"
 						  caption="HLU Tool"
-						  className="HLU.UI.ViewModel.ViewModelWindowMain"
+						  className="HLU.UI.ViewModel.ViewModelWindowMain_NEW"
 						  dock="group"
 						  dockWith="esri_core_projectDockPane">
 					<content className="HLU.UI.View.WindowMain" />

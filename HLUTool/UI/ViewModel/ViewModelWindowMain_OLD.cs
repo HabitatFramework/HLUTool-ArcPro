@@ -66,6 +66,14 @@ namespace HLU.UI.ViewModel
     {
         #region Fields
 
+        private ViewModelWindowMain _dockPane;
+
+        private bool _mapEventsSubscribed;
+        private bool _projectClosedEventsSubscribed;
+
+        //TODO: Move to ArcGISApp?
+        private MapView _activeMapView;
+
         private ICommand _navigateFirstCommand;
         private ICommand _navigatePreviousCommand;
         private ICommand _navigateNextCommand;
@@ -139,6 +147,7 @@ namespace HLU.UI.ViewModel
         private WindowEditPotentialHabitats _windowEditPotentialHabitats;
         private ViewModelWindowEditPotentialHabitats _viewModelWinEditPotentialHabitats;
 
+        private string _displayName = "HLU Tool";
         private int _mapWindowsCount;
         private bool _showingReasonProcessGroup = false;
         private bool _showingOSMMPendingGroup = false;
@@ -295,7 +304,7 @@ namespace HLU.UI.ViewModel
         private bool _tabDetailsControlsEnabled = true;
         private bool _tabSourcesControlsEnabled = true;
         private bool _windowEnabled = true;
-
+        private bool _editMode;
         private bool _pasting = false;
         private bool _changed = false;
         private bool _readingMap = false;
@@ -410,6 +419,267 @@ namespace HLU.UI.ViewModel
         internal static int IncidPageSize = Settings.Default.IncidTablePageSize;
 
         #endregion
+
+        #region ViewModelBase Members
+
+        /// <summary>
+        /// Set the global variables.
+        /// </summary>
+        protected ViewModelWindowMain()
+        {
+            //TODO: Switch with Initialize()?
+            InitializeComponentAsync();
+            Initialize();
+        }
+
+        /// <summary>
+        /// Initialise the DockPane components.
+        /// </summary>
+        public async void InitializeComponentAsync()
+        {
+            _dockPane = this;
+            _initialised = false;
+            _inError = false;
+
+            // Indicate that the dockpane has been initialised.
+            _initialised = true;
+        }
+
+        /// <summary>
+        /// Show the DockPane.
+        /// </summary>
+        internal static void Show()
+        {
+            // Get the dockpane DAML id.
+            DockPane pane = FrameworkApplication.DockPaneManager.Find(_dockPaneID);
+            if (pane == null)
+                return;
+
+            // Get the ViewModel by casting the dockpane.
+            ViewModelWindowMain vm = pane as ViewModelWindowMain;
+
+            // If the ViewModel is uninitialised then initialise it.
+            if (!vm.Initialised)
+                vm.InitializeComponentAsync();
+
+            // If the ViewModel is in error then don't show the dockpane.
+            if (vm.InError)
+            {
+                pane = null;
+                return;
+            }
+
+            // Active the dockpane.
+            pane.Activate();
+        }
+
+        protected override void OnShow(bool isVisible)
+        {
+            // Hide the dockpane if there is no active map.
+            //if (MapView.Active == null)
+            //    DockpaneVisibility = Visibility.Hidden;
+
+            // Is the dockpane visible (or is the window not showing the map).
+            if (isVisible)
+            {
+                if (!_mapEventsSubscribed)
+                {
+                    _mapEventsSubscribed = true;
+
+                    // Subscribe from map changed events.
+                    ActiveMapViewChangedEvent.Subscribe(OnActiveMapViewChanged);
+                }
+
+                if (!_projectClosedEventsSubscribed)
+                {
+                    _projectClosedEventsSubscribed = true;
+
+                    // Suscribe to project closed events.
+                    ProjectClosedEvent.Subscribe(OnProjectClosed);
+                }
+            }
+            else
+            {
+                if (_mapEventsSubscribed)
+                {
+                    _mapEventsSubscribed = false;
+
+                    // Unsubscribe from map changed events.
+                    ActiveMapViewChangedEvent.Unsubscribe(OnActiveMapViewChanged);
+                }
+            }
+
+            base.OnShow(isVisible);
+        }
+
+        private void OnActiveMapViewChanged(ActiveMapViewChangedEventArgs obj)
+        {
+            if (MapView.Active == null)
+            {
+                DockpaneVisibility = Visibility.Hidden;
+
+                // Clear the form lists.
+                //_paneH2VM?.ClearFormLists();
+            }
+            else
+            {
+                DockpaneVisibility = Visibility.Visible;
+
+                //TODO: Recheck HLU layers present in active map window
+                // Recheck the active map window is valid (don't wait).
+                if (MapView.Active != _activeMapView)
+                {
+                    //_paneH2VM?.LoadTableCountsAsync(true, false);
+                }
+
+                // Save the active map view.
+                _activeMapView = MapView.Active;
+            }
+        }
+
+        private void OnProjectClosed(ProjectEventArgs obj)
+        {
+            if (MapView.Active == null)
+            {
+                DockpaneVisibility = Visibility.Hidden;
+
+                //TODO: Disable form?
+                // Disable the form.
+                //_paneH2VM?.ClearFormLists();
+            }
+
+            _projectClosedEventsSubscribed = false;
+
+            ProjectClosedEvent.Unsubscribe(OnProjectClosed);
+        }
+
+        private Visibility _dockpaneVisibility = Visibility.Visible;
+
+        public Visibility DockpaneVisibility
+        {
+            get { return _dockpaneVisibility; }
+            set
+            {
+                _dockpaneVisibility = value;
+                OnPropertyChanged(nameof(DockpaneVisibility));
+            }
+        }
+
+        #endregion ViewModelBase Members
+
+        #region Properties
+
+        /// <summary>
+        /// ID of the DockPane.
+        /// </summary>
+        private const string _dockPaneID = "HLUTool_UI_DockpaneMain";
+
+        public static string DockPaneID
+        {
+            get => _dockPaneID;
+        }
+
+        /// <summary>
+        /// Override the default behavior when the dockpane's help icon is clicked
+        /// or the F1 key is pressed.
+        /// </summary>
+        protected override void OnHelpRequested()
+        {
+            if (_helpURL != null)
+            {
+                System.Diagnostics.Process.Start(new ProcessStartInfo
+                {
+                    FileName = _helpURL,
+                    UseShellExecute = true
+                });
+            }
+        }
+
+        private bool _initialised = false;
+
+        /// <summary>
+        /// Has the DockPane been initialised?
+        /// </summary>
+        public bool Initialised
+        {
+            get { return _initialised; }
+            set
+            {
+                _initialised = value;
+            }
+        }
+
+        private bool _inError = false;
+
+        /// <summary>
+        /// Is the DockPane in error?
+        /// </summary>
+        public bool InError
+        {
+            get { return _inError; }
+            set
+            {
+                _inError = value;
+            }
+        }
+
+        private bool _formLoading;
+
+        /// <summary>
+        /// Is the form loading?
+        /// </summary>
+        public bool FormLoading
+        {
+            get { return _formLoading; }
+            set { _formLoading = value; }
+        }
+
+        private bool _compareRunning;
+
+        /// <summary>
+        /// Is the compare running?
+        /// </summary>
+        public bool CompareRunning
+        {
+            get { return _compareRunning; }
+            set { _compareRunning = value; }
+        }
+
+        private bool _syncRunning;
+
+        /// <summary>
+        /// Is the sync running?
+        /// </summary>
+        public bool SyncRunning
+        {
+            get { return _syncRunning; }
+            set { _syncRunning = value; }
+        }
+
+        private string _helpURL;
+
+        /// <summary>
+        /// The URL of the help page.
+        /// </summary>
+        public string HelpURL
+        {
+            get { return _helpURL; }
+            set { _helpURL = value; }
+        }
+
+        /// <summary>
+        /// Get the image for the Run button.
+        /// </summary>
+        public static ImageSource ButtonRunImg
+        {
+            get
+            {
+                var imageSource = Application.Current.Resources["GenericRun16"] as ImageSource;
+                return imageSource;
+            }
+        }
+
+        #endregion Properties
 
         #region Constructor
 
@@ -1141,6 +1411,28 @@ namespace HLU.UI.ViewModel
         #region ViewModelBase Members
 
         /// <summary>
+        /// Returns the user-friendly name of this object.
+        /// Child classes can set this property to a new value,
+        /// or override it to determine the value on-demand.
+        /// </summary>
+        public override string DisplayName
+        {
+            get { return _displayName; }
+            set { _displayName = value; }
+        }
+
+        /// <summary>
+        /// The title of the main window.
+        /// </summary>
+        public override string WindowTitle
+        {
+            get
+            {
+                return String.Format("{0}{1}", DisplayName, _editMode ? String.Empty : " [READONLY]");
+            }
+        }
+
+        /// <summary>
         /// Gets the name of the layer to display in the status bar.
         /// </summary>
         /// <value>
@@ -1580,6 +1872,163 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion
+
+        #region Processing
+
+        /// <summary>
+        /// Is the form processing?
+        /// </summary>
+        public Visibility IsProcessing
+        {
+            get
+            {
+                if (_processStatus != null)
+                    return Visibility.Visible;
+                else
+                    return Visibility.Collapsed;
+            }
+        }
+
+        private double _progressValue;
+
+        /// <summary>
+        /// Gets the value to set on the progress
+        /// </summary>
+        public double ProgressValue
+        {
+            get
+            {
+                return _progressValue;
+            }
+            set
+            {
+                _progressValue = value;
+
+                OnPropertyChanged(nameof(ProgressValue));
+            }
+        }
+
+        private double _maxProgressValue;
+
+        /// <summary>
+        /// Gets the max value to set on the progress
+        /// </summary>
+        public double MaxProgressValue
+        {
+            get
+            {
+                return _maxProgressValue;
+            }
+            set
+            {
+                _maxProgressValue = value;
+
+                OnPropertyChanged(nameof(MaxProgressValue));
+            }
+        }
+
+        private string _processStatus;
+
+        /// <summary>
+        /// ProgressStatus Text
+        /// </summary>
+        public string ProcessStatus
+        {
+            get
+            {
+                return _processStatus;
+            }
+            set
+            {
+                _processStatus = value;
+
+                OnPropertyChanged(nameof(ProcessStatus));
+                OnPropertyChanged(nameof(IsProcessing));
+                OnPropertyChanged(nameof(ProgressText));
+                OnPropertyChanged(nameof(ProgressAnimating));
+            }
+        }
+
+        private string _progressText;
+
+        /// <summary>
+        /// Progress bar Text
+        /// </summary>
+        public string ProgressText
+        {
+            get
+            {
+                return _progressText;
+            }
+            set
+            {
+                _progressText = value;
+
+                OnPropertyChanged(nameof(ProgressText));
+            }
+        }
+
+        /// <summary>
+        /// Is the progress wheel animating?
+        /// </summary>
+        public Visibility ProgressAnimating
+        {
+            get
+            {
+                if (_progressText != null)
+                    return Visibility.Visible;
+                else
+                    return Visibility.Collapsed;
+            }
+        }
+
+        /// <summary>
+        /// Update the progress bar.
+        /// </summary>
+        /// <param name="processText"></param>
+        /// <param name="progressValue"></param>
+        /// <param name="maxProgressValue"></param>
+        public void ProgressUpdate(string processText = null, int progressValue = -1, int maxProgressValue = -1)
+        {
+            if (Application.Current.Dispatcher.CheckAccess())
+            {
+                // Check if the values have changed and update them if they have.
+                if (progressValue >= 0)
+                    ProgressValue = progressValue;
+
+                if (maxProgressValue != 0)
+                    MaxProgressValue = maxProgressValue;
+
+                if (_maxProgressValue > 0)
+                    ProgressText = _progressValue == _maxProgressValue ? "Done" : $@"{_progressValue * 100 / _maxProgressValue:0}%";
+                else
+                    ProgressText = null;
+
+                ProcessStatus = processText;
+            }
+            else
+            {
+                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background,
+                  () =>
+                  {
+                      // Check if the values have changed and update them if they have.
+                      if (progressValue >= 0)
+                          ProgressValue = progressValue;
+
+                      if (maxProgressValue != 0)
+                          MaxProgressValue = maxProgressValue;
+
+                      if (_maxProgressValue > 0)
+                          ProgressText = _progressValue == _maxProgressValue ? "Done" : $@"{_progressValue * 100 / _maxProgressValue:0}%";
+                      else
+                          ProgressText = null;
+
+                      ProcessStatus = processText;
+                  });
+            }
+        }
+
+        #endregion Processing
 
         #region User ID
 

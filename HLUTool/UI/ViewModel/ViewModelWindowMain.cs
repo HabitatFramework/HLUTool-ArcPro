@@ -137,11 +137,11 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// Build the DockPane.
     /// </summary>
-    internal partial class ViewModelWindowMain : PanelViewModelBase, INotifyPropertyChanged
+    internal class ViewModelWindowMain_NEW : PanelViewModelBase, INotifyPropertyChanged
     {
         #region Fields
 
-        private ViewModelWindowMain _dockPane;
+        private ViewModelWindowMain_NEW _dockPane;
 
         private bool _mapEventsSubscribed;
         private bool _projectClosedEventsSubscribed;
@@ -179,7 +179,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Set the global variables.
         /// </summary>
-        protected ViewModelWindowMain()
+        protected ViewModelWindowMain_NEW()
         {
             InitializeComponentAsync();
         }
@@ -208,7 +208,7 @@ namespace HLU.UI.ViewModel
                 return;
 
             // Get the ViewModel by casting the dockpane.
-            ViewModelWindowMain vm = pane as ViewModelWindowMain;
+            ViewModelWindowMain_NEW vm = pane as ViewModelWindowMain_NEW;
 
             // If the ViewModel is uninitialised then initialise it.
             if (!vm.Initialised)
@@ -295,7 +295,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// ID of the DockPane.
         /// </summary>
-        private const string _dockPaneID = "HLUTool_UI_DockpaneMain";
+        private const string _dockPaneID = "HLUTool_UI_WindowMain";
 
         public static string DockPaneID
         {
@@ -310,7 +310,7 @@ namespace HLU.UI.ViewModel
         {
             if (_helpURL != null)
             {
-                System.Diagnostics.Process.Start(new ProcessStartInfo
+                Process.Start(new ProcessStartInfo
                 {
                     FileName = _helpURL,
                     UseShellExecute = true
@@ -469,7 +469,7 @@ namespace HLU.UI.ViewModel
                 return;
 
             // Get the ViewModel by casting the dockpane.
-            ViewModelWindowMain vm = pane as ViewModelWindowMain;
+            ViewModelWindowMain_NEW vm = pane as ViewModelWindowMain_NEW;
 
             // Force the dockpane to be re-initialised next time it's shown.
             vm.Initialised = false;
@@ -683,7 +683,7 @@ namespace HLU.UI.ViewModel
             //string uri = System.Reflection.Assembly.GetExecutingAssembly().Location;
 
             // Show the dock pane.
-            ViewModelWindowMain.Show();
+            ViewModelWindowMain_NEW.Show();
         }
     }
 }
