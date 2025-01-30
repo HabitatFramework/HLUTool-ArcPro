@@ -43,7 +43,7 @@ namespace HLU.UI.ViewModel
     {
         #region Fields
 
-        private ViewModelWindowMain _viewModelMain;
+        private ViewModelWindowMain_OLD _viewModelMain;
 
         private ICommand _saveCommand;
         private ICommand _cancelCommand;
@@ -131,7 +131,7 @@ namespace HLU.UI.ViewModel
         /// Get the default values from settings.
         /// </summary>
         /// <remarks></remarks>
-        public ViewModelOptions(ViewModelWindowMain viewModelMain)
+        public ViewModelOptions(ViewModelWindowMain_OLD viewModelMain)
         {
             _viewModelMain = viewModelMain;
 
@@ -420,7 +420,7 @@ namespace HLU.UI.ViewModel
         /// </value>
         public HluDataSet.lut_habitat_classRow[] HabitatClassCodes
         {
-            get { return ViewModelWindowMain.HabitatClasses; }
+            get { return ViewModelWindowMain_OLD.HabitatClasses; }
             set { }
         }
 
@@ -551,7 +551,7 @@ namespace HLU.UI.ViewModel
 
         public HluDataSet.lut_secondary_groupRow[] SecondaryGroupCodes
         {
-            get { return ViewModelWindowMain.SecondaryGroupsAll; }
+            get { return ViewModelWindowMain_OLD.SecondaryGroupsAll; }
             set { }
         }
 

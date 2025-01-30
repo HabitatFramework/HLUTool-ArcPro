@@ -34,14 +34,14 @@ namespace HLU.UI.ViewModel
 {
     class ViewModelWindowMainMerge
     {
-        private ViewModelWindowMain _viewModelMain;
+        private ViewModelWindowMain_OLD _viewModelMain;
         private WindowMergeFeatures _mergeFeaturesWindow;
         private ViewModelMergeFeatures<HluDataSet.incidDataTable, HluDataSet.incidRow> _mergeFeaturesViewModelLogical;
         private ViewModelMergeFeatures<HluDataSet.incid_mm_polygonsDataTable, HluDataSet.incid_mm_polygonsRow>
             _mergeFeaturesViewModelPhysical;
         private int _mergeResultFeatureIndex;
 
-        public ViewModelWindowMainMerge(ViewModelWindowMain viewModelMain)
+        public ViewModelWindowMainMerge(ViewModelWindowMain_OLD viewModelMain)
         {
             _viewModelMain = viewModelMain;
         }
@@ -157,13 +157,13 @@ namespace HLU.UI.ViewModel
 
                 HluDataSet.incidDataTable selectTable = new();
                 _viewModelMain.HluTableAdapterManager.incidTableAdapter.Fill(selectTable,
-                    ViewModelWindowMainHelpers.IncidSelectionToWhereClause(ViewModelWindowMain.IncidPageSize,
+                    ViewModelWindowMainHelpers.IncidSelectionToWhereClause(ViewModelWindowMain_OLD.IncidPageSize,
                     _viewModelMain.IncidTable.incidColumn.Ordinal, _viewModelMain.IncidTable, _viewModelMain.IncidsSelectedMap));
 
                 HluDataSet.incid_mm_polygonsDataTable polygons = new();
                 _viewModelMain.GetIncidMMPolygonRows(ViewModelWindowMainHelpers.GisSelectionToWhereClause(
                     _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals,
-                    ViewModelWindowMain.IncidPageSize, polygons), ref polygons);
+                    ViewModelWindowMain_OLD.IncidPageSize, polygons), ref polygons);
 
                 _mergeFeaturesViewModelLogical = new(selectTable, _viewModelMain.GisIDColumnOrdinals,
                     _viewModelMain.IncidTable.incidColumn.Ordinal, polygons.Select(r => r).ToArray(),
@@ -368,7 +368,7 @@ namespace HLU.UI.ViewModel
                 HluDataSet.incid_mm_polygonsDataTable selectTable = new();
                 _viewModelMain.GetIncidMMPolygonRows(ViewModelWindowMainHelpers.GisSelectionToWhereClause(
                     _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals,
-                    ViewModelWindowMain.IncidPageSize, selectTable), ref selectTable);
+                    ViewModelWindowMain_OLD.IncidPageSize, selectTable), ref selectTable);
 
                 // Check the GIS layer and DB are in sync
                 if (selectTable.Count == 0)
@@ -435,7 +435,7 @@ namespace HLU.UI.ViewModel
                         List<List<SqlFilterCondition>> resultFeatureWhereClause =
                             ViewModelWindowMainHelpers.GisSelectionToWhereClause(
                             [selectTable[_mergeResultFeatureIndex]],
-                                _viewModelMain.GisIDColumnOrdinals, ViewModelWindowMain.IncidPageSize, selectTable);
+                                _viewModelMain.GisIDColumnOrdinals, ViewModelWindowMain_OLD.IncidPageSize, selectTable);
 
                         if (resultFeatureWhereClause.Count != 1)
                             throw new Exception("Error getting result feature from database.");
@@ -444,7 +444,7 @@ namespace HLU.UI.ViewModel
                         List<List<SqlFilterCondition>> mergeFeaturesWhereClause =
                             ViewModelWindowMainHelpers.GisSelectionToWhereClause(
                             selectTable.Where((r, index) => index != _mergeResultFeatureIndex).ToArray(),
-                                _viewModelMain.GisIDColumnOrdinals, ViewModelWindowMain.IncidPageSize, selectTable);
+                                _viewModelMain.GisIDColumnOrdinals, ViewModelWindowMain_OLD.IncidPageSize, selectTable);
 
                         // historyTable contains rows of features merged into result feature (i.e. no longer existing)
                         // and last row with data of result feature (remaining in GIS, lowest toidfragid of merged features)
@@ -545,7 +545,7 @@ namespace HLU.UI.ViewModel
                         _viewModelMain.DataBase.QuoteValue(newToidFragmentID), updateWhereClause);
                     break;
                 case GeometryTypes.Line:
-                    double plineLength = resultTable.Rows[0].Field<double>(ViewModelWindowMain.HistoryGeometry1ColumnName);
+                    double plineLength = resultTable.Rows[0].Field<double>(ViewModelWindowMain_OLD.HistoryGeometry1ColumnName);
                     updateStatement = String.Format("UPDATE {0} SET {1} = {2}, {3} = {4} WHERE {5}",
                         _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
                         _viewModelMain.DataBase.QuoteIdentifier(
@@ -556,8 +556,8 @@ namespace HLU.UI.ViewModel
                         plineLength, updateWhereClause);
                     break;
                 case GeometryTypes.Polygon:
-                    double shapeLength = resultTable.Rows[0].Field<double>(ViewModelWindowMain.HistoryGeometry1ColumnName);
-                    double shapeArea = resultTable.Rows[0].Field<double>(ViewModelWindowMain.HistoryGeometry2ColumnName);
+                    double shapeLength = resultTable.Rows[0].Field<double>(ViewModelWindowMain_OLD.HistoryGeometry1ColumnName);
+                    double shapeArea = resultTable.Rows[0].Field<double>(ViewModelWindowMain_OLD.HistoryGeometry2ColumnName);
                     updateStatement = String.Format("UPDATE {0} SET {1} = {2}, {3} = {4}, {5} = {6} WHERE {7}",
                         _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
                         _viewModelMain.DataBase.QuoteIdentifier(

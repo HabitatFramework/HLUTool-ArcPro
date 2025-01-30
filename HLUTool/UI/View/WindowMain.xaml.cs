@@ -35,7 +35,7 @@ namespace HLU.UI.View
     /// <summary>
     /// Interaction logic for Window1.xaml
     /// </summary>
-    public partial class WindowMain : UserControl
+    public partial class WindowMain_OLD : UserControl
     {
         private ComboBox[] _comboBoxes;
         private MenuItem[] _menuItems;
@@ -45,7 +45,7 @@ namespace HLU.UI.View
         public int _autoZoom = 1;
         public bool _autoSelect = false;
 
-        public WindowMain()
+        public WindowMain_OLD()
         {
             InitializeComponent();
         }

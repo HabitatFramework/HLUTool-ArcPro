@@ -28,9 +28,9 @@ namespace HLU.UI.ViewModel
 {
     class ViewModelWindowMainHistory
     {
-        ViewModelWindowMain _viewModelMain;
+        ViewModelWindowMain_OLD _viewModelMain;
 
-        public ViewModelWindowMainHistory(ViewModelWindowMain viewModelMain)
+        public ViewModelWindowMainHistory(ViewModelWindowMain_OLD viewModelMain)
         {
             _viewModelMain = viewModelMain;
         }
@@ -177,14 +177,14 @@ namespace HLU.UI.ViewModel
                 case GeometryTypes.Point:
                     break;
                 case GeometryTypes.Line:
-                    if (table.Columns.Contains(ViewModelWindowMain.HistoryGeometry1ColumnName))
-                        table.Columns[ViewModelWindowMain.HistoryGeometry1ColumnName].ColumnName = newGeom1ColumnName;
+                    if (table.Columns.Contains(ViewModelWindowMain_OLD.HistoryGeometry1ColumnName))
+                        table.Columns[ViewModelWindowMain_OLD.HistoryGeometry1ColumnName].ColumnName = newGeom1ColumnName;
                     break;
                 case GeometryTypes.Polygon:
-                    if (table.Columns.Contains(ViewModelWindowMain.HistoryGeometry1ColumnName))
-                        table.Columns[ViewModelWindowMain.HistoryGeometry1ColumnName].ColumnName = newGeom1ColumnName;
-                    if (table.Columns.Contains(ViewModelWindowMain.HistoryGeometry2ColumnName))
-                        table.Columns[ViewModelWindowMain.HistoryGeometry2ColumnName].ColumnName = newGeom2ColumnName;
+                    if (table.Columns.Contains(ViewModelWindowMain_OLD.HistoryGeometry1ColumnName))
+                        table.Columns[ViewModelWindowMain_OLD.HistoryGeometry1ColumnName].ColumnName = newGeom1ColumnName;
+                    if (table.Columns.Contains(ViewModelWindowMain_OLD.HistoryGeometry2ColumnName))
+                        table.Columns[ViewModelWindowMain_OLD.HistoryGeometry2ColumnName].ColumnName = newGeom2ColumnName;
                     break;
             }
         }

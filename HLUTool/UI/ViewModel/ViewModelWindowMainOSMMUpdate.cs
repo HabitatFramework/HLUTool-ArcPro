@@ -40,9 +40,9 @@ namespace HLU.UI.ViewModel
     //
     class ViewModelWindowMainOSMMUpdate
     {
-        private ViewModelWindowMain _viewModelMain;
+        private ViewModelWindowMain_OLD _viewModelMain;
 
-        public ViewModelWindowMainOSMMUpdate(ViewModelWindowMain viewModelMain)
+        public ViewModelWindowMainOSMMUpdate(ViewModelWindowMain_OLD viewModelMain)
         {
             _viewModelMain = viewModelMain;
         }

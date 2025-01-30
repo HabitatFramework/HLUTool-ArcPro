@@ -138,32 +138,28 @@ namespace HLU.UI.ViewModel
         Error
     };
 
+    //---------------------------------------------------------------------
+    // CHANGED: CR49 Process proposed OSMM Updates
+    // Functionality to process proposed OSMM Updates.
+    //
+    /// <summary>
+    /// Update operations.
+    /// </summary>
+    public enum Operations { PhysicalMerge, PhysicalSplit, LogicalMerge, LogicalSplit, AttributeUpdate, BulkUpdate, OSMMUpdate };
+    //---------------------------------------------------------------------
+
+    /// <summary>
+    /// User Interface control visibility values.
+    /// </summary>
+    //public enum Visibility { Visible, Hidden, Collapsed };
+
     #endregion enums
 
-    public partial class ViewModelWindowMain : ViewModelBase, IDataErrorInfo
+    public partial class ViewModelWindowMain_OLD : ViewModelBase, IDataErrorInfo
     {
-        #region Enums
-
-        //---------------------------------------------------------------------
-        // CHANGED: CR49 Process proposed OSMM Updates
-        // Functionality to process proposed OSMM Updates.
-        //
-        /// <summary>
-        /// Update operations.
-        /// </summary>
-        public enum Operations { PhysicalMerge, PhysicalSplit, LogicalMerge, LogicalSplit, AttributeUpdate, BulkUpdate, OSMMUpdate };
-        //---------------------------------------------------------------------
-
-        /// <summary>
-        /// User Interface control visibility values.
-        /// </summary>
-        //public enum Visibility { Visible, Hidden, Collapsed };
-
-        #endregion
-
         #region Fields
 
-        private ViewModelWindowMain _dockPane;
+        private ViewModelWindowMain_OLD _dockPane;
 
         private bool _mapEventsSubscribed;
         private bool _projectClosedEventsSubscribed;
@@ -522,7 +518,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Set the global variables.
         /// </summary>
-        protected ViewModelWindowMain()
+        protected ViewModelWindowMain_OLD()
         {
             //TODO: Switch with Initialize()?
             InitializeComponentAsync();
@@ -553,7 +549,7 @@ namespace HLU.UI.ViewModel
                 return;
 
             // Get the ViewModel by casting the dockpane.
-            ViewModelWindowMain vm = pane as ViewModelWindowMain;
+            ViewModelWindowMain_OLD vm = pane as ViewModelWindowMain_OLD;
 
             // If the ViewModel is uninitialised then initialise it.
             if (!vm.Initialised)
@@ -15542,7 +15538,7 @@ namespace HLU.UI.ViewModel
             //string uri = System.Reflection.Assembly.GetExecutingAssembly().Location;
 
             // Show the dock pane.
-            ViewModelWindowMain.Show();
+            ViewModelWindowMain_OLD.Show();
         }
     }
 }

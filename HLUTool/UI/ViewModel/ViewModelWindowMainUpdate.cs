@@ -34,13 +34,13 @@ namespace HLU.UI.ViewModel
 {
     class ViewModelWindowMainUpdate
     {
-        ViewModelWindowMain _viewModelMain;
+        ViewModelWindowMain_OLD _viewModelMain;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ViewModelWindowMainUpdate"/> class.
         /// </summary>
         /// <param name="viewModelMain">The view model main.</param>
-        public ViewModelWindowMainUpdate(ViewModelWindowMain viewModelMain)
+        public ViewModelWindowMainUpdate(ViewModelWindowMain_OLD viewModelMain)
         {
             _viewModelMain = viewModelMain;
         }
@@ -436,7 +436,7 @@ namespace HLU.UI.ViewModel
         /// by properties (to enable undo if update cancelled).
         /// </summary>
         /// <param name="viewModelMain">Reference to main window view model.</param>
-        internal static void IncidCurrentRowDerivedValuesUpdate(ViewModelWindowMain viewModelMain)
+        internal static void IncidCurrentRowDerivedValuesUpdate(ViewModelWindowMain_OLD viewModelMain)
         {
             // Clear IHS values on update (if required) depending on user settings
             bool clearIHSCodes = false;

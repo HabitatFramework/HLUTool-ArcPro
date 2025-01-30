@@ -34,9 +34,9 @@ namespace HLU.UI.ViewModel
 {
     class ViewModelWindowMainSplit
     {
-        ViewModelWindowMain _viewModelMain;
+        ViewModelWindowMain_OLD _viewModelMain;
 
-        public ViewModelWindowMainSplit(ViewModelWindowMain viewModelMain)
+        public ViewModelWindowMainSplit(ViewModelWindowMain_OLD viewModelMain)
         {
             _viewModelMain = viewModelMain;
         }
@@ -133,7 +133,7 @@ namespace HLU.UI.ViewModel
                 // get a filter from the GIS selection
                 List<List<SqlFilterCondition>> featuresFilter = ViewModelWindowMainHelpers.GisSelectionToWhereClause(
                     _viewModelMain.GisSelection.AsEnumerable().Skip(skipCount).ToArray(), _viewModelMain.GisIDColumnOrdinals,
-                    ViewModelWindowMain.IncidPageSize, _viewModelMain.HluDataset.incid_mm_polygons);
+                    ViewModelWindowMain_OLD.IncidPageSize, _viewModelMain.HluDataset.incid_mm_polygons);
                 //---------------------------------------------------------------------
 
                 if (featuresFilter.Count != 1)
@@ -161,7 +161,7 @@ namespace HLU.UI.ViewModel
                 // get a where clause for the original split feature
                 List<List<SqlFilterCondition>> originalFeatureWhereClause = ViewModelWindowMainHelpers.GisSelectionToWhereClause(
                     _viewModelMain.GisSelection.AsEnumerable().Take(1).ToArray(), _viewModelMain.GisIDColumnOrdinals,
-                    ViewModelWindowMain.IncidPageSize, _viewModelMain.HluDataset.incid_mm_polygons);
+                    ViewModelWindowMain_OLD.IncidPageSize, _viewModelMain.HluDataset.incid_mm_polygons);
 
                 if (originalFeatureWhereClause.Count != 1)
                     throw new Exception("Error finding features in database.");
@@ -175,9 +175,9 @@ namespace HLU.UI.ViewModel
 
                 // insert attributes of original split feature into history
                 DataTable history = updTable.Copy();
-                history.Columns[updTable.shape_lengthColumn.ColumnName].ColumnName = ViewModelWindowMain.HistoryGeometry1ColumnName;
-                history.Columns[updTable.shape_areaColumn.ColumnName].ColumnName = ViewModelWindowMain.HistoryGeometry2ColumnName;
-                string[] historyColNames = (new string[] { ViewModelWindowMain.HistoryGeometry1ColumnName, ViewModelWindowMain.HistoryGeometry2ColumnName }
+                history.Columns[updTable.shape_lengthColumn.ColumnName].ColumnName = ViewModelWindowMain_OLD.HistoryGeometry1ColumnName;
+                history.Columns[updTable.shape_areaColumn.ColumnName].ColumnName = ViewModelWindowMain_OLD.HistoryGeometry2ColumnName;
+                string[] historyColNames = (new string[] { ViewModelWindowMain_OLD.HistoryGeometry1ColumnName, ViewModelWindowMain_OLD.HistoryGeometry2ColumnName }
                     .Concat(_viewModelMain.HistoryColumns.Select(c => c.ColumnName)).ToArray());
                 DataColumn[] delCols = history.Columns.Cast<DataColumn>().Where(c => !historyColNames.Contains(c.ColumnName)).ToArray();
                 foreach (DataColumn c in delCols)
@@ -328,7 +328,7 @@ namespace HLU.UI.ViewModel
                 HluDataSet.incid_mm_polygonsDataTable polygons = new();
                 _viewModelMain.GetIncidMMPolygonRows(ViewModelWindowMainHelpers.GisSelectionToWhereClause(
                     _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals,
-                    ViewModelWindowMain.IncidPageSize, polygons), ref polygons);
+                    ViewModelWindowMain_OLD.IncidPageSize, polygons), ref polygons);
 
                 historyTable.PrimaryKey = historyTable.Columns.Cast<DataColumn>()
                     .Where(c => _viewModelMain.GisIDColumnOrdinals.Contains(c.Ordinal)).ToArray();

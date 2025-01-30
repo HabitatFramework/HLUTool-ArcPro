@@ -41,7 +41,7 @@ namespace HLU.UI.ViewModel
 {
     class ViewModelWindowMainBulkUpdate
     {
-        private ViewModelWindowMain _viewModelMain;
+        private ViewModelWindowMain_OLD _viewModelMain;
         private WindowBulkUpdate _windowBulkUpdate;
         private ViewModelBulkUpdate _viewModelBulkUpdate;
 
@@ -64,7 +64,7 @@ namespace HLU.UI.ViewModel
 
         #region #ctor
 
-        public ViewModelWindowMainBulkUpdate(ViewModelWindowMain viewModelMain)
+        public ViewModelWindowMainBulkUpdate(ViewModelWindowMain_OLD viewModelMain)
         {
             _viewModelMain = viewModelMain;
         }
@@ -1513,7 +1513,7 @@ namespace HLU.UI.ViewModel
                 if (createHistory)
                 {
                     // Build a WHERE clause for all the incids in the DB shadow copy of GIS layer
-                    incidWhereClause = ViewModelWindowMainHelpers.IncidSelectionToWhereClause(ViewModelWindowMain.IncidPageSize,
+                    incidWhereClause = ViewModelWindowMainHelpers.IncidSelectionToWhereClause(ViewModelWindowMain_OLD.IncidPageSize,
                         _viewModelMain.HluDataset.incid_mm_polygons.incidColumn.Ordinal, _viewModelMain.HluDataset.incid_mm_polygons,
                         incidSelection.AsEnumerable().Select(r => r.Field<string>(incidOrdinal)));
 
