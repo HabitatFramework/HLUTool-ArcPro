@@ -1,43 +1,24 @@
-﻿// The DataTools are a suite of ArcGIS Pro addins used to extract, sync
-// and manage biodiversity information from ArcGIS Pro and SQL Server
-// based on pre-defined or user specified criteria.
+﻿// HLUTool is used to view and maintain habitat and land use GIS data.
+// Copyright © 2011 Hampshire Biodiversity Information Centre
+// Copyright © 2013-2014, 2016 Thames Valley Environmental Records Centre
+// Copyright © 2014, 2018 Sussex Biodiversity Record Centre
+// Copyright © 2019 London & South East Record Centres (LaSER)
+// Copyright © 2019-2022 Greenspace Information for Greater London CIC
 //
-// Copyright © 2024 Andy Foy Consulting.
+// This file is part of HLUTool.
 //
-// This file is part of DataTools suite of programs..
-//
-// DataTools are free software: you can redistribute it and/or modify
-// them under the terms of the GNU General Public License as published by
+// HLUTool is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// DataTools are distributed in the hope that it will be useful,
+// HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with with program.  If not, see <http://www.gnu.org/licenses/>.
-
-using ArcGIS.Core.Data.UtilityNetwork;
-using ArcGIS.Desktop.Core.Events;
-using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Contracts;
-using ArcGIS.Desktop.Framework.Controls;
-using ArcGIS.Desktop.Mapping;
-using ArcGIS.Desktop.Mapping.Events;
-using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
-
-using HLU;
-using HLU.Data.Connection;
-using HLU.Data.Model.HluDataSetTableAdapters;
-using HLU.Data.Model;
-using HLU.Data;
-using HLU.Date;
-using HLU.GISApplication.ArcGIS;
-using HLU.Properties;
-using HLU.UI.View;
-using HLU.UI.ViewModel;
+// along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
 using System.Collections.Generic;
@@ -46,126 +27,43 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Input;
-using System.Windows.Interop;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Threading;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Windows;
+using System.Windows.Input;
+using System.Windows.Interop;
+using System.Windows.Media.Imaging;
+using HLU.Data;
+using HLU.Data.Connection;
+using HLU.Data.Model;
+using HLU.Data.Model.HluDataSetTableAdapters;
+using HLU.Date;
+//using HLU.GISApplication;
+using HLU.GISApplication.ArcGIS;
+using HLU.Properties;
+using HLU.UI.View;
+using HLU.UI.ViewModel;
+
+using ArcGIS.Desktop.Core.Events;
+using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Framework.Contracts;
+using ArcGIS.Desktop.Framework.Controls;
+using ArcGIS.Desktop.Mapping;
+using ArcGIS.Desktop.Mapping.Events;
+using System.Windows.Threading;
+using System.Windows.Media;
+
 using CommandType = System.Data.CommandType;
+
 
 namespace HLU.UI.ViewModel
 {
-    #region enums
 
-    /// <summary>
-    /// An enumeration of the different options for what to do when
-    /// attempting to update a subset of features for an incid.
-    /// </summary>
-    public enum SubsetUpdateActions
+    public partial class ViewModelWindowMain : ViewModelBase, IDataErrorInfo
     {
-        Prompt,
-        Split,
-        All
-    };
-
-    /// <summary>
-    /// An enumeration of the different options for when to warn
-    /// the user before performing a GIS selection.
-    /// </summary>
-    public enum WarnBeforeGISSelect
-    {
-        Always,
-        Joins,
-        Never
-    };
-
-    /// <summary>
-    /// An enumeration of the different options for whether
-    /// to auto zoom to the GIS selection.
-    /// </summary>
-    public enum AutoZoomSelection
-    {
-        Off,
-        When,
-        Always
-    };
-
-    /// <summary>
-    /// An enumeration of the different options for whether
-    /// to validate secondary codes against the habitat type
-    /// mandatory codes.
-    /// </summary>
-    public enum HabitatSecondaryCodeValidationOptions
-    {
-        Ignore,
-        Warning,
-        Error
-    };
-
-    /// <summary>
-    /// An enumeration of the different options for whether
-    /// to validate secondary codes against the primary code.
-    /// </summary>
-    public enum PrimarySecondaryCodeValidationOptions
-    {
-        Ignore,
-        Error
-    };
-
-    /// <summary>
-    /// An enumeration of the different options for whether
-    /// to validate quality determination and interpretation.
-    /// </summary>
-    public enum QualityValidationOptions
-    {
-        Optional,
-        Mandatory
-    };
-
-    /// <summary>
-    /// An enumeration of the different options for whether
-    /// to validate potential priority habitat quality determination.
-    /// </summary>
-    public enum PotentialPriorityDetermQtyValidationOptions
-    {
-        Ignore,
-        Error
-    };
-
-    //---------------------------------------------------------------------
-    // CHANGED: CR49 Process proposed OSMM Updates
-    // Functionality to process proposed OSMM Updates.
-    //
-    /// <summary>
-    /// Update operations.
-    /// </summary>
-    public enum Operations { PhysicalMerge, PhysicalSplit, LogicalMerge, LogicalSplit, AttributeUpdate, BulkUpdate, OSMMUpdate };
-    //---------------------------------------------------------------------
-
-    /// <summary>
-    /// User Interface control visibility values.
-    /// </summary>
-    //public enum Visibility { Visible, Hidden, Collapsed };
-
-    #endregion enums
-
-    #region Class DockpaneMainViewModel
-
-    /// <summary>
-    /// Build the DockPane.
-    /// </summary>
-    internal partial class ViewModelWindowMain : PanelViewModelBase, INotifyPropertyChanged
-    {
-        #region DockPaene
-
         #region Fields
 
         private ViewModelWindowMain _dockPane;
@@ -173,536 +71,8 @@ namespace HLU.UI.ViewModel
         private bool _mapEventsSubscribed;
         private bool _projectClosedEventsSubscribed;
 
-        private string _displayName = "HLU Tool";
-
         //TODO: Move to ArcGISApp?
         private MapView _activeMapView;
-
-        #endregion Fields
-
-        #region PanelViewModelBase Members
-
-        /// <summary>
-        /// Returns the user-friendly name of this object.
-        /// Child classes can set this property to a new value,
-        /// or override it to determine the value on-demand.
-        /// </summary>
-        public override string DisplayName
-        {
-            get { return _displayName; }
-            set { _displayName = value; }
-        }
-
-        /// <summary>
-        /// The title of the main window.
-        /// </summary>
-        public override string WindowTitle
-        {
-            get
-            {
-                return String.Format("{0}{1}", DisplayName, _editMode ? String.Empty : " [READONLY]");
-            }
-        }
-        /// <summary>
-        /// Set the global variables.
-        /// </summary>
-        protected ViewModelWindowMain()
-        {
-            InitializeComponentAsync();
-        }
-
-        /// <summary>
-        /// Initialise the DockPane components.
-        /// </summary>
-        public async void InitializeComponentAsync()
-        {
-            _dockPane = this;
-            _initialised = false;
-            _inError = false;
-
-            // Indicate that the dockpane has been initialised.
-            _initialised = true;
-        }
-
-        /// <summary>
-        /// Show the DockPane.
-        /// </summary>
-        internal static void Show()
-        {
-            // Get the dockpane DAML id.
-            DockPane pane = FrameworkApplication.DockPaneManager.Find(_dockPaneID);
-            if (pane == null)
-                return;
-
-            // Get the ViewModel by casting the dockpane.
-            ViewModelWindowMain vm = pane as ViewModelWindowMain;
-
-            // If the ViewModel is uninitialised then initialise it.
-            if (!vm.Initialised)
-                vm.InitializeComponentAsync();
-
-            // If the ViewModel is in error then don't show the dockpane.
-            if (vm.InError)
-            {
-                pane = null;
-                return;
-            }
-
-            // Active the dockpane.
-            pane.Activate();
-        }
-
-        protected override void OnShow(bool isVisible)
-        {
-            // Hide the dockpane if there is no active map.
-            if (MapView.Active == null)
-                DockpaneVisibility = Visibility.Hidden;
-
-            // Is the dockpane visible (or is the window not showing the map).
-            if (isVisible)
-            {
-                if (!_mapEventsSubscribed)
-                {
-                    _mapEventsSubscribed = true;
-
-                    // Subscribe from map changed events.
-                    ActiveMapViewChangedEvent.Subscribe(OnActiveMapViewChanged);
-                }
-
-                if (!_projectClosedEventsSubscribed)
-                {
-                    _projectClosedEventsSubscribed = true;
-
-                    // Suscribe to project closed events.
-                    ProjectClosedEvent.Subscribe(OnProjectClosed);
-                }
-            }
-            else
-            {
-                if (_mapEventsSubscribed)
-                {
-                    _mapEventsSubscribed = false;
-
-                    // Unsubscribe from map changed events.
-                    ActiveMapViewChangedEvent.Unsubscribe(OnActiveMapViewChanged);
-                }
-            }
-
-            base.OnShow(isVisible);
-        }
-
-        #endregion ViewModelBase Members
-
-        #region Controls Enabled
-
-        /// <summary>
-        /// Can the Run button be pressed?
-        /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
-        public bool RunButtonEnabled
-        {
-            get
-            {
-                //TODO: UI
-                return true;
-            }
-        }
-
-        public void CheckRunButton()
-        {
-            OnPropertyChanged(nameof(RunButtonEnabled));
-        }
-
-        #endregion Controls Enabled
-
-        #region Properties
-
-        /// <summary>
-        /// ID of the DockPane.
-        /// </summary>
-        private const string _dockPaneID = "HLUTool_UI_DockpaneMain";
-
-        public static string DockPaneID
-        {
-            get => _dockPaneID;
-        }
-
-        /// <summary>
-        /// Override the default behavior when the dockpane's help icon is clicked
-        /// or the F1 key is pressed.
-        /// </summary>
-        protected override void OnHelpRequested()
-        {
-            if (_helpURL != null)
-            {
-                System.Diagnostics.Process.Start(new ProcessStartInfo
-                {
-                    FileName = _helpURL,
-                    UseShellExecute = true
-                });
-            }
-        }
-
-        private bool _initialised = false;
-
-        /// <summary>
-        /// Has the DockPane been initialised?
-        /// </summary>
-        public bool Initialised
-        {
-            get { return _initialised; }
-            set
-            {
-                _initialised = value;
-            }
-        }
-
-        private bool _inError = false;
-
-        /// <summary>
-        /// Is the DockPane in error?
-        /// </summary>
-        public bool InError
-        {
-            get { return _inError; }
-            set
-            {
-                _inError = value;
-            }
-        }
-
-        private bool _formLoading;
-
-        /// <summary>
-        /// Is the form loading?
-        /// </summary>
-        public bool FormLoading
-        {
-            get { return _formLoading; }
-            set { _formLoading = value; }
-        }
-
-        private bool _compareRunning;
-
-        /// <summary>
-        /// Is the compare running?
-        /// </summary>
-        public bool CompareRunning
-        {
-            get { return _compareRunning; }
-            set { _compareRunning = value; }
-        }
-
-        private bool _syncRunning;
-
-        /// <summary>
-        /// Is the sync running?
-        /// </summary>
-        public bool SyncRunning
-        {
-            get { return _syncRunning; }
-            set { _syncRunning = value; }
-        }
-
-        private string _helpURL;
-
-        /// <summary>
-        /// The URL of the help page.
-        /// </summary>
-        public string HelpURL
-        {
-            get { return _helpURL; }
-            set { _helpURL = value; }
-        }
-
-        /// <summary>
-        /// Get the image for the Run button.
-        /// </summary>
-        public static ImageSource ButtonRunImg
-        {
-            get
-            {
-                var imageSource = Application.Current.Resources["GenericRun16"] as ImageSource;
-                return imageSource;
-            }
-        }
-
-        #endregion Properties
-
-        #region Active Map View
-
-        private void OnActiveMapViewChanged(ActiveMapViewChangedEventArgs obj)
-        {
-            if (MapView.Active == null)
-            {
-                DockpaneVisibility = Visibility.Hidden;
-
-                // Clear the form lists.
-                //_paneH2VM?.ClearFormLists();
-            }
-            else
-            {
-                DockpaneVisibility = Visibility.Visible;
-
-
-                //TODO: UI
-                // Do something when the active map view changes
-
-
-                // Save the active map view.
-                _activeMapView = MapView.Active;
-            }
-        }
-
-        private void OnProjectClosed(ProjectEventArgs obj)
-        {
-            if (MapView.Active == null)
-            {
-                DockpaneVisibility = Visibility.Hidden;
-
-
-
-                //TODO: UI
-                // Do something when the active map view closes
-            }
-
-            _projectClosedEventsSubscribed = false;
-
-            ProjectClosedEvent.Unsubscribe(OnProjectClosed);
-        }
-
-        private Visibility _dockpaneVisibility = Visibility.Visible;
-
-        public Visibility DockpaneVisibility
-        {
-            get { return _dockpaneVisibility; }
-            set
-            {
-                _dockpaneVisibility = value;
-                OnPropertyChanged(nameof(DockpaneVisibility));
-            }
-        }
-
-        /// <summary>
-        /// Event when the DockPane is hidden.
-        /// </summary>
-        protected override void OnHidden()
-        {
-            // Get the dockpane DAML id.
-            DockPane pane = FrameworkApplication.DockPaneManager.Find(_dockPaneID);
-            if (pane == null)
-                return;
-
-            // Get the ViewModel by casting the dockpane.
-            ViewModelWindowMain vm = pane as ViewModelWindowMain;
-
-            // Force the dockpane to be re-initialised next time it's shown.
-            vm.Initialised = false;
-        }
-
-        #endregion Active Map View
-
-        #region Processing
-
-        /// <summary>
-        /// Is the form processing?
-        /// </summary>
-        public Visibility IsProcessing
-        {
-            get
-            {
-                if (_processStatus != null)
-                    return Visibility.Visible;
-                else
-                    return Visibility.Collapsed;
-            }
-        }
-
-        private double _progressValue;
-
-        /// <summary>
-        /// Gets the value to set on the progress
-        /// </summary>
-        public double ProgressValue
-        {
-            get
-            {
-                return _progressValue;
-            }
-            set
-            {
-                _progressValue = value;
-
-                OnPropertyChanged(nameof(ProgressValue));
-            }
-        }
-
-        private double _maxProgressValue;
-
-        /// <summary>
-        /// Gets the max value to set on the progress
-        /// </summary>
-        public double MaxProgressValue
-        {
-            get
-            {
-                return _maxProgressValue;
-            }
-            set
-            {
-                _maxProgressValue = value;
-
-                OnPropertyChanged(nameof(MaxProgressValue));
-            }
-        }
-
-        private string _processStatus;
-
-        /// <summary>
-        /// ProgressStatus Text
-        /// </summary>
-        public string ProcessStatus
-        {
-            get
-            {
-                return _processStatus;
-            }
-            set
-            {
-                _processStatus = value;
-
-                OnPropertyChanged(nameof(ProcessStatus));
-                OnPropertyChanged(nameof(IsProcessing));
-                OnPropertyChanged(nameof(ProgressText));
-                OnPropertyChanged(nameof(ProgressAnimating));
-            }
-        }
-
-        private string _progressText;
-
-        /// <summary>
-        /// Progress bar Text
-        /// </summary>
-        public string ProgressText
-        {
-            get
-            {
-                return _progressText;
-            }
-            set
-            {
-                _progressText = value;
-
-                OnPropertyChanged(nameof(ProgressText));
-            }
-        }
-
-        /// <summary>
-        /// Is the progress wheel animating?
-        /// </summary>
-        public Visibility ProgressAnimating
-        {
-            get
-            {
-                if (_progressText != null)
-                    return Visibility.Visible;
-                else
-                    return Visibility.Collapsed;
-            }
-        }
-
-        /// <summary>
-        /// Update the progress bar.
-        /// </summary>
-        /// <param name="processText"></param>
-        /// <param name="progressValue"></param>
-        /// <param name="maxProgressValue"></param>
-        public void ProgressUpdate(string processText = null, int progressValue = -1, int maxProgressValue = -1)
-        {
-            if (Application.Current.Dispatcher.CheckAccess())
-            {
-                // Check if the values have changed and update them if they have.
-                if (progressValue >= 0)
-                    ProgressValue = progressValue;
-
-                if (maxProgressValue != 0)
-                    MaxProgressValue = maxProgressValue;
-
-                if (_maxProgressValue > 0)
-                    ProgressText = _progressValue == _maxProgressValue ? "Done" : $@"{_progressValue * 100 / _maxProgressValue:0}%";
-                else
-                    ProgressText = null;
-
-                ProcessStatus = processText;
-            }
-            else
-            {
-                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background,
-                  () =>
-                  {
-                      // Check if the values have changed and update them if they have.
-                      if (progressValue >= 0)
-                          ProgressValue = progressValue;
-
-                      if (maxProgressValue != 0)
-                          MaxProgressValue = maxProgressValue;
-
-                      if (_maxProgressValue > 0)
-                          ProgressText = _progressValue == _maxProgressValue ? "Done" : $@"{_progressValue * 100 / _maxProgressValue:0}%";
-                      else
-                          ProgressText = null;
-
-                      ProcessStatus = processText;
-                  });
-            }
-        }
-
-        #endregion Processing
-
-        #region Run Command
-
-        private ICommand _runCommand;
-
-        /// <summary>
-        /// Create Run button command.
-        /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
-        public ICommand RunCommand
-        {
-            get
-            {
-                if (_runCommand == null)
-                {
-                    Action<object> runAction = new(RunCommandClick);
-                    _runCommand = new RelayCommand(runAction, param => RunButtonEnabled);
-                }
-
-                return _runCommand;
-            }
-        }
-
-        /// <summary>
-        /// Handles event when Run button is clicked.
-        /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
-        private void RunCommandClick(object param)
-        {
-            //TODO: UI
-            // Do something when the run button is clicked.
-        }
-
-        #endregion Run Command
-
-        #endregion DockPane
-
-        #region MainWindow
-
-        #region Fields
 
         private ICommand _navigateFirstCommand;
         private ICommand _navigatePreviousCommand;
@@ -777,6 +147,7 @@ namespace HLU.UI.ViewModel
         private WindowEditPotentialHabitats _windowEditPotentialHabitats;
         private ViewModelWindowEditPotentialHabitats _viewModelWinEditPotentialHabitats;
 
+        private string _displayName = "HLU Tool";
         private int _mapWindowsCount;
         private bool _showingReasonProcessGroup = false;
         private bool _showingOSMMPendingGroup = false;
@@ -1049,347 +420,268 @@ namespace HLU.UI.ViewModel
 
         #endregion
 
-        #region Internal properties
+        #region ViewModelBase Members
 
-        internal ArcMapApp GISApplication
+        /// <summary>
+        /// Set the global variables.
+        /// </summary>
+        protected ViewModelWindowMain()
         {
-            get { return _gisApp; }
+            //TODO: Switch with Initialize()?
+            InitializeComponentAsync();
+            Initialize();
         }
 
-        internal DbBase DataBase
+        /// <summary>
+        /// Initialise the DockPane components.
+        /// </summary>
+        public async void InitializeComponentAsync()
         {
-            get { return _db; }
+            _dockPane = this;
+            _initialised = false;
+            _inError = false;
+
+            // Indicate that the dockpane has been initialised.
+            _initialised = true;
         }
 
-        internal HluDataSet HluDataset
+        /// <summary>
+        /// Show the DockPane.
+        /// </summary>
+        internal static void Show()
+        {
+            // Get the dockpane DAML id.
+            DockPane pane = FrameworkApplication.DockPaneManager.Find(_dockPaneID);
+            if (pane == null)
+                return;
+
+            // Get the ViewModel by casting the dockpane.
+            ViewModelWindowMain vm = pane as ViewModelWindowMain;
+
+            // If the ViewModel is uninitialised then initialise it.
+            if (!vm.Initialised)
+                vm.InitializeComponentAsync();
+
+            // If the ViewModel is in error then don't show the dockpane.
+            if (vm.InError)
+            {
+                pane = null;
+                return;
+            }
+
+            // Active the dockpane.
+            pane.Activate();
+        }
+
+        protected override void OnShow(bool isVisible)
+        {
+            // Hide the dockpane if there is no active map.
+            //if (MapView.Active == null)
+            //    DockpaneVisibility = Visibility.Hidden;
+
+            // Is the dockpane visible (or is the window not showing the map).
+            if (isVisible)
+            {
+                if (!_mapEventsSubscribed)
+                {
+                    _mapEventsSubscribed = true;
+
+                    // Subscribe from map changed events.
+                    ActiveMapViewChangedEvent.Subscribe(OnActiveMapViewChanged);
+                }
+
+                if (!_projectClosedEventsSubscribed)
+                {
+                    _projectClosedEventsSubscribed = true;
+
+                    // Suscribe to project closed events.
+                    ProjectClosedEvent.Subscribe(OnProjectClosed);
+                }
+            }
+            else
+            {
+                if (_mapEventsSubscribed)
+                {
+                    _mapEventsSubscribed = false;
+
+                    // Unsubscribe from map changed events.
+                    ActiveMapViewChangedEvent.Unsubscribe(OnActiveMapViewChanged);
+                }
+            }
+
+            base.OnShow(isVisible);
+        }
+
+        private void OnActiveMapViewChanged(ActiveMapViewChangedEventArgs obj)
+        {
+            if (MapView.Active == null)
+            {
+                DockpaneVisibility = Visibility.Hidden;
+
+                // Clear the form lists.
+                //_paneH2VM?.ClearFormLists();
+            }
+            else
+            {
+                DockpaneVisibility = Visibility.Visible;
+
+                //TODO: Recheck HLU layers present in active map window
+                // Recheck the active map window is valid (don't wait).
+                if (MapView.Active != _activeMapView)
+                {
+                    //_paneH2VM?.LoadTableCountsAsync(true, false);
+                }
+
+                // Save the active map view.
+                _activeMapView = MapView.Active;
+            }
+        }
+
+        private void OnProjectClosed(ProjectEventArgs obj)
+        {
+            if (MapView.Active == null)
+            {
+                DockpaneVisibility = Visibility.Hidden;
+
+                //TODO: Disable form?
+                // Disable the form.
+                //_paneH2VM?.ClearFormLists();
+            }
+
+            _projectClosedEventsSubscribed = false;
+
+            ProjectClosedEvent.Unsubscribe(OnProjectClosed);
+        }
+
+        private Visibility _dockpaneVisibility = Visibility.Visible;
+
+        public Visibility DockpaneVisibility
+        {
+            get { return _dockpaneVisibility; }
+            set
+            {
+                _dockpaneVisibility = value;
+                OnPropertyChanged(nameof(DockpaneVisibility));
+            }
+        }
+
+        #endregion ViewModelBase Members
+
+        #region Properties
+
+        /// <summary>
+        /// ID of the DockPane.
+        /// </summary>
+        private const string _dockPaneID = "HLUTool_UI_DockpaneMain";
+
+        public static string DockPaneID
+        {
+            get => _dockPaneID;
+        }
+
+        /// <summary>
+        /// Override the default behavior when the dockpane's help icon is clicked
+        /// or the F1 key is pressed.
+        /// </summary>
+        protected override void OnHelpRequested()
+        {
+            if (_helpURL != null)
+            {
+                System.Diagnostics.Process.Start(new ProcessStartInfo
+                {
+                    FileName = _helpURL,
+                    UseShellExecute = true
+                });
+            }
+        }
+
+        private bool _initialised = false;
+
+        /// <summary>
+        /// Has the DockPane been initialised?
+        /// </summary>
+        public bool Initialised
+        {
+            get { return _initialised; }
+            set
+            {
+                _initialised = value;
+            }
+        }
+
+        private bool _inError = false;
+
+        /// <summary>
+        /// Is the DockPane in error?
+        /// </summary>
+        public bool InError
+        {
+            get { return _inError; }
+            set
+            {
+                _inError = value;
+            }
+        }
+
+        private bool _formLoading;
+
+        /// <summary>
+        /// Is the form loading?
+        /// </summary>
+        public bool FormLoading
+        {
+            get { return _formLoading; }
+            set { _formLoading = value; }
+        }
+
+        private bool _compareRunning;
+
+        /// <summary>
+        /// Is the compare running?
+        /// </summary>
+        public bool CompareRunning
+        {
+            get { return _compareRunning; }
+            set { _compareRunning = value; }
+        }
+
+        private bool _syncRunning;
+
+        /// <summary>
+        /// Is the sync running?
+        /// </summary>
+        public bool SyncRunning
+        {
+            get { return _syncRunning; }
+            set { _syncRunning = value; }
+        }
+
+        private string _helpURL;
+
+        /// <summary>
+        /// The URL of the help page.
+        /// </summary>
+        public string HelpURL
+        {
+            get { return _helpURL; }
+            set { _helpURL = value; }
+        }
+
+        /// <summary>
+        /// Get the image for the Run button.
+        /// </summary>
+        public static ImageSource ButtonRunImg
         {
             get
             {
-                if (_hluDS == null) Initialize();
-                return _hluDS;
+                var imageSource = Application.Current.Resources["GenericRun16"] as ImageSource;
+                return imageSource;
             }
         }
 
-        internal IEnumerable<DataRelation> HluDataRelations
-        {
-            get { return _hluDataRelations; }
-        }
+        #endregion Properties
 
-        internal TableAdapterManager HluTableAdapterManager
-        {
-            get { return _hluTableAdapterMgr; }
-        }
-
-        internal int[] GisIDColumnOrdinals
-        {
-            get { return _gisIDColumnOrdinals; }
-        }
-
-        internal DataColumn[] GisIDColumns
-        {
-            get { return _gisIDColumns; }
-        }
-
-        internal DataColumn[] HistoryColumns
-        {
-            get { return _historyColumns; }
-        }
-
-        public static string HistoryGeometry1ColumnName { get => _historyGeometry1ColumnName; set => _historyGeometry1ColumnName = value; }
-
-        public static string HistoryGeometry2ColumnName { get => _historyGeometry2ColumnName; set => _historyGeometry2ColumnName = value; }
-
-        internal DataTable GisSelection
-        {
-            get { return _gisSelection; }
-            set { _gisSelection = value; }
-        }
-
-        internal DataTable IncidSelection
-        {
-            get { return _incidSelection; }
-            set { _incidSelection = value; }
-        }
-
-        internal List<List<SqlFilterCondition>> IncidSelectionWhereClause
-        {
-            get { return _incidSelectionWhereClause; }
-            set { _incidSelectionWhereClause = value; }
-        }
-
-        internal string OSMMUpdateWhereClause
-        {
-            get { return _osmmUpdateWhereClause; }
-            set { _osmmUpdateWhereClause = value; }
-        }
-
-        internal List<string> ExportMdbs
-        {
-            get { return _exportMdbs; }
-            set { _exportMdbs = value; }
-        }
-
-        internal DateTime IncidLastModifiedDateVal
-        {
-            get { return _incidLastModifiedDate; }
-            set { _incidLastModifiedDate = value; }
-        }
-
-        internal string IncidLastModifiedUserId
-        {
-            get { return _incidLastModifiedUser; }
-            set { if ((IncidCurrentRow != null) && (value != null)) _incidLastModifiedUser = value; }
-        }
-
-        internal HluDataSet.incid_ihs_matrixRow[] IncidIhsMatrixRows
-        {
-            get { return _incidIhsMatrixRows; }
-            set { _incidIhsMatrixRows = value; }
-        }
-
-        internal HluDataSet.incid_ihs_formationRow[] IncidIhsFormationRows
-        {
-            get { return _incidIhsFormationRows; }
-            set { _incidIhsFormationRows = value; }
-        }
-
-        internal HluDataSet.incid_ihs_managementRow[] IncidIhsManagementRows
-        {
-            get { return _incidIhsManagementRows; }
-            set { _incidIhsManagementRows = value; }
-        }
-
-        internal HluDataSet.incid_ihs_complexRow[] IncidIhsComplexRows
-        {
-            get { return _incidIhsComplexRows; }
-            set { _incidIhsComplexRows = value; }
-        }
-
-        internal HluDataSet.incid_secondaryRow[] IncidSecondaryRows
-        {
-            get { return _incidSecondaryRows; }
-            set { _incidSecondaryRows = value; }
-        }
-
-        internal HluDataSet.incid_conditionRow[] IncidConditionRows
-        {
-            get { return _incidConditionRows; }
-            set { _incidConditionRows = value; }
-        }
-
-        internal HluDataSet.incid_bapRow[] IncidBapRows
-        {
-            get { return _incidBapRows; }
-            set { _incidBapRows = value; }
-        }
-
-        internal HluDataSet.incid_sourcesRow[] IncidSourcesRows
-        {
-            get { return _incidSourcesRows; }
-            set { _incidSourcesRows = value; }
-        }
-
-        internal HluDataSet.incid_osmm_updatesRow[] IncidOSMMUpdatesRows
-        {
-            get { return _incidOSMMUpdatesRows; }
-            set { _incidOSMMUpdatesRows = value; }
-        }
-
-        internal ObservableCollection<BapEnvironment> IncidBapRowsAuto
-        {
-            get { return _incidBapRowsAuto; }
-            set { _incidBapRowsAuto = value; }
-        }
-
-        internal ObservableCollection<BapEnvironment> IncidBapRowsUser
-        {
-            get { return _incidBapRowsUser; }
-            set { _incidBapRowsUser = value; }
-        }
-
-        internal RecordIds RecIDs
-        {
-            get { return _recIDs; }
-            set { _recIDs = value; }
-        }
-
-        internal bool Saved
-        {
-            get { return _saved; }
-            set { _saved = value; }
-        }
-
-        internal bool Pasting
-        {
-            get { return _pasting; }
-            set { _pasting = value; }
-        }
-
-        internal bool Changed
-        {
-            get { return _changed; }
-            set
-            {
-                // If this is another change by the user but the data is no longer
-                // dirty (i.e. the user has reversed out their changes) then
-                // reset the changed flag.
-                if (value == true && !IsDirty)
-                    _changed = false;
-                else
-                    _changed = value;
-            }
-        }
-
-        internal bool Saving
-        {
-            get { return _saving; }
-            set { _saving = value; }
-        }
-
-        internal bool SavingAttempted
-        {
-            get { return _savingAttempted; }
-            set { _savingAttempted = value; }
-        }
-
-        internal IEnumerable<string> IncidsSelectedMap
-        {
-            get { return _incidsSelectedMap; }
-        }
-
-        internal IEnumerable<string> ToidsSelectedMap
-        {
-            get { return _toidsSelectedMap; }
-        }
-
-        internal IEnumerable<string> FragsSelectedMap
-        {
-            get { return _fragsSelectedMap; }
-        }
-
-        internal int IncidsSelectedMapCount
-        {
-            get { return _incidsSelectedMapCount; }
-        }
-
-        internal int ToidsSelectedMapCount
-        {
-            get { return _toidsSelectedMapCount; }
-        }
-
-        internal int FragsSelectedMapCount
-        {
-            get { return _fragsSelectedMapCount; }
-        }
-
-        internal ViewModelWindowMainUpdate ViewModelUpdate
-        {
-            get { return _viewModelUpd; }
-        }
-
-        internal List<string> HabitatWarnings
-        {
-            get { return _habitatWarnings; }
-            set { _habitatWarnings = value; }
-        }
-
-        internal List<string> PriorityWarnings
-        {
-            get { return _priorityWarnings; }
-            set { _priorityWarnings = value; }
-        }
-
-        internal List<string[]> ConditionWarnings
-        {
-            get { return _conditionWarnings; }
-            set { _conditionWarnings = value; }
-        }
-
-        internal List<string> DetailsWarnings
-        {
-            get { return _detailsWarnings; }
-            set { _detailsWarnings = value; }
-        }
-
-        internal List<string[]> Source1Warnings
-        {
-            get { return _source1Warnings; }
-            set { _source1Warnings = value; }
-        }
-
-        internal List<string[]> Source2Warnings
-        {
-            get { return _source2Warnings; }
-            set { _source2Warnings = value; }
-        }
-
-        internal List<string[]> Source3Warnings
-        {
-            get { return _source3Warnings; }
-            set { _source3Warnings = value; }
-        }
-
-        internal List<string> HabitatErrors
-        {
-            get { return _habitatErrors; }
-            set { _habitatErrors = value; }
-        }
-
-        internal List<string> PriorityErrors
-        {
-            get { return _priorityErrors; }
-            set { _priorityErrors = value; }
-        }
-
-        internal List<string[]> ConditionErrors
-        {
-            get { return _conditionErrors; }
-            set { _conditionErrors = value; }
-        }
-
-        internal List<string> DetailsErrors
-        {
-            get { return _detailsErrors; }
-            set { _detailsErrors = value; }
-        }
-
-        internal List<string[]> Source1Errors
-        {
-            get { return _source1Errors; }
-            set { _source1Errors = value; }
-        }
-
-        internal List<string[]> Source2Errors
-        {
-            get { return _source2Errors; }
-            set { _source2Errors = value; }
-        }
-
-        internal List<string[]> Source3Errors
-        {
-            get { return _source3Errors; }
-            set { _source3Errors = value; }
-        }
-
-        internal bool RefillIncidTable
-        {
-            get { return _refillIncidTable; }
-            set { _refillIncidTable = true; }
-        }
-
-        internal int DBConnectionTimeout
-        {
-            get { return _dbConnectionTimeout; }
-        }
-
-        internal string ClearIHSUpdateAction
-        {
-            get { return _clearIHSUpdateAction; }
-        }
-
-        #endregion
-
-        #region Initialize
+        #region Constructor
 
         internal bool Initialize()
         {
@@ -1602,6 +894,7 @@ namespace HLU.UI.ViewModel
             return true;
         }
 
+
         /// <summary>
         /// Loads all of the lookup tables (with the exception of a few
         /// loaded elsewhere).
@@ -1736,8 +1029,8 @@ namespace HLU.UI.ViewModel
 
                 // Get the list of values from the lookup table.
                 _lutHabitatTypeSecondary = from htp in HluDataset.lut_habitat_type_secondary
-                                           where htp.is_local
-                                           select htp;
+                                         where htp.is_local
+                                         select htp;
             }
 
             // Get the list of ihs complex code values from the lookup table.
@@ -2115,6 +1408,404 @@ namespace HLU.UI.ViewModel
 
         #endregion
 
+        #region ViewModelBase Members
+
+        /// <summary>
+        /// Returns the user-friendly name of this object.
+        /// Child classes can set this property to a new value,
+        /// or override it to determine the value on-demand.
+        /// </summary>
+        public override string DisplayName
+        {
+            get { return _displayName; }
+            set { _displayName = value; }
+        }
+
+        /// <summary>
+        /// The title of the main window.
+        /// </summary>
+        public override string WindowTitle
+        {
+            get
+            {
+                return String.Format("{0}{1}", DisplayName, _editMode ? String.Empty : " [READONLY]");
+            }
+        }
+
+        /// <summary>
+        /// Gets the name of the layer to display in the status bar.
+        /// </summary>
+        /// <value>
+        /// The name of the layer.
+        /// </value>
+        public string LayerName
+        {
+            get
+            {
+                // If no HLU layer has been identified yet (GIS is still loading) then
+                // don't return the layer name
+                if (_gisApp.CurrentHluLayer == null)
+                    return String.Empty;
+                else
+                {
+                    //---------------------------------------------------------------------
+                    // Do not display map window number with layer name
+                    // if there is only one map window.
+                    // 
+                    if (_mapWindowsCount > 1)
+                        // Include the layer name and active layer/map window number in the window title.
+                        return String.Format("{0} [{1}]", _gisApp.CurrentHluLayer.LayerName, _gisApp.CurrentHluLayer.MapNum);
+                    else
+                        // Include only the layer name in the window title.
+                        return String.Format("{0}", _gisApp.CurrentHluLayer.LayerName);
+                    //---------------------------------------------------------------------
+                }
+                //---------------------------------------------------------------------
+            }
+        }
+
+        #endregion
+
+        #region Internal properties
+
+        internal ArcMapApp GISApplication
+        {
+            get { return _gisApp; }
+        }
+
+        internal DbBase DataBase
+        {
+            get { return _db; }
+        }
+
+        internal HluDataSet HluDataset
+        {
+            get
+            {
+                if (_hluDS == null) Initialize();
+                return _hluDS;
+            }
+        }
+
+        internal IEnumerable<DataRelation> HluDataRelations
+        {
+            get { return _hluDataRelations; }
+        }
+
+        internal TableAdapterManager HluTableAdapterManager
+        {
+            get { return _hluTableAdapterMgr; }
+        }
+
+        internal int[] GisIDColumnOrdinals
+        {
+            get { return _gisIDColumnOrdinals; }
+        }
+
+        internal DataColumn[] GisIDColumns
+        {
+            get { return _gisIDColumns; }
+        }
+
+        internal DataColumn[] HistoryColumns
+        {
+            get { return _historyColumns; }
+        }
+
+        public static string HistoryGeometry1ColumnName { get => _historyGeometry1ColumnName; set => _historyGeometry1ColumnName = value; }
+
+        public static string HistoryGeometry2ColumnName { get => _historyGeometry2ColumnName; set => _historyGeometry2ColumnName = value; }
+
+        internal DataTable GisSelection
+        {
+            get { return _gisSelection; }
+            set { _gisSelection = value; }
+        }
+
+        internal DataTable IncidSelection
+        {
+            get { return _incidSelection; }
+            set { _incidSelection = value; }
+        }
+
+        internal List<List<SqlFilterCondition>> IncidSelectionWhereClause
+        {
+            get { return _incidSelectionWhereClause; }
+            set { _incidSelectionWhereClause = value; }
+        }
+
+        internal string OSMMUpdateWhereClause
+        {
+            get { return _osmmUpdateWhereClause; }
+            set { _osmmUpdateWhereClause = value; }
+        }
+
+        internal List<string> ExportMdbs
+        {
+            get { return _exportMdbs; }
+            set { _exportMdbs = value; }
+        }
+
+        internal DateTime IncidLastModifiedDateVal
+        {
+            get { return _incidLastModifiedDate; }
+            set { _incidLastModifiedDate = value; }
+        }
+
+        internal string IncidLastModifiedUserId
+        {
+            get { return _incidLastModifiedUser; }
+            set { if ((IncidCurrentRow != null) && (value != null)) _incidLastModifiedUser = value; }
+        }
+
+        internal HluDataSet.incid_ihs_matrixRow[] IncidIhsMatrixRows
+        {
+            get { return _incidIhsMatrixRows; }
+            set { _incidIhsMatrixRows = value; }
+        }
+
+        internal HluDataSet.incid_ihs_formationRow[] IncidIhsFormationRows
+        {
+            get { return _incidIhsFormationRows; }
+            set { _incidIhsFormationRows = value; }
+        }
+
+        internal HluDataSet.incid_ihs_managementRow[] IncidIhsManagementRows
+        {
+            get { return _incidIhsManagementRows; }
+            set { _incidIhsManagementRows = value; }
+        }
+
+        internal HluDataSet.incid_ihs_complexRow[] IncidIhsComplexRows
+        {
+            get { return _incidIhsComplexRows; }
+            set { _incidIhsComplexRows = value; }
+        }
+        
+        internal HluDataSet.incid_secondaryRow[] IncidSecondaryRows
+        {
+            get { return _incidSecondaryRows; }
+            set { _incidSecondaryRows = value; }
+        }
+
+        internal HluDataSet.incid_conditionRow[] IncidConditionRows
+        {
+            get { return _incidConditionRows; }
+            set { _incidConditionRows = value; }
+        }
+
+        internal HluDataSet.incid_bapRow[] IncidBapRows
+        {
+            get { return _incidBapRows; }
+            set { _incidBapRows = value; }
+        }
+
+        internal HluDataSet.incid_sourcesRow[] IncidSourcesRows
+        {
+            get { return _incidSourcesRows; }
+            set { _incidSourcesRows = value; }
+        }
+
+        internal HluDataSet.incid_osmm_updatesRow[] IncidOSMMUpdatesRows
+        {
+            get { return _incidOSMMUpdatesRows; }
+            set { _incidOSMMUpdatesRows = value; }
+        }
+
+        internal ObservableCollection<BapEnvironment> IncidBapRowsAuto
+        {
+            get { return _incidBapRowsAuto; }
+            set { _incidBapRowsAuto = value; }
+        }
+
+        internal ObservableCollection<BapEnvironment> IncidBapRowsUser
+        {
+            get { return _incidBapRowsUser; }
+            set { _incidBapRowsUser = value; }
+        }
+
+        internal RecordIds RecIDs
+        {
+            get { return _recIDs; }
+            set { _recIDs = value; }
+        }
+
+        internal bool Saved
+        {
+            get { return _saved; }
+            set { _saved = value; }
+        }
+
+        internal bool Pasting
+        {
+            get { return _pasting; }
+            set { _pasting = value; }
+        }
+
+        internal bool Changed
+        {
+            get { return _changed; }
+            set
+            {
+                // If this is another change by the user but the data is no longer
+                // dirty (i.e. the user has reversed out their changes) then
+                // reset the changed flag.
+                if (value == true && !IsDirty)
+                    _changed = false;
+                else
+                    _changed = value;
+            }
+        }
+
+        internal bool Saving
+        {
+            get { return _saving; }
+            set { _saving = value; }
+        }
+
+        internal bool SavingAttempted
+        {
+            get { return _savingAttempted; }
+            set { _savingAttempted = value; }
+        }
+
+        internal IEnumerable<string> IncidsSelectedMap
+        {
+            get { return _incidsSelectedMap; }
+        }
+
+        internal IEnumerable<string> ToidsSelectedMap
+        {
+            get { return _toidsSelectedMap; }
+        }
+
+        internal IEnumerable<string> FragsSelectedMap
+        {
+            get { return _fragsSelectedMap; }
+        }
+
+        internal int IncidsSelectedMapCount
+        {
+            get { return _incidsSelectedMapCount; }
+        }
+
+        internal int ToidsSelectedMapCount
+        {
+            get { return _toidsSelectedMapCount; }
+        }
+
+        internal int FragsSelectedMapCount
+        {
+            get { return _fragsSelectedMapCount; }
+        }
+
+        internal ViewModelWindowMainUpdate ViewModelUpdate
+        {
+            get { return _viewModelUpd; }
+        }
+
+        internal List<string> HabitatWarnings
+        {
+            get { return _habitatWarnings; }
+            set { _habitatWarnings = value; }
+        }
+
+        internal List<string> PriorityWarnings
+        {
+            get { return _priorityWarnings; }
+            set { _priorityWarnings = value; }
+        }
+
+        internal List<string[]> ConditionWarnings
+        {
+            get { return _conditionWarnings; }
+            set { _conditionWarnings = value; }
+        }
+
+        internal List<string> DetailsWarnings
+        {
+            get { return _detailsWarnings; }
+            set { _detailsWarnings = value; }
+        }
+
+        internal List<string[]> Source1Warnings
+        {
+            get { return _source1Warnings; }
+            set { _source1Warnings = value; }
+        }
+
+        internal List<string[]> Source2Warnings
+        {
+            get { return _source2Warnings; }
+            set { _source2Warnings = value; }
+        }
+
+        internal List<string[]> Source3Warnings
+        {
+            get { return _source3Warnings; }
+            set { _source3Warnings = value; }
+        }
+
+        internal List<string> HabitatErrors
+        {
+            get { return _habitatErrors; }
+            set { _habitatErrors = value; }
+        }
+
+        internal List<string> PriorityErrors
+        {
+            get { return _priorityErrors; }
+            set { _priorityErrors = value; }
+        }
+
+        internal List<string[]> ConditionErrors
+        {
+            get { return _conditionErrors; }
+            set { _conditionErrors = value; }
+        }
+
+        internal List<string> DetailsErrors
+        {
+            get { return _detailsErrors; }
+            set { _detailsErrors = value; }
+        }
+
+        internal List<string[]> Source1Errors
+        {
+            get { return _source1Errors; }
+            set { _source1Errors = value; }
+        }
+
+        internal List<string[]> Source2Errors
+        {
+            get { return _source2Errors; }
+            set { _source2Errors = value; }
+        }
+
+        internal List<string[]> Source3Errors
+        {
+            get { return _source3Errors; }
+            set { _source3Errors = value; }
+        }
+
+        internal bool RefillIncidTable
+        {
+            get { return _refillIncidTable; }
+            set { _refillIncidTable = true; }
+        }
+
+        internal int DBConnectionTimeout
+        {
+            get { return _dbConnectionTimeout; }
+        }
+
+        internal string ClearIHSUpdateAction
+        {
+            get { return _clearIHSUpdateAction; }
+        }
+
+        #endregion
+
         #region Defaults
 
         //---------------------------------------------------------------------
@@ -2159,6 +1850,185 @@ namespace HLU.UI.ViewModel
         //---------------------------------------------------------------------
 
         #endregion
+
+        #region Cursor
+
+        public void ChangeCursor(Cursor cursorType, string processingMessage)
+        {
+            ProgressUpdate(processingMessage, -1, -1);
+
+            //_windowCursor = cursorType;
+            //_windowEnabled = cursorType != Cursors.Wait;
+
+            //OnPropertyChanged(nameof(TabControlDataEnabled));
+            //if (cursorType == Cursors.Arrow)
+            //    _processingMsg = "Processing ...";
+            //else
+            //    _processingMsg = processingMessage;
+
+            //OnPropertyChanged(nameof(StatusBar));
+            //if (cursorType == Cursors.Wait)
+            //    DispatcherHelper.DoEvents();
+        }
+
+        #endregion
+
+        #region Processing
+
+        /// <summary>
+        /// Is the form processing?
+        /// </summary>
+        public Visibility IsProcessing
+        {
+            get
+            {
+                if (_processStatus != null)
+                    return Visibility.Visible;
+                else
+                    return Visibility.Collapsed;
+            }
+        }
+
+        private double _progressValue;
+
+        /// <summary>
+        /// Gets the value to set on the progress
+        /// </summary>
+        public double ProgressValue
+        {
+            get
+            {
+                return _progressValue;
+            }
+            set
+            {
+                _progressValue = value;
+
+                OnPropertyChanged(nameof(ProgressValue));
+            }
+        }
+
+        private double _maxProgressValue;
+
+        /// <summary>
+        /// Gets the max value to set on the progress
+        /// </summary>
+        public double MaxProgressValue
+        {
+            get
+            {
+                return _maxProgressValue;
+            }
+            set
+            {
+                _maxProgressValue = value;
+
+                OnPropertyChanged(nameof(MaxProgressValue));
+            }
+        }
+
+        private string _processStatus;
+
+        /// <summary>
+        /// ProgressStatus Text
+        /// </summary>
+        public string ProcessStatus
+        {
+            get
+            {
+                return _processStatus;
+            }
+            set
+            {
+                _processStatus = value;
+
+                OnPropertyChanged(nameof(ProcessStatus));
+                OnPropertyChanged(nameof(IsProcessing));
+                OnPropertyChanged(nameof(ProgressText));
+                OnPropertyChanged(nameof(ProgressAnimating));
+            }
+        }
+
+        private string _progressText;
+
+        /// <summary>
+        /// Progress bar Text
+        /// </summary>
+        public string ProgressText
+        {
+            get
+            {
+                return _progressText;
+            }
+            set
+            {
+                _progressText = value;
+
+                OnPropertyChanged(nameof(ProgressText));
+            }
+        }
+
+        /// <summary>
+        /// Is the progress wheel animating?
+        /// </summary>
+        public Visibility ProgressAnimating
+        {
+            get
+            {
+                if (_progressText != null)
+                    return Visibility.Visible;
+                else
+                    return Visibility.Collapsed;
+            }
+        }
+
+        /// <summary>
+        /// Update the progress bar.
+        /// </summary>
+        /// <param name="processText"></param>
+        /// <param name="progressValue"></param>
+        /// <param name="maxProgressValue"></param>
+        public void ProgressUpdate(string processText = null, int progressValue = -1, int maxProgressValue = -1)
+        {
+            if (Application.Current.Dispatcher.CheckAccess())
+            {
+                // Check if the values have changed and update them if they have.
+                if (progressValue >= 0)
+                    ProgressValue = progressValue;
+
+                if (maxProgressValue != 0)
+                    MaxProgressValue = maxProgressValue;
+
+                if (_maxProgressValue > 0)
+                    ProgressText = _progressValue == _maxProgressValue ? "Done" : $@"{_progressValue * 100 / _maxProgressValue:0}%";
+                else
+                    ProgressText = null;
+
+                ProcessStatus = processText;
+            }
+            else
+            {
+                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background,
+                  () =>
+                  {
+                      // Check if the values have changed and update them if they have.
+                      if (progressValue >= 0)
+                          ProgressValue = progressValue;
+
+                      if (maxProgressValue != 0)
+                          MaxProgressValue = maxProgressValue;
+
+                      if (_maxProgressValue > 0)
+                          ProgressText = _progressValue == _maxProgressValue ? "Done" : $@"{_progressValue * 100 / _maxProgressValue:0}%";
+                      else
+                          ProgressText = null;
+
+                      ProcessStatus = processText;
+                  });
+            }
+        }
+
+        #endregion Processing
 
         #region User ID
 
@@ -2241,25 +2111,97 @@ namespace HLU.UI.ViewModel
 
         #endregion
 
-        #region Cursor
+        #region Close Command
 
-        public void ChangeCursor(Cursor cursorType, string processingMessage)
+        /// <summary>
+        /// Returns the command that, when invoked, attempts
+        /// to remove this workspace from the user interface.
+        /// </summary>
+        public ICommand CloseCommand
         {
-            ProgressUpdate(processingMessage, -1, -1);
+            get
+            {
+                if (_closeCommand == null)
+                    _closeCommand = new RelayCommand(param => this.OnRequestClose(true));
 
-            //_windowCursor = cursorType;
-            //_windowEnabled = cursorType != Cursors.Wait;
-
-            //OnPropertyChanged(nameof(TabControlDataEnabled));
-            //if (cursorType == Cursors.Arrow)
-            //    _processingMsg = "Processing ...";
-            //else
-            //    _processingMsg = processingMessage;
-
-            //OnPropertyChanged(nameof(StatusBar));
-            //if (cursorType == Cursors.Wait)
-            //    DispatcherHelper.DoEvents();
+                return _closeCommand;
+            }
         }
+
+        /// <summary>
+        /// Raised when main window should be closed.
+        /// </summary>
+        public event EventHandler RequestClose;
+
+        public void OnRequestClose(bool check)
+        {
+            // Set the event handler to close the application
+            EventHandler handler = this.RequestClose;
+            if (handler != null)
+            {
+                //---------------------------------------------------------------------
+                // FIX: 106 Check if user is sure before closing application.
+                //
+                if ((check == false) || (MessageBox.Show("Close HLU Tool. Are you sure?", "HLU: Exit", MessageBoxButton.YesNo,
+                        MessageBoxImage.Question) == MessageBoxResult.Yes))
+                {
+                    // Indicate the application is closing.
+                    _closing = true;
+                    //---------------------------------------------------------------------
+
+                    // Check there are no outstanding edits.
+                    _readingMap = false;
+                    MessageBoxResult userResponse = CheckDirty();
+
+                    switch (userResponse)
+                    {
+                        case MessageBoxResult.Yes:
+                            //if (!_viewModelUpd.Update()) return;
+                            break;
+                        case MessageBoxResult.No:
+                            break;
+                        case MessageBoxResult.Cancel:
+                            return;
+                    }
+
+                    //TODO: ArcGIS
+                    //if (HaveGisApp && MessageBox.Show(String.Format("Close {0} as well?",
+                    //    _gisApp.ApplicationType), "HLU: Exit", MessageBoxButton.YesNo,
+                    //    MessageBoxImage.Question) == MessageBoxResult.Yes)
+                    //{
+                    //    _gisApp.Close();
+
+                    //    ScratchDb.CleanUp();
+
+                    //    if (_exportMdbs != null)
+                    //    {
+                    //        foreach (string path in _exportMdbs)
+                    //        {
+                    //            try { File.Delete(path); }
+                    //            catch { }
+                    //        }
+                    //    }
+                    //}
+
+                    //TODO: ArcGIS
+                    //// Call the event handle to close the application
+                    //handler(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // FIX: 106 Check if user is sure before closing application.
+        //
+        /// <summary>
+        /// Is the application already in the process of closing.
+        /// </summary>
+        /// <returns></returns>
+        public bool IsClosing
+        {
+            get { return _closing; }
+        }
+        //---------------------------------------------------------------------
 
         #endregion
 
@@ -3304,7 +3246,7 @@ namespace HLU.UI.ViewModel
         /// <value>
         /// The cancel bulk update command.
         /// </value>
-        public ICommand CancelBulkUpdateCommand
+         public ICommand CancelBulkUpdateCommand
         {
             get
             {
@@ -3317,10 +3259,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        /// <summary>
-        /// Cancel the bulk update.
-        /// </summary>
-        /// <param name="param">The parameter.</param>
+         /// <summary>
+         /// Cancel the bulk update.
+         /// </summary>
+         /// <param name="param">The parameter.</param>
         private void CancelBulkUpdateClicked(object param)
         {
             if (_viewModelBulkUpdate != null)
@@ -3613,7 +3555,7 @@ namespace HLU.UI.ViewModel
             // If there are any OSMM Updates for this incid then store the values.
             if (_osmmUpdating == false && _osmmUpdatesEmpty == false)
             {
-                if (IncidOSMMStatus > 0)
+                if (IncidOSMMStatus  > 0)
                 {
                     _osmmUpdating = true;
 
@@ -3764,7 +3706,7 @@ namespace HLU.UI.ViewModel
                     _osmmUpdatesEmpty == false &&
                     _incidOSMMUpdatesStatus != null &&
                     (_incidOSMMUpdatesStatus > 0 || _incidOSMMUpdatesStatus < -1));
-                //(_incidOSMMUpdatesStatus == null || (_incidOSMMUpdatesStatus > 0 || _incidOSMMUpdatesStatus < -1)));
+                    //(_incidOSMMUpdatesStatus == null || (_incidOSMMUpdatesStatus > 0 || _incidOSMMUpdatesStatus < -1)));
                 //---------------------------------------------------------------------
             }
         }
@@ -5741,7 +5683,7 @@ namespace HLU.UI.ViewModel
                                     // Refresh all the controls
                                     RefreshAll();
                                 }
-
+                            
                                 // Reset the cursor back to normal.
                                 ChangeCursor(Cursors.Arrow, null);
 
@@ -5797,8 +5739,8 @@ namespace HLU.UI.ViewModel
                 {
                     _incidSelection = null;
                     ChangeCursor(Cursors.Arrow, null);
-                    MessageBox.Show(ex.Message, "HLU: Apply Query",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(ex.Message, "HLU: Apply Query",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
                 }
                 finally { RefreshStatus(); }
             }
@@ -6353,12 +6295,12 @@ namespace HLU.UI.ViewModel
 
         private bool CanReadMapSelection
         {
-            //---------------------------------------------------------------------
-            // FIX: 101 Enable get map selection when in OSMM update mode.
-            //--------------------------------------------------------------
-            //get { return _bulkUpdateMode == false && _osmmUpdateMode == false && HaveGisApp; }
-            get { return _bulkUpdateMode == false; }
-            //---------------------------------------------------------------------
+                //---------------------------------------------------------------------
+                // FIX: 101 Enable get map selection when in OSMM update mode.
+                //--------------------------------------------------------------
+                //get { return _bulkUpdateMode == false && _osmmUpdateMode == false && HaveGisApp; }
+                get { return _bulkUpdateMode == false; }
+                //---------------------------------------------------------------------
         }
 
         internal void ReadMapSelection(bool showMessage)
@@ -6876,8 +6818,8 @@ namespace HLU.UI.ViewModel
                             // Lookup the secondary group for the secondary code
                             IEnumerable<string> q = null;
                             q = (from s in SecondaryHabitatCodesAll
-                                 where s.code == secondaryHabitat
-                                 select s.code_group);
+                                    where s.code == secondaryHabitat
+                                    select s.code_group);
 
                             // If the secondary group has been found
                             string secondaryGroup = null;
@@ -7225,7 +7167,7 @@ namespace HLU.UI.ViewModel
                                                 fragment = r.Field<string>(2)
                                             }
                                                 into g
-                                            select g.Key.fragment;
+                                                select g.Key.fragment;
                         _fragsSelectedMapCount = _fragsSelectedMap.Count();
                         goto case 2;
                     case 2:
@@ -10291,20 +10233,20 @@ namespace HLU.UI.ViewModel
                     // and primary habitat category are both flagged as local and
                     // are related as local to the current habitat type.
                     _primaryCodes = (from p in _lutPrimary
-                                     join c in _lutPrimaryCategory on p.category equals c.code
-                                     from htp in _lutHabitatTypePrimary
-                                     where htp.code_habitat_type == _habitatType
-                                     && (p.code == htp.code_primary
-                                     || (htp.code_primary.EndsWith('*') && Regex.IsMatch(p.code, @"\A" + htp.code_primary.TrimEnd('*') + @"")))
-                                     select p).ToArray();
+                                    join c in _lutPrimaryCategory on p.category equals c.code
+                                    from htp in _lutHabitatTypePrimary
+                                    where htp.code_habitat_type == _habitatType
+                                    && (p.code == htp.code_primary
+                                    || (htp.code_primary.EndsWith('*') && Regex.IsMatch(p.code, @"\A" + htp.code_primary.TrimEnd('*') + @"")))
+                                    select p).ToArray();
 
                     // Load all secondary habitat codes where the habitat type
                     // has one of more mandatory codes.
                     IEnumerable<HluDataSet.lut_secondaryRow> secondaryCodesMandatory = (from hts in _lutHabitatTypeSecondary
-                                                                                        join s in _lutSecondary on hts.code_secondary equals s.code
-                                                                                        where hts.code_habitat_type == _habitatType
-                                                                                        && hts.mandatory == 1
-                                                                                        select s).OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
+                                                join s in _lutSecondary on hts.code_secondary equals s.code
+                                                where hts.code_habitat_type == _habitatType
+                                                && hts.mandatory == 1
+                                                select s).OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
 
                     // Store the list of mandatory secondary codes.
                     _secondaryCodesMandatory = secondaryCodesMandatory.Select(hts => hts.code);
@@ -10315,8 +10257,8 @@ namespace HLU.UI.ViewModel
                     // Load all primary habitat codes where the primary habitat code
                     // and primary habitat category are both flagged as local.
                     _primaryCodes = (from p in _lutPrimary
-                                     join c in _lutPrimaryCategory on p.category equals c.code
-                                     select p).ToArray();
+                                    join c in _lutPrimaryCategory on p.category equals c.code
+                                    select p).ToArray();
 
                     // Clear the list of mandatory secondary codes.
                     _secondaryCodesMandatory = [];
@@ -10459,7 +10401,7 @@ namespace HLU.UI.ViewModel
                 return true;
             }
         }
-
+        
         /// <summary>
         /// Gets the primary codes.
         /// </summary>
@@ -10482,9 +10424,9 @@ namespace HLU.UI.ViewModel
                     // and primary habitat category are both flagged as local). There
                     // should be only one.
                     _primaryCodes = (from p in _lutPrimary
-                                     join pc in _lutPrimaryCategory on p.category equals pc.code
-                                     where p.code == IncidPrimary
-                                     select p).ToArray();
+                                    join pc in _lutPrimaryCategory on p.category equals pc.code
+                                    where p.code == IncidPrimary
+                                    select p).ToArray();
 
                     return _primaryCodes;
                 }
@@ -12027,7 +11969,7 @@ namespace HLU.UI.ViewModel
         //---------------------------------------------------------------------
 
         #region Priority Habitat
-
+        
         /// <summary>
         /// Gets the array of all bap habitat codes.
         /// </summary>
@@ -12055,7 +11997,7 @@ namespace HLU.UI.ViewModel
                 return _bapHabitatCodes;
             }
         }
-
+        
         /// <summary>
         /// Gets the array of all determination quality codes.
         /// </summary>
@@ -12069,7 +12011,7 @@ namespace HLU.UI.ViewModel
                 return _lutQualityDetermination.OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
             }
         }
-
+        
         /// <summary>
         /// Gets the array of bap determination quality codes valid for automatically
         /// assigned priority habitats.
@@ -12107,7 +12049,7 @@ namespace HLU.UI.ViewModel
                 return DeterminationQualityCodes;
             }
         }
-
+        
         /// <summary>
         /// Gets the  array of all interpretation quality codes.
         /// </summary>
@@ -12121,7 +12063,7 @@ namespace HLU.UI.ViewModel
                 return _lutQualityInterpretation.OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
             }
         }
-
+        
         /// <summary>
         /// Gets the  array of all bap related interpretation quality codes.
         /// </summary>
@@ -12135,7 +12077,7 @@ namespace HLU.UI.ViewModel
                 return InterpretationQualityCodes;
             }
         }
-
+        
         /// <summary>
         /// Gets or sets the collection of incid bap habitats automatically assigned.
         /// </summary>
@@ -12360,7 +12302,7 @@ namespace HLU.UI.ViewModel
                                        where _incidCurrentRow.incid != null && r.incid == _incidCurrentRow.incid
                                        where !_incidBapRowsAuto.Any(row => row.bap_habitat == r.bap_habitat)
                                        select r).ToList();
-                    prevBapRowsUser.ForEach(delegate (BapEnvironment be)
+                    prevBapRowsUser.ForEach(delegate(BapEnvironment be)
                     {
                         // Don't overwrite the determination quality value loaded from the
                         // database with 'Not present but close to definition' as other
@@ -12445,9 +12387,9 @@ namespace HLU.UI.ViewModel
                 {
                     //DONE: Aggregate
                     List<string> beDups = (from be in _incidBapRowsAuto.Concat(_incidBapRowsUser)
-                                           group be by be.bap_habitat into g
-                                           where g.Count() > 1
-                                           select g.Key).ToList();
+                                            group be by be.bap_habitat into g
+                                            where g.Count() > 1
+                                            select g.Key).ToList();
 
                     //StringBuilder beDups = (from be in _incidBapRowsAuto.Concat(_incidBapRowsUser)
                     //                        group be by be.bap_habitat into g
@@ -12518,9 +12460,9 @@ namespace HLU.UI.ViewModel
                 {
                     //DONE: Aggregate
                     List<string> beDups = (from be in _incidBapRowsAuto.Concat(_incidBapRowsUser)
-                                           group be by be.bap_habitat into g
-                                           where g.Count() > 1
-                                           select g.Key).ToList();
+                                            group be by be.bap_habitat into g
+                                            where g.Count() > 1
+                                            select g.Key).ToList();
 
                     //StringBuilder beDups = (from be in _incidBapRowsAuto.Concat(_incidBapRowsUser)
                     //                        group be by be.bap_habitat into g
@@ -12663,9 +12605,9 @@ namespace HLU.UI.ViewModel
                 {
                     //DONE: Aggregate
                     List<string> beDups = (from be in _incidBapRowsAuto.Concat(_incidBapRowsUser)
-                                           group be by be.bap_habitat into g
-                                           where g.Count() > 1
-                                           select g.Key).ToList();
+                                            group be by be.bap_habitat into g
+                                            where g.Count() > 1
+                                            select g.Key).ToList();
 
                     //StringBuilder beDups = (from be in _incidBapRowsAuto.Concat(_incidBapRowsUser)
                     //                        group be by be.bap_habitat into g
@@ -12693,7 +12635,7 @@ namespace HLU.UI.ViewModel
                     be.DataChanged += _incidBapRowsUser_DataChanged;
             }
         }
-
+        
         #endregion
 
         #endregion
@@ -12757,7 +12699,7 @@ namespace HLU.UI.ViewModel
                     return null;
             }
         }
-
+        
         /// <summary>
         /// Gets the list of boundary map codes.
         /// </summary>
@@ -12777,7 +12719,7 @@ namespace HLU.UI.ViewModel
                 return _boundaryMapCodes;
             }
         }
-
+        
         /// <summary>
         /// Gets or sets the incid boundary base map.
         /// </summary>
@@ -12804,7 +12746,7 @@ namespace HLU.UI.ViewModel
                 }
             }
         }
-
+        
         /// <summary>
         /// Gets or sets the incid digitisation base map.
         /// </summary>
@@ -12896,7 +12838,7 @@ namespace HLU.UI.ViewModel
         #endregion
 
         #region Condition
-
+        
         /// <summary>
         /// Gets the details condition group header.
         /// </summary>
@@ -13028,7 +12970,7 @@ namespace HLU.UI.ViewModel
                 }
             }
         }
-
+        
         /// <summary>
         /// Gets the list of condition qualifier codes.
         /// </summary>
@@ -13049,7 +12991,7 @@ namespace HLU.UI.ViewModel
                 return _conditionQualifierCodes;
             }
         }
-
+        
         /// <summary>
         /// Gets or sets the incid condition qualifier.
         /// </summary>
@@ -13208,7 +13150,7 @@ namespace HLU.UI.ViewModel
         #endregion
 
         #region Quality
-
+        
         /// <summary>
         /// Gets the details quality group header.
         /// </summary>
@@ -13225,7 +13167,7 @@ namespace HLU.UI.ViewModel
                     return null;
             }
         }
-
+        
         /// <summary>
         /// Gets the list of quality determination codes.
         /// </summary>
@@ -13260,7 +13202,7 @@ namespace HLU.UI.ViewModel
                 }
             }
         }
-
+        
         /// <summary>
         /// Gets or sets the incid quality determination.
         /// </summary>
@@ -13299,7 +13241,7 @@ namespace HLU.UI.ViewModel
                 }
             }
         }
-
+        
         /// <summary>
         /// Gets the list of quality interpretation codes.
         /// </summary>
@@ -13334,7 +13276,7 @@ namespace HLU.UI.ViewModel
                 }
             }
         }
-
+        
         /// <summary>
         /// Gets or sets the incid quality interpretation.
         /// </summary>
@@ -13376,7 +13318,7 @@ namespace HLU.UI.ViewModel
                 }
             }
         }
-
+        
         /// <summary>
         /// Gets or sets the incid quality comments.
         /// </summary>
@@ -13409,7 +13351,7 @@ namespace HLU.UI.ViewModel
         #endregion
 
         #region Sources Tab
-
+        
         /// <summary>
         /// Gets the sources tab group label.
         /// </summary>
@@ -13465,7 +13407,7 @@ namespace HLU.UI.ViewModel
 
             return currentDate;
         }
-
+        
         /// <summary>
         /// Updates the incid sources row.
         /// </summary>
@@ -13572,7 +13514,7 @@ namespace HLU.UI.ViewModel
             }
             catch { }
         }
-
+        
         /// <summary>
         /// Gets the list of source names.
         /// </summary>
@@ -13592,7 +13534,7 @@ namespace HLU.UI.ViewModel
                 return _sourceNames;
             }
         }
-
+        
         /// <summary>
         /// Gets the list of source habitat class codes.
         /// </summary>
@@ -13613,7 +13555,7 @@ namespace HLU.UI.ViewModel
                 return _sourceHabitatClassCodes;
             }
         }
-
+        
         /// <summary>
         /// Gets the list of source importance codes.
         /// </summary>
@@ -13637,7 +13579,7 @@ namespace HLU.UI.ViewModel
         #endregion
 
         #region Source1
-
+        
         public string Source1Header
         {
             get
@@ -14505,42 +14447,6 @@ namespace HLU.UI.ViewModel
         private int NextIncidConditionId { get { return _recIDs.NextIncidConditionId; } }
 
         #endregion
-
-        #region Footer Fields
-
-        /// <summary>
-        /// Gets the name of the layer to display in the status bar.
-        /// </summary>
-        /// <value>
-        /// The name of the layer.
-        /// </value>
-        public string LayerName
-        {
-            get
-            {
-                // If no HLU layer has been identified yet (GIS is still loading) then
-                // don't return the layer name
-                if (_gisApp.CurrentHluLayer == null)
-                    return String.Empty;
-                else
-                {
-                    //---------------------------------------------------------------------
-                    // Do not display map window number with layer name
-                    // if there is only one map window.
-                    // 
-                    if (_mapWindowsCount > 1)
-                        // Include the layer name and active layer/map window number in the window title.
-                        return String.Format("{0} [{1}]", _gisApp.CurrentHluLayer.LayerName, _gisApp.CurrentHluLayer.MapNum);
-                    else
-                        // Include only the layer name in the window title.
-                        return String.Format("{0}", _gisApp.CurrentHluLayer.LayerName);
-                    //---------------------------------------------------------------------
-                }
-                //---------------------------------------------------------------------
-            }
-        }
-
-        #endregion Footer
 
         #region SQLUpdater
 
@@ -15527,112 +15433,12 @@ namespace HLU.UI.ViewModel
 
         #endregion
 
-        #region Close Command
-
-        /// <summary>
-        /// Returns the command that, when invoked, attempts
-        /// to remove this workspace from the user interface.
-        /// </summary>
-        public ICommand CloseCommand
-        {
-            get
-            {
-                if (_closeCommand == null)
-                    _closeCommand = new RelayCommand(param => this.OnRequestClose(true));
-
-                return _closeCommand;
-            }
-        }
-
-        /// <summary>
-        /// Raised when main window should be closed.
-        /// </summary>
-        public event EventHandler RequestClose;
-
-        public void OnRequestClose(bool check)
-        {
-            // Set the event handler to close the application
-            EventHandler handler = this.RequestClose;
-            if (handler != null)
-            {
-                //---------------------------------------------------------------------
-                // FIX: 106 Check if user is sure before closing application.
-                //
-                if ((check == false) || (MessageBox.Show("Close HLU Tool. Are you sure?", "HLU: Exit", MessageBoxButton.YesNo,
-                        MessageBoxImage.Question) == MessageBoxResult.Yes))
-                {
-                    // Indicate the application is closing.
-                    _closing = true;
-                    //---------------------------------------------------------------------
-
-                    // Check there are no outstanding edits.
-                    _readingMap = false;
-                    MessageBoxResult userResponse = CheckDirty();
-
-                    switch (userResponse)
-                    {
-                        case MessageBoxResult.Yes:
-                            //if (!_viewModelUpd.Update()) return;
-                            break;
-                        case MessageBoxResult.No:
-                            break;
-                        case MessageBoxResult.Cancel:
-                            return;
-                    }
-
-                    //TODO: ArcGIS
-                    //if (HaveGisApp && MessageBox.Show(String.Format("Close {0} as well?",
-                    //    _gisApp.ApplicationType), "HLU: Exit", MessageBoxButton.YesNo,
-                    //    MessageBoxImage.Question) == MessageBoxResult.Yes)
-                    //{
-                    //    _gisApp.Close();
-
-                    //    ScratchDb.CleanUp();
-
-                    //    if (_exportMdbs != null)
-                    //    {
-                    //        foreach (string path in _exportMdbs)
-                    //        {
-                    //            try { File.Delete(path); }
-                    //            catch { }
-                    //        }
-                    //    }
-                    //}
-
-                    //TODO: ArcGIS
-                    //// Call the event handle to close the application
-                    //handler(this, EventArgs.Empty);
-                }
-            }
-        }
-
-        //---------------------------------------------------------------------
-        // FIX: 106 Check if user is sure before closing application.
-        //
-        /// <summary>
-        /// Is the application already in the process of closing.
-        /// </summary>
-        /// <returns></returns>
-        public bool IsClosing
-        {
-            get { return _closing; }
-        }
-        //---------------------------------------------------------------------
-
-        #endregion
-
-        #endregion MainWindow
-
     }
 
-    #endregion Class DockpaneMainViewModel
-
-    #region Class DockpaneMain_ShowButton
-
     /// <summary>
-    /// Button implementation to show the DockPane.
+    /// Button implementation to show the Main Window.
     /// </summary>
-    internal class DockpaneMain_ShowButton : Button
+    internal class WindowMain_ShowButton : Button
     {
         protected override void OnClick()
         {
@@ -15642,7 +15448,4 @@ namespace HLU.UI.ViewModel
             ViewModelWindowMain.Show();
         }
     }
-
-    #endregion Class DockpaneMain_ShowButton
-
 }
