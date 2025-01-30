@@ -15437,7 +15437,7 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// Button implementation to show the Main Window.
     /// </summary>
-    internal class WindowMain_ShowButton : Button
+    internal class WindowMain_ShowButton_OLD : Button
     {
         protected override void OnClick()
         {

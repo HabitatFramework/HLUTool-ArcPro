@@ -29,7 +29,7 @@
 			<controls>
 				<button id="HLUTool_btnHLUToolDockPane"
 						caption="HLU Tool"
-						className="HLU.UI.ViewModel.MainWindow_ShowButton"
+						className="HLU.UI.ViewModel.WindowMain_ShowButton"
 						loadOnClick="true"
 						keytip="DY"
 						smallImage="pack://application:,,,/HLUTool;component/Images/HLUTool16.png"
@@ -41,14 +41,14 @@
 				</button>
 			</controls>
 			<dockPanes>
-				<dockPane id="HLUTool_UI_DockpaneMain"
+				<dockPane id="HLUTool_UI_WindowMain"
 						  hasHelp="true"
 						  autoHide="false"
 						  caption="HLU Tool"
 						  className="HLU.UI.ViewModel.ViewModelWindowMain_NEW"
 						  dock="group"
 						  dockWith="esri_core_projectDockPane">
-					<content className="HLU.UI.View.MainWindow" />
+					<content className="HLU.UI.View.WindowMain" />
 				</dockPane>
 			</dockPanes>
 		</insertModule>

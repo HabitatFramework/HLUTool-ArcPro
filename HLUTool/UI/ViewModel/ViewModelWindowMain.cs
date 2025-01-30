@@ -295,7 +295,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// ID of the DockPane.
         /// </summary>
-        private const string _dockPaneID = "HLUTool_UI_DockpaneMain";
+        private const string _dockPaneID = "HLUTool_UI_WindowMain";
 
         public static string DockPaneID
         {
@@ -676,7 +676,7 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// Button implementation to show the DockPane.
     /// </summary>
-    internal class MainWindow_ShowButton : Button
+    internal class WindowMain_ShowButton : Button
     {
         protected override void OnClick()
         {
