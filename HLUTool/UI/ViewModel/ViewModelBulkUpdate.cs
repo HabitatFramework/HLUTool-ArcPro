@@ -29,7 +29,7 @@ using HLU.Properties;
 
 namespace HLU.UI.ViewModel
 {
-    class ViewModelBulkUpdate(ViewModelWindowMain_OLD viewModelMain,
+    class ViewModelBulkUpdate(ViewModelWindowMain viewModelMain,
         bool osmmBulkUpdateMode,
         bool deleteOrphanBapHabitats,
         bool deletePotentialBapHabitats,
@@ -43,7 +43,7 @@ namespace HLU.UI.ViewModel
     {
         #region Fields
 
-        private ViewModelWindowMain_OLD _viewModelMain = viewModelMain;
+        private ViewModelWindowMain _viewModelMain = viewModelMain;
 
         private ICommand _okCommand;
         private ICommand _cancelCommand;

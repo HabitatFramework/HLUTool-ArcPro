@@ -42,7 +42,7 @@ namespace HLU.UI.ViewModel
 
         private string _displayName = "Potential Priority Habitats";
 
-        private ViewModelWindowMain_OLD _viewModelMain;
+        private ViewModelWindowMain _viewModelMain;
 
         private ObservableCollection<BapEnvironment> _incidBapRowsUser;
 
@@ -50,7 +50,7 @@ namespace HLU.UI.ViewModel
 
         #region Constructor
 
-        public ViewModelWindowEditPotentialHabitats(ViewModelWindowMain_OLD viewModelMain, ObservableCollection<BapEnvironment> incidBapHabitatsUser)
+        public ViewModelWindowEditPotentialHabitats(ViewModelWindowMain viewModelMain, ObservableCollection<BapEnvironment> incidBapHabitatsUser)
         {
             _viewModelMain = viewModelMain;
 

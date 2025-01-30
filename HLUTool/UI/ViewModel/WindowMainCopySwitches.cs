@@ -813,7 +813,7 @@ namespace HLU.UI.ViewModel
 
         #region Copy/Paste
 
-        internal void CopyValues(ViewModelWindowMain_OLD vmMain)
+        internal void CopyValues(ViewModelWindowMain vmMain)
         {
             List<string> errorProps = [];
             string propertyName = null;
@@ -860,7 +860,7 @@ namespace HLU.UI.ViewModel
             //vmMain.OnPropertyChanged(nameof(CanPaste));
         }
 
-        internal void PasteValues(ViewModelWindowMain_OLD vmMain)
+        internal void PasteValues(ViewModelWindowMain vmMain)
         {
             List<string> errorProps = [];
             string propertyName = null;

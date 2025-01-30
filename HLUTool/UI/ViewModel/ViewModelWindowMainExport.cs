@@ -47,7 +47,7 @@ namespace HLU.UI.ViewModel
     {
         public static HluDataSet HluDatasetStatic = null;
 
-        ViewModelWindowMain_OLD _viewModelMain;
+        ViewModelWindowMain _viewModelMain;
         private WindowExport _windowExport;
         private ViewModelExport _viewModelExport;
 
@@ -72,7 +72,7 @@ namespace HLU.UI.ViewModel
         private List<int> _sourceDateTypeOrdinals;
         private int _attributesLength;
 
-        public ViewModelWindowMainExport(ViewModelWindowMain_OLD viewModelMain)
+        public ViewModelWindowMainExport(ViewModelWindowMain viewModelMain)
         {
             _viewModelMain = viewModelMain;
         }
@@ -491,18 +491,18 @@ namespace HLU.UI.ViewModel
                         int lutFieldOrdinal;
                         if ((r.table_name == _viewModelMain.HluDataset.incid_sources.TableName) && (idSuffixRegex().IsMatch(r.column_name)))
                         {
-                            lutFieldName = ViewModelWindowMain_OLD.LutSourceFieldName;
-                            lutFieldOrdinal = ViewModelWindowMain_OLD.LutSourceFieldOrdinal - 1;
+                            lutFieldName = ViewModelWindowMain.LutSourceFieldName;
+                            lutFieldOrdinal = ViewModelWindowMain.LutSourceFieldOrdinal - 1;
                         }
                         else if ((r.table_name == _viewModelMain.HluDataset.incid.TableName) && (useridSuffixRegex().IsMatch(r.column_name)))
                         {
-                            lutFieldName = ViewModelWindowMain_OLD.LutUserFieldName;
-                            lutFieldOrdinal = ViewModelWindowMain_OLD.LutUserFieldOrdinal - 1;
+                            lutFieldName = ViewModelWindowMain.LutUserFieldName;
+                            lutFieldOrdinal = ViewModelWindowMain.LutUserFieldOrdinal - 1;
                         }
                         else
                         {
-                            lutFieldName = ViewModelWindowMain_OLD.LutDescriptionFieldName;
-                            lutFieldOrdinal = ViewModelWindowMain_OLD.LutDescriptionFieldOrdinal - 1;
+                            lutFieldName = ViewModelWindowMain.LutDescriptionFieldName;
+                            lutFieldOrdinal = ViewModelWindowMain.LutDescriptionFieldOrdinal - 1;
                         }
 
                         // Get the list of columns for the lookup table.

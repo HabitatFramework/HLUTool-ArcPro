@@ -30,6 +30,7 @@
     <Compile Remove="UI\View\Connection\ViewConnectOleDb.xaml.cs" />
     <Compile Remove="UI\View\PaneHeader1View.xaml.cs" />
     <Compile Remove="UI\View\PaneHeader2View.xaml.cs" />
+    <Compile Remove="UI\View\WindowMain_OLD.xaml.cs" />
     <Compile Remove="UI\View\WindowSelectGIS.xaml.cs" />
     <Compile Remove="UI\View\WindowSplash.xaml.cs" />
   </ItemGroup>
@@ -57,6 +58,7 @@
     <Page Remove="UI\View\Dictionary\SpatialReferenceConverterDictionary.xaml" />
     <Page Remove="UI\View\PaneHeader1View.xaml" />
     <Page Remove="UI\View\PaneHeader2View.xaml" />
+    <Page Remove="UI\View\WindowMain_OLD.xaml" />
     <Page Remove="UI\View\WindowSelectGIS.xaml" />
     <Page Remove="UI\View\WindowSplash.xaml" />
   </ItemGroup>

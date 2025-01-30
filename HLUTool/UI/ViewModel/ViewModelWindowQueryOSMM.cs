@@ -65,7 +65,7 @@ namespace HLU.UI.ViewModel
 
         //public event SelectionChangedEventHandler SelectionChanged;
 
-        ViewModelWindowMain_OLD _viewModelMain;
+        ViewModelWindowMain _viewModelMain;
 
         public static HluDataSet HluDatasetStatic = null;
 
@@ -113,7 +113,7 @@ namespace HLU.UI.ViewModel
         /// Get the default values from settings.
         /// </summary>
         /// <remarks></remarks>
-        public ViewModelWindowQueryOSMM(HluDataSet hluDataset, DbBase hluDatabase, ViewModelWindowMain_OLD viewModelMain)
+        public ViewModelWindowQueryOSMM(HluDataSet hluDataset, DbBase hluDatabase, ViewModelWindowMain viewModelMain)
         {
             HluDatasetStatic = hluDataset;
             _hluDataset = hluDataset;
