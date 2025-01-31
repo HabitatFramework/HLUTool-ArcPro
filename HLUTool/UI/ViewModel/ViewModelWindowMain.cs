@@ -27,11 +27,13 @@ using ArcGIS.Desktop.Framework.Controls;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using HLU;
+using HLU.Properties;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Configuration;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -137,11 +139,12 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// Build the DockPane.
     /// </summary>
-    internal class ViewModelWindowMain_NEW : PanelViewModelBase, INotifyPropertyChanged
+    internal partial class ViewModelWindowMain : PanelViewModelBase, INotifyPropertyChanged
     {
+
         #region Fields
 
-        private ViewModelWindowMain_NEW _dockPane;
+        private ViewModelWindowMain _dockPane;
 
         private bool _mapEventsSubscribed;
         private bool _projectClosedEventsSubscribed;
@@ -176,10 +179,26 @@ namespace HLU.UI.ViewModel
                 return String.Format("{0}{1}", DisplayName, _editMode ? String.Empty : " [READONLY]");
             }
         }
+
+        //TODO: Static variables
+        // Static constructor
+        //static ViewModelWindowMain()
+        //{
+        //    _historyGeometry1ColumnName = Settings.Default.HistoryGeometry1ColumnName;
+        //    _historyGeometry2ColumnName = Settings.Default.HistoryGeometry2ColumnName;
+        //    LutDescriptionFieldName = Settings.Default.LutDescriptionFieldName;
+        //    LutDescriptionFieldOrdinal = Settings.Default.LutDescriptionFieldOrdinal;
+        //    LutSourceFieldName = Settings.Default.LutSourceFieldName;
+        //    LutSourceFieldOrdinal = Settings.Default.LutSourceFieldOrdinal;
+        //    LutUserFieldName = Settings.Default.LutUserFieldName;
+        //    LutUserFieldOrdinal = Settings.Default.LutUserFieldOrdinal;
+        //    IncidPageSize = Settings.Default.IncidTablePageSize;
+        //}
+
         /// <summary>
         /// Set the global variables.
         /// </summary>
-        protected ViewModelWindowMain_NEW()
+        protected ViewModelWindowMain()
         {
             InitializeComponentAsync();
         }
@@ -208,7 +227,7 @@ namespace HLU.UI.ViewModel
                 return;
 
             // Get the ViewModel by casting the dockpane.
-            ViewModelWindowMain_NEW vm = pane as ViewModelWindowMain_NEW;
+            ViewModelWindowMain vm = pane as ViewModelWindowMain;
 
             // If the ViewModel is uninitialised then initialise it.
             if (!vm.Initialised)
@@ -310,7 +329,7 @@ namespace HLU.UI.ViewModel
         {
             if (_helpURL != null)
             {
-                Process.Start(new ProcessStartInfo
+                System.Diagnostics.Process.Start(new ProcessStartInfo
                 {
                     FileName = _helpURL,
                     UseShellExecute = true
@@ -469,170 +488,13 @@ namespace HLU.UI.ViewModel
                 return;
 
             // Get the ViewModel by casting the dockpane.
-            ViewModelWindowMain_NEW vm = pane as ViewModelWindowMain_NEW;
+            ViewModelWindowMain vm = pane as ViewModelWindowMain;
 
             // Force the dockpane to be re-initialised next time it's shown.
             vm.Initialised = false;
         }
 
         #endregion Active Map View
-
-        #region Processing
-
-        /// <summary>
-        /// Is the form processing?
-        /// </summary>
-        public Visibility IsProcessing
-        {
-            get
-            {
-                if (_processStatus != null)
-                    return Visibility.Visible;
-                else
-                    return Visibility.Collapsed;
-            }
-        }
-
-        private double _progressValue;
-
-        /// <summary>
-        /// Gets the value to set on the progress
-        /// </summary>
-        public double ProgressValue
-        {
-            get
-            {
-                return _progressValue;
-            }
-            set
-            {
-                _progressValue = value;
-
-                OnPropertyChanged(nameof(ProgressValue));
-            }
-        }
-
-        private double _maxProgressValue;
-
-        /// <summary>
-        /// Gets the max value to set on the progress
-        /// </summary>
-        public double MaxProgressValue
-        {
-            get
-            {
-                return _maxProgressValue;
-            }
-            set
-            {
-                _maxProgressValue = value;
-
-                OnPropertyChanged(nameof(MaxProgressValue));
-            }
-        }
-
-        private string _processStatus;
-
-        /// <summary>
-        /// ProgressStatus Text
-        /// </summary>
-        public string ProcessStatus
-        {
-            get
-            {
-                return _processStatus;
-            }
-            set
-            {
-                _processStatus = value;
-
-                OnPropertyChanged(nameof(ProcessStatus));
-                OnPropertyChanged(nameof(IsProcessing));
-                OnPropertyChanged(nameof(ProgressText));
-                OnPropertyChanged(nameof(ProgressAnimating));
-            }
-        }
-
-        private string _progressText;
-
-        /// <summary>
-        /// Progress bar Text
-        /// </summary>
-        public string ProgressText
-        {
-            get
-            {
-                return _progressText;
-            }
-            set
-            {
-                _progressText = value;
-
-                OnPropertyChanged(nameof(ProgressText));
-            }
-        }
-
-        /// <summary>
-        /// Is the progress wheel animating?
-        /// </summary>
-        public Visibility ProgressAnimating
-        {
-            get
-            {
-                if (_progressText != null)
-                    return Visibility.Visible;
-                else
-                    return Visibility.Collapsed;
-            }
-        }
-
-        /// <summary>
-        /// Update the progress bar.
-        /// </summary>
-        /// <param name="processText"></param>
-        /// <param name="progressValue"></param>
-        /// <param name="maxProgressValue"></param>
-        public void ProgressUpdate(string processText = null, int progressValue = -1, int maxProgressValue = -1)
-        {
-            if (Application.Current.Dispatcher.CheckAccess())
-            {
-                // Check if the values have changed and update them if they have.
-                if (progressValue >= 0)
-                    ProgressValue = progressValue;
-
-                if (maxProgressValue != 0)
-                    MaxProgressValue = maxProgressValue;
-
-                if (_maxProgressValue > 0)
-                    ProgressText = _progressValue == _maxProgressValue ? "Done" : $@"{_progressValue * 100 / _maxProgressValue:0}%";
-                else
-                    ProgressText = null;
-
-                ProcessStatus = processText;
-            }
-            else
-            {
-                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background,
-                  () =>
-                  {
-                      // Check if the values have changed and update them if they have.
-                      if (progressValue >= 0)
-                          ProgressValue = progressValue;
-
-                      if (maxProgressValue != 0)
-                          MaxProgressValue = maxProgressValue;
-
-                      if (_maxProgressValue > 0)
-                          ProgressText = _progressValue == _maxProgressValue ? "Done" : $@"{_progressValue * 100 / _maxProgressValue:0}%";
-                      else
-                          ProgressText = null;
-
-                      ProcessStatus = processText;
-                  });
-            }
-        }
-
-        #endregion Processing
 
         #region Run Command
 
@@ -683,7 +545,7 @@ namespace HLU.UI.ViewModel
             //string uri = System.Reflection.Assembly.GetExecutingAssembly().Location;
 
             // Show the dock pane.
-            ViewModelWindowMain_NEW.Show();
+            ViewModelWindowMain.Show();
         }
     }
 }

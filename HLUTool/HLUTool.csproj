@@ -50,6 +50,7 @@
     <None Remove="Images\Error32.png" />
     <None Remove="Images\Success32.png" />
     <None Remove="Images\Warning32.png" />
+    <None Remove="UI\ViewModel\ViewModelWindowMain_OLD.csTEMP" />
   </ItemGroup>
   <ItemGroup>
     <Page Remove="UI\View\Connection\ViewConnectOleDb.xaml" />

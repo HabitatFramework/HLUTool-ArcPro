@@ -7,7 +7,7 @@
              xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
              xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
              xmlns:viewModel="clr-namespace:HLU.UI.ViewModel"
-             d:DataContext="{d:DesignInstance Type=local:ViewModelWindowMain_NEW}"
+             d:DataContext="{d:DesignInstance Type=local:ViewModelWindowMain}"
              xmlns:view="clr-namespace:HLU.UI.View"
              mc:Ignorable="d"
              d:DesignHeight="600" d:DesignWidth="300">

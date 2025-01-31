@@ -64,10 +64,7 @@ namespace HLU.UI.ViewModel
 
     internal partial class ViewModelWindowMain : PanelViewModelBase, INotifyPropertyChanged
     {
-
         #region Fields
-
-        #region Commands
 
         private ICommand _navigateFirstCommand;
         private ICommand _navigatePreviousCommand;
@@ -111,10 +108,6 @@ namespace HLU.UI.ViewModel
         private ICommand _optionsCommand;
         private ICommand _aboutCommand;
 
-        #endregion Commands
-
-        #region Windows
-
         private WindowMainCopySwitches _copySwitches = new();
         private WindowAbout _windowAbout;
         private ViewModelWindowAbout _viewModelAbout;
@@ -146,52 +139,48 @@ namespace HLU.UI.ViewModel
         private WindowEditPotentialHabitats _windowEditPotentialHabitats;
         private ViewModelWindowEditPotentialHabitats _viewModelWinEditPotentialHabitats;
 
-        #endregion Windows
-
-        #region Option fields
+        private int _mapWindowsCount;
+        private bool _showingReasonProcessGroup = false;
+        private bool _showingOSMMPendingGroup = false;
 
         // Database options
-        private int _dbConnectionTimeout;
+        private int _dbConnectionTimeout = Settings.Default.DbConnectionTimeout;
 
         // GIS/Export options
-        private int _minZoom;
+        private int _minZoom = Settings.Default.MinAutoZoom;
 
         // History options
         private DataColumn[] _historyColumns;
-        private int _historyDisplayLastN;
+        private int _historyDisplayLastN = Settings.Default.HistoryDisplayLastN;
 
         // Interface options
-        private string _preferredHabitatClass;
-        private bool _showGroupHeaders;
-        private bool _showIHSTab;
-        private bool _showSourceHabitatGroup;
-        private bool _showHabitatSecondariesSuggested;
-        private bool _showNVCCodes;
-        private bool _showHabitatSummary;
-        private string _showOSMMUpdates;
-        private string _preferredSecondaryGroup;
-        private string _secondaryCodeOrder;
-        private string _secondaryCodeDelimiter;
+        private string _preferredHabitatClass = Settings.Default.PreferredHabitatClass;
+        private bool _showGroupHeaders = Settings.Default.ShowGroupHeaders;
+        private bool _showIHSTab = Settings.Default.ShowIHSTab;
+        private bool _showSourceHabitatGroup = Settings.Default.ShowSourceHabitatGroup;
+        private bool _showHabitatSecondariesSuggested = Settings.Default.ShowHabitatSecondariesSuggested;
+        private bool _showNVCCodes = Settings.Default.ShowNVCCodes;
+        private bool _showHabitatSummary = Settings.Default.ShowHabitatSummary;
+        private string _showOSMMUpdates = Settings.Default.ShowOSMMUpdatesOption;
+        private string _preferredSecondaryGroup = Settings.Default.PreferredSecondaryGroup;
+        private string _secondaryCodeOrder = Settings.Default.SecondaryCodeOrder;
+        private string _secondaryCodeDelimiter = Settings.Default.SecondaryCodeDelimiter;
 
         // Updates options
-        private int _subsetUpdateAction;
-        private string _clearIHSUpdateAction;
-        private bool _notifyOnSplitMerge;
-        private bool _resetOSMMUpdatesStatus;
-        private int _habitatSecondaryCodeValidation;
-        private int _primarySecondaryCodeValidation;
-        private int _qualityValidation;
-        private int _potentialPriorityDetermQtyValidation;
+        private int _subsetUpdateAction = Settings.Default.SubsetUpdateAction;
+        private string _clearIHSUpdateAction = Settings.Default.ClearIHSUpdateAction;
+        private bool _notifyOnSplitMerge = Settings.Default.NotifyOnSplitMerge;
+        private bool _resetOSMMUpdatesStatus = Settings.Default.ResetOSMMUpdatesStatus;
+        private int _habitatSecondaryCodeValidation = Settings.Default.HabitatSecondaryCodeValidation;
+        private int _primarySecondaryCodeValidation = Settings.Default.PrimarySecondaryCodeValidation;
+        private int _qualityValidation = Settings.Default.QualityValidation;
+        private int _potentialPriorityDetermQtyValidation = Settings.Default.PotentialPriorityDetermQtyValidation;
 
         // Filter options
-        private int _warnBeforeGISSelect;
+        private int _warnBeforeGISSelect = Settings.Default.WarnBeforeGISSelect;
 
         // Dates options
         // None
-
-        #endregion Option fields
-
-        #region Dataset
 
         private DbBase _db;
         private ArcMapApp _gisApp;
@@ -279,14 +268,6 @@ namespace HLU.UI.ViewModel
         private HluDataSet.lut_habitat_classRow[] _habitatClassCodes;
         private static HluDataSet.lut_habitat_classRow[] _habitatClasses; // Used in the options window
         private HluDataSet.lut_habitat_typeRow[] _habitatTypeCodes;
-
-        #endregion Dataset
-
-        #region Variables
-
-        private int _mapWindowsCount;
-        private bool _showingReasonProcessGroup = false;
-        private bool _showingOSMMPendingGroup = false;
 
         private double _incidArea;
         private double _incidLength;
@@ -378,6 +359,7 @@ namespace HLU.UI.ViewModel
         private Nullable<bool> _isAuthorisedUser;
         private Nullable<bool> _canBulkUpdate;
         private Nullable<bool> _bulkUpdateMode = false;
+        //private bool _bulkUpdatePrimaryBap = Settings.Default.BulkUpdatePotentialBap;
         private string _osmmAcceptTag = "A_ccept";
         private string _osmmRejectTag = "Re_ject";
         private Nullable<bool> _canOSMMUpdate;
@@ -385,14 +367,14 @@ namespace HLU.UI.ViewModel
         private Nullable<bool> _osmmBulkUpdateMode = false;
         private bool _osmmUpdatesEmpty = false;
         private bool _osmmUpdateCreateHistory;
-        private string _codeAnyRow;
+        private string _codeAnyRow = Settings.Default.CodeAnyRow;
 
         private VagueDateInstance _incidConditionDateEntered;
 
         private VagueDateInstance _incidSource1DateEntered;
         private VagueDateInstance _incidSource2DateEntered;
         private VagueDateInstance _incidSource3DateEntered;
-        private string _codeDeleteRow;
+        private string _codeDeleteRow = Settings.Default.CodeDeleteRow;
         private string _processingMsg = "Processing ...";
         private bool _saved = false;
         private bool _savingAttempted;
@@ -414,24 +396,18 @@ namespace HLU.UI.ViewModel
         private bool _updateCancelled = true;
         private bool _updateAllFeatures = true;
         private bool _refillIncidTable = false;
-        private int _autoZoomSelection;
-        private bool _autoSelectOnGis;
+        private int _autoZoomSelection = Settings.Default.AutoZoomSelection;
+        private bool _autoSelectOnGis = Settings.Default.AutoSelectOnGis;
 
-        #endregion Fields
-
-        #region Static Variables
-
-        private static string _historyGeometry1ColumnName;
-        private static string _historyGeometry2ColumnName;
-        internal static string LutDescriptionFieldName;
-        internal static int LutDescriptionFieldOrdinal;
-        internal static string LutSourceFieldName;
-        internal static int LutSourceFieldOrdinal;
-        internal static string LutUserFieldName;
-        internal static int LutUserFieldOrdinal;
-        internal static int IncidPageSize;
-
-        #endregion Static fields
+        private static string _historyGeometry1ColumnName = Settings.Default.HistoryGeometry1ColumnName;
+        private static string _historyGeometry2ColumnName = Settings.Default.HistoryGeometry2ColumnName;
+        internal static string LutDescriptionFieldName = Settings.Default.LutDescriptionFieldName;
+        internal static int LutDescriptionFieldOrdinal = Settings.Default.LutDescriptionFieldOrdinal;
+        internal static string LutSourceFieldName = Settings.Default.LutSourceFieldName;
+        internal static int LutSourceFieldOrdinal = Settings.Default.LutSourceFieldOrdinal;
+        internal static string LutUserFieldName = Settings.Default.LutUserFieldName;
+        internal static int LutUserFieldOrdinal = Settings.Default.LutUserFieldOrdinal;
+        internal static int IncidPageSize = Settings.Default.IncidTablePageSize;
 
         #endregion
 
@@ -1162,7 +1138,37 @@ namespace HLU.UI.ViewModel
 
         #endregion
 
-
+        /// <summary>
+        /// Gets the name of the layer to display in the status bar.
+        /// </summary>
+        /// <value>
+        /// The name of the layer.
+        /// </value>
+        public string LayerName
+        {
+            get
+            {
+                // If no HLU layer has been identified yet (GIS is still loading) then
+                // don't return the layer name
+                if (_gisApp.CurrentHluLayer == null)
+                    return String.Empty;
+                else
+                {
+                    //---------------------------------------------------------------------
+                    // Do not display map window number with layer name
+                    // if there is only one map window.
+                    // 
+                    if (_mapWindowsCount > 1)
+                        // Include the layer name and active layer/map window number in the window title.
+                        return String.Format("{0} [{1}]", _gisApp.CurrentHluLayer.LayerName, _gisApp.CurrentHluLayer.MapNum);
+                    else
+                        // Include only the layer name in the window title.
+                        return String.Format("{0}", _gisApp.CurrentHluLayer.LayerName);
+                    //---------------------------------------------------------------------
+                }
+                //---------------------------------------------------------------------
+            }
+        }
 
         #region Internal properties
 
@@ -1279,7 +1285,7 @@ namespace HLU.UI.ViewModel
             get { return _incidIhsComplexRows; }
             set { _incidIhsComplexRows = value; }
         }
-
+        
         internal HluDataSet.incid_secondaryRow[] IncidSecondaryRows
         {
             get { return _incidSecondaryRows; }
@@ -1570,163 +1576,6 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion
-
-        #region Processing
-
-        /// <summary>
-        /// Is the form processing?
-        /// </summary>
-        public Visibility IsProcessing
-        {
-            get
-            {
-                if (_processStatus != null)
-                    return Visibility.Visible;
-                else
-                    return Visibility.Collapsed;
-            }
-        }
-
-        private double _progressValue;
-
-        /// <summary>
-        /// Gets the value to set on the progress
-        /// </summary>
-        public double ProgressValue
-        {
-            get
-            {
-                return _progressValue;
-            }
-            set
-            {
-                _progressValue = value;
-
-                OnPropertyChanged(nameof(ProgressValue));
-            }
-        }
-
-        private double _maxProgressValue;
-
-        /// <summary>
-        /// Gets the max value to set on the progress
-        /// </summary>
-        public double MaxProgressValue
-        {
-            get
-            {
-                return _maxProgressValue;
-            }
-            set
-            {
-                _maxProgressValue = value;
-
-                OnPropertyChanged(nameof(MaxProgressValue));
-            }
-        }
-
-        private string _processStatus;
-
-        /// <summary>
-        /// ProgressStatus Text
-        /// </summary>
-        public string ProcessStatus
-        {
-            get
-            {
-                return _processStatus;
-            }
-            set
-            {
-                _processStatus = value;
-
-                OnPropertyChanged(nameof(ProcessStatus));
-                OnPropertyChanged(nameof(IsProcessing));
-                OnPropertyChanged(nameof(ProgressText));
-                OnPropertyChanged(nameof(ProgressAnimating));
-            }
-        }
-
-        private string _progressText;
-
-        /// <summary>
-        /// Progress bar Text
-        /// </summary>
-        public string ProgressText
-        {
-            get
-            {
-                return _progressText;
-            }
-            set
-            {
-                _progressText = value;
-
-                OnPropertyChanged(nameof(ProgressText));
-            }
-        }
-
-        /// <summary>
-        /// Is the progress wheel animating?
-        /// </summary>
-        public Visibility ProgressAnimating
-        {
-            get
-            {
-                if (_progressText != null)
-                    return Visibility.Visible;
-                else
-                    return Visibility.Collapsed;
-            }
-        }
-
-        /// <summary>
-        /// Update the progress bar.
-        /// </summary>
-        /// <param name="processText"></param>
-        /// <param name="progressValue"></param>
-        /// <param name="maxProgressValue"></param>
-        public void ProgressUpdate(string processText = null, int progressValue = -1, int maxProgressValue = -1)
-        {
-            if (Application.Current.Dispatcher.CheckAccess())
-            {
-                // Check if the values have changed and update them if they have.
-                if (progressValue >= 0)
-                    ProgressValue = progressValue;
-
-                if (maxProgressValue != 0)
-                    MaxProgressValue = maxProgressValue;
-
-                if (_maxProgressValue > 0)
-                    ProgressText = _progressValue == _maxProgressValue ? "Done" : $@"{_progressValue * 100 / _maxProgressValue:0}%";
-                else
-                    ProgressText = null;
-
-                ProcessStatus = processText;
-            }
-            else
-            {
-                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background,
-                  () =>
-                  {
-                      // Check if the values have changed and update them if they have.
-                      if (progressValue >= 0)
-                          ProgressValue = progressValue;
-
-                      if (maxProgressValue != 0)
-                          MaxProgressValue = maxProgressValue;
-
-                      if (_maxProgressValue > 0)
-                          ProgressText = _progressValue == _maxProgressValue ? "Done" : $@"{_progressValue * 100 / _maxProgressValue:0}%";
-                      else
-                          ProgressText = null;
-
-                      ProcessStatus = processText;
-                  });
-            }
-        }
-
-        #endregion Processing
 
         #region User ID
 
@@ -7231,38 +7080,6 @@ namespace HLU.UI.ViewModel
                 }
                 else
                     return false;
-            }
-        }
-
-        /// <summary>
-        /// Gets the name of the layer to display in the status bar.
-        /// </summary>
-        /// <value>
-        /// The name of the layer.
-        /// </value>
-        public string LayerName
-        {
-            get
-            {
-                // If no HLU layer has been identified yet (GIS is still loading) then
-                // don't return the layer name
-                if (_gisApp.CurrentHluLayer == null)
-                    return String.Empty;
-                else
-                {
-                    //---------------------------------------------------------------------
-                    // Do not display map window number with layer name
-                    // if there is only one map window.
-                    // 
-                    if (_mapWindowsCount > 1)
-                        // Include the layer name and active layer/map window number in the window title.
-                        return String.Format("{0} [{1}]", _gisApp.CurrentHluLayer.LayerName, _gisApp.CurrentHluLayer.MapNum);
-                    else
-                        // Include only the layer name in the window title.
-                        return String.Format("{0}", _gisApp.CurrentHluLayer.LayerName);
-                    //---------------------------------------------------------------------
-                }
-                //---------------------------------------------------------------------
             }
         }
 
@@ -15163,5 +14980,19 @@ namespace HLU.UI.ViewModel
 
         #endregion
 
+    }
+
+    /// <summary>
+    /// Button implementation to show the Main Window.
+    /// </summary>
+    internal class WindowMain_ShowButton_OLD : Button
+    {
+        protected override void OnClick()
+        {
+            //string uri = System.Reflection.Assembly.GetExecutingAssembly().Location;
+
+            // Show the dock pane.
+            ViewModelWindowMain.Show();
+        }
     }
 }
