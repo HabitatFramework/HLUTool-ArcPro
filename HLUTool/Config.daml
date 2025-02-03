@@ -5,7 +5,7 @@
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
 
-	<AddInInfo id="{8bb44fa0-a26d-4f03-a370-b52f39b28c90}" version="1.0.0" desktopVersion="3.3.52636">
+	<AddInInfo id="{8bb44fa0-a26d-4f03-a370-b52f39b28c90}" version="4.1.0" desktopVersion="3.3.52636">
 		<Name>HLUTool</Name>
 		<Description>HLUTool is an ArcGIS .Net tool ....</Description>
 		<Image>Images\AddinDesktop32.png</Image>

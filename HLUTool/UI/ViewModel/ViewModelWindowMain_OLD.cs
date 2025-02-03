@@ -35,6 +35,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using HLU.Data;
 using HLU.Data.Connection;
@@ -57,6 +58,7 @@ using System.Windows.Threading;
 using System.Windows.Media;
 
 using CommandType = System.Data.CommandType;
+using Azure.Identity;
 
 
 namespace HLU.UI.ViewModel
@@ -421,15 +423,9 @@ namespace HLU.UI.ViewModel
 
         #region Static Variables
 
-        private static string _historyGeometry1ColumnName;
-        private static string _historyGeometry2ColumnName;
-        internal static string LutDescriptionFieldName;
-        internal static int LutDescriptionFieldOrdinal;
-        internal static string LutSourceFieldName;
-        internal static int LutSourceFieldOrdinal;
-        internal static string LutUserFieldName;
-        internal static int LutUserFieldOrdinal;
-        internal static int IncidPageSize;
+        internal static string _historyGeometry1ColumnName;
+        internal static string _historyGeometry2ColumnName;
+        internal static int _incidPageSize;
 
         #endregion Static fields
 
@@ -439,6 +435,57 @@ namespace HLU.UI.ViewModel
 
         internal bool Initialize()
         {
+            // Initialise settings.
+
+            // Database options
+            _dbConnectionTimeout = Settings.Default.DbConnectionTimeout;
+
+            // GIS/Export options
+            _minZoom = Settings.Default.MinAutoZoom;
+
+            // History options
+            _historyDisplayLastN = Settings.Default.HistoryDisplayLastN;
+
+            // Interface options
+            _preferredHabitatClass = Settings.Default.PreferredHabitatClass;
+            _showGroupHeaders = Settings.Default.ShowGroupHeaders;
+            _showIHSTab = Settings.Default.ShowIHSTab;
+            _showSourceHabitatGroup = Settings.Default.ShowSourceHabitatGroup;
+            _showHabitatSecondariesSuggested = Settings.Default.ShowHabitatSecondariesSuggested;
+            _showNVCCodes = Settings.Default.ShowNVCCodes;
+            _showHabitatSummary = Settings.Default.ShowHabitatSummary;
+            _showOSMMUpdates = Settings.Default.ShowOSMMUpdatesOption;
+            _preferredSecondaryGroup = Settings.Default.PreferredSecondaryGroup;
+            _secondaryCodeOrder = Settings.Default.SecondaryCodeOrder;
+            _secondaryCodeDelimiter = Settings.Default.SecondaryCodeDelimiter;
+
+            // Updates options
+            _subsetUpdateAction = Settings.Default.SubsetUpdateAction;
+            _clearIHSUpdateAction = Settings.Default.ClearIHSUpdateAction;
+            _notifyOnSplitMerge = Settings.Default.NotifyOnSplitMerge;
+            _resetOSMMUpdatesStatus = Settings.Default.ResetOSMMUpdatesStatus;
+            _habitatSecondaryCodeValidation = Settings.Default.HabitatSecondaryCodeValidation;
+            _primarySecondaryCodeValidation = Settings.Default.PrimarySecondaryCodeValidation;
+            _qualityValidation = Settings.Default.QualityValidation;
+            _potentialPriorityDetermQtyValidation = Settings.Default.PotentialPriorityDetermQtyValidation;
+
+            // Filter options
+            _warnBeforeGISSelect = Settings.Default.WarnBeforeGISSelect;
+
+            // Dates options
+            // None
+
+            _codeDeleteRow = Settings.Default.CodeDeleteRow;
+            _autoZoomSelection = Settings.Default.AutoZoomSelection;
+            _autoSelectOnGis = Settings.Default.AutoSelectOnGis;
+            _codeAnyRow = Settings.Default.CodeAnyRow;
+            //private bool _bulkUpdatePrimaryBap = Settings.Default.BulkUpdatePotentialBap;
+
+            // Initialise statics.
+            HistoryGeometry1ColumnName = Settings.Default.HistoryGeometry1ColumnName;
+            HistoryGeometry2ColumnName = Settings.Default.HistoryGeometry2ColumnName;
+            IncidPageSize = Settings.Default.IncidTablePageSize;
+
             try
             {
                 // open database connection and test whether it points to a valid HLU database
@@ -1214,6 +1261,8 @@ namespace HLU.UI.ViewModel
 
         public static string HistoryGeometry2ColumnName { get => _historyGeometry2ColumnName; set => _historyGeometry2ColumnName = value; }
 
+        public static int IncidPageSize { get => _incidPageSize; set => _incidPageSize = value; }
+
         internal DataTable GisSelection
         {
             get { return _gisSelection; }
@@ -1553,6 +1602,7 @@ namespace HLU.UI.ViewModel
 
         public void ChangeCursor(Cursor cursorType, string processingMessage)
         {
+            //TODO: ChanceCursor
             ProgressUpdate(processingMessage, -1, -1);
 
             //_windowCursor = cursorType;

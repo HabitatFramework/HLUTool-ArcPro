@@ -149,7 +149,7 @@ namespace HLU.Data.Connection
 
         public static bool HasPassword(DbConnectionStringBuilder connStringBuilder)
         {
-            if ((connStringBuilder == null) || IsIntegratedSecurity(connStringBuilder) || 
+            if ((connStringBuilder == null) || IsIntegratedSecurity(connStringBuilder) ||
                 !HasPasswordKey(connStringBuilder)) return false;
 
             connStringBuilder.TryGetValue("Password", out object pwd);

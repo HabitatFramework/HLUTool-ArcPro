@@ -48,7 +48,7 @@ namespace HLU.Data.Connection
                 _connType = (ConnectionTypes)Settings.Default.DbConnectionType;
             else
                 _connType = ConnectionTypes.Unknown;
-            
+
             string connString = Settings.Default.DbConnectionString;
             string defaultSchema = Settings.Default.DbDefaultSchema;
             bool promptPwd = Settings.Default.DbPromptPwd;
@@ -59,7 +59,7 @@ namespace HLU.Data.Connection
                 promptPwd = false;
                 SelectConnectionType();
             }
-            
+
             if (_connType == ConnectionTypes.Unknown) return null;
 
             DbBase db = null;

@@ -126,7 +126,7 @@ namespace HLU.UI.ViewModel
                 cn.Close();
 
                 _connStrBuilder.PersistSecurityInfo = Settings.Default.DbConnectionPersistSecurityInfo;
-                
+
                 this.RequestClose(_connStrBuilder.ConnectionString, _defaultSchema, null);
             }
             catch (SqlException exSql)
@@ -200,6 +200,9 @@ namespace HLU.UI.ViewModel
             {
                 if (!String.IsNullOrEmpty(value) && (value != _connStrBuilder.DataSource))
                     _connStrBuilder.DataSource = value;
+
+                //DONE: Manually set encryption to optional.
+                _connStrBuilder.Encrypt = SqlConnectionEncryptOption.Optional;
             }
         }
 

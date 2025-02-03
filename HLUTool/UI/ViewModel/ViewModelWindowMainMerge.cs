@@ -28,6 +28,7 @@ using System.Windows;
 using System.Windows.Input;
 using HLU.Data;
 using HLU.Data.Model;
+using HLU.Properties;
 using HLU.UI.View;
 
 namespace HLU.UI.ViewModel

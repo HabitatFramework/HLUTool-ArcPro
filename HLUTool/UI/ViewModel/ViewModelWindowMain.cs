@@ -180,21 +180,6 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        //TODO: Static variables
-        // Static constructor
-        //static ViewModelWindowMain()
-        //{
-        //    _historyGeometry1ColumnName = Settings.Default.HistoryGeometry1ColumnName;
-        //    _historyGeometry2ColumnName = Settings.Default.HistoryGeometry2ColumnName;
-        //    LutDescriptionFieldName = Settings.Default.LutDescriptionFieldName;
-        //    LutDescriptionFieldOrdinal = Settings.Default.LutDescriptionFieldOrdinal;
-        //    LutSourceFieldName = Settings.Default.LutSourceFieldName;
-        //    LutSourceFieldOrdinal = Settings.Default.LutSourceFieldOrdinal;
-        //    LutUserFieldName = Settings.Default.LutUserFieldName;
-        //    LutUserFieldOrdinal = Settings.Default.LutUserFieldOrdinal;
-        //    IncidPageSize = Settings.Default.IncidTablePageSize;
-        //}
-
         /// <summary>
         /// Set the global variables.
         /// </summary>
@@ -214,6 +199,40 @@ namespace HLU.UI.ViewModel
 
             // Indicate that the dockpane has been initialised.
             _initialised = true;
+
+            try
+            {
+                UpgradeSettings();
+
+                //DispatcherHelper.DoEvents();
+
+                //string test = System.Configuration.ConfigurationManager.AppSettings["ConverterParameterSeparator"];
+
+                // Initialise settings.
+
+                // Database options
+                //_dbConnectionTimeout = Settings.Default.DbConnectionTimeout;
+
+                // Initialise the main view (start the tool)
+                if (!Initialize())
+                {
+                    //TODO: What to do if initialise fails?
+                }
+            }
+            finally
+            {
+                //TODO: What to do it upgrade fails?
+            }
+        }
+
+        private void UpgradeSettings()
+        {
+            //if (Settings.Default.CallUpgrade)
+            //{
+            //    Settings.Default.Upgrade();
+            //    Settings.Default.CallUpgrade = false;
+            //    Settings.Default.Save();
+            //}
         }
 
         /// <summary>

@@ -491,18 +491,26 @@ namespace HLU.UI.ViewModel
                         int lutFieldOrdinal;
                         if ((r.table_name == _viewModelMain.HluDataset.incid_sources.TableName) && (idSuffixRegex().IsMatch(r.column_name)))
                         {
-                            lutFieldName = ViewModelWindowMain.LutSourceFieldName;
-                            lutFieldOrdinal = ViewModelWindowMain.LutSourceFieldOrdinal - 1;
+                            string lutSourceFieldName = Settings.Default.LutSourceFieldName;
+                            int lutSourceFieldOrdinal = Settings.Default.LutSourceFieldOrdinal;
+
+                            lutFieldName = lutSourceFieldName;
+                            lutFieldOrdinal = lutSourceFieldOrdinal - 1;
                         }
                         else if ((r.table_name == _viewModelMain.HluDataset.incid.TableName) && (useridSuffixRegex().IsMatch(r.column_name)))
                         {
-                            lutFieldName = ViewModelWindowMain.LutUserFieldName;
-                            lutFieldOrdinal = ViewModelWindowMain.LutUserFieldOrdinal - 1;
+                            string lutUserFieldName = Settings.Default.LutUserFieldName;
+                            int lutUserFieldOrdinal = Settings.Default.LutUserFieldOrdinal;
+                            lutFieldName = lutUserFieldName;
+                            lutFieldOrdinal = lutUserFieldOrdinal - 1;
                         }
                         else
                         {
-                            lutFieldName = ViewModelWindowMain.LutDescriptionFieldName;
-                            lutFieldOrdinal = ViewModelWindowMain.LutDescriptionFieldOrdinal - 1;
+                            string lutDescriptionFieldName = Settings.Default.LutDescriptionFieldName;
+                            int lutDescriptionFieldOrdinal = Settings.Default.LutDescriptionFieldOrdinal;
+
+                            lutFieldName = lutDescriptionFieldName;
+                            lutFieldOrdinal = lutDescriptionFieldOrdinal - 1;
                         }
 
                         // Get the list of columns for the lookup table.

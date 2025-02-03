@@ -17,6 +17,7 @@
     <Page Remove="GISApplication\MapInfo\**" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Remove="App.xaml.cs" />
     <Compile Remove="Data\Model\DataSet1.Designer.cs" />
     <Compile Remove="GISApplication\GISApp.cs" />
     <Compile Remove="GISApplication\GISAppFactory.cs" />
@@ -25,6 +26,7 @@
     <Compile Remove="UI\ViewModel\PaneHeader1ViewModel.cs" />
     <Compile Remove="UI\ViewModel\PaneHeader2ViewModel.cs" />
     <Compile Remove="UI\ViewModel\ViewModelConnectOleDb.cs" />
+    <Compile Remove="UI\ViewModel\ViewModelWindowMain_NEW.cs" />
     <Compile Remove="UI\ViewModel\ViewModelWindowSelectGIS.cs" />
     <Compile Remove="UI\ViewModel\ViewModelWindowSplash.cs" />
     <Compile Remove="UI\View\Connection\ViewConnectOleDb.xaml.cs" />
@@ -111,7 +113,7 @@
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.6.1" />
     <PackageReference Include="System.Collections" Version="4.3.0" />
     <PackageReference Include="System.Data.Odbc" Version="9.0.1" />
-    <PackageReference Include="System.Data.OleDb" Version="9.0.0" />
+    <PackageReference Include="System.Data.OleDb" Version="8.0.0" />
     <PackageReference Include="System.Linq" Version="4.3.0" />
     <PackageReference Include="System.Runtime" Version="4.3.1" />
   </ItemGroup>
