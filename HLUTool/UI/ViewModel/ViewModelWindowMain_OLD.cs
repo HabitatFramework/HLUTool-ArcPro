@@ -2778,7 +2778,7 @@ namespace HLU.UI.ViewModel
         /// made by the user, if we're not currently in bulk update mode with no records
         /// selected, or if the current record is in error.
         /// </summary>
-        private bool CanUpdate
+        public bool CanUpdate
         {
             get
             {
@@ -6304,7 +6304,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        private bool CanEditPriorityHabitats
+        public bool CanEditPriorityHabitats
         {
             get { return _bulkUpdateMode == false && _osmmUpdateMode == false && BapHabitatsAutoEnabled; }
         }
@@ -6388,7 +6388,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        private bool CanEditPotentialHabitats
+        public bool CanEditPotentialHabitats
         {
             get { return _bulkUpdateMode == false && _osmmUpdateMode == false && BapHabitatsUserEnabled; }
         }
@@ -7863,6 +7863,7 @@ namespace HLU.UI.ViewModel
             bool canMove = false;
             if (!IsFiltered)
             {
+                //TODO: Bug here sometimes.
                 int newRowIndex = SeekIncid(_incidCurrentRowIndex);
                 if ((canMove = newRowIndex != -1))
                     _incidCurrentRow = _hluDS.incid[newRowIndex];
@@ -8227,6 +8228,7 @@ namespace HLU.UI.ViewModel
                     string loadWhereClauseTemplate = String.Format("{0} >= {1} AND {0} < {2} ORDER BY {0}",
                         _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName), "{0}", "{1}");
 
+                    //TODO: Move to above if statements and amend depending on if at start, end or middle of table.
                     _hluTableAdapterMgr.Fill(_hluDS, typeof(HluDataSet.incidDataTable), String.Format(
                         loadWhereClauseTemplate, _db.QuoteValue(_recIDs.IncidString(seekIncidNumber)),
                         _db.QuoteValue(_recIDs.IncidString(seekIncidNumber + IncidPageSize))), true);
