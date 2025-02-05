@@ -25,24 +25,31 @@ using ArcGIS.Core.Data.DDL;
 using ArcGIS.Core.Data.Exceptions;
 using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
+using SortDescription = ArcGIS.Core.Data.SortDescription;
 using ArcGIS.Desktop.Core.Geoprocessing;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Editing.Attributes;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using QueryFilter = ArcGIS.Core.Data.QueryFilter;
+using Field = ArcGIS.Core.Data.Field;
+using HLU.Data;
+using HLU.Data.Model;
+using System.Data;
 
-namespace HLU
+namespace HLU.GISApplication
 {
     /// <summary>
     /// This class provides ArcGIS Pro map functions.
     /// </summary>
-    internal class MapFunctions
+    internal partial class ArcMapApp
     {
         #region Fields
 
@@ -56,7 +63,7 @@ namespace HLU
         /// <summary>
         /// Set the global variables.
         /// </summary>
-        public MapFunctions()
+        public ArcMapApp()
         {
             // Get the active map view (if there is one).
             _activeMapView = GetActiveMapView();
@@ -66,6 +73,13 @@ namespace HLU
                 _activeMap = _activeMapView.Map;
             else
                 _activeMap = null;
+
+            // Get the HLU featureLayer structure from the database.
+            if (_hluLayerStructure == null)
+                _hluLayerStructure = new HluGISLayer.incid_mm_polygonsDataTable();
+
+            // Set the data type maps to/from SQL.
+            GetTypeMaps(out _typeMapSystemToSQL, out _typeMapSQLToSystem);
         }
 
         #endregion Constructor
@@ -152,7 +166,7 @@ namespace HLU
         }
 
         /// <summary>
-        /// Add a layer to the active map.
+        /// Add a featureLayer to the active map.
         /// </summary>
         /// <param name="url"></param>
         /// <param name="index"></param>
@@ -170,10 +184,10 @@ namespace HLU
                 {
                     Uri uri = new(url);
 
-                    // Check if the layer is already loaded (unlikely as the map is new)
+                    // Check if the featureLayer is already loaded (unlikely as the map is new)
                     Layer findLayer = _activeMap.Layers.FirstOrDefault(t => t.Name == uri.Segments.Last());
 
-                    // If the layer is not loaded, add it.
+                    // If the featureLayer is not loaded, add it.
                     if (findLayer == null)
                     {
                         Layer layer = LayerFactory.Instance.CreateLayer(uri, _activeMap, index, layerName);
@@ -190,7 +204,7 @@ namespace HLU
         }
 
         /// <summary>
-        /// Add a standalone layer to the active map.
+        /// Add a standalone featureLayer to the active map.
         /// </summary>
         /// <param name="url"></param>
         /// <returns>bool</returns>
@@ -206,10 +220,10 @@ namespace HLU
                 {
                     Uri uri = new(url);
 
-                    // Check if the layer is already loaded.
+                    // Check if the featureLayer is already loaded.
                     StandaloneTable findTable = _activeMap.StandaloneTables.FirstOrDefault(t => t.Name == uri.Segments.Last());
 
-                    // If the layer is not loaded, add it.
+                    // If the featureLayer is not loaded, add it.
                     if (findTable == null)
                     {
                         StandaloneTable table = StandaloneTableFactory.Instance.CreateStandaloneTable(uri, _activeMap);
@@ -235,14 +249,14 @@ namespace HLU
         /// <returns>bool</returns>
         public async Task<bool> ZoomToLayerAsync(string layerName, long objectID, double? factor, double? mapScaleOrDistance)
         {
-            // Check there is an input feature layer name.
+            // Check there is an input feature featureLayer name.
             if (String.IsNullOrEmpty(layerName))
                 return false;
 
-            // Check if the layer is already loaded.
+            // Check if the featureLayer is already loaded.
             BasicFeatureLayer findLayer = FindLayer(layerName);
 
-            // If the layer is not loaded.
+            // If the featureLayer is not loaded.
             if (findLayer == null)
                 return false;
 
@@ -268,14 +282,14 @@ namespace HLU
         /// <returns>bool</returns>
         public async Task<bool> ZoomToLayerAsync(string layerName, IEnumerable<long> objectIDs)
         {
-            // Check there is an input feature layer name.
+            // Check there is an input feature featureLayer name.
             if (String.IsNullOrEmpty(layerName))
                 return false;
 
-            // Check if the layer is already loaded.
+            // Check if the featureLayer is already loaded.
             BasicFeatureLayer findLayer = FindLayer(layerName);
 
-            // If the layer is not loaded.
+            // If the featureLayer is not loaded.
             if (findLayer == null)
                 return false;
 
@@ -294,7 +308,7 @@ namespace HLU
         }
 
         /// <summary>
-        /// Zoom to a layer for a given ratio or scale.
+        /// Zoom to a featureLayer for a given ratio or scale.
         /// </summary>
         /// <param name="layerName"></param>
         /// <param name="selectedOnly"></param>
@@ -303,20 +317,20 @@ namespace HLU
         /// <returns>bool</returns>
         public async Task<bool> ZoomToLayerAsync(string layerName, bool selectedOnly, double ratio = 1, double scale = 10000)
         {
-            // Check there is an input feature layer name.
+            // Check there is an input feature featureLayer name.
             if (String.IsNullOrEmpty(layerName))
                 return false;
 
-            // Check if the layer is already loaded.
+            // Check if the featureLayer is already loaded.
             Layer findLayer = FindLayer(layerName);
 
-            // If the layer is not loaded.
+            // If the featureLayer is not loaded.
             if (findLayer == null)
                 return false;
 
             try
             {
-                // Zoom to the layer extent.
+                // Zoom to the featureLayer extent.
                 await _activeMapView.ZoomToAsync(findLayer, selectedOnly);
 
                 // Get the camera for the active view.
@@ -345,13 +359,13 @@ namespace HLU
         #region Layers
 
         /// <summary>
-        /// Find a feature layer by name in the active map.
+        /// Find a feature featureLayer by name in the active map.
         /// </summary>
         /// <param name="layerName"></param>
         /// <returns>FeatureLayer</returns>
         internal FeatureLayer FindLayer(string layerName)
         {
-            // Check there is an input feature layer name.
+            // Check there is an input feature featureLayer name.
             if (String.IsNullOrEmpty(layerName))
                 return null;
 
@@ -366,10 +380,10 @@ namespace HLU
             {
                 while (layers.Any())
                 {
-                    // Get the first feature layer found by name.
+                    // Get the first feature featureLayer found by name.
                     FeatureLayer layer = layers.First();
 
-                    // Check the feature layer is in the active map.
+                    // Check the feature featureLayer is in the active map.
                     if (layer.Map.Name.Equals(_activeMap.Name, StringComparison.OrdinalIgnoreCase))
                         return layer;
                 }
@@ -384,13 +398,13 @@ namespace HLU
         }
 
         /// <summary>
-        /// Find the position index for a feature layer by name in the active map.
+        /// Find the position index for a feature featureLayer by name in the active map.
         /// </summary>
         /// <param name="layerName"></param>
         /// <returns>int</returns>
         internal int FindLayerIndex(string layerName)
         {
-            // Check there is an input feature layer name.
+            // Check there is an input feature featureLayer name.
             if (String.IsNullOrEmpty(layerName))
                 return 0;
 
@@ -407,7 +421,7 @@ namespace HLU
             {
                 for (int index = 0; index < _activeMap.Layers.Count; index++)
                 {
-                    // Get the index of the first feature layer found by name.
+                    // Get the index of the first feature featureLayer found by name.
                     if (_activeMap.Layers[index].Name == layerName)
                         return index;
                 }
@@ -422,22 +436,22 @@ namespace HLU
         }
 
         /// <summary>
-        /// Remove a layer by name from the active map.
+        /// Remove a featureLayer by name from the active map.
         /// </summary>
         /// <param name="layerName"></param>
         /// <returns>bool</returns>
         public async Task<bool> RemoveLayerAsync(string layerName)
         {
-            // Check there is an input layer name.
+            // Check there is an input featureLayer name.
             if (String.IsNullOrEmpty(layerName))
                 return false;
 
             try
             {
-                // Find the layer in the active map.
+                // Find the featureLayer in the active map.
                 FeatureLayer layer = FindLayer(layerName);
 
-                // Remove the layer.
+                // Remove the featureLayer.
                 if (layer != null)
                     return await RemoveLayerAsync(layer);
             }
@@ -451,13 +465,13 @@ namespace HLU
         }
 
         /// <summary>
-        /// Remove a layer from the active map.
+        /// Remove a featureLayer from the active map.
         /// </summary>
         /// <param name="layer"></param>
         /// <returns>bool</returns>
         public async Task<bool> RemoveLayerAsync(Layer layer)
         {
-            // Check there is an input layer.
+            // Check there is an input featureLayer.
             if (layer == null)
                 return false;
 
@@ -465,7 +479,7 @@ namespace HLU
             {
                 await QueuedTask.Run(() =>
                 {
-                    // Remove the layer.
+                    // Remove the featureLayer.
                     if (layer != null)
                         _activeMap.RemoveLayer(layer);
                 });
@@ -503,7 +517,7 @@ namespace HLU
             if (!await FieldExistsAsync(outputLayerName, keyFieldName))
                 return -1;
 
-            // Get the feature layer.
+            // Get the feature featureLayer.
             FeatureLayer outputFeaturelayer = FindLayer(outputLayerName);
             if (outputFeaturelayer == null)
                 return -1;
@@ -525,14 +539,14 @@ namespace HLU
             {
                 await QueuedTask.Run(() =>
                 {
-                    /// Get the feature class for the output feature layer.
+                    /// Get the feature class for the output feature featureLayer.
                     using FeatureClass featureClass = outputFeaturelayer.GetFeatureClass();
 
                     // Get the feature class defintion.
                     using FeatureClassDefinition featureClassDefinition = featureClass.GetDefinition();
 
                     // Get the key field from the feature class definition.
-                    using ArcGIS.Core.Data.Field keyField = featureClassDefinition.GetFields()
+                    using Field keyField = featureClassDefinition.GetFields()
                       .First(x => x.Name.Equals(keyFieldName, StringComparison.OrdinalIgnoreCase));
 
                     // Create a SortDescription for the key field.
@@ -626,7 +640,7 @@ namespace HLU
             if (!string.IsNullOrEmpty(radiusColumn) && !await FieldExistsAsync(layerName, radiusColumn))
                 return false;
 
-            // Get the feature layer.
+            // Get the feature featureLayer.
             FeatureLayer featurelayer = FindLayer(layerName);
 
             if (featurelayer == null)
@@ -709,11 +723,11 @@ namespace HLU
         public static async Task<bool> SelectLayerByLocationAsync(string targetLayer, string searchLayer,
             string overlapType = "INTERSECT", string searchDistance = "", string selectionType = "NEW_SELECTION")
         {
-            // Check if there is an input target layer name.
+            // Check if there is an input target featureLayer name.
             if (String.IsNullOrEmpty(targetLayer))
                 return false;
 
-            // Check if there is an input search layer name.
+            // Check if there is an input search featureLayer name.
             if (String.IsNullOrEmpty(searchLayer))
                 return false;
 
@@ -760,7 +774,7 @@ namespace HLU
         /// <returns>bool</returns>
         public async Task<bool> SelectLayerByAttributesAsync(string layerName, string whereClause, SelectionCombinationMethod selectionMethod)
         {
-            // Check there is an input feature layer name.
+            // Check there is an input feature featureLayer name.
             if (String.IsNullOrEmpty(layerName))
                 return false;
 
@@ -794,13 +808,13 @@ namespace HLU
         }
 
         /// <summary>
-        /// Clear selected features in a feature layer.
+        /// Clear selected features in a feature featureLayer.
         /// </summary>
         /// <param name="layerName"></param>
         /// <returns>bool</returns>
         public async Task<bool> ClearLayerSelectionAsync(string layerName)
         {
-            // Check there is an input feature layer name.
+            // Check there is an input feature featureLayer name.
             if (String.IsNullOrEmpty(layerName))
                 return false;
 
@@ -828,13 +842,13 @@ namespace HLU
         }
 
         /// <summary>
-        /// Count the number of selected features in a feature layer.
+        /// Count the number of selected features in a feature featureLayer.
         /// </summary>
         /// <param name="layerName"></param>
         /// <returns>long</returns>
         public long GetSelectedFeatureCount(string layerName)
         {
-            // Check there is an input feature layer name.
+            // Check there is an input feature featureLayer name.
             if (String.IsNullOrEmpty(layerName))
                 return -1;
 
@@ -863,23 +877,16 @@ namespace HLU
         /// Get the list of fields for a feature class.
         /// </summary>
         /// <param name="layerPath"></param>
-        /// <returns>IReadOnlyList<ArcGIS.Core.Data.Field></returns>
-        public async Task<IReadOnlyList<ArcGIS.Core.Data.Field>> GetFCFieldsAsync(string layerPath)
+        /// <returns>IReadOnlyList<Field></returns>
+        public async Task<IReadOnlyList<Field>> GetFCFieldsAsync(FeatureLayer featurelayer)
         {
-            // Check there is an input feature layer path.
-            if (String.IsNullOrEmpty(layerPath))
+            // Check there is an input feature featureLayer.
+            if (featurelayer == null)
                 return null;
 
             try
             {
-                // Find the feature layer by name if it exists. Only search existing layers.
-                FeatureLayer featurelayer = FindLayer(layerPath);
-
-                if (featurelayer == null)
-                    return null;
-
-                IReadOnlyList<ArcGIS.Core.Data.Field> fields = null;
-                List<string> fieldList = [];
+                IReadOnlyList<Field> fields = null;
 
                 await QueuedTask.Run(() =>
                 {
@@ -905,13 +912,44 @@ namespace HLU
         }
 
         /// <summary>
+        /// Get the list of fields for a feature class.
+        /// </summary>
+        /// <param name="layerPath"></param>
+        /// <returns>IReadOnlyList<Field></returns>
+        public async Task<IReadOnlyList<Field>> GetFCFieldsAsync(string layerPath)
+        {
+            // Check there is an input feature featureLayer path.
+            if (String.IsNullOrEmpty(layerPath))
+                return null;
+
+            try
+            {
+                // Find the feature featureLayer by name if it exists. Only search existing layers.
+                FeatureLayer featurelayer = FindLayer(layerPath);
+
+                if (featurelayer == null)
+                    return null;
+
+                IReadOnlyList<Field> fields;
+                fields = await GetFCFieldsAsync(featurelayer);
+
+                return fields;
+            }
+            catch
+            {
+                // Handle Exception.
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Get the list of fields for a standalone table.
         /// </summary>
         /// <param name="layerPath"></param>
-        /// <returns>IReadOnlyList<ArcGIS.Core.Data.Field></returns>
-        public async Task<IReadOnlyList<ArcGIS.Core.Data.Field>> GetTableFieldsAsync(string layerPath)
+        /// <returns>IReadOnlyList<Field></returns>
+        public async Task<IReadOnlyList<Field>> GetTableFieldsAsync(string layerPath)
         {
-            // Check there is an input feature layer name.
+            // Check there is an input feature featureLayer name.
             if (String.IsNullOrEmpty(layerPath))
                 return null;
 
@@ -923,7 +961,7 @@ namespace HLU
                 if (inputTable == null)
                     return null;
 
-                IReadOnlyList<ArcGIS.Core.Data.Field> fields = null;
+                IReadOnlyList<Field> fields = null;
                 List<string> fieldList = [];
 
                 await QueuedTask.Run(() =>
@@ -955,7 +993,7 @@ namespace HLU
         /// <param name="fields"></param>
         /// <param name="fieldName"></param>
         /// <returns>bool</returns>
-        public static bool FieldExists(IReadOnlyList<ArcGIS.Core.Data.Field> fields, string fieldName)
+        public static bool FieldExists(IReadOnlyList<Field> fields, string fieldName)
         {
             bool fldFound = false;
 
@@ -963,7 +1001,7 @@ namespace HLU
             if (String.IsNullOrEmpty(fieldName))
                 return false;
 
-            foreach (ArcGIS.Core.Data.Field fld in fields)
+            foreach (Field fld in fields)
             {
                 if (fld.Name.Equals(fieldName, StringComparison.OrdinalIgnoreCase) ||
                     fld.AliasName.Equals(fieldName, StringComparison.OrdinalIgnoreCase))
@@ -984,7 +1022,7 @@ namespace HLU
         /// <returns>bool</returns>
         public async Task<bool> FieldExistsAsync(string layerPath, string fieldName)
         {
-            // Check there is an input feature layer path.
+            // Check there is an input feature featureLayer path.
             if (String.IsNullOrEmpty(layerPath))
                 return false;
 
@@ -994,7 +1032,7 @@ namespace HLU
 
             try
             {
-                // Find the feature layer by name if it exists. Only search existing layers.
+                // Find the feature featureLayer by name if it exists. Only search existing layers.
                 FeatureLayer featurelayer = FindLayer(layerPath);
 
                 if (featurelayer == null)
@@ -1012,10 +1050,10 @@ namespace HLU
                         using TableDefinition tableDef = table.GetDefinition();
 
                         // Get the fields in the table.
-                        IReadOnlyList<ArcGIS.Core.Data.Field> fields = tableDef.GetFields();
+                        IReadOnlyList<Field> fields = tableDef.GetFields();
 
                         // Loop through all fields looking for a name match.
-                        foreach (ArcGIS.Core.Data.Field fld in fields)
+                        foreach (Field fld in fields)
                         {
                             if (fld.Name.Equals(fieldName, StringComparison.OrdinalIgnoreCase) ||
                                 fld.AliasName.Equals(fieldName, StringComparison.OrdinalIgnoreCase))
@@ -1044,7 +1082,7 @@ namespace HLU
         /// <returns>bool</returns>
         public async Task<Field> GetFieldAsync(string layerPath, string fieldName)
         {
-            // Check there is an input feature layer path.
+            // Check there is an input feature featureLayer path.
             if (String.IsNullOrEmpty(layerPath))
                 return null;
 
@@ -1054,7 +1092,7 @@ namespace HLU
 
             try
             {
-                // Find the feature layer by name if it exists. Only search existing layers.
+                // Find the feature featureLayer by name if it exists. Only search existing layers.
                 FeatureLayer featurelayer = FindLayer(layerPath);
 
                 if (featurelayer == null)
@@ -1072,10 +1110,10 @@ namespace HLU
                         using TableDefinition tableDef = table.GetDefinition();
 
                         // Get the fields in the table.
-                        IReadOnlyList<ArcGIS.Core.Data.Field> fields = tableDef.GetFields();
+                        IReadOnlyList<Field> fields = tableDef.GetFields();
 
                         // Loop through all fields looking for a name match.
-                        foreach (ArcGIS.Core.Data.Field fld in fields)
+                        foreach (Field fld in fields)
                         {
                             if (fld.Name.Equals(fieldName, StringComparison.OrdinalIgnoreCase) ||
                                 fld.AliasName.Equals(fieldName, StringComparison.OrdinalIgnoreCase))
@@ -1104,7 +1142,7 @@ namespace HLU
         /// <returns>bool</returns>
         public async Task<int> GetFieldOrdinalAsync(string layerPath, string fieldName)
         {
-            // Check there is an input feature layer path.
+            // Check there is an input feature featureLayer path.
             if (String.IsNullOrEmpty(layerPath))
                 return -1;
 
@@ -1114,7 +1152,7 @@ namespace HLU
 
             try
             {
-                // Find the feature layer by name if it exists. Only search existing layers.
+                // Find the feature featureLayer by name if it exists. Only search existing layers.
                 FeatureLayer featurelayer = FindLayer(layerPath);
 
                 if (featurelayer == null)
@@ -1132,14 +1170,89 @@ namespace HLU
                         using TableDefinition tableDef = table.GetDefinition();
 
                         // Get the fields in the table.
-                        IReadOnlyList<ArcGIS.Core.Data.Field> fields = tableDef.GetFields();
+                        IReadOnlyList<Field> fields = tableDef.GetFields();
 
                         // Loop through all fields looking for a name match.
                         int fieldNum = 0;
-                        foreach (ArcGIS.Core.Data.Field fld in fields)
+                        foreach (Field fld in fields)
                         {
                             if (fld.Name.Equals(fieldName, StringComparison.OrdinalIgnoreCase) ||
                                 fld.AliasName.Equals(fieldName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                fieldOrd = fieldNum;
+                                break;
+                            }
+
+                            fieldNum += 1;
+                        }
+                    }
+                });
+
+                return fieldOrd;
+            }
+            catch
+            {
+                // Handle Exception.
+                return -1;
+            }
+        }
+
+        /// <summary>
+        /// Get a field position in a feature class by name, type and length.
+        /// </summary>
+        /// <param name="layerPath"></param>
+        /// <param name="fieldName"></param>
+        /// <returns>bool</returns>
+        public async Task<int> GetFieldOrdinalAsync(FeatureLayer featurelayer, string fieldName, esriFieldType fieldType, int fieldMaxLength = 0)
+        {
+            // Check there is an input feature featureLayer.
+            if (featurelayer == null)
+                return -1;
+
+            // Check there is an input field name.
+            if (String.IsNullOrEmpty(fieldName))
+                return -1;
+
+            // Check there is an input field type.
+            if (fieldType == 0)
+                return -1;
+
+            try
+            {
+                int fieldOrd = -1;
+
+                await QueuedTask.Run(() =>
+                {
+                    // Get the underlying feature class as a table.
+                    using ArcGIS.Core.Data.Table table = featurelayer.GetTable();
+                    if (table != null)
+                    {
+                        // Get the table definition of the table.
+                        using TableDefinition tableDef = table.GetDefinition();
+
+                        // Get the fields in the table.
+                        IReadOnlyList<Field> fields = tableDef.GetFields();
+
+                        // Loop through all fields looking for a name match.
+                        int fieldNum = 0;
+                        foreach (Field fld in fields)
+                        {
+                            // Get the field names.
+                            string fldName = fld.Name;
+                            string fldAlias = fld.AliasName;
+
+                            // Get the esri field type.
+                            esriFieldType esriFldType = (esriFieldType)fld.FieldType;
+
+                            // Get the field length.
+                            int fldLength = 0;
+                            if (fld.FieldType == FieldType.String)
+                                fldLength = fld.Length;
+
+                            if (((fldName.Equals(fieldName, StringComparison.OrdinalIgnoreCase) ||
+                                fldAlias.Equals(fieldName, StringComparison.OrdinalIgnoreCase)))
+                                && (esriFldType == fieldType)
+                                && (fldLength == fieldMaxLength))
                             {
                                 fieldOrd = fieldNum;
                                 break;
@@ -1186,7 +1299,7 @@ namespace HLU
         /// <returns>bool</returns>
         public async Task<bool> FieldIsNumericAsync(string layerName, string fieldName)
         {
-            // Check there is an input feature layer name.
+            // Check there is an input feature featureLayer name.
             if (String.IsNullOrEmpty(layerName))
                 return false;
 
@@ -1202,7 +1315,7 @@ namespace HLU
                 if (featurelayer == null)
                     return false;
 
-                IReadOnlyList<ArcGIS.Core.Data.Field> fields = null;
+                IReadOnlyList<Field> fields = null;
 
                 bool fldIsNumeric = false;
 
@@ -1219,7 +1332,7 @@ namespace HLU
                         fields = tableDef.GetFields();
 
                         // Loop through all fields looking for a name match.
-                        foreach (ArcGIS.Core.Data.Field fld in fields)
+                        foreach (Field fld in fields)
                         {
                             if (fld.Name.Equals(fieldName, StringComparison.OrdinalIgnoreCase) ||
                                 fld.AliasName.Equals(fieldName, StringComparison.OrdinalIgnoreCase))
@@ -1258,7 +1371,7 @@ namespace HLU
         {
             int rowLength = 0;
 
-            // Check there is an input feature layer name.
+            // Check there is an input feature featureLayer name.
             if (String.IsNullOrEmpty(layerName))
                 return rowLength;
 
@@ -1270,7 +1383,7 @@ namespace HLU
                 if (featurelayer == null)
                     return rowLength;
 
-                IReadOnlyList<ArcGIS.Core.Data.Field> fields = null;
+                IReadOnlyList<Field> fields = null;
                 List<string> fieldList = [];
 
                 await QueuedTask.Run(() =>
@@ -1288,7 +1401,7 @@ namespace HLU
                         int fldLength;
 
                         // Loop through all fields.
-                        foreach (ArcGIS.Core.Data.Field fld in fields)
+                        foreach (Field fld in fields)
                         {
                             if (fld.FieldType == FieldType.Integer)
                                 fldLength = 10;
@@ -1332,7 +1445,7 @@ namespace HLU
             //fieldList.Add("FID");
 
             // Get the list of fields for the input table.
-            IReadOnlyList<ArcGIS.Core.Data.Field> inputfields = await GetFCFieldsAsync(layerName);
+            IReadOnlyList<Field> inputfields = await GetFCFieldsAsync(layerName);
 
             // Check a list of fields is returned.
             if (inputfields == null || inputfields.Count == 0)
@@ -1342,10 +1455,10 @@ namespace HLU
             // aren't required fields (e.g. excluding FID and Shape).
             List<string> inputFieldNames = inputfields.Where(x => !x.IsRequired).Select(y => y.Name).ToList();
 
-            // Get the list of fields that do exist in the layer.
+            // Get the list of fields that do exist in the featureLayer.
             List<string> existingFields = await GetExistingFieldsAsync(layerName, fieldList);
 
-            // Get the list of layer fields that aren't in the field list.
+            // Get the list of featureLayer fields that aren't in the field list.
             var remainingFields = inputFieldNames.Except(existingFields).ToList();
 
             if (remainingFields == null || remainingFields.Count == 0)
@@ -1386,14 +1499,14 @@ namespace HLU
         }
 
         /// <summary>
-        /// Get the full layer path name for a layer in the map (i.e.
+        /// Get the full featureLayer path name for a featureLayer in the map (i.e.
         /// to include any parent group names.
         /// </summary>
         /// <param name="layer"></param>
         /// <returns>string</returns>
         public string GetLayerPath(Layer layer)
         {
-            // Check there is an input layer.
+            // Check there is an input featureLayer.
             if (layer == null)
                 return null;
 
@@ -1401,19 +1514,19 @@ namespace HLU
 
             try
             {
-                // Get the parent for the layer.
+                // Get the parent for the featureLayer.
                 ILayerContainer layerParent = layer.Parent;
 
-                // Loop while the parent is a group layer.
+                // Loop while the parent is a group featureLayer.
                 while (layerParent is GroupLayer)
                 {
-                    // Get the parent layer.
+                    // Get the parent featureLayer.
                     Layer grouplayer = (Layer)layerParent;
 
-                    // Append the parent name to the full layer path.
+                    // Append the parent name to the full featureLayer path.
                     layerPath = grouplayer.Name + "/" + layerPath;
 
-                    // Get the parent for the layer.
+                    // Get the parent for the featureLayer.
                     layerParent = grouplayer.Parent;
                 }
             }
@@ -1423,31 +1536,31 @@ namespace HLU
                 return null;
             }
 
-            // Append the layer name to it's full path.
+            // Append the featureLayer name to it's full path.
             return layerPath + layer.Name;
         }
 
         /// <summary>
-        /// Get the full layer path name for a layer name in the map (i.e.
+        /// Get the full featureLayer path name for a featureLayer name in the map (i.e.
         /// to include any parent group names.
         /// </summary>
         /// <param name="layerName"></param>
         /// <returns>string</returns>
         public string GetLayerPath(string layerName)
         {
-            // Check there is an input layer name.
+            // Check there is an input featureLayer name.
             if (String.IsNullOrEmpty(layerName))
                 return null;
 
             try
             {
-                // Find the layer in the active map.
+                // Find the featureLayer in the active map.
                 FeatureLayer layer = FindLayer(layerName);
 
                 if (layer == null)
                     return null;
 
-                // Get the full layer path.
+                // Get the full featureLayer path.
                 return GetLayerPath(layer);
             }
             catch
@@ -1458,20 +1571,36 @@ namespace HLU
         }
 
         /// <summary>
-        /// Returns a simplified feature class shape type for a feature layer.
+        /// This method is called to use the current active mapw and retrieve all
+        /// feature layers that are part of the map layers in the current map view.
+        /// </summary>
+        public List<FeatureLayer> GetFeatureLayers()
+        {
+            if (_activeMap == null) return null;
+
+            //Get the feature layers in the active map view.
+            List<FeatureLayer> featureLayerList = _activeMap.GetLayersAsFlattenedList().OfType<FeatureLayer>().ToList();
+
+            //List<FeatureLayer> layers = [];
+            //foreach (var featureLayer in featureLayers) layers.Add(featureLayer);
+
+            return featureLayerList;
+        }
+        /// <summary>
+        /// Returns a simplified feature class shape type for a feature featureLayer.
         /// </summary>
         /// <param name="featureLayer"></param>
         /// <returns>string: point, line, polygon</returns>
         public string GetFCType(FeatureLayer featureLayer)
         {
-            // Check there is an input feature layer.
+            // Check there is an input feature featureLayer.
             if (featureLayer == null)
                 return null;
 
             try
             {
-                BasicFeatureLayer basicFeatureLayer = featureLayer as BasicFeatureLayer;
-                esriGeometryType shapeType = basicFeatureLayer.ShapeType;
+                //BasicFeatureLayer basicFeatureLayer = featureLayer as BasicFeatureLayer;
+                esriGeometryType shapeType = featureLayer.ShapeType;
 
                 return shapeType switch
                 {
@@ -1496,19 +1625,19 @@ namespace HLU
         }
 
         /// <summary>
-        /// Returns a simplified feature class shape type for a layer name.
+        /// Returns a simplified feature class shape type for a featureLayer name.
         /// </summary>
         /// <param name="layerName"></param>
         /// <returns>string: point, line, polygon</returns>
         public string GetFCType(string layerName)
         {
-            // Check there is an input feature layer name.
+            // Check there is an input feature featureLayer name.
             if (String.IsNullOrEmpty(layerName))
                 return null;
 
             try
             {
-                // Find the layer in the active map.
+                // Find the featureLayer in the active map.
                 FeatureLayer layer = FindLayer(layerName);
 
                 if (layer == null)
@@ -1528,13 +1657,13 @@ namespace HLU
         #region Group Layers
 
         /// <summary>
-        /// Find a group layer by name in the active map.
+        /// Find a group featureLayer by name in the active map.
         /// </summary>
         /// <param name="layerName"></param>
         /// <returns>GroupLayer</returns>
         internal GroupLayer FindGroupLayer(string layerName)
         {
-            // Check there is an input group layer name.
+            // Check there is an input group featureLayer name.
             if (String.IsNullOrEmpty(layerName))
                 return null;
 
@@ -1545,10 +1674,10 @@ namespace HLU
 
                 while (groupLayers.Any())
                 {
-                    // Get the first group layer found by name.
+                    // Get the first group featureLayer found by name.
                     GroupLayer groupLayer = groupLayers.First();
 
-                    // Check the group layer is in the active map.
+                    // Check the group featureLayer is in the active map.
                     if (groupLayer.Map.Name.Equals(_activeMap.Name, StringComparison.OrdinalIgnoreCase))
                         return groupLayer;
                 }
@@ -1563,7 +1692,7 @@ namespace HLU
         }
 
         /// <summary>
-        /// Move a layer into a group layer (creating the group layer if
+        /// Move a featureLayer into a group featureLayer (creating the group featureLayer if
         /// it doesn't already exist).
         /// </summary>
         /// <param name="layer"></param>
@@ -1572,19 +1701,19 @@ namespace HLU
         /// <returns>bool</returns>
         public async Task<bool> MoveToGroupLayerAsync(Layer layer, string groupLayerName, int position = -1)
         {
-            // Check if there is an input layer.
+            // Check if there is an input featureLayer.
             if (layer == null)
                 return false;
 
-            // Check there is an input group layer name.
+            // Check there is an input group featureLayer name.
             if (String.IsNullOrEmpty(groupLayerName))
                 return false;
 
-            // Does the group layer exist?
+            // Does the group featureLayer exist?
             GroupLayer groupLayer = FindGroupLayer(groupLayerName);
             if (groupLayer == null)
             {
-                // Add the group layer to the map.
+                // Add the group featureLayer to the map.
                 try
                 {
                     await QueuedTask.Run(() =>
@@ -1599,12 +1728,12 @@ namespace HLU
                 }
             }
 
-            // Move the layer into the group.
+            // Move the featureLayer into the group.
             try
             {
                 await QueuedTask.Run(() =>
                 {
-                    // Move the layer into the group.
+                    // Move the featureLayer into the group.
                     _activeMap.MoveLayer(layer, groupLayer, position);
 
                     // Expand the group.
@@ -1621,19 +1750,19 @@ namespace HLU
         }
 
         /// <summary>
-        /// Remove a group layer if it is empty.
+        /// Remove a group featureLayer if it is empty.
         /// </summary>
         /// <param name="groupLayerName"></param>
         /// <returns>bool</returns>
         public async Task<bool> RemoveGroupLayerAsync(string groupLayerName)
         {
-            // Check there is an input group layer name.
+            // Check there is an input group featureLayer name.
             if (String.IsNullOrEmpty(groupLayerName))
                 return false;
 
             try
             {
-                // Does the group layer exist?
+                // Does the group featureLayer exist?
                 GroupLayer groupLayer = FindGroupLayer(groupLayerName);
                 if (groupLayer == null)
                     return false;
@@ -1644,7 +1773,7 @@ namespace HLU
 
                 await QueuedTask.Run(() =>
                 {
-                    // Remove the group layer.
+                    // Remove the group featureLayer.
                     _activeMap.RemoveLayer(groupLayer);
                 });
             }
@@ -1760,14 +1889,14 @@ namespace HLU
         #region Symbology
 
         /// <summary>
-        /// Apply symbology to a layer by name using a lyrx file.
+        /// Apply symbology to a featureLayer by name using a lyrx file.
         /// </summary>
         /// <param name="layerName"></param>
         /// <param name="layerFile"></param>
         /// <returns>bool</returns>
         public async Task<bool> ApplySymbologyFromLayerFileAsync(string layerName, string layerFile)
         {
-            // Check there is an input layer name.
+            // Check there is an input featureLayer name.
             if (String.IsNullOrEmpty(layerName))
                 return false;
 
@@ -1775,12 +1904,12 @@ namespace HLU
             if (!FileFunctions.FileExists(layerFile))
                 return false;
 
-            // Find the layer in the active map.
+            // Find the featureLayer in the active map.
             FeatureLayer featureLayer = FindLayer(layerName);
 
             if (featureLayer != null)
             {
-                // Apply the layer file symbology to the feature layer.
+                // Apply the featureLayer file symbology to the feature featureLayer.
                 try
                 {
                     await QueuedTask.Run(() =>
@@ -1790,11 +1919,11 @@ namespace HLU
 
                         CIMLayerDocument cimLyrDoc = lyrDocFromLyrxFile.GetCIMLayerDocument();
 
-                        // Get the renderer from the layer file.
+                        // Get the renderer from the featureLayer file.
                         //CIMSimpleRenderer rendererFromLayerFile = ((CIMFeatureLayer)cimLyrDoc.LayerDefinitions[0]).Renderer as CIMSimpleRenderer;
                         var rendererFromLayerFile = ((CIMFeatureLayer)cimLyrDoc.LayerDefinitions[0]).Renderer;
 
-                        // Apply the renderer to the feature layer.
+                        // Apply the renderer to the feature featureLayer.
                         if (featureLayer.CanSetRenderer(rendererFromLayerFile))
                             featureLayer.SetRenderer(rendererFromLayerFile);
                     });
@@ -1809,7 +1938,7 @@ namespace HLU
         }
 
         /// <summary>
-        /// Apply a label style to a label column of a layer by name.
+        /// Apply a label style to a label column of a featureLayer by name.
         /// </summary>
         /// <param name="layerName"></param>
         /// <param name="labelColumn"></param>
@@ -1825,7 +1954,7 @@ namespace HLU
         public async Task<bool> LabelLayerAsync(string layerName, string labelColumn, string labelFont = "Arial", double labelSize = 10, string labelStyle = "Normal",
                             int labelRed = 0, int labelGreen = 0, int labelBlue = 0, bool allowOverlap = true, bool displayLabels = true)
         {
-            // Check there is an input layer.
+            // Check there is an input featureLayer.
             if (String.IsNullOrEmpty(layerName))
                 return false;
 
@@ -1833,7 +1962,7 @@ namespace HLU
             if (String.IsNullOrEmpty(labelColumn))
                 return false;
 
-            // Get the input feature layer.
+            // Get the input feature featureLayer.
             FeatureLayer featurelayer = FindLayer(layerName);
 
             if (featurelayer == null)
@@ -1847,7 +1976,7 @@ namespace HLU
 
                     CIMTextSymbol textSymbol = SymbolFactory.Instance.ConstructTextSymbol(textColor, labelSize, labelFont, labelStyle);
 
-                    // Get the layer definition.
+                    // Get the featureLayer definition.
                     CIMFeatureLayer lyrDefn = featurelayer.GetDefinition() as CIMFeatureLayer;
 
                     // Get the label classes - we need the first one.
@@ -1868,7 +1997,7 @@ namespace HLU
                     if (labelEngine is CIMStandardGeneralPlacementProperties) //Current labeling engine is Standard labeling engine
                         labelClass.StandardLabelPlacementProperties.AllowOverlappingLabels = allowOverlap;
 
-                    // Set the label definition back to the layer.
+                    // Set the label definition back to the featureLayer.
                     featurelayer.SetDefinition(lyrDefn);
 
                     // Set the label visibilty.
@@ -1892,11 +2021,11 @@ namespace HLU
         /// <returns>bool</returns>
         public async Task<bool> SwitchLabelsAsync(string layerName, bool displayLabels)
         {
-            // Check there is an input layer.
+            // Check there is an input featureLayer.
             if (String.IsNullOrEmpty(layerName))
                 return false;
 
-            // Get the input feature layer.
+            // Get the input feature featureLayer.
             FeatureLayer featurelayer = FindLayer(layerName);
 
             if (featurelayer == null)
@@ -1937,7 +2066,7 @@ namespace HLU
         public async Task<int> CopyFCToTextFileAsync(string inputLayer, string outFile, string columns, string orderByColumns,
              string separator, bool append = false, bool includeHeader = true)
         {
-            // Check there is an input layer name.
+            // Check there is an input featureLayer name.
             if (String.IsNullOrEmpty(inputLayer))
                 return -1;
 
@@ -1953,11 +2082,11 @@ namespace HLU
             FeatureLayer inputFeaturelayer;
             List<string> outColumnsList = [];
             List<string> orderByColumnsList = [];
-            IReadOnlyList<ArcGIS.Core.Data.Field> inputfields;
+            IReadOnlyList<Field> inputfields;
 
             try
             {
-                // Get the input feature layer.
+                // Get the input feature featureLayer.
                 inputFeaturelayer = FindLayer(inputLayer);
 
                 if (inputFeaturelayer == null)
@@ -1970,7 +2099,7 @@ namespace HLU
                 if (inputfields == null || inputfields.Count == 0)
                     return -1;
 
-                // Align the columns with what actually exists in the layer.
+                // Align the columns with what actually exists in the featureLayer.
                 List<string> columnsList = [.. columns.Split(',')];
                 outColumns = "";
                 foreach (string column in columnsList)
@@ -2008,7 +2137,7 @@ namespace HLU
             {
                 await QueuedTask.Run(() =>
                 {
-                    /// Get the feature class for the input feature layer.
+                    /// Get the feature class for the input feature featureLayer.
                     using FeatureClass featureClass = inputFeaturelayer.GetFeatureClass();
 
                     // Get the feature class defintion.
@@ -2018,13 +2147,13 @@ namespace HLU
                     RowCursor rowCursor;
 
                     // Create a new list of sort descriptions.
-                    List<ArcGIS.Core.Data.SortDescription> sortDescriptions = [];
+                    List<SortDescription> sortDescriptions = [];
 
                     if (!string.IsNullOrEmpty(orderByColumns))
                     {
                         orderByColumnsList = [.. orderByColumns.Split(',')];
 
-                        // Build the list of sort descriptions for each orderby column in the input layer.
+                        // Build the list of sort descriptions for each orderby column in the input featureLayer.
                         foreach (string column in orderByColumnsList)
                         {
                             // Get the column name (ignoring any trailing ASC/DESC sort order).
@@ -2042,7 +2171,7 @@ namespace HLU
                             if ((columnName.Substring(0, 1) != "\"") && (FieldExists(inputfields, columnName)))
                             {
                                 // Get the field from the feature class definition.
-                                using ArcGIS.Core.Data.Field field = featureClassDefinition.GetFields()
+                                using Field field = featureClassDefinition.GetFields()
                                   .First(x => x.Name.Equals(columnName, StringComparison.OrdinalIgnoreCase));
 
                                 // Create a SortDescription for the field.
@@ -2162,11 +2291,11 @@ namespace HLU
             StandaloneTable inputTable;
             List<string> columnsList = [];
             List<string> orderByColumnsList = [];
-            IReadOnlyList<ArcGIS.Core.Data.Field> inputfields;
+            IReadOnlyList<Field> inputfields;
 
             try
             {
-                // Get the input feature layer.
+                // Get the input feature featureLayer.
                 inputTable = FindTable(inputLayer);
 
                 if (inputTable == null)
@@ -2179,7 +2308,7 @@ namespace HLU
                 if (inputfields == null || inputfields.Count == 0)
                     return -1;
 
-                // Align the columns with what actually exists in the layer.
+                // Align the columns with what actually exists in the featureLayer.
                 columnsList = [.. columns.Split(',')];
                 columns = "";
                 foreach (string column in columnsList)
@@ -2219,7 +2348,7 @@ namespace HLU
             {
                 await QueuedTask.Run(() =>
                 {
-                    /// Get the underlying table for the input layer.
+                    /// Get the underlying table for the input featureLayer.
                     using ArcGIS.Core.Data.Table table = inputTable.GetTable();
 
                     // Get the table defintion.
@@ -2229,13 +2358,13 @@ namespace HLU
                     RowCursor rowCursor;
 
                     // Create a new list of sort descriptions.
-                    List<ArcGIS.Core.Data.SortDescription> sortDescriptions = [];
+                    List<SortDescription> sortDescriptions = [];
 
                     if (!string.IsNullOrEmpty(orderByColumns))
                     {
                         orderByColumnsList = [.. orderByColumns.Split(',')];
 
-                        // Build the list of sort descriptions for each orderby column in the input layer.
+                        // Build the list of sort descriptions for each orderby column in the input featureLayer.
                         foreach (string column in orderByColumnsList)
                         {
                             // Get the column name (ignoring any trailing ASC/DESC sort order).
@@ -2253,7 +2382,7 @@ namespace HLU
                             if ((columnName.Substring(0, 1) != "\"") && (FieldExists(inputfields, columnName)))
                             {
                                 // Get the field from the feature class definition.
-                                using ArcGIS.Core.Data.Field field = tableDefinition.GetFields()
+                                using Field field = tableDefinition.GetFields()
                                   .First(x => x.Name.Equals(columnName, StringComparison.OrdinalIgnoreCase));
 
                                 // Create a SortDescription for the field.
@@ -2411,7 +2540,7 @@ namespace HLU
             int intFieldCount;
             try
             {
-                IReadOnlyList<ArcGIS.Core.Data.Field> fields;
+                IReadOnlyList<Field> fields;
 
                 if (isSpatial)
                 {
@@ -2437,7 +2566,7 @@ namespace HLU
                     // Get the fieldName name.
                     fieldName = fields[i].Name;
 
-                    using ArcGIS.Core.Data.Field field = fields[i];
+                    using Field field = fields[i];
 
                     // Get the fieldName type.
                     FieldType fieldType = field.FieldType;
@@ -2480,10 +2609,10 @@ namespace HLU
                     {
                         FeatureLayer inputFC;
 
-                        // Get the input feature layer.
+                        // Get the input feature featureLayer.
                         inputFC = FindLayer(inputLayer);
 
-                        /// Get the underlying table for the input layer.
+                        /// Get the underlying table for the input featureLayer.
                         using FeatureClass featureClass = inputFC.GetFeatureClass();
 
                         // Create a cursor of the features.
@@ -2496,7 +2625,7 @@ namespace HLU
                         // Get the input table.
                         inputTable = FindTable(inputLayer);
 
-                        /// Get the underlying table for the input layer.
+                        /// Get the underlying table for the input featureLayer.
                         using Table table = inputTable.GetTable();
 
                         // Create a cursor of the features.
@@ -2563,10 +2692,172 @@ namespace HLU
         }
 
         #endregion Export
+
+        #region HLULayers
+
+        public bool IsHluLayer(GISLayer newGISLayer)
+        {
+            // Check there is an input GIS featureLayer.
+            if (newGISLayer == null)
+                return false;
+
+            // Get the feature featureLayer for the new GIS featureLayer.
+            FeatureLayer featurelayer = FindLayer(newGISLayer.LayerName);
+
+            // Check if the feature featureLayer is a valid HLU featureLayer.
+            return IsHluLayer(featurelayer);
+        }
+
+        /// <summary>
+        /// Determines whether the specified new gis featureLayer is a valid HLU featureLayer
+        /// and if it is sets the current featureLayer (_hluLayer, etc) properies
+        /// to relate this the new GIS featureLayer.
+        /// </summary>
+        /// <param name="newGISLayer">The new gis featureLayer to test for validity.</param>
+        /// <returns>True if the GIS featureLayer is a valid HLU featureLayer, otherwise False</returns>
+        public bool IsHluLayer(FeatureLayer newGISLayer)
+        {
+            //TODO: ArcGIS
+            //try
+            //{
+            //    // Get the correct map based on the map number.
+            //    IMap map = Maps(_arcMap).get_Item(mapNum);
+            //    _hluView = map as IActiveView;
+
+            //    UID uid = new();
+            //    uid.Value = typeof(IFeatureLayer).GUID.ToString("B");
+
+            //    // Loop through each featureLayer in the map looking for the correct featureLayer
+            //    // by number (order).
+            //    int j = 0;
+            //    IEnumLayer layers = map.get_Layers(uid, true);
+            //    ILayer featureLayer = layers.Next();
+            //    while (featureLayer != null)
+            //    {
+            //        if (j == layerNum)
+            //        {
+            //            string layerName = featureLayer.Name;
+            //            _templateLayer = (IGeoFeatureLayer)featureLayer;
+            //            CreateHluLayer(false, _templateLayer);
+            //            CreateFieldMap(5, 3, 1, retList);
+            //            _hluCurrentLayer = newGISLayer;
+            //            return true;
+            //        }
+            //        featureLayer = layers.Next();
+            //        j++;
+            //    }
+            //    else
+            //    {
+            //        _hluLayer = null;
+            //    }
+            //}
+            //catch { }
+
+            //if (_hluLayer != null)
+            //{
+            //    return true;
+            //}
+            //else
+            //{
+            //    DestroyHluLayer();
+            //    return false;
+            //}
+            return false;
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="featureLayer"></param>
+        /// <param name="origFields"></param>
+        /// <param name="hluFieldMap"></param>
+        /// <param name="hluFieldNames"></param>
+        /// <returns></returns>
+        public async Task<bool> IsHluLayerAsync(FeatureLayer featureLayer)
+        {
+            int[] hluFieldMap = [];
+            string[] hluFieldNames = [];
+
+            bool isHlu = false;
+
+            try
+            {
+                await QueuedTask.Run(async () =>
+                {
+                    // Check the feature featureLayer is valid.
+                    if ((featureLayer == null) || ((featureLayer.GetFeatureClass().GetDefinition() == null)))
+                        return;
+
+                    // Get the featureLayer feature class.
+                    FeatureClass featureClass = featureLayer.GetFeatureClass();
+
+                    // Check the featureLayer is a polygon feature featureLayer.
+                    //BasicFeatureLayer basicFeatureLayer = featureLayer as BasicFeatureLayer;
+                    if (featureLayer.ShapeType != esriGeometryType.esriGeometryPolygon)
+                        throw (new Exception("Invalid geometry type."));
+
+                    hluFieldMap = new int[_hluLayerStructure.Columns.Count];
+                    hluFieldNames = new string[_hluLayerStructure.Columns.Count];
+
+                    int i = 0;
+
+                    // Loop through the columns in the HLU GIS featureLayer structure.
+                    foreach (DataColumn col in _hluLayerStructure.Columns)
+                    {
+                        // Get the column name.
+                        string colName = col.ColumnName;
+
+                        // Get the data type.
+                        int fieldType;
+                        if (!_typeMapSystemToSQL.TryGetValue(col.DataType, out fieldType))
+                            throw (new Exception("Invalid field type."));
+
+                        // Get the esri field type.
+                        esriFieldType esriColType = (esriFieldType)fieldType;
+
+                        // Get the maximum text length.
+                        int colMaxLength = 0;
+                        if ((col.MaxLength != -1) && (esriColType == esriFieldType.esriFieldTypeString))
+                            colMaxLength = col.MaxLength;
+
+                        int ordinal = await GetFieldOrdinalAsync(featureLayer, colName, esriColType, colMaxLength);
+
+                        //TODO: ArcGIS
+                        if (ordinal == -1)
+                            throw (new Exception(String.Format("Field {0} not found in HLU GIS featureLayer.", colName)));
+
+                        //if (fcField.Type != fixedField.Type)
+                        //    throw (new Exception("Field type does not match the HLU GIS featureLayer structure."));
+
+                        //if ((fcField.Type == esriFieldType.esriFieldTypeString) && (fcField.Length > fixedField.Length))
+                        //    throw (new Exception("Field length does not match the HLU GIS featureLayer structure."));
+
+                        hluFieldMap[i] = ordinal;
+                        hluFieldNames[i] = colName;
+                        i += 1;
+                    }
+
+                    _hluFieldMap = hluFieldMap;
+                    _hluFieldNames = hluFieldNames;
+
+                    isHlu = true;
+                });
+            }
+            catch
+            {
+                // Handle Exception.
+                return false;
+            }
+
+            return isHlu;
+        }
+
+        #endregion HLULayers
+
     }
 
     /// <summary>
-    /// This helper class provides ArcGIS Pro feature class and layer functions.
+    /// This helper class provides ArcGIS Pro feature class and featureLayer functions.
     /// </summary>
     internal static class ArcGISFunctions
     {
@@ -2921,7 +3212,7 @@ namespace HLU
         }
 
         /// <summary>
-        /// Count the features in a layer using a search where clause.
+        /// Count the features in a featureLayer using a search where clause.
         /// </summary>
         /// <param name="layer"></param>
         /// <param name="whereClause"></param>
@@ -2931,7 +3222,7 @@ namespace HLU
         /// <returns>long</returns>
         public static async Task<long> GetFeaturesCountAsync(FeatureLayer layer, string whereClause = null, string subfields = null, string prefixClause = null, string postfixClause = null)
         {
-            // Check if there is an input layer name.
+            // Check if there is an input featureLayer name.
             if (layer == null)
                 return -1;
 
@@ -2975,7 +3266,7 @@ namespace HLU
         }
 
         /// <summary>
-        /// Count the duplicate features in a layer using a search where clause.
+        /// Count the duplicate features in a featureLayer using a search where clause.
         /// </summary>
         /// <param name="layer"></param>
         /// <param name="keyField"></param>
@@ -2983,7 +3274,7 @@ namespace HLU
         /// <returns>long</returns>
         public static async Task<long> GetDuplicateFeaturesCountAsync(FeatureLayer layer, string keyField, string whereClause = null)
         {
-            // Check if there is an input layer name.
+            // Check if there is an input featureLayer name.
             if (layer == null)
                 return -1;
 
@@ -3009,7 +3300,7 @@ namespace HLU
 
                 await QueuedTask.Run(() =>
                 {
-                    /// Get the feature class for the layer.
+                    /// Get the feature class for the featureLayer.
                     using FeatureClass featureClass = layer.GetFeatureClass();
 
                     // Create a cursor of the features.
@@ -3120,7 +3411,7 @@ namespace HLU
         }
 
         /// <summary>
-        /// Clip the features in a feature class using a clip feature layer.
+        /// Clip the features in a feature class using a clip feature featureLayer.
         /// </summary>
         /// <param name="inFeatureClass"></param>
         /// <param name="clipFeatureClass"></param>
@@ -3623,7 +3914,7 @@ namespace HLU
         }
 
         /// <summary>
-        /// Check if a layer exists in a geodatabase.
+        /// Check if a featureLayer exists in a geodatabase.
         /// </summary>
         /// <param name="filePath"></param>
         /// <param name="fileName"></param>
@@ -4260,5 +4551,6 @@ namespace HLU
         }
 
         #endregion Copy Table
+
     }
 }

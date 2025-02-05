@@ -29,7 +29,7 @@ using HLU.Data.Connection;
 using HLU.Data.Model;
 using HLU.Properties;
 
-namespace HLU.GISApplication.ArcGIS
+namespace HLU.GISApplication
 {
     static class ScratchDb
     {
@@ -78,7 +78,7 @@ namespace HLU.GISApplication.ArcGIS
                     Settings.Default.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders,
                     true, Settings.Default.DbIsUnicode, Settings.Default.DbUseTimeZone, 255,
                     Settings.Default.DbBinaryLength, Settings.Default.DbTimePrecision,
-                    Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale);
+                    Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, Settings.Default.DbConnectionTimeout);
 
                 return true;
             }

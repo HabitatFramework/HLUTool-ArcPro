@@ -68,38 +68,38 @@ namespace HLU.Data.Connection
             {
                 case ConnectionTypes.ODBC:
                     db = new DbOdbc(ref connString, ref defaultSchema, ref promptPwd,
-                        Settings.Default.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders, 
-                        true, Settings.Default.DbIsUnicode, Settings.Default.DbUseTimeZone, 
-                        Settings.Default.DbTextLength, Settings.Default.DbBinaryLength, Settings.Default.DbTimePrecision, 
-                        Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale);
+                        Settings.Default.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders,
+                        true, Settings.Default.DbIsUnicode, Settings.Default.DbUseTimeZone,
+                        Settings.Default.DbTextLength, Settings.Default.DbBinaryLength, Settings.Default.DbTimePrecision,
+                        Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, Settings.Default.DbConnectionTimeout);
                     break;
                 case ConnectionTypes.OleDb:
                     db = new DbOleDb(ref connString, ref defaultSchema, ref promptPwd,
-                        Settings.Default.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders, 
+                        Settings.Default.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders,
                         true, Settings.Default.DbIsUnicode, Settings.Default.DbUseTimeZone, Settings.Default.DbTextLength,
                         Settings.Default.DbBinaryLength, Settings.Default.DbTimePrecision,
-                        Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale);
+                        Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, Settings.Default.DbConnectionTimeout);
                     break;
                 case ConnectionTypes.Oracle:
                     db = new DbOracle(ref connString, ref defaultSchema, ref promptPwd,
                         Settings.Default.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders,
                         true, Settings.Default.DbIsUnicode, Settings.Default.DbUseTimeZone, Settings.Default.DbTextLength,
                         Settings.Default.DbBinaryLength, Settings.Default.DbTimePrecision,
-                        Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale);
+                        Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, Settings.Default.DbConnectionTimeout);
                     break;
                 case ConnectionTypes.PostgreSQL:
                     db = new DbPgSql(ref connString, ref defaultSchema, ref promptPwd,
                         Settings.Default.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders,
                         true, Settings.Default.DbIsUnicode, Settings.Default.DbUseTimeZone, Settings.Default.DbTextLength,
                         Settings.Default.DbBinaryLength, Settings.Default.DbTimePrecision,
-                        Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale);
+                        Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, Settings.Default.DbConnectionTimeout);
                     break;
                 case ConnectionTypes.SQLServer:
                     db = new DbSqlServer(ref connString, ref defaultSchema, ref promptPwd,
                         Settings.Default.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders,
                         true, Settings.Default.DbIsUnicode, Settings.Default.DbUseTimeZone, Settings.Default.DbTextLength,
                         Settings.Default.DbBinaryLength, Settings.Default.DbTimePrecision,
-                        Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale);
+                        Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, Settings.Default.DbConnectionTimeout);
                     break;
             }
 

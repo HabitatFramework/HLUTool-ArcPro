@@ -37,13 +37,14 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Threading.Tasks;
+
 using HLU.Data;
 using HLU.Data.Connection;
 using HLU.Data.Model;
 using HLU.Data.Model.HluDataSetTableAdapters;
 using HLU.Date;
-//using HLU.GISApplication;
-using HLU.GISApplication.ArcGIS;
+using HLU.GISApplication;
 using HLU.Properties;
 using HLU.UI.View;
 using HLU.UI.ViewModel;
@@ -59,6 +60,7 @@ using System.Windows.Media;
 
 using CommandType = System.Data.CommandType;
 using Azure.Identity;
+using System.Runtime.InteropServices;
 
 
 namespace HLU.UI.ViewModel
@@ -433,7 +435,7 @@ namespace HLU.UI.ViewModel
 
         #region Constructor
 
-        internal bool Initialize()
+        internal async Task<bool> Initialize()
         {
             // Initialise settings.
 
@@ -586,10 +588,9 @@ namespace HLU.UI.ViewModel
 
                 //TODO: ArcGIS
                 // Check if the GIS workspace is valid
-                if (!_gisApp.IsHluWorkspace())
+                if (!await _gisApp.IsHluWorkspaceAsync())
                 {
-                    MessageBox.Show(String.Format("{0} Invalid HLU workspace.",
-                        "ArcGIS Pro"), "HLU: Initialise GIS", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    MessageBox.Show("Invalid HLU workspace.", "HLU: Initialise GIS", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                     return false;
                 }
 
@@ -613,7 +614,7 @@ namespace HLU.UI.ViewModel
             catch (Exception ex)
             {
                 if (ex.Message != "cancelled")
-                    MessageBox.Show(ex.Message + "\n\nShutting down.", "HLU: Initialise Application",
+                    MessageBox.Show(ex.Message, "HLU: Initialise Application",
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 //TODO: App.Current.Shutdown
                 //App.Current.Shutdown();
@@ -643,16 +644,16 @@ namespace HLU.UI.ViewModel
         //---------------------------------------------------------------------
         // CHANGED: CR30 (Database validation on start-up)
         /// <summary>
-        /// Check the assembly version is greater than or equal to the
+        /// Check the addin version is greater than or equal to the
         /// application version from the lut_version table in the database.
         /// </summary>
         private bool CheckVersion()
         {
-            // Get the assembly version.
-            Version assemblyVersion = Assembly.GetExecutingAssembly().GetName().Version;
-            _betaVersion = assemblyVersion.Revision != 0;
+            // Get the addin version.
+            var addInInfo = FrameworkApplication.GetAddInInfos().First(addIn => addIn.Name == "HLUTool");
+            var addInVersion = addInInfo.Version;
 
-            // Get the application, database and data versions from the database.
+            // Get the minimum application, database and data versions from the database.
             String lutAppVersion = "0.0.0";
             String lutDbVersion = "0";
             String lutDataVersion = "";
@@ -667,11 +668,12 @@ namespace HLU.UI.ViewModel
                 return false;
             }
 
-            Version assVersion = new(assemblyVersion.ToString(3));
+            // Convert the version strings to version mumbers.
+            Version addVersion = new(addInVersion);
             Version appVersion = new(lutAppVersion);
 
-            // Compare the assembly and application versions.
-            if (assVersion.CompareTo(appVersion) < 0)
+            // Compare the addin and application versions.
+            if (addVersion.CompareTo(appVersion) < 0)
             {
                 // Trap error if database requires a later application version.
                 throw new Exception(String.Format("The minimum application version must be {0}.", appVersion.ToString()));
@@ -688,7 +690,7 @@ namespace HLU.UI.ViewModel
             }
 
             // Store the application, database and data versions for displaying in the 'About' box.
-            _appVersion = assVersion.ToString();
+            _appVersion = addInVersion;
             _dbVersion = lutDbVersion;
             _dataVersion = lutDataVersion;
 
@@ -1227,7 +1229,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_hluDS == null) Initialize();
+                //TODO: Needed?
+                //if (_hluDS == null) Initialize();
                 return _hluDS;
             }
         }
@@ -7235,7 +7238,7 @@ namespace HLU.UI.ViewModel
 
         private void SwitchGISLayerClicked(object param)
         {
-            if (_gisApp.ListHluLayers() > 0)
+            if (_gisApp.HluLayerCount > 0)
             {
                 _windowSwitchGISLayer = new()
                 {
@@ -7262,19 +7265,7 @@ namespace HLU.UI.ViewModel
                 if (_bulkUpdateMode == false && _osmmUpdateMode == false)
                 {
                     // Get the total number of map layers
-                    int mapLayersCount = _gisApp.ListHluLayers();
-
-                    // Get the total number of map windows
-                    int mapWindowsCount = _gisApp.MapWindowsCount;
-
-                    // If the number of map windows has changed
-                    if (mapWindowsCount != _mapWindowsCount)
-                    {
-                        _mapWindowsCount = mapWindowsCount;
-
-                        // Refresh the layer name
-                        OnPropertyChanged(nameof(LayerName));
-                    }
+                    int mapLayersCount = _gisApp.HluLayerCount;
 
                     // Return true if there is more than one map layer
                     return mapLayersCount > 1;
@@ -7300,17 +7291,8 @@ namespace HLU.UI.ViewModel
                     return String.Empty;
                 else
                 {
-                    //---------------------------------------------------------------------
-                    // Do not display map window number with layer name
-                    // if there is only one map window.
-                    // 
-                    if (_mapWindowsCount > 1)
-                        // Include the layer name and active layer/map window number in the window title.
-                        return String.Format("{0} [{1}]", _gisApp.CurrentHluLayer.LayerName, _gisApp.CurrentHluLayer.MapNum);
-                    else
-                        // Include only the layer name in the window title.
-                        return String.Format("{0}", _gisApp.CurrentHluLayer.LayerName);
-                    //---------------------------------------------------------------------
+                    // Return the layer name.
+                    return _gisApp.CurrentHluLayer.LayerName;
                 }
                 //---------------------------------------------------------------------
             }
@@ -7334,6 +7316,9 @@ namespace HLU.UI.ViewModel
                 }
                 else
                 {
+                    // Get the selected layer name.
+                    string layerName = selectedHLULayer.LayerName;
+
                     // Switch the GIS layer
                     if (_gisApp.IsHluLayer(selectedHLULayer))
                     {

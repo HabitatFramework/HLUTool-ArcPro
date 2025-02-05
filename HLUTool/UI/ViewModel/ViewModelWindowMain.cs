@@ -206,15 +206,8 @@ namespace HLU.UI.ViewModel
 
                 //DispatcherHelper.DoEvents();
 
-                //string test = System.Configuration.ConfigurationManager.AppSettings["ConverterParameterSeparator"];
-
-                // Initialise settings.
-
-                // Database options
-                //_dbConnectionTimeout = Settings.Default.DbConnectionTimeout;
-
                 // Initialise the main view (start the tool)
-                if (!Initialize())
+                if (!await Initialize())
                 {
                     //TODO: What to do if initialise fails?
                 }
@@ -227,12 +220,12 @@ namespace HLU.UI.ViewModel
 
         private void UpgradeSettings()
         {
-            //if (Settings.Default.CallUpgrade)
-            //{
-            //    Settings.Default.Upgrade();
-            //    Settings.Default.CallUpgrade = false;
-            //    Settings.Default.Save();
-            //}
+            if (Settings.Default.CallUpgrade)
+            {
+                Settings.Default.Upgrade();
+                Settings.Default.CallUpgrade = false;
+                Settings.Default.Save();
+            }
         }
 
         /// <summary>

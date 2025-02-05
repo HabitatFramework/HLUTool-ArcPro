@@ -38,8 +38,10 @@ using System.Windows.Interop;
 //using AppModule.NamedPipes;
 
 using ArcGIS.Core.Data;
+using Field = ArcGIS.Core.Data.Field;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
+using LinearUnit = ArcGIS.Core.Geometry.LinearUnit;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 //using ArcGIS.Desktop.Internal.Framework.Controls;
@@ -63,11 +65,13 @@ using HLU.Data.Model;
 using HLU.Properties;
 using Microsoft.Win32;
 using System.Linq.Expressions;
+using ArcGIS.Core.Internal.CIM;
+using ArcGIS.Core.Data.Analyst3D;
 //using ArcGIS.Core.Internal.CIM;
 
-namespace HLU.GISApplication.ArcGIS
+namespace HLU.GISApplication
 {
-    public class ArcMapApp : SqlBuilder
+    internal partial class ArcMapApp : SqlBuilder
     {
         public enum DistanceUnits
         {
@@ -83,8 +87,6 @@ namespace HLU.GISApplication.ArcGIS
         }
 
         #region Private Fields
-
-        MapFunctions _mapFunctions;
 
         //TODO: ArcGIS
         ///// <summary>
@@ -160,6 +162,12 @@ namespace HLU.GISApplication.ArcGIS
         /// </summary>
         private FeatureLayer _hluLayer;
 
+
+        /// <summary>
+        /// The name of the feature class.
+        /// </summary>
+        private string _hluTableName;
+
         /// <summary>
         /// The list of valid HLU map layers in the document.
         /// </summary>
@@ -199,6 +207,7 @@ namespace HLU.GISApplication.ArcGIS
         ///// </summary>
         //private ISQLSyntax _hluWSSqlSyntax;
 
+        //TODO: Is _hluFeatureClass Needed?
         /// <summary>
         /// Maps the _hluFeatureClass data structure onto _hluLayerStructure.
         /// This is required by shapefiles with potentially truncated field names.
@@ -226,15 +235,6 @@ namespace HLU.GISApplication.ArcGIS
         /// Maximum (nominal) allowable length of a SQL query.
         /// </summary>
         private int _maxSqlLength = Settings.Default.MaxSqlLengthArcGIS;
-
-        #endregion
-
-        #region Constructor
-
-        public ArcMapApp()
-        {
-            _mapFunctions = new();
-        }
 
         #endregion
 
@@ -1293,42 +1293,6 @@ namespace HLU.GISApplication.ArcGIS
         }
 
         /// <summary>
-        /// The total number of map windows in the current workspace.
-        /// </summary>
-        public int MapWindowsCount
-        {
-            get { return _mapWindowsCount; }
-        }
-
-        //TODO: ArcGIS
-        ///// <summary>
-        ///// True if ArcMap is running, otherwise false.
-        ///// </summary>
-        //public bool IsRunning
-        //{
-        //    get
-        //    {
-        //        try
-        //        {
-        //            if (!WinAPI.IsWindow(_arcMapWindow))
-        //            {
-        //                _arcMap = null;
-        //                return false;
-        //            }
-        //            else
-        //            {
-        //                return true;
-        //            }
-        //        }
-        //        catch
-        //        {
-        //            _arcMap = null;
-        //            return false;
-        //        }
-        //    }
-        //}
-
-        /// <summary>
         /// True if HLU layer is being edited in user initiated edit session.
         /// </summary>
         public bool IsEditing
@@ -1348,315 +1312,68 @@ namespace HLU.GISApplication.ArcGIS
             }
         }
 
-        //TODO: ArcGIS
-        /// <summary>
-        /// Launches an instance of ArcMap.
-        /// </summary>
-        /// <param name = "waitSeconds" > Number of seconds to wait for the ArcMap process to load before an exception is thrown.</param>
-        /// <returns>true if ArcMap launched ok, otherwise false.</returns>
-        //public bool Start(ProcessWindowStyle windowStyle)
-        //{
-        //    try
-        //    {
-        //        _arcMap = null;
-        //        _objectFactory = null;
-        //        DestroyHluLayer();
-
-        //        // start an instance of ArcMap
-        //        IDocument doc = new MxDocumentClass();
-        //        _arcMap = doc.Parent;
-        //        _arcMapWindow = new IntPtr(_arcMap.hWnd);
-        //        _objectFactory = (IObjectFactory)_arcMap;
-        //        _pipeName = String.Format("{0}.{1}", PipeBaseName, _arcMap.hWnd);
-
-        //        // size the ArcMap window
-        //        Window(windowStyle, IntPtr.Zero);
-
-        //        // open the HLU map document
-        //        return OpenWorkspace(_mapPath);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _arcMap = null;
-        //        MessageBox.Show(ex.Message, "Error Starting ArcMap",
-        //            MessageBoxButton.OK, MessageBoxImage.Error);
-        //        return false;
-        //    }
-        //}
-
-        //TODO: ArcGIS
-        //public bool Close()
-        //{
-        //    try
-        //    {
-        //        if (_arcMap != null)
-        //        {
-        //            // try to close any modal dialogs by sending the Escape key
-        //            // won't handle: - VBA up with a modal dialog
-        //            //               - Modal dialog that doesn't respond to Escape key
-        //            Activate();
-        //            int nestModalHwnd = 0;
-        //            while ((nestModalHwnd = WinAPI.GetLastActivePopup(_arcMap.hWnd)) != _arcMap.hWnd)
-        //                System.Windows.Forms.SendKeys.SendWait("{ESC}");
-
-        //            // manage document dirty flag - abandon changes
-        //            IDocumentDirty2 docDirtyFlag = (IDocumentDirty2)_arcMap.Document;
-        //            docDirtyFlag.SetClean();
-
-        //            // stop listening before exiting
-        //            _rot.AppRemoved -= new IAppROTEvents_AppRemovedEventHandler(appROTEvent_AppRemoved);
-        //            _rot = null;
-
-        //            // exit
-        //            _arcMap.Shutdown();
-        //            _arcMap = null;
-        //        }
-        //        return true;
-        //    }
-        //    catch { return false; }
-        //}
-
-        //TODO: _arcMapWindow
-        //public IntPtr hWnd { get { return _arcMapWindow; } }
-
-        //TODO: ArcGIS
-        //public void Window(ProcessWindowStyle windowStyle, IntPtr sideBySideWith)
-        //{
-        //    if ((_arcMapWindow == null) || !WinAPI.IsWindow(_arcMapWindow) || !_arcMap.Visible)
-        //    {
-        //        int arcMapProcessId;
-        //        int threadId = WinAPI.GetWindowThreadProcessId(_arcMapWindow, out arcMapProcessId);
-        //        Process arcMapProcess = Process.GetProcessById(arcMapProcessId);
-        //        _arcMap.Visible = true;
-        //        _arcMapWindow = arcMapProcess.MainWindowHandle;
-        //    }
-
-        //    System.Windows.Forms.Screen arcMapScreen = System.Windows.Forms.Screen.FromHandle(_arcMapWindow);
-        //    Rectangle arcMapWorkingArea = arcMapScreen.WorkingArea;
-
-        //    System.Windows.Forms.Screen hluScreen =
-        //        System.Windows.Forms.Screen.FromHandle(Process.GetCurrentProcess().MainWindowHandle);
-
-        //    WinAPI.WINDOWINFO winfo = new();
-        //    winfo.cbSize = (uint)Marshal.SizeOf(winfo);
-        //    WinAPI.GetWindowInfo(_arcMapWindow, ref winfo);
-
-        //    switch (windowStyle)
-        //    {
-        //        case ProcessWindowStyle.Hidden:
-        //            _arcMap.Visible = false;
-        //            break;
-        //        case ProcessWindowStyle.Maximized:
-        //            _arcMap.Visible = true;
-        //            if ((winfo.rcClient.Width < arcMapScreen.WorkingArea.Width) ||
-        //                 (winfo.rcClient.Bottom < arcMapScreen.WorkingArea.Height))
-        //            {
-        //                WinAPI.ShowWindow(_arcMapWindow, (int)WinAPI.WindowStates.SW_SHOWNORMAL);
-        //                WinAPI.ShowWindow(_arcMapWindow, (int)WinAPI.WindowStates.SW_SHOWMAXIMIZED);
-        //            }
-        //            break;
-        //        case ProcessWindowStyle.Minimized:
-        //            _arcMap.Visible = true;
-        //            WinAPI.ShowWindow(_arcMapWindow, (int)WinAPI.WindowStates.SW_SHOWMINIMIZED);
-        //            break;
-        //        case ProcessWindowStyle.Normal:
-        //            _arcMap.Visible = true;
-        //            if (sideBySideWith != IntPtr.Zero)
-        //            {
-        //                WinAPI.RECT sideBySideRect;
-        //                if (WinAPI.GetWindowRect(sideBySideWith, out sideBySideRect))
-        //                {
-        //                    int gisWinWidth = hluScreen.WorkingArea.Width - sideBySideRect.Width;
-        //                    if (gisWinWidth <= 0) return;
-        //                    WinAPI.MoveWindow(sideBySideWith, 0, 0, sideBySideRect.Width, sideBySideRect.Height, true);
-        //                    WinAPI.MoveWindow(_arcMapWindow, sideBySideRect.Width, 0, 
-        //                        gisWinWidth, hluScreen.WorkingArea.Height, true);
-        //                }
-        //            }
-        //            else
-        //            {
-        //                WinAPI.ShowWindow(_arcMapWindow, (int)WinAPI.WindowStates.SW_SHOWNORMAL);
-        //            }
-        //            break;
-        //    }
-        //}
-
-        //TODO: ArcGIS
-        //public void Activate()
-        //{
-        //    WinAPI.SetForegroundWindow(_arcMapWindow);
-        //}
-
-        //TODO: ArcGIS
-        //public bool OpenWorkspace(string path)
-        //{
-        //    if (_arcMap == null) return false;
-
-        //    try
-        //    {
-        //        if (!(OpenMapDocument(path, "Select HLU Map Document") && IsHluWorkspace()))
-        //        {
-        //            if (!(AddLayer() && IsHluWorkspace()))
-        //                return false;
-        //            else
-        //                SaveWorkspace();
-        //        }
-        //        Settings.Default.Save();
-        //        return true;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        MessageBox.Show(ex.Message, "Error Opening Map Document",
-        //            MessageBoxButton.OK, MessageBoxImage.Error);
-        //        return false;
-        //    }
-        //}
-
-        //TODO: ArcGIS
-        //public bool SaveWorkspace()
-        //{
-        //    try
-        //    {
-        //        string path;
-        //        SaveFileDialog saveFileDlg = new()
-        //        {
-        //            Title = "Save New Map Document",
-        //            Filter = "ESRI ArcMap Documents (*.mxd)|*.mxd",
-        //            CheckPathExists = true,
-        //            RestoreDirectory = false,
-        //            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
-        //        };
-        //        _arcMap.Visible = false;
-        //        if (saveFileDlg.ShowDialog() == true)
-        //        {
-        //            path = saveFileDlg.FileName;
-        //            FileInfo fInfo = new(path);
-        //            if (Directory.Exists(fInfo.DirectoryName))
-        //            {
-        //                _arcMap.SaveAsDocument(path, false);
-        //                Settings.Default.MapPath = path;
-        //                Settings.Default.Save();
-        //                return true;
-        //            }
-        //        }
-        //    }
-        //    catch { }
-        //    finally { _arcMap.Visible = true; }
-        //    return false;
-        //}
-
-        //TODO: ArcGIS
-        //public bool AddLayer()
-        //{
-        //    try
-        //    {
-        //        IGxDialog featClassDlg = (IGxDialog)CreateArcObject<GxDialogClass>(Settings.Default.UseObjectFactory);
-        //        IGxObjectFilterCollection filterCollection = featClassDlg as IGxObjectFilterCollection;
-        //        filterCollection.AddFilter(new GxFilterPGDBFeatureClasses(), true);
-        //        filterCollection.AddFilter(new GxFilterSDEFeatureClasses(), false);
-        //        filterCollection.AddFilter(new GxFilterShapefiles(), false);
-        //        filterCollection.AddFilter(new GxFilterLayers(), false);
-
-        //        featClassDlg.Title = "Select HLU Feature Class";
-        //        featClassDlg.AllowMultiSelect = false;
-        //        featClassDlg.RememberLocation = true;
-        //        IEnumGxObject enumGxObjs;
-        //        _arcMap.Visible = false;
-        //        WindowInteropHelper winInteropHelper = new(App.Current.MainWindow);
-        //        DispatcherHelper.DoEvents();
-        //        if (!featClassDlg.DoModalOpen(winInteropHelper.Handle.ToInt32(), out enumGxObjs)) return false;
-
-        //        IGxObject selGxObj = enumGxObjs.Next();
-
-        //        if ((selGxObj == null) || !selGxObj.IsValid) throw (new Exception("Invalid object."));
-
-        //        if (selGxObj.Category == "Layer")
-        //        {
-        //            ILayerFile layerFile = (ILayerFile)CreateArcObject<LayerFileClass>(Settings.Default.UseObjectFactory);
-        //            layerFile.Open(selGxObj.FullName);
-        //            CreateHluLayer(true, layerFile.Layer as IGeoFeatureLayer);
-        //        }
-        //        else
-        //        {
-        //            object newDataset = selGxObj.InternalObjectName.Open();
-        //            if (newDataset is IFeatureClass)
-        //            {
-        //                CreateHluLayer((IFeatureClass)newDataset);
-        //            }
-        //        }
-
-        //        return true;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        MessageBox.Show(ex.Message, "Error Adding Layer", MessageBoxButton.OK, MessageBoxImage.Error);
-        //        return false;
-        //    }
-        //    finally { _arcMap.Visible = true; }
-        //}
-
+        //TODO: Is _hluFeatureClass Needed?
         /// <summary>
         /// Checks whether the current document contains an HLU layer. Also initializes the fields
-        /// _hluView and _hluCurrentLayer and, indirectly (by calling CreateHluLayer()), _hluLayer,
-        /// _hluFeatureClass and _hluWS, and indirectly (by calling CreateFieldMap(), _hluFieldMap
-        /// and _hluFieldNames.
+        /// _hluView, _hluCurrentLayer, _hluLayer, _hluFeatureClass and _hluWS, and indirectly
+        /// (by calling CreateFieldMap()), _hluFieldMap and _hluFieldNames.
         /// </summary>
         /// <returns>True if the current document contains a valid HLU layer, otherwise false.</returns>
-        public bool IsHluWorkspace()
+        public async Task<bool> IsHluWorkspaceAsync()
         {
-            if (_hluLayerStructure == null)
-                _hluLayerStructure = new();
+            // Initialise or clear the list of valid layers.
+            if (_hluLayerList == null)
+                _hluLayerList = [];
+            else
+                _hluLayerList.Clear();
 
             //TODO: ArcGIS
-            //try
-            //{
-            //    List<string> retList = IpcArcMap(["iw"]);
-            //    if ((retList != null) && (retList.Count > 5))
-            //    {
-            //        IMap map = Maps(_arcMap).get_Item(Int32.Parse(retList[0]));
-            //        _hluView = map as IActiveView;
+            try
+            {
+                _hluLayer = null;
 
-            //        //---------------------------------------------------------------------
-            //        // CHANGED: CR19 (Feature layer position in GIS)
-            //        // Loop through all the feature layers in the document until the
-            //        // layer in the same position (number) as the HLU layer is found.
-            //        // This ensures that group layers are not counted, in the same way
-            //        // that they weren't counted when the position of the HLU layer
-            //        // was first determined.
-            //        UID uid = new();
-            //        uid.Value = typeof(IFeatureLayer).GUID.ToString("B");
+                // Get all of the feature layers in the active map view.
+                IEnumerable<FeatureLayer> featureLayers = GetFeatureLayers();
 
-            //        IEnumLayer layers = map.get_Layers(uid, true);
-            //        ILayer layer = layers.Next();
+                // Loop through all of the feature layers.
+                foreach(FeatureLayer layer in featureLayers)
+                {
+                    // Check if the feature layer a valid HLU layer.
+                    if (await IsHluLayerAsync(layer))
+                    {
+                        // Add the layer to the list of valid layers.
+                        string layerName = layer.Name;
+                        _hluLayerList.Add(new GISLayer(layerName));
 
-            //        // Increment the map number by 1 so that it starts with 1 instead
-            //        // of 0 to be more user-friendly when displayed.
-            //        int mapNum = Int32.Parse(retList[0]) + 1;
-            //        string mapName = retList[1];
-            //        int layerNum = Int32.Parse(retList[2]);
-            //        int j = 0;
+                        // Store the details of the first valid layer found.
+                        if (_hluLayer == null)
+                        {
+                            //TODO: HLU variables
+                            //_hluUidFieldOrdinals = hluUidFieldOrdinals;
+                            //_hluFieldSysTypeNames = hluFieldSysTypeNames;
+                            //_hluSqlSyntax = hluSqlSyntax;
+                            //_quotePrefix = quotePrefix;
+                            //_quoteSuffix = quoteSuffix;
 
-            //        while (layer != null)
-            //        {
-            //            if (j == layerNum)
-            //            {
-            //                string layerName = layer.Name;
-            //                _templateLayer = (IGeoFeatureLayer)layer;
-            //                CreateHluLayer(false, _templateLayer);
-            //                CreateFieldMap(7, 5, 3, retList);
-            //                _hluCurrentLayer = new GISLayer(mapNum, mapName, layerNum, layerName);
-            //            }
-            //            layer = layers.Next();
-            //            j++;
-            //        }
-            //        //---------------------------------------------------------------------
-            //    }
-            //    else
-            //    {
-            //        _hluLayer = null;
-            //    }
-            //}
-            //catch { }
+                            //TODO: Workspace variables.
+                            //_hluWS = (IFeatureWorkspace)((IDataset)_hluFeatureClass).Workspace;
+
+                            //TODO: ArcGIS
+                            //// Map the fields in the layer to the fields in the HLU layer structure.
+                            //CreateFieldMap(7, 5, 3, retList);
+
+                            _hluLayer = layer;
+                            _hluTableName = layer.Name;
+                            //TODO: Needed?
+                            //_hluFeatureClass = _hluLayer.GetFeatureClass();
+                            _hluCurrentLayer = new GISLayer(layerName);
+                        }
+
+                        //break;
+                    }
+                }
+            }
+            catch { }
 
             if (_hluLayer != null)
             {
@@ -1669,11 +1386,6 @@ namespace HLU.GISApplication.ArcGIS
             }
         }
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR31 (Switching between GIS layers)
-        // Enable the user to switch between different HLU layers, where
-        // there is more than one valid layer in the current document.
-        //
         /// <summary>
         /// Determines which of the layers in all the maps are valid HLU layers
         /// and stores these in a list so the user can switch between them.
@@ -1728,83 +1440,6 @@ namespace HLU.GISApplication.ArcGIS
             //return _hluLayerList.Count;
             return 0;
         }
-        //---------------------------------------------------------------------
-
-        //---------------------------------------------------------------------
-        // CHANGED: CR31 (Switching between GIS layers)
-        // Enable the user to switch between different HLU layers, where
-        // there is more than one valid layer in the current document.
-        //
-        /// <summary>
-        /// Determines whether the specified new gis layer is a valid HLU layer
-        /// and if it is sets the current layer (_hluLayer, etc) properies
-        /// to relate this the new GIS layer.
-        /// </summary>
-        /// <param name="newGISLayer">The new gis layer to test for validity.</param>
-        /// <returns>True if the GIS layer is a valid HLU layer, otherwise False</returns>
-        public bool IsHluLayer(GISLayer newGISLayer)
-        {
-            //if (_hluLayerStructure == null)
-            //    _hluLayerStructure = new HluGISLayer.incid_mm_polygonsDataTable();
-
-            //TODO: ArcGIS
-            //try
-            //{
-            //    // Reduce the map number by 1 because the GISLayer value is always
-            //    // incremented by 1 so that it starts with 1 instead of 0 to be more
-            //    // user-friendly.
-            //    int mapNum = newGISLayer.MapNum - 1;
-            //    int layerNum = newGISLayer.LayerNum;
-
-            //    List<string> retList = IpcArcMap(
-            //        new string[] { "il", mapNum.ToString(), layerNum.ToString() });
-            //    if ((retList != null) && (retList.Count > 5))
-            //    {
-            //        // Get the correct map based on the map number.
-            //        IMap map = Maps(_arcMap).get_Item(mapNum);
-            //        _hluView = map as IActiveView;
-
-            //        UID uid = new();
-            //        uid.Value = typeof(IFeatureLayer).GUID.ToString("B");
-
-            //        // Loop through each layer in the map looking for the correct layer
-            //        // by number (order).
-            //        int j = 0;
-            //        IEnumLayer layers = map.get_Layers(uid, true);
-            //        ILayer layer = layers.Next();
-            //        while (layer != null)
-            //        {
-            //            if (j == layerNum)
-            //            {
-            //                string layerName = layer.Name;
-            //                _templateLayer = (IGeoFeatureLayer)layer;
-            //                CreateHluLayer(false, _templateLayer);
-            //                CreateFieldMap(5, 3, 1, retList);
-            //                _hluCurrentLayer = newGISLayer;
-            //                return true;
-            //            }
-            //            layer = layers.Next();
-            //            j++;
-            //        }
-            //    }
-            //    else
-            //    {
-            //        _hluLayer = null;
-            //    }
-            //}
-            //catch { }
-
-            if (_hluLayer != null)
-            {
-                return true;
-            }
-            else
-            {
-                DestroyHluLayer();
-                return false;
-            }
-        }
-        //---------------------------------------------------------------------
 
         /// <summary>
         /// Populates field map from list returned by ArcMap through pipe.
@@ -1835,11 +1470,13 @@ namespace HLU.GISApplication.ArcGIS
         {
             _hluFieldMap = null;
             _hluFieldNames = null;
-            _hluFeatureClass = null;
+            //TODO: Needed?
+            //_hluFeatureClass = null;
             _hluLayer = null;
             _hluView = null;
         }
 
+        //TODO: Is _hluFeatureClass Needed?
         /// <summary>
         /// Retrieves the name of the field of _hluFeatureClass that corresponds to the column of
         /// _hluLayerStructure whose ordinal is passed in.
@@ -1854,6 +1491,7 @@ namespace HLU.GISApplication.ArcGIS
                 return _hluFieldNames[columnOrdinal];
         }
 
+        //TODO: Is _hluFeatureClass Needed?
         /// <summary>
         /// Retrieves the ordinal of the field of _hluFeatureClass that corresponds to the column of
         /// _hluLayerStructure whose ordinal is passed in.
@@ -1872,6 +1510,7 @@ namespace HLU.GISApplication.ArcGIS
                 return _hluFieldMap[columnOrdinal];
         }
 
+        //TODO: Is _hluFeatureClass Needed?
         /// <summary>
         /// Retrieves the ordinal of the field of _hluFeatureClass that corresponds to the column of
         /// _hluLayerStructure whose ordinal is passed in.
@@ -1888,6 +1527,7 @@ namespace HLU.GISApplication.ArcGIS
                 return _hluFieldMap[columnOrdinal];
         }
 
+        //TODO: Is _hluFeatureClass Needed?
         /// <summary>
         /// Retrieves the field of _hluFeatureClass that corresponds to the column of _hluLayerStructure whose ordinal is passed in.
         /// </summary>
@@ -1929,6 +1569,7 @@ namespace HLU.GISApplication.ArcGIS
                 return null;
         }
 
+        //TODO: Is _hluFeatureClass Needed?
         /// <summary>
         /// Retrieves the column of _hluLayerStructure that corresponds to the field of _hluFeatureClass whose ordinal is passed in.
         /// </summary>
@@ -1945,6 +1586,7 @@ namespace HLU.GISApplication.ArcGIS
                 return null;
         }
 
+        //TODO: Is _hluFeatureClass Needed?
         //TODO: ArcPro
         /// <summary>
         /// Retrieves the column of _hluLayerStructure that corresponds to the field of _hluFeatureClass whose name is passed in.
@@ -1957,7 +1599,7 @@ namespace HLU.GISApplication.ArcGIS
                 (_hluFeatureClass == null) || String.IsNullOrEmpty(fieldName)) return null;
 
             //TODO: ArcPro
-            int fieldOrdinal = await _mapFunctions.GetFieldOrdinalAsync(_hluFeatureClass.GetName(), fieldName);
+            int fieldOrdinal = await GetFieldOrdinalAsync(_hluFeatureClass.GetName(), fieldName);
             //int fieldOrdinal = _hluFeatureClass.Fields.FindField(fieldName);
 
             if (fieldOrdinal == -1) return null;
@@ -2205,7 +1847,7 @@ namespace HLU.GISApplication.ArcGIS
 
         //private SdeDLL[] ExtractSDE()
         //{
-        //    string sdeLibPrefix = "HLU.GISApplication.ArcGIS.lib";
+        //    string sdeLibPrefix = "HLU.GISApplication.lib";
         //    // sde DLLs in order of dependency, i.e., main DLL last
         //    SdeDLL[] sdeLibs =
         //    [
@@ -2388,171 +2030,6 @@ namespace HLU.GISApplication.ArcGIS
         //}
 
         //TODO: ArcGIS
-        //private void CreateHluFeatureClass(IFeatureClass templateFeatureClass)
-        //{
-        //    if (templateFeatureClass == null)
-        //        throw new ArgumentException("No HLU dataset provided.", "templateFeatureClass");
-
-        //    IDataset templateDataset = (IDataset)templateFeatureClass;
-
-        //    if (!Settings.Default.UseObjectFactory)
-        //    {
-        //        _hluWS = (IFeatureWorkspace)templateDataset.Workspace;
-        //        _hluFeatureClass = templateFeatureClass;
-        //        return;
-        //    }
-
-        //    IWorkspaceFactory wsFactoryStored = templateDataset.Workspace.WorkspaceFactory;
-
-        //    switch (wsFactoryStored.GetClassID().Value.ToString())
-        //    {
-        //        case "{DD48C96A-D92A-11D1-AA81-00C04FA33A15}":
-        //            AccessWorkspaceFactory wsFactoryAccess =
-        //                (AccessWorkspaceFactory)CreateArcObject<AccessWorkspaceFactoryClass>(true);
-        //            _hluWS = (IFeatureWorkspace)wsFactoryAccess
-        //                .OpenFromFile(templateDataset.Workspace.PathName, (int)_arcMapWindow);
-        //            break;
-        //        case "{71FE75F0-EA0C-4406-873E-B7D53748AE7E}":
-        //            FileGDBWorkspaceFactory wsFactoryFileGDB = (FileGDBWorkspaceFactory)
-        //                CreateArcObject<ESRI.ArcGIS.DataSourcesGDB.FileGDBWorkspaceFactoryClass>(true);
-        //            _hluWS = (IFeatureWorkspace)wsFactoryFileGDB
-        //                .OpenFromFile(templateDataset.Workspace.PathName, (int)_arcMapWindow);
-        //            break;
-        //        case "{A06ADB96-D95C-11D1-AA81-00C04FA33A15}":
-        //            ShapefileWorkspaceFactory wsFactoryShp =
-        //                (ShapefileWorkspaceFactory)CreateArcObject<ShapefileWorkspaceFactoryClass>(true);
-        //            _hluWS = (IFeatureWorkspace)wsFactoryShp
-        //                .OpenFromFile(templateDataset.Workspace.PathName, (int)_arcMapWindow);
-        //            break;
-        //        case "{1D887452-D9F2-11D1-AA81-00C04FA33A15}":
-        //            ArcInfoWorkspaceFactory wsFactoryArcInfo =
-        //                (ArcInfoWorkspaceFactory)CreateArcObject<ArcInfoWorkspaceFactoryClass>(true);
-        //            _hluWS = (IFeatureWorkspace)wsFactoryArcInfo.Open(
-        //                templateDataset.Workspace.ConnectionProperties, (int)_arcMapWindow);
-        //            break;
-        //        case "{6DE812D2-9AB6-11D2-B0D7-0000F8780820}":
-        //            PCCoverageWorkspaceFactory wsFactoryPCCoverage =
-        //                (PCCoverageWorkspaceFactory)CreateArcObject<PCCoverageWorkspaceFactoryClass>(true);
-        //            _hluWS = (IFeatureWorkspace)wsFactoryPCCoverage.Open(
-        //                templateDataset.Workspace.ConnectionProperties, (int)_arcMapWindow);
-        //            break;
-        //        case "{D9B4FA40-D6D9-11D1-AA81-00C04FA33A15}":
-        //            SdeWorkspaceFactory wsFactorySde =
-        //                (SdeWorkspaceFactory)CreateArcObject<SdeWorkspaceFactoryClass>(true);
-        //            _hluWS = (IFeatureWorkspace)wsFactorySde
-        //                .Open(templateDataset.Workspace.ConnectionProperties, (int)_arcMapWindow);
-        //            break;
-        //    }
-
-        //    _hluFeatureClass = _hluWS.OpenFeatureClass(templateDataset.Name);
-        //}
-
-        //TODO: ArcGIS
-        //private void CreateHluLayer(IFeatureClass templateFeatureClass)
-        //{
-        //    if (templateFeatureClass == null)
-        //        throw new ArgumentException("No HLU dataset provided", "templateFeatureClass");
-
-        //    CreateHluFeatureClass(templateFeatureClass);
-        //    _hluLayer = (IFeatureLayer)CreateArcObject<FeatureLayerClass>(Settings.Default.UseObjectFactory);
-        //    _hluLayer.FeatureClass = _hluFeatureClass;
-        //    _hluLayer.Name = _hluFeatureClass.AliasName;
-
-        //    AddHluLayer();
-        //}
-
-        //TODO: ArcGIS
-        //private void CreateHluLayer(bool addNew, IGeoFeatureLayer templateLayer)
-        //{
-        //    if (templateLayer == null)
-        //        throw new ArgumentException("No HLU layer provided", "templateLayer");
-
-        //    if (!Settings.Default.UseObjectFactory || !addNew)
-        //    {
-        //        _hluLayer = _templateLayer;
-        //        _hluFeatureClass = _templateLayer.FeatureClass;
-        //        _hluWS = (IFeatureWorkspace)((IDataset)_hluFeatureClass).Workspace;
-        //        if (addNew) AddHluLayer();
-        //    }
-        //    else
-        //    {
-        //        CreateHluFeatureClass(templateLayer.FeatureClass);
-
-        //        IObjectCopy objCopy = (IObjectCopy)CreateArcObject<ObjectCopyClass>(Settings.Default.UseObjectFactory);
-
-        //        _hluLayer = (IGeoFeatureLayer)CreateArcObject<FeatureLayerClass>(Settings.Default.UseObjectFactory);
-        //        _hluLayer.FeatureClass = _hluFeatureClass;
-        //        _hluLayer.Name = templateLayer.Name;
-        //        ((IGeoFeatureLayer)_hluLayer).Renderer = (IFeatureRenderer)objCopy.Copy(templateLayer.Renderer);
-        //        ((IFeatureLayerDefinition)_hluLayer).DefinitionExpression =
-        //            ((IFeatureLayerDefinition)templateLayer).DefinitionExpression;
-        //        IFeatureSelection featureSelection = (IFeatureSelection)templateLayer;
-        //        if (featureSelection.SelectionSet.Count > 0)
-        //        {
-        //            IQueryFilter queryFilter = new();
-        //            queryFilter.WhereClause = String.Format("{0} IN ({1})", _hluFeatureClass.OIDFieldName,
-        //                String.Join(",", SelectedIDs(featureSelection.SelectionSet).Select(i => i.ToString()).ToArray()));
-        //            featureSelection = (IFeatureSelection)_hluLayer;
-        //            featureSelection.SelectFeatures(queryFilter, esriSelectionResultEnum.esriSelectionResultNew, false);
-        //        }
-
-        //        AddHluLayer();
-        //    }
-
-        //    SetDefaults();
-        //}
-
-        //TODO: ArcGIS
-        //private void AddHluLayer()
-        //{
-        //    IMap focusMap;
-
-        //    IEnvelope originalExtent = null;
-
-        //    if (_hluView != null)
-        //    {
-        //        focusMap = _hluView.FocusMap;
-        //        originalExtent = _hluView.Extent;
-        //    }
-        //    else
-        //    {
-        //        focusMap = ((IMxDocument)_arcMap.Document).FocusMap;
-        //        _hluView = focusMap as IActiveView;
-        //    }
-
-        //    if (focusMap.SpatialReference != null)
-        //    {
-        //        _hluLayer.SpatialReference = focusMap.SpatialReference;
-        //    }
-        //    else
-        //    {
-        //        ISpatialReference spatialRef = ((IGeoDataset)_hluLayer.FeatureClass).SpatialReference;
-        //        _hluLayer.SpatialReference = spatialRef;
-        //        focusMap.SpatialReference = spatialRef;
-        //    }
-
-        //    if (_templateLayer != null)
-        //    {
-        //        ((IDataLayer2)_templateLayer).Disconnect();
-        //        focusMap.DeleteLayer(_templateLayer);
-        //    }
-
-        //    // add layer to document
-        //    focusMap.AddLayer(_hluLayer);
-
-        //    if ((_templateLayer == null) && (focusMap.LayerCount == 1))
-        //        _hluView.Extent = _hluLayer.AreaOfInterest;
-        //    else if (originalExtent != null)
-        //    {
-        //        _hluView.Extent = originalExtent;
-        //        _hluView.Refresh();
-        //    }
-
-        //    IBasicDocument document = (IBasicDocument)_arcMap.Document;
-        //    document.UpdateContents();
-        //}
-
-        //TODO: ArcGIS
         //private IEnumLayer Layers(IMap map)
         //{
         //    if (map == null) return null;
@@ -2614,5 +2091,128 @@ namespace HLU.GISApplication.ArcGIS
         //        _pipeName = String.Format("{0}.{1}", PipeBaseName, _arcMap.hWnd);
         //    }
         //}
+
+        //TODO: Is _hluFeatureClass Needed?
+        //TODO: ArcGIS
+        ///// <summary>
+        ///// Retrieves the field of _hluFeatureClass that corresponds to the column of _hluLayerStructure whose name is passed in.
+        ///// </summary>
+        ///// <param name="columnName">Name of the column of _hluLayerStructure.</param>
+        ///// <returns>The field of _hluFeatureClass corresponding to column _hluLayerStructure[columnName].</returns>
+        //public static IField GetField(string columnName, IFeatureClass _hluFeatureClass,
+        //    HluGISLayer.incid_mm_polygonsDataTable _hluLayerStructure, int[] _hluFieldMap)
+        //{
+        //    if ((_hluLayerStructure == null) || (_hluFieldMap == null) ||
+        //        (_hluFeatureClass == null) || String.IsNullOrEmpty(columnName)) return null;
+        //    DataColumn c = _hluLayerStructure.Columns[columnName.Trim()];
+        //    if ((c == null) || (c.Ordinal >= _hluFieldMap.Length)) return null;
+        //    int fieldOrdinal = _hluFieldMap[c.Ordinal];
+        //    if ((fieldOrdinal >= 0) && (fieldOrdinal <= _hluFieldMap.Length))
+        //        return _hluFeatureClass.Fields.get_Field(fieldOrdinal);
+        //    else
+        //        return null;
+        //}
+
+        //TODO: ArcGIS
+        //public static string WhereClauseFromCursor(int oidOrdinalCursor, string oidColumnAlias, ICursor cursor)
+        //{
+        //    StringBuilder sbIDs = new();
+        //    StringBuilder sbBetween = new();
+        //    string betweenTemplate = " OR (" + oidColumnAlias + " BETWEEN {0} AND {1})";
+        //    int currOid = -1;
+        //    int nextOid = -1;
+        //    int countContinuous = 0;
+        //    IRow row = cursor.NextRow();
+
+        //    while (row != null)
+        //    {
+        //        currOid = (int)row.get_Value(oidOrdinalCursor);
+        //        nextOid = currOid;
+        //        countContinuous = 1;
+        //        do
+        //        {
+        //            row = cursor.NextRow();
+        //            if (row != null)
+        //            {
+        //                nextOid = (int)row.get_Value(oidOrdinalCursor);
+        //                if (nextOid != currOid + countContinuous)
+        //                    break;
+        //                else
+        //                    countContinuous++;
+        //            }
+        //            else
+        //            {
+        //                break;
+        //            }
+        //        }
+        //        while (true);
+        //        switch (countContinuous)
+        //        {
+        //            case 1:
+        //                sbIDs.Append(',').Append(currOid);
+        //                break;
+        //            case 2:
+        //                sbIDs.Append(',').Append(currOid);
+        //                if (nextOid != currOid) sbIDs.Append(',').Append(nextOid);
+        //                break;
+        //            default:
+        //                sbBetween.Append(String.Format(betweenTemplate, currOid, currOid + countContinuous - 1));
+        //                break;
+        //        }
+        //    }
+
+        //    if (sbIDs.Length > 1) sbIDs.Remove(0, 1).Insert(0, oidColumnAlias + " IN (").Append(')');
+        //    return sbIDs.Append(sbBetween).ToString();
+        //}
+
+        //TODO: ArcGIS
+        //public static IQueryDef CreateQueryDef(IFeatureWorkspace featureWorkspace,
+        //    String tables, String subFields, String whereClause)
+        //{
+        //    // Create the query definition.
+        //    IQueryDef queryDef = featureWorkspace.CreateQueryDef();
+
+        //    // Provide a list of table(s) to join.
+        //    queryDef.Tables = tables;
+
+        //    // Declare the subfields to retrieve.
+        //    queryDef.SubFields = subFields; // must be qualified if multiple tables !!
+
+        //    // Assign a where clause to filter the results.
+        //    queryDef.WhereClause = whereClause;
+
+        //    return queryDef;
+        //}
+
+        //TODO: ArcGIS
+        public static void GetTypeMaps(out Dictionary<Type, int> _typeMapSystemToSQL,
+            out Dictionary<int, Type> _typeMapSQLToSystem)
+        {
+            _typeMapSystemToSQL = [];
+            _typeMapSystemToSQL.Add(typeof(System.String), (int)esriFieldType.esriFieldTypeString);
+            _typeMapSystemToSQL.Add(typeof(System.Decimal), (int)esriFieldType.esriFieldTypeSingle);
+            _typeMapSystemToSQL.Add(typeof(System.Int64), (int)esriFieldType.esriFieldTypeInteger);
+            _typeMapSystemToSQL.Add(typeof(System.Int32), (int)esriFieldType.esriFieldTypeSmallInteger);
+            _typeMapSystemToSQL.Add(typeof(System.Int16), (int)esriFieldType.esriFieldTypeSmallInteger);
+            _typeMapSystemToSQL.Add(typeof(System.Boolean), (int)esriFieldType.esriFieldTypeSmallInteger);
+            _typeMapSystemToSQL.Add(typeof(System.Single), (int)esriFieldType.esriFieldTypeSingle);
+            _typeMapSystemToSQL.Add(typeof(System.Double), (int)esriFieldType.esriFieldTypeDouble);
+            _typeMapSystemToSQL.Add(typeof(System.DateTime), (int)esriFieldType.esriFieldTypeDate);
+
+            _typeMapSQLToSystem = [];
+            _typeMapSQLToSystem.Add((int)esriFieldType.esriFieldTypeBlob, typeof(System.Byte[]));
+            _typeMapSQLToSystem.Add((int)esriFieldType.esriFieldTypeDate, typeof(System.DateTime));
+            _typeMapSQLToSystem.Add((int)esriFieldType.esriFieldTypeDouble, typeof(System.Double));
+            _typeMapSQLToSystem.Add((int)esriFieldType.esriFieldTypeGeometry, typeof(System.Byte[]));
+            _typeMapSQLToSystem.Add((int)esriFieldType.esriFieldTypeGlobalID, typeof(System.Guid));
+            _typeMapSQLToSystem.Add((int)esriFieldType.esriFieldTypeGUID, typeof(System.Guid));
+            _typeMapSQLToSystem.Add((int)esriFieldType.esriFieldTypeInteger, typeof(System.Int64));
+            _typeMapSQLToSystem.Add((int)esriFieldType.esriFieldTypeOID, typeof(System.Int64));
+            _typeMapSQLToSystem.Add((int)esriFieldType.esriFieldTypeRaster, typeof(System.Byte[]));
+            _typeMapSQLToSystem.Add((int)esriFieldType.esriFieldTypeSingle, typeof(System.Single));
+            _typeMapSQLToSystem.Add((int)esriFieldType.esriFieldTypeSmallInteger, typeof(System.Int32));
+            _typeMapSQLToSystem.Add((int)esriFieldType.esriFieldTypeString, typeof(System.String));
+            _typeMapSQLToSystem.Add((int)esriFieldType.esriFieldTypeXML, typeof(System.String));
+        }
     }
 }

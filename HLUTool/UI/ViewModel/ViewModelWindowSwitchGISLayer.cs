@@ -56,11 +56,6 @@ namespace HLU.UI.ViewModel
             {
                 _availableHLULayers = ValidHluLayers;
                 _selectedHLULayer = SelectedHLULayer;
-                _mapWindowsCount = MapWindowsCount;
-
-                // Set the static variable for the total number of
-                // map windows.
-                GISLayer.MapWindowsCount = _mapWindowsCount;
             }
         }
 

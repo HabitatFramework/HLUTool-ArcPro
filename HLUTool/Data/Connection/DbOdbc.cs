@@ -60,16 +60,19 @@ namespace HLU.Data.Connection
         public DbOdbc(ref string connString, ref string defaultSchema, ref bool promptPwd,
             string pwdMask, bool useCommandBuilder, bool useColumnNames, bool isUnicode,
             bool useTimeZone, uint textLength, uint binaryLength, uint timePrecision,
-            uint numericPrecision, uint numericScale)
+            uint numericPrecision, uint numericScale, int connectTimeOut)
             : base(ref connString, ref defaultSchema, ref promptPwd, pwdMask,
             useCommandBuilder, useColumnNames, isUnicode, useTimeZone, textLength,
-            binaryLength, timePrecision, numericPrecision, numericScale)
+            binaryLength, timePrecision, numericPrecision, numericScale, connectTimeOut)
         {
             if (String.IsNullOrEmpty(ConnectionString)) throw (new Exception("No connection string"));
 
             try
             {
-                Login(_backend == Backends.Oracle ? "User ID" : "User name", ConnectionString,
+                // Append connection timeout to connection string.
+                string connectionString = String.Format("{0};{1}", ConnectionString, connectTimeOut);
+
+                Login(_backend == Backends.Oracle ? "User ID" : "User name", connectionString,
                     ref promptPwd, ref _connStrBuilder, ref _connection);
 
                 PopulateTypeMaps(IsUnicode, UseTimeZone, TextLength, BinaryLength,

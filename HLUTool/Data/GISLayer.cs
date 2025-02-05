@@ -45,9 +45,6 @@ namespace HLU.Data
     {
         #region Fields
 
-        private int _mapNum;
-        private string _mapName;
-        private int _layerNum;
         private string _layerName;
         private static int _mapWindowsCount;
 
@@ -59,19 +56,8 @@ namespace HLU.Data
         {
         }
 
-        public GISLayer(int mapNum, int layerNum, string layerName)
+        public GISLayer(string layerName)
         {
-            _mapNum = mapNum;
-            _mapName = null;
-            _layerNum = layerNum;
-            _layerName = layerName;
-        }
-
-        public GISLayer(int mapNum, string mapName, int layerNum, string layerName)
-        {
-            _mapNum = mapNum;
-            _mapName = mapName;
-            _layerNum = layerNum;
             _layerName = layerName;
         }
 
@@ -79,55 +65,15 @@ namespace HLU.Data
 
         #region Properties
 
-        public int MapNum
-        {
-            get { return _mapNum; }
-            set { _mapNum = value; }
-        }
-
-        public string MapName
-        {
-            get { return _mapName; }
-            set { _mapName = value; }
-        }
-
-        public int LayerNum
-        {
-            get { return _layerNum; }
-            set { _layerNum = value; }
-        }
-
         public string LayerName
         {
             get { return _layerName; }
             set { _layerName = value; }
         }
 
-        public static int MapWindowsCount
-        {
-            get { return _mapWindowsCount; }
-            set { _mapWindowsCount = value; }
-        }
-
         public string DisplayName
         {
-            get
-            {
-                string mapName = null;
-
-                // Set the map name to the window name and number.
-                if (_mapName == null)
-                    mapName = string.Format(" [{0}]", _mapNum);
-                else
-                    mapName = string.Format(" in {0} [{1}]", _mapName, _mapNum);
-
-                // If there is more than one map window in total then
-                // include the map name/number
-                if (_mapWindowsCount > 1)
-                    return String.Format("{0}{1}", _layerName, mapName);
-                else
-                    return String.Format("{0}", _layerName);
-            }
+            get { return _layerName; }
         }
 
         #endregion // Properties
@@ -136,19 +82,19 @@ namespace HLU.Data
 
         public override string ToString()
         {
-            return "Map: " + _mapName + "[" + _mapNum + "]" + " Layer: " + _layerName + "[" + _layerNum + "]";
+            return "Layer: " + _layerName;
         }
 
         public override int GetHashCode()
         {
-            return (this.MapNum.GetHashCode() * 100) + (this.LayerNum.GetHashCode() * 10) + this.LayerName.GetHashCode();
+            return this.LayerName.GetHashCode();
         }
 
         public virtual bool Equals(GISLayer other)
         {
             if (other == null) return false;
 
-            return ((this._mapNum == other._mapNum) && (this._mapName == other._mapName) && (this._layerNum == other._layerNum) && (this._layerName == other._layerName));
+            return (this._layerName == other._layerName);
         }
 
         public override bool Equals(object obj)

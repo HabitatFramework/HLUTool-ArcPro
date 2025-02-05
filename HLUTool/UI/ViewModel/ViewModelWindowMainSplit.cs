@@ -28,7 +28,7 @@ using System.Linq;
 using System.Windows;
 using HLU.Data;
 using HLU.Data.Model;
-using HLU.GISApplication.ArcGIS;
+using HLU.GISApplication;
 
 namespace HLU.UI.ViewModel
 {

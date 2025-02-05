@@ -75,7 +75,7 @@ namespace HLU.Data.Connection
 
         protected DbBase(ref string connString, ref string defaultSchema, ref bool promptPwd, string pwdMask,
             bool useCommandBuilder, bool useColumnNames, bool isUnicode, bool useTimeZone, uint textLength,
-            uint binaryLength, uint timePrecision, uint numericPrecision, uint numericScale)
+            uint binaryLength, uint timePrecision, uint numericPrecision, uint numericScale, int connectTimeOut)
         {
             try
             {
@@ -97,6 +97,7 @@ namespace HLU.Data.Connection
                 _timePrecision = timePrecision;
                 _numericPrecision = numericPrecision;
                 _numericScale = numericScale;
+                _connectTimeOut = connectTimeOut;
                 _sqlTypeRegex = SqlTypeRegex();
             }
             catch { throw; }
@@ -231,6 +232,8 @@ namespace HLU.Data.Connection
         public uint NumericPrecision { get { return _numericPrecision; } }
 
         public uint NumericScale { get { return _numericScale; } }
+
+        public int ConnectTimeOut { get { return _connectTimeOut; } }
 
         public string RestrictionNameCatalog { get { return _restrictionNameCatalog; } }
 
@@ -513,6 +516,8 @@ namespace HLU.Data.Connection
         protected uint _numericPrecision;
 
         protected uint _numericScale;
+
+        protected int _connectTimeOut;
 
         protected bool _useCommandBuilder;
 

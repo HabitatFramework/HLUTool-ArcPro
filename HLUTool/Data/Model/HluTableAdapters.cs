@@ -28,6 +28,7 @@ using System.Reflection;
 using System.Text;
 using HLU.Data.Connection;
 
+//TODO: Code refactoring required
 namespace HLU.Data.Model.HluDataSetTableAdapters
 {
     public partial class HluTableAdapter<T, R> : Component
