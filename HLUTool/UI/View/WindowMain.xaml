@@ -31,7 +31,28 @@
                VerticalAlignment="Stretch"
                Cursor="{Binding WindowCursor}">
 
-        <Grid x:Name="GridMain" Visibility="{Binding DockpaneVisibility}">
+        <Grid x:Name="Panel">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <controls:MessageLabel
+                      Grid.Row="0"
+                      Margin="0,8,0,0"
+                      Height="24"
+                      MessageType="{Binding Path=MessageLevel}"
+                      Severity="High"
+                      ShowHelp="False"
+                      Content="{Binding Path=Message}"
+                      ToolTip="{Binding Path=Message}"
+                      CanClose="False"
+                      Visibility="{Binding Path=HasMessage}" />
+
+            <Grid x:Name="GridMain"
+                  Grid.Row="1"
+                  Visibility="{Binding DockpaneVisibility}">
+
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
@@ -201,174 +222,180 @@
                       Margin="2,0,2,0"
                       Header="{Binding Path=TopControlsGroupHeader}"
                       Visibility="{Binding Path=HideInBulkUpdateMode}">
+
                 <Grid x:Name="GridTopControls"
                       Grid.Row="0"
                       Margin="0,0,0,0"
                       Panel.ZIndex="1">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" MinWidth="90" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
+
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <Label x:Name="LabelIncid"
-                           Grid.Row="0"
-                           Grid.Column="0"
-                           Margin="0,0,0,4"
-                           HorizontalAlignment="Right"
-                           VerticalAlignment="Center"
-                           Content="INCID" />
-                    <TextBox x:Name="TextBoxIncid"
-                             Grid.Row="0"
-                             Grid.Column="1"
-                             Margin="0,0,0,4"
-							 MinWidth="80"
-                             VerticalAlignment="Center"
-                             IsReadOnly="True"
-                             Text="{Binding Path=Incid,
-                                            Mode=OneWay,
-                                            ValidatesOnDataErrors=False}" />
+                        <Grid x:Name="GridIncidDetails"
+                            Grid.Row="0">
 
-                    <Grid x:Name="GridIncidAttributes"
-                          Grid.Row="0"
-                          Grid.Column="2"
-                          Grid.ColumnSpan="3">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="60" />
+                                <ColumnDefinition Width="80" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
 
-                        <Label x:Name="LabelIncidArea"
+                                <Label x:Name="LabelIncid"
+                                   Grid.Row="0"
+                                   Grid.Column="0"
+                                   Margin="0,0,0,4"
+                                   HorizontalAlignment="Right"
+                                   VerticalAlignment="Center"
+                                   Content="INCID" />
+                                <TextBox x:Name="TextBoxIncid"
+                                     Grid.Row="0"
+                                     Grid.Column="1"
+                                     Margin="0,0,0,4"
+							         VerticalAlignment="Center"
+                                     IsReadOnly="True"
+                                     Text="{Binding Path=Incid,
+                                                    Mode=OneWay,
+                                                    ValidatesOnDataErrors=False}" />
+                                <Label x:Name="LabelIncidArea"
+                                   Grid.Row="0"
+                                   Grid.Column="2"
+                                   Margin="6,0,0,4"
+                                   HorizontalAlignment="Right"
+                                   VerticalAlignment="Center"
+                                   Content="Area [ha]" />
+                                <TextBox x:Name="TextBoxIncidArea"
+                                     Grid.Row="0"
+                                     Grid.Column="3"
+                                     Margin="0,0,0,4"
+                                     VerticalAlignment="Center"
+                                     IsEnabled="False"
+                                     IsReadOnly="True"
+                                     Text="{Binding IncidArea,
+                                                    Mode=OneWay,
+                                                    ValidatesOnDataErrors=False}"
+                                     TextAlignment="Right" />
+                                <Label x:Name="LabelIncidLength"
+                                   Grid.Row="0"
+                                   Grid.Column="4"
+                                   Margin="6,0,0,4"
+                                   HorizontalAlignment="Right"
+                                   VerticalAlignment="Center"
+                                   Content="Length [km]" />
+                                <TextBox x:Name="TextBoxIncidLength"
+                                     Grid.Row="0"
+                                     Grid.Column="5"
+                                     Margin="0,0,2,4"
+                                     VerticalAlignment="Center"
+                                     IsEnabled="False"
+                                     IsReadOnly="True"
+                                     Text="{Binding IncidLength,
+                                                    Mode=OneWay,
+                                                    ValidatesOnDataErrors=False}"
+                                     TextAlignment="Right" />
+                        </Grid>
+
+                        <Grid x:Name="GridIncidDateUser"
+                            Grid.Row="1">
+
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="60" />
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+
+                            <Label x:Name="LabelIncidCreatedDate"
                                Grid.Row="0"
                                Grid.Column="0"
-                               Margin="6,0,0,4"
+                               Margin="8,0,0,4"
                                HorizontalAlignment="Right"
-                               VerticalAlignment="Center"
-                               Content="Area [ha]" />
-                        <TextBox x:Name="TextBoxIncidArea"
+                               VerticalAlignment="Center">
+                                Created
+                            </Label>
+                            <TextBox x:Name="TextBoxIncidCreatedDate"
                                  Grid.Row="0"
                                  Grid.Column="1"
                                  Margin="0,0,0,4"
                                  VerticalAlignment="Center"
                                  IsEnabled="False"
                                  IsReadOnly="True"
-                                 Text="{Binding IncidArea,
+                                 Text="{Binding IncidCreatedDate,
                                                 Mode=OneWay,
                                                 ValidatesOnDataErrors=False}"
-                                 TextAlignment="Right" />
-                        <Label x:Name="LabelIncidLength"
+                                 TextAlignment="Left" />
+
+                            <Label x:Name="LabelIncidCreatedUser"
                                Grid.Row="0"
                                Grid.Column="2"
                                Margin="6,0,0,4"
-                               HorizontalAlignment="Right"
-                               VerticalAlignment="Center"
-                               Content="Length [km]" />
-                        <TextBox x:Name="TextBoxIncidLength"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Center">
+                                By
+                            </Label>
+                            <TextBox x:Name="TextBoxIncidCreatedUser"
                                  Grid.Row="0"
                                  Grid.Column="3"
-                                 Margin="0,0,6,4"
+                                 Margin="0,0,2,4"
                                  VerticalAlignment="Center"
                                  IsEnabled="False"
                                  IsReadOnly="True"
-                                 Text="{Binding IncidLength,
+                                 Text="{Binding IncidCreatedUser,
                                                 Mode=OneWay,
                                                 ValidatesOnDataErrors=False}"
-                                 TextAlignment="Right" />
+                                 TextAlignment="Left" />
+
+                            <Label x:Name="LabelIncidLastModDate"
+                               Grid.Row="1"
+                               Grid.Column="0"
+                               Margin="0,0,0,0"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center">
+                                Modified
+                            </Label>
+                            <TextBox x:Name="TextBoxIncidLastModDate"
+                                 Grid.Row="1"
+                                 Grid.Column="1"
+                                 Margin="0,0,0,0"
+                                 VerticalAlignment="Center"
+                                 IsEnabled="False"
+                                 IsReadOnly="True"
+                                 Text="{Binding IncidLastModifiedDate,
+                                                Mode=OneWay,
+                                                ValidatesOnDataErrors=False}"
+                                 TextAlignment="Left" />
+
+                            <Label x:Name="LabelIncidLastModUser"
+                               Grid.Row="1"
+                               Grid.Column="2"
+                               Margin="6,0,0,0"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Center">
+                                By
+                            </Label>
+                            <TextBox x:Name="TextBoxIncidLastModUser"
+                                 Grid.Row="1"
+                                 Grid.Column="3"
+                                 Margin="0,0,2,0"
+                                 VerticalAlignment="Center"
+                                 IsEnabled="False"
+                                 IsReadOnly="True"
+                                 Text="{Binding IncidLastModifiedUser,
+                                                Mode=OneWay,
+                                                ValidatesOnDataErrors=False}"
+                                 TextAlignment="Left" />
+
+                        </Grid>
                     </Grid>
-
-                    <Label x:Name="LabelIncidCreatedDate"
-                           Grid.Row="1"
-                           Grid.Column="0"
-                           Margin="8,0,0,4"
-                           HorizontalAlignment="Right"
-                           VerticalAlignment="Center">
-                        Created
-                    </Label>
-                    <TextBox x:Name="TextBoxIncidCreatedDate"
-                             Grid.Row="1"
-                             Grid.Column="1"
-                             Grid.ColumnSpan="2"
-                             Margin="0,0,0,4"
-                             VerticalAlignment="Center"
-                             IsEnabled="False"
-                             IsReadOnly="True"
-                             Text="{Binding IncidCreatedDate,
-                                            Mode=OneWay,
-                                            ValidatesOnDataErrors=False}"
-                             TextAlignment="Left" />
-
-                    <Label x:Name="LabelIncidCreatedUser"
-                           Grid.Row="1"
-                           Grid.Column="3"
-                           Margin="6,0,0,4"
-                           HorizontalAlignment="Left"
-                           VerticalAlignment="Center">
-                        By
-                    </Label>
-                    <TextBox x:Name="TextBoxIncidCreatedUser"
-                             Grid.Row="1"
-                             Grid.Column="4"
-                             Margin="0,0,6,4"
-                             VerticalAlignment="Center"
-                             IsEnabled="False"
-                             IsReadOnly="True"
-                             Text="{Binding IncidCreatedUser,
-                                            Mode=OneWay,
-                                            ValidatesOnDataErrors=False}"
-                             TextAlignment="Left" />
-
-                    <Label x:Name="LabelIncidLastModDate"
-                           Grid.Row="2"
-                           Grid.Column="0"
-                           Margin="0,0,0,0"
-                           HorizontalAlignment="Right"
-                           VerticalAlignment="Center">
-                        Modified
-                    </Label>
-                    <TextBox x:Name="TextBoxIncidLastModDate"
-                             Grid.Row="2"
-                             Grid.Column="1"
-                             Grid.ColumnSpan="2"
-                             Margin="0,0,0,0"
-                             VerticalAlignment="Center"
-                             IsEnabled="False"
-                             IsReadOnly="True"
-                             Text="{Binding IncidLastModifiedDate,
-                                            Mode=OneWay,
-                                            ValidatesOnDataErrors=False}"
-                             TextAlignment="Left" />
-
-                    <Label x:Name="LabelIncidLastModUser"
-                           Grid.Row="2"
-                           Grid.Column="3"
-                           Margin="6,0,0,0"
-                           HorizontalAlignment="Left"
-                           VerticalAlignment="Center">
-                        By
-                    </Label>
-                    <TextBox x:Name="TextBoxIncidLastModUser"
-                             Grid.Row="2"
-                             Grid.Column="4"
-                             Margin="0,0,6,0"
-                             VerticalAlignment="Center"
-                             IsEnabled="False"
-                             IsReadOnly="True"
-                             Text="{Binding IncidLastModifiedUser,
-                                            Mode=OneWay,
-                                            ValidatesOnDataErrors=False}"
-                             TextAlignment="Left" />
-
-                </Grid>
-            </GroupBox>
+                </GroupBox>
 
             <!--  TabControlData  -->
             <TabControl x:Name="TabControlData"
@@ -749,7 +776,7 @@
                                                                          Header="INCID"
                                                                          IsReadOnly="True"
                                                                          Visibility="Collapsed" />
-                                                <DataGridComboBoxColumn x:Name="DataGridComboBoxSecondaryGroup"
+                                                    <DataGridComboBoxColumn x:Name="DataGridComboBoxSecondaryGroup"
                                                                         Width="117"
 																					   IsReadOnly="True"
                                                                                        CanUserResize="True"
@@ -760,10 +787,21 @@
                                                                                                                       Converter={StaticResource codeDescriptionConverter},
                                                                                                                       UpdateSourceTrigger=PropertyChanged,
                                                                                                                       ValidatesOnDataErrors=True}"
-                                                                                       SelectedValuePath="code" />
-                                                <!-- EditingElementStyle="{DynamicResource ComboBoxStyle}" -->
+                                                                                       SelectedValuePath="code">
+                                                        <DataGridComboBoxColumn.EditingElementStyle>
+                                                            <Style TargetType="ComboBox">
+                                                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                                            </Style>
+                                                        </DataGridComboBoxColumn.EditingElementStyle>
+                                                        <DataGridComboBoxColumn.ElementStyle>
+                                                            <Style TargetType="ComboBox">
+                                                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                                            </Style>
+                                                        </DataGridComboBoxColumn.ElementStyle>
+                                                    </DataGridComboBoxColumn>
+                                                    <!-- EditingElementStyle="{DynamicResource ComboBoxStyle}" -->
                                                 <!-- Visibility="{Binding ShowSecondaryGroupColumn}" -->
-                                                <DataGridComboBoxColumn x:Name="DataGridComboBoxSecondaryCode"
+                                                    <DataGridComboBoxColumn x:Name="DataGridComboBoxSecondaryCode"
                                                                         Width="*"
 																					   IsReadOnly="True"
                                                                                        CanUserResize="True"
@@ -775,8 +813,19 @@
                                                                                                                       Converter={StaticResource codeDescriptionConverter},
                                                                                                                       UpdateSourceTrigger=PropertyChanged,
                                                                                                                       ValidatesOnDataErrors=True}"
-                                                                                       SelectedValuePath="code" />
-                                                <!-- EditingElementStyle="{DynamicResource ComboBoxStyle}" -->
+                                                                                       SelectedValuePath="code">
+                                                        <DataGridComboBoxColumn.EditingElementStyle>
+                                                            <Style TargetType="ComboBox">
+                                                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                                            </Style>
+                                                        </DataGridComboBoxColumn.EditingElementStyle>
+                                                        <DataGridComboBoxColumn.ElementStyle>
+                                                            <Style TargetType="ComboBox">
+                                                                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                                            </Style>
+                                                        </DataGridComboBoxColumn.ElementStyle>
+                                                    </DataGridComboBoxColumn>
+                                                    <!-- EditingElementStyle="{DynamicResource ComboBoxStyle}" -->
                                             </DataGrid.Columns>
                                         </DataGrid>
                                         <!-- </ScrollViewer> -->
@@ -3159,7 +3208,7 @@
 
             <Separator Grid.Row="3" />
 
-            <Grid Name="GridProcessStatus" Grid.Row="4" Margin="6,6,6,0" Visibility="{Binding IsProcessing}">
+            <Grid Name="GridProcessStatus" Grid.Row="4" Margin="6,6,6,6" Visibility="{Binding IsProcessing}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="22" />
                     <ColumnDefinition Width="*" />
@@ -3178,7 +3227,7 @@
                         Text="{Binding ProcessStatus}" />
             </Grid>
 
-            <Grid Name="GridProgressAnimation" Grid.Row="6" Margin="6,6,6,0" Visibility="{Binding ProgressAnimating}">
+            <Grid Name="GridProgressAnimation" Grid.Row="5" Margin="6,6,6,6" Visibility="{Binding ProgressAnimating}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
@@ -3196,38 +3245,8 @@
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center" />
             </Grid>
+        </Grid>
 
-            <Grid Name="GridButtons" Grid.Row="7" Margin="6,6,6,6">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="70" />
-                </Grid.ColumnDefinitions>
-
-                <Button Name="ButtonRun"
-                    Grid.Column="1"
-                    Margin="0,0,0,0"
-                    Padding="0"
-                    MinWidth="0"
-                    Height="0"
-                    BorderBrush="LightBlue"
-                    Command="{Binding Path=RunCommand}"
-                    IsCancel="False"
-                    IsDefault="False"
-                    Focusable="False"
-                    IsEnabled="{Binding Path=RunButtonEnabled}"
-                    TabIndex="2"
-                    Style="{DynamicResource Esri_SimpleButton}">
-                    <StackPanel Orientation="Horizontal">
-                        <Image Source="{Binding ButtonRunImg}" Width="16" Height="16" />
-                        <Label Content="Sync" Padding="4,0,0,0" />
-                    </StackPanel>
-                    <Button.ToolTip>
-                        <ToolTip>
-                            <TextBlock Text="Run the sync to update the remote table" FontWeight="Normal"></TextBlock>
-                        </ToolTip>
-                    </Button.ToolTip>
-                </Button>
-            </Grid>
         </Grid>
     </DockPanel>
 </UserControl>

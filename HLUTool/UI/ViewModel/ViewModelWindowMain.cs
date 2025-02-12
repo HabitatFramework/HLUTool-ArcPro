@@ -39,6 +39,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
+using ArcGIS.Desktop.Internal.Framework.Controls;
 
 namespace HLU.UI.ViewModel
 {
@@ -197,6 +198,9 @@ namespace HLU.UI.ViewModel
             _initialised = false;
             _inError = false;
 
+            // Set the help URL.
+            _dockPane.HelpURL = Settings.Default.HelpURL;
+
             // Indicate that the dockpane has been initialised.
             _initialised = true;
 
@@ -211,10 +215,17 @@ namespace HLU.UI.ViewModel
                 {
                     //TODO: What to do if initialise fails?
                 }
+
+                // Check the active map is valid.
+                if (!await CheckActiveMapAsync())
+                {
+                    //TODO: Just return or hide the dockpane?
+                    return;
+                }
             }
             finally
             {
-                //TODO: What to do it upgrade fails?
+                //TODO: What to do if the upgrade fails?
             }
         }
 
@@ -242,7 +253,7 @@ namespace HLU.UI.ViewModel
             ViewModelWindowMain vm = pane as ViewModelWindowMain;
 
             // If the ViewModel is uninitialised then initialise it.
-            if (!vm.Initialised)
+            if (vm.Initialised)
                 vm.InitializeComponentAsync();
 
             // If the ViewModel is in error then don't show the dockpane.
@@ -296,30 +307,6 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion ViewModelBase Members
-
-        #region Controls Enabled
-
-        /// <summary>
-        /// Can the Run button be pressed?
-        /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
-        public bool RunButtonEnabled
-        {
-            get
-            {
-                //TODO: UI
-                return true;
-            }
-        }
-
-        public void CheckRunButton()
-        {
-            OnPropertyChanged(nameof(RunButtonEnabled));
-        }
-
-        #endregion Controls Enabled
 
         #region Properties
 
@@ -388,28 +375,6 @@ namespace HLU.UI.ViewModel
             set { _formLoading = value; }
         }
 
-        private bool _compareRunning;
-
-        /// <summary>
-        /// Is the compare running?
-        /// </summary>
-        public bool CompareRunning
-        {
-            get { return _compareRunning; }
-            set { _compareRunning = value; }
-        }
-
-        private bool _syncRunning;
-
-        /// <summary>
-        /// Is the sync running?
-        /// </summary>
-        public bool SyncRunning
-        {
-            get { return _syncRunning; }
-            set { _syncRunning = value; }
-        }
-
         private string _helpURL;
 
         /// <summary>
@@ -421,23 +386,11 @@ namespace HLU.UI.ViewModel
             set { _helpURL = value; }
         }
 
-        /// <summary>
-        /// Get the image for the Run button.
-        /// </summary>
-        public static ImageSource ButtonRunImg
-        {
-            get
-            {
-                var imageSource = Application.Current.Resources["GenericRun16"] as ImageSource;
-                return imageSource;
-            }
-        }
-
         #endregion Properties
 
         #region Active Map View
 
-        private void OnActiveMapViewChanged(ActiveMapViewChangedEventArgs obj)
+        private async void OnActiveMapViewChanged(ActiveMapViewChangedEventArgs obj)
         {
             if (MapView.Active == null)
             {
@@ -448,12 +401,18 @@ namespace HLU.UI.ViewModel
             }
             else
             {
-                DockpaneVisibility = Visibility.Visible;
-
-
                 //TODO: UI
-                // Do something when the active map view changes
+                // Check the active map is valid.
+                if (MapView.Active != _activeMapView)
+                {
+                    if (!await CheckActiveMapAsync())
+                        return;
+                }
 
+                // Clear any messages.
+                ClearMessage();
+
+                DockpaneVisibility = Visibility.Visible;
 
                 // Save the active map view.
                 _activeMapView = MapView.Active;
@@ -465,8 +424,6 @@ namespace HLU.UI.ViewModel
             if (MapView.Active == null)
             {
                 DockpaneVisibility = Visibility.Hidden;
-
-
 
                 //TODO: UI
                 // Do something when the active map view closes
@@ -508,42 +465,80 @@ namespace HLU.UI.ViewModel
 
         #endregion Active Map View
 
-        #region Run Command
+        #region Message
 
-        private ICommand _runCommand;
+        private string _message;
 
         /// <summary>
-        /// Create Run button command.
+        /// The message to display on the form.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
-        public ICommand RunCommand
+        public string Message
         {
             get
             {
-                if (_runCommand == null)
-                {
-                    Action<object> runAction = new(RunCommandClick);
-                    _runCommand = new RelayCommand(runAction, param => RunButtonEnabled);
-                }
+                return _message;
+            }
+            set
+            {
+                _message = value;
+                OnPropertyChanged(nameof(HasMessage));
+                OnPropertyChanged(nameof(Message));
+            }
+        }
 
-                return _runCommand;
+        private MessageType _messageLevel;
+
+        /// <summary>
+        /// The type of message; Error, Warning, Confirmation, Information
+        /// </summary>
+        public MessageType MessageLevel
+        {
+            get
+            {
+                return _messageLevel;
+            }
+            set
+            {
+                _messageLevel = value;
+                OnPropertyChanged(nameof(MessageLevel));
             }
         }
 
         /// <summary>
-        /// Handles event when Run button is clicked.
+        /// Is there a message to display?
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
-        private void RunCommandClick(object param)
+        public Visibility HasMessage
         {
-            //TODO: UI
-            // Do something when the run button is clicked.
+            get
+            {
+                if (_dockPane.ProcessStatus != null
+                || string.IsNullOrEmpty(_message))
+                    return Visibility.Collapsed;
+                else
+                    return Visibility.Visible;
+            }
         }
 
-        #endregion Run Command
+        /// <summary>
+        /// Show the message with the required icon (message type).
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <param name="messageLevel"></param>
+        public void ShowMessage(string msg, MessageType messageLevel)
+        {
+            MessageLevel = messageLevel;
+            Message = msg;
+        }
+
+        /// <summary>
+        /// Clear the form messages.
+        /// </summary>
+        public void ClearMessage()
+        {
+            Message = "";
+        }
+
+        #endregion Message
 
     }
 
