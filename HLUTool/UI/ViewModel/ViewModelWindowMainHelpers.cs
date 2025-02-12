@@ -109,10 +109,7 @@ namespace HLU.UI.ViewModel
             //StringBuilder buildSummary = ihsCodes.Where(c => !String.IsNullOrEmpty(c))
             //    .Aggregate(new(), (sb, c) => sb.Append(String.Format(".{0}", c)));
 
-            if (buildSummary.Length > 1)
-                return buildSummary.Remove(0, 1).ToString();
-            else
-                return null;
+            return buildSummary.ToString();
         }
 
         public static bool RowIsDirty<R>(R row)

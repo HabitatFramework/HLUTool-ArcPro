@@ -32,7 +32,7 @@ namespace HLU.UI.ViewModel
     /// It provides support for property change notifications
     /// and has a DisplayName property. This class is abstract.
     /// </summary>
-    internal abstract partial class PanelViewModelBase : DockPane, INotifyPropertyChanged, IDisposable
+    public abstract partial class PanelViewModelBase : DockPane, INotifyPropertyChanged, IDisposable
     {
         #region Properties
 

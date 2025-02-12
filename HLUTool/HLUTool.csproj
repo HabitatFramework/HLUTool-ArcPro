@@ -11,14 +11,6 @@
     <RootNamespace>HLU</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="GISApplication\MapInfo\**" />
-    <EmbeddedResource Remove="GISApplication\MapInfo\**" />
-    <None Remove="GISApplication\MapInfo\**" />
-    <Page Remove="GISApplication\MapInfo\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="App.xaml.cs" />
-    <Compile Remove="Data\Model\DataSet1.Designer.cs" />
     <Compile Remove="GISApplication\GISApp.cs" />
     <Compile Remove="GISApplication\GISAppFactory.cs" />
     <Compile Remove="GISApplication\WinAPI.cs" />
@@ -34,7 +26,6 @@
     <Compile Remove="UI\View\PaneHeader2View.xaml.cs" />
     <Compile Remove="UI\View\WindowMain_OLD.xaml.cs" />
     <Compile Remove="UI\View\WindowSelectGIS.xaml.cs" />
-    <Compile Remove="UI\View\WindowSplash.xaml.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="DarkImages\AddInDesktop16.png" />
@@ -44,15 +35,16 @@
     <None Remove="DarkImages\Error32.png" />
     <None Remove="DarkImages\Success32.png" />
     <None Remove="DarkImages\Warning32.png" />
-    <None Remove="Data\Model\DataSet1.xsc" />
-    <None Remove="Data\Model\DataSet1.xsd" />
-    <None Remove="Data\Model\DataSet1.xss" />
+    <None Remove="Icons\AddRowSquare.png" />
+    <None Remove="Icons\AddScript.png" />
+    <None Remove="Icons\HLUIcon.png" />
+    <None Remove="Icons\ReadMapSelection.png" />
+    <None Remove="Icons\ZoomTable.png" />
     <None Remove="Images\AddInDesktop16.png" />
     <None Remove="Images\AddInDesktop32.png" />
     <None Remove="Images\Error32.png" />
     <None Remove="Images\Success32.png" />
     <None Remove="Images\Warning32.png" />
-    <None Remove="UI\ViewModel\ViewModelWindowMain_OLD.csTEMP" />
   </ItemGroup>
   <ItemGroup>
     <Page Remove="UI\View\Connection\ViewConnectOleDb.xaml" />
@@ -63,7 +55,6 @@
     <Page Remove="UI\View\PaneHeader2View.xaml" />
     <Page Remove="UI\View\WindowMain_OLD.xaml" />
     <Page Remove="UI\View\WindowSelectGIS.xaml" />
-    <Page Remove="UI\View\WindowSplash.xaml" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Config.daml" />
@@ -84,6 +75,21 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
     <Resource Include="DarkImages\Warning32.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\AddRowSquare.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\AddScript.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\HLUIcon.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\ReadMapSelection.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Icons\ZoomTable.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Images\HLUTool16.png">

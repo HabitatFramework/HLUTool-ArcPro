@@ -19,6 +19,8 @@
 // You should have received a copy of the GNU General Public License
 // along with with program.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Data.Model;
+using HLU.UI.ViewModel;
 using System.Windows.Controls;
 
 namespace HLU.UI.View
@@ -28,9 +30,29 @@ namespace HLU.UI.View
     /// </summary>
     public partial class WindowMain : UserControl
     {
+        private ViewModelWindowMain viewModel;
+
         public WindowMain()
         {
             InitializeComponent();
+
+            // Initialize ViewModel and set DataContext
+            viewModel = new ViewModelWindowMain();
+            this.DataContext = viewModel;
+
+            // Assign items source to the combo box columns in the secondary habitat data grid
+            DataGridComboBoxSecondaryGroup.ItemsSource = viewModel.SecondaryGroupCodesAll;
+            DataGridComboBoxSecondaryCode.ItemsSource = viewModel.SecondaryHabitatCodesAll;
+
+            // Assign items source to the combo box columns in the primary BAP data grid
+            DataGridComboBoxPrimaryBapHabitatCodes.ItemsSource = viewModel.BapHabitatCodes;
+            DataGridComboBoxPrimaryBapDeterminationQualityCodesUser.ItemsSource = viewModel.BapDeterminationQualityCodesAuto;
+            DataGridComboBoxPrimaryyBapInterpretationQualityCodes.ItemsSource = viewModel.BapInterpretationQualityCodes;
+
+            // Assign items source to the combo box columns in the secondary BAP data grid
+            DataGridComboBoxSecondaryBapHabitatCodes.ItemsSource = viewModel.BapHabitatCodes;
+            DataGridComboBoxSecondaryBapDeterminationQualityCodesUser.ItemsSource = viewModel.BapDeterminationQualityCodesUser;
+            DataGridComboBoxSecondaryBapInterpretationQualityCodes.ItemsSource = viewModel.BapInterpretationQualityCodes;
         }
     }
 }

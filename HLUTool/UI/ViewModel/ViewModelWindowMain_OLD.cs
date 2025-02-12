@@ -61,12 +61,13 @@ using System.Windows.Media;
 using CommandType = System.Data.CommandType;
 using Azure.Identity;
 using System.Runtime.InteropServices;
+using Azure;
 
 
 namespace HLU.UI.ViewModel
 {
 
-    internal partial class ViewModelWindowMain : PanelViewModelBase, INotifyPropertyChanged
+    public partial class ViewModelWindowMain : PanelViewModelBase, INotifyPropertyChanged
     {
 
         #region Fields
@@ -1211,8 +1212,6 @@ namespace HLU.UI.ViewModel
 
         #endregion
 
-
-
         #region Internal properties
 
         internal ArcMapApp GISApplication
@@ -1623,6 +1622,70 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion
+
+        #region Button Images
+
+        /// <summary>
+        /// Get the image for the AddSecondaryHabitat button.
+        /// </summary>
+        public static ImageSource ButtonAddSecondaryHabitatImg
+        {
+            get
+            {
+                string imageSource = "pack://application:,,,/HLUTool;component/Icons/AddRowSquare.png";
+                return new BitmapImage(new Uri(imageSource)) as ImageSource;
+            }
+        }
+
+        /// <summary>
+        /// Get the image for the AddSecondaryHabitatList button.
+        /// </summary>
+        public static ImageSource ButtonAddSecondaryHabitatListImg
+        {
+            get
+            {
+                string imageSource = "pack://application:,,,/HLUTool;component/Icons/AddScript.png";
+                return new BitmapImage(new Uri(imageSource)) as ImageSource;
+            }
+        }
+
+        /// <summary>
+        /// Get the image for the ReadMapSelection button.
+        /// </summary>
+        public static ImageSource ButtonReadMapSelectionImg
+        {
+            get
+            {
+                string imageSource = "pack://application:,,,/HLUTool;component/Icons/ReadMapSelection.png";
+                return new BitmapImage(new Uri(imageSource)) as ImageSource;
+            }
+        }
+
+        /// <summary>
+        /// Get the image for the EditPriorityHabitats button.
+        /// </summary>
+        public static ImageSource ButtonEditPriorityHabitatsImg
+        {
+            get
+            {
+                string imageSource = "pack://application:,,,/HLUTool;component/Icons/ZoomTable.png";
+                return new BitmapImage(new Uri(imageSource)) as ImageSource;
+            }
+        }
+
+        /// <summary>
+        /// Get the image for the EditPotentialHabitats button.
+        /// </summary>
+        public static ImageSource ButtonEditPotentialHabitatsImg
+        {
+            get
+            {
+                string imageSource = "pack://application:,,,/HLUTool;component/Icons/ZoomTable.png";
+                return new BitmapImage(new Uri(imageSource)) as ImageSource;
+            }
+        }
+
+        #endregion Button Images
 
         #region Processing
 
@@ -6044,7 +6107,7 @@ namespace HLU.UI.ViewModel
             ReadMapSelection(true);
         }
 
-        private bool CanReadMapSelection
+        internal bool CanReadMapSelection
         {
                 //---------------------------------------------------------------------
                 // FIX: 101 Enable get map selection when in OSMM update mode.
@@ -8159,91 +8222,92 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Translates a row number in the incid remote DB table, ordered by incid, into a row number in 
-        /// the in-memory incid DataTable, which only contains the current page of the entire DB table. 
-        /// If necessary, a new page is loaded from the database. 
+        /// Translates a row number in the incid remote DB table, ordered by incid, into a row number in
+        /// the in-memory incid DataTable, which only contains the current page of the entire DB table.
+        /// If necessary, a new page is loaded from the database.
         /// </summary>
-        /// <param name="seekRowNumber">Row number in the remote DB incid table, ordered by incid, whose 
+        /// <param name="seekRowNumber">Row number in the remote DB incid table, ordered by incid, whose
         /// corresponding row number in in-memory DataTable HluDataset.incid is sought.</param>
         /// <returns>The row number in in-memory DataTable HluDataset.incid that corresponds to
-        /// row number seekRowNumber in the remote DB incid table, ordered by incid. 
-        /// If loading of a new page fails, -1 is returned and _incidPageRowNoMin and _incidPageRowNoMax 
+        /// row number seekRowNumber in the remote DB incid table, ordered by incid.
+        /// If loading of a new page fails, -1 is returned and _incidPageRowNoMin and _incidPageRowNoMax
         /// are reset to their values before the attempted move.</returns>
         private int SeekIncid(int seekRowNumber)
         {
-            // If the row being sought is within the current page.
+            // If within the current page, return relative index
             if ((seekRowNumber >= _incidPageRowNoMin) && (seekRowNumber <= _incidPageRowNoMax))
-            {
                 return seekRowNumber - _incidPageRowNoMin;
-            }
-            // Otherwise, load a new page.
-            else
+
+            // Backup values in case of failure
+            int incidPageRowNoMinBak = _incidPageRowNoMin;
+            int incidPageRowNoMaxBak = _incidPageRowNoMax;
+
+            try
             {
-                int incidPageRowNoMinBak = _incidPageRowNoMin;
-                int incidPageRowNoMaxBak = _incidPageRowNoMax;
+                int seekIncidNumber = seekRowNumber;
 
-                try
+                // Get the first record if seeking very early in the table
+                if (seekRowNumber < 2)
                 {
-                    int seekIncidNumber = seekRowNumber;
+                    seekIncidNumber = RecordIds.IncidNumber(
+                        _db.ExecuteScalar(String.Format(
+                        "SELECT {0} FROM {1} ORDER BY {0} ASC",
+                            _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName),
+                            _db.QualifyTableName(_hluDS.incid.TableName)),
+                            _db.Connection.ConnectionTimeout, CommandType.Text).ToString());
+                }
+                // Get the last record if seeking very late in the table
+                else if (seekRowNumber >= _incidRowCount)
+                {
+                    seekIncidNumber = RecordIds.IncidNumber(
+                        _db.ExecuteScalar(String.Format(
+                        "SELECT {0} FROM {1} ORDER BY {0} DESC",
+                            _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName),
+                            _db.QualifyTableName(_hluDS.incid.TableName)),
+                            _db.Connection.ConnectionTimeout, CommandType.Text).ToString());
+                }
+                else
+                {
+                    //_incidRowCount = (int)_db.ExecuteScalar(
+                    //    String.Format("SELECT COUNT(*) FROM {0}",
+                    //        _db.QualifyTableName(_hluDS.incid.TableName)),
+                    //    _db.Connection.ConnectionTimeout, CommandType.Text);
 
-                    // Get the first incid number
-                    if (seekRowNumber < 2)
-                    {
-                        seekIncidNumber = RecordIds.IncidNumber(_db.ExecuteScalar(
-                            String.Format("SELECT {0} FROM {1} ORDER BY {0} ASC",
-                            _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName),
-                            _db.QualifyTableName(_hluDS.incid.TableName)),
-                            _db.Connection.ConnectionTimeout, CommandType.Text).ToString());
-                    }
-                    // Get the last incid number
-                    else if (seekRowNumber >= _incidRowCount)
-                    {
-                        seekIncidNumber = RecordIds.IncidNumber(_db.ExecuteScalar(
-                            String.Format("SELECT {0} FROM {1} ORDER BY {0} DESC",
-                            _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName),
-                            _db.QualifyTableName(_hluDS.incid.TableName)),
-                            _db.Connection.ConnectionTimeout, CommandType.Text).ToString());
-                    }
-                    else
-                    {
-                        _incidRowCount = (int)_db.ExecuteScalar(String.Format(
-                            "SELECT COUNT(*) FROM {0}", _db.QualifyTableName(_hluDS.incid.TableName)),
+                    string countSql = String.Format("SELECT COUNT(*) FROM {0} WHERE {1} <= {{0}}",
+                        _db.QualifyTableName(_hluDS.incid.TableName),
+                        _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName));
+
+                    int count = 0;
+                    while ((count < seekRowNumber) && (count < _incidRowCount))
+                        {
+                        count = (int)_db.ExecuteScalar(String.Format(countSql,
+                            _db.QuoteValue(_recIDs.IncidString(seekIncidNumber))),
                             _db.Connection.ConnectionTimeout, CommandType.Text);
 
-                        string countSql = String.Format("SELECT COUNT(*) FROM {0} WHERE {1} <= {2}",
-                            _db.QualifyTableName(_hluDS.incid.TableName),
-                            _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName), "{0}");
+                        seekIncidNumber += seekRowNumber - count;
 
-                        int count = 0;
+                    };
+                }
 
-                        do
-                        {
-                            count = (int)_db.ExecuteScalar(String.Format(countSql,
-                                _db.QuoteValue(_recIDs.IncidString(seekIncidNumber))),
-                                _db.Connection.ConnectionTimeout, CommandType.Text);
-                            seekIncidNumber += seekRowNumber - count;
-                        } while ((count < seekRowNumber) && (count < _incidRowCount));
-                    }
+                string loadWhereClauseTemplate = String.Format("{0} >= {{0}} AND {0} < {{1}} ORDER BY {0} ASC",
+                    _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName));
 
-                    string loadWhereClauseTemplate = String.Format("{0} >= {1} AND {0} < {2} ORDER BY {0}",
-                        _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName), "{0}", "{1}");
-
-                    //TODO: Move to above if statements and amend depending on if at start, end or middle of table.
-                    _hluTableAdapterMgr.Fill(_hluDS, typeof(HluDataSet.incidDataTable), String.Format(
-                        loadWhereClauseTemplate, _db.QuoteValue(_recIDs.IncidString(seekIncidNumber)),
+                // Fetch records
+                _hluTableAdapterMgr.Fill(_hluDS, typeof(HluDataSet.incidDataTable),
+                    String.Format(loadWhereClauseTemplate,
+                        _db.QuoteValue(_recIDs.IncidString(seekIncidNumber)),
                         _db.QuoteValue(_recIDs.IncidString(seekIncidNumber + IncidPageSize))), true);
 
-                    _incidPageRowNoMin = seekRowNumber;
-                    _incidPageRowNoMax = _incidPageRowNoMin + _hluDS.incid.Count;
+                _incidPageRowNoMin = seekRowNumber;
+                _incidPageRowNoMax = _incidPageRowNoMin + _hluDS.incid.Count;
 
-                    return 0;
-                }
-                catch
-                {
-                    _incidPageRowNoMin = incidPageRowNoMinBak;
-                    _incidPageRowNoMax = incidPageRowNoMaxBak;
-                    return -1;
-                }
+                return 0;
+            }
+            catch
+            {
+                _incidPageRowNoMin = incidPageRowNoMinBak;
+                _incidPageRowNoMax = incidPageRowNoMaxBak;
+                return -1;
             }
         }
 
@@ -10480,6 +10544,14 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                // Set the public and static variables
+                if (_secondaryGroups == null || _secondaryGroups.Length == 0)
+                {
+                    // Set the full list of local secondary groups.
+                    _secondaryGroups = (from sg in _lutSecondaryGroup
+                                        select sg).OrderBy(r => r.sort_order).ThenBy(r => r.description).Distinct().ToArray();
+                }
+
                 return _secondaryGroups;
             }
         }
@@ -11865,7 +11937,7 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Gets or sets the collection of incid bap habitats assigned by the user.
-        /// The bap_id of existing secondary priority habitats is multiplied by -1 (and same again when 
+        /// The bap_id of existing secondary priority habitats is multiplied by -1 (and same again when
         /// saving back to DB) to distinguish them from primary priority habitats in UI validation methods.
         /// </summary>
         /// <value>

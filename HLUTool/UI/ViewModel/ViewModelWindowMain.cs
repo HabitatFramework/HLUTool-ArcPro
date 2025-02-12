@@ -139,7 +139,7 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// Build the DockPane.
     /// </summary>
-    internal partial class ViewModelWindowMain : PanelViewModelBase, INotifyPropertyChanged
+    public partial class ViewModelWindowMain : PanelViewModelBase, INotifyPropertyChanged
     {
 
         #region Fields
@@ -183,7 +183,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Set the global variables.
         /// </summary>
-        protected ViewModelWindowMain()
+        internal ViewModelWindowMain()
         {
             InitializeComponentAsync();
         }
