@@ -413,5 +413,8 @@
     <Setting Name="PasswordMaskString" Type="System.String" Scope="Application">
       <Value Profile="(Default)">***</Value>
     </Setting>
+    <Setting Name="HelpURL" Roaming="true" Type="System.String" Scope="User">
+      <Value Profile="(Default)">https://hlutool-userguide.readthedocs.io/en/latest/</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

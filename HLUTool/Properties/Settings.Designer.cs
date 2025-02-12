@@ -1379,5 +1379,18 @@ namespace HLU.Properties {
                 return ((string)(this["PasswordMaskString"]));
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://hlutool-userguide.readthedocs.io/en/latest/")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
+        public string HelpURL {
+            get {
+                return ((string)(this["HelpURL"]));
+            }
+            set {
+                this["HelpURL"] = value;
+            }
+        }
     }
 }
