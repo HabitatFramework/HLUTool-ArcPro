@@ -62,6 +62,7 @@ using CommandType = System.Data.CommandType;
 using Azure.Identity;
 using System.Runtime.InteropServices;
 using Azure;
+using ArcGIS.Desktop.Internal.Framework.Controls;
 
 
 namespace HLU.UI.ViewModel
@@ -355,6 +356,7 @@ namespace HLU.UI.ViewModel
         private int _origIncidSourcesCount = 0;
         private SqlFilterCondition _incidMMPolygonsIncidFilter;
         private int _incidRowCount;
+        private int _incidPageRowNo;
         private int _incidPageRowNoMin = 0;
         private int _incidPageRowNoMax = 0;
         private string _incidIhsHabitat;
@@ -436,10 +438,12 @@ namespace HLU.UI.ViewModel
 
         #region Constructor
 
-        internal async Task<bool> Initialize()
+        /// <summary>
+        /// Initialise settings for main window.
+        /// </summary>
+        /// <returns></returns>
+        internal async Task<bool> InitializeToolPaneAsync()
         {
-            // Initialise settings.
-
             // Database options
             _dbConnectionTimeout = Settings.Default.DbConnectionTimeout;
 
@@ -491,7 +495,7 @@ namespace HLU.UI.ViewModel
 
             try
             {
-                // open database connection and test whether it points to a valid HLU database
+                // Open database connection and test whether it points to a valid HLU database
                 while (true)
                 {
                     if ((_db = DbFactory.CreateConnection()) == null)
@@ -530,20 +534,20 @@ namespace HLU.UI.ViewModel
 
                 ChangeCursor(Cursors.Wait, "Initiating ...");
 
-                // create table adapter manager for the dataset and connection
+                // Create table adapter manager for the dataset and connection
                 _hluTableAdapterMgr = new TableAdapterManager(_db, TableAdapterManager.Scope.AllButMMPolygonsHistory);
 
-                // fill a dictionary of parent-child tables and relations between them
+                // Fill a dictionary of parent-child tables and relations between them
                 _hluDataRelations = HluDataset.Relations.Cast<DataRelation>();
 
-                // translate DataRelation objects into database condtions and build order by clauses
+                // Translate DataRelation objects into database condtions and build order by clauses
                 _childRowFilterDict = BuildChildRowFilters();
                 _childRowOrderByDict = BuildChildRowOrderByClauses();
 
-                // fill lookup tables (at least lut_site_id must be filled at this point)
+                // Fill lookup tables (at least lut_site_id must be filled at this point)
                 _hluTableAdapterMgr.Fill(_hluDS, TableAdapterManager.Scope.Lookup, false);
 
-                // create RecordIds object for the db
+                // Create RecordIds object for the db
                 _recIDs = new RecordIds(_db, _hluDS, _hluTableAdapterMgr, GisLayerType);
 
                 //---------------------------------------------------------------------
@@ -554,46 +558,34 @@ namespace HLU.UI.ViewModel
                     return false;
                 //---------------------------------------------------------------------
 
-                // wire up event handler for copy switches
+                // Wire up event handler for copy switches
                 _copySwitches.PropertyChanged += new PropertyChangedEventHandler(_copySwitches_PropertyChanged);
 
                 int result;
-                // columns that identify map polygons and are returned by GIS
+                // Columns that identify map polygons and are returned by GIS
                 _gisIDColumnOrdinals = (from s in Settings.Default.GisIDColumnOrdinals.Cast<string>()
                                         where Int32.TryParse(s, out result) && (result >= 0) &&
                                         (result < _hluDS.incid_mm_polygons.Columns.Count)
                                         select Int32.Parse(s)).ToArray();
                 _gisIDColumns = _gisIDColumnOrdinals.Select(i => _hluDS.incid_mm_polygons.Columns[i]).ToArray();
 
-                // columns to be displayed in history (always includes _gisIDColumns)
+                // Columns to be displayed in history (always includes _gisIDColumns)
                 _historyColumns = InitializeHistoryColumns(_historyColumns);
 
                 // Create scratch database
                 ScratchDb.CreateScratchMdb(_hluDS.incid, _hluDS.incid_mm_polygons);
 
-                // count rows of incid table
+                // Count rows of incid table
                 IncidRowCount(true);
 
-                // load all of the lookup tables
+                // Load all of the lookup tables
                 LoadLookupTables();
 
-                // move to first row
+                // Move to first row
                 IncidCurrentRowIndex = 1;
 
-                // Check the GIS workspace
-                ChangeCursor(Cursors.Wait, "Checking GIS workspace ...");
-
-                _gisApp = new ArcMapApp();
-                if (_gisApp == null)
-                    return false;
-
-                //TODO: ArcGIS
-                // Check if the GIS workspace is valid
-                if (!await _gisApp.IsHluWorkspaceAsync())
-                {
-                    MessageBox.Show("Invalid HLU workspace.", "HLU: Initialise GIS", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                    return false;
-                }
+                // Check the active map is valid (don't check result at this stage)
+                await CheckActiveMapAsync();
 
                 // Initialise the main update view model
                 _viewModelUpd = new ViewModelWindowMainUpdate(this);
@@ -603,9 +595,6 @@ namespace HLU.UI.ViewModel
 
                 // Set the validation option for potential priority habitats
                 BapEnvironment.PotentialPriorityDetermQtyValidation = _potentialPriorityDetermQtyValidation;
-
-                // Read the selected features from the map
-                ReadMapSelection(false);
 
                 // Clear the status bar (or reset the cursor to an arrow)
                 ChangeCursor(Cursors.Arrow, null);
@@ -621,6 +610,124 @@ namespace HLU.UI.ViewModel
                 //App.Current.Shutdown();
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Load the sources for the data grid combo boxes.
+        /// </summary>
+        /// <returns></returns>
+        internal async Task<bool> LoadComboBoxSourcesAsync()
+        {
+            try
+            {
+                // Open database connection and test whether it points to a valid HLU database
+                while (true)
+                {
+                    if ((_db = DbFactory.CreateConnection()) == null)
+                        throw new Exception("No database connection.");
+
+                    _hluDS = new HluDataSet();
+
+                    string errorMessage;
+                    if (!_db.ContainsDataSet(_hluDS, out errorMessage))
+                    {
+                        // Clear the current database settings as they are clearly not valid.
+                        DbFactory.ClearSettings();
+
+                        if (String.IsNullOrEmpty(errorMessage))
+                        {
+                            errorMessage = String.Empty;
+                        }
+                        else if (errorMessage.Length > 200)
+                        {
+                            if (MessageBox.Show("There were errors loading data from the database." +
+                                "\n\nWould like to see a list of those errors?", "HLU: Initialise Dataset",
+                                MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.Yes)
+                                ShowMessageWindow.ShowMessage(errorMessage, "HLU Dataset");
+                            errorMessage = String.Empty;
+                        }
+                        if (MessageBox.Show("There were errors loading data from the database." +
+                            errorMessage + "\n\nWould you like to connect to another database?", "HLU: Initialise Dataset",
+                            MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.No)
+                            throw new Exception("cancelled");
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                // Create table adapter manager for the dataset and connection
+                _hluTableAdapterMgr = new TableAdapterManager(_db, TableAdapterManager.Scope.AllButMMPolygonsHistory);
+
+                // Fill lookup tables (at least lut_site_id must be filled at this point)
+                _hluTableAdapterMgr.Fill(_hluDS, TableAdapterManager.Scope.Lookup, false);
+
+                // Load all of the lookup tables
+                LoadLookupTables();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message != "cancelled")
+                    MessageBox.Show(ex.Message, "HLU: Initialise Application",
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                //TODO: App.Current.Shutdown
+                //App.Current.Shutdown();
+                return false;
+            }
+        }
+
+        private async Task<bool> CheckActiveMapAsync()
+        {
+            // Check the GIS workspace
+            ChangeCursor(Cursors.Wait, "Checking GIS workspace ...");
+
+            // Create a new GIS functions object if necessary.
+            if (_gisApp == null || _gisApp.MapName == null || MapView.Active is null || MapView.Active.Map.Name != _gisApp.MapName)
+                _gisApp = new();
+
+            // Check if there is an active map.
+            if (_gisApp.MapName != null)
+            {
+                //DONE: ArcGIS
+                // Check if the GIS workspace is valid
+                if (!await _gisApp.IsHluWorkspaceAsync())
+                {
+                    // Clear the status bar (or reset the cursor to an arrow)
+                    ChangeCursor(Cursors.Arrow, null);
+
+                    // Display an error message.
+                    ShowMessage("Invalid HLU workspace.", MessageType.Warning);
+
+                    // Hide the dockpane.
+                    DockpaneVisibility = Visibility.Hidden;
+
+                    return false;
+                }
+
+                // Read the selected features from the map
+                ReadMapSelection(false);
+            }
+            else
+            {
+                // Clear the status bar (or reset the cursor to an arrow)
+                ChangeCursor(Cursors.Arrow, null);
+
+                // Display an error message.
+                ShowMessage("No active map.", MessageType.Warning);
+
+                // Hide the dockpane.
+                DockpaneVisibility = Visibility.Hidden;
+
+                return false;
+            }
+
+            // Clear the status bar (or reset the cursor to an arrow)
+            ChangeCursor(Cursors.Arrow, null);
+
+            return true;
         }
 
         /// <summary>
@@ -1229,7 +1336,7 @@ namespace HLU.UI.ViewModel
             get
             {
                 //TODO: Needed?
-                //if (_hluDS == null) Initialize();
+                //if (_hluDS == null) InitializeToolPaneAsync();
                 return _hluDS;
             }
         }
@@ -6602,7 +6709,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Closes the query add secondaries window and adds the list of 
+        /// Closes the query add secondaries window and adds the list of
         /// secondary habitats to the tble.
         /// </summary>
         /// <param name="querySecondaries">The list of secondaries to add.</param>
@@ -6927,7 +7034,7 @@ namespace HLU.UI.ViewModel
 
                 //---------------------------------------------------------------------
                 // FIX: 107 Reset filter when no map features selected.
-                // 
+                //
                 // Suggest the selection came from the map so that
                 // the map doesn't auto zoom to the first incid.
                 _filterByMap = true;
@@ -7339,12 +7446,12 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets the name of the layer to display in the status bar.
+        /// Gets the name of the active layer to display in the status bar.
         /// </summary>
         /// <value>
         /// The name of the layer.
         /// </value>
-        public string LayerName
+        public string ActiveLayerName
         {
             get
             {
@@ -7386,7 +7493,7 @@ namespace HLU.UI.ViewModel
                     if (_gisApp.IsHluLayer(selectedHLULayer))
                     {
                         // Refresh the layer name
-                        OnPropertyChanged(nameof(LayerName));
+                        OnPropertyChanged(nameof(ActiveLayerName));
 
                         // Get the GIS layer selection and warn the user if no
                         // features are found
@@ -7800,7 +7907,9 @@ namespace HLU.UI.ViewModel
                         if (_bulkUpdateMode != false || ((value > 0) &&
                             (IsFiltered && ((_incidSelection == null) || (value <= _incidSelection.Rows.Count))) ||
                             (!IsFiltered && ((_incidSelection == null) || (value <= _incidRowCount)))))
+                        {
                             _incidCurrentRowIndex = value;
+                        }
 
                         // Move to the new incid
                         NewIncidCurrentRow();
@@ -8184,7 +8293,7 @@ namespace HLU.UI.ViewModel
         /// the HluDataset.incid DataTable.
         /// </summary>
         /// <param name="incid">The incid whose row is to be made current.</param>
-        /// <returns>The row number in HluDataset.incid corresponding to the incid passed in, 
+        /// <returns>The row number in HluDataset.incid corresponding to the incid passed in,
         /// or -1 if the search fails.</returns>
         private int GoToIncid(string incid)
         {
@@ -8234,37 +8343,82 @@ namespace HLU.UI.ViewModel
         /// are reset to their values before the attempted move.</returns>
         private int SeekIncid(int seekRowNumber)
         {
-            // If within the current page, return relative index
-            if ((seekRowNumber >= _incidPageRowNoMin) && (seekRowNumber <= _incidPageRowNoMax))
-                return seekRowNumber - _incidPageRowNoMin;
+            // If within the current page, return the relative index.
+            if ((seekRowNumber >= _incidPageRowNoMin)
+                && (seekRowNumber <= _incidPageRowNoMax)
+                && _hluDS.incid.Count > 0)
+            {
+                _incidPageRowNo = seekRowNumber - _incidPageRowNoMin;
+                return _incidPageRowNo;
+            }
 
-            // Backup values in case of failure
+            // Backup values in case of failure.
+            int incidPageRowNoBak = _incidPageRowNo;
             int incidPageRowNoMinBak = _incidPageRowNoMin;
             int incidPageRowNoMaxBak = _incidPageRowNoMax;
+
+            // Set-up the SQL load where clause template.
+            string loadWhereClauseTemplate = String.Format("{0} >= {{0}} AND {0} < {{1}} ORDER BY {0} ASC",
+                _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName));
 
             try
             {
                 int seekIncidNumber = seekRowNumber;
 
-                // Get the first record if seeking very early in the table
+                // If seeking the very early in the table.
                 if (seekRowNumber < 2)
                 {
+                    // Get the first record.
                     seekIncidNumber = RecordIds.IncidNumber(
                         _db.ExecuteScalar(String.Format(
                         "SELECT {0} FROM {1} ORDER BY {0} ASC",
                             _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName),
                             _db.QualifyTableName(_hluDS.incid.TableName)),
                             _db.Connection.ConnectionTimeout, CommandType.Text).ToString());
+
+                    // Fetch records.
+                    _hluTableAdapterMgr.Fill(_hluDS, typeof(HluDataSet.incidDataTable),
+                        String.Format(loadWhereClauseTemplate,
+                            _db.QuoteValue(_recIDs.IncidString(seekIncidNumber)),
+                            _db.QuoteValue(_recIDs.IncidString(seekIncidNumber + IncidPageSize))), true);
+
+                    // Store the min and max row numbers in the page.
+                    _incidPageRowNoMin = seekRowNumber;
+                    _incidPageRowNoMax = _incidPageRowNoMin + _hluDS.incid.Count;
+
+                    // Return the index of the first record in the page.
+                    _incidPageRowNo = 0;
                 }
-                // Get the last record if seeking very late in the table
+                // If seeking very late in the table.
                 else if (seekRowNumber >= _incidRowCount)
                 {
+                    // Get the last record.
                     seekIncidNumber = RecordIds.IncidNumber(
                         _db.ExecuteScalar(String.Format(
                         "SELECT {0} FROM {1} ORDER BY {0} DESC",
                             _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName),
                             _db.QualifyTableName(_hluDS.incid.TableName)),
                             _db.Connection.ConnectionTimeout, CommandType.Text).ToString());
+
+                    // Move back by the page size.
+                    if (seekIncidNumber > IncidPageSize)
+                        seekIncidNumber -= (IncidPageSize - 1);
+
+                    // Fetch records.
+                    _hluTableAdapterMgr.Fill(_hluDS, typeof(HluDataSet.incidDataTable),
+                        String.Format(loadWhereClauseTemplate,
+                            _db.QuoteValue(_recIDs.IncidString(seekIncidNumber)),
+                            _db.QuoteValue(_recIDs.IncidString(seekIncidNumber + IncidPageSize))), true);
+
+                    // Move the seek row number back by the number of rows in the page.
+                    seekRowNumber -= _hluDS.incid.Count;
+
+                    // Store the min and max row numbers in the page.
+                    _incidPageRowNoMin = seekRowNumber;
+                    _incidPageRowNoMax = _incidPageRowNoMin + _hluDS.incid.Count;
+
+                    // Return the index of the last record in the page.
+                    _incidPageRowNo = _hluDS.incid.Count - 1;
                 }
                 else
                 {
@@ -8273,6 +8427,7 @@ namespace HLU.UI.ViewModel
                     //        _db.QualifyTableName(_hluDS.incid.TableName)),
                     //    _db.Connection.ConnectionTimeout, CommandType.Text);
 
+                    // Set-up the SQL count clause.
                     string countSql = String.Format("SELECT COUNT(*) FROM {0} WHERE {1} <= {{0}}",
                         _db.QualifyTableName(_hluDS.incid.TableName),
                         _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName));
@@ -8280,6 +8435,7 @@ namespace HLU.UI.ViewModel
                     int count = 0;
                     while ((count < seekRowNumber) && (count < _incidRowCount))
                         {
+                        // Count the number of records before the seek number.
                         count = (int)_db.ExecuteScalar(String.Format(countSql,
                             _db.QuoteValue(_recIDs.IncidString(seekIncidNumber))),
                             _db.Connection.ConnectionTimeout, CommandType.Text);
@@ -8287,39 +8443,47 @@ namespace HLU.UI.ViewModel
                         seekIncidNumber += seekRowNumber - count;
 
                     };
+
+                    // If moving backwards.
+                    //if (seekRowNumber == oldRowNumber - 1)
+                    //{
+                    //    // Move back by the page size.
+                    //    if (seekIncidNumber > IncidPageSize)
+                    //        seekIncidNumber -= IncidPageSize;
+                    //}
+
+                    // Fetch records
+                    _hluTableAdapterMgr.Fill(_hluDS, typeof(HluDataSet.incidDataTable),
+                        String.Format(loadWhereClauseTemplate,
+                            _db.QuoteValue(_recIDs.IncidString(seekIncidNumber)),
+                            _db.QuoteValue(_recIDs.IncidString(seekIncidNumber + IncidPageSize))), true);
+
+                    _incidPageRowNoMin = seekRowNumber;
+                    _incidPageRowNoMax = _incidPageRowNoMin + _hluDS.incid.Count;
+
+                    _incidPageRowNo = 0;
                 }
-
-                string loadWhereClauseTemplate = String.Format("{0} >= {{0}} AND {0} < {{1}} ORDER BY {0} ASC",
-                    _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName));
-
-                // Fetch records
-                _hluTableAdapterMgr.Fill(_hluDS, typeof(HluDataSet.incidDataTable),
-                    String.Format(loadWhereClauseTemplate,
-                        _db.QuoteValue(_recIDs.IncidString(seekIncidNumber)),
-                        _db.QuoteValue(_recIDs.IncidString(seekIncidNumber + IncidPageSize))), true);
-
-                _incidPageRowNoMin = seekRowNumber;
-                _incidPageRowNoMax = _incidPageRowNoMin + _hluDS.incid.Count;
-
-                return 0;
             }
             catch
             {
                 _incidPageRowNoMin = incidPageRowNoMinBak;
                 _incidPageRowNoMax = incidPageRowNoMaxBak;
+                _incidPageRowNo = incidPageRowNoBak;
                 return -1;
             }
+
+            return _incidPageRowNo;
         }
 
         /// <summary>
         /// Retrieves the row of the in-memory incid DataTable that corresponds to the incid of the row
         /// of the _incidSelection DataTable whose row number is passed in as parameter seekRowNumber.
-        /// If necessary, a new page of selected incid rows is loaded from the database. 
+        /// If necessary, a new page of selected incid rows is loaded from the database.
         /// </summary>
-        /// <param name="seekRowNumber">Row number in the _incidSelection DataTable whose 
+        /// <param name="seekRowNumber">Row number in the _incidSelection DataTable whose
         /// corresponding row in in-memory DataTable HluDataset.incid is sought.</param>
         /// <returns>The row of in-memory DataTable HluDataset.incid that corresponds to
-        /// row number seekRowNumber in the _incidSelection DataTable. 
+        /// row number seekRowNumber in the _incidSelection DataTable.
         /// If loading of a new page fails, null is returned.</returns>
         private HluDataSet.incidRow SeekIncidFiltered(int seekRowNumber)
         {
@@ -10232,7 +10396,7 @@ namespace HLU.UI.ViewModel
                 return true;
             }
         }
-        
+
         /// <summary>
         /// Gets the primary codes.
         /// </summary>
@@ -11808,7 +11972,7 @@ namespace HLU.UI.ViewModel
         //---------------------------------------------------------------------
 
         #region Priority Habitat
-        
+
         /// <summary>
         /// Gets the array of all bap habitat codes.
         /// </summary>
@@ -11836,7 +12000,7 @@ namespace HLU.UI.ViewModel
                 return _bapHabitatCodes;
             }
         }
-        
+
         /// <summary>
         /// Gets the array of all determination quality codes.
         /// </summary>
@@ -11850,7 +12014,7 @@ namespace HLU.UI.ViewModel
                 return _lutQualityDetermination.OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
             }
         }
-        
+
         /// <summary>
         /// Gets the array of bap determination quality codes valid for automatically
         /// assigned priority habitats.
@@ -11888,7 +12052,7 @@ namespace HLU.UI.ViewModel
                 return DeterminationQualityCodes;
             }
         }
-        
+
         /// <summary>
         /// Gets the  array of all interpretation quality codes.
         /// </summary>
@@ -11902,7 +12066,7 @@ namespace HLU.UI.ViewModel
                 return _lutQualityInterpretation.OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
             }
         }
-        
+
         /// <summary>
         /// Gets the  array of all bap related interpretation quality codes.
         /// </summary>
@@ -11916,7 +12080,7 @@ namespace HLU.UI.ViewModel
                 return InterpretationQualityCodes;
             }
         }
-        
+
         /// <summary>
         /// Gets or sets the collection of incid bap habitats automatically assigned.
         /// </summary>
@@ -12474,7 +12638,7 @@ namespace HLU.UI.ViewModel
                     be.DataChanged += _incidBapRowsUser_DataChanged;
             }
         }
-        
+
         #endregion
 
         #endregion
@@ -12538,7 +12702,7 @@ namespace HLU.UI.ViewModel
                     return null;
             }
         }
-        
+
         /// <summary>
         /// Gets the list of boundary map codes.
         /// </summary>
@@ -12558,7 +12722,7 @@ namespace HLU.UI.ViewModel
                 return _boundaryMapCodes;
             }
         }
-        
+
         /// <summary>
         /// Gets or sets the incid boundary base map.
         /// </summary>
@@ -12585,7 +12749,7 @@ namespace HLU.UI.ViewModel
                 }
             }
         }
-        
+
         /// <summary>
         /// Gets or sets the incid digitisation base map.
         /// </summary>
@@ -12989,7 +13153,7 @@ namespace HLU.UI.ViewModel
         #endregion
 
         #region Quality
-        
+
         /// <summary>
         /// Gets the details quality group header.
         /// </summary>
@@ -13041,7 +13205,7 @@ namespace HLU.UI.ViewModel
                 }
             }
         }
-        
+
         /// <summary>
         /// Gets or sets the incid quality determination.
         /// </summary>
@@ -13115,7 +13279,7 @@ namespace HLU.UI.ViewModel
                 }
             }
         }
-        
+
         /// <summary>
         /// Gets or sets the incid quality interpretation.
         /// </summary>
@@ -13157,7 +13321,7 @@ namespace HLU.UI.ViewModel
                 }
             }
         }
-        
+
         /// <summary>
         /// Gets or sets the incid quality comments.
         /// </summary>
@@ -13190,7 +13354,7 @@ namespace HLU.UI.ViewModel
         #endregion
 
         #region Sources Tab
-        
+
         /// <summary>
         /// Gets the sources tab group label.
         /// </summary>

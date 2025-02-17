@@ -36,8 +36,8 @@ namespace HLU.UI.View
         {
             InitializeComponent();
 
-            // Initialize ViewModel and set DataContext
-            viewModel = new ViewModelWindowMain();
+            // InitializeToolPaneAsync ViewModel and set DataContext
+            viewModel = new ViewModelWindowMain(true);
             this.DataContext = viewModel;
 
             // Assign items source to the combo box columns in the secondary habitat data grid

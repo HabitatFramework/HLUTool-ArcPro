@@ -149,6 +149,7 @@ namespace HLU.UI.ViewModel
 
         private bool _mapEventsSubscribed;
         private bool _projectClosedEventsSubscribed;
+        private bool _layersChangedEventsSubscribed;
 
         private string _displayName = "HLU Tool";
         private bool _editMode;
@@ -186,14 +187,24 @@ namespace HLU.UI.ViewModel
         /// </summary>
         internal ViewModelWindowMain()
         {
-            InitializeComponentAsync();
+            InitializeComponentAsync().GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Set the global variables.
+        /// </summary>
+        internal ViewModelWindowMain(bool minimal)
+        {
+            LoadComboBoxSourcesAsync().GetAwaiter().GetResult();
         }
 
         /// <summary>
         /// Initialise the DockPane components.
         /// </summary>
-        public async void InitializeComponentAsync()
+        public async Task InitializeComponentAsync()
         {
+            //if (!Initialised)
+            //{
             _dockPane = this;
             _initialised = false;
             _inError = false;
@@ -201,33 +212,24 @@ namespace HLU.UI.ViewModel
             // Set the help URL.
             _dockPane.HelpURL = Settings.Default.HelpURL;
 
-            // Indicate that the dockpane has been initialised.
-            _initialised = true;
-
             try
             {
+                //TODO: What to do if the upgrade fails?
                 UpgradeSettings();
 
-                //DispatcherHelper.DoEvents();
-
                 // Initialise the main view (start the tool)
-                if (!await Initialize())
+                if (!await InitializeToolPaneAsync())
                 {
                     //TODO: What to do if initialise fails?
-                }
-
-                // Check the active map is valid.
-                if (!await CheckActiveMapAsync())
-                {
-                    //TODO: Just return or hide the dockpane?
-                    return;
                 }
             }
             finally
             {
-                //TODO: What to do if the upgrade fails?
+                // Indicate that the dockpane has been initialised.
+                _initialised = true;
             }
         }
+        //}
 
         private void UpgradeSettings()
         {
@@ -252,8 +254,8 @@ namespace HLU.UI.ViewModel
             // Get the ViewModel by casting the dockpane.
             ViewModelWindowMain vm = pane as ViewModelWindowMain;
 
-            // If the ViewModel is uninitialised then initialise it.
-            if (vm.Initialised)
+            //// If the ViewModel is uninitialised then initialise it.
+            if (!vm.Initialised)
                 vm.InitializeComponentAsync();
 
             // If the ViewModel is in error then don't show the dockpane.
@@ -281,7 +283,7 @@ namespace HLU.UI.ViewModel
                     _mapEventsSubscribed = true;
 
                     // Subscribe from map changed events.
-                    ActiveMapViewChangedEvent.Subscribe(OnActiveMapViewChanged);
+                    ActiveMapViewChangedEvent.Subscribe(OnActiveMapViewChangedAsync);
                 }
 
                 if (!_projectClosedEventsSubscribed)
@@ -291,6 +293,17 @@ namespace HLU.UI.ViewModel
                     // Suscribe to project closed events.
                     ProjectClosedEvent.Subscribe(OnProjectClosed);
                 }
+
+                if (!_layersChangedEventsSubscribed)
+                {
+                    _layersChangedEventsSubscribed = true;
+
+                    // Subscribe to the LayersAddedEvent
+                    LayersAddedEvent.Subscribe(OnLayersAddedAsync);
+
+                    // Subscribe to the LayersRemovedEvent
+                    LayersRemovedEvent.Subscribe(OnLayersRemovedAsync);
+                }
             }
             else
             {
@@ -299,7 +312,18 @@ namespace HLU.UI.ViewModel
                     _mapEventsSubscribed = false;
 
                     // Unsubscribe from map changed events.
-                    ActiveMapViewChangedEvent.Unsubscribe(OnActiveMapViewChanged);
+                    ActiveMapViewChangedEvent.Unsubscribe(OnActiveMapViewChangedAsync);
+                }
+
+                if (_layersChangedEventsSubscribed)
+                {
+                    _layersChangedEventsSubscribed = false;
+
+                    // Subscribe to the LayersAddedEvent
+                    LayersAddedEvent.Unsubscribe(OnLayersAddedAsync);
+
+                    // Subscribe to the LayersRemovedEvent
+                    LayersRemovedEvent.Unsubscribe(OnLayersRemovedAsync);
                 }
             }
 
@@ -390,11 +414,15 @@ namespace HLU.UI.ViewModel
 
         #region Active Map View
 
-        private async void OnActiveMapViewChanged(ActiveMapViewChangedEventArgs obj)
+        private async void OnActiveMapViewChangedAsync(ActiveMapViewChangedEventArgs obj)
         {
             if (MapView.Active == null)
             {
+                // Hide the dockpane.
                 DockpaneVisibility = Visibility.Hidden;
+
+                // Display an error message.
+                ShowMessage("No active map.", MessageType.Warning);
 
                 // Clear the form lists.
                 //_paneH2VM?.ClearFormLists();
@@ -406,7 +434,10 @@ namespace HLU.UI.ViewModel
                 if (MapView.Active != _activeMapView)
                 {
                     if (!await CheckActiveMapAsync())
+                    {
+                        _activeMapView = null;
                         return;
+                    }
                 }
 
                 // Clear any messages.
@@ -417,6 +448,35 @@ namespace HLU.UI.ViewModel
                 // Save the active map view.
                 _activeMapView = MapView.Active;
             }
+        }
+
+        private async void OnLayersAddedAsync(LayerEventsArgs args)
+        {
+            if (!await CheckActiveMapAsync())
+            {
+                _activeMapView = null;
+                return;
+            }
+        }
+
+        private async void OnLayersRemovedAsync(LayerEventsArgs args)
+        {
+            foreach (var layer in args.Layers)
+            {
+                // If the active layer has been removed force
+                // a new GIS functions object to be created.
+                if (layer.Name == ActiveLayerName)
+                    _gisApp = null;
+            }
+
+            if (!await CheckActiveMapAsync())
+            {
+                _activeMapView = null;
+                return;
+            }
+
+            // Refresh the layer name (in case it has changed).
+            OnPropertyChanged(nameof(ActiveLayerName));
         }
 
         private void OnProjectClosed(ProjectEventArgs obj)

@@ -3206,9 +3206,39 @@
                 </Grid>
             </Grid>
 
-            <Separator Grid.Row="3" />
+            <Grid x:Name="GridActiveLayer"
+            Grid.Row="3"
+            Margin="0,0,0,0"
+            VerticalAlignment="Top">
+                <Grid x:Name="GridStatusBar">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
-            <Grid Name="GridProcessStatus" Grid.Row="4" Margin="6,6,6,6" Visibility="{Binding IsProcessing}">
+                    <Label x:Name="LabelLayerName"
+                        Grid.Column="0"
+                        Margin="0,0,0,0"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Content="Active Layer:" />
+                    <TextBox x:Name="TextBoxLayerName"
+                             Grid.Column="1"
+                             Margin="0,0,0,0"
+                             Height="22"
+                             IsEnabled="False"
+                             VerticalAlignment="Center"
+                             Text="{Binding ActiveLayerName, Mode=OneWay}" />
+                </Grid>
+            </Grid>
+
+            <!-- <Separator Grid.Row="4" /> -->
+
+            <Grid Name="GridProcessStatus"
+                  Grid.Row="5"
+                  Margin="6,6,6,6"
+                  Visibility="{Binding IsProcessing}">
+
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="22" />
                     <ColumnDefinition Width="*" />
@@ -3227,7 +3257,10 @@
                         Text="{Binding ProcessStatus}" />
             </Grid>
 
-            <Grid Name="GridProgressAnimation" Grid.Row="5" Margin="6,6,6,6" Visibility="{Binding ProgressAnimating}">
+            <Grid Name="GridProgressAnimation"
+                  Grid.Row="6"
+                  Margin="6,6,6,6"
+                  Visibility="{Binding ProgressAnimating}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
@@ -3245,7 +3278,7 @@
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center" />
             </Grid>
-        </Grid>
+            </Grid>
 
         </Grid>
     </DockPanel>
