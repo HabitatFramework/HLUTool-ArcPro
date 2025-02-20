@@ -44,6 +44,7 @@ using HLU.Data.Connection;
 using HLU.Data.Model;
 using HLU.Data.Model.HluDataSetTableAdapters;
 using HLU.Date;
+using HLU.UI.UserControls;
 using HLU.GISApplication;
 using HLU.Properties;
 using HLU.UI.View;
@@ -56,13 +57,17 @@ using ArcGIS.Desktop.Framework.Controls;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using System.Windows.Threading;
-using System.Windows.Media;
 
 using CommandType = System.Data.CommandType;
 using Azure.Identity;
 using System.Runtime.InteropServices;
 using Azure;
 using ArcGIS.Desktop.Internal.Framework.Controls;
+using System.Windows.Controls;
+
+using ComboBox = ArcGIS.Desktop.Framework.Contracts.ComboBox;
+using ArcGIS.Desktop.Internal.Mapping.Locate;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 
 namespace HLU.UI.ViewModel
@@ -424,6 +429,8 @@ namespace HLU.UI.ViewModel
         private int _autoZoomSelection;
         private bool _autoSelectOnGis;
 
+        private ActiveLayerComboBox _activeLayerComboBox;
+
         #endregion Fields
 
         #region Static Variables
@@ -688,6 +695,10 @@ namespace HLU.UI.ViewModel
             if (_gisApp == null || _gisApp.MapName == null || MapView.Active is null || MapView.Active.Map.Name != _gisApp.MapName)
                 _gisApp = new();
 
+            // Get the instance of the active layer ComboBox in the ribbon.
+            if (_activeLayerComboBox == null)
+                _activeLayerComboBox = ActiveLayerComboBox.GetInstance();
+
             // Check if there is an active map.
             if (_gisApp.MapName != null)
             {
@@ -698,6 +709,12 @@ namespace HLU.UI.ViewModel
                     // Clear the status bar (or reset the cursor to an arrow)
                     ChangeCursor(Cursors.Arrow, null);
 
+                    // Clear the list of layer names in ComboBox in the ribbon.
+                    ActiveLayerComboBox.UpdateLayerNames(null);
+
+                    // Force the ComboBox to reinitialise (if it is loaded).
+                    _activeLayerComboBox?.Initialize();
+
                     // Display an error message.
                     ShowMessage("Invalid HLU workspace.", MessageType.Warning);
 
@@ -707,8 +724,44 @@ namespace HLU.UI.ViewModel
                     return false;
                 }
 
+                // Set the list of valid HLU layer names.
+                AvailableHLULayerNames = new ObservableCollection<string>(_gisApp.ValidHluLayerNames);
+
+                // Update the list of layer names in the ComboBox in the ribbon.
+                ActiveLayerComboBox.UpdateLayerNames(AvailableHLULayerNames);
+
+                // Update the active layer name for the ComboBox in the ribbon.
+                ActiveLayerComboBox.UpdateActiveLayer(ActiveLayerName);
+
+                // If the ComboBox has still not been initialised.
+                if (_activeLayerComboBox == null)
+                {
+                    // Switch the GIS layer.
+                    if (await _gisApp.IsHluLayer(ActiveLayerName, true))
+                    {
+                        // Refresh the layer name
+                        OnPropertyChanged(nameof(ActiveLayerName));
+
+                        // Get the GIS layer selection and warn the user if no
+                        // features are found
+                        ReadMapSelection(true);
+                    }
+                }
+                // Otherwise (re)initialise the ComboBox, select the active
+                // layer and let that switch the GIS layer.
+                else
+                {
+                    // Force the ComboBox to reinitialise (if it is loaded).
+                    _activeLayerComboBox.Initialize();
+
+                    // Update the selection in the ComboBox (if it is loaded)
+                    // to match the current active layer.
+                    _activeLayerComboBox.SetSelectedItem(ActiveLayerName);
+                }
+
+                //TODO: Needed as triggered by above when setting active layer?
                 // Read the selected features from the map
-                ReadMapSelection(false);
+                //ReadMapSelection(false);
             }
             else
             {
@@ -3216,7 +3269,13 @@ namespace HLU.UI.ViewModel
         internal Nullable<bool> BulkUpdateMode
         {
             get { return _bulkUpdateMode; }
-            set { _bulkUpdateMode = value; }
+            set
+            {
+                _bulkUpdateMode = value;
+
+                // Refresh the state of the active layer combo box.
+                UpdateComboBoxEnabledState();
+            }
         }
 
         public Visibility HideInBulkUpdateMode
@@ -3709,7 +3768,13 @@ namespace HLU.UI.ViewModel
         internal Nullable<bool> OSMMUpdateMode
         {
             get { return _osmmUpdateMode; }
-            set { _osmmUpdateMode = value; }
+            set
+            {
+                _osmmUpdateMode = value;
+
+                // Refresh the state of the active layer combo box.
+                UpdateComboBoxEnabledState();
+            }
         }
 
         /// <summary>
@@ -5604,7 +5669,7 @@ namespace HLU.UI.ViewModel
                                     // Refresh all the controls
                                     RefreshAll();
                                 }
-                            
+
                                 // Reset the cursor back to normal.
                                 ChangeCursor(Cursors.Arrow, null);
 
@@ -6333,6 +6398,8 @@ namespace HLU.UI.ViewModel
                     }
                     else
                     {
+                        ChangeCursor(Cursors.Arrow, null);
+
                         // Check if the GIS and database are in sync.
                         if ((_toidsIncidGisCount > _toidsIncidDbCount) ||
                            (_fragsIncidGisCount > _fragsIncidDbCount))
@@ -6348,9 +6415,6 @@ namespace HLU.UI.ViewModel
                 }
                 else
                 {
-                    if (showMessage) MessageBox.Show("No map features selected in active layer.", "HLU: Selection",
-                        MessageBoxButton.OK, MessageBoxImage.Exclamation);
-
                     // Reset the incid and map selections and move
                     // to the first incid in the database.
                     ClearFilter(true);
@@ -6363,6 +6427,11 @@ namespace HLU.UI.ViewModel
                     // the map doesn't auto zoom to the incid).
                     _filterByMap = false;
                     //---------------------------------------------------------------------
+
+                    ChangeCursor(Cursors.Arrow, null);
+
+                    if (showMessage) MessageBox.Show("No map features selected in active layer.", "HLU: Selection",
+                        MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 }
             }
             catch (Exception ex)
@@ -7055,7 +7124,7 @@ namespace HLU.UI.ViewModel
 
                 //---------------------------------------------------------------------
                 // FIX: 107 Reset filter when no map features selected.
-                // 
+                //
                 // Indicate the selection didn't come from the map.
                 _filterByMap = false;
                 //---------------------------------------------------------------------
@@ -7389,59 +7458,26 @@ namespace HLU.UI.ViewModel
         #endregion
 
         #region Switch GIS Layer
-        //---------------------------------------------------------------------
-        // CHANGED: CR31 (Switching between GIS layers)
-        // Enable the user to switch between different HLU layers, where
-        // there is more than one valid layer in the current document.
-        public ICommand SwitchGISLayerCommand
+
+        private void UpdateComboBoxEnabledState()
         {
-            get
+            if (_bulkUpdateMode == false && _osmmUpdateMode == false)
             {
-                if (_switchGISLayerCommand == null)
+                // Can switch if there is more than one map layer.
+                if (_gisApp.HluLayerCount > 1)
                 {
-                    Action<object> SwitchGISLayerAction = new(this.SwitchGISLayerClicked);
-                    _switchGISLayerCommand = new RelayCommand(SwitchGISLayerAction, param => this.CanSwitchGISLayer);
+                    // Enable the combo box.
+                    ActiveLayerComboBox.GetInstance()?.UpdateState(true);
+
+                    FrameworkApplication.State.Activate("HLUTool_ActiveLayerComboBox");
                 }
-                return _switchGISLayerCommand;
             }
-        }
-
-        private void SwitchGISLayerClicked(object param)
-        {
-            if (_gisApp.HluLayerCount > 0)
+            else
             {
-                _windowSwitchGISLayer = new()
-                {
-                    //DONE: App.Current.MainWindow
-                    //_windowSwitchGISLayer.Owner = App.Current.MainWindow;
-                    WindowStartupLocation = WindowStartupLocation.CenterScreen
-                };
+                // Disable the combo box.
+                ActiveLayerComboBox.GetInstance()?.UpdateState(false);
 
-                // Pass the total number of map windows to the view model
-                _viewModelSwitchGISLayer = new ViewModelWindowSwitchGISLayer(_gisApp.ValidHluLayers, _gisApp.CurrentHluLayer, _mapWindowsCount);
-                _viewModelSwitchGISLayer.RequestClose +=
-                    new ViewModelWindowSwitchGISLayer.RequestCloseEventHandler(_viewModelSwitchGISLayer_RequestClose);
-
-                _windowSwitchGISLayer.DataContext = _viewModelSwitchGISLayer;
-
-                _windowSwitchGISLayer.ShowDialog();
-            }
-        }
-
-        public bool CanSwitchGISLayer
-        {
-            get
-            {
-                if (_bulkUpdateMode == false && _osmmUpdateMode == false)
-                {
-                    // Get the total number of map layers
-                    int mapLayersCount = _gisApp.HluLayerCount;
-
-                    // Return true if there is more than one map layer
-                    return mapLayersCount > 1;
-                }
-                else
-                    return false;
+                FrameworkApplication.State.Deactivate("HLUTool_ActiveLayerComboBox");
             }
         }
 
@@ -7468,45 +7504,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        void _viewModelSwitchGISLayer_RequestClose(bool switchGISLayer, GISLayer selectedHLULayer)
-        {
-            _viewModelSwitchGISLayer.RequestClose -= _viewModelSwitchGISLayer_RequestClose;
-            _windowSwitchGISLayer.Close();
-
-            // If the GIS layer has been switched
-            if ((switchGISLayer) && (selectedHLULayer != _gisApp.CurrentHluLayer))
-            {
-                // Check if there are unsaved edits
-                if (_editMode && (_bulkUpdateMode == false && _osmmUpdateMode == false) && IsDirty)
-                {
-                    // Inform the user to save the unsaved edits first.
-                    MessageBox.Show("The current record has been changed." +
-                        "\n\nYou must save any outstanding changes before switching GIS layer!",
-                        "HLU: Switch GIS Layer", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                }
-                else
-                {
-                    // Get the selected layer name.
-                    string layerName = selectedHLULayer.LayerName;
-
-                    // Switch the GIS layer
-                    if (_gisApp.IsHluLayer(selectedHLULayer))
-                    {
-                        // Refresh the layer name
-                        OnPropertyChanged(nameof(ActiveLayerName));
-
-                        // Get the GIS layer selection and warn the user if no
-                        // features are found
-                        ReadMapSelection(true);
-                    }
-                }
-            }
-        }
-        //---------------------------------------------------------------------
-
         #endregion
 
-        #region Data Tables
+            #region Data Tables
 
         public HluDataSet.incidDataTable IncidTable
         {

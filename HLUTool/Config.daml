@@ -21,12 +21,46 @@
 		<dependency name="{11a4897d-5c60-4521-b312-274e0ba2403e}" />
 	</dependencies>
 
+	<conditions>
+		<insertCondition id="HLUTool_Tab1_condition" caption="Toggle HLUTool_Tab1">
+			<state id="tab_state" />
+		</insertCondition>
+	</conditions>
+
 	<modules>
 		<insertModule id="HLUTool_Module"
 					  className="HLUTool"
 					  autoLoad="true"
 					  caption="HLU Tool module">
+
+			<tabs>
+				<tab id="HLUTool_Tab1" caption="HLU Tool" keytip="T0" condition="HLUTool_Tab1_condition" >
+					<group refID="HLUTool_Group1" />
+				</tab>
+			</tabs>
+
+			<groups>
+				<group id="HLUTool_Group1" caption="GIS" keytip="G0">
+					<comboBox refID="HLUTool_ActiveLayerComboBox" size="middle" />
+				</group>
+			</groups>
+
 			<controls>
+				<comboBox id="HLUTool_ActiveLayerComboBox"
+						  caption=" Active Layer:"
+						  extendedCaption="Select Active Layer"
+						  className="HLU.UI.UserControls.ActiveLayerComboBox"
+						  itemWidth="180"
+						  isEditable="true"
+						  condition="esri_mapping_mapPane"
+						  isReadOnly="true"
+						  resizable="true"
+						  keytip="C0">
+					<tooltip heading="Active Layer">
+						Select the active feature layer<disabledText />
+					</tooltip>
+				</comboBox>
+
 				<button id="HLUTool_btnHLUToolDockPane"
 						caption="HLU Tool"
 						className="HLU.UI.ViewModel.WindowMain_ShowButton"
@@ -40,6 +74,7 @@
 					</tooltip>
 				</button>
 			</controls>
+
 			<dockPanes>
 				<dockPane id="HLUTool_UI_WindowMain"
 						  hasHelp="true"
@@ -51,6 +86,7 @@
 					<content className="HLU.UI.View.WindowMain" />
 				</dockPane>
 			</dockPanes>
+
 		</insertModule>
 
 		<updateModule refID="DataTools_Module">

@@ -28,6 +28,7 @@ using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using HLU;
 using HLU.Properties;
+using HLU.UI.UserControls;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -40,6 +41,9 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 using ArcGIS.Desktop.Internal.Framework.Controls;
+using System.Collections.ObjectModel;
+using HLU.Data;
+using System.Linq;
 
 namespace HLU.UI.ViewModel
 {
@@ -187,6 +191,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         internal ViewModelWindowMain()
         {
+            // Initialise the DockPane components and wait for it to complete.
             InitializeComponentAsync().GetAwaiter().GetResult();
         }
 
@@ -195,7 +200,11 @@ namespace HLU.UI.ViewModel
         /// </summary>
         internal ViewModelWindowMain(bool minimal)
         {
+            // Load the data grid combo box sources and wait for it to complete.
             LoadComboBoxSourcesAsync().GetAwaiter().GetResult();
+
+            // Subscribe to the active layer combobox selection event
+            //ActiveLayerComboBox.OnComboBoxSelectionChanged += HandleComboBoxSelection;
         }
 
         /// <summary>
@@ -328,6 +337,9 @@ namespace HLU.UI.ViewModel
             }
 
             base.OnShow(isVisible);
+
+            // Toggle the tab state to visible.
+            ToggleState("tab_state", true);
         }
 
         #endregion ViewModelBase Members
@@ -465,6 +477,7 @@ namespace HLU.UI.ViewModel
             {
                 // If the active layer has been removed force
                 // a new GIS functions object to be created.
+                //TODO: Clear variables instead of creating new instance?
                 if (layer.Name == ActiveLayerName)
                     _gisApp = null;
             }
@@ -521,6 +534,9 @@ namespace HLU.UI.ViewModel
 
             // Force the dockpane to be re-initialised next time it's shown.
             vm.Initialised = false;
+
+            // Toggle the tab state to hidden.
+            ToggleState("tab_state", false);
         }
 
         #endregion Active Map View
@@ -600,6 +616,101 @@ namespace HLU.UI.ViewModel
 
         #endregion Message
 
+        #region Ribbon Controls
+
+        // ObservableCollection to hold HLU layers combo box items
+        private ObservableCollection<string> _availableHLULayerNames = [];
+
+        /// <summary>
+        /// The available HLU layers.
+        /// </summary>
+        public ObservableCollection<string> AvailableHLULayerNames
+        {
+            get { return _availableHLULayerNames; }
+            set
+            {
+                _availableHLULayerNames = value;
+                OnPropertyChanged(nameof(AvailableHLULayerNames));
+            }
+        }
+
+        // These properties are used by the ribbon controls
+        //private ActiveLayerComboBox _switchLayerComboBox;
+
+        //internal ActiveLayerComboBox HLULayerComboBox
+        //{
+        //    get { return _switchLayerComboBox; }
+        //    set
+        //    {
+        //        _switchLayerComboBox = value;
+
+        //        //InitializeLayerComboBox();
+        //    }
+        //}
+
+        //public static async void HandleComboBoxSelectionStatic(string selectedValue)
+        //{
+        //    //TODO: Switch active layer (if different).
+        //    MessageBox.Show($"ComboBox selection changed: {selectedValue}");
+
+        //    // Get the dockpane DAML id.
+        //    DockPane pane = FrameworkApplication.DockPaneManager.Find(_dockPaneID);
+        //    if (pane == null)
+        //        return;
+
+        //    // Get the ViewModel by casting the dockpane.
+        //    ViewModelWindowMain vm = pane as ViewModelWindowMain;
+
+        //    if (await vm._gisApp.IsHluLayer(selectedValue, true))
+        //    {
+        //        // Refresh the layer name
+        //        vm.OnPropertyChanged(nameof(ActiveLayerName));
+
+        //        // Get the GIS layer selection and warn the user if no
+        //        // features are found
+        //        //ReadMapSelection(true);
+        //    }
+        //}
+
+        public async void HandleComboBoxSelection(string selectedValue)
+        {
+            // Create a new GIS functions object if necessary.
+            if (_gisApp == null || _gisApp.MapName == null || MapView.Active is null || MapView.Active.Map.Name != _gisApp.MapName)
+                _gisApp = new();
+
+            // Switch the GIS layer.
+            if (await _gisApp.IsHluLayer(selectedValue, true))
+            {
+                // Refresh the layer name
+                OnPropertyChanged(nameof(ActiveLayerName));
+
+                // Get the GIS layer selection and warn the user if no
+                // features are found
+                ReadMapSelection(true);
+            }
+        }
+
+        /// <summary>
+        /// Activate or Deactivate the specified state. State is identified via
+        /// its name. Listen for state changes via the DAML <b>condition</b> attribute
+        /// </summary>
+        /// <param name="stateID"></param>
+        public static void ToggleState(string stateID, bool activate)
+        {
+            if (FrameworkApplication.State.Contains(stateID))
+            {
+                if (!activate)
+                    FrameworkApplication.State.Deactivate(stateID);
+            }
+            else
+            {
+                if (activate)
+                    FrameworkApplication.State.Activate(stateID);
+            }
+        }
+
+        #endregion
+
     }
 
     /// <summary>
@@ -609,8 +720,6 @@ namespace HLU.UI.ViewModel
     {
         protected override void OnClick()
         {
-            //string uri = System.Reflection.Assembly.GetExecutingAssembly().Location;
-
             // Show the dock pane.
             ViewModelWindowMain.Show();
         }

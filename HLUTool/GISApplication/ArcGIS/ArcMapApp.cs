@@ -169,9 +169,9 @@ namespace HLU.GISApplication
         private string _hluTableName;
 
         /// <summary>
-        /// The list of valid HLU map layers in the document.
+        /// The list of valid HLU map layer names in the document.
         /// </summary>
-        private List<GISLayer> _hluLayerList;
+        private List<string> _hluLayerNamesList;
 
         /// <summary>
         /// The current valid HLU map layer in the document.
@@ -1269,19 +1269,19 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// The number of valid hlu layers.
+        /// The number of valid hlu layer namess.
         /// </summary>
         public int HluLayerCount
         {
-            get { return _hluLayerList.Count; }
+            get { return _hluLayerNamesList?.Count ?? 0; }
         }
 
         /// <summary>
-        /// The list of valid hlu layers.
+        /// The list of valid hlu layer names.
         /// </summary>
-        public List<GISLayer> ValidHluLayers
+        public List<string> ValidHluLayerNames
         {
-            get { return _hluLayerList; }
+            get { return _hluLayerNamesList; }
         }
 
         /// <summary>
@@ -1322,10 +1322,10 @@ namespace HLU.GISApplication
         public async Task<bool> IsHluWorkspaceAsync()
         {
             // Initialise or clear the list of valid layers.
-            if (_hluLayerList == null)
-                _hluLayerList = [];
+            if (_hluLayerNamesList == null)
+                _hluLayerNamesList = [];
             else
-                _hluLayerList.Clear();
+                _hluLayerNamesList.Clear();
 
             //TODO: ArcGIS
             try
@@ -1339,11 +1339,11 @@ namespace HLU.GISApplication
                 foreach(FeatureLayer layer in featureLayers)
                 {
                     // Check if the feature layer a valid HLU layer.
-                    if (await IsHluLayerAsync(layer))
+                    if (await IsHluLayerAsync(layer, false))
                     {
                         // Add the layer to the list of valid layers.
                         string layerName = layer.Name;
-                        _hluLayerList.Add(new GISLayer(layerName));
+                        _hluLayerNamesList.Add(layerName);
 
                         // Store the details of the first valid layer found.
                         if (_hluLayer == null)
@@ -1366,7 +1366,7 @@ namespace HLU.GISApplication
                             _hluTableName = layer.Name;
                             //TODO: Needed?
                             //_hluFeatureClass = _hluLayer.GetFeatureClass();
-                            _hluCurrentLayer = new GISLayer(layerName);
+                            _hluCurrentLayer = new(layerName);
                         }
 
                         //break;
@@ -1398,8 +1398,8 @@ namespace HLU.GISApplication
             //if (_hluLayerStructure == null)
             //    _hluLayerStructure = new HluGISLayer.incid_mm_polygonsDataTable();
 
-            //if (_hluLayerList == null)
-            //    _hluLayerList = [];
+            //if (_hluLayerNamesList == null)
+            //    _hluLayerNamesList = [];
 
             //try
             //{
@@ -1413,17 +1413,17 @@ namespace HLU.GISApplication
 
             //            // Split each layer into constituent parts and add them to the list
             //            // of valid layers.
-            //            if (_hluLayerList == null)
-            //                _hluLayerList = [];
+            //            if (_hluLayerNamesList == null)
+            //                _hluLayerNamesList = [];
             //            else
-            //                _hluLayerList.Clear();
+            //                _hluLayerNamesList.Clear();
 
             //            for (int i = 3; i < retList.Count; i++)
             //            {
             //                // Increment the map number by 1 so that it starts with 1 instead
             //                // of 0 to be more user-friendly when displayed.
             //                string[] layerParts = retList[i].ToString().Split(["::"], StringSplitOptions.None);
-            //                _hluLayerList.Add(new GISLayer(Int32.Parse(layerParts[0]) + 1, layerParts[1], Int32.Parse(layerParts[2]), layerParts[3]));
+            //                _hluLayerNamesList.Add(new GISLayer(Int32.Parse(layerParts[0]) + 1, layerParts[1], Int32.Parse(layerParts[2]), layerParts[3]));
             //            }
             //        }
             //    }
@@ -1436,8 +1436,8 @@ namespace HLU.GISApplication
             //catch { }
 
             //if (_hluCurrentLayer == null)
-            //    _hluCurrentLayer = _hluLayerList[0];
-            //return _hluLayerList.Count;
+            //    _hluCurrentLayer = _hluLayerNamesList[0];
+            //return _hluLayerNamesList.Count;
             return 0;
         }
 

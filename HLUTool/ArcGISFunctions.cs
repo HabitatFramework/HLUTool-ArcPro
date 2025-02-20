@@ -2695,17 +2695,17 @@ namespace HLU.GISApplication
 
         #region HLULayers
 
-        public bool IsHluLayer(GISLayer newGISLayer)
+        public async Task<bool> IsHluLayer(string layerName, bool activate)
         {
             // Check there is an input GIS featureLayer.
-            if (newGISLayer == null)
+            if (layerName == null)
                 return false;
 
             // Get the feature featureLayer for the new GIS featureLayer.
-            FeatureLayer featurelayer = FindLayer(newGISLayer.LayerName);
+            FeatureLayer featurelayer = FindLayer(layerName);
 
-            // Check if the feature featureLayer is a valid HLU featureLayer.
-            return IsHluLayer(featurelayer);
+            // Check if the feature layer a valid HLU layer.
+            return await IsHluLayerAsync(featurelayer, activate);
         }
 
         /// <summary>
@@ -2740,7 +2740,7 @@ namespace HLU.GISApplication
             //            _templateLayer = (IGeoFeatureLayer)featureLayer;
             //            CreateHluLayer(false, _templateLayer);
             //            CreateFieldMap(5, 3, 1, retList);
-            //            _hluCurrentLayer = newGISLayer;
+            //            _hluCurrentLayer = layerName;
             //            return true;
             //        }
             //        featureLayer = layers.Next();
@@ -2769,11 +2769,9 @@ namespace HLU.GISApplication
         ///
         /// </summary>
         /// <param name="featureLayer"></param>
-        /// <param name="origFields"></param>
-        /// <param name="hluFieldMap"></param>
-        /// <param name="hluFieldNames"></param>
+        /// <param name="activate"></param>
         /// <returns></returns>
-        public async Task<bool> IsHluLayerAsync(FeatureLayer featureLayer)
+        public async Task<bool> IsHluLayerAsync(FeatureLayer featureLayer, bool activate)
         {
             int[] hluFieldMap = [];
             string[] hluFieldNames = [];
@@ -2837,8 +2835,13 @@ namespace HLU.GISApplication
                         i += 1;
                     }
 
-                    _hluFieldMap = hluFieldMap;
-                    _hluFieldNames = hluFieldNames;
+                    if (activate)
+                    {
+                        _hluFieldMap = hluFieldMap;
+                        _hluFieldNames = hluFieldNames;
+
+                        _hluCurrentLayer = new(featureLayer.Name);
+                    }
 
                     isHlu = true;
                 });
