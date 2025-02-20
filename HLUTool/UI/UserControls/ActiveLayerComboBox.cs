@@ -21,7 +21,7 @@ namespace HLU.UI.UserControls
         #region Fields
 
         private static ActiveLayerComboBox _hluLayerComboBox;
-        private ViewModelWindowMain viewModel;
+        private ViewModelWindowMain _viewModel;
 
         private bool _isInitialized;
         private bool _isEnabled;
@@ -36,7 +36,8 @@ namespace HLU.UI.UserControls
         public ActiveLayerComboBox()
         {
             // Get this instance of the ComboBox.
-            _hluLayerComboBox = this;
+            if (_hluLayerComboBox == null)
+                _hluLayerComboBox = this;
 
             // Get the dockpane DAML id.
             DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
@@ -44,11 +45,10 @@ namespace HLU.UI.UserControls
                 return;
 
             // Get the ViewModel by casting the dockpane.
-            viewModel = pane as ViewModelWindowMain;
+            _viewModel = pane as ViewModelWindowMain;
 
-            // Initialize the ComboBox if it's not already.
-            if (!_isInitialized)
-                Initialize();
+            // Initialize the ComboBox (if it's not already).
+            Initialize();
         }
 
         #endregion Constructor
@@ -70,10 +70,14 @@ namespace HLU.UI.UserControls
         /// </summary>
         protected override void OnUpdate()
         {
+            // Initialize the ComboBox if it's not already.
+            if (!_isInitialized)
+                Initialize();
+
             // Select the active layer if it hasn't been selected.
-            if (this.SelectedItem == null && viewModel.ActiveLayerName != null)
+            if (this.SelectedItem == null && _viewModel?.ActiveLayerName != null)
             {
-                this.SelectedItem = viewModel.ActiveLayerName;
+                this.SelectedItem = _viewModel.ActiveLayerName;
                 OnSelectionChange(this.SelectedItem);
             }
 
@@ -96,7 +100,11 @@ namespace HLU.UI.UserControls
         /// </summary>
         internal void Initialize()
         {
-            // Clear existing items
+            // Ensure the ViewModel is available.
+            if (_viewModel == null)
+                return;
+
+            // Clear existing items.
             Clear();
 
             // Clear the selected item.
@@ -106,16 +114,24 @@ namespace HLU.UI.UserControls
             _isEnabled = false;
 
             // Load the available layers into the ComboBox list.
-            if (viewModel.AvailableHLULayerNames != null)
+            LoadAvailableLayers();
+
+            _isInitialized = true;
+        }
+
+        /// <summary>
+        /// Loads the available layers from the ViewModel and adds them to the ComboBox.
+        /// </summary>
+        private void LoadAvailableLayers()
+        {
+            if (_viewModel?.AvailableHLULayerNames?.Any() == true)
             {
                 // Add new layers from the ViewModel.
-                foreach (var layerName in viewModel.AvailableHLULayerNames)
+                foreach (var layerName in _viewModel.AvailableHLULayerNames)
                     Add(new ComboBoxItem(layerName));
 
                 _isEnabled = true;
             }
-
-            _isInitialized = true;
         }
 
         /// <summary>
@@ -135,7 +151,7 @@ namespace HLU.UI.UserControls
         {
             // Switch the active layer (if different).
             if (item != null)
-                viewModel.SwitchGISLayer(item.Text);
+                _viewModel?.SwitchGISLayer(item.Text);
         }
 
         /// <summary>
@@ -145,18 +161,10 @@ namespace HLU.UI.UserControls
         public void SetSelectedItem(string value)
         {
             // Check if the ItemCollection is not null and has items.
-            if (this.ItemCollection != null && this.ItemCollection.Count > 0)
+            if (this.ItemCollection?.Any() == true)
             {
-                // Check if the item exists.
-                foreach (var item in this.ItemCollection)
-                {
-                    // Set the selected item if found.
-                    if (item.ToString() == value)
-                    {
-                        this.SelectedItem = value;
-                        break;
-                    }
-                }
+                // Find and set the selected item if found.
+                this.SelectedItem = this.ItemCollection.FirstOrDefault(item => item.ToString() == value);
             }
         }
 

@@ -663,7 +663,7 @@
                                               Grid.Column="0"
 											  Grid.ColumnSpan="2">
                                             <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="140" />
+                                                <ColumnDefinition Width="Auto" MinWidth="100" />
                                                 <ColumnDefinition Width="*" />
                                             </Grid.ColumnDefinitions>
 
@@ -755,7 +755,8 @@
                                                        CanUserSortColumns="False"
                                                        HeadersVisibility="All"
                                                        IsEnabled="{Binding SecondaryHabitatsEnabled}"
-                                                       ItemsSource="{Binding IncidSecondaryHabitats}"
+                                                       ItemsSource="{Binding IncidSecondaryHabitats, Mode=TwoWay}"
+                                                  PreviewKeyDown="DataGridSecondaryHabitats_PreviewKeyDown"
                                                        MinRowHeight="24"
                                                        Padding="2,0"
 													   MinHeight="116"
@@ -777,7 +778,8 @@
                                                                          IsReadOnly="True"
                                                                          Visibility="Collapsed" />
                                                     <DataGridComboBoxColumn x:Name="DataGridComboBoxSecondaryGroup"
-                                                                        Width="117"
+                                                                        Width="Auto"
+                                                                            MinWidth="80"
 																					   IsReadOnly="True"
                                                                                        CanUserResize="True"
                                                                                        DisplayMemberPath="description"

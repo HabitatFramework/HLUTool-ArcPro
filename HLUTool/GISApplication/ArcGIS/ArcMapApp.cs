@@ -1319,19 +1319,25 @@ namespace HLU.GISApplication
         /// (by calling CreateFieldMap()), _hluFieldMap and _hluFieldNames.
         /// </summary>
         /// <returns>True if the current document contains a valid HLU layer, otherwise false.</returns>
-        public async Task<bool> IsHluWorkspaceAsync()
+        public async Task<bool> IsHluWorkspaceAsync(string currentLayerName)
         {
+            // Backup current layer variables.
+            FeatureLayer hluLayerBak = _hluLayer;
+            string hluTableNameBak = _hluTableName;
+            GISLayer hluCurrentLayerBak = _hluCurrentLayer;
+
             // Initialise or clear the list of valid layers.
             if (_hluLayerNamesList == null)
                 _hluLayerNamesList = [];
             else
                 _hluLayerNamesList.Clear();
 
+            if (string.IsNullOrEmpty(currentLayerName))
+                _hluLayer = null;
+
             //TODO: ArcGIS
             try
             {
-                _hluLayer = null;
-
                 // Get all of the feature layers in the active map view.
                 IEnumerable<FeatureLayer> featureLayers = GetFeatureLayers();
 
@@ -1345,7 +1351,9 @@ namespace HLU.GISApplication
                         string layerName = layer.Name;
                         _hluLayerNamesList.Add(layerName);
 
-                        // Store the details of the first valid layer found.
+                        // Store the details of the first valid layer found
+                        // if none already stored or there is no current
+                        // layer.
                         if (_hluLayer == null)
                         {
                             //TODO: HLU variables
@@ -1355,7 +1363,7 @@ namespace HLU.GISApplication
                             //_quotePrefix = quotePrefix;
                             //_quoteSuffix = quoteSuffix;
 
-                            //TODO: Workspace variables.
+                            //TODO: Workspace variables?
                             //_hluWS = (IFeatureWorkspace)((IDataset)_hluFeatureClass).Workspace;
 
                             //TODO: ArcGIS
@@ -1374,6 +1382,15 @@ namespace HLU.GISApplication
                 }
             }
             catch { }
+
+            // If the currentLayer is still found in the workspace
+            // then restore the variables.
+            if (!string.IsNullOrEmpty(currentLayerName) && _hluLayerNamesList.Contains(currentLayerName))
+            {
+                _hluLayer = hluLayerBak;
+                _hluTableName = hluTableNameBak;
+                _hluCurrentLayer = hluCurrentLayerBak;
+            }
 
             if (_hluLayer != null)
             {

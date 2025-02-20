@@ -21,7 +21,12 @@
 
 using HLU.Data.Model;
 using HLU.UI.ViewModel;
+using HLU.Data;
+using System.Linq;
 using System.Windows.Controls;
+using System.Windows.Input;
+using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Framework.Contracts;
 
 namespace HLU.UI.View
 {
@@ -36,8 +41,11 @@ namespace HLU.UI.View
         {
             InitializeComponent();
 
-            // InitializeToolPaneAsync ViewModel and set DataContext
+            // Initialise the ViewModel for the WindowMain (just to load the combo box sources).
+            ViewModelWindowMain viewModel;
             viewModel = new ViewModelWindowMain(true);
+
+            // Set the DataContext for the WindowMain.
             this.DataContext = viewModel;
 
             // Assign items source to the combo box columns in the secondary habitat data grid
@@ -53,6 +61,31 @@ namespace HLU.UI.View
             DataGridComboBoxSecondaryBapHabitatCodes.ItemsSource = viewModel.BapHabitatCodes;
             DataGridComboBoxSecondaryBapDeterminationQualityCodesUser.ItemsSource = viewModel.BapDeterminationQualityCodesUser;
             DataGridComboBoxSecondaryBapInterpretationQualityCodes.ItemsSource = viewModel.BapInterpretationQualityCodes;
+        }
+
+        private void DataGridSecondaryHabitats_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            // Set the view model if not already set.
+            if (viewModel == null)
+            {
+                // Get the dockpane DAML id.
+                DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
+                if (pane == null)
+                    return;
+
+                // Get the real ViewModel by casting the dockpane.
+                viewModel = pane as ViewModelWindowMain;
+            }
+
+            if (e.Key == Key.Delete)
+            {
+                var grid = sender as DataGrid;
+                var selectedItems = grid.SelectedItems.Cast<SecondaryHabitat>().ToList();
+                foreach (var item in selectedItems)
+                {
+                    viewModel.IncidSecondaryHabitats.Remove(item);
+                }
+            }
         }
     }
 }

@@ -701,7 +701,7 @@ namespace HLU.UI.ViewModel
             {
                 //DONE: ArcGIS
                 // Check if the GIS workspace is valid
-                if (!await _gisApp.IsHluWorkspaceAsync())
+                if (!await _gisApp.IsHluWorkspaceAsync(ActiveLayerName))
                 {
                     // Clear the status bar (or reset the cursor to an arrow)
                     ChangeCursor(Cursors.Arrow, null);
@@ -8371,7 +8371,7 @@ namespace HLU.UI.ViewModel
                     // Get the first record.
                     seekIncidNumber = RecordIds.IncidNumber(
                         _db.ExecuteScalar(String.Format(
-                        "SELECT {0} FROM {1} ORDER BY {0} ASC",
+                        "SELECT TOP 1 {0} FROM {1} ORDER BY {0} ASC",
                             _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName),
                             _db.QualifyTableName(_hluDS.incid.TableName)),
                             _db.Connection.ConnectionTimeout, CommandType.Text).ToString());
@@ -8395,7 +8395,7 @@ namespace HLU.UI.ViewModel
                     // Get the last record.
                     seekIncidNumber = RecordIds.IncidNumber(
                         _db.ExecuteScalar(String.Format(
-                        "SELECT {0} FROM {1} ORDER BY {0} DESC",
+                        "SELECT TOP 1 {0} FROM {1} ORDER BY {0} DESC",
                             _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName),
                             _db.QualifyTableName(_hluDS.incid.TableName)),
                             _db.Connection.ConnectionTimeout, CommandType.Text).ToString());

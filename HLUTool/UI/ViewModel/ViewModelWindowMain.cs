@@ -196,7 +196,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Set the global variables.
+        /// Set the global variables for just the combo box sources.
         /// </summary>
         internal ViewModelWindowMain(bool minimal)
         {
@@ -637,6 +637,7 @@ namespace HLU.UI.ViewModel
         /// <param name="selectedValue"></param>
         public async void SwitchGISLayer(string selectedValue)
         {
+            // Check if the layer name has actually changed.
             if (selectedValue != ActiveLayerName)
             {
                 // Create a new GIS functions object if necessary.
