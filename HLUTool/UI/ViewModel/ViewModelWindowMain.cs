@@ -202,9 +202,6 @@ namespace HLU.UI.ViewModel
         {
             // Load the data grid combo box sources and wait for it to complete.
             LoadComboBoxSourcesAsync().GetAwaiter().GetResult();
-
-            // Subscribe to the active layer combobox selection event
-            //ActiveLayerComboBox.OnComboBoxSelectionChanged += HandleComboBoxSelection;
         }
 
         /// <summary>
@@ -634,59 +631,28 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        // These properties are used by the ribbon controls
-        //private ActiveLayerComboBox _switchLayerComboBox;
-
-        //internal ActiveLayerComboBox HLULayerComboBox
-        //{
-        //    get { return _switchLayerComboBox; }
-        //    set
-        //    {
-        //        _switchLayerComboBox = value;
-
-        //        //InitializeLayerComboBox();
-        //    }
-        //}
-
-        //public static async void HandleComboBoxSelectionStatic(string selectedValue)
-        //{
-        //    //TODO: Switch active layer (if different).
-        //    MessageBox.Show($"ComboBox selection changed: {selectedValue}");
-
-        //    // Get the dockpane DAML id.
-        //    DockPane pane = FrameworkApplication.DockPaneManager.Find(_dockPaneID);
-        //    if (pane == null)
-        //        return;
-
-        //    // Get the ViewModel by casting the dockpane.
-        //    ViewModelWindowMain vm = pane as ViewModelWindowMain;
-
-        //    if (await vm._gisApp.IsHluLayer(selectedValue, true))
-        //    {
-        //        // Refresh the layer name
-        //        vm.OnPropertyChanged(nameof(ActiveLayerName));
-
-        //        // Get the GIS layer selection and warn the user if no
-        //        // features are found
-        //        //ReadMapSelection(true);
-        //    }
-        //}
-
-        public async void HandleComboBoxSelection(string selectedValue)
+        /// <summary>
+        /// Switch the active layer.
+        /// </summary>
+        /// <param name="selectedValue"></param>
+        public async void SwitchGISLayer(string selectedValue)
         {
-            // Create a new GIS functions object if necessary.
-            if (_gisApp == null || _gisApp.MapName == null || MapView.Active is null || MapView.Active.Map.Name != _gisApp.MapName)
-                _gisApp = new();
-
-            // Switch the GIS layer.
-            if (await _gisApp.IsHluLayer(selectedValue, true))
+            if (selectedValue != ActiveLayerName)
             {
-                // Refresh the layer name
-                OnPropertyChanged(nameof(ActiveLayerName));
+                // Create a new GIS functions object if necessary.
+                if (_gisApp == null || _gisApp.MapName == null || MapView.Active is null || MapView.Active.Map.Name != _gisApp.MapName)
+                    _gisApp = new();
 
-                // Get the GIS layer selection and warn the user if no
-                // features are found
-                ReadMapSelection(true);
+                // Switch the GIS layer.
+                if (await _gisApp.IsHluLayer(selectedValue, true))
+                {
+                    // Refresh the layer name
+                    OnPropertyChanged(nameof(ActiveLayerName));
+
+                    // Get the GIS layer selection and warn the user if no
+                    // features are found
+                    ReadMapSelection(true);
+                }
             }
         }
 

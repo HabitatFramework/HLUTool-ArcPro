@@ -14,33 +14,46 @@ using HLU.UI.ViewModel;
 namespace HLU.UI.UserControls
 {
     /// <summary>
-    /// Represents a ComboBox control that allows the user to select the active layerName.
+    /// Represents a ComboBox control that allows the user to select the active layer name.
     /// </summary>
     internal class ActiveLayerComboBox : ComboBox
     {
+        #region Fields
+
         private static ActiveLayerComboBox _hluLayerComboBox;
-        private static ObservableCollection<string> _availableHLULayerNames;
-        private static string _selectedHLULayerName;
-        private static string _oldSelectedHLULayerName;
+        private ViewModelWindowMain viewModel;
 
         private bool _isInitialized;
         private bool _isEnabled;
 
-        public static event Action<string> OnComboBoxSelectionChanged;
+        #endregion Fields
+
+        #region Constructor
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public ActiveLayerComboBox()
         {
+            // Get this instance of the ComboBox.
             _hluLayerComboBox = this;
 
+            // Get the dockpane DAML id.
+            DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
+            if (pane == null)
+                return;
+
+            // Get the ViewModel by casting the dockpane.
+            viewModel = pane as ViewModelWindowMain;
+
+            // Initialize the ComboBox if it's not already.
             if (!_isInitialized)
-            {
                 Initialize();
-                _isInitialized = true;
-            }
         }
+
+        #endregion Constructor
+
+        #region Methods
 
         /// <summary>
         /// Gets the instance of the ActiveLayerComboBox.
@@ -48,6 +61,7 @@ namespace HLU.UI.UserControls
         /// <returns></returns>
         public static ActiveLayerComboBox GetInstance()
         {
+            // Return the instance of the ComboBox.
             return _hluLayerComboBox;
         }
 
@@ -56,12 +70,14 @@ namespace HLU.UI.UserControls
         /// </summary>
         protected override void OnUpdate()
         {
-            if (this.SelectedItem == null)
+            // Select the active layer if it hasn't been selected.
+            if (this.SelectedItem == null && viewModel.ActiveLayerName != null)
             {
-                this.SelectedItem = _selectedHLULayerName;
+                this.SelectedItem = viewModel.ActiveLayerName;
                 OnSelectionChange(this.SelectedItem);
             }
 
+            // Enable or disable the ComboBox.
             Enabled = _isEnabled;
         }
 
@@ -70,17 +86,15 @@ namespace HLU.UI.UserControls
         /// </summary>
         protected override void OnDropDownOpened()
         {
+            // Initialize the ComboBox if it's not already.
             if (!_isInitialized)
-            {
                 Initialize();
-                _isInitialized = true;
-            }
         }
 
         /// <summary>
         /// Initializes the ComboBox.
         /// </summary>
-        public void Initialize()
+        internal void Initialize()
         {
             // Clear existing items
             Clear();
@@ -89,58 +103,28 @@ namespace HLU.UI.UserControls
             this.SelectedItem = null;
             OnSelectionChange(null);
 
-            // Load the available layers to the list.
-            if (_availableHLULayerNames != null)
+            _isEnabled = false;
+
+            // Load the available layers into the ComboBox list.
+            if (viewModel.AvailableHLULayerNames != null)
             {
                 // Add new layers from the ViewModel.
-                foreach (var layerName in _availableHLULayerNames)
-                {
+                foreach (var layerName in viewModel.AvailableHLULayerNames)
                     Add(new ComboBoxItem(layerName));
-                }
 
                 _isEnabled = true;
             }
-            else
-            {
-                _isEnabled = false;
-            }
 
-            //// Set the selected item.
-            //if (this.SelectedItem == null && _selectedHLULayerName != null)
-            //    SetSelectedItem(_selectedHLULayerName);
+            _isInitialized = true;
         }
 
+        /// <summary>
+        /// Updates the state of the ComboBox.
+        /// </summary>
+        /// <param name="enabled"></param>
         public void UpdateState(bool enabled)
         {
             _isEnabled = enabled;
-        }
-
-        /// <summary>
-        /// Updates the items in the ComboBox.
-        /// </summary>
-        /// <param name="newLayerNames"></param>
-        public static void UpdateLayerNames(ObservableCollection<string> newLayerNames)
-        {
-            _availableHLULayerNames = newLayerNames;
-
-            // Force combobox to refresh
-            //_isInitialized = false;
-            //OnDropDownOpened();
-        }
-
-        /// <summary>
-        /// Updates the active layer in the ComboBox.
-        /// </summary>
-        /// <param name="activeLayerName"></param>
-        public static void UpdateActiveLayer(string activeLayerName)
-        {
-            // Set the selected layer name.
-            if (_selectedHLULayerName == null)
-                _selectedHLULayerName = activeLayerName;
-
-            // Force combobox to refresh
-            //_isInitialized = false;
-            //OnDropDownOpened();
         }
 
         /// <summary>
@@ -149,27 +133,9 @@ namespace HLU.UI.UserControls
         /// <param name="item"></param>
         protected override void OnSelectionChange(ComboBoxItem item)
         {
+            // Switch the active layer (if different).
             if (item != null)
-            {
-                //TODO: Switch active layerName
-                // Raise event
-                //OnComboBoxSelectionChanged?.Invoke(item.Text);
-                //ViewModelWindowMain.HandleComboBoxSelectionStatic(item.Text);
-
-                // Get the dockpane DAML id.
-                DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
-                if (pane == null)
-                    return;
-
-                // Get the ViewModel by casting the dockpane.
-                ViewModelWindowMain vm = pane as ViewModelWindowMain;
-
-                //TODO: Switch active layer (if different).
-                vm.HandleComboBoxSelection(item.Text);
-
-                // Update the selected layer name.
-                _selectedHLULayerName = item.Text;
-            }
+                viewModel.SwitchGISLayer(item.Text);
         }
 
         /// <summary>
@@ -193,5 +159,8 @@ namespace HLU.UI.UserControls
                 }
             }
         }
+
+        #endregion Methods
+
     }
 }

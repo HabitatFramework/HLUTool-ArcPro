@@ -95,7 +95,6 @@ namespace HLU.UI.ViewModel
         private ICommand _editPotentialHabitatsCommand;
         private ICommand _addSecondaryHabitatCommand;
         private ICommand _addSecondaryHabitatListCommand;
-        private ICommand _switchGISLayerCommand;
         private ICommand _logicalSplitCommand;
         private ICommand _physicalSplitCommand;
         private ICommand _logicalMergeCommand;
@@ -144,8 +143,6 @@ namespace HLU.UI.ViewModel
         private WindowNotifyOnSplitMerge _windowWarnSplitMerge;
         private ViewModelWindowNotifyOnSplitMerge _viewModelWinWarnSplitMerge;
         private WindowWarnOnSubsetUpdate _windowWarnSubsetUpdate;
-        private WindowSwitchGISLayer _windowSwitchGISLayer;
-        private ViewModelWindowSwitchGISLayer _viewModelSwitchGISLayer;
         private WindowCompletePhysicalSplit _windowCompSplit;
         private ViewModelCompletePhysicalSplit _vmCompSplit;
         private ViewModelWindowWarnOnSubsetUpdate _viewModelWinWarnSubsetUpdate;
@@ -709,8 +706,11 @@ namespace HLU.UI.ViewModel
                     // Clear the status bar (or reset the cursor to an arrow)
                     ChangeCursor(Cursors.Arrow, null);
 
+                    // Clear the list of valid HLU layer names.
+                    AvailableHLULayerNames = [];
+
                     // Clear the list of layer names in ComboBox in the ribbon.
-                    ActiveLayerComboBox.UpdateLayerNames(null);
+                    //ActiveLayerComboBox.UpdateLayerNames(null);
 
                     // Force the ComboBox to reinitialise (if it is loaded).
                     _activeLayerComboBox?.Initialize();
@@ -728,10 +728,10 @@ namespace HLU.UI.ViewModel
                 AvailableHLULayerNames = new ObservableCollection<string>(_gisApp.ValidHluLayerNames);
 
                 // Update the list of layer names in the ComboBox in the ribbon.
-                ActiveLayerComboBox.UpdateLayerNames(AvailableHLULayerNames);
+                //ActiveLayerComboBox.UpdateLayerNames(AvailableHLULayerNames);
 
                 // Update the active layer name for the ComboBox in the ribbon.
-                ActiveLayerComboBox.UpdateActiveLayer(ActiveLayerName);
+                //ActiveLayerComboBox.UpdateActiveLayer(ActiveLayerName);
 
                 // If the ComboBox has still not been initialised.
                 if (_activeLayerComboBox == null)
@@ -759,7 +759,7 @@ namespace HLU.UI.ViewModel
                     _activeLayerComboBox.SetSelectedItem(ActiveLayerName);
                 }
 
-                //TODO: Needed as triggered by above when setting active layer?
+                //DONE: No needed as triggered by above when setting active layer?
                 // Read the selected features from the map
                 //ReadMapSelection(false);
             }
