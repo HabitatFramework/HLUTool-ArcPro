@@ -202,7 +202,7 @@ namespace HLU.UI.ViewModel
         #region Dataset
 
         private DbBase _db;
-        private ArcMapApp _gisApp;
+        private ArcProApp _gisApp;
         private GeometryTypes _gisLayerType = GeometryTypes.Polygon;
         private HluDataSet _hluDS;
         private TableAdapterManager _hluTableAdapterMgr;
@@ -586,7 +586,7 @@ namespace HLU.UI.ViewModel
                 LoadLookupTables();
 
                 // Move to first row
-                IncidCurrentRowIndex = 1;
+                MoveIncidCurrentRowIndexAsync(1);
 
                 // Check the active map is valid (don't check result at this stage)
                 await CheckActiveMapAsync();
@@ -744,7 +744,7 @@ namespace HLU.UI.ViewModel
 
                         // Get the GIS layer selection and warn the user if no
                         // features are found
-                        ReadMapSelection(true);
+                        await ReadMapSelectionAsync(true);
                     }
                 }
                 // Otherwise (re)initialise the ComboBox, select the active
@@ -761,7 +761,7 @@ namespace HLU.UI.ViewModel
 
                 //DONE: No needed as triggered by above when setting active layer?
                 // Read the selected features from the map
-                //ReadMapSelection(false);
+                //await ReadMapSelectionAsync(false);
             }
             else
             {
@@ -1374,7 +1374,7 @@ namespace HLU.UI.ViewModel
 
         #region Internal properties
 
-        internal ArcMapApp GISApplication
+        internal ArcProApp GISApplication
         {
             get { return _gisApp; }
         }
@@ -1810,13 +1810,13 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Get the image for the ReadMapSelection button.
+        /// Get the image for the ReadMapSelectionAsync button.
         /// </summary>
         public static ImageSource ButtonReadMapSelectionImg
         {
             get
             {
-                string imageSource = "pack://application:,,,/HLUTool;component/Icons/ReadMapSelection.png";
+                string imageSource = "pack://application:,,,/HLUTool;component/Icons/ReadMapSelectionAsync.png";
                 return new BitmapImage(new Uri(imageSource)) as ImageSource;
             }
         }
@@ -2263,6 +2263,9 @@ namespace HLU.UI.ViewModel
 
         #region Navigation Commands
 
+        private ICommand _executeAsyncCommand;
+        public ICommand ExecuteAsyncCommand => _executeAsyncCommand ??= new RelayCommand(async () => await ExecuteAsyncTask(), () => true);
+
         /// <summary>
         /// Navigate to first record command.
         /// </summary>
@@ -2272,14 +2275,13 @@ namespace HLU.UI.ViewModel
             {
                 if (_navigateFirstCommand == null)
                 {
-                    Action<object> navigateFirstAction = new(this.NavigateFirstClicked);
-                    _navigateFirstCommand = new RelayCommand(navigateFirstAction, param => this.CanNavigateBackward);
+                    _navigateFirstCommand ??= new RelayCommand2(async () => await NavigateFirstClickedAsync(), () => true);
                 }
                 return _navigateFirstCommand;
             }
         }
 
-        private void NavigateFirstClicked(object param)
+        private async Task NavigateFirstClickedAsync()
         {
             //---------------------------------------------------------------------
             // CHANGED: CR22 (Record selectors)
@@ -2287,7 +2289,8 @@ namespace HLU.UI.ViewModel
             // whilst moving to the new Incid.
             ChangeCursor(Cursors.Wait, "Processing ...");
 
-            IncidCurrentRowIndex = 1;
+            // Move to the first record.
+            await MoveIncidCurrentRowIndexAsync(1);
 
             ChangeCursor(Cursors.Arrow, null);
             //---------------------------------------------------------------------
@@ -2314,6 +2317,7 @@ namespace HLU.UI.ViewModel
             {
                 if (_navigatePreviousCommand == null)
                 {
+                    _navigatePreviousCommand ??= new RelayCommand2(async () => await NavigateFirstAsync(), () => true);
                     Action<object> navigatePreviousAction = new(this.NavigatePreviousClicked);
                     _navigatePreviousCommand = new RelayCommand(navigatePreviousAction, param => this.CanNavigateBackward);
                 }
@@ -2321,7 +2325,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        private void NavigatePreviousClicked(object param)
+        private void NavigatePreviousClickedAsync(object param)
         {
             //---------------------------------------------------------------------
             // CHANGED: CR22 (Record selectors)
@@ -2488,8 +2492,10 @@ namespace HLU.UI.ViewModel
         private void LogicalSplitClicked(object param)
         {
             _autoSplit = false;
+
             // Get the GIS layer selection again (just in case)
-            ReadMapSelection(false);
+            ReadMapSelectionAsync(false).GetAwaiter().GetResult();
+
             _autoSplit = true;
 
             // Check the selected rows are unique before attempting to split them.
@@ -2518,7 +2524,7 @@ namespace HLU.UI.ViewModel
         {
             _autoSplit = false;
             // Get the GIS layer selection again (just in case)
-            ReadMapSelection(false);
+            ReadMapSelectionAsync(false).GetAwaiter().GetResult();
             _autoSplit = true;
 
             ViewModelWindowMainSplit vmSplit = new(this);
@@ -2612,7 +2618,7 @@ namespace HLU.UI.ViewModel
         private void LogicalMergeClicked(object param)
         {
             // Get the GIS layer selection again (just in case)
-            ReadMapSelection(false);
+            ReadMapSelectionAsync(false).GetAwaiter().GetResult();
 
             // Check the selected rows are unique before attempting to merge them.
             if (!_gisApp.SelectedRowsUnique())
@@ -2639,7 +2645,7 @@ namespace HLU.UI.ViewModel
         private void PhysicalMergeClicked(object param)
         {
             // Get the GIS layer selection again (just in case)
-            ReadMapSelection(false);
+            ReadMapSelectionAsync(false).GetAwaiter().GetResult();
 
             // Check the selected rows are unique before attempting to merge them.
             if (!_gisApp.SelectedRowsUnique())
@@ -2766,6 +2772,11 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        private void UpdateClicked(object param)
+        {
+            UpdateAsync(param);
+        }
+
         //---------------------------------------------------------------------
         // CHANGED: CR10 (Attribute updates for incid subsets)
         // Enable users to change the attributes for an incid and then
@@ -2779,7 +2790,7 @@ namespace HLU.UI.ViewModel
         /// UpdateCommand event handler.
         /// </summary>
         /// <param name="param"></param>
-        private void UpdateClicked(object param)
+        private async Task UpdateAsync(object param)
         {
             // Check if the GIS and database are in sync.
             if ((_toidsIncidGisCount > _toidsIncidDbCount) ||
@@ -2887,10 +2898,13 @@ namespace HLU.UI.ViewModel
 
             DispatcherHelper.DoEvents();
 
-            // Recheck the selected features in GIS to make sure they
-            // all belong to the current incid.
+            // Initialise the GIS selection table.
             _gisSelection = NewGisSelectionTable();
-            _gisApp.ReadMapSelection(ref _gisSelection);
+
+            // Recheck the selected features in GIS to make sure they
+            // all belong to the current incid (passing a new GIS
+            // selection table so that it knows the columns to return.
+            _gisSelection = await _gisApp.ReadMapSelectionAsync(_gisSelection);
 
             // Count the number of toids and fragments for the current incid
             // selected in the GIS and in the database.
@@ -3244,7 +3258,7 @@ namespace HLU.UI.ViewModel
                 //---------------------------------------------------------------------
                 // CHANGED: CR49 Process proposed OSMM Updates
                 // Functionality to process proposed OSMM Updates.
-                //    
+                //
                 // If the Cancel button has been clicked then we need
                 // to work out which mode was active and cancel the
                 // right one
@@ -3474,7 +3488,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 //---------------------------------------------------------------------
-                // FIX: 103 Accept/Reject OSMM updates in edit mode.     
+                // FIX: 103 Accept/Reject OSMM updates in edit mode.
                 //
                 // Can start OSMM Update mode if in edit mode,
                 // and user is authorised,
@@ -6257,7 +6271,7 @@ namespace HLU.UI.ViewModel
         #region Read Map Selection Command
 
         /// <summary>
-        /// ReadMapSelection command.
+        /// ReadMapSelectionAsync command.
         /// </summary>
         public ICommand ReadMapSelectionCommand
         {
@@ -6276,7 +6290,7 @@ namespace HLU.UI.ViewModel
         {
             // Get the GIS layer selection and warn the user if no
             // features are found
-            ReadMapSelection(true);
+            ReadMapSelectionAsync(true);
         }
 
         internal bool CanReadMapSelection
@@ -6289,7 +6303,7 @@ namespace HLU.UI.ViewModel
                 //---------------------------------------------------------------------
         }
 
-        internal void ReadMapSelection(bool showMessage)
+        internal async Task ReadMapSelectionAsync(bool showMessage)
         {
             try
             {
@@ -6315,9 +6329,12 @@ namespace HLU.UI.ViewModel
 
                 DispatcherHelper.DoEvents();
 
-                // Read which features are selected in GIS
+                // Initialise the GIS selection table.
                 _gisSelection = NewGisSelectionTable();
-                _gisApp.ReadMapSelection(ref _gisSelection);
+
+                // Read which features are selected in GIS (passing it a new
+                // GIS selection table so that it knows the columns to return.
+                _gisSelection = await _gisApp.ReadMapSelectionAsync(_gisSelection);
 
                 // Count how many incids, toids and fragments are selected in GIS
                 _incidSelectionWhereClause = null;
@@ -7224,6 +7241,10 @@ namespace HLU.UI.ViewModel
             return outTable;
         }
 
+        /// <summary>
+        /// Initialise the GIS selection table.
+        /// </summary>
+        /// <returns></returns>
         private DataTable NewGisSelectionTable()
         {
             DataTable outTable = new();
@@ -7844,80 +7865,87 @@ namespace HLU.UI.ViewModel
         public int IncidCurrentRowIndex
         {
             get { return _incidCurrentRowIndex; }
-            set
+        }
+
+        /// <summary>
+        /// Gets or sets the index of the incid current row.
+        /// </summary>
+        /// <value>
+        /// The index of the incid current row.
+        /// </value>
+        public async Task MoveIncidCurrentRowIndexAsync(int value)
+        {
+            MessageBoxResult userResponse = MessageBoxResult.No;
+            // Check there are no outstanding edits (unless this has
+            // already been checked before reading the map selection).
+            if (!_readingMap)
+                userResponse = CheckDirty();
+
+            // Process based on the response ...
+            // Yes = move to the new incid
+            // No = move to the new incid
+            // Cancel = don't move to the new incid
+            switch (userResponse)
             {
-                MessageBoxResult userResponse = MessageBoxResult.No;
-                // Check there are no outstanding edits (unless this has
-                // already been checked before reading the map selection).
-                if (!_readingMap)
-                    userResponse = CheckDirty();
+                case MessageBoxResult.Yes:
+                    break;
+                case MessageBoxResult.No:
+                    //---------------------------------------------------------------------
+                    // CHANGED: CR49 Process proposed OSMM Updates
+                    // Clear the form and warn the user when there are no more records
+                    // when in OSMM Update mode.
+                    //
+                    if (_osmmUpdateMode == true && ((value > 0) &&
+                        (IsFiltered && ((_incidSelection == null) || (value > _incidSelection.Rows.Count)))))
+                    {
+                        // Clear the selection (filter).
+                        _incidSelection = null;
 
-                // Process based on the response ...
-                // Yes = move to the new incid
-                // No = move to the new incid
-                // Cancel = don't move to the new incid
-                switch (userResponse)
-                {
-                    case MessageBoxResult.Yes:
-                        break;
-                    case MessageBoxResult.No:
-                        //---------------------------------------------------------------------
-                        // CHANGED: CR49 Process proposed OSMM Updates
-                        // Clear the form and warn the user when there are no more records
-                        // when in OSMM Update mode.
-                        //
-                        if (_osmmUpdateMode == true && ((value > 0) &&
-                            (IsFiltered && ((_incidSelection == null) || (value > _incidSelection.Rows.Count)))))
-                        {
-                            // Clear the selection (filter).
-                            _incidSelection = null;
+                        // Indicate the selection didn't come from the map.
+                        _filterByMap = false;
 
-                            // Indicate the selection didn't come from the map.
-                            _filterByMap = false;
+                        // Indicate there are no more OSMM updates to review.
+                        _osmmUpdatesEmpty = true;
 
-                            // Indicate there are no more OSMM updates to review.
-                            _osmmUpdatesEmpty = true;
+                        // Clear all the form fields (except the habitat class
+                        // and habitat type).
+                        ClearForm();
 
-                            // Clear all the form fields (except the habitat class
-                            // and habitat type).
-                            ClearForm();
+                        // Clear the map selection.
+                        _gisApp.ClearMapSelection();
 
-                            // Clear the map selection.
-                            _gisApp.ClearMapSelection();
+                        // Reset the map counters
+                        _incidsSelectedMapCount = 0;
+                        _toidsSelectedMapCount = 0;
+                        _fragsSelectedMapCount = 0;
 
-                            // Reset the map counters
-                            _incidsSelectedMapCount = 0;
-                            _toidsSelectedMapCount = 0;
-                            _fragsSelectedMapCount = 0;
+                        // Refresh all the controls
+                        RefreshAll();
 
-                            // Refresh all the controls
-                            RefreshAll();
+                        // Reset the cursor back to normal.
+                        ChangeCursor(Cursors.Arrow, null);
 
-                            // Reset the cursor back to normal.
-                            ChangeCursor(Cursors.Arrow, null);
-
-                            // Warn the user that no more records were found.
-                            MessageBox.Show("No more records found.", "HLU: OSMM Updates",
-                                MessageBoxButton.OK, MessageBoxImage.Information);
-
-                            break;
-                        }
-                        //---------------------------------------------------------------------
-
-                        if (_bulkUpdateMode != false || ((value > 0) &&
-                            (IsFiltered && ((_incidSelection == null) || (value <= _incidSelection.Rows.Count))) ||
-                            (!IsFiltered && ((_incidSelection == null) || (value <= _incidRowCount)))))
-                        {
-                            _incidCurrentRowIndex = value;
-                        }
-
-                        // Move to the new incid
-                        NewIncidCurrentRow();
+                        // Warn the user that no more records were found.
+                        MessageBox.Show("No more records found.", "HLU: OSMM Updates",
+                            MessageBoxButton.OK, MessageBoxImage.Information);
 
                         break;
-                    case MessageBoxResult.Cancel:
-                        break;
-                }
+                    }
+                    //---------------------------------------------------------------------
+
+                    if (_bulkUpdateMode != false || ((value > 0) &&
+                        (IsFiltered && ((_incidSelection == null) || (value <= _incidSelection.Rows.Count))) ||
+                        (!IsFiltered && ((_incidSelection == null) || (value <= _incidRowCount)))))
+                    {
+                        _incidCurrentRowIndex = value;
+                    }
+
+                    // Move to the new incid
+                    await NewIncidCurrentRowAsync();
+
+                    break;
+                case MessageBoxResult.Cancel:
+                    break;
             }
         }
 
@@ -8021,14 +8049,20 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Initiates all the necessary actions when moving to another incid row.
         /// </summary>
-        private void NewIncidCurrentRow()
+        private async Task NewIncidCurrentRowAsync()
         {
             // Re-check GIS selection in case it has changed.
             if (_gisApp != null)
             {
+                // Initialise the GIS selection table.
                 _gisSelection = NewGisSelectionTable();
-                _gisApp.ReadMapSelection(ref _gisSelection);
+
+                // Recheck the selected features in GIS (passing a new GIS
+                // selection table so that it knows the columns to return.
+                _gisSelection = await _gisApp.ReadMapSelectionAsync(_gisSelection);
+
                 _incidSelectionWhereClause = null;
+
                 AnalyzeGisSelectionSet(false);
             }
 

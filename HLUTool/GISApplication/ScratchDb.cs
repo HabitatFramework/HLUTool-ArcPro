@@ -173,7 +173,7 @@ namespace HLU.GISApplication
         /// <returns>
         /// A list of sql filter conditions.
         /// </returns>
-        public static List<SqlFilterCondition> GisWhereClause(DataTable incidSelection, ArcMapApp gisApp, bool useIncidTable)
+        public static List<SqlFilterCondition> GisWhereClause(DataTable incidSelection, ArcProApp gisApp, bool useIncidTable)
         {
             List<SqlFilterCondition> whereClause = [];
             SqlFilterCondition cond = new();

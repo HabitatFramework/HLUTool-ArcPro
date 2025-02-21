@@ -45,14 +45,14 @@ namespace HLU.UI.ViewModel
         private int _incidOrdinal;
         private int _selectedIndex = -1;
         private int[] _keyOrdinals;
-        private ArcMapApp _gisApp;
+        private ArcProApp _gisApp;
 
         #endregion
 
         #region Constructor
 
         public ViewModelMergeFeatures(T selectedFeatures, int[] keyOrdinals, int incidOrdinal,
-            HluDataSet.incid_mm_polygonsRow[] childRows, ArcMapApp gisApp)
+            HluDataSet.incid_mm_polygonsRow[] childRows, ArcProApp gisApp)
         {
             _selectedFeatures = selectedFeatures;
             _keyOrdinals = keyOrdinals;

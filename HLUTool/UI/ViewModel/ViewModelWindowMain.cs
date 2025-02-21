@@ -652,7 +652,7 @@ namespace HLU.UI.ViewModel
 
                     // Get the GIS layer selection and warn the user if no
                     // features are found
-                    ReadMapSelection(true);
+                    ReadMapSelectionAsync(true);
                 }
             }
         }

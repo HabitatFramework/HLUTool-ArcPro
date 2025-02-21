@@ -71,7 +71,7 @@ using ArcGIS.Core.Data.Analyst3D;
 
 namespace HLU.GISApplication
 {
-    internal partial class ArcMapApp : SqlBuilder
+    internal partial class ArcProApp : SqlBuilder
     {
         public enum DistanceUnits
         {
@@ -631,33 +631,56 @@ namespace HLU.GISApplication
         }
         //---------------------------------------------------------------------
 
-        public void ReadMapSelection(ref DataTable resultTable)
+        // Asynchronous method to read the map selection and populate the DataTable
+        public async Task<DataTable> ReadMapSelectionAsync(DataTable resultTable)
         {
-            if (resultTable == null) return;
+            // Return if the supplied resultTable is null
+            if (resultTable == null)
+                return resultTable;
 
-            //try
-            //{
-            //    //MessageBox.Show("Requesting read of map selection", "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Information);
+            // Execute the query on the main CIM thread
+            await QueuedTask.Run(() =>
+            {
+                try
+                {
+                    // Get the selection from the FeatureLayer
+                    var selection = _hluLayer.GetSelection();
 
-            //    List<string> selectionList = IpcArcMap(new string[] { "rs" }.Concat(
-            //        resultTable.Columns.Cast<DataColumn>().Select(c => c.ColumnName)).ToArray());
+                    // Return if there are no selected features
+                    if (selection.GetCount() == 0)
+                        return;
 
-            //    if (selectionList == null)
-            //    {
-            //        //MessageBox.Show("Returned selection list is null", "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Information);
+                    // Use a RowCursor to iterate through the selected features
+                    using RowCursor rowCursor = selection.Search();
 
-            //        return;
-            //    }
+                    // Loop through the selected features until there are no more
+                    while (rowCursor.MoveNext())
+                    {
+                        // Get the current feature
+                        using Feature feature = (Feature)rowCursor.Current;
 
-            //    //MessageBox.Show(string.Format("Returned selection list has {0} records", selectionList.Count), "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Information);
+                        // Create a new DataRow
+                        DataRow dataRow = resultTable.NewRow();
 
-            //    foreach (string s in selectionList)
-            //    {
-            //        string[] items = s.Split(PipeFieldDelimiter);
-            //        resultTable.Rows.Add(items);
-            //    }
-            //}
-            //catch { throw; }
+                        // Populate the DataRow with feature attributes
+                        for (int i = 0; i < resultTable.Columns.Count; i++)
+                        {
+                            dataRow[i] = feature[i];
+                        }
+
+                        // Add the DataRow to the DataTable
+                        resultTable.Rows.Add(dataRow);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Throw an exception if there is an error
+                    throw new Exception("Error reading map selection: " + ex.Message);
+                }
+            });
+
+            // Return the resultTable
+            return resultTable;
         }
 
         //---------------------------------------------------------------------

@@ -326,7 +326,7 @@ namespace HLU.UI.ViewModel
                         _viewModelMain.RefillIncidTable = true;
 
                         // Get the GIS layer selection again
-                        _viewModelMain.ReadMapSelection(true);
+                        _viewModelMain.ReadMapSelectionAsync(true);
                     }
                 }
                 catch
@@ -500,7 +500,7 @@ namespace HLU.UI.ViewModel
                         _viewModelMain.RefillIncidTable = true;
 
                         // Get the GIS layer selection again
-                        _viewModelMain.ReadMapSelection(true);
+                        _viewModelMain.ReadMapSelectionAsync(true);
                     }
                     catch
                     {

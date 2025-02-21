@@ -49,7 +49,7 @@ namespace HLU.GISApplication
     /// <summary>
     /// This class provides ArcGIS Pro map functions.
     /// </summary>
-    internal partial class ArcMapApp
+    internal partial class ArcProApp
     {
         #region Fields
 
@@ -63,7 +63,7 @@ namespace HLU.GISApplication
         /// <summary>
         /// Set the global variables.
         /// </summary>
-        public ArcMapApp()
+        public ArcProApp()
         {
             // Get the active map view (if there is one).
             _activeMapView = GetActiveMapView();

@@ -256,7 +256,7 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.RefillIncidTable = true;
 
                     // Get the GIS layer selection again
-                    _viewModelMain.ReadMapSelection(true);
+                    _viewModelMain.ReadMapSelectionAsync(true);
                 }
             }
             return success;
@@ -314,7 +314,7 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.HistoryColumns.Concat([ new(
                             _viewModelMain.HluDataset.history.modified_toidfragidColumn.ColumnName.Replace(
                             _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.ColumnName, String.Empty) +
-                            ArcMapApp.HistoryAdditionalFieldsDelimiter +
+                            ArcProApp.HistoryAdditionalFieldsDelimiter +
                             _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.ColumnName,
                             _viewModelMain.HluDataset.history.modified_toidfragidColumn.DataType)]).ToArray());
 
@@ -394,7 +394,7 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.RefillIncidTable = true;
 
                     // Get the GIS layer selection again
-                    _viewModelMain.ReadMapSelection(true);
+                    _viewModelMain.ReadMapSelectionAsync(true);
                 }
             }
             //}
