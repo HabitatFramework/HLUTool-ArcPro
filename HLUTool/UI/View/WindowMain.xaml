@@ -3021,37 +3021,44 @@
                     <Button x:Name="ButtonFirstRecord"
                             Grid.Column="1"
                             Margin="0,0,2,0"
-                            Command="{Binding Path=NavigateFirstCommand}"
+                            Command="{Binding NavigateFirstCommand}"
                             Style="{DynamicResource Esri_ButtonUpSmall}"
                             ToolTip="First record">
-                    </Button>
+                            <!-- IsEnabled="{Binding CanNavigateBackward}" -->
+                        </Button>
                     <Button Name="ButtonPreviousRecord"
                             Grid.Column="2"
                             Margin="2,0,2,0"
-                            Command="{Binding Path=NavigatePreviousCommand}"
+                            Command="{Binding NavigatePreviousCommand}"
                             Style="{DynamicResource Esri_ButtonBackSmall}"
                             ToolTip="Previous record">
                     </Button>
-                    <TextBox Name="TextBoxRecordNumber"
+                        <TextBox Name="TextBoxRecordNumber"
                              Grid.Column="3"
                              Margin="2,0,2,0"
                              Text="{Binding IncidCurrentRowIndex,
                                             Mode=TwoWay,
+                                            UpdateSourceTrigger=Explicit,
                                             ValidatesOnDataErrors=True}"
                              Tag="ErrorContent"
                              TextAlignment="Center"
-                             VerticalAlignment="Center"/>
-                    <Button x:Name="ButtonNextRecord"
+                             VerticalAlignment="Center">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Enter" Command="{Binding NavigateIncidCommand}" CommandParameter="{Binding ElementName=TextBoxRecordNumber, Path=Text}" />
+                            </TextBox.InputBindings>
+                        </TextBox>
+                        <Button x:Name="ButtonNextRecord"
                             Grid.Column="4"
                             Margin="2,0,2,0"
-                            Command="{Binding Path=NavigateNextCommand}"
+                            Command="{Binding NavigateNextCommand}"
                             Style="{DynamicResource Esri_ButtonForwardSmall}"
                             ToolTip="Next record">
-                    </Button>
+                            <!-- IsEnabled="{Binding CanNavigateForward}" -->
+                        </Button>
                     <Button Name="ButtonLastRecord"
                             Grid.Column="5"
                             Margin="2,0,0,0"
-                            Command="{Binding Path=NavigateLastCommand}"
+                            Command="{Binding NavigateLastCommand}"
                             Style="{DynamicResource Esri_ButtonDownSmall}"
                             ToolTip="Last record">
                     </Button>
@@ -3089,6 +3096,7 @@
                             Grid.Column="1"
                             Margin="0,0,2,0"
                             Command="{Binding Path=CancelBulkUpdateCommand}"
+                            IsEnabled="{Binding CanCancelBulkUpdate}"
                             Visibility="{Binding Path=ShowInBulkUpdateMode}"
                             HorizontalAlignment="Center"
                             Style="{DynamicResource Esri_Button}">
@@ -3099,10 +3107,10 @@
                             Margin="2,0,6,0"
                             Background="Red"
                             Command="{Binding UpdateCommand}"
+                            IsEnabled="{Binding CanUpdate}"
                             Content="Appl_y"
                             Foreground="White"
                             HorizontalAlignment="Center"
-                            IsEnabled="{Binding CanUpdate}"
                             Style="{DynamicResource Esri_Button}" />
                 </Grid>
             </Grid>
@@ -3176,17 +3184,17 @@
                             Margin="2,0,0,0"
                             Background="#FF939393"
                             Command="{Binding OSMMSkipCommand}"
+                            IsEnabled="{Binding CanOSMMSkip, UpdateSourceTrigger=PropertyChanged}"
                             Content="_Skip"
-                            Foreground="White"
-                            IsEnabled="{Binding CanOSMMSkip, UpdateSourceTrigger=PropertyChanged}" />
+                            Foreground="White" />
                     <Button x:Name="ButtonOSMMReject"
                             Grid.Column="1"
                             Margin="2,0,0,0"
                             Background="DarkOrange"
                             Command="{Binding OSMMRejectCommand}"
+                            IsEnabled="{Binding CanOSMMAccept}"
                             Content="{Binding OSMMRejectText}"
                             Foreground="White"
-                            IsEnabled="{Binding CanOSMMAccept}"
 	                        ToolTip="Hold down 'Ctrl' key to reject all remaining records in filter"
 		                    ToolTipService.ShowOnDisabled="True"
 							Tag="{Binding OSMMRejectTag,
@@ -3197,9 +3205,9 @@
                             Margin="2,0,0,0"
                             Background="DarkGreen"
                             Command="{Binding OSMMAcceptCommand}"
+                            IsEnabled="{Binding CanOSMMAccept}"
                             Content="{Binding OSMMAcceptText}"
                             Foreground="White"
-                            IsEnabled="{Binding CanOSMMAccept}"
 	                        ToolTip="Hold down 'Ctrl' key to accept all remaining records in filter"
 		                    ToolTipService.ShowOnDisabled="True"
 							Tag="{Binding OSMMAcceptTag,
@@ -3239,12 +3247,16 @@
             <Grid Name="GridProcessStatus"
                   Grid.Row="5"
                   Margin="6,6,6,6"
-                  Visibility="{Binding IsProcessing}">
+                  Visibility="Visible">
 
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="22" />
+                    </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="22" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
+
                 <controls:CircularAnimationControl
                 Grid.Column="0"
                 Foreground="{DynamicResource Esri_BorderSelectedBrush }"
@@ -3263,9 +3275,11 @@
                   Grid.Row="6"
                   Margin="6,6,6,6"
                   Visibility="{Binding ProgressAnimating}">
+
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
+
                 <ProgressBar x:Name="ProgressBar"
                             Grid.Column="0"
                             Height="22"

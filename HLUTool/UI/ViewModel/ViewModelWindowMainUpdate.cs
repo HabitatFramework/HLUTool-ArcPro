@@ -45,6 +45,7 @@ namespace HLU.UI.ViewModel
             _viewModelMain = viewModelMain;
         }
 
+        //TODO: Add wait?
         /// <summary>
         /// Writes changes made to current incid back to database and GIS layer.
         /// Also synchronizes shadow copy of GIS layer in DB and writes history.

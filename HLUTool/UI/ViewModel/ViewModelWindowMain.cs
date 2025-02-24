@@ -191,8 +191,8 @@ namespace HLU.UI.ViewModel
         /// </summary>
         internal ViewModelWindowMain()
         {
-            // Initialise the DockPane components and wait for it to complete.
-            InitializeComponentAsync().GetAwaiter().GetResult();
+            // Initialise the DockPane components (don't wait for it to complete).
+            InitializeComponentAsync();
         }
 
         /// <summary>
@@ -200,8 +200,8 @@ namespace HLU.UI.ViewModel
         /// </summary>
         internal ViewModelWindowMain(bool minimal)
         {
-            // Load the data grid combo box sources and wait for it to complete.
-            LoadComboBoxSourcesAsync().GetAwaiter().GetResult();
+            // Load the data grid combo box sources.
+            LoadComboBoxSources();
         }
 
         /// <summary>
@@ -250,7 +250,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Show the DockPane.
         /// </summary>
-        internal static void Show()
+        internal static async Task Show()
         {
             // Get the dockpane DAML id.
             DockPane pane = FrameworkApplication.DockPaneManager.Find(_dockPaneID);
@@ -262,7 +262,7 @@ namespace HLU.UI.ViewModel
 
             //// If the ViewModel is uninitialised then initialise it.
             if (!vm.Initialised)
-                vm.InitializeComponentAsync();
+                await vm.InitializeComponentAsync();
 
             // If the ViewModel is in error then don't show the dockpane.
             if (vm.InError)
@@ -652,7 +652,7 @@ namespace HLU.UI.ViewModel
 
                     // Get the GIS layer selection and warn the user if no
                     // features are found
-                    ReadMapSelectionAsync(true);
+                    await ReadMapSelectionAsync(true);
                 }
             }
         }
@@ -685,10 +685,10 @@ namespace HLU.UI.ViewModel
     /// </summary>
     internal class WindowMain_ShowButton : Button
     {
-        protected override void OnClick()
+        protected override async void OnClick()
         {
             // Show the dock pane.
-            ViewModelWindowMain.Show();
+            await ViewModelWindowMain.Show();
         }
     }
 }

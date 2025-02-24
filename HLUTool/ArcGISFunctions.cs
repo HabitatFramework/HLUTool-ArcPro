@@ -2837,9 +2837,10 @@ namespace HLU.GISApplication
 
                     if (activate)
                     {
+                        _hluLayer = featureLayer;
                         _hluFieldMap = hluFieldMap;
                         _hluFieldNames = hluFieldNames;
-
+                        _hluFeatureClass = featureClass;
                         _hluCurrentLayer = new(featureLayer.Name);
                     }
 

@@ -30,6 +30,8 @@ using HLU.Data;
 using HLU.Data.Model;
 using HLU.Properties;
 using HLU.UI.View;
+using System.Windows.Threading;
+using System.Threading.Tasks;
 
 namespace HLU.UI.ViewModel
 {
@@ -57,7 +59,7 @@ namespace HLU.UI.ViewModel
         /// There must be at least two selected features that either share the same toid but not the same incid,
         /// or they do not share the same incid.
         /// </summary>
-        internal bool LogicalMerge()
+        internal async Task<bool> LogicalMergeAsync()
         {
             if ((_viewModelMain.GisSelection == null) || (_viewModelMain.GisSelection.Rows.Count == 0))
             {
@@ -80,12 +82,12 @@ namespace HLU.UI.ViewModel
             else if ((_viewModelMain.ToidsSelectedMapCount == 1) && (_viewModelMain.IncidsSelectedMapCount > 1))
             {
                 // selected features share same toid but not incid
-                return PerformLogicalMerge(true);
+                return await PerformLogicalMergeAsync(true);
             }
             else if (_viewModelMain.IncidsSelectedMapCount > 1)
             {
                 // selected features do not share same incid
-                return PerformLogicalMerge(false);
+                return await PerformLogicalMergeAsync(false);
             }
             else
                 return false;
@@ -101,7 +103,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// There must be at least two selected features that share the same incid and toid.
         /// </summary>
-        internal bool PhysicalMerge()
+        internal async Task<bool> PhysicalMergeAsync()
         {
             if ((_viewModelMain.GisSelection == null) || (_viewModelMain.GisSelection.Rows.Count == 0))
             {
@@ -124,7 +126,7 @@ namespace HLU.UI.ViewModel
             else if ((_viewModelMain.IncidsSelectedMapCount == 1) && (_viewModelMain.ToidsSelectedMapCount == 1))
             {
                 // selected features share same incid and toid
-                return PerformPhysicalMerge();
+                return await PerformPhysicalMergeAsync();
             }
             else
                 return false;
@@ -137,7 +139,7 @@ namespace HLU.UI.ViewModel
         // whether to notify the user following the completion of
         // the merge.
         //
-        private bool PerformLogicalMerge(bool physicallyMerge)
+        private async Task<bool> PerformLogicalMergeAsync(bool physicallyMerge)
         {
             bool success = true;
             try
@@ -305,7 +307,7 @@ namespace HLU.UI.ViewModel
                             _viewModelMain.GisSelection.Rows.Add(newRow);
                         }
 
-                        PerformPhysicalMerge();
+                        await PerformPhysicalMergeAsync();
                     }
                     else
                     {
@@ -317,7 +319,7 @@ namespace HLU.UI.ViewModel
 
                         // Reset the incid and map selections but don't move
                         // to the first incid in the database.
-                        _viewModelMain.ClearFilter(false);
+                        await _viewModelMain.ClearFilterAsync(false);
 
                         // Synch with the GIS selection.
                         // Force the Incid table to be refilled because it has been
@@ -326,7 +328,7 @@ namespace HLU.UI.ViewModel
                         _viewModelMain.RefillIncidTable = true;
 
                         // Get the GIS layer selection again
-                        _viewModelMain.ReadMapSelectionAsync(true);
+                        await _viewModelMain.ReadMapSelectionAsync(true);
                     }
                 }
                 catch
@@ -360,7 +362,7 @@ namespace HLU.UI.ViewModel
         // whether to notify the user following the completion of
         // the merge.
         //
-        private bool PerformPhysicalMerge()
+        private async Task<bool> PerformPhysicalMergeAsync()
         {
             bool success = true;
             try
@@ -491,7 +493,7 @@ namespace HLU.UI.ViewModel
 
                         // Reset the incid and map selections but don't move
                         // to the first incid in the database.
-                        _viewModelMain.ClearFilter(false);
+                        await _viewModelMain.ClearFilterAsync(false);
 
                         // Synch with the GIS selection.
                         // Force the Incid table to be refilled because it has been
@@ -500,7 +502,7 @@ namespace HLU.UI.ViewModel
                         _viewModelMain.RefillIncidTable = true;
 
                         // Get the GIS layer selection again
-                        _viewModelMain.ReadMapSelectionAsync(true);
+                        await _viewModelMain.ReadMapSelectionAsync(true);
                     }
                     catch
                     {

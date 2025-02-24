@@ -73,6 +73,7 @@ namespace HLU.UI.ViewModel
 
         #region Bulk Update
 
+        //TODO: Add wait?
         /// <summary>
         /// Starts the bulk update mode.
         /// </summary>
@@ -433,6 +434,7 @@ namespace HLU.UI.ViewModel
             }
             finally
             {
+                //TODO: Await call.
                 BulkUpdateResetControls();
             }
         }
@@ -442,6 +444,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public void CancelBulkUpdate()
         {
+            //TODO: Await call.
             BulkUpdateResetControls();
         }
 
@@ -460,7 +463,8 @@ namespace HLU.UI.ViewModel
             _viewModelMain.BulkUpdateMode = null;
 
             // Clear the active filter.
-            _viewModelMain.ClearFilter(true);
+            //TODO: Await call.
+            _viewModelMain.ClearFilterAsync(true);
 
             // Stop the bulk update mode
             _viewModelMain.BulkUpdateMode = false;
@@ -808,7 +812,8 @@ namespace HLU.UI.ViewModel
             _viewModelMain.OSMMBulkUpdateMode = false;
 
             // Clear the active filter.
-            _viewModelMain.ClearFilter(true);
+            //TODO: Await call.
+            _viewModelMain.ClearFilterAsync(true);
 
             // Stop the bulk update mode
             _viewModelMain.BulkUpdateMode = false;

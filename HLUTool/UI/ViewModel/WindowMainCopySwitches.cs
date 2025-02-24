@@ -856,8 +856,8 @@ namespace HLU.UI.ViewModel
                     String.Join(", ", errorProps.ToArray())), "HLU: Copy Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
 
-            //TODO: Compile dependency?
-            //vmMain.OnPropertyChanged(nameof(CanPaste));
+            //DONE: Compile dependency?
+            vmMain.OnPropertyChanged(nameof(vmMain.CanPaste));
         }
 
         internal void PasteValues(ViewModelWindowMain vmMain)

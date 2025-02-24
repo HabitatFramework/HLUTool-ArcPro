@@ -46,7 +46,6 @@ namespace HLU.Data
         #region Fields
 
         private string _layerName;
-        private static int _mapWindowsCount;
 
         #endregion
 

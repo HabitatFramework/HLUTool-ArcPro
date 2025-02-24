@@ -78,7 +78,7 @@ namespace HLU
         /// </summary>
         /// <param name="sdeFileName"></param>
         /// <returns>bool</returns>
-        public static async Task<bool> CheckSDEConnection(string sdeFileName)
+        public static async Task<bool> CheckSDEConnectionAsync(string sdeFileName)
         {
             bool _sdeConnectionValid = false;
 

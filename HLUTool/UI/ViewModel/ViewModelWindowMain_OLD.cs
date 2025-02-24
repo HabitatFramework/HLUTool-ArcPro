@@ -84,6 +84,7 @@ namespace HLU.UI.ViewModel
         private ICommand _navigatePreviousCommand;
         private ICommand _navigateNextCommand;
         private ICommand _navigateLastCommand;
+        private ICommand _navigateIncidCommand;
         private ICommand _filterByAttributesCommand;
         private ICommand _filterByAttributesOSMMCommand;
         private ICommand _filterByIncidCommand;
@@ -292,7 +293,6 @@ namespace HLU.UI.ViewModel
 
         #region Variables
 
-        private int _mapWindowsCount;
         private bool _showingReasonProcessGroup = false;
         private bool _showingOSMMPendingGroup = false;
 
@@ -586,7 +586,7 @@ namespace HLU.UI.ViewModel
                 LoadLookupTables();
 
                 // Move to first row
-                MoveIncidCurrentRowIndexAsync(1);
+                await MoveIncidCurrentRowIndexAsync(1);
 
                 // Check the active map is valid (don't check result at this stage)
                 await CheckActiveMapAsync();
@@ -620,7 +620,7 @@ namespace HLU.UI.ViewModel
         /// Load the sources for the data grid combo boxes.
         /// </summary>
         /// <returns></returns>
-        internal async Task<bool> LoadComboBoxSourcesAsync()
+        internal bool LoadComboBoxSources()
         {
             try
             {
@@ -1810,13 +1810,13 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Get the image for the ReadMapSelectionAsync button.
+        /// Get the image for the ReadMapSelection button.
         /// </summary>
         public static ImageSource ButtonReadMapSelectionImg
         {
             get
             {
-                string imageSource = "pack://application:,,,/HLUTool;component/Icons/ReadMapSelectionAsync.png";
+                string imageSource = "pack://application:,,,/HLUTool;component/Icons/ReadMapSelection.png";
                 return new BitmapImage(new Uri(imageSource)) as ImageSource;
             }
         }
@@ -2263,9 +2263,6 @@ namespace HLU.UI.ViewModel
 
         #region Navigation Commands
 
-        private ICommand _executeAsyncCommand;
-        public ICommand ExecuteAsyncCommand => _executeAsyncCommand ??= new RelayCommand(async () => await ExecuteAsyncTask(), () => true);
-
         /// <summary>
         /// Navigate to first record command.
         /// </summary>
@@ -2275,37 +2272,17 @@ namespace HLU.UI.ViewModel
             {
                 if (_navigateFirstCommand == null)
                 {
-                    _navigateFirstCommand ??= new RelayCommand2(async () => await NavigateFirstClickedAsync(), () => true);
+                    Action<object> navigateFirstAction = new(this.NavigateFirstClicked);
+                    _navigateFirstCommand = new RelayCommand(navigateFirstAction, param => this.CanNavigateBackward);
                 }
                 return _navigateFirstCommand;
             }
         }
 
-        private async Task NavigateFirstClickedAsync()
+        private async void NavigateFirstClicked(object param)
         {
-            //---------------------------------------------------------------------
-            // CHANGED: CR22 (Record selectors)
-            // Show the wait cursor and processing message in the status area
-            // whilst moving to the new Incid.
-            ChangeCursor(Cursors.Wait, "Processing ...");
-
-            // Move to the first record.
-            await MoveIncidCurrentRowIndexAsync(1);
-
-            ChangeCursor(Cursors.Arrow, null);
-            //---------------------------------------------------------------------
-
-            // Check if the GIS and database are in sync.
-            if ((_toidsIncidGisCount > _toidsIncidDbCount) ||
-               (_fragsIncidGisCount > _fragsIncidDbCount))
-            {
-                if (_fragsIncidGisCount == 1)
-                    MessageBox.Show("Map feature not found in database.", "HLU: Selection",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                else
-                    MessageBox.Show("Map features not found in database.", "HLU: Selection",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
+            // Move to first record.
+            await NavigateToRecordAsync(1);
         }
 
         /// <summary>
@@ -2317,7 +2294,6 @@ namespace HLU.UI.ViewModel
             {
                 if (_navigatePreviousCommand == null)
                 {
-                    _navigatePreviousCommand ??= new RelayCommand2(async () => await NavigateFirstAsync(), () => true);
                     Action<object> navigatePreviousAction = new(this.NavigatePreviousClicked);
                     _navigatePreviousCommand = new RelayCommand(navigatePreviousAction, param => this.CanNavigateBackward);
                 }
@@ -2325,33 +2301,13 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        private void NavigatePreviousClickedAsync(object param)
+        private async void NavigatePreviousClicked(object param)
         {
-            //---------------------------------------------------------------------
-            // CHANGED: CR22 (Record selectors)
-            // Show the wait cursor and processing message in the status area
-            // whilst moving to the new Incid.
-            ChangeCursor(Cursors.Wait, "Processing ...");
-
-            IncidCurrentRowIndex -= 1;
-
-            ChangeCursor(Cursors.Arrow, null);
-            //---------------------------------------------------------------------
-
-            // Check if the GIS and database are in sync.
-            if ((_toidsIncidGisCount > _toidsIncidDbCount) ||
-               (_fragsIncidGisCount > _fragsIncidDbCount))
-            {
-                if (_fragsIncidGisCount == 1)
-                    MessageBox.Show("Map feature not found in database.", "HLU: Selection",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                else
-                    MessageBox.Show("Map features not found in database.", "HLU: Selection",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
+            // Move to previous record.
+            await NavigateToRecordAsync(_incidCurrentRowIndex - 1);
         }
 
-        private bool CanNavigateBackward
+        public bool CanNavigateBackward
         {
             get { return IncidCurrentRowIndex > 1; }
         }
@@ -2372,33 +2328,13 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        private void NavigateNextClicked(object param)
+        private async void NavigateNextClicked(object param)
         {
-            //---------------------------------------------------------------------
-            // CHANGED: CR22 (Record selectors)
-            // Show the wait cursor and processing message in the status area
-            // whilst moving to the new Incid.
-            ChangeCursor(Cursors.Wait, "Processing ...");
-
-            IncidCurrentRowIndex += 1;
-
-            ChangeCursor(Cursors.Arrow, null);
-            //---------------------------------------------------------------------
-
-            // Check if the GIS and database are in sync.
-            if ((_toidsIncidGisCount > _toidsIncidDbCount) ||
-               (_fragsIncidGisCount > _fragsIncidDbCount))
-            {
-                if (_fragsIncidGisCount == 1)
-                    MessageBox.Show("Map feature not found in database.", "HLU: Selection",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                else
-                    MessageBox.Show("Map features not found in database.", "HLU: Selection",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
+            // Move to next record.
+            await NavigateToRecordAsync(_incidCurrentRowIndex + 1);
         }
 
-        private bool CanNavigateForward
+        public bool CanNavigateForward
         {
             get
             {
@@ -2423,7 +2359,13 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        private void NavigateLastClicked(object param)
+        private async void NavigateLastClicked(object param)
+        {
+            // Move to last record.
+            await NavigateToRecordAsync(IsFiltered ? _incidSelection.Rows.Count : _incidRowCount);
+        }
+
+        private async Task NavigateToRecordAsync(int value)
         {
             //---------------------------------------------------------------------
             // CHANGED: CR22 (Record selectors)
@@ -2431,7 +2373,8 @@ namespace HLU.UI.ViewModel
             // whilst moving to the new Incid.
             ChangeCursor(Cursors.Wait, "Processing ...");
 
-            IncidCurrentRowIndex = IsFiltered ? _incidSelection.Rows.Count : _incidRowCount;
+            // Move to the first record.
+            await MoveIncidCurrentRowIndexAsync(value);
 
             ChangeCursor(Cursors.Arrow, null);
             //---------------------------------------------------------------------
@@ -2446,6 +2389,41 @@ namespace HLU.UI.ViewModel
                 else
                     MessageBox.Show("Map features not found in database.", "HLU: Selection",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        /// <summary>
+        /// Navigate to the specified record command.
+        /// </summary>
+        public ICommand NavigateIncidCommand
+        {
+            get
+            {
+                if (_navigateIncidCommand == null)
+                {
+                    Action<object> navigateIncidAction = new(this.NavigateIncidClicked);
+                    _navigateIncidCommand = new RelayCommand(navigateIncidAction, param => this.CanNavigateIncid);
+                }
+                return _navigateIncidCommand;
+            }
+        }
+
+        public async void NavigateIncidClicked(object param)
+        {
+            if (param is string newText && int.TryParse(newText, out int value))
+            {
+                // Move to the required incid current row (don't wait).
+                await MoveIncidCurrentRowIndexAsync(value);
+            }
+        }
+
+        public bool CanNavigateIncid
+        {
+            get
+            {
+                return (IncidCurrentRowIndex > 1) ||
+                    ((IsFiltered && (IncidCurrentRowIndex < _incidSelection.Rows.Count)) ||
+                    (!IsFiltered && (IncidCurrentRowIndex < _incidRowCount)));
             }
         }
 
@@ -2470,6 +2448,47 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
+        /// LogicalSplitCommand event handler.
+        /// </summary>
+        /// <param name="param"></param>
+        private void LogicalSplitClicked(object param)
+        {
+            // Logically split the selected features (don't wait).
+            LogicalSplitAsync();
+        }
+
+        /// <summary>
+        /// LogicalSplitCommand event handler.
+        /// </summary>
+        /// <param name="param"></param>
+        private async Task LogicalSplitAsync()
+        {
+            _autoSplit = false;
+
+            // Get the GIS layer selection again (just in case)
+            await ReadMapSelectionAsync(false);
+
+            _autoSplit = true;
+
+            // Check the selected rows are unique before attempting to split them.
+            if (!_gisApp.SelectedRowsUnique())
+            {
+                MessageBox.Show("The map selection contains one or more features where a physical split has not been completed.\n\n" +
+                    "Please select the features and invoke the Split command to prevent the map and database going out of sync.",
+                    "HLU: Data Integrity", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+
+                return;
+            }
+
+            ViewModelWindowMainSplit vmSplit = new(this);
+
+            // Execute the logical split and wait for the result.
+            // Notify the user following the completion of the split.
+            if (await vmSplit.LogicalSplitAsync())
+                NotifySplitMerge("Logical split completed.");
+        }
+
+        /// <summary>
         /// Physical Split command.
         /// </summary>
         public ICommand PhysicalSplitCommand
@@ -2486,53 +2505,34 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// LogicalSplitCommand event handler.
+        /// PhysicalSplitCommand event handler.
         /// </summary>
         /// <param name="param"></param>
-        private void LogicalSplitClicked(object param)
+        private void PhysicalSplitClicked(object param)
         {
-            _autoSplit = false;
-
-            // Get the GIS layer selection again (just in case)
-            ReadMapSelectionAsync(false).GetAwaiter().GetResult();
-
-            _autoSplit = true;
-
-            // Check the selected rows are unique before attempting to split them.
-            if (!_gisApp.SelectedRowsUnique())
-            {
-                MessageBox.Show("The map selection contains one or more features where a physical split has not been completed.\n\n" +
-                    "Please select the features and invoke the Split command to prevent the map and database going out of sync.",
-                    "HLU: Data Integrity", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-
-                return;
-            }
-
-            ViewModelWindowMainSplit vmSplit = new(this);
-            //---------------------------------------------------------------------
-            // CHANGED: CR39 (Split and merge complete messages)
-            // Notify the user following the completion of the split.
-            if (vmSplit.LogicalSplit()) NotifySplitMerge("Logical split completed.");
-            //---------------------------------------------------------------------
+            // Physically split the selected features (don't wait).
+            PhysicalSplitAsync();
         }
 
         /// <summary>
         /// PhysicalSplitCommand event handler.
         /// </summary>
         /// <param name="param"></param>
-        private void PhysicalSplitClicked(object param)
+        private async Task PhysicalSplitAsync()
         {
             _autoSplit = false;
+
             // Get the GIS layer selection again (just in case)
-            ReadMapSelectionAsync(false).GetAwaiter().GetResult();
+            await ReadMapSelectionAsync(false);
+
             _autoSplit = true;
 
             ViewModelWindowMainSplit vmSplit = new(this);
-            //---------------------------------------------------------------------
-            // CHANGED: CR39 (Split and merge complete messages)
+
+            // Execute the physical split and wait for the result.
             // Notify the user following the completion of the split.
-            if (vmSplit.PhysicalSplit()) NotifySplitMerge("Physical split completed.");
-            //---------------------------------------------------------------------
+            if (await vmSplit.PhysicalSplitAsync())
+                NotifySplitMerge("Physical split completed.");
         }
 
         /// <summary>
@@ -2596,6 +2596,43 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
+        /// LogicalMergeCommand event handler.
+        /// </summary>
+        /// <param name="param"></param>
+        private void LogicalMergeClicked(object param)
+        {
+            // Logically merge the selected features (don't wait).
+            LogicalMergeAsync();
+        }
+
+        /// <summary>
+        /// LogicalMergeCommand event handler.
+        /// </summary>
+        /// <param name="param"></param>
+        private async Task LogicalMergeAsync()
+        {
+            // Get the GIS layer selection again (just in case)
+            await ReadMapSelectionAsync(false);
+
+            // Check the selected rows are unique before attempting to merge them.
+            if (!_gisApp.SelectedRowsUnique())
+            {
+                MessageBox.Show("The map selection contains one or more features where a physical split has not been completed.\n\n" +
+                    "Please select the features and invoke the Split command to prevent the map and database going out of sync.",
+                    "HLU: Data Integrity", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+
+                return;
+            }
+
+            ViewModelWindowMainMerge vmMerge = new(this);
+
+            // Execute the logical merge and wait for the result.
+            // Notify the user following the completion of the merge.
+            if (await vmMerge.LogicalMergeAsync())
+                NotifySplitMerge("Logical merge completed.");
+        }
+
+        /// <summary>
         /// Physical Merge command.
         /// </summary>
         public ICommand PhysicalMergeCommand
@@ -2612,40 +2649,23 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// LogicalMergeCommand event handler.
+        /// PhysicalMergeCommand event handler.
         /// </summary>
         /// <param name="param"></param>
-        private void LogicalMergeClicked(object param)
+        private void PhysicalMergeClicked(object param)
         {
-            // Get the GIS layer selection again (just in case)
-            ReadMapSelectionAsync(false).GetAwaiter().GetResult();
-
-            // Check the selected rows are unique before attempting to merge them.
-            if (!_gisApp.SelectedRowsUnique())
-            {
-                MessageBox.Show("The map selection contains one or more features where a physical split has not been completed.\n\n" +
-                    "Please select the features and invoke the Split command to prevent the map and database going out of sync.",
-                    "HLU: Data Integrity", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-
-                return;
-            }
-
-            ViewModelWindowMainMerge vmMerge = new(this);
-            //---------------------------------------------------------------------
-            // CHANGED: CR39 (Split and merge complete messages)
-            // Notify the user following the completion of the split.
-            if (vmMerge.LogicalMerge()) NotifySplitMerge("Logical merge completed.");
-            //---------------------------------------------------------------------
+            // Physically merge the selected features (don't wait).
+            PhysicalMergeAsync();
         }
 
         /// <summary>
         /// PhysicalMergeCommand event handler.
         /// </summary>
         /// <param name="param"></param>
-        private void PhysicalMergeClicked(object param)
+        private async Task PhysicalMergeAsync()
         {
             // Get the GIS layer selection again (just in case)
-            ReadMapSelectionAsync(false).GetAwaiter().GetResult();
+            await ReadMapSelectionAsync(false);
 
             // Check the selected rows are unique before attempting to merge them.
             if (!_gisApp.SelectedRowsUnique())
@@ -2658,12 +2678,13 @@ namespace HLU.UI.ViewModel
             }
 
             ViewModelWindowMainMerge vmMerge = new(this);
-            //---------------------------------------------------------------------
-            // CHANGED: CR39 (Split and merge complete messages)
+
+            // Execute the physical merge and wait for the result.
             // Notify the user following the completion of the split.
-            if (vmMerge.PhysicalMerge()) NotifySplitMerge("Physical merge completed.");
-            //---------------------------------------------------------------------
+            if (await vmMerge.PhysicalMergeAsync())
+                NotifySplitMerge("Physical merge completed.");
         }
+
 
         /// <summary>
         /// At least one feature in selection that do not share the same incid or toidfragid
@@ -2774,6 +2795,7 @@ namespace HLU.UI.ViewModel
 
         private void UpdateClicked(object param)
         {
+            // Update the attributes (don't wait).
             UpdateAsync(param);
         }
 
@@ -2948,7 +2970,7 @@ namespace HLU.UI.ViewModel
                         // Logically split the features for the current incid into a new incid.
                         ViewModelWindowMainSplit vmSplit = new(this);
                         _splitting = true;
-                        if (!vmSplit.LogicalSplit())
+                        if (!await vmSplit.LogicalSplitAsync())
                         {
                             //MessageBox.Show("Could not complete logical split - update cancelled.\nPlease invoke the Split command before applying any updates.",
                             //    "HLU: Save", MessageBoxButton.OK, MessageBoxImage.Exclamation);
@@ -3191,7 +3213,7 @@ namespace HLU.UI.ViewModel
                 //---------------------------------------------------------------------
                 // CHANGED: CR49 Process proposed OSMM Updates
                 // Functionality to process proposed OSMM Updates.
-                //    
+                //
                 // Start the bulk update process.
                 _viewModelBulkUpdate.StartBulkUpdate(false);
                 //---------------------------------------------------------------------
@@ -3265,6 +3287,7 @@ namespace HLU.UI.ViewModel
                 if (_osmmBulkUpdateMode == true)
                     _viewModelBulkUpdate.CancelOSMMBulkUpdate();
                 else
+                    //TODO: Await call.
                     _viewModelBulkUpdate.CancelBulkUpdate();
                 //---------------------------------------------------------------------
 
@@ -3509,7 +3532,9 @@ namespace HLU.UI.ViewModel
             if (_viewModelOSMMUpdate != null)
             {
                 _osmmUpdatesEmpty = false;
+
                 _viewModelOSMMUpdate.CancelOSMMUpdate();
+
                 _viewModelOSMMUpdate = null;
                 // Prevent OSMM updates being actioned too quickly.
                 _osmmUpdating = false;
@@ -3544,12 +3569,22 @@ namespace HLU.UI.ViewModel
         /// <param name="param"></param>
         private void OSMMSkipClicked(object param)
         {
+
+            // Skip the OSMM Update for the current incid (don't wait).
+            OSMMSkipAsync();
+        }
+
+        /// <summary>
+        /// Skip the OSMM Update for the current incid.
+        /// </summary>
+        private async Task OSMMSkipAsync()
+        {
             // Prevent OSMM updates being actioned too quickly.
             // Mark the OSMM Update row as skipped
             // If there are any OSMM Updates for this incid then store the values.
             if (_osmmUpdating == false && _osmmUpdatesEmpty == false)
             {
-                if (IncidOSMMStatus  > 0)
+                if (IncidOSMMStatus > 0)
                 {
                     _osmmUpdating = true;
 
@@ -3560,7 +3595,7 @@ namespace HLU.UI.ViewModel
                     // FIX: 103 Accept/Reject OSMM updates in edit mode.
                     //
                     // Move to the next Incid
-                    IncidCurrentRowIndex += 1;
+                    await MoveIncidCurrentRowIndexAsync(_incidCurrentRowIndex + 1);
                     //---------------------------------------------------------------------
 
                     _osmmUpdating = false;
@@ -3577,7 +3612,7 @@ namespace HLU.UI.ViewModel
                 else
                 {
                     // Move to the next Incid
-                    IncidCurrentRowIndex += 1;
+                    await MoveIncidCurrentRowIndexAsync(_incidCurrentRowIndex + 1);
                 }
                 //---------------------------------------------------------------------
 
@@ -3634,6 +3669,16 @@ namespace HLU.UI.ViewModel
         /// <param name="param"></param>
         private void OSMMAcceptClicked(object param)
         {
+            // Accept the OSMM Update for the current incid. (don't wait).
+            OSMMAcceptAsync();
+        }
+
+        /// <summary>
+        /// Accept the OSMM Update for the current incid.
+        /// </summary>
+        /// <param name="param"></param>
+        private async Task OSMMAcceptAsync()
+        {
             // Prevent OSMM updates being actioned too quickly.
             if (_osmmUpdating == false)
             {
@@ -3657,7 +3702,7 @@ namespace HLU.UI.ViewModel
                     // FIX: 103 Accept/Reject OSMM updates in edit mode.
                     //
                     // Move to the next Incid
-                    IncidCurrentRowIndex += 1;
+                    await MoveIncidCurrentRowIndexAsync(_incidCurrentRowIndex + 1);
                     //---------------------------------------------------------------------
                 }
 
@@ -3727,6 +3772,16 @@ namespace HLU.UI.ViewModel
         /// <param name="param"></param>
         private void OSMMRejectClicked(object param)
         {
+            // Reject the OSMM Update for the current incid (don't wait).
+            OSMMRejectAsync();
+        }
+
+        /// <summary>
+        /// Reject the OSMM Update for the current incid.
+        /// </summary>
+        /// <param name="param"></param>
+        private async Task OSMMRejectAsync()
+        {
             // Prevent OSMM updates being actioned too quickly.
             if (_osmmUpdating == false)
             {
@@ -3750,7 +3805,7 @@ namespace HLU.UI.ViewModel
                     // FIX: 103 Accept/Reject OSMM updates in edit mode.
                     //
                     // Move to the next Incid
-                    IncidCurrentRowIndex += 1;
+                    await MoveIncidCurrentRowIndexAsync(_incidCurrentRowIndex + 1);
                     //---------------------------------------------------------------------
 
                     // Check if the GIS and database are in sync.
@@ -3858,11 +3913,15 @@ namespace HLU.UI.ViewModel
         {
             // If already in OSMM update mode
             if (_osmmUpdateMode == true)
+            {
                 // Cancel the OSMM update mode
                 CancelOSMMUpdateClicked(param);
+            }
             else
+            {
                 // Start the OSMM update mode
                 OSMMUpdateClicked(param);
+            }
         }
 
         /// <summary>
@@ -3914,6 +3973,19 @@ namespace HLU.UI.ViewModel
         /// <param name="param"></param>
         private void OSMMUpdateAcceptClicked()
         {
+            //Accept the proposed OSMM Update (don't wait).
+            OSMMUpdateAcceptAsync();
+        }
+
+        //---------------------------------------------------------------------
+        // FIX: 103 Accept/Reject OSMM updates in edit mode.
+        //
+        /// <summary>
+        /// Accept the proposed OSMM Update.
+        /// </summary>
+        /// <param name="param"></param>
+        private async Task OSMMUpdateAcceptAsync()
+        {
             if (_viewModelOSMMUpdate == null)
                 _viewModelOSMMUpdate = new ViewModelWindowMainOSMMUpdate(this);
 
@@ -3931,7 +4003,7 @@ namespace HLU.UI.ViewModel
             // FIX: 103 Accept/Reject OSMM updates in edit mode.
             //
             // Reload the incid
-            IncidCurrentRowIndex = incidCurrRowIx;
+            await MoveIncidCurrentRowIndexAsync(incidCurrRowIx);
 
             //OnPropertyChanged(nameof(CanOSMMUpdateAccept));
             //---------------------------------------------------------------------
@@ -3972,8 +4044,17 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Reject the proposed OSMM Update.
         /// </summary>
-        /// <param name="param"></param>
         private void OSMMUpdateRejectClicked()
+        {
+            //Reject the proposed OSMM Update (don't wait).
+            OSMMUpdateRejectAsync();
+        }
+
+        /// <summary>
+        /// Reject the proposed OSMM Update.
+        /// </summary>
+        /// <param name="param"></param>
+        private async Task OSMMUpdateRejectAsync()
         {
             if (_viewModelOSMMUpdate == null)
                 _viewModelOSMMUpdate = new ViewModelWindowMainOSMMUpdate(this);
@@ -3992,7 +4073,7 @@ namespace HLU.UI.ViewModel
             // FIX: 103 Accept/Reject OSMM updates in edit mode.
             //
             // Reload the incid
-            IncidCurrentRowIndex = incidCurrRowIx;
+            await MoveIncidCurrentRowIndexAsync(incidCurrRowIx);
 
             //OnPropertyChanged(nameof(CanOSMMUpdateReject));
             //---------------------------------------------------------------------
@@ -4900,7 +4981,8 @@ namespace HLU.UI.ViewModel
                             _filterByMap = false;
 
                             // Set the filter back to the first incid.
-                            SetFilter();
+                            //TODO: await call.
+                            SetFilterAsync();
 
                             // Reset the cursor back to normal.
                             ChangeCursor(Cursors.Arrow, null);
@@ -4941,7 +5023,8 @@ namespace HLU.UI.ViewModel
                             _filterByMap = false;
 
                             // Set the filter back to the first incid.
-                            SetFilter();
+                            //TODO: await call.
+                            SetFilterAsync();
                             //---------------------------------------------------------------------
 
                             // Reset the cursor back to normal.
@@ -4967,7 +5050,8 @@ namespace HLU.UI.ViewModel
                         _filterByMap = false;
 
                         // Set the filter back to the first incid.
-                        SetFilter();
+                        //TODO: await call.
+                        SetFilterAsync();
                         //---------------------------------------------------------------------
 
                         // Reset the cursor back to normal
@@ -5221,7 +5305,8 @@ namespace HLU.UI.ViewModel
                             _filterByMap = false;
 
                             // Set the filter back to the first incid.
-                            SetFilter();
+                            //TODO: await call.
+                            SetFilterAsync();
 
                             // Reset the cursor back to normal.
                             ChangeCursor(Cursors.Arrow, null);
@@ -5258,10 +5343,12 @@ namespace HLU.UI.ViewModel
                             _incidSelection = null;
 
                             // Indicate the selection didn't come from the map.
+                            //TODO: await call.
                             _filterByMap = false;
 
                             // Set the filter back to the first incid.
-                            SetFilter();
+                            //TODO: await call.
+                            SetFilterAsync();
                             //---------------------------------------------------------------------
 
                             // Reset the cursor back to normal.
@@ -5287,7 +5374,8 @@ namespace HLU.UI.ViewModel
                         _filterByMap = false;
 
                         // Set the filter back to the first incid.
-                        SetFilter();
+                        //TODO: await call.
+                        SetFilterAsync();
                         //---------------------------------------------------------------------
 
                         // Reset the cursor back to normal
@@ -5625,7 +5713,8 @@ namespace HLU.UI.ViewModel
                                     //---------------------------------------------------------------------
 
                                     // Set the filter to the first incid.
-                                    SetFilter();
+                                    //TODO: await call.
+                                    SetFilterAsync();
 
                                     // Check if the GIS and database are in sync.
                                     if ((_toidsIncidGisCount > _toidsIncidDbCount) ||
@@ -5863,7 +5952,8 @@ namespace HLU.UI.ViewModel
                             _osmmUpdatesEmpty = false;
 
                             // Set the filter to the first incid.
-                            SetFilter();
+                            //TODO: await call.
+                            SetFilterAsync();
 
                             //---------------------------------------------------------------------
                             // FIX: 103 Accept/Reject OSMM updates in edit mode.
@@ -6126,6 +6216,7 @@ namespace HLU.UI.ViewModel
             get { return _bulkUpdateMode == false && _osmmUpdateMode == false && IncidCurrentRow != null; }
         }
 
+        //TODO: Add wait?
         /// <summary>
         /// Select current DB record on map when button pressed.
         /// </summary>
@@ -6289,7 +6380,7 @@ namespace HLU.UI.ViewModel
         private void ReadMapSelectionClicked(object param)
         {
             // Get the GIS layer selection and warn the user if no
-            // features are found
+            // features are found (don't wait).
             ReadMapSelectionAsync(true);
         }
 
@@ -6371,7 +6462,7 @@ namespace HLU.UI.ViewModel
                     _readingMap = true;
 
                     // Set the filter to the first incid.
-                    SetFilter();
+                    await SetFilterAsync();
 
                     // Reset the flag again.
                     _readingMap = false;
@@ -6398,7 +6489,9 @@ namespace HLU.UI.ViewModel
                             if (CanPhysicallySplit)
                             {
                                 ViewModelWindowMainSplit vmSplit = new(this);
-                                if (vmSplit.PhysicalSplit()) NotifySplitMerge("Physical split completed.");
+
+                                if (await vmSplit.PhysicalSplitAsync())
+                                    NotifySplitMerge("Physical split completed.");
                             }
                             else
                             {
@@ -6434,7 +6527,7 @@ namespace HLU.UI.ViewModel
                 {
                     // Reset the incid and map selections and move
                     // to the first incid in the database.
-                    ClearFilter(true);
+                    await ClearFilterAsync(true);
 
                     //---------------------------------------------------------------------
                     // FIX: 107 Reset filter when no map features selected.
@@ -6919,16 +7012,16 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        private void SelectAllOnMapClicked(object param)
+        private async void SelectAllOnMapClicked(object param)
         {
             // Select all the incids in the active filter in GIS.
-            SelectAllOnMap();
+            await SelectAllOnMap();
         }
 
         /// <summary>
         /// Select all the incids in the active filter in GIS.
         /// </summary>
-        public void SelectAllOnMap()
+        public async Task SelectAllOnMap()
         {
             // If there are any records in the selection (and the tool is
             // not currently in bulk update mode).
@@ -6965,7 +7058,7 @@ namespace HLU.UI.ViewModel
                             _filterByMap = true;
 
                         // Set the filter back to the first incid.
-                        SetFilter();
+                        await SetFilterAsync();
 
                         // Zoom to the GIS selection if auto zoom is on.
                         if (_gisSelection != null && _autoZoomSelection != 0)
@@ -7046,8 +7139,8 @@ namespace HLU.UI.ViewModel
         private void ClearFilterClicked(object param)
         {
             // Reset the incid and map selections and move
-            // to the first incid in the database.
-            ClearFilter(true);
+            // to the first incid in the database (don't wait).
+            ClearFilterAsync(true);
         }
 
         public bool CanClearFilter
@@ -7070,7 +7163,7 @@ namespace HLU.UI.ViewModel
         /// Clears any active incid filter and optionally moves to the first incid in the index.
         /// </summary>
         /// <param name="resetRowIndex">If set to <c>true</c> the first incid in the index is loaded.</param>
-        internal void ClearFilter(bool resetRowIndex)
+        internal async Task ClearFilterAsync(bool resetRowIndex)
         {
             //---------------------------------------------------------------------
             // CHANGED: CR49 Process proposed OSMM Updates
@@ -7130,7 +7223,7 @@ namespace HLU.UI.ViewModel
                 // toids and fragments for the current incid selected in the GIS and
                 // in the database).
                 if (resetRowIndex)
-                    IncidCurrentRowIndex = _incidCurrentRowIndex;
+                    await MoveIncidCurrentRowIndexAsync(_incidCurrentRowIndex);
                 else
                     // Count the number of toids and fragments for the current incid
                     // selected in the GIS and in the database.
@@ -7380,6 +7473,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        //TODO: Add wait?
         //---------------------------------------------------------------------
         // CHANGED: CR21 (Select current incid in map)
         // No longer set the filter or reset the cursor AFTER performing
@@ -7451,7 +7545,7 @@ namespace HLU.UI.ViewModel
         }
         //---------------------------------------------------------------------
 
-        private void SetFilter()
+        private async Task SetFilterAsync()
         {
             try
             {
@@ -7459,9 +7553,13 @@ namespace HLU.UI.ViewModel
                     // If currently splitting a feature then go to the last incid
                     // in the filter (which will be the new incid).
                     if (_splitting)
-                        IncidCurrentRowIndex = IsFiltered ? _incidSelection.Rows.Count : _incidRowCount;
+                    {
+                        await MoveIncidCurrentRowIndexAsync(IsFiltered ? _incidSelection.Rows.Count : _incidRowCount);
+                    }
                     else
-                        IncidCurrentRowIndex = 1;
+                    {
+                        await MoveIncidCurrentRowIndexAsync(1);
+                    }
             }
             finally
             {
@@ -7533,6 +7631,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //TODO: Is this every true?
                 // Load the data table if not already loaded.
                 if (HluDataset.incid.IsInitialized && (HluDataset.incid.Rows.Count == 0))
                 {
@@ -7540,8 +7639,9 @@ namespace HLU.UI.ViewModel
                         _hluTableAdapterMgr.incidTableAdapter =
                             new HluTableAdapter<HluDataSet.incidDataTable, HluDataSet.incidRow>(_db);
 
+                    //TODO: Commented out until it's determined this if clause is ever true.
                     // Go to the first incid in the table.
-                    IncidCurrentRowIndex = 1;
+                    //MoveIncidCurrentRowIndexAsync(1);
                 }
 
                 return _hluDS.incid;
@@ -7865,6 +7965,12 @@ namespace HLU.UI.ViewModel
         public int IncidCurrentRowIndex
         {
             get { return _incidCurrentRowIndex; }
+            //set { _incidCurrentRowIndex = value; }
+            set
+            {
+                // Move to the required incid current row (don't wait).
+                MoveIncidCurrentRowIndexAsync(value);
+            }
         }
 
         /// <summary>
@@ -8078,7 +8184,7 @@ namespace HLU.UI.ViewModel
             {
                 if ((canMove = (_incidCurrentRowIndex != -1) &&
                     (_incidCurrentRowIndex <= _incidSelection.Rows.Count)))
-                    _incidCurrentRow = SeekIncidFiltered(_incidCurrentRowIndex);
+                    _incidCurrentRow = await SeekIncidFiltered(_incidCurrentRowIndex);
             }
 
             if (canMove)
@@ -8519,7 +8625,7 @@ namespace HLU.UI.ViewModel
         /// <returns>The row of in-memory DataTable HluDataset.incid that corresponds to
         /// row number seekRowNumber in the _incidSelection DataTable.
         /// If loading of a new page fails, null is returned.</returns>
-        private HluDataSet.incidRow SeekIncidFiltered(int seekRowNumber)
+        private async Task<HluDataSet.incidRow> SeekIncidFiltered(int seekRowNumber)
         {
             seekRowNumber--;
 
@@ -8559,6 +8665,7 @@ namespace HLU.UI.ViewModel
                 int stop = start;
                 bool moveForward = true;
 
+                //TODO: Check if seekIncidNumber is not -1 first.
                 if (seekIncidNumber < incidNumberPageMin) // moving backward
                 {
                     start = seekRowNumber - IncidPageSize > 0 ? seekRowNumber - IncidPageSize : 0;
@@ -8587,9 +8694,10 @@ namespace HLU.UI.ViewModel
                     {
                         MessageBox.Show("No database record retrieved.", "HLU: Selection",
                             MessageBoxButton.OK, MessageBoxImage.Asterisk);
+
                         // Reset the incid and map selections and move
                         // to the first incid in the database.
-                        ClearFilter(true);
+                        await ClearFilterAsync(true);
                         return _incidCurrentRow;
                     }
                     else
@@ -15324,7 +15432,7 @@ namespace HLU.UI.ViewModel
                     //---------------------------------------------------------------------
                     // CHANGED: CR49 Process proposed OSMM Updates
                     // Warnings with in Bulk Update mode.
-                    //    
+                    //
                     case "NumIncidSelectedMap":
                         if (_incidsSelectedMapCount == 0)
                             error = "Warning: No database incids are selected in map";

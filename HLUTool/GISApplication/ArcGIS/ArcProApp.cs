@@ -178,11 +178,6 @@ namespace HLU.GISApplication
         /// </summary>
         private GISLayer _hluCurrentLayer;
 
-        /// <summary>
-        /// The total number of map windows in the workspace.
-        /// </summary>
-        private int _mapWindowsCount;
-
         //TODO: ArcGIS
         ///// <summary>
         ///// Persisted HLU layer that is cloned every time the application starts.
@@ -663,10 +658,16 @@ namespace HLU.GISApplication
                         DataRow dataRow = resultTable.NewRow();
 
                         // Populate the DataRow with feature attributes
-                        for (int i = 0; i < resultTable.Columns.Count; i++)
+                        foreach (DataColumn c in resultTable.Columns)
                         {
-                            dataRow[i] = feature[i];
+                            dataRow[c.ColumnName] = feature[c.ColumnName];
                         }
+
+                        //// Populate the DataRow with feature attributes
+                        //for (int i = 0; i < resultTable.Columns.Count; i++)
+                        //{
+                        //    dataRow[i] = feature[i];
+                        //}
 
                         // Add the DataRow to the DataTable
                         resultTable.Rows.Add(dataRow);

@@ -29,6 +29,8 @@ using System.Windows;
 using HLU.Data;
 using HLU.Data.Model;
 using HLU.GISApplication;
+using System.Windows.Threading;
+using System.Threading.Tasks;
 
 namespace HLU.UI.ViewModel
 {
@@ -46,7 +48,7 @@ namespace HLU.UI.ViewModel
         /// or there must be only one feature in the selection.
         /// </summary>
         /// <returns></returns>
-        internal bool LogicalSplit()
+        internal async Task<bool> LogicalSplitAsync()
         {
             if ((_viewModelMain.GisSelection == null) || (_viewModelMain.GisSelection.Rows.Count == 0))
             {
@@ -65,7 +67,7 @@ namespace HLU.UI.ViewModel
                 (_viewModelMain.GisSelection.Rows.Count == 1))
             {
                 // all features in selection share same incid, but *not* toid and toidfragid
-                return PerformLogicalSplit();
+                return await PerformLogicalSplitAsync();
             }
             else
             {
@@ -79,7 +81,7 @@ namespace HLU.UI.ViewModel
         /// There must be more than one feature in the selection that share the same incid, toid and toidfragid.
         /// </summary>
         /// <returns></returns>
-        internal bool PhysicalSplit()
+        internal async Task<bool> PhysicalSplitAsync()
         {
             if ((_viewModelMain.GisSelection == null) || (_viewModelMain.GisSelection.Rows.Count == 0))
             {
@@ -97,7 +99,7 @@ namespace HLU.UI.ViewModel
                 (_viewModelMain.ToidsSelectedMapCount == 1) && (_viewModelMain.FragsSelectedMapCount == 1))
             {
                 // all features in selection share same incid, toid and toidfragid
-                return PerformPhysicalSplit();
+                return await PerformPhysicalSplitAsync();
             }
             else
             {
@@ -110,7 +112,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Physically split features on the GIS layer.
         /// </summary>
-        private bool PerformPhysicalSplit()
+        private async Task<bool> PerformPhysicalSplitAsync()
         {
             bool success = true;
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
@@ -247,7 +249,7 @@ namespace HLU.UI.ViewModel
 
                     // Reset the incid and map selections but don't move
                     // to the first incid in the database.
-                    _viewModelMain.ClearFilter(false);
+                    await _viewModelMain.ClearFilterAsync(false);
 
                     // Synch with the GIS selection.
                     // Force the Incid table to be refilled because it has been
@@ -256,13 +258,13 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.RefillIncidTable = true;
 
                     // Get the GIS layer selection again
-                    _viewModelMain.ReadMapSelectionAsync(true);
+                    await _viewModelMain.ReadMapSelectionAsync(true);
                 }
             }
             return success;
         }
 
-        private bool PerformLogicalSplit()
+        private async Task<bool> PerformLogicalSplitAsync()
         {
             // Check if selected feature is the only one pertaining to its incid
             if (_viewModelMain.GisSelection.Rows.Count == 1)
@@ -385,7 +387,7 @@ namespace HLU.UI.ViewModel
 
                     // Reset the incid and map selections but don't move
                     // to the first incid in the database.
-                    _viewModelMain.ClearFilter(false);
+                    await _viewModelMain.ClearFilterAsync(false);
 
                     // Synch with the GIS selection.
                     // Force the Incid table to be refilled because it has been
@@ -394,7 +396,7 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.RefillIncidTable = true;
 
                     // Get the GIS layer selection again
-                    _viewModelMain.ReadMapSelectionAsync(true);
+                    await _viewModelMain.ReadMapSelectionAsync(true);
                 }
             }
             //}
