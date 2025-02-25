@@ -44,6 +44,8 @@ using ArcGIS.Desktop.Internal.Framework.Controls;
 using System.Collections.ObjectModel;
 using HLU.Data;
 using System.Linq;
+using HLU.UI.View;
+using HLU.Date;
 
 namespace HLU.UI.ViewModel
 {
@@ -250,10 +252,10 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Show the DockPane.
         /// </summary>
-        internal static async Task Show()
+        internal static async Task ShowDockPane()
         {
             // Get the dockpane DAML id.
-            DockPane pane = FrameworkApplication.DockPaneManager.Find(_dockPaneID);
+            DockPane pane = FrameworkApplication.DockPaneManager.Find(DockPaneID);
             if (pane == null)
                 return;
 
@@ -522,7 +524,7 @@ namespace HLU.UI.ViewModel
         protected override void OnHidden()
         {
             // Get the dockpane DAML id.
-            DockPane pane = FrameworkApplication.DockPaneManager.Find(_dockPaneID);
+            DockPane pane = FrameworkApplication.DockPaneManager.Find(DockPaneID);
             if (pane == null)
                 return;
 
@@ -688,7 +690,69 @@ namespace HLU.UI.ViewModel
         protected override async void OnClick()
         {
             // Show the dock pane.
-            await ViewModelWindowMain.Show();
+            await ViewModelWindowMain.ShowDockPane();
+        }
+    }
+
+    /// <summary>
+    /// Button implementation for the button on the menu of the burger button.
+    /// </summary>
+    internal class WindowMain_OptionsButton : Button
+    {
+        private WindowOptions _windowOptions;
+        private ViewModelOptions _viewModelOptions;
+
+        protected override void OnClick()
+        {
+            try
+            {
+                // Ensure the window is shown on the UI thread
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    _windowOptions = new()
+                    {
+                        // Set ArcGIS Pro as the parent
+                        Owner = System.Windows.Application.Current.MainWindow,
+                        WindowStartupLocation = WindowStartupLocation.CenterScreen
+                    };
+
+                    // create ViewModel to which main window binds
+                    _viewModelOptions = new()
+                    {
+                        DisplayName = "Add Secondary Habitats"
+                    };
+
+                    // when ViewModel asks to be closed, close window
+                    _viewModelOptions.RequestClose +=
+                        new ViewModelOptions.RequestCloseEventHandler(_viewModelOptions_RequestClose);
+
+                    // allow all controls in window to bind to ViewModel by setting DataContext
+                    _windowOptions.DataContext = _viewModelOptions;
+
+                    // show window
+                    _windowOptions.ShowDialog();
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "HLU: Options", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// Save the options settings when the options window is closed.
+        /// </summary>
+        /// <param name="saveSettings">if set to <c>true</c> [save settings].</param>
+        void _viewModelOptions_RequestClose(bool saveSettings)
+        {
+            _viewModelOptions.RequestClose -= _viewModelOptions_RequestClose;
+            _windowOptions.Close();
+
+            // Re-set static variables in main window
+            if (saveSettings)
+            {
+
+            }
         }
     }
 }

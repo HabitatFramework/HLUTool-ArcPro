@@ -37,6 +37,7 @@
 				<tab id="HLUTool_Tab1" caption="HLU Tool" keytip="T0" condition="HLUTool_Tab1_condition" >
 					<group refID="HLUTool_Group1" />
 					<group refID="HLUTool_Group2" />
+					<group refID="HLUTool_Group3" />
 				</tab>
 			</tabs>
 
@@ -44,9 +45,12 @@
 				<group id="HLUTool_Group1" caption="GIS" keytip="G0">
 					<comboBox refID="HLUTool_ActiveLayerComboBox" size="middle" />
 				</group>
-				<group id="HLUTool_Group2" caption="Control Edits" keytip="R0">
+				<group id="HLUTool_Group2" caption="Edits" keytip="G1">
 					<comboBox refID="HLUTool_ReasonComboBox" size="middle" />
 					<comboBox refID="HLUTool_ProcessComboBox" size="middle" />
+				</group>
+				<group id="HLUTool_Group3" caption="Options" keytip="G2">
+					<button refID="HLUTool_btnOptionsButton" size="middle" />
 				</group>
 			</groups>
 
@@ -61,6 +65,16 @@
 					<tooltip heading="HLU Tool"
 							 image="pack://application:,,,/HLUTool;component/Images/HLUTool16.png">
 						Manage habitat and land use data.<disabledText />
+					</tooltip>
+				</button>
+
+				<button id="HLUTool_btnOptionsButton"
+						caption="Options"
+						className="HLU.UI.ViewModel.WindowMain_OptionsButton"
+						loadOnClick="true"
+						keytip="OP">
+					<tooltip heading="Tool options">
+						ToolTip<disabledText />
 					</tooltip>
 				</button>
 
@@ -103,7 +117,7 @@
 						  condition="esri_mapping_mapPane"
 						  isReadOnly="true"
 						  resizable="true"
-						  keytip="RC">
+						  keytip="PC">
 					<tooltip heading="Process">
 						Select the process for updates<disabledText />
 					</tooltip>

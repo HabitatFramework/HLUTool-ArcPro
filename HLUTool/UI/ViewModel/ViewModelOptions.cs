@@ -36,6 +36,8 @@ using HLU.UI.ViewModel;
 using HLU.GISApplication;
 using HLU.Properties;
 using HLU.UI.UserControls;
+using System.Collections.ObjectModel;
+using HLU.UI.View;
 
 namespace HLU.UI.ViewModel
 {
@@ -123,6 +125,8 @@ namespace HLU.UI.ViewModel
         //private string _bakExportPath;
         private string _bakSqlPath;
 
+        public ObservableCollection<NavigationItem> NavigationItems { get; }
+
         #endregion
 
         #region Constructor
@@ -132,6 +136,14 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public ViewModelOptions()
         {
+            NavigationItems =
+        [
+            new() { Name = "Database", Content = new DatabaseOptions() }
+            //new () { Name = "GIS/Export", Content = new GisView() },
+            //new () { Name = "History", Content = new HistoryView() }
+        ];
+
+            SelectedView = NavigationItems.First();
         }
 
         /// <summary>
@@ -161,6 +173,16 @@ namespace HLU.UI.ViewModel
             // Store the map path so that it can be reset if the user
             // cancels updates to the options.
             _bakMapPath = _mapPath;
+
+
+            NavigationItems =
+        [
+            new() { Name = "Database", Content = new DatabaseOptions() }
+            //new () { Name = "GIS/Export", Content = new GisView() },
+            //new () { Name = "History", Content = new HistoryView() }
+        ];
+
+            SelectedView = NavigationItems.First();
         }
 
         private string EscapeAccessKey(string s)
@@ -199,6 +221,20 @@ namespace HLU.UI.ViewModel
         public event RequestCloseEventHandler RequestClose;
 
         #endregion
+
+        #region Navigation Items
+
+        private NavigationItem _selectedView;
+        public NavigationItem SelectedView
+        {
+            get => _selectedView;
+            set
+            {
+                _selectedView = value;
+                OnPropertyChanged(nameof(SelectedView));
+            }
+        }
+        #endregion Navigation Items
 
         #region Save Command
 
@@ -240,11 +276,12 @@ namespace HLU.UI.ViewModel
             Settings.Default.ExportPath = _exportPath;
 
             // History options
-            Settings.Default.HistoryColumnOrdinals =
-            [
-                .. _historyColumns.Where(c => c.IsSelected)
-                    .Select(c => _incidMMPolygonsTable.Columns[UnescapeAccessKey(c.Item)].Ordinal.ToString()).ToArray(),
-            ];
+            //TOOO: Fix this
+            //Settings.Default.HistoryColumnOrdinals =
+            //[
+            //    .. _historyColumns.Where(c => c.IsSelected)
+            //        .Select(c => _incidMMPolygonsTable.Columns[UnescapeAccessKey(c.Item)].Ordinal.ToString()).ToArray(),
+            //];
             Settings.Default.HistoryDisplayLastN = (int)_historyDisplayLastN;
 
             // Interface options
