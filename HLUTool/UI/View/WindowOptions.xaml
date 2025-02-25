@@ -1,7 +1,12 @@
 ﻿<Window x:Class="HLU.UI.View.WindowOptions"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:hlu="clr-namespace:HLU.UI.UserControls;assembly="
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
+             xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+             xmlns:viewModel="clr-namespace:HLU.UI.ViewModel"
+             xmlns:view="clr-namespace:HLU.UI.View"
         Title="{Binding WindowTitle}"
         Width="600"
         Height="Auto"
@@ -14,6 +19,7 @@
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <extensions:DesignOnlyResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
                 <ResourceDictionary Source="Dictionary\NullableValueConverterDictionary.xaml" />
                 <ResourceDictionary Source="Dictionary\ErrorMessageConverterDictionary.xaml" />
             </ResourceDictionary.MergedDictionaries>
@@ -88,7 +94,7 @@
                                  VerticalAlignment="Center"
                                  BorderThickness="1"
                                  Text="{Binding DbConnectionTimeout, Converter={StaticResource nullableValueConverter}, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-                                 Tag="ErrorContent" 
+                                 Tag="ErrorContent"
                                  TextAlignment="Right" />
 
                         <Label x:Name="LabelIncidPageSize"
@@ -104,7 +110,7 @@
                                  VerticalAlignment="Center"
                                  BorderThickness="1"
                                  Text="{Binding IncidTablePageSize, Converter={StaticResource nullableValueConverter}, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-                                 Tag="ErrorContent" 
+                                 Tag="ErrorContent"
                                  TextAlignment="Right" />
 
                     </Grid>
@@ -166,7 +172,7 @@
 											 Margin="4,8,4,8"
 											 BorderThickness="1"
 											 Text="{Binding MinAutoZoom, Converter={StaticResource nullableValueConverter}, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-											 Tag="ErrorContent" 
+											 Tag="ErrorContent"
 											 TextAlignment="Right" />
 								</Grid>
 
@@ -183,8 +189,8 @@
                 <TabItem x:Name="TabHistory"
                          Height="29.29"
                          VerticalAlignment="Bottom"
-                         GotFocus="TabHistory_GotFocus"
                          IsEnabled="True">
+                    <!--GotFocus="TabHistory_GotFocus" -->
 
                     <TabItem.Header>
                         <StackPanel>
@@ -295,7 +301,7 @@
                                  VerticalAlignment="Center"
                                  BorderThickness="1"
                                  Text="{Binding HistoryDisplayLastN, Converter={StaticResource nullableValueConverter}, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-                                 Tag="ErrorContent" 
+                                 Tag="ErrorContent"
                                  TextAlignment="Right" />
                         </Grid>
 
@@ -496,7 +502,7 @@
 												  DisplayMemberPath="description"
 												  ItemsSource="{Binding HabitatClassCodes}"
 												  SelectedValue="{Binding PreferredHabitatClass, ValidatesOnDataErrors=True}"
-												  Tag="ErrorContent" 
+												  Tag="ErrorContent"
 												  SelectedValuePath="code" />
 
 									</Grid>
@@ -519,7 +525,7 @@
 												  DisplayMemberPath="description"
 												  ItemsSource="{Binding SecondaryGroupCodes}"
 												  SelectedValue="{Binding PreferredSecondaryGroup, ValidatesOnDataErrors=True}"
-												  Tag="ErrorContent" 
+												  Tag="ErrorContent"
 												  SelectedValuePath="code" />
 
 									</Grid>
@@ -555,7 +561,7 @@
 												 VerticalAlignment="Center"
 												 BorderThickness="1"
 												 Text="{Binding SecondaryCodeDelimiter, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-												 Tag="ErrorContent" 
+												 Tag="ErrorContent"
 												 TextAlignment="Center" />
 									</Grid>
 
@@ -851,7 +857,7 @@
                                      VerticalAlignment="Center"
                                      BorderThickness="1"
                                      Text="{Binding GetValueRows, Converter={StaticResource nullableValueConverter}, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-                                     Tag="ErrorContent" 
+                                     Tag="ErrorContent"
                                      TextAlignment="Right" />
 
                         </Grid>
@@ -896,7 +902,7 @@
                                      BorderThickness="1"
                                      IsEnabled="False"
                                      Text="{Binding SqlPath, ValidatesOnDataErrors=True}"
-                                     Tag="ErrorContent" 
+                                     Tag="ErrorContent"
                                      TextAlignment="Left"
                                      ToolTip="{Binding SqlPath}"
                                      ToolTipService.ShowOnDisabled="True" />
@@ -1031,7 +1037,7 @@
                                      VerticalAlignment="Center"
                                      BorderThickness="1"
                                      Text="{Binding VagueDateDelimiter, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-                                     Tag="ErrorContent" 
+                                     Tag="ErrorContent"
                                      TextAlignment="Center" />
                         </Grid>
 

@@ -128,6 +128,13 @@ namespace HLU.UI.ViewModel
         #region Constructor
 
         /// <summary>
+        /// Default constructor
+        /// </summary>
+        public ViewModelOptions()
+        {
+        }
+
+        /// <summary>
         /// Get the default values from settings.
         /// </summary>
         /// <remarks></remarks>
