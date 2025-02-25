@@ -36,6 +36,7 @@
 			<tabs>
 				<tab id="HLUTool_Tab1" caption="HLU Tool" keytip="T0" condition="HLUTool_Tab1_condition" >
 					<group refID="HLUTool_Group1" />
+					<group refID="HLUTool_Group2" />
 				</tab>
 			</tabs>
 
@@ -43,24 +44,13 @@
 				<group id="HLUTool_Group1" caption="GIS" keytip="G0">
 					<comboBox refID="HLUTool_ActiveLayerComboBox" size="middle" />
 				</group>
+				<group id="HLUTool_Group2" caption="Control Edits" keytip="R0">
+					<comboBox refID="HLUTool_ReasonComboBox" size="middle" />
+					<comboBox refID="HLUTool_ProcessComboBox" size="middle" />
+				</group>
 			</groups>
 
 			<controls>
-				<comboBox id="HLUTool_ActiveLayerComboBox"
-						  caption=" Active Layer:"
-						  extendedCaption="Select Active Layer"
-						  className="HLU.UI.UserControls.ActiveLayerComboBox"
-						  itemWidth="180"
-						  isEditable="true"
-						  condition="esri_mapping_mapPane"
-						  isReadOnly="true"
-						  resizable="true"
-						  keytip="C0">
-					<tooltip heading="Active Layer">
-						Select the active feature layer<disabledText />
-					</tooltip>
-				</comboBox>
-
 				<button id="HLUTool_btnHLUToolDockPane"
 						caption="HLU Tool"
 						className="HLU.UI.ViewModel.WindowMain_ShowButton"
@@ -73,6 +63,51 @@
 						Manage habitat and land use data.<disabledText />
 					</tooltip>
 				</button>
+
+				<comboBox id="HLUTool_ActiveLayerComboBox"
+						  caption=" Active Layer:"
+						  extendedCaption="Select Active Layer"
+						  className="HLU.UI.UserControls.ActiveLayerComboBox"
+						  itemWidth="180"
+						  isEditable="true"
+						  condition="esri_mapping_mapPane"
+						  isReadOnly="true"
+						  resizable="true"
+						  keytip="AL">
+					<tooltip heading="Active Layer">
+						Select the active feature layer<disabledText />
+					</tooltip>
+				</comboBox>
+
+				<comboBox id="HLUTool_ReasonComboBox"
+						  caption=" Reason:"
+						  extendedCaption="Select reason for updates"
+						  className="HLU.UI.UserControls.ReasonComboBox"
+						  itemWidth="250"
+						  isEditable="true"
+						  condition="esri_mapping_mapPane"
+						  isReadOnly="true"
+						  resizable="true"
+						  keytip="RC">
+					<tooltip heading="Reason">
+						Select the reason for updates<disabledText />
+					</tooltip>
+				</comboBox>
+
+				<comboBox id="HLUTool_ProcessComboBox"
+						  caption=" Process:"
+						  extendedCaption="Select process for updates"
+						  className="HLU.UI.UserControls.ProcessComboBox"
+						  itemWidth="250"
+						  isEditable="true"
+						  condition="esri_mapping_mapPane"
+						  isReadOnly="true"
+						  resizable="true"
+						  keytip="RC">
+					<tooltip heading="Process">
+						Select the process for updates<disabledText />
+					</tooltip>
+				</comboBox>
 			</controls>
 
 			<dockPanes>
@@ -98,4 +133,5 @@
 			</groups>
 		</updateModule>
 	</modules>
+
 </ArcGIS>

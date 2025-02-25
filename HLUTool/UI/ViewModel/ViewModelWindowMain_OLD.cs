@@ -427,6 +427,8 @@ namespace HLU.UI.ViewModel
         private bool _autoSelectOnGis;
 
         private ActiveLayerComboBox _activeLayerComboBox;
+        private ReasonComboBox _reasonComboBox;
+        private ProcessComboBox _processComboBox;
 
         #endregion Fields
 
@@ -2367,17 +2369,14 @@ namespace HLU.UI.ViewModel
 
         private async Task NavigateToRecordAsync(int value)
         {
-            //---------------------------------------------------------------------
-            // CHANGED: CR22 (Record selectors)
             // Show the wait cursor and processing message in the status area
             // whilst moving to the new Incid.
-            ChangeCursor(Cursors.Wait, "Processing ...");
+            ChangeCursor(Cursors.Wait, "Selecting record ...");
 
             // Move to the first record.
             await MoveIncidCurrentRowIndexAsync(value);
 
             ChangeCursor(Cursors.Arrow, null);
-            //---------------------------------------------------------------------
 
             // Check if the GIS and database are in sync.
             if ((_toidsIncidGisCount > _toidsIncidDbCount) ||
@@ -2412,8 +2411,26 @@ namespace HLU.UI.ViewModel
         {
             if (param is string newText && int.TryParse(newText, out int value))
             {
+                // Show the wait cursor and processing message in the status area
+                // whilst moving to the new Incid.
+                ChangeCursor(Cursors.Wait, "Selecting record ...");
+
                 // Move to the required incid current row (don't wait).
                 await MoveIncidCurrentRowIndexAsync(value);
+
+                ChangeCursor(Cursors.Arrow, null);
+
+                // Check if the GIS and database are in sync.
+                if ((_toidsIncidGisCount > _toidsIncidDbCount) ||
+                   (_fragsIncidGisCount > _fragsIncidDbCount))
+                {
+                    if (_fragsIncidGisCount == 1)
+                        MessageBox.Show("Map feature not found in database.", "HLU: Selection",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    else
+                        MessageBox.Show("Map features not found in database.", "HLU: Selection",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
             }
         }
 
@@ -6554,6 +6571,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        //TODO: Remove window and stop split from happening without reason/process set.
         void vmCompSplit_RequestClose(string reason, string process)
         {
             _vmCompSplit.RequestClose -= vmCompSplit_RequestClose;
@@ -8665,7 +8683,7 @@ namespace HLU.UI.ViewModel
                 int stop = start;
                 bool moveForward = true;
 
-                //TODO: Check if seekIncidNumber is not -1 first.
+                //TODO: Check if seekIncidNumber is not -1 first?
                 if (seekIncidNumber < incidNumberPageMin) // moving backward
                 {
                     start = seekRowNumber - IncidPageSize > 0 ? seekRowNumber - IncidPageSize : 0;
@@ -10184,7 +10202,18 @@ namespace HLU.UI.ViewModel
 
         public string Reason
         {
-            get { return _reason; }
+            get
+            {
+                // Get the instance of the active layer ComboBox in the ribbon.
+                if (_reasonComboBox == null)
+                    _reasonComboBox = ReasonComboBox.GetInstance();
+
+                if (_reasonComboBox.Reason != null)
+                    _reason = _reasonComboBox.Reason;
+
+                return _reason;
+
+            }
             set { _reason = value; }
         }
 
@@ -10205,7 +10234,18 @@ namespace HLU.UI.ViewModel
 
         public string Process
         {
-            get { return _process; }
+            get
+            {
+                // Get the instance of the active layer ComboBox in the ribbon.
+                if (_processComboBox == null)
+                    _processComboBox = ProcessComboBox.GetInstance();
+
+                if (_processComboBox.Process != null)
+                    _process = _processComboBox.Process;
+
+                return _reason;
+
+            }
             set { _process = value; }
         }
 
@@ -15173,9 +15213,11 @@ namespace HLU.UI.ViewModel
 
                 StringBuilder error = new();
 
+                //TODO: Remove from error checking now on ribbon?
                 if (String.IsNullOrEmpty(Reason))
                     error.Append(Environment.NewLine).Append("Reason is mandatory for the history trail of every update");
 
+                //TODO: Remove from error checking now on ribbon?
                 if (String.IsNullOrEmpty(Process))
                     error.Append(Environment.NewLine).Append("Process is mandatory for the history trail of every update");
 
@@ -15270,6 +15312,7 @@ namespace HLU.UI.ViewModel
 
                 string error = null;
 
+                //TODO: Remove from error checking now on ribbon?
                 switch (columnName)
                 {
                     case "Reason":

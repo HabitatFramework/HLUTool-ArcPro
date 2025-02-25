@@ -74,10 +74,29 @@ namespace HLU.UI.ViewModel
                     fixedValueDict.Add(_viewModelMain.HluDataset.history.modified_dateColumn.Ordinal, nowDtTm);
                 }
                 //---------------------------------------------------------------------
+
                 if (!fixedValueDict.ContainsKey(_viewModelMain.HluDataset.history.modified_reasonColumn.Ordinal))
-                    fixedValueDict.Add(_viewModelMain.HluDataset.history.modified_reasonColumn.Ordinal, _viewModelMain.Reason);
+                {
+                    string reasonCode = ViewModelWindowMainHelpers.GetReasonCode(_viewModelMain.HluDataset, _viewModelMain.Reason);
+                    if (!String.IsNullOrEmpty(reasonCode))
+                        fixedValueDict.Add(_viewModelMain.HluDataset.history.modified_reasonColumn.Ordinal,
+                            reasonCode);
+                    else
+                        throw new Exception(String.Format("Missing or indeterminate reason code for {0}.",
+                            operation.ToString()));
+                }
+
                 if (!fixedValueDict.ContainsKey(_viewModelMain.HluDataset.history.modified_processColumn.Ordinal))
-                    fixedValueDict.Add(_viewModelMain.HluDataset.history.modified_processColumn.Ordinal, _viewModelMain.Process);
+                {
+                    string processCode = ViewModelWindowMainHelpers.GetProcessCode(_viewModelMain.HluDataset, _viewModelMain.Process);
+                    if (!String.IsNullOrEmpty(processCode))
+                        fixedValueDict.Add(_viewModelMain.HluDataset.history.modified_processColumn.Ordinal,
+                            processCode);
+                    else
+                        throw new Exception(String.Format("Missing or indeterminate process code for {0}.",
+                            operation.ToString()));
+                }
+
                 if (!fixedValueDict.ContainsKey(_viewModelMain.HluDataset.history.modified_operationColumn.Ordinal))
                 {
                     string operationCode = ViewModelWindowMainHelpers.GetOperationsCode(_viewModelMain.HluDataset, operation);

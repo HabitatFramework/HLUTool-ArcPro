@@ -167,6 +167,32 @@ namespace HLU.UI.ViewModel
                 return null;
         }
 
+        public static string GetReasonCode(HluDataSet hluDS, string reasonDescription)
+        {
+            if ((hluDS == null) || (hluDS.lut_reason == null)) return null;
+
+            var o = hluDS.lut_reason
+                .Where(r => r.description == reasonDescription);
+
+            if (o.Count() == 1)
+                return o.First().code;
+            else
+                return null;
+        }
+
+        public static string GetProcessCode(HluDataSet hluDS, string processDescription)
+        {
+            if ((hluDS == null) || (hluDS.lut_process == null)) return null;
+
+            var o = hluDS.lut_reason
+                .Where(r => r.description == processDescription);
+
+            if (o.Count() == 1)
+                return o.First().code;
+            else
+                return null;
+        }
+
         [GeneratedRegex("[A-Z][^A-Z]*")]
         private static partial Regex CapitalisedRegex();
     }
