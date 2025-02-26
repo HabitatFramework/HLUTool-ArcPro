@@ -719,7 +719,7 @@ namespace HLU.UI.ViewModel
                     // create ViewModel to which main window binds
                     _viewModelOptions = new()
                     {
-                        DisplayName = "Add Secondary Habitats"
+                        DisplayName = "Options"
                     };
 
                     // when ViewModel asks to be closed, close window

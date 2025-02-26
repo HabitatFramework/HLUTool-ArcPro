@@ -138,9 +138,14 @@ namespace HLU.UI.ViewModel
         {
             NavigationItems =
         [
-            new() { Name = "Database", Content = new DatabaseOptions() }
-            //new () { Name = "GIS/Export", Content = new GisView() },
-            //new () { Name = "History", Content = new HistoryView() }
+            new() { Name = "Database", Content = new DatabaseOptions() },
+            new () { Name = "Export", Content = new ExportOptions() },
+            new () { Name = "History", Content = new HistoryOptions() },
+            new () { Name = "Interface", Content = new InterfaceOptions() },
+            new () { Name = "Updates", Content = new UpdatesOptions() },
+            new () { Name = "SQL", Content = new SQLOptions() },
+            new () { Name = "Dates", Content = new DatesOptions() },
+            new () { Name = "Bulk Update", Content = new BulkUpdateOptions() }
         ];
 
             SelectedView = NavigationItems.First();

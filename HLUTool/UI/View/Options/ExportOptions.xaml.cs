@@ -13,14 +13,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace HLU.UI.UserControls
+namespace HLU.UI.View
 {
     /// <summary>
-    /// Interaction logic for DatabaseOptions.xaml
+    /// Interaction logic for ExportOptions.xaml
     /// </summary>
-    public partial class DatabaseOptions : UserControl
+    public partial class ExportOptions : UserControl
     {
-        public DatabaseOptions()
+        public ExportOptions()
         {
             InitializeComponent();
         }
