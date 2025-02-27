@@ -7,6 +7,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="../Dictionary/NullableValueConverterDictionary.xaml" />
+                <ResourceDictionary Source="../Dictionary/MultiEqualityConverterDictionary.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
 
@@ -16,30 +17,32 @@
 
         <Label Content="Set options for SQL"
             HorizontalAlignment="Left"
-            FontWeight="Medium"
             FontSize="14"
-            Margin="0,0,0,10" />
+            FontWeight="Medium" />
 
         <Expander Header="Filter Options"
+            Margin="6,10,0,0"
             IsExpanded="True">
 
-            <Grid Margin="2,4,4,2"
+            <Grid
+                Margin="12,4,4,2"
                 HorizontalAlignment="Left">
 
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="10" />
+                    <RowDefinition Height="4" />
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="10" />
+                    <RowDefinition Height="4" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <Grid x:Name="GridSQLSelect"
+                <Grid
+                    x:Name="GridSQLSelect"
                     Grid.Row="0">
 
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="160" />
-                        <ColumnDefinition Width="Auto" MinWidth="100" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" MinWidth="60" />
                     </Grid.ColumnDefinitions>
 
                     <Label Content="Get Values Count"
@@ -56,29 +59,62 @@
                         TextAlignment="Right" />
                 </Grid>
 
-                <Grid x:Name="GridWarnBeforeGISSelect"
+                <Grid
+                    x:Name="GridWarnBeforeGISSelect"
                     Grid.Row="2">
 
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="160" />
-                        <ColumnDefinition Width="Auto" MinWidth="150" />
+                        <ColumnDefinition Width="20" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
                     <Label Content="Warn Before GIS Select"
                         x:Name="LabelWarnBeforeGISSelect"
+                        Grid.Row="0"
                         Grid.Column="0"
+                        Grid.ColumnSpan="2"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center" />
 
-                    <ComboBox ItemsSource="{Binding WarnBeforeGISSelectOptions}"
-                        SelectedValue="{Binding WarnBeforeGISSelect, ValidatesOnDataErrors=True}"
-                        x:Name="ComboBoxWarnBeforeGISSelect"
+                    <StackPanel
+                        Grid.Row="1"
                         Grid.Column="1"
-                        BorderThickness="1"
-                        Tag="ErrorContent" />
+                        Grid.ColumnSpan="2">
+                        <ItemsControl ItemsSource="{Binding WarnBeforeGISSelectOptions}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <RadioButton Content="{Binding}"
+                                        Margin="0,0,0,5"
+                                        GroupName="WarnBeforeGISSelectGroup">
+                                        <RadioButton.IsChecked>
+                                            <MultiBinding
+                                                Converter="{StaticResource multiEqualityConverter}"
+                                                Mode="TwoWay">
+                                                <!-- First binding: ViewModel property that stores the selected option -->
+                                                <Binding
+                                                    Mode="TwoWay"
+                                                    Path="DataContext.WarnBeforeGISSelect"
+                                                    RelativeSource="{RelativeSource AncestorType=Window}"
+                                                    ValidatesOnDataErrors="True" />
+                                                <!-- Second binding: The value of the current item in the ItemsControl -->
+                                                <Binding Path="." />
+                                            </MultiBinding>
+                                        </RadioButton.IsChecked>
+                                    </RadioButton>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
                 </Grid>
 
-                <Grid x:Name="GridSqlPath"
+                <Grid
+                    x:Name="GridSqlPath"
                     Grid.Row="4">
 
                     <Grid.ColumnDefinitions>

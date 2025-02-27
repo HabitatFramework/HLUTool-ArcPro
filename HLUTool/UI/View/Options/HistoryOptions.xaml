@@ -16,11 +16,11 @@
 
         <Label Content="Set options for history"
             HorizontalAlignment="Left"
-            FontWeight="Medium"
             FontSize="14"
-            Margin="0,0,0,10" />
+            FontWeight="Medium" />
 
         <Expander Header="Display Columns"
+            Margin="6,10,0,0"
             IsExpanded="True">
 
             <ListBox ItemsSource="{Binding HistoryColumns}"
@@ -28,8 +28,7 @@
 
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <CheckBox Content="{Binding Item, Mode=TwoWay}"
-                            IsChecked="{Binding IsSelected, Mode=TwoWay}" />
+                        <CheckBox Content="{Binding Item, Mode=TwoWay}" IsChecked="{Binding IsSelected, Mode=TwoWay}" />
                     </DataTemplate>
                 </ListBox.ItemTemplate>
 
@@ -38,14 +37,16 @@
         </Expander>
 
         <Expander Header="Display Rows"
+            Margin="6,10,0,0"
             IsExpanded="True">
 
-            <Grid Margin="2,4,4,2"
+            <Grid
+                Margin="12,4,4,2"
                 HorizontalAlignment="Left">
 
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="70" />
+                    <ColumnDefinition Width="60" />
                 </Grid.ColumnDefinitions>
 
                 <Label Content="Rows to Display"
@@ -53,7 +54,8 @@
                     HorizontalAlignment="Right" />
 
                 <TextBox Text="{Binding HistoryDisplayLastN, Converter={StaticResource nullableValueConverter}, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-                    Grid.Column="1" />
+                    Grid.Column="1"
+                    HorizontalContentAlignment="Right" />
 
             </Grid>
 

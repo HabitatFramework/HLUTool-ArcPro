@@ -5,8 +5,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:viewModel="clr-namespace:HLU.UI.ViewModel"
         Title="{Binding WindowTitle}"
-        Width="600" MinWidth="500"
-        Height="300" MinHeight="500"
+        Width="Auto" MinWidth="500" MaxWidth="800"
+        Height="Auto" MinHeight="300" MaxHeight="600"
         Icon="..\..\Icons\HLUIcon.png"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
@@ -39,27 +39,39 @@
                 <!-- Content -->
             </Grid.ColumnDefinitions>
 
-            <!-- Navigation List -->
-            <ListBox x:Name="NavigationList"
-                     Grid.Row="0"
-                     Grid.Column="0"
-                     ItemsSource="{Binding NavigationItems}"
-                     SelectedItem="{Binding SelectedView}"
-                     Background="Transparent"
-                     BorderThickness="0">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding Name}" Padding="10,5" />
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+            <!-- Navigation List with Border -->
+            <Border Grid.Column="0"
+                    BorderThickness="1"
+                    BorderBrush="Gray"
+                    Margin="0,0,5,0">
 
-            <!-- Content Area with ScrollViewer -->
-            <ScrollViewer Grid.Row="0"
-                          Grid.Column="1"
-                          VerticalScrollBarVisibility="Auto" >
-                <ContentControl Content="{Binding SelectedView.Content}" />
-            </ScrollViewer>
+                    <ListBox x:Name="NavigationList"
+                         Grid.Row="0"
+                         Grid.Column="0"
+                         ItemsSource="{Binding NavigationItems}"
+                         SelectedItem="{Binding SelectedView}"
+                         Background="Transparent"
+                         BorderThickness="0">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" Padding="10,5" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+
+            <!-- Content Area with Border and ScrollViewer -->
+            <Border Grid.Column="1"
+                    BorderThickness="1"
+                    BorderBrush="Gray">
+
+                    <ScrollViewer Grid.Row="0"
+                              Grid.Column="1"
+                              VerticalScrollBarVisibility="Auto" >
+                    <ContentControl Content="{Binding SelectedView.Content}"
+                              Padding="5" />
+                </ScrollViewer>
+            </Border>
 
             <!-- Buttons (Fixed Position) -->
             <StackPanel Orientation="Horizontal"
@@ -69,7 +81,7 @@
                         Margin="0,10,0,0">
                 <Button x:Name="ButtonSave"
                         Command="{Binding SaveCommand}"
-                        Content="_Save"
+                        Content="_OK"
                         Width="80"
                         Margin="5"
                         Style="{DynamicResource Esri_Button}" />

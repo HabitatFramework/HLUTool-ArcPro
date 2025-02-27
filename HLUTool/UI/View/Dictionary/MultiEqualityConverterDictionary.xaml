@@ -3,6 +3,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:hlu="clr-namespace:HLU.Converters">
 
-    <hlu:ErrorMessageConverter x:Key="errorMessageConverter" />
+    <hlu:MultiEqualityConverter x:Key="multiEqualityConverter" />
 
 </ResourceDictionary>
