@@ -587,6 +587,7 @@ namespace HLU.UI.ViewModel
                 // Load all of the lookup tables
                 LoadLookupTables();
 
+                //TODO: Don't do this until the active map has been checked.
                 // Move to first row
                 await MoveIncidCurrentRowIndexAsync(1);
 
@@ -8175,6 +8176,8 @@ namespace HLU.UI.ViewModel
         /// </summary>
         private async Task NewIncidCurrentRowAsync()
         {
+            //TODO: Check if the slection is already being read so it
+            // doesn't repeat itself.
             // Re-check GIS selection in case it has changed.
             if (_gisApp != null)
             {

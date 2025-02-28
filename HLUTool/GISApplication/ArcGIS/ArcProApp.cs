@@ -633,6 +633,10 @@ namespace HLU.GISApplication
             if (resultTable == null)
                 return resultTable;
 
+            // Return if the active layer hasn't been set yet.
+            if (_hluLayer == null)
+                return resultTable;
+
             // Execute the query on the main CIM thread
             await QueuedTask.Run(() =>
             {
