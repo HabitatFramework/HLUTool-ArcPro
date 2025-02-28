@@ -10,6 +10,7 @@ namespace HLU.UI.UserControls
     public class NavigationItem
     {
         public string Name { get; set; }
+        public string Category { get; set; }
         public UserControl Content { get; set; }
     }
 }

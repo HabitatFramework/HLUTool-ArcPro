@@ -38,6 +38,7 @@
 
                 <TextBox Text="{Binding MinAutoZoom, Converter={StaticResource nullableValueConverter}, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
                     Grid.Column="1"
+                    Height="24"
                     HorizontalContentAlignment="Right" />
 
             </Grid>

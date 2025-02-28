@@ -20,11 +20,14 @@
             FontWeight="Medium" />
 
         <Expander Header="Display Columns"
-            Margin="6,10,0,0"
-            IsExpanded="True">
+                  Margin="6,10,0,0"
+                  IsExpanded="True">
 
             <ListBox ItemsSource="{Binding HistoryColumns}"
-                SelectionMode="Extended">
+                     Margin="18,4,4,2"
+                     Width="Auto" MinWidth="200"
+                     HorizontalAlignment="Left"
+                     SelectionMode="Extended">
 
                 <ListBox.ItemTemplate>
                     <DataTemplate>
@@ -55,6 +58,7 @@
 
                 <TextBox Text="{Binding HistoryDisplayLastN, Converter={StaticResource nullableValueConverter}, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
                     Grid.Column="1"
+                    Height="24"
                     HorizontalContentAlignment="Right" />
 
             </Grid>

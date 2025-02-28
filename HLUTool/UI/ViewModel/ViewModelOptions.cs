@@ -30,6 +30,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Input;
 using System.Windows.Forms;
+using ArcGIS.Desktop.Framework;
 using System.Text.RegularExpressions;
 using HLU.Data.Model;
 using HLU.UI.ViewModel;
@@ -38,6 +39,8 @@ using HLU.Properties;
 using HLU.UI.UserControls;
 using System.Collections.ObjectModel;
 using HLU.UI.View;
+using System.Windows.Data;
+using ArcGIS.Desktop.Framework.Contracts;
 
 namespace HLU.UI.ViewModel
 {
@@ -126,6 +129,8 @@ namespace HLU.UI.ViewModel
         private string _bakSqlPath;
 
         public ObservableCollection<NavigationItem> NavigationItems { get; }
+        public ICollectionView GroupedNavigationItems { get; set; }
+        private readonly Dictionary<string, System.Windows.Controls.UserControl> _controlInstances = new();
 
         #endregion
 
@@ -136,19 +141,66 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public ViewModelOptions()
         {
-            NavigationItems =
-        [
-            new() { Name = "Database", Content = new DatabaseOptions() },
-            new () { Name = "Export", Content = new ExportOptions() },
-            new () { Name = "History", Content = new HistoryOptions() },
-            new () { Name = "Interface", Content = new InterfaceOptions() },
-            new () { Name = "Updates", Content = new UpdatesOptions() },
-            new () { Name = "SQL", Content = new SQLOptions() },
-            new () { Name = "Dates", Content = new DatesOptions() },
-            new () { Name = "Bulk Update", Content = new BulkUpdateOptions() }
-        ];
+            // Get the dockpane DAML id.
+            DockPane pane = FrameworkApplication.DockPaneManager.Find(DockPaneID);
+            if (pane == null)
+                return;
+
+            // Get the ViewModel by casting the dockpane.
+            _viewModelMain = pane as ViewModelWindowMain;
+
+            _gisIDColumnOrdinals = Settings.Default.GisIDColumnOrdinals.Cast<string>()
+                .Select(s => Int32.Parse(s)).ToList();
+
+            _historyColumns = new SelectionList<string>(_incidMMPolygonsTable.Columns.Cast<DataColumn>()
+                .Where(c => !_gisIDColumnOrdinals.Contains(c.Ordinal)
+                    && !c.ColumnName.StartsWith("shape_"))
+                .Select(c => EscapeAccessKey(c.ColumnName)).ToArray());
+
+            List<int> historyColumnOrdinals = Settings.Default.HistoryColumnOrdinals.Cast<string>()
+                .Select(s => Int32.Parse(s)).Where(i => !_gisIDColumnOrdinals.Contains(i) &&
+                    !_incidMMPolygonsTable.Columns[i].ColumnName.StartsWith("shape_")).ToList();
+
+            foreach (SelectionItem<string> si in _historyColumns)
+                si.IsSelected = historyColumnOrdinals.Contains(
+                    _incidMMPolygonsTable.Columns[UnescapeAccessKey(si.Item)].Ordinal);
+
+            // Store the map path so that it can be reset if the user
+            // cancels updates to the options.
+            _bakMapPath = _mapPath;
+
+            NavigationItems = new ObservableCollection<NavigationItem>
+            {
+                new() { Name = "Database", Category = "Application", Content = new DatabaseOptions() },
+                new () { Name = "Export", Category = "Application", Content = new ExportOptions() },
+                new () { Name = "History", Category = "User", Content = new HistoryOptions() },
+                new () { Name = "Interface", Category = "User", Content = new InterfaceOptions() },
+                new () { Name = "Updates", Category = "User", Content = new UpdatesOptions() },
+                new () { Name = "SQL", Category = "User", Content = new SQLOptions() },
+                new () { Name = "Dates", Category = "User", Content = new DatesOptions() },
+                new () { Name = "Bulk Update", Category = "User", Content = new BulkUpdateOptions() }
+            };
+
+            var collectionView = new CollectionViewSource { Source = NavigationItems };
+            collectionView.GroupDescriptions.Add(new PropertyGroupDescription("Category"));
+            GroupedNavigationItems = collectionView.View;
 
             SelectedView = NavigationItems.First();
+        }
+
+        private NavigationItem CreateNavigationItem(string name, string category, System.Windows.Controls.UserControl control)
+        {
+            if (!_controlInstances.ContainsKey(name))
+            {
+                _controlInstances[name] = control;
+            }
+
+            return new NavigationItem
+            {
+                Name = name,
+                Category = category,
+                Content = _controlInstances[name]
+            };
         }
 
         /// <summary>
@@ -180,14 +232,14 @@ namespace HLU.UI.ViewModel
             _bakMapPath = _mapPath;
 
 
-            NavigationItems =
-        [
-            new() { Name = "Database", Content = new DatabaseOptions() }
-            //new () { Name = "GIS/Export", Content = new GisView() },
-            //new () { Name = "History", Content = new HistoryView() }
-        ];
+        //    NavigationItems =
+        //[
+        //    new() { Name = "Database", Content = new DatabaseOptions() }
+        //    //new () { Name = "GIS/Export", Content = new GisView() },
+        //    //new () { Name = "History", Content = new HistoryView() }
+        //];
 
-            SelectedView = NavigationItems.First();
+        //    SelectedView = NavigationItems.First();
         }
 
         private string EscapeAccessKey(string s)
@@ -216,6 +268,20 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion
+
+        #region Properties
+
+        /// <summary>
+        /// ID of the DockPane.
+        /// </summary>
+        private const string _dockPaneID = "HLUTool_UI_WindowMain";
+
+        public static string DockPaneID
+        {
+            get => _dockPaneID;
+        }
+
+        #endregion Properties
 
         #region RequestClose
 

@@ -77,48 +77,66 @@
 
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="10" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" MinWidth="370" />
-                </Grid.ColumnDefinitions>
+                <Grid x:Name="GridPriorityDeterminationQuality"
+                      Grid.Row="0"
+                      HorizontalAlignment="Left">
 
-                <Label Content="Priority Determination Quality"
-                    x:Name="LabelDeterminationQuality"
-                    Grid.Row="0"
-                    Grid.Column="0"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Center" />
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"
+                                          MinWidth="170" />
+                        <ColumnDefinition Width="Auto"
+                                          MinWidth="350" />
+                    </Grid.ColumnDefinitions>
 
-                <ComboBox ItemsSource="{Binding BulkDeterminationQualityCodes}"
-                    x:Name="ComboBoxDeterminationQuality"
-                    Grid.Row="0"
-                    Grid.Column="1"
-                    BorderThickness="1"
-                    DisplayMemberPath="description"
-                    SelectedValue="{Binding BulkDeterminationQuality, ValidatesOnDataErrors=True}"
-                    SelectedValuePath="code"
-                    Tag="ErrorContent" />
+                    <Label Content="Priority Determination Quality"
+                           x:Name="LabelDeterminationQuality"
+                           Grid.Column="0"
+                           HorizontalAlignment="Left"
+                           VerticalAlignment="Center" />
 
-                <Label Content="Priority Interpretation Quality"
-                    x:Name="LabelInterpretationQuality"
-                    Grid.Row="2"
-                    Grid.Column="0"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Center" />
+                    <ComboBox ItemsSource="{Binding BulkDeterminationQualityCodes}"
+                              x:Name="ComboBoxDeterminationQuality"
+                              Grid.Column="1"
+                              BorderThickness="1"
+                              DisplayMemberPath="description"
+                              SelectedValue="{Binding BulkDeterminationQuality, ValidatesOnDataErrors=True}"
+                              SelectedValuePath="code"
+                              Tag="ErrorContent" />
 
-                <ComboBox ItemsSource="{Binding BulkInterpretationQualityCodes}"
-                    x:Name="ComboBoxInterpretationQuality"
-                    Grid.Row="2"
-                    Grid.Column="1"
-                    BorderThickness="1"
-                    DisplayMemberPath="description"
-                    SelectedValue="{Binding BulkInterpretationQuality, ValidatesOnDataErrors=True}"
-                    SelectedValuePath="code"
-                    Tag="ErrorContent" />
+                </Grid>
+
+                <Grid x:Name="GridPriorityInterpretationQuality"
+                      Grid.Row="1"
+                      HorizontalAlignment="Left">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"
+                                          MinWidth="170" />
+                        <ColumnDefinition Width="Auto"
+                                          MinWidth="90" />
+                    </Grid.ColumnDefinitions>
+
+                    <Label Content="Priority Interpretation Quality"
+                           x:Name="LabelInterpretationQuality"
+                           Grid.Row="2"
+                           Grid.Column="0"
+                           HorizontalAlignment="Left"
+                           VerticalAlignment="Center" />
+
+                    <ComboBox ItemsSource="{Binding BulkInterpretationQualityCodes}"
+                              x:Name="ComboBoxInterpretationQuality"
+                              Grid.Row="2"
+                              Grid.Column="1"
+                              BorderThickness="1"
+                              DisplayMemberPath="description"
+                              SelectedValue="{Binding BulkInterpretationQuality, ValidatesOnDataErrors=True}"
+                              SelectedValuePath="code"
+                              Tag="ErrorContent" />
+
+                </Grid>
             </Grid>
         </Expander>
 

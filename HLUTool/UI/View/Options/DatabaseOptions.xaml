@@ -1,20 +1,21 @@
 ﻿<UserControl x:Class="HLU.UI.View.DatabaseOptions"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <StackPanel Margin="4">
 
         <Label Content="Set options for database"
-               HorizontalAlignment="Left"
-               FontSize="14"
-               FontWeight="Medium" />
+            HorizontalAlignment="Left"
+            FontSize="14"
+            FontWeight="Medium" />
 
         <Expander Header="Database timeout"
-                  Margin="6,10,0,0"
-                  IsExpanded="True">
+            Margin="6,10,0,0"
+            IsExpanded="True">
 
-            <Grid Margin="12,4,4,2"
-                  HorizontalAlignment="Left">
+            <Grid
+                Margin="12,4,4,2"
+                HorizontalAlignment="Left">
 
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -28,24 +29,26 @@
                 </Grid.ColumnDefinitions>
 
                 <Label Content="Timeout [secs]"
-                       Grid.Row="0"
-                       Grid.Column="0"
-                       HorizontalAlignment="Left" />
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    HorizontalAlignment="Left" />
 
                 <TextBox Text="{Binding DbConnectionTimeout}"
-                         Grid.Row="0"
-                         Grid.Column="1"
-                         HorizontalContentAlignment="Right" />
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Height="24"
+                    HorizontalContentAlignment="Right" />
 
                 <Label Content="Incid Table Page Size [rows]"
-                       Grid.Row="2"
-                       Grid.Column="0"
-                       HorizontalAlignment="Left" />
+                    Grid.Row="2"
+                    Grid.Column="0"
+                    HorizontalAlignment="Left" />
 
                 <TextBox Text="{Binding IncidTablePageSize}"
-                         Grid.Row="2"
-                         Grid.Column="1"
-                         HorizontalContentAlignment="Right" />
+                    Grid.Row="2"
+                    Grid.Column="1"
+                    Height="24"
+                    HorizontalContentAlignment="Right" />
 
             </Grid>
 

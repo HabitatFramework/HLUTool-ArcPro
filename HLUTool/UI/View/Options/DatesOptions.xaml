@@ -31,54 +31,66 @@
                     <ColumnDefinition Width="80" />
                 </Grid.ColumnDefinitions>
 
-                <Label x:Name="LabelSeasonSpring" Content="Spring"
+                <Label Content="Spring"
+                    x:Name="LabelSeasonSpring"
                     Grid.Row="0"
                     Grid.Column="0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Center" />
 
-                <TextBox x:Name="TextBoxSeasonSpring" Text="{Binding SeasonSpring, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
+                <TextBox Text="{Binding SeasonSpring, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
+                    x:Name="TextBoxSeasonSpring"
                     Grid.Row="0"
                     Grid.Column="1"
+                    Height="24"
                     HorizontalContentAlignment="Center"
                     BorderThickness="1"
                     Tag="ErrorContent" />
 
-                <Label x:Name="LabelSeasonAutumn" Content="Autumn"
+                <Label Content="Autumn"
+                    x:Name="LabelSeasonAutumn"
                     Grid.Row="0"
                     Grid.Column="3"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Center" />
 
-                <TextBox x:Name="TextBoxSeasonAutumn" Text="{Binding SeasonAutumn, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
+                <TextBox Text="{Binding SeasonAutumn, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
+                    x:Name="TextBoxSeasonAutumn"
                     Grid.Row="0"
                     Grid.Column="4"
+                    Height="24"
                     HorizontalContentAlignment="Center"
                     BorderThickness="1"
                     Tag="ErrorContent" />
 
-                <Label x:Name="LabelSeasonSummer" Content="Summer"
+                <Label Content="Summer"
+                    x:Name="LabelSeasonSummer"
                     Grid.Row="2"
                     Grid.Column="0"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Center" />
 
-                <TextBox x:Name="TextBoxSeasonSummer" Text="{Binding SeasonSummer, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
+                <TextBox Text="{Binding SeasonSummer, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
+                    x:Name="TextBoxSeasonSummer"
                     Grid.Row="2"
                     Grid.Column="1"
+                    Height="24"
                     HorizontalContentAlignment="Center"
                     BorderThickness="1"
                     Tag="ErrorContent" />
 
-                <Label x:Name="LabelSeasonWinter" Content="Winter"
+                <Label Content="Winter"
+                    x:Name="LabelSeasonWinter"
                     Grid.Row="2"
                     Grid.Column="3"
                     HorizontalAlignment="Left"
                     VerticalAlignment="Center" />
 
-                <TextBox x:Name="TextBoxSeasonWinter" Text="{Binding SeasonWinter, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
+                <TextBox Text="{Binding SeasonWinter, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
+                    x:Name="TextBoxSeasonWinter"
                     Grid.Row="2"
                     Grid.Column="4"
+                    Height="24"
                     HorizontalContentAlignment="Center"
                     BorderThickness="1"
                     Tag="ErrorContent" />

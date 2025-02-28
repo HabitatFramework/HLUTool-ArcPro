@@ -129,7 +129,8 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <Grid x:Name="GridPreferredHabitatClass"
+                <Grid
+                    x:Name="GridPreferredHabitatClass"
                     Grid.Row="0"
                     HorizontalAlignment="Left">
 
@@ -149,7 +150,8 @@
                         SelectedValuePath="code" />
                 </Grid>
 
-                <Grid x:Name="GridPreferredSecondaryGroup"
+                <Grid
+                    x:Name="GridPreferredSecondaryGroup"
                     Grid.Row="2"
                     HorizontalAlignment="Left">
 
@@ -169,7 +171,8 @@
                         SelectedValuePath="code" />
                 </Grid>
 
-                <Grid x:Name="GridSecondaryTableOrder"
+                <Grid
+                    x:Name="GridSecondaryTableOrder"
                     Grid.Row="4"
                     HorizontalAlignment="Left">
 
@@ -208,7 +211,7 @@
                                                 <Binding
                                                     Mode="TwoWay"
                                                     Path="DataContext.SecondaryCodeOrder"
-                                                    RelativeSource="{RelativeSource AncestorType=Window}"
+                                                    RelativeSource="{RelativeSource AncestorType=UserControl}"
                                                     ValidatesOnDataErrors="True" />
                                                 <!-- Second binding: The value of the current item in the ItemsControl -->
                                                 <Binding Path="." />
@@ -221,7 +224,8 @@
                     </StackPanel>
                 </Grid>
 
-                <Grid x:Name="GridSecondaryCodeDelimiter"
+                <Grid
+                    x:Name="GridSecondaryCodeDelimiter"
                     Grid.Row="6"
                     HorizontalAlignment="Left">
 
@@ -236,6 +240,7 @@
 
                     <TextBox Text="{Binding SecondaryCodeDelimiter, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
                         Grid.Column="1"
+                        Height="24"
                         MinWidth="30"
                         HorizontalAlignment="Left"
                         TextAlignment="Center" />
