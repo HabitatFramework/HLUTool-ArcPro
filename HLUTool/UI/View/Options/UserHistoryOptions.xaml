@@ -1,0 +1,122 @@
+﻿<UserControl x:Class="HLU.UI.View.UserHistoryOptions"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
+    xmlns:local="clr-namespace:HLU.UI.ViewModel"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+    d:DataContext="{d:DesignInstance Type=local:ViewModelOptions}"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <extensions:DesignOnlyResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
+                <ResourceDictionary Source="../Dictionary/NullableValueConverterDictionary.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+
+    </UserControl.Resources>
+
+    <StackPanel Margin="4">
+
+        <Label Content="Set user options for history"
+            HorizontalAlignment="Left"
+            FontSize="14"
+            FontWeight="Medium" />
+
+        <Expander Header="Display Columns"
+            Margin="6,10,0,0"
+            IsExpanded="True">
+
+            <Grid
+                Margin="12,4,4,2"
+                HorizontalAlignment="Left">
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Label Content="Columns to Display"
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        HorizontalAlignment="Left" />
+                    <controls:InfoButton Header="History Display Columns"
+                        Grid.Column="1"
+                        Margin="0,0,0,0"
+                        Description="Select which additional columns from the GIS layer are displayed in the History tab for each update. If the checkbox for a column is selected the column will be displayed." />
+
+                </Grid>
+
+                <ListBox ItemsSource="{Binding HistoryColumns}"
+                    Grid.Row="1"
+                    Width="Auto"
+                    MinWidth="200"
+                    Margin="6,4,4,2"
+                    HorizontalAlignment="Left"
+                    SelectionMode="Extended">
+
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <CheckBox Content="{Binding Item, Mode=TwoWay}"
+                                IsChecked="{Binding IsSelected,
+                                                    Mode=TwoWay}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+
+                </ListBox>
+
+            </Grid>
+
+        </Expander>
+
+        <Expander Header="Display Rows"
+            Margin="6,10,0,0"
+            IsExpanded="True">
+
+            <Grid
+                Margin="12,4,4,2"
+                HorizontalAlignment="Left">
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="60" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Label Content="Rows to Display"
+                    Grid.Column="0"
+                    HorizontalAlignment="Right" />
+                <xctk:IntegerUpDown
+                    x:Name="xctkHistoryDisplayLastN"
+                    Grid.Column="1"
+                    Height="24"
+                    BorderThickness="1"
+                    Maximum="{Binding MaxHistoryDisplayLastN}"
+                    Minimum="1"
+                    TextAlignment="Right"
+                    Value="{Binding HistoryDisplayLastN,
+                                    Converter={StaticResource nullableValueConverter},
+                                    ValidatesOnDataErrors=True,
+                                    UpdateSourceTrigger=PropertyChanged}" />
+                <controls:InfoButton Header="Display History Rows"
+                    Grid.Column="2"
+                    Margin="5,0,0,0"
+                    Description="Sets the number of entries displayed in the ‘History’ tab of the main interface." />
+
+            </Grid>
+
+        </Expander>
+
+    </StackPanel>
+
+</UserControl>

@@ -1,0 +1,101 @@
+﻿<UserControl x:Class="HLU.UI.View.AppDatabaseOptions"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
+    xmlns:local="clr-namespace:HLU.UI.ViewModel"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+    d:DataContext="{d:DesignInstance Type=local:ViewModelOptions}"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <extensions:DesignOnlyResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel Margin="4">
+
+        <Label Content="Set application options for database"
+            HorizontalAlignment="Left"
+            FontSize="14"
+            FontWeight="Medium" />
+
+        <Expander Header="Database timeout"
+            Margin="6,10,0,0"
+            IsExpanded="True">
+
+            <Grid
+                Margin="12,4,4,2"
+                HorizontalAlignment="Left">
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="4" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="60" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Label Content="Timeout [secs]"
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        HorizontalAlignment="Left" />
+                    <xctk:IntegerUpDown
+                        x:Name="xctkMaxDbConnectionTimeout"
+                        Grid.Column="1"
+                        Height="24"
+                        Maximum="{Binding MaxDbConnectionTimeout}"
+                        Minimum="1"
+                        TextAlignment="Right"
+                        Value="{Binding DbConnectionTimeout}" />
+                    <controls:InfoButton Header="Timeout"
+                        Grid.Column="2"
+                        Margin="5,0,0,0"
+                        Description="Sets the amount of time the tool will wait (in seconds) for the database to respond. The default value is 15.&#10;&#10;This value should be increased if an error occurs such as ‘The connection to the database timed out’ or if the network and/or database connection is known to be slow." />
+
+                </Grid>
+
+                <Grid Grid.Row="2">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="60" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Label Content="Incid Table Page Size [rows]"
+                        Grid.Column="0"
+                        HorizontalAlignment="Left" />
+                    <xctk:IntegerUpDown
+                        x:Name="xctkIncidTablePageSize"
+                        Grid.Column="1"
+                        Height="24"
+                        Maximum="{Binding MaxIncidTablePageSize}"
+                        Minimum="1"
+                        TextAlignment="Right"
+                        Value="{Binding IncidTablePageSize}" />
+                    <controls:InfoButton Header="Incid Table Page Size"
+                        Grid.Column="2"
+                        Margin="5,0,0,0"
+                        Description="Sets how many rows are retrieved from the database and stored in memory. The default value is 100.&#10;&#10;Increasing this value can improve performance when browsing records, however this will increase the amount of RAM required by the application and significant increases in the page size value could cause the tool to stop responding." />
+
+                </Grid>
+
+            </Grid>
+
+        </Expander>
+
+    </StackPanel>
+
+</UserControl>

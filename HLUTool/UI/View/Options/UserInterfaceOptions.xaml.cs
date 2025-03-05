@@ -16,11 +16,11 @@ using System.Windows.Shapes;
 namespace HLU.UI.View
 {
     /// <summary>
-    /// Interaction logic for ExportOptions.xaml
+    /// Interaction logic for UserInterfaceOptions.xaml
     /// </summary>
-    public partial class ExportOptions : UserControl
+    public partial class UserInterfaceOptions : UserControl
     {
-        public ExportOptions()
+        public UserInterfaceOptions()
         {
             InitializeComponent();
         }

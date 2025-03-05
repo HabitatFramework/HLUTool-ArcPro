@@ -16,11 +16,11 @@ using System.Windows.Shapes;
 namespace HLU.UI.View
 {
     /// <summary>
-    /// Interaction logic for HistoryOptions.xaml
+    /// Interaction logic for UserUpdatesOptions.xaml
     /// </summary>
-    public partial class HistoryOptions : UserControl
+    public partial class UserUpdatesOptions : UserControl
     {
-        public HistoryOptions()
+        public UserUpdatesOptions()
         {
             InitializeComponent();
         }

@@ -16,11 +16,11 @@ using System.Windows.Shapes;
 namespace HLU.UI.View
 {
     /// <summary>
-    /// Interaction logic for DatesOptions.xaml
+    /// Interaction logic for AppDatesOptions.xaml
     /// </summary>
-    public partial class DatesOptions : UserControl
+    public partial class AppDatesOptions : UserControl
     {
-        public DatesOptions()
+        public AppDatesOptions()
         {
             InitializeComponent();
         }

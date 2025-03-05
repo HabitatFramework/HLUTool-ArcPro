@@ -162,6 +162,8 @@ namespace HLU.UI.ViewModel
 
         private MapView _activeMapView;
 
+        private AddInSettings _appSettings;
+
         #endregion Fields
 
         #region PanelViewModelBase Members
@@ -211,18 +213,35 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public async Task InitializeComponentAsync()
         {
+            //TODO: Needed?
             //if (!Initialised)
             //{
             _dockPane = this;
             _initialised = false;
             _inError = false;
 
+            // Open the application XML settings file.
+            XmlSettingsManager xmlSettingsManager = new();
+
+            // If the settings file is not found then error.
+            if (xmlSettingsManager.SettingsFound == null)
+            {
+                ShowMessage("Settings file not found.", MessageType.Error);
+                _inError = true;
+                return;
+            }
+
+            // Load the settings from the XML file.
+            _appSettings = new AddInSettings();
+            _appSettings = xmlSettingsManager.LoadSettings();
+
             // Set the help URL.
-            _dockPane.HelpURL = Settings.Default.HelpURL;
+            _dockPane.HelpURL = _appSettings.HelpURL;
 
             try
             {
                 //TODO: What to do if the upgrade fails?
+                // Upgrade the user settings if necessary.
                 UpgradeSettings();
 
                 // Initialise the main view (start the tool)

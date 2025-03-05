@@ -16,11 +16,11 @@ using System.Windows.Shapes;
 namespace HLU.UI.View
 {
     /// <summary>
-    /// Interaction logic for UpdatesOptions.xaml
+    /// Interaction logic for UserGISOptions.xaml
     /// </summary>
-    public partial class UpdatesOptions : UserControl
+    public partial class UserGISOptions : UserControl
     {
-        public UpdatesOptions()
+        public UserGISOptions()
         {
             InitializeComponent();
         }

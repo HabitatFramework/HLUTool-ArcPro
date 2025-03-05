@@ -1,0 +1,160 @@
+﻿<UserControl x:Class="HLU.UI.View.AppUpdatesOptions"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
+    xmlns:local="clr-namespace:HLU.UI.ViewModel"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+    d:DataContext="{d:DesignInstance Type=local:ViewModelOptions}"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <extensions:DesignOnlyResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel Margin="4">
+
+        <Label Content="Set application options for updates"
+            HorizontalAlignment="Left"
+            FontSize="14"
+            FontWeight="Medium" />
+
+        <Expander Header="Update Options"
+            Margin="6,10,0,0"
+            IsExpanded="True">
+
+            <Grid
+                Margin="12,4,4,2"
+                HorizontalAlignment="Left">
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="0" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="0" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="0" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Grid
+                    x:Name="GridSubsetUpdateAction"
+                    Grid.Row="0"
+                    HorizontalAlignment="Left">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" MinWidth="245" />
+                        <ColumnDefinition Width="Auto" MinWidth="70" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Label Content="Action To Take When Updating Incid Subset"
+                        x:Name="LabelSubsetUpdateAction"
+                        Grid.Column="0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center" />
+                    <ComboBox ItemsSource="{Binding SubsetUpdateActions}"
+                        x:Name="ComboBoxSubsetUpdateAction"
+                        Grid.Column="1"
+                        BorderThickness="1"
+                        SelectedValue="{Binding SubsetUpdateAction,
+                                                ValidatesOnDataErrors=True}"
+                        Tag="ErrorContent" />
+                    <controls:InfoButton Header="Action to Take When Updating Subset"
+                        Grid.Column="2"
+                        Margin="5,0,0,0"
+                        Description="Select what action to take if they attempt to apply attribute changes to only a subset of features for an INCID (see :ref:`attribute_update` for more details). The available actions are:&#10;&#10;  * Prompt - Always **prompt** the user when attempting to update a subset of INCID features.&#10;  * Split - Always perform a logical split before applying the attribute updates.&#10;  * All - Always apply the attribute update to all features belonging to the INCID regardless of which features of the INCID are currently selected." />
+                </Grid>
+
+                <Grid
+                    x:Name="GridIHSUpdateAction"
+                    Grid.Row="2"
+                    HorizontalAlignment="Left">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" MinWidth="245" />
+                        <ColumnDefinition Width="Auto" MinWidth="300" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Label Content="When To Clear IHS Codes After Update"
+                        x:Name="LabelClearIHSUpdateAction"
+                        Grid.Column="0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center" />
+                    <ComboBox ItemsSource="{Binding ClearIHSUpdateActions}"
+                        x:Name="ComboBoxClearIHSUpdateAction"
+                        Grid.Column="1"
+                        BorderThickness="1"
+                        SelectedValue="{Binding ClearIHSUpdateAction,
+                                                ValidatesOnDataErrors=True}"
+                        Tag="ErrorContent" />
+                    <controls:InfoButton Header="When To Clear IHS Codes After Update"
+                        Grid.Column="2"
+                        Margin="5,0,0,0"
+                        Description="Select when existing IHS Codes should be cleared when attribute updates are applied. The available options are:&#10;&#10;  * Do not clear - Leave any existing IHS habitat and multiplex codes following an attribute update.&#10;  * Clear on change in primary code only - Clear any existing IHS habitat and multiplex codes only following a change to the primary habitat code.&#10;  * Clear on change in primary or secondary codes only - Clear any existing IHS habitat and multiplex codes following a change to either the primary or secondary habitat codes.&#10;  * Clear on any change - Clear any existing IHS habitat and multiplex codes following any change in an attribute update." />
+                </Grid>
+
+                <Grid
+                    x:Name="GridSecondaryCodeDelimiter"
+                    Grid.Row="4"
+                    HorizontalAlignment="Left">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" MinWidth="245" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Label Content="Secondary Code Delimiter"
+                        Grid.Column="0"
+                        HorizontalAlignment="Left" />
+
+                    <TextBox Text="{Binding SecondaryCodeDelimiter, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
+                        Grid.Column="1"
+                        Height="24"
+                        MinWidth="30"
+                        HorizontalAlignment="Left"
+                        TextAlignment="Center" />
+                    <controls:InfoButton Header="Secondary Code Delimiter"
+                        Grid.Column="2"
+                        Margin="5,0,0,0"
+                        Description="Set the delimiter characters (e.g. '.' or ', ') that are used to separate any secondary habitat codes in the Summary field. Up to 2 non-alphanumeric characters can be entered." />
+                </Grid>
+
+                <Grid Grid.Row="6">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="20" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <CheckBox
+                        Grid.Column="0"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        IsChecked="{Binding ResetOSMMUpdatesStatus}" />
+                    <Label Content="Reset Pending OSMM Update Status On Manual Update"
+                        Grid.Column="1"
+                        HorizontalAlignment="Left" />
+                    <controls:InfoButton Header="Reset Pending OSMM Update Status On Manual Update"
+                        Grid.Column="2"
+                        Margin="0,0,0,0"
+                        Description="Select if the status of any pending OSMM Updates for the current INCID should be reset to 'Ignored' when an update is applied." />
+
+                </Grid>
+
+            </Grid>
+
+        </Expander>
+
+    </StackPanel>
+
+</UserControl>

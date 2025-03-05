@@ -111,6 +111,7 @@
   <ItemGroup>
     <PackageReference Include="Azure.Identity" Version="1.11.4" />
     <PackageReference Include="Esri.ArcGISPro.Extensions30" Version="3.3.0.52636" />
+    <PackageReference Include="Extended.Wpf.Toolkit" Version="4.7.25103.5738" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.0" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.61.3" />
@@ -139,25 +140,31 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Update="UI\View\Options\BulkUpdateOptions.xaml.cs">
+    <Compile Update="UI\View\Options\AppValidationOptions.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="UI\View\Options\DatesOptions.xaml.cs">
+    <Compile Update="UI\View\Options\UserUpdatesOptions.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="UI\View\Options\SQLOptions.xaml.cs">
+    <Compile Update="UI\View\Options\AppBulkUpdateOptions.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="UI\View\Options\UpdatesOptions.xaml.cs">
+    <Compile Update="UI\View\Options\AppDatesOptions.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="UI\View\Options\InterfaceOptions.xaml.cs">
+    <Compile Update="UI\View\Options\UserSQLOptions.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="UI\View\Options\HistoryOptions.xaml.cs">
+    <Compile Update="UI\View\Options\AppUpdatesOptions.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="UI\View\Options\ExportOptions.xaml.cs">
+    <Compile Update="UI\View\Options\UserInterfaceOptions.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="UI\View\Options\UserHistoryOptions.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="UI\View\Options\UserGISOptions.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

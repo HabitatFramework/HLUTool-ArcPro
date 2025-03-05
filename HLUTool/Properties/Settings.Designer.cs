@@ -23,211 +23,111 @@ namespace HLU.Properties {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public string XMLFolder {
-            get {
-                return ((string)(this["XMLFolder"]));
-            }
-            set {
-                this["XMLFolder"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("60")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public int DbConnectionTimeout {
-            get {
-                return ((int)(this["DbConnectionTimeout"]));
-            }
-            set {
-                this["DbConnectionTimeout"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public bool DbConnectionPersistSecurityInfo {
             get {
                 return ((bool)(this["DbConnectionPersistSecurityInfo"]));
             }
-            set {
-                this["DbConnectionPersistSecurityInfo"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public string DbDefaultSchema {
             get {
                 return ((string)(this["DbDefaultSchema"]));
             }
-            set {
-                this["DbDefaultSchema"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public bool DbPromptPwd {
             get {
                 return ((bool)(this["DbPromptPwd"]));
             }
-            set {
-                this["DbPromptPwd"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public string DbConnectionString {
             get {
                 return ((string)(this["DbConnectionString"]));
             }
-            set {
-                this["DbConnectionString"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public bool DbIsUnicode {
             get {
                 return ((bool)(this["DbIsUnicode"]));
             }
-            set {
-                this["DbIsUnicode"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public bool DbUseTimeZone {
             get {
                 return ((bool)(this["DbUseTimeZone"]));
             }
-            set {
-                this["DbUseTimeZone"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("50")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public uint DbTextLength {
             get {
                 return ((uint)(this["DbTextLength"]));
             }
-            set {
-                this["DbTextLength"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("50")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public uint DbBinaryLength {
             get {
                 return ((uint)(this["DbBinaryLength"]));
             }
-            set {
-                this["DbBinaryLength"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("10")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public uint DbTimePrecision {
             get {
                 return ((uint)(this["DbTimePrecision"]));
             }
-            set {
-                this["DbTimePrecision"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("10")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public uint DbNumericPrecision {
             get {
                 return ((uint)(this["DbNumericPrecision"]));
             }
-            set {
-                this["DbNumericPrecision"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("10")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public uint DbNumericScale {
             get {
                 return ((uint)(this["DbNumericScale"]));
             }
-            set {
-                this["DbNumericScale"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public int DbConnectionType {
             get {
                 return ((int)(this["DbConnectionType"]));
-            }
-            set {
-                this["DbConnectionType"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public string MapPath {
-            get {
-                return ((string)(this["MapPath"]));
-            }
-            set {
-                this["MapPath"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public int PreferredGis {
-            get {
-                return ((int)(this["PreferredGis"]));
-            }
-            set {
-                this["PreferredGis"] = value;
             }
         }
         
@@ -249,59 +149,6 @@ namespace HLU.Properties {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("-")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public string VagueDateDelimiter {
-            get {
-                return ((string)(this["VagueDateDelimiter"]));
-            }
-            set {
-                this["VagueDateDelimiter"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("10")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public int StartupTimeout {
-            get {
-                return ((int)(this["StartupTimeout"]));
-            }
-            set {
-                this["StartupTimeout"] = value;
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("|")]
-        public char PipeFieldDelimiter {
-            get {
-                return ((char)(this["PipeFieldDelimiter"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("@")]
-        public string PipeTransmissionEnd {
-            get {
-                return ((string)(this["PipeTransmissionEnd"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("%")]
-        public string PipeTransmissionInterrupt {
-            get {
-                return ((string)(this["PipeTransmissionInterrupt"]));
-            }
-        }
-        
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("geom1")]
@@ -317,37 +164,6 @@ namespace HLU.Properties {
         public string HistoryGeometry2ColumnName {
             get {
                 return ((string)(this["HistoryGeometry2ColumnName"]));
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("100")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public int IncidTablePageSize {
-            get {
-                return ((int)(this["IncidTablePageSize"]));
-            }
-            set {
-                this["IncidTablePageSize"] = value;
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("131072")]
-        public int PipeMaxReadBytes {
-            get {
-                return ((int)(this["PipeMaxReadBytes"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("$")]
-        public char PipeStringContinue {
-            get {
-                return ((char)(this["PipeStringContinue"]));
             }
         }
         
@@ -391,29 +207,12 @@ namespace HLU.Properties {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public int BulkUpdateDeleteMultiplexCodes {
-            get {
-                return ((int)(this["BulkUpdateDeleteMultiplexCodes"]));
-            }
-            set {
-                this["BulkUpdateDeleteMultiplexCodes"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("<clear>")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public string CodeDeleteRow {
             get {
                 return ((string)(this["CodeDeleteRow"]));
-            }
-            set {
-                this["CodeDeleteRow"] = value;
             }
         }
         
@@ -423,37 +222,6 @@ namespace HLU.Properties {
         public bool BulkUpdateUsesAdo {
             get {
                 return ((bool)(this["BulkUpdateUsesAdo"]));
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public bool BulkUpdatePotentialBap {
-            get {
-                return ((bool)(this["BulkUpdatePotentialBap"]));
-            }
-            set {
-                this["BulkUpdatePotentialBap"] = value;
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("HluPipev4")]
-        public string PipeBaseName {
-            get {
-                return ((string)(this["PipeBaseName"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("~")]
-        public char PipeErrorInit {
-            get {
-                return ((char)(this["PipeErrorInit"]));
             }
         }
         
@@ -488,81 +256,48 @@ namespace HLU.Properties {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public bool CallUpgrade {
             get {
                 return ((bool)(this["CallUpgrade"]));
             }
-            set {
-                this["CallUpgrade"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("N")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public string SourceImportanceSkip {
             get {
                 return ((string)(this["SourceImportanceSkip"]));
             }
-            set {
-                this["SourceImportanceSkip"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("P")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public string SourceImportanceApply1 {
             get {
                 return ((string)(this["SourceImportanceApply1"]));
             }
-            set {
-                this["SourceImportanceApply1"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("S")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public string SourceImportanceApply2 {
             get {
                 return ((string)(this["SourceImportanceApply2"]));
             }
-            set {
-                this["SourceImportanceApply2"] = value;
-            }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("C")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public string SourceImportanceApply3 {
             get {
                 return ((string)(this["SourceImportanceApply3"]));
-            }
-            set {
-                this["SourceImportanceApply3"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public int SubsetUpdateAction {
-            get {
-                return ((int)(this["SubsetUpdateAction"]));
-            }
-            set {
-                this["SubsetUpdateAction"] = value;
             }
         }
         
@@ -585,19 +320,6 @@ namespace HLU.Properties {
             }
             set {
                 this["PreferredHabitatClass"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Original")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public string InterfaceStyle {
-            get {
-                return ((string)(this["InterfaceStyle"]));
-            }
-            set {
-                this["InterfaceStyle"] = value;
             }
         }
         
@@ -651,15 +373,6 @@ namespace HLU.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("2000")]
-        public int MaxSqlLengthMapInfo {
-            get {
-                return ((int)(this["MaxSqlLengthMapInfo"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("30000")]
         public int MaxSqlLengthArcGIS {
             get {
@@ -700,37 +413,6 @@ namespace HLU.Properties {
         public int LutUserFieldOrdinal {
             get {
                 return ((int)(this["LutUserFieldOrdinal"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("4000")]
-        public int MapInfoMaxRecordLength {
-            get {
-                return ((int)(this["MapInfoMaxRecordLength"]));
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public string ExportPath {
-            get {
-                return ((string)(this["ExportPath"]));
-            }
-            set {
-                this["ExportPath"] = value;
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("2097152")]
-        public int MapInfoMaxTableSize {
-            get {
-                return ((int)(this["MapInfoMaxTableSize"]));
             }
         }
         
@@ -821,19 +503,6 @@ namespace HLU.Properties {
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
         [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public bool ResetOSMMUpdatesStatus {
-            get {
-                return ((bool)(this["ResetOSMMUpdatesStatus"]));
-            }
-            set {
-                this["ResetOSMMUpdatesStatus"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public bool ShowGroupHeaders {
             get {
                 return ((bool)(this["ShowGroupHeaders"]));
@@ -843,55 +512,12 @@ namespace HLU.Properties {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public bool AppKeepOnTop {
-            get {
-                return ((bool)(this["AppKeepOnTop"]));
-            }
-            set {
-                this["AppKeepOnTop"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("<all>")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public string CodeAnyRow {
             get {
                 return ((string)(this["CodeAnyRow"]));
-            }
-            set {
-                this["CodeAnyRow"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public bool BulkUpdateDeleteOrphanBapHabitats {
-            get {
-                return ((bool)(this["BulkUpdateDeleteOrphanBapHabitats"]));
-            }
-            set {
-                this["BulkUpdateDeleteOrphanBapHabitats"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public bool BulkUpdateCreateHistoryRecords {
-            get {
-                return ((bool)(this["BulkUpdateCreateHistoryRecords"]));
-            }
-            set {
-                this["BulkUpdateCreateHistoryRecords"] = value;
             }
         }
         
@@ -932,71 +558,6 @@ namespace HLU.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("PI")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public string BulkUpdateDeterminationQuality {
-            get {
-                return ((string)(this["BulkUpdateDeterminationQuality"]));
-            }
-            set {
-                this["BulkUpdateDeterminationQuality"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("M2")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public string BulkUpdateInterpretationQuality {
-            get {
-                return ((string)(this["BulkUpdateInterpretationQuality"]));
-            }
-            set {
-                this["BulkUpdateInterpretationQuality"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public bool BulkUpdateDeletePotentialBapHabitats {
-            get {
-                return ((bool)(this["BulkUpdateDeletePotentialBapHabitats"]));
-            }
-            set {
-                this["BulkUpdateDeletePotentialBapHabitats"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public int BulkOSMMSourceId {
-            get {
-                return ((int)(this["BulkOSMMSourceId"]));
-            }
-            set {
-                this["BulkOSMMSourceId"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute(".")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public string SecondaryCodeDelimiter {
-            get {
-                return ((string)(this["SecondaryCodeDelimiter"]));
-            }
-            set {
-                this["SecondaryCodeDelimiter"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
         [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public bool ShowIHSTab {
@@ -1023,54 +584,6 @@ namespace HLU.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public int PrimarySecondaryCodeValidation {
-            get {
-                return ((int)(this["PrimarySecondaryCodeValidation"]));
-            }
-            set {
-                this["PrimarySecondaryCodeValidation"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public bool BulkUpdateDeleteSecondaryCodes {
-            get {
-                return ((bool)(this["BulkUpdateDeleteSecondaryCodes"]));
-            }
-            set {
-                this["BulkUpdateDeleteSecondaryCodes"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public string ClearIHSUpdateAction {
-            get {
-                return ((string)(this["ClearIHSUpdateAction"]));
-            }
-            set {
-                this["ClearIHSUpdateAction"] = value;
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("250")]
-        public int MaxSecondaryGroupColumnWidth {
-            get {
-                return ((int)(this["MaxSecondaryGroupColumnWidth"]));
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
         [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public string SecondaryCodeOrder {
@@ -1082,38 +595,12 @@ namespace HLU.Properties {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public int QualityValidation {
-            get {
-                return ((int)(this["QualityValidation"]));
-            }
-            set {
-                this["QualityValidation"] = value;
-            }
-        }
-        
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("sort_order")]
         public string LutSortOrderFieldName {
             get {
                 return ((string)(this["LutSortOrderFieldName"]));
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public bool BulkUpdateDeleteIHSCodes {
-            get {
-                return ((bool)(this["BulkUpdateDeleteIHSCodes"]));
-            }
-            set {
-                this["BulkUpdateDeleteIHSCodes"] = value;
             }
         }
         
@@ -1153,32 +640,6 @@ namespace HLU.Properties {
             }
             set {
                 this["ShowSourceHabitatGroup"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public int PotentialPriorityDetermQtyValidation {
-            get {
-                return ((int)(this["PotentialPriorityDetermQtyValidation"]));
-            }
-            set {
-                this["PotentialPriorityDetermQtyValidation"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public int HabitatSecondaryCodeValidation {
-            get {
-                return ((int)(this["HabitatSecondaryCodeValidation"]));
-            }
-            set {
-                this["HabitatSecondaryCodeValidation"] = value;
             }
         }
         
@@ -1233,21 +694,6 @@ namespace HLU.Properties {
         public string HLUData_v401ConnectionString_2017 {
             get {
                 return ((string)(this["HLUData_v401ConnectionString_2017"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute(@"<?xml version=""1.0"" encoding=""utf-16""?>
-<ArrayOfString xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"">
-  <string>esriDataSourcesGDB.AccessWorkspaceFactory</string>
-  <string>esriDataSourcesGDB.FileGDBWorkspaceFactory</string>
-  <string>esriDataSourcesGDB.SdeWorkspaceFactory</string>
-  <string>esriDataSourcesFile.ShapefileWorkspaceFactory</string>
-</ArrayOfString>")]
-        public global::System.Collections.Specialized.StringCollection ArcGISValidWorkspaces {
-            get {
-                return ((global::System.Collections.Specialized.StringCollection)(this["ArcGISValidWorkspaces"]));
             }
         }
         
@@ -1321,25 +767,6 @@ namespace HLU.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute(@"<?xml version=""1.0"" encoding=""utf-16""?>
-<ArrayOfString xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"">
-  <string>Spring</string>
-  <string>Summer</string>
-  <string>Autumn</string>
-  <string>Winter</string>
-</ArrayOfString>")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public global::System.Collections.Specialized.StringCollection SeasonNames {
-            get {
-                return ((global::System.Collections.Specialized.StringCollection)(this["SeasonNames"]));
-            }
-            set {
-                this["SeasonNames"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n<ArrayOfString xmlns:xsd=\"http://www.w3." +
             "org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\r\n  <s" +
             "tring>4</string>\r\n</ArrayOfString>")]
@@ -1377,19 +804,6 @@ namespace HLU.Properties {
         public string PasswordMaskString {
             get {
                 return ((string)(this["PasswordMaskString"]));
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("https://hlutool-userguide.readthedocs.io/en/latest/")]
-        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public string HelpURL {
-            get {
-                return ((string)(this["HelpURL"]));
-            }
-            set {
-                this["HelpURL"] = value;
             }
         }
     }

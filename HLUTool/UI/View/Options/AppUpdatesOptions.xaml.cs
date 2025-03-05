@@ -16,11 +16,11 @@ using System.Windows.Shapes;
 namespace HLU.UI.View
 {
     /// <summary>
-    /// Interaction logic for BulkUpdateOptions.xaml
+    /// Interaction logic for AppUpdatesOptions.xaml
     /// </summary>
-    public partial class BulkUpdateOptions : UserControl
+    public partial class AppUpdatesOptions : UserControl
     {
-        public BulkUpdateOptions()
+        public AppUpdatesOptions()
         {
             InitializeComponent();
         }

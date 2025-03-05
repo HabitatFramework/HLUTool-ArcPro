@@ -16,11 +16,11 @@ using System.Windows.Shapes;
 namespace HLU.UI.View
 {
     /// <summary>
-    /// Interaction logic for DatabaseOptions.xaml
+    /// Interaction logic for AppBulkUpdateOptions.xaml
     /// </summary>
-    public partial class DatabaseOptions : UserControl
+    public partial class AppBulkUpdateOptions : UserControl
     {
-        public DatabaseOptions()
+        public AppBulkUpdateOptions()
         {
             InitializeComponent();
         }

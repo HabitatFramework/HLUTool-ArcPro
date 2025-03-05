@@ -492,7 +492,6 @@ namespace HLU.UI.ViewModel
             _autoZoomSelection = Settings.Default.AutoZoomSelection;
             _autoSelectOnGis = Settings.Default.AutoSelectOnGis;
             _codeAnyRow = Settings.Default.CodeAnyRow;
-            //private bool _bulkUpdatePrimaryBap = Settings.Default.BulkUpdatePotentialBap;
 
             // Initialise statics.
             HistoryGeometry1ColumnName = Settings.Default.HistoryGeometry1ColumnName;
@@ -9445,7 +9444,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(HabitatHeader));
             OnPropertyChanged(nameof(PrimaryHeader));
             OnPropertyChanged(nameof(SecondaryHabitatsHeader));
-            OnPropertyChanged(nameof(SecondarySummaryHeader));
+            OnPropertyChanged(nameof(HabitatSummaryHeader));
             OnPropertyChanged(nameof(LegacyHeader));
 
             OnPropertyChanged(nameof(IhsHabitatHeader));
@@ -11051,7 +11050,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        public string SecondarySummaryHeader
+        public string HabitatSummaryHeader
         {
             get
             {
