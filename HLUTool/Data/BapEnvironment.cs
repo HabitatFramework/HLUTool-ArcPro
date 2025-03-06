@@ -222,7 +222,7 @@ namespace HLU.Data
                 _bap_habitat = value;
                 // Flag that the current record has changed so that the apply button
                 // will appear.
-                if (this.DataChanged != null)
+                if (DataChanged != null)
                     this.DataChanged(true);
             }
         }

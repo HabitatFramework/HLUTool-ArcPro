@@ -11,7 +11,7 @@
 		<Image>Images\AddinDesktop32.png</Image>
 		<Author>Andy Foy, andy@andyfoyconsulting.co.uk</Author>
 		<Company>Andy Foy Consulting</Company>
-		<Date>25/11/2024 15:37:00 AM</Date>
+		<Date>06/03/2025 15:57:00 AM</Date>
 		<Subject>Framework, Geodatabase</Subject>
 		<!-- Note subject can be one or more of these topics:
                     Content, Framework, Editing, Geodatabase, Geometry, Geoprocessing, Layouts, Map Authoring, Map Exploration -->
@@ -57,7 +57,7 @@
 			<controls>
 				<button id="HLUTool_btnHLUToolDockPane"
 						caption="HLU Tool"
-						className="HLU.UI.ViewModel.WindowMain_ShowButton"
+						className="HLU.UI.UserControls.Toolbar.ShowMainWindowButton"
 						loadOnClick="true"
 						keytip="DY"
 						smallImage="pack://application:,,,/HLUTool;component/Images/HLUTool16.png"
@@ -70,18 +70,18 @@
 
 				<button id="HLUTool_btnOptionsButton"
 						caption="Options"
-						className="HLU.UI.ViewModel.WindowMain_OptionsButton"
+						className="HLU.UI.UserControls.Toolbar.ShowOptionsButton"
 						loadOnClick="true"
 						keytip="OP">
 					<tooltip heading="Tool options">
-						ToolTip<disabledText />
+						View and update the tool options<disabledText />
 					</tooltip>
 				</button>
 
 				<comboBox id="HLUTool_ActiveLayerComboBox"
 						  caption=" Active Layer:"
 						  extendedCaption="Select Active Layer"
-						  className="HLU.UI.UserControls.ActiveLayerComboBox"
+						  className="HLU.UI.UserControls.Toolbar.ActiveLayerComboBox"
 						  itemWidth="180"
 						  isEditable="true"
 						  condition="esri_mapping_mapPane"
@@ -96,7 +96,7 @@
 				<comboBox id="HLUTool_ReasonComboBox"
 						  caption=" Reason:"
 						  extendedCaption="Select reason for updates"
-						  className="HLU.UI.UserControls.ReasonComboBox"
+						  className="HLU.UI.UserControls.Toolbar.ReasonComboBox"
 						  itemWidth="250"
 						  isEditable="true"
 						  condition="esri_mapping_mapPane"
@@ -111,7 +111,7 @@
 				<comboBox id="HLUTool_ProcessComboBox"
 						  caption=" Process:"
 						  extendedCaption="Select process for updates"
-						  className="HLU.UI.UserControls.ProcessComboBox"
+						  className="HLU.UI.UserControls.Toolbar.ProcessComboBox"
 						  itemWidth="250"
 						  isEditable="true"
 						  condition="esri_mapping_mapPane"

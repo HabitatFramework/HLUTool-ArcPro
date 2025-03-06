@@ -51,7 +51,7 @@ namespace HLU.GISApplication
         }
 
         public static bool CreateScratchMdb(HluDataSet.incidDataTable incidTable,
-            HluDataSet.incid_mm_polygonsDataTable incidMMTable)
+            HluDataSet.incid_mm_polygonsDataTable incidMMTable, int dbConnectionTimeout)
         {
             try
             {
@@ -78,7 +78,7 @@ namespace HLU.GISApplication
                     Settings.Default.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders,
                     true, Settings.Default.DbIsUnicode, Settings.Default.DbUseTimeZone, 255,
                     Settings.Default.DbBinaryLength, Settings.Default.DbTimePrecision,
-                    Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, Settings.Default.DbConnectionTimeout);
+                    Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, dbConnectionTimeout);
 
                 return true;
             }

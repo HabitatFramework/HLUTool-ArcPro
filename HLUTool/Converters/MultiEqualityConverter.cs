@@ -64,10 +64,10 @@ namespace HLU.Converters
             if (value is bool isChecked && isChecked)
             {
                 // Return the current bound item (values[1]) instead of parameter
-                return new object[] { parameter ?? Binding.DoNothing };
+                return [parameter ?? Binding.DoNothing];
             }
 
-            return new object[] { Binding.DoNothing };
+            return [Binding.DoNothing];
         }
 
         #endregion

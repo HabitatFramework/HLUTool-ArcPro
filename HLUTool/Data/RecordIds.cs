@@ -49,13 +49,10 @@ namespace HLU.Data
         public RecordIds(DbBase db, HluDataSet hluDataset,
             TableAdapterManager hluTableAdapterMgr, GeometryTypes gisLayerType)
         {
-            if (db == null) throw new ArgumentException("db is null", nameof(db));
-            if (hluDataset == null) throw new ArgumentException("hluDataset is null", nameof(hluDataset));
-            if (hluTableAdapterMgr == null) throw new ArgumentException("hluTableAdapterMgr is null", nameof(hluTableAdapterMgr));
+            _db = db ?? throw new ArgumentException("db is null", nameof(db));
+            _hluDataset = hluDataset ?? throw new ArgumentException("hluDataset is null", nameof(hluDataset));
+            _hluTableAdapterMgr = hluTableAdapterMgr ?? throw new ArgumentException("hluTableAdapterMgr is null", nameof(hluTableAdapterMgr));
 
-            _db = db;
-            _hluDataset = hluDataset;
-            _hluTableAdapterMgr = hluTableAdapterMgr;
             _gisLayerType = gisLayerType;
             if (_hluDataset.lut_last_incid.IsInitialized && _hluDataset.lut_last_incid.Count == 0)
             {

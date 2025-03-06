@@ -11,16 +11,16 @@ using ComboBox = ArcGIS.Desktop.Framework.Contracts.ComboBox;
 using System.Runtime.CompilerServices;
 using HLU.UI.ViewModel;
 
-namespace HLU.UI.UserControls
+namespace HLU.UI.UserControls.Toolbar
 {
     /// <summary>
-    /// Represents a ComboBox control that allows the user to select the reason for updates.
+    /// Represents a ComboBox control that allows the user to select the process for updates.
     /// </summary>
-    internal class ReasonComboBox : ComboBox
+    internal class ProcessComboBox : ComboBox
     {
         #region Fields
 
-        private static ReasonComboBox _reasonComboBox;
+        private static ProcessComboBox _processComboBox;
         private ViewModelWindowMain _viewModel;
 
         private bool _isInitialized;
@@ -33,11 +33,11 @@ namespace HLU.UI.UserControls
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ReasonComboBox()
+        public ProcessComboBox()
         {
             // Get this instance of the ComboBox.
-            if (_reasonComboBox == null)
-                _reasonComboBox = this;
+            if (_processComboBox == null)
+                _processComboBox = this;
 
             // Get the dockpane DAML id.
             DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
@@ -56,13 +56,13 @@ namespace HLU.UI.UserControls
         #region Methods
 
         /// <summary>
-        /// Gets the instance of the ReasonComboBox.
+        /// Gets the instance of the ProcessComboBox.
         /// </summary>
         /// <returns></returns>
-        public static ReasonComboBox GetInstance()
+        public static ProcessComboBox GetInstance()
         {
             // Return the instance of the ComboBox.
-            return _reasonComboBox;
+            return _processComboBox;
         }
 
         /// <summary>
@@ -74,10 +74,10 @@ namespace HLU.UI.UserControls
             if (!_isInitialized)
                 Initialize();
 
-            // Select the reason if it hasn't been selected.
-            if (this.SelectedItem == null && _viewModel?.Reason != null)
+            // Select the process if it hasn't been selected.
+            if (this.SelectedItem == null && _viewModel?.Process != null)
             {
-                this.SelectedItem = _viewModel.Reason;
+                this.SelectedItem = _viewModel.Process;
                 OnSelectionChange(this.SelectedItem);
             }
 
@@ -113,23 +113,23 @@ namespace HLU.UI.UserControls
 
             _isEnabled = false;
 
-            // Load the reasons into the ComboBox list.
-            LoadReasons();
+            // Load the processs into the ComboBox list.
+            LoadProcesss();
 
             _isInitialized = true;
         }
 
         /// <summary>
-        /// Loads the reasons from the ViewModel and adds them to the ComboBox.
+        /// Loads the processs from the ViewModel and adds them to the ComboBox.
         /// </summary>
-        private void LoadReasons()
+        private void LoadProcesss()
         {
-            if (_viewModel?.ReasonCodes?.Length != 0)
+            if (_viewModel?.ProcessCodes?.Length != 0)
             {
                 // Add new layers from the ViewModel.
-                foreach (var reasonCode in _viewModel.ReasonCodes)
+                foreach (var processCode in _viewModel.ProcessCodes)
                 {
-                    Add(new ComboBoxItem(reasonCode.description));
+                    Add(new ComboBoxItem(processCode.description));
                 }
 
                 _isEnabled = true;
@@ -145,11 +145,10 @@ namespace HLU.UI.UserControls
             _isEnabled = enabled;
         }
 
-        public string Reason
+        public string Process
         {
-            get { return this.SelectedItem == null ? null : this.SelectedItem.ToString(); }
+            get { return this.SelectedItem?.ToString(); }
         }
-
 
         ///// <summary>
         ///// Called when the selection changes.

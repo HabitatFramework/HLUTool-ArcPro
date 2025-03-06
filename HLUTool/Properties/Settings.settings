@@ -5,13 +5,13 @@
     <Setting Name="DbConnectionPersistSecurityInfo" Roaming="true" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="DbDefaultSchema" Roaming="true" Type="System.String" Scope="Application">
+    <Setting Name="DbDefaultSchema" Roaming="true" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="DbPromptPwd" Roaming="true" Type="System.Boolean" Scope="Application">
+    <Setting Name="DbPromptPwd" Roaming="true" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="DbConnectionString" Roaming="true" Type="System.String" Scope="Application">
+    <Setting Name="DbConnectionString" Roaming="true" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="DbIsUnicode" Roaming="true" Type="System.Boolean" Scope="Application">
@@ -35,7 +35,7 @@
     <Setting Name="DbNumericScale" Roaming="true" Type="System.UInt32" Scope="Application">
       <Value Profile="(Default)">10</Value>
     </Setting>
-    <Setting Name="DbConnectionType" Roaming="true" Type="System.Int32" Scope="Application">
+    <Setting Name="DbConnectionType" Roaming="true" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
     <Setting Name="UseAutomaticCommandBuilders" Type="System.Boolean" Scope="Application">
@@ -77,7 +77,7 @@
     <Setting Name="BAPDeterminationQualityUserAdded" Type="System.String" Scope="Application">
       <Value Profile="(Default)">NP</Value>
     </Setting>
-    <Setting Name="CallUpgrade" Roaming="true" Type="System.Boolean" Scope="Application">
+    <Setting Name="CallUpgrade" Roaming="true" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
     <Setting Name="SourceImportanceSkip" Roaming="true" Type="System.String" Scope="Application">
@@ -277,6 +277,9 @@
     </Setting>
     <Setting Name="PasswordMaskString" Type="System.String" Scope="Application">
       <Value Profile="(Default)">***</Value>
+    </Setting>
+    <Setting Name="CallXMLUpgrade" Roaming="true" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
     </Setting>
   </Settings>
 </SettingsFile>

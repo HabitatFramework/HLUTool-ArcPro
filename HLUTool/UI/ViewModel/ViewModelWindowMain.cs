@@ -46,6 +46,7 @@ using HLU.Data;
 using System.Linq;
 using HLU.UI.View;
 using HLU.Date;
+using System.Drawing.Printing;
 
 namespace HLU.UI.ViewModel
 {
@@ -162,7 +163,8 @@ namespace HLU.UI.ViewModel
 
         private MapView _activeMapView;
 
-        private AddInSettings _appSettings;
+        private XmlSettingsManager _xmlSettingsManager;
+        private AddInSettings _addInSettings;
 
         #endregion Fields
 
@@ -220,29 +222,27 @@ namespace HLU.UI.ViewModel
             _initialised = false;
             _inError = false;
 
-            // Open the application XML settings file.
-            XmlSettingsManager xmlSettingsManager = new();
+            // Open the add-in XML settings file.
+            _xmlSettingsManager = new();
 
-            // If the settings file is not found then error.
-            if (xmlSettingsManager.SettingsFound == null)
+            try
             {
-                ShowMessage("Settings file not found.", MessageType.Error);
-                _inError = true;
-                return;
+                UpgradeXMLSettings();
+            }
+            finally
+            {
+                // Load the add-in settings from the XML file.
+                _addInSettings = _xmlSettingsManager.LoadSettings();
             }
 
-            // Load the settings from the XML file.
-            _appSettings = new AddInSettings();
-            _appSettings = xmlSettingsManager.LoadSettings();
-
             // Set the help URL.
-            _dockPane.HelpURL = _appSettings.HelpURL;
+            _dockPane.HelpURL = _addInSettings.HelpURL;
 
             try
             {
                 //TODO: What to do if the upgrade fails?
                 // Upgrade the user settings if necessary.
-                UpgradeSettings();
+                UpgradeUserSettings();
 
                 // Initialise the main view (start the tool)
                 if (!await InitializeToolPaneAsync())
@@ -258,12 +258,40 @@ namespace HLU.UI.ViewModel
         }
         //}
 
-        private void UpgradeSettings()
+        /// <summary>
+        /// Upgrade the XML settings if necessary.
+        /// </summary>
+        private void UpgradeXMLSettings()
         {
+            // If the XML settings haven't been upgrade yet then upgrade them.
+            if (Settings.Default.CallXMLUpgrade)
+            {
+                // Remove the following nodes from the XML file:
+                _xmlSettingsManager.RemoveNode("HelpPages");
+
+                // Set the call upgrade flag to false.
+                Settings.Default.CallXMLUpgrade = false;
+
+                // Save the settings.
+                Settings.Default.Save();
+            }
+        }
+
+        /// <summary>
+        /// Upgrade the application and user settings if necessary.
+        /// </summary>
+        private void UpgradeUserSettings()
+        {
+            // If the settings haven't been upgrade yet then upgrade them.
             if (Settings.Default.CallUpgrade)
             {
+                // Upgrade the settings.
                 Settings.Default.Upgrade();
+
+                // Set the call upgrade flag to false.
                 Settings.Default.CallUpgrade = false;
+
+                // Save the settings.
                 Settings.Default.Save();
             }
         }
@@ -438,6 +466,12 @@ namespace HLU.UI.ViewModel
         {
             get { return _helpURL; }
             set { _helpURL = value; }
+        }
+
+        public AddInSettings AddInSettings
+        {
+            get { return _addInSettings; }
+            set { _addInSettings = value; }
         }
 
         #endregion Properties
@@ -699,79 +733,5 @@ namespace HLU.UI.ViewModel
 
         #endregion
 
-    }
-
-    /// <summary>
-    /// Button implementation to show the DockPane.
-    /// </summary>
-    internal class WindowMain_ShowButton : Button
-    {
-        protected override async void OnClick()
-        {
-            // Show the dock pane.
-            await ViewModelWindowMain.ShowDockPane();
-        }
-    }
-
-    /// <summary>
-    /// Button implementation for the button on the menu of the burger button.
-    /// </summary>
-    internal class WindowMain_OptionsButton : Button
-    {
-        private WindowOptions _windowOptions;
-        private ViewModelOptions _viewModelOptions;
-
-        protected override void OnClick()
-        {
-            try
-            {
-                // Ensure the window is shown on the UI thread
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                {
-                    _windowOptions = new()
-                    {
-                        // Set ArcGIS Pro as the parent
-                        Owner = System.Windows.Application.Current.MainWindow,
-                        WindowStartupLocation = WindowStartupLocation.CenterScreen
-                    };
-
-                    // create ViewModel to which main window binds
-                    _viewModelOptions = new()
-                    {
-                        DisplayName = "Options"
-                    };
-
-                    // when ViewModel asks to be closed, close window
-                    _viewModelOptions.RequestClose +=
-                        new ViewModelOptions.RequestCloseEventHandler(_viewModelOptions_RequestClose);
-
-                    // allow all controls in window to bind to ViewModel by setting DataContext
-                    _windowOptions.DataContext = _viewModelOptions;
-
-                    // show window
-                    _windowOptions.ShowDialog();
-                });
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "HLU: Options", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        /// <summary>
-        /// Save the options settings when the options window is closed.
-        /// </summary>
-        /// <param name="saveSettings">if set to <c>true</c> [save settings].</param>
-        void _viewModelOptions_RequestClose(bool saveSettings)
-        {
-            _viewModelOptions.RequestClose -= _viewModelOptions_RequestClose;
-            _windowOptions.Close();
-
-            // Re-set static variables in main window
-            if (saveSettings)
-            {
-
-            }
-        }
     }
 }

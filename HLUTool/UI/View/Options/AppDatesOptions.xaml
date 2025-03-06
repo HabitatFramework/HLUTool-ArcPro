@@ -17,28 +17,28 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <StackPanel Margin="4">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
 
-        <Label Content="Set application options for dates"
-            HorizontalAlignment="Left"
-            FontSize="14"
-            FontWeight="Medium" />
+        <StackPanel
+            Grid.Row="0"
+            Margin="4">
 
-        <Expander Header="Date Options"
-            Margin="6,10,0,0"
-            IsExpanded="True">
+            <Label Content="Set application options for dates"
+                HorizontalAlignment="Left"
+                FontSize="14"
+                FontWeight="Medium" />
 
-            <Grid
-                Margin="12,4,4,2"
-                HorizontalAlignment="Left">
+            <Expander Header="Date Options"
+                Margin="6,10,0,0"
+                IsExpanded="True">
 
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="0" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-
-                <Grid Grid.Row="0">
+                <Grid
+                    Margin="12,4,4,2"
+                    HorizontalAlignment="Left">
 
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -46,107 +46,131 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="60" />
-                        <ColumnDefinition Width="80" />
-                        <ColumnDefinition Width="60" />
-                        <ColumnDefinition Width="60" />
-                        <ColumnDefinition Width="80" />
-                    </Grid.ColumnDefinitions>
+                    <Grid Grid.Row="0">
 
-                    <Label Content="Spring"
-                        x:Name="LabelSeasonSpring"
-                        Grid.Row="0"
-                        Grid.Column="0"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center" />
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="6" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
 
-                    <TextBox Text="{Binding SeasonSpring, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-                        x:Name="TextBoxSeasonSpring"
-                        Grid.Row="0"
-                        Grid.Column="1"
-                        Height="24"
-                        HorizontalContentAlignment="Left"
-                        BorderThickness="1"
-                        Tag="ErrorContent" />
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="60" />
+                            <ColumnDefinition Width="80" />
+                            <ColumnDefinition Width="60" />
+                            <ColumnDefinition Width="60" />
+                            <ColumnDefinition Width="80" />
+                        </Grid.ColumnDefinitions>
 
-                    <Label Content="Autumn"
-                        x:Name="LabelSeasonAutumn"
-                        Grid.Row="0"
-                        Grid.Column="3"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center" />
+                        <Label Content="Spring"
+                            x:Name="LabelSeasonSpring"
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center" />
 
-                    <TextBox Text="{Binding SeasonAutumn, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-                        x:Name="TextBoxSeasonAutumn"
-                        Grid.Row="0"
-                        Grid.Column="4"
-                        Height="24"
-                        HorizontalContentAlignment="Left"
-                        BorderThickness="1"
-                        Tag="ErrorContent" />
+                        <TextBox Text="{Binding SeasonSpring, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
+                            x:Name="TextBoxSeasonSpring"
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Height="24"
+                            HorizontalContentAlignment="Left"
+                            BorderThickness="1"
+                            Tag="ErrorContent" />
 
-                    <Label Content="Summer"
-                        x:Name="LabelSeasonSummer"
-                        Grid.Row="2"
-                        Grid.Column="0"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center" />
+                        <Label Content="Autumn"
+                            x:Name="LabelSeasonAutumn"
+                            Grid.Row="0"
+                            Grid.Column="3"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center" />
 
-                    <TextBox Text="{Binding SeasonSummer, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-                        x:Name="TextBoxSeasonSummer"
-                        Grid.Row="2"
-                        Grid.Column="1"
-                        Height="24"
-                        HorizontalContentAlignment="Left"
-                        BorderThickness="1"
-                        Tag="ErrorContent" />
+                        <TextBox Text="{Binding SeasonAutumn, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
+                            x:Name="TextBoxSeasonAutumn"
+                            Grid.Row="0"
+                            Grid.Column="4"
+                            Height="24"
+                            HorizontalContentAlignment="Left"
+                            BorderThickness="1"
+                            Tag="ErrorContent" />
 
-                    <Label Content="Winter"
-                        x:Name="LabelSeasonWinter"
-                        Grid.Row="2"
-                        Grid.Column="3"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center" />
+                        <Label Content="Summer"
+                            x:Name="LabelSeasonSummer"
+                            Grid.Row="2"
+                            Grid.Column="0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center" />
 
-                    <TextBox Text="{Binding SeasonWinter, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-                        x:Name="TextBoxSeasonWinter"
-                        Grid.Row="2"
-                        Grid.Column="4"
-                        Height="24"
-                        HorizontalContentAlignment="Left"
-                        BorderThickness="1"
-                        Tag="ErrorContent" />
+                        <TextBox Text="{Binding SeasonSummer, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
+                            x:Name="TextBoxSeasonSummer"
+                            Grid.Row="2"
+                            Grid.Column="1"
+                            Height="24"
+                            HorizontalContentAlignment="Left"
+                            BorderThickness="1"
+                            Tag="ErrorContent" />
+
+                        <Label Content="Winter"
+                            x:Name="LabelSeasonWinter"
+                            Grid.Row="2"
+                            Grid.Column="3"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center" />
+
+                        <TextBox Text="{Binding SeasonWinter, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
+                            x:Name="TextBoxSeasonWinter"
+                            Grid.Row="2"
+                            Grid.Column="4"
+                            Height="24"
+                            HorizontalContentAlignment="Left"
+                            BorderThickness="1"
+                            Tag="ErrorContent" />
+                    </Grid>
+
+                    <Grid Grid.Row="2">
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Label Content="Vague Date Delimiter"
+                            Grid.Column="0"
+                            HorizontalAlignment="Left" />
+
+                        <TextBox Text="{Binding VagueDateDelimiter, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
+                            Grid.Column="1"
+                            Height="24"
+                            MinWidth="30"
+                            HorizontalAlignment="Left"
+                            TextAlignment="Center" />
+                        <controls:InfoButton Header="Vague Date Delimiter"
+                            Grid.Column="2"
+                            Margin="5,0,0,0"
+                            Description="Set how date ranges, such as 'Spring 2010-Autumn 2010' or '1989-2010', are entered so that they can be converted to dates in the database." />
+                    </Grid>
+
                 </Grid>
 
-                <Grid Grid.Row="2">
+            </Expander>
 
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+        </StackPanel>
 
-                    <Label Content="Vague Date Delimiter"
-                        Grid.Column="0"
-                        HorizontalAlignment="Left" />
+        <TextBlock
+            Grid.Row="1"
+            Margin="8,0,0,10"
+            HorizontalAlignment="Left"
+            FontWeight="Medium">
+            <Hyperlink
+                Command="{Binding OpenHyperlinkCommand}"
+                CommandParameter="{Binding NavigateUri,
+                                           RelativeSource={RelativeSource Self}}"
+                NavigateUri="{Binding Hyperlink_AppDatesHelp}">
+                Learn more about application dates options
+            </Hyperlink>
+        </TextBlock>
 
-                    <TextBox Text="{Binding VagueDateDelimiter, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
-                        Grid.Column="1"
-                        Height="24"
-                        MinWidth="30"
-                        HorizontalAlignment="Left"
-                        TextAlignment="Center" />
-                    <controls:InfoButton Header="Vague Date Delimiter"
-                        Grid.Column="2"
-                        Margin="5,0,0,0"
-                        Description="Set how date ranges, such as 'Spring 2010-Autumn 2010' or '1989-2010', are entered so that they can be converted to dates in the database." />
-                </Grid>
-
-            </Grid>
-
-        </Expander>
-
-    </StackPanel>
+    </Grid>
 
 </UserControl>

@@ -45,6 +45,8 @@ namespace HLU.UI.ViewModel
         private WindowBulkUpdate _windowBulkUpdate;
         private ViewModelBulkUpdate _viewModelBulkUpdate;
 
+        private AddInSettings _addInSettings;
+
         //private HluDataSet.incid_ihs_matrixDataTable _ihsMatrixTable = new();
         //private HluDataSet.incid_ihs_formationDataTable _ihsFormationTable = new();
         //private HluDataSet.incid_ihs_managementDataTable _ihsManagementTable = new();
@@ -64,9 +66,10 @@ namespace HLU.UI.ViewModel
 
         #region #ctor
 
-        public ViewModelWindowMainBulkUpdate(ViewModelWindowMain viewModelMain)
+        public ViewModelWindowMainBulkUpdate(ViewModelWindowMain viewModelMain, AddInSettings addInSettings)
         {
             _viewModelMain = viewModelMain;
+            _addInSettings = addInSettings;
         }
 
         #endregion
@@ -128,6 +131,16 @@ namespace HLU.UI.ViewModel
 
             if (_osmmBulkUpdateMode == true)
             {
+                // Can't start OSMM Update mode if the bulk OSMM source hasn't been set.
+                if (_addInSettings.BulkOSMMSourceId == null)
+                {
+                    MessageBox.Show("The Bulk OSMM Source has not been set.\n\n" +
+                        "Please set the Bulk OSMM Source in the Options.",
+                        "HLU: OSMM Update", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+
+                    return;
+                }
+
                 // Reset the database counts
                 _viewModelMain.NumIncidSelectedDB = 0;
                 _viewModelMain.NumToidSelectedDB = 0;
@@ -148,13 +161,13 @@ namespace HLU.UI.ViewModel
             //_incidSelectionBackup = _viewModelMain.IncidSelection;
 
             // Get the default settings
-            bool deleteOrphanBapHabitats = Settings.Default.BulkUpdateDeleteOrphanBapHabitats;
-            bool deletePotentialBapHabitats = Settings.Default.BulkUpdateDeletePotentialBapHabitats;
-            bool deleteIHSCodes = Settings.Default.BulkUpdateDeleteIHSCodes;
-            bool deleteSecondaryCodes = Settings.Default.BulkUpdateDeleteSecondaryCodes;
-            bool createHistory = Settings.Default.BulkUpdateCreateHistoryRecords;
-            string determinationQuality = Settings.Default.BulkUpdateDeterminationQuality;
-            string interpretationQuality = Settings.Default.BulkUpdateInterpretationQuality;
+            bool deleteOrphanBapHabitats = _addInSettings.BulkUpdateDeleteOrphanBapHabitats;
+            bool deletePotentialBapHabitats = _addInSettings.BulkUpdateDeletePotentialBapHabitats;
+            bool deleteIHSCodes = _addInSettings.BulkUpdateDeleteIHSCodes;
+            bool deleteSecondaryCodes = _addInSettings.BulkUpdateDeleteSecondaryCodes;
+            bool createHistory = _addInSettings.BulkUpdateCreateHistoryRecords;
+            string determinationQuality = _addInSettings.BulkUpdateDeterminationQuality;
+            string interpretationQuality = _addInSettings.BulkUpdateInterpretationQuality;
             bool primaryChanged = true;
 
             // If in OSMM bulk update mode set the mandatory options
@@ -713,7 +726,7 @@ namespace HLU.UI.ViewModel
                             if (SecondaryHabitat.SecondaryHabitatList != null)
                             {
                                 // Build a concatenated string of the secondary habitats
-                                string secondaryCodeDelimiter = Settings.Default.SecondaryCodeDelimiter;
+                                string secondaryCodeDelimiter = _addInSettings.SecondaryCodeDelimiter;
                                 string secondarySummary = String.Join(secondaryCodeDelimiter, SecondaryHabitat.SecondaryHabitatList
                                     .OrderBy(s => s.secondary_habitat_int)
                                     .ThenBy(s => s.secondary_habitat)

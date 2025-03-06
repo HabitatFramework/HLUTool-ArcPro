@@ -135,9 +135,19 @@ namespace HLU.Date
             Unknown
         }
 
-        public static string Delimiter = Settings.Default.VagueDateDelimiter;
+        public static string _delimiter;
+        public static string Delimiter
+        {
+            get { return _delimiter; }
+            set { _delimiter = value; }
+        }
 
-        public static string[] SeasonNames = Settings.Default.SeasonNames.Cast<string>().ToArray();
+        public static string[] _seasonNames;
+        public static string[] SeasonNames
+        {
+            get { return _seasonNames; }
+            set { _seasonNames = value; }
+        }
 
         public static string ToCode(VagueDateTypes en)
         {

@@ -18,52 +18,76 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <StackPanel Margin="4">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
 
-        <Label Content="Set user options for updates"
-            HorizontalAlignment="Left"
-            FontSize="14"
-            FontWeight="Medium" />
+        <StackPanel
+            Grid.Row="0"
+            Margin="4">
 
-        <Expander Header="Update Options"
-            Margin="6,10,0,0"
-            IsExpanded="True">
+            <Label Content="Set user options for updates"
+                HorizontalAlignment="Left"
+                FontSize="14"
+                FontWeight="Medium" />
 
-            <Grid
-                Margin="12,4,4,2"
-                HorizontalAlignment="Left">
+            <Expander Header="Update Options"
+                Margin="6,10,0,0"
+                IsExpanded="True">
 
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+                <Grid
+                    Margin="12,4,4,2"
+                    HorizontalAlignment="Left">
 
-                <Grid Grid.Row="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="20" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+                    <Grid Grid.Row="0">
 
-                    <CheckBox
-                        Grid.Column="0"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Center"
-                        IsChecked="{Binding NotifyOnSplitMerge}" />
-                    <Label Content="Notify After Completing Split/Merge"
-                        Grid.Column="1"
-                        HorizontalAlignment="Left" />
-                    <controls:InfoButton Header="Notify After Completing Split/Merge"
-                        Grid.Column="2"
-                        Margin="0,0,0,0"
-                        Description="Select if a pop-up message should be displayed following the completion of any of the split or merge operations." />
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="20" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <CheckBox
+                            Grid.Column="0"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            IsChecked="{Binding NotifyOnSplitMerge}" />
+                        <Label Content="Notify After Completing Split/Merge"
+                            Grid.Column="1"
+                            HorizontalAlignment="Left" />
+                        <controls:InfoButton Header="Notify After Completing Split/Merge"
+                            Grid.Column="2"
+                            Margin="0,0,0,0"
+                            Description="Select if a pop-up message should be displayed following the completion of any of the split or merge operations." />
+
+                    </Grid>
 
                 </Grid>
 
-            </Grid>
+            </Expander>
 
-        </Expander>
+        </StackPanel>
 
-    </StackPanel>
+        <TextBlock
+            Grid.Row="1"
+            Margin="8,0,0,10"
+            HorizontalAlignment="Left"
+            FontWeight="Medium">
+            <Hyperlink
+                Command="{Binding OpenHyperlinkCommand}"
+                CommandParameter="{Binding NavigateUri,
+                                           RelativeSource={RelativeSource Self}}"
+                NavigateUri="{Binding Hyperlink_UserUpdatesHelp}">
+                Learn more about user updates options
+            </Hyperlink>
+        </TextBlock>
+
+    </Grid>
 
 </UserControl>

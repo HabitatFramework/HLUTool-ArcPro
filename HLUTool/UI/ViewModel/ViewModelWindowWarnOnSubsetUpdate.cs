@@ -67,7 +67,7 @@ namespace HLU.UI.ViewModel
 
         #region RequestClose
 
-        public delegate void RequestCloseEventHandler(bool proceed, bool split);
+        public delegate void RequestCloseEventHandler(bool proceed, bool split, int? subsetUpdateAction);
 
         public event RequestCloseEventHandler RequestClose;
 
@@ -104,11 +104,9 @@ namespace HLU.UI.ViewModel
         {
             // Set the default value to 'Subset'.
             if (_makeDefaultReponse == true)
-            {
-                Settings.Default.SubsetUpdateAction = 1;
-                Settings.Default.Save();
-            }
-            this.RequestClose(true, true);
+                this.RequestClose(true, true, 1);
+            else
+                this.RequestClose(true, true, null);
         }
 
         #endregion
@@ -144,11 +142,9 @@ namespace HLU.UI.ViewModel
         {
             // Set the default value to 'All'.
             if (_makeDefaultReponse == true)
-            {
-                Settings.Default.SubsetUpdateAction = 2;
-                Settings.Default.Save();
-            }
-            this.RequestClose(true, false);
+                this.RequestClose(true, true, 2);
+            else
+                this.RequestClose(true, true, null);
         }
 
         #endregion
@@ -182,7 +178,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void CancelCommandClick(object param)
         {
-            this.RequestClose(false, false);
+            this.RequestClose(false, false, null);
         }
 
         #endregion

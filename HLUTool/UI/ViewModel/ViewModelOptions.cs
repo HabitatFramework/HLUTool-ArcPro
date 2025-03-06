@@ -43,6 +43,9 @@ using System.Windows.Data;
 using ArcGIS.Desktop.Framework.Contracts;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
+using System.Diagnostics;
+using System.Windows.Navigation;
+using Microsoft.IdentityModel.Tokens;
 
 namespace HLU.UI.ViewModel
 {
@@ -52,76 +55,80 @@ namespace HLU.UI.ViewModel
 
         private ViewModelWindowMain _viewModelMain;
 
+        private AddInSettings _addInSettings;
+
         private ICommand _saveCommand;
         private ICommand _cancelCommand;
         private ICommand _browseSqlPathCommand;
+        private ICommand _openHyperlinkCommand;
+
         private string _displayName = "Options";
 
         private HluDataSet.incid_mm_polygonsDataTable _incidMMPolygonsTable = new();
         private List<int> _gisIDColumnOrdinals;
 
         // Database options
-        //private int? _dbConnectionTimeout = Settings.Default.DbConnectionTimeout;
-        //private int? _incidTablePageSize = Settings.Default.IncidTablePageSize;
+        private int? _dbConnectionTimeout;
+        private int? _incidTablePageSize;
 
         // Dates options
-        //private string _seasonSpring = Settings.Default.SeasonNames[0];
-        //private string _seasonSummer = Settings.Default.SeasonNames[1];
-        //private string _seasonAutumn = Settings.Default.SeasonNames[2];
-        //private string _seasonWinter = Settings.Default.SeasonNames[3];
-        //private string _vagueDateDelimiter = Settings.Default.VagueDateDelimiter;
+        private string _seasonSpring;
+        private string _seasonSummer;
+        private string _seasonAutumn;
+        private string _seasonWinter;
+        private string _vagueDateDelimiter;
 
         // Updates options
-        //private int _habitatSecondaryCodeValidation = Settings.Default.HabitatSecondaryCodeValidation;
-        //private int _primarySecondaryCodeValidation = Settings.Default.PrimarySecondaryCodeValidation;
-        //private int _qualityValidation = Settings.Default.QualityValidation;
-        //private int _potentialPriorityDetermQtyValidation = Settings.Default.PotentialPriorityDetermQtyValidation;
-        //private int? _subsetUpdateAction = Settings.Default.SubsetUpdateAction;
-        //private string[] _clearIHSUpdateActions;
-        //private string _clearIHSUpdateAction = Settings.Default.ClearIHSUpdateAction;
-        //private string _secondaryCodeDelimiter = Settings.Default.SecondaryCodeDelimiter;
-        //private bool _resetOSMMUpdatesStatus = Settings.Default.ResetOSMMUpdatesStatus;
+        private int _habitatSecondaryCodeValidation;
+        private int _primarySecondaryCodeValidation;
+        private int _qualityValidation;
+        private int _potentialPriorityDetermQtyValidation;
+        private int? _subsetUpdateAction;
+        private string[] _clearIHSUpdateActions;
+        private string _clearIHSUpdateAction;
+        private string _secondaryCodeDelimiter;
+        private bool _resetOSMMUpdatesStatus;
 
         // Bulk Update options
-        //private bool _bulkDeleteOrphanBapHabitats = Settings.Default.BulkUpdateDeleteOrphanBapHabitats;
-        //private bool _bulkDeletePotentialBapHabitats = Settings.Default.BulkUpdateDeletePotentialBapHabitats;
-        //private bool _bulkDeleteIHSCodes = Settings.Default.BulkUpdateDeleteIHSCodes;
-        //private bool _bulkDeleteSecondaryCodes = Settings.Default.BulkUpdateDeleteSecondaryCodes;
-        //private bool _bulkCreateHistoryRecords = Settings.Default.BulkUpdateCreateHistoryRecords;
-        //private string _bulkDeterminationQuality = Settings.Default.BulkUpdateDeterminationQuality;
-        //private string _bulkInterpretationQuality = Settings.Default.BulkUpdateInterpretationQuality;
-        //private Nullable<int> _bulkOSMMSourceId = Settings.Default.BulkOSMMSourceId;
+        private bool _bulkDeleteOrphanBapHabitats;
+        private bool _bulkDeletePotentialBapHabitats;
+        private bool _bulkDeleteIHSCodes;
+        private bool _bulkDeleteSecondaryCodes;
+        private bool _bulkCreateHistoryRecords;
+        private string _bulkDeterminationQuality;
+        private string _bulkInterpretationQuality;
+        private int? _bulkOSMMSourceId;
 
         // User GIS options
-        private int? _minAutoZoom = Settings.Default.MinAutoZoom;
-        private int _maxAutoZoom = Settings.Default.MaxAutoZoom;
+        private int? _minAutoZoom;
+        private int _maxAutoZoom;
 
         // User History options
         private SelectionList<string> _historyColumns;
-        private int? _historyDisplayLastN = Settings.Default.HistoryDisplayLastN;
+        private int? _historyDisplayLastN;
 
         // User Interface options
-        private bool _showGroupHeaders = Settings.Default.ShowGroupHeaders;
-        private bool _showIHSTab = Settings.Default.ShowIHSTab;
-        private bool _showSourceHabitatGroup = Settings.Default.ShowSourceHabitatGroup;
-        private bool _showHabitatSecondariesSuggested = Settings.Default.ShowHabitatSecondariesSuggested;
-        private bool _showNVCCodes = Settings.Default.ShowNVCCodes;
-        private bool _showHabitatSummary = Settings.Default.ShowHabitatSummary;
+        private bool _showGroupHeaders;
+        private bool _showIHSTab;
+        private bool _showSourceHabitatGroup;
+        private bool _showHabitatSecondariesSuggested;
+        private bool _showNVCCodes;
+        private bool _showHabitatSummary;
         private string[] _showOSMMUpdatesOptions;
-        private string _showOSMMUpdatesOption = Settings.Default.ShowOSMMUpdatesOption;
-        private string _preferredHabitatClass = Settings.Default.PreferredHabitatClass;
-        private string _preferredSecondaryGroup = Settings.Default.PreferredSecondaryGroup;
+        private string _showOSMMUpdatesOption;
+        private string _preferredHabitatClass;
+        private string _preferredSecondaryGroup;
         private string[] _secondaryCodeOrderOptions;
-        private string _secondaryCodeOrder = Settings.Default.SecondaryCodeOrder;
+        private string _secondaryCodeOrder;
 
         // User Updates options
-        private bool _notifyOnSplitMerge = Settings.Default.NotifyOnSplitMerge;
+        private bool _notifyOnSplitMerge;
 
         // Filter options
-        private int? _getValueRows = Settings.Default.GetValueRows;
-        private int _maxGetValueRows = Settings.Default.MaxGetValueRows;
-        private int? _warnBeforeGISSelect = Settings.Default.WarnBeforeGISSelect;
-        private string _sqlPath = Settings.Default.SqlPath;
+        private int? _getValueRows;
+        private int _maxGetValueRows;
+        private int? _warnBeforeGISSelect;
+        private string _sqlPath;
 
         // Backup variables
         private string _bakSqlPath;
@@ -139,17 +146,57 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public ViewModelOptions()
         {
-            // Get the dockpane DAML id.
-            DockPane pane = FrameworkApplication.DockPaneManager.Find(DockPaneID);
+           // Get the dockpane DAML id.
+           DockPane pane = FrameworkApplication.DockPaneManager.Find(DockPaneID);
             if (pane == null)
                 return;
 
             // Get the ViewModel by casting the dockpane.
             _viewModelMain = pane as ViewModelWindowMain;
 
+            // Get the AddInSettings from the ViewModel.
+            _addInSettings = _viewModelMain.AddInSettings;
+
+            // Get the GIS ID Column Ordinals.
             _gisIDColumnOrdinals = Settings.Default.GisIDColumnOrdinals.Cast<string>()
                 .Select(s => Int32.Parse(s)).ToList();
 
+            // Set the application database options
+            _dbConnectionTimeout = _addInSettings.DbConnectionTimeout;
+            _incidTablePageSize = _addInSettings.IncidTablePageSize;
+
+            // Set the application dates options
+            _seasonSpring = _addInSettings.SeasonNames[0];
+            _seasonSummer = _addInSettings.SeasonNames[1];
+            _seasonAutumn = _addInSettings.SeasonNames[2];
+            _seasonWinter = _addInSettings.SeasonNames[3];
+            _vagueDateDelimiter = _addInSettings.VagueDateDelimiter;
+
+            // Set the application updates options
+            _habitatSecondaryCodeValidation = _addInSettings.HabitatSecondaryCodeValidation;
+            _primarySecondaryCodeValidation = _addInSettings.PrimarySecondaryCodeValidation;
+            _qualityValidation = _addInSettings.QualityValidation;
+            _potentialPriorityDetermQtyValidation = _addInSettings.PotentialPriorityDetermQtyValidation;
+            _subsetUpdateAction = _addInSettings.SubsetUpdateAction;
+            _clearIHSUpdateAction = _addInSettings.ClearIHSUpdateAction;
+            _secondaryCodeDelimiter = _addInSettings.SecondaryCodeDelimiter;
+            _resetOSMMUpdatesStatus = _addInSettings.ResetOSMMUpdatesStatus;
+
+            // Set the application bulk Update options
+            _bulkDeleteOrphanBapHabitats = _addInSettings.BulkUpdateDeleteOrphanBapHabitats;
+            _bulkDeletePotentialBapHabitats = _addInSettings.BulkUpdateDeletePotentialBapHabitats;
+            _bulkDeleteIHSCodes = _addInSettings.BulkUpdateDeleteIHSCodes;
+            _bulkDeleteSecondaryCodes = _addInSettings.BulkUpdateDeleteSecondaryCodes;
+            _bulkCreateHistoryRecords = _addInSettings.BulkUpdateCreateHistoryRecords;
+            _bulkDeterminationQuality = _addInSettings.BulkUpdateDeterminationQuality;
+            _bulkInterpretationQuality = _addInSettings.BulkUpdateInterpretationQuality;
+            _bulkOSMMSourceId = _addInSettings.BulkOSMMSourceId;
+
+            // Set the user GIS options
+            _minAutoZoom = Settings.Default.MinAutoZoom;
+            _maxAutoZoom = Settings.Default.MaxAutoZoom;
+
+            // User History options
             _historyColumns = new SelectionList<string>(_incidMMPolygonsTable.Columns.Cast<DataColumn>()
                 .Where(c => !_gisIDColumnOrdinals.Contains(c.Ordinal)
                     && !c.ColumnName.StartsWith("shape_"))
@@ -162,6 +209,29 @@ namespace HLU.UI.ViewModel
             foreach (SelectionItem<string> si in _historyColumns)
                 si.IsSelected = historyColumnOrdinals.Contains(
                     _incidMMPolygonsTable.Columns[UnescapeAccessKey(si.Item)].Ordinal);
+
+            _historyDisplayLastN = Settings.Default.HistoryDisplayLastN;
+
+            // Set the user interface options
+            _showGroupHeaders = Settings.Default.ShowGroupHeaders;
+            _showIHSTab = Settings.Default.ShowIHSTab;
+            _showSourceHabitatGroup = Settings.Default.ShowSourceHabitatGroup;
+            _showHabitatSecondariesSuggested = Settings.Default.ShowHabitatSecondariesSuggested;
+            _showNVCCodes = Settings.Default.ShowNVCCodes;
+            _showHabitatSummary = Settings.Default.ShowHabitatSummary;
+            _showOSMMUpdatesOption = Settings.Default.ShowOSMMUpdatesOption;
+            _preferredHabitatClass = Settings.Default.PreferredHabitatClass;
+            _preferredSecondaryGroup = Settings.Default.PreferredSecondaryGroup;
+            _secondaryCodeOrder = Settings.Default.SecondaryCodeOrder;
+
+            // Set the user updates options
+            _notifyOnSplitMerge = Settings.Default.NotifyOnSplitMerge;
+
+            // Set the user SQL options
+            _getValueRows = Settings.Default.GetValueRows;
+            _maxGetValueRows = Settings.Default.MaxGetValueRows;
+            _warnBeforeGISSelect = Settings.Default.WarnBeforeGISSelect;
+            _sqlPath = Settings.Default.SqlPath;
 
             // Load the navigation items.
             NavigationItems =
@@ -199,31 +269,6 @@ namespace HLU.UI.ViewModel
                 Category = category,
                 Content = value
             };
-        }
-
-        /// <summary>
-        /// Get the default values from settings.
-        /// </summary>
-        /// <remarks></remarks>
-        public ViewModelOptions(ViewModelWindowMain viewModelMain)
-        {
-            _viewModelMain = viewModelMain;
-
-            _gisIDColumnOrdinals = Settings.Default.GisIDColumnOrdinals.Cast<string>()
-                .Select(s => Int32.Parse(s)).ToList();
-
-            _historyColumns = new SelectionList<string>(_incidMMPolygonsTable.Columns.Cast<DataColumn>()
-                .Where(c => !_gisIDColumnOrdinals.Contains(c.Ordinal)
-                    && !c.ColumnName.StartsWith("shape_"))
-                .Select(c => EscapeAccessKey(c.ColumnName)).ToArray());
-
-            List<int> historyColumnOrdinals = Settings.Default.HistoryColumnOrdinals.Cast<string>()
-                .Select(s => Int32.Parse(s)).Where(i => !_gisIDColumnOrdinals.Contains(i) &&
-                    !_incidMMPolygonsTable.Columns[i].ColumnName.StartsWith("shape_")).ToList();
-
-            foreach (SelectionItem<string> si in _historyColumns)
-                si.IsSelected = historyColumnOrdinals.Contains(
-                    _incidMMPolygonsTable.Columns[UnescapeAccessKey(si.Item)].Ordinal);
         }
 
         private string EscapeAccessKey(string s)
@@ -276,7 +321,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                string imageSource = "pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/FolderOpenState16.png";
+                string imageSource = "pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/FolderOpenState32.png";
                 return new BitmapImage(new Uri(imageSource)) as ImageSource;
                 //var imageSource = System.Windows.Application.Current.Resources["FolderOpenState16"] as ImageSource;
                 //return imageSource;
@@ -284,6 +329,120 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion Button Images
+
+        #region Hyperlinks
+
+        public Uri Hyperlink_AppDatabaseHelp
+        {
+            get
+            {
+                if (Uri.TryCreate(string.Format("{0}/{1}", _addInSettings.HelpURL, _addInSettings.HelpPages.AppDatabase), UriKind.Absolute, out Uri uri))
+                    return uri;
+                else
+                    return null;
+            }
+        }
+
+        public Uri Hyperlink_AppDatesHelp
+        {
+            get
+            {
+                if (Uri.TryCreate(string.Format("{0}/{1}", _addInSettings.HelpURL, _addInSettings.HelpPages.AppDates), UriKind.Absolute, out Uri uri))
+                    return uri;
+                else
+                    return null;
+            }
+        }
+
+        public Uri Hyperlink_AppBulkUpdatesHelp
+        {
+            get
+            {
+                if (Uri.TryCreate(string.Format("{0}/{1}", _addInSettings.HelpURL, _addInSettings.HelpPages.AppBulkUpdate), UriKind.Absolute, out Uri uri))
+                    return uri;
+                else
+                    return null;
+            }
+        }
+
+        public Uri Hyperlink_AppUpdatesHelp
+        {
+            get
+            {
+                if (Uri.TryCreate(string.Format("{0}/{1}", _addInSettings.HelpURL, _addInSettings.HelpPages.AppUpdates), UriKind.Absolute, out Uri uri))
+                    return uri;
+                else
+                    return null;
+            }
+        }
+
+        public Uri Hyperlink_AppValidationHelp
+        {
+            get
+            {
+                if (Uri.TryCreate(string.Format("{0}/{1}", _addInSettings.HelpURL, _addInSettings.HelpPages.AppValidation), UriKind.Absolute, out Uri uri))
+                    return uri;
+                else
+                    return null;
+            }
+        }
+
+        public Uri Hyperlink_UserGISHelp
+        {
+            get
+            {
+                if (Uri.TryCreate(string.Format("{0}/{1}", _addInSettings.HelpURL, _addInSettings.HelpPages.UserGIS), UriKind.Absolute, out Uri uri))
+                    return uri;
+                else
+                    return null;
+            }
+        }
+
+        public Uri Hyperlink_UserInterfaceHelp
+        {
+            get
+            {
+                if (Uri.TryCreate(string.Format("{0}/{1}", _addInSettings.HelpURL, _addInSettings.HelpPages.UserInterface), UriKind.Absolute, out Uri uri))
+                    return uri;
+                else
+                    return null;
+            }
+        }
+
+        public Uri Hyperlink_UserUpdatesHelp
+        {
+            get
+            {
+                if (Uri.TryCreate(string.Format("{0}/{1}", _addInSettings.HelpURL, _addInSettings.HelpPages.UserUpdates), UriKind.Absolute, out Uri uri))
+                    return uri;
+                else
+                    return null;
+            }
+        }
+
+        public Uri Hyperlink_UserSQLHelp
+        {
+            get
+            {
+                if (Uri.TryCreate(string.Format("{0}/{1}", _addInSettings.HelpURL, _addInSettings.HelpPages.UserSQL), UriKind.Absolute, out Uri uri))
+                    return uri;
+                else
+                    return null;
+            }
+        }
+
+        public Uri Hyperlink_UserHistoryHelp
+        {
+            get
+            {
+                if (Uri.TryCreate(string.Format("{0}/{1}", _addInSettings.HelpURL, _addInSettings.HelpPages.UserHistory), UriKind.Absolute, out Uri uri))
+                    return uri;
+                else
+                    return null;
+            }
+        }
+
+        #endregion
 
         #region RequestClose
 
@@ -338,47 +497,61 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void SaveCommandClick(object param)
         {
-            // Save application options
+            // Save add-in settings.
+            SaveAddInSettings();
 
-            // Database options
-            Settings.Default.DbConnectionTimeout = (int)_dbConnectionTimeout;
-            Settings.Default.IncidTablePageSize = (int)_incidTablePageSize;
+            // Save user settings;
+            SaveUserSettings();
 
-            // Dates options
-            Settings.Default.SeasonNames[0] = _seasonSpring;
-            Settings.Default.SeasonNames[1] = _seasonSummer;
-            Settings.Default.SeasonNames[2] = _seasonAutumn;
-            Settings.Default.SeasonNames[3] = _seasonWinter;
-            Settings.Default.VagueDateDelimiter = _vagueDateDelimiter;
+            // Close the window and trigger the event to apply the settings.
+            this.RequestClose(true);
+        }
 
-            // Updates options
-            Settings.Default.HabitatSecondaryCodeValidation = _habitatSecondaryCodeValidation;
-            Settings.Default.PrimarySecondaryCodeValidation = _primarySecondaryCodeValidation;
-            Settings.Default.QualityValidation = _qualityValidation;
-            Settings.Default.PotentialPriorityDetermQtyValidation = _potentialPriorityDetermQtyValidation;
-            Settings.Default.SubsetUpdateAction = (int)_subsetUpdateAction;
-            Settings.Default.ClearIHSUpdateAction = _clearIHSUpdateAction;
-            Settings.Default.SecondaryCodeDelimiter = _secondaryCodeDelimiter;
-            Settings.Default.ResetOSMMUpdatesStatus = _resetOSMMUpdatesStatus;
+        private void SaveAddInSettings()
+        {
+            // Update add-in database options
+            _addInSettings.DbConnectionTimeout = (int)_dbConnectionTimeout;
+            _addInSettings.IncidTablePageSize = (int)_incidTablePageSize;
 
-            // Bulk update options
-            Settings.Default.BulkUpdateDeleteOrphanBapHabitats = _bulkDeleteOrphanBapHabitats;
-            Settings.Default.BulkUpdateDeletePotentialBapHabitats = _bulkDeletePotentialBapHabitats;
-            Settings.Default.BulkUpdateDeleteSecondaryCodes = _bulkDeleteSecondaryCodes;
-            Settings.Default.BulkUpdateCreateHistoryRecords = _bulkCreateHistoryRecords;
-            Settings.Default.BulkUpdateDeleteIHSCodes = _bulkDeleteIHSCodes;
+            // Update add-in dates options
+            _addInSettings.SeasonNames[0] = _seasonSpring;
+            _addInSettings.SeasonNames[1] = _seasonSummer;
+            _addInSettings.SeasonNames[2] = _seasonAutumn;
+            _addInSettings.SeasonNames[3] = _seasonWinter;
+            _addInSettings.VagueDateDelimiter = _vagueDateDelimiter;
 
-            // OSMM bulk update options
-            Settings.Default.BulkUpdateDeterminationQuality = _bulkDeterminationQuality;
-            Settings.Default.BulkUpdateInterpretationQuality = _bulkInterpretationQuality;
-            Settings.Default.BulkOSMMSourceId = (int)_bulkOSMMSourceId;
+            // Update add-in updates options
+            _addInSettings.HabitatSecondaryCodeValidation = _habitatSecondaryCodeValidation;
+            _addInSettings.PrimarySecondaryCodeValidation = _primarySecondaryCodeValidation;
+            _addInSettings.QualityValidation = _qualityValidation;
+            _addInSettings.PotentialPriorityDetermQtyValidation = _potentialPriorityDetermQtyValidation;
+            _addInSettings.SubsetUpdateAction = (int)_subsetUpdateAction;
+            _addInSettings.ClearIHSUpdateAction = _clearIHSUpdateAction;
+            _addInSettings.SecondaryCodeDelimiter = _secondaryCodeDelimiter;
+            _addInSettings.ResetOSMMUpdatesStatus = _resetOSMMUpdatesStatus;
 
-            // Save user options
+            // Update add-in bulk update options
+            _addInSettings.BulkUpdateDeleteOrphanBapHabitats = _bulkDeleteOrphanBapHabitats;
+            _addInSettings.BulkUpdateDeletePotentialBapHabitats = _bulkDeletePotentialBapHabitats;
+            _addInSettings.BulkUpdateDeleteSecondaryCodes = _bulkDeleteSecondaryCodes;
+            _addInSettings.BulkUpdateCreateHistoryRecords = _bulkCreateHistoryRecords;
+            _addInSettings.BulkUpdateDeleteIHSCodes = _bulkDeleteIHSCodes;
 
-            // GIS options
+            // Update add-in OSMM bulk update options
+            _addInSettings.BulkUpdateDeterminationQuality = _bulkDeterminationQuality;
+            _addInSettings.BulkUpdateInterpretationQuality = _bulkInterpretationQuality;
+            _addInSettings.BulkOSMMSourceId = (int)_bulkOSMMSourceId;
+
+            // Save changes back to XML in main window.
+            _viewModelMain.SaveAddInSettings(_addInSettings);
+        }
+
+        private void SaveUserSettings()
+        {
+            // Update user GIS options
             Settings.Default.MinAutoZoom = (int)_minAutoZoom;
 
-            // History options
+            // Update user history options
             //TOOO: Fix this
             //Settings.Default.HistoryColumnOrdinals =
             //[
@@ -387,7 +560,7 @@ namespace HLU.UI.ViewModel
             //];
             Settings.Default.HistoryDisplayLastN = (int)_historyDisplayLastN;
 
-            // Interface options
+            // Update user interface options
             Settings.Default.PreferredHabitatClass = _preferredHabitatClass;
             Settings.Default.ShowGroupHeaders = _showGroupHeaders;
             Settings.Default.ShowIHSTab = _showIHSTab;
@@ -400,17 +573,16 @@ namespace HLU.UI.ViewModel
             Settings.Default.PreferredSecondaryGroup = _preferredSecondaryGroup;
             Settings.Default.SecondaryCodeOrder = _secondaryCodeOrder;
 
-            // Filter options
+            // Update user SQL options
             Settings.Default.GetValueRows = (int)_getValueRows;
             Settings.Default.WarnBeforeGISSelect = (int)_warnBeforeGISSelect;
             Settings.Default.SqlPath = _sqlPath;
 
-            // Updates options
+            // Update user updates options
             Settings.Default.NotifyOnSplitMerge = _notifyOnSplitMerge;
 
+            // Save changes to the settings.
             Settings.Default.Save();
-
-            this.RequestClose(true);
         }
 
         /// <summary>
@@ -452,10 +624,46 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void CancelCommandClick(object param)
         {
-            // Reset the map path incase the user has selected a new
-            // path and is now cancelling the changes.
-            Settings.Default.MapPath = _bakMapPath;
+            // Don't save the changes.
             this.RequestClose(false);
+        }
+
+        #endregion
+
+        #region OpenHyperlink Command
+
+        /// <summary>
+        /// Create OpenHyperlink command
+        /// </summary>
+        /// <value></value>
+        /// <returns></returns>
+        /// <remarks></remarks>
+        public ICommand OpenHyperlinkCommand
+        {
+            get
+            {
+                if (_openHyperlinkCommand == null)
+                {
+                    Action<object> openHyperlinkAction = new(this.OpenHyperlinkClick);
+                    _openHyperlinkCommand = new RelayCommand(openHyperlinkAction);
+                }
+
+                return _openHyperlinkCommand;
+            }
+        }
+
+        /// <summary>
+        /// Handles event when OpenHyperlink command is fired
+        /// </summary>
+        /// <param name="param"></param>
+        /// <remarks></remarks>
+        private void OpenHyperlinkClick(object parameter)
+        {
+            if (parameter is Uri uri && uri != null)
+            {
+                string url = uri.AbsoluteUri; // Convert Uri to string
+                System.Diagnostics.Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            }
         }
 
         #endregion
@@ -1339,7 +1547,7 @@ namespace HLU.UI.ViewModel
         /// <value>
         /// The default option for the OSMM source name.
         /// </value>
-        public Nullable<int> OSMMSourceId
+        public int? OSMMSourceId
         {
             get { return _bulkOSMMSourceId; }
             set { _bulkOSMMSourceId = value; }
@@ -1359,18 +1567,18 @@ namespace HLU.UI.ViewModel
                 // Database options
                 if (Convert.ToInt32(DbConnectionTimeout) <= 0 || DbConnectionTimeout == null)
                     error.Append("\n" + "Enter a database timeout greater than 0 seconds.");
-                //if (Convert.ToInt32(IncidTablePageSize) <= 0 || IncidTablePageSize == null)
-                //    error.Append("\n" + "Enter a database page size greater than 0 rows.");
+                if (Convert.ToInt32(IncidTablePageSize) <= 0 || IncidTablePageSize == null)
+                    error.Append("\n" + "Enter a database page size greater than 0 rows.");
 
                 // GIS options
-                //if (Convert.ToInt32(MinAutoZoom) < 100 || MinAutoZoom == null)
-                //    error.Append("\n" + "Minimum auto zoom scale must be at least 100.");
-                //if (Convert.ToInt32(MinAutoZoom) > Settings.Default.MaxAutoZoom)
-                //    error.Append("\n" + String.Format("Minimum auto zoom scale must not be greater than {0}.", Settings.Default.MaxAutoZoom));
+                if (Convert.ToInt32(MinAutoZoom) < 100 || MinAutoZoom == null)
+                    error.Append("\n" + "Minimum auto zoom scale must be at least 100.");
+                if (Convert.ToInt32(MinAutoZoom) > Settings.Default.MaxAutoZoom)
+                    error.Append("\n" + String.Format("Minimum auto zoom scale must not be greater than {0}.", Settings.Default.MaxAutoZoom));
 
                 // History options
-                //if (Convert.ToInt32(HistoryDisplayLastN) <= 0 || HistoryDisplayLastN == null)
-                //    error.Append("\n" + "Number of history rows to be displayed must be greater than 0.");
+                if (Convert.ToInt32(HistoryDisplayLastN) <= 0 || HistoryDisplayLastN == null)
+                    error.Append("\n" + "Number of history rows to be displayed must be greater than 0.");
 
                 // Interface options
                 if (PreferredHabitatClass == null)
@@ -1401,10 +1609,10 @@ namespace HLU.UI.ViewModel
                     error.Append("Select when to clear IHS codes after an update.");
 
                 // SQL options
-                //if (Convert.ToInt32(GetValueRows) <= 0 || GetValueRows == null)
-                //    error.Append("\n" + "Number of value rows to be retrieved must be greater than 0.");
-                //if (Convert.ToInt32(GetValueRows) > Settings.Default.MaxGetValueRows)
-                //    error.Append("\n" + String.Format("Number of value rows to be retrieved must not be greater than {0}.", Settings.Default.MaxGetValueRows));
+                if (Convert.ToInt32(GetValueRows) <= 0 || GetValueRows == null)
+                    error.Append("\n" + "Number of value rows to be retrieved must be greater than 0.");
+                if (Convert.ToInt32(GetValueRows) > Settings.Default.MaxGetValueRows)
+                    error.Append("\n" + String.Format("Number of value rows to be retrieved must not be greater than {0}.", Settings.Default.MaxGetValueRows));
 
                 // Date options
                 if (String.IsNullOrEmpty(SeasonSpring))
@@ -1454,26 +1662,26 @@ namespace HLU.UI.ViewModel
                         if (Convert.ToInt32(DbConnectionTimeout) <= 0 || DbConnectionTimeout == null)
                             error = "Error: Enter a database timeout greater than 0 seconds.";
                         break;
-                    //case "IncidTablePageSize":
-                    //    if (Convert.ToInt32(IncidTablePageSize) <= 0 || IncidTablePageSize == null)
-                    //        error = "Error: Enter a database page size greater than 0 rows.";
-                    //    if (Convert.ToInt32(IncidTablePageSize) > 1000 || IncidTablePageSize == null)
-                    //        error = "Error: Enter a database page size no more than 1000 rows.";
-                    //    break;
+                    case "IncidTablePageSize":
+                        if (Convert.ToInt32(IncidTablePageSize) <= 0 || IncidTablePageSize == null)
+                            error = "Error: Enter a database page size greater than 0 rows.";
+                        if (Convert.ToInt32(IncidTablePageSize) > 1000 || IncidTablePageSize == null)
+                            error = "Error: Enter a database page size no more than 1000 rows.";
+                        break;
 
                     // GIS options
-                    //case "MinAutoZoom":
-                    //    if (Convert.ToInt32(MinAutoZoom) < 100 || MinAutoZoom == null)
-                    //        error = "Error: Minimum auto zoom scale must be at least 100.";
-                    //    if (Convert.ToInt32(MinAutoZoom) > Settings.Default.MaxAutoZoom)
-                    //        error = String.Format("Error: Minimum auto zoom scale must not be greater than {0}.", Settings.Default.MaxAutoZoom);
-                    //    break;
+                    case "MinAutoZoom":
+                        if (Convert.ToInt32(MinAutoZoom) < 100 || MinAutoZoom == null)
+                            error = "Error: Minimum auto zoom scale must be at least 100.";
+                        if (Convert.ToInt32(MinAutoZoom) > Settings.Default.MaxAutoZoom)
+                            error = String.Format("Error: Minimum auto zoom scale must not be greater than {0}.", Settings.Default.MaxAutoZoom);
+                        break;
 
                     // History options
-                    //case "HistoryDisplayLastN":
-                    //    if (Convert.ToInt32(HistoryDisplayLastN) <= 0 || HistoryDisplayLastN == null)
-                    //        error = "Error: Number of history rows to be displayed must be greater than 0.";
-                    //    break;
+                    case "HistoryDisplayLastN":
+                        if (Convert.ToInt32(HistoryDisplayLastN) <= 0 || HistoryDisplayLastN == null)
+                            error = "Error: Number of history rows to be displayed must be greater than 0.";
+                        break;
 
                     // Update options
                     case "HabitatSecondaryCodeValidation":
@@ -1528,12 +1736,12 @@ namespace HLU.UI.ViewModel
                         break;
 
                     // SQL options
-                    //case "GetValueRows":
-                    //    if (Convert.ToInt32(GetValueRows) <= 0 || GetValueRows == null)
-                    //        error = "Error: Number of value rows to be retrieved must be greater than 0.";
-                    //    if (Convert.ToInt32(GetValueRows) > Settings.Default.MaxGetValueRows)
-                    //        error = String.Format("Error: Number of value rows to be retrieved must not be greater than {0}.", Settings.Default.MaxGetValueRows);
-                    //    break;
+                    case "GetValueRows":
+                        if (Convert.ToInt32(GetValueRows) <= 0 || GetValueRows == null)
+                            error = "Error: Number of value rows to be retrieved must be greater than 0.";
+                        if (Convert.ToInt32(GetValueRows) > Settings.Default.MaxGetValueRows)
+                            error = String.Format("Error: Number of value rows to be retrieved must not be greater than {0}.", Settings.Default.MaxGetValueRows);
+                        break;
 
                     // Date options
                     case "SeasonSpring":

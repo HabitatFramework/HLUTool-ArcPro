@@ -2,12 +2,33 @@
 using System.IO;
 using System.Xml.Serialization;
 using System.Reflection;
+using System.Linq;
+using System.Xml.Linq;
+using ArcGIS.Desktop.Framework;
 
 namespace HLU;
 
+public class HelpPages
+{
+    // Individual help pages
+    public string AppDatabase { get; set; } = "interface/interface.html#database-options";
+    public string AppDates { get; set; } = "interface/interface.html#dates-options";
+    public string AppBulkUpdate { get; set; } = "interface/interface.html#bulk-update-options";
+    public string AppUpdates { get; set; } = "interface/interface.html#updates-options";
+    public string AppValidation { get; set; } = "interface/interface.html#updates-options";
+    public string UserGIS { get; set; } = "interface/interface.html#gis-export-options";
+    public string UserInterface { get; set; } = "interface/interface.html#interface-options";
+    public string UserUpdates { get; set; } = "interface/interface.html#updates-options";
+    public string UserSQL { get; set; } = "interface/interface.html#filter-options";
+    public string UserHistory { get; set; } = "interface/interface.html#history-options";
+}
+
 public class AddInSettings
 {
+    // Help URL.
     public string HelpURL { get; set; } = "https://hlutool-userguide.readthedocs.io/en/latest/";
+
+    public HelpPages HelpPages { get; set; } = new();
 
     // Application database options
     public int DbConnectionTimeout { get; set; } = 60;
@@ -20,12 +41,12 @@ public class AddInSettings
     // Application validation options
     public int HabitatSecondaryCodeValidation { get; set; } = 2;
     public int PrimarySecondaryCodeValidation { get; set; } = 1;
-    public int QualityValidation { get; set; } = 0;
-    public int PotentialPriorityDeterminQtyValidation { get; set; } = 0;
+    public int QualityValidation { get; set; } = 1;
+    public int PotentialPriorityDetermQtyValidation { get; set; } = 1;
 
     // Application updates options
     public int SubsetUpdateAction { get; set; } = 0;
-    public int ClearIHSUpdateAction { get; set; } = 0;
+    public string ClearIHSUpdateAction { get; set; } = "Do not clear";
     public string SecondaryCodeDelimiter { get; set; } = ".";
     public bool ResetOSMMUpdatesStatus { get; set; } = false;
 
@@ -37,7 +58,9 @@ public class AddInSettings
     public bool BulkUpdateCreateHistoryRecords { get; set; } = true;
     public string BulkUpdateDeterminationQuality { get; set; } = @"PI";
     public string BulkUpdateInterpretationQuality { get; set; } = @"M2";
-    public int BulkOSMMSourceId { get; set; } = 0;
+
+//    [XmlElement("BulkOSMMSourceId")]
+    public int? BulkOSMMSourceId { get; set; } = null;
 }
 
 public class XmlSettingsManager
@@ -49,14 +72,34 @@ public class XmlSettingsManager
     /// </summary>
     internal XmlSettingsManager()
     {
-        // Get the full path of the executing assembly (DLL inside the .esriAddinX package)
-        string assemblyPath = Assembly.GetExecutingAssembly().Location;
+        // Get the full file path of the .esriAddInX file.
+        string addinPath = GetEsriAddinXPath();
 
-        // Get the directory where the add-in is loaded from
-        string addInDirectory = Path.GetDirectoryName(assemblyPath);
+        // Get the directory where the add-in file is loaded from.
+        string addInDirectory = Path.GetDirectoryName(addinPath);
 
-        // Get the full path to the settings file
-        _settingsFile = Path.Combine(addInDirectory, "Settings.xml");
+        // Get the full path to the settings file.
+        _settingsFile = Path.Combine(addInDirectory, "HLUTool.xml");
+    }
+
+    /// <summary>
+    /// Get the full file path of the .esriAddInX file.
+    /// </summary>
+    /// <returns></returns>
+    public static string GetEsriAddinXPath()
+    {
+        // Get the collection of all installed add-ins.
+        var addIns = FrameworkApplication.GetAddInInfos();
+
+        // Get the name of the currently executing add-in by checking the assembly name.
+        var executingAssembly = System.Reflection.Assembly.GetExecutingAssembly();
+        string executingAssemblyName = executingAssembly.GetName().Name;
+
+        // Find the add-in that matches the executing assembly name.
+        var currentAddIn = addIns.FirstOrDefault(a => a.Name.ToString().Equals(executingAssemblyName, StringComparison.OrdinalIgnoreCase));
+
+        // Return the original .esriAddinX full file path.
+        return currentAddIn?.FullPath;
     }
 
     /// <summary>
@@ -68,7 +111,6 @@ public class XmlSettingsManager
         // Return true if the settings file exists
         return File.Exists(_settingsFile);
     }
-
 
     /// <summary>
     /// Load the settings from the settings file
@@ -94,5 +136,24 @@ public class XmlSettingsManager
         XmlSerializer serializer = new(typeof(AddInSettings));
         using StreamWriter writer = new(_settingsFile);
         serializer.Serialize(writer, settings);
+    }
+
+    /// <summary>
+    /// Removes a specified node from the XML file.
+    /// </summary>
+    public void RemoveNode(string nodeName)
+    {
+        if (File.Exists(_settingsFile))
+        {
+            XDocument doc = XDocument.Load(_settingsFile);
+
+            // Find and remove the first occurrence of the node
+            XElement nodeToRemove = doc.Root.Element(nodeName);
+            if (nodeToRemove != null)
+            {
+                nodeToRemove.Remove();
+                doc.Save(_settingsFile);
+            }
+        }
     }
 }

@@ -16,50 +16,74 @@
                 <extensions:DesignOnlyResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
-
     </UserControl.Resources>
 
-    <StackPanel Margin="4">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
 
-        <Label Content="Set user options for GIS"
+        <StackPanel
+            Grid.Row="0"
+            Margin="4">
+
+            <Label Content="Set user options for GIS"
+                HorizontalAlignment="Left"
+                FontSize="14"
+                FontWeight="Medium" />
+
+            <Expander Header="Zoom Options"
+                Margin="6,10,0,0"
+                IsExpanded="True">
+
+                <Grid
+                    Margin="12,4,4,2"
+                    HorizontalAlignment="Left">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="60" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Label Content="Minimum Auto Zoom"
+                        Grid.Column="0"
+                        HorizontalAlignment="Right" />
+                    <xctk:IntegerUpDown
+                        x:Name="TextBoxMaxGetValues"
+                        Grid.Column="1"
+                        Height="24"
+                        Maximum="{Binding MaxAutoZoom}"
+                        Minimum="100"
+                        TextAlignment="Right"
+                        Value="{Binding MinAutoZoom,
+                                        ValidatesOnDataErrors=True}" />
+                    <controls:InfoButton Header="Minimum Auto Zoom"
+                        Grid.Column="2"
+                        Margin="5,0,0,0"
+                        Description="Sets the minimum zoom level at which the auto-zoom function activates. Select a scale value (e.g. 1000). Lower values zoom in closer, while higher values zoom out." />
+
+                </Grid>
+
+            </Expander>
+
+        </StackPanel>
+
+        <TextBlock
+            Grid.Row="1"
+            Margin="8,0,0,10"
             HorizontalAlignment="Left"
-            FontSize="14"
-            FontWeight="Medium" />
+            FontWeight="Medium">
+            <Hyperlink
+                Command="{Binding OpenHyperlinkCommand}"
+                CommandParameter="{Binding NavigateUri,
+                                           RelativeSource={RelativeSource Self}}"
+                NavigateUri="{Binding Hyperlink_UserGISHelp}">
+                Learn more about user GIS options
+            </Hyperlink>
+        </TextBlock>
 
-        <Expander Header="Zoom Options"
-            Margin="6,10,0,0"
-            IsExpanded="True">
-
-            <Grid
-                Margin="12,4,4,2"
-                HorizontalAlignment="Left">
-
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="60" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <Label Content="Minimum Auto Zoom"
-                    Grid.Column="0"
-                    HorizontalAlignment="Right" />
-                <xctk:IntegerUpDown
-                    x:Name="TextBoxMaxGetValues"
-                    Grid.Column="1"
-                    Height="24"
-                    Maximum="{Binding MaxAutoZoom}"
-                    Minimum="100"
-                    TextAlignment="Right"
-                    Value="{Binding MinAutoZoom}" />
-                <controls:InfoButton Header="Minimum Auto Zoom"
-                    Grid.Column="2"
-                    Margin="5,0,0,0"
-                    Description="Sets the minimum zoom level at which the auto-zoom function activates. Select a scale value (e.g. 1000). Lower values zoom in closer, while higher values zoom out." />
-
-            </Grid>
-
-        </Expander>
-
-    </StackPanel>
+    </Grid>
 
 </UserControl>

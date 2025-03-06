@@ -15,6 +15,7 @@
     <Compile Remove="GISApplication\GISAppFactory.cs" />
     <Compile Remove="GISApplication\WinAPI.cs" />
     <Compile Remove="HluArcMapExtension.cs" />
+    <Compile Remove="PipeList.cs" />
     <Compile Remove="UI\ViewModel\PaneHeader1ViewModel.cs" />
     <Compile Remove="UI\ViewModel\PaneHeader2ViewModel.cs" />
     <Compile Remove="UI\ViewModel\ViewModelConnectOleDb.cs" />

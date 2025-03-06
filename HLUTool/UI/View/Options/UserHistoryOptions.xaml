@@ -17,106 +17,129 @@
                 <ResourceDictionary Source="../Dictionary/NullableValueConverterDictionary.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
-
     </UserControl.Resources>
 
-    <StackPanel Margin="4">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
 
-        <Label Content="Set user options for history"
-            HorizontalAlignment="Left"
-            FontSize="14"
-            FontWeight="Medium" />
+        <StackPanel
+            Grid.Row="0"
+            Margin="4">
 
-        <Expander Header="Display Columns"
-            Margin="6,10,0,0"
-            IsExpanded="True">
+            <Label Content="Set user options for history"
+                HorizontalAlignment="Left"
+                FontSize="14"
+                FontWeight="Medium" />
 
-            <Grid
-                Margin="12,4,4,2"
-                HorizontalAlignment="Left">
+            <Expander Header="Display Columns"
+                Margin="6,10,0,0"
+                IsExpanded="True">
 
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+                <Grid
+                    Margin="12,4,4,2"
+                    HorizontalAlignment="Left">
 
-                <Grid Grid.Row="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <Label Content="Columns to Display"
-                        Grid.Row="0"
-                        Grid.Column="0"
-                        HorizontalAlignment="Left" />
-                    <controls:InfoButton Header="History Display Columns"
-                        Grid.Column="1"
-                        Margin="0,0,0,0"
-                        Description="Select which additional columns from the GIS layer are displayed in the History tab for each update. If the checkbox for a column is selected the column will be displayed." />
+                    <Grid Grid.Row="0">
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Label Content="Columns to Display"
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            HorizontalAlignment="Left" />
+                        <controls:InfoButton Header="History Display Columns"
+                            Grid.Column="1"
+                            Margin="0,0,0,0"
+                            Description="Select which additional columns from the GIS layer are displayed in the History tab for each update. If the checkbox for a column is selected the column will be displayed." />
+
+                    </Grid>
+
+                    <ListBox ItemsSource="{Binding HistoryColumns}"
+                        Grid.Row="1"
+                        Width="Auto"
+                        MinWidth="200"
+                        Margin="6,4,4,2"
+                        HorizontalAlignment="Left"
+                        SelectionMode="Extended">
+
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <CheckBox Content="{Binding Item, Mode=TwoWay}"
+                                    IsChecked="{Binding IsSelected,
+                                                        Mode=TwoWay}" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+
+                    </ListBox>
 
                 </Grid>
 
-                <ListBox ItemsSource="{Binding HistoryColumns}"
-                    Grid.Row="1"
-                    Width="Auto"
-                    MinWidth="200"
-                    Margin="6,4,4,2"
-                    HorizontalAlignment="Left"
-                    SelectionMode="Extended">
+            </Expander>
 
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <CheckBox Content="{Binding Item, Mode=TwoWay}"
-                                IsChecked="{Binding IsSelected,
-                                                    Mode=TwoWay}" />
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
+            <Expander Header="Display Rows"
+                Margin="6,10,0,0"
+                IsExpanded="True">
 
-                </ListBox>
+                <Grid
+                    Margin="12,4,4,2"
+                    HorizontalAlignment="Left">
 
-            </Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="60" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
-        </Expander>
+                    <Label Content="Rows to Display"
+                        Grid.Column="0"
+                        HorizontalAlignment="Right" />
+                    <xctk:IntegerUpDown
+                        x:Name="xctkHistoryDisplayLastN"
+                        Grid.Column="1"
+                        Height="24"
+                        BorderThickness="1"
+                        Maximum="{Binding MaxHistoryDisplayLastN}"
+                        Minimum="1"
+                        TextAlignment="Right"
+                        Value="{Binding HistoryDisplayLastN,
+                                        Converter={StaticResource nullableValueConverter},
+                                        ValidatesOnDataErrors=True,
+                                        UpdateSourceTrigger=PropertyChanged}" />
+                    <controls:InfoButton Header="Display History Rows"
+                        Grid.Column="2"
+                        Margin="5,0,0,0"
+                        Description="Sets the number of entries displayed in the ‘History’ tab of the main interface." />
 
-        <Expander Header="Display Rows"
-            Margin="6,10,0,0"
-            IsExpanded="True">
+                </Grid>
 
-            <Grid
-                Margin="12,4,4,2"
-                HorizontalAlignment="Left">
+            </Expander>
 
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="60" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+        </StackPanel>
 
-                <Label Content="Rows to Display"
-                    Grid.Column="0"
-                    HorizontalAlignment="Right" />
-                <xctk:IntegerUpDown
-                    x:Name="xctkHistoryDisplayLastN"
-                    Grid.Column="1"
-                    Height="24"
-                    BorderThickness="1"
-                    Maximum="{Binding MaxHistoryDisplayLastN}"
-                    Minimum="1"
-                    TextAlignment="Right"
-                    Value="{Binding HistoryDisplayLastN,
-                                    Converter={StaticResource nullableValueConverter},
-                                    ValidatesOnDataErrors=True,
-                                    UpdateSourceTrigger=PropertyChanged}" />
-                <controls:InfoButton Header="Display History Rows"
-                    Grid.Column="2"
-                    Margin="5,0,0,0"
-                    Description="Sets the number of entries displayed in the ‘History’ tab of the main interface." />
+        <TextBlock
+            Grid.Row="1"
+            Margin="8,0,0,10"
+            HorizontalAlignment="Left"
+            FontWeight="Medium">
+            <Hyperlink
+                Command="{Binding OpenHyperlinkCommand}"
+                CommandParameter="{Binding NavigateUri,
+                                           RelativeSource={RelativeSource Self}}"
+                NavigateUri="{Binding Hyperlink_UserHistoryHelp}">
+                Learn more about user history options
+            </Hyperlink>
+        </TextBlock>
 
-            </Grid>
-
-        </Expander>
-
-    </StackPanel>
+    </Grid>
 
 </UserControl>

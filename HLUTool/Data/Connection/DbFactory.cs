@@ -42,7 +42,7 @@ namespace HLU.Data.Connection
             get { return _backend; }
         }
 
-        public static DbBase CreateConnection()
+        public static DbBase CreateConnection(int dbConnectionTimeout)
         {
             if (Enum.IsDefined(typeof(ConnectionTypes), Settings.Default.DbConnectionType))
                 _connType = (ConnectionTypes)Settings.Default.DbConnectionType;
@@ -71,35 +71,35 @@ namespace HLU.Data.Connection
                         Settings.Default.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders,
                         true, Settings.Default.DbIsUnicode, Settings.Default.DbUseTimeZone,
                         Settings.Default.DbTextLength, Settings.Default.DbBinaryLength, Settings.Default.DbTimePrecision,
-                        Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, Settings.Default.DbConnectionTimeout);
+                        Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, dbConnectionTimeout);
                     break;
                 case ConnectionTypes.OleDb:
                     db = new DbOleDb(ref connString, ref defaultSchema, ref promptPwd,
                         Settings.Default.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders,
                         true, Settings.Default.DbIsUnicode, Settings.Default.DbUseTimeZone, Settings.Default.DbTextLength,
                         Settings.Default.DbBinaryLength, Settings.Default.DbTimePrecision,
-                        Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, Settings.Default.DbConnectionTimeout);
+                        Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, dbConnectionTimeout);
                     break;
                 case ConnectionTypes.Oracle:
                     db = new DbOracle(ref connString, ref defaultSchema, ref promptPwd,
                         Settings.Default.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders,
                         true, Settings.Default.DbIsUnicode, Settings.Default.DbUseTimeZone, Settings.Default.DbTextLength,
                         Settings.Default.DbBinaryLength, Settings.Default.DbTimePrecision,
-                        Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, Settings.Default.DbConnectionTimeout);
+                        Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, dbConnectionTimeout);
                     break;
                 case ConnectionTypes.PostgreSQL:
                     db = new DbPgSql(ref connString, ref defaultSchema, ref promptPwd,
                         Settings.Default.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders,
                         true, Settings.Default.DbIsUnicode, Settings.Default.DbUseTimeZone, Settings.Default.DbTextLength,
                         Settings.Default.DbBinaryLength, Settings.Default.DbTimePrecision,
-                        Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, Settings.Default.DbConnectionTimeout);
+                        Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, dbConnectionTimeout);
                     break;
                 case ConnectionTypes.SQLServer:
                     db = new DbSqlServer(ref connString, ref defaultSchema, ref promptPwd,
                         Settings.Default.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders,
                         true, Settings.Default.DbIsUnicode, Settings.Default.DbUseTimeZone, Settings.Default.DbTextLength,
                         Settings.Default.DbBinaryLength, Settings.Default.DbTimePrecision,
-                        Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, Settings.Default.DbConnectionTimeout);
+                        Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, dbConnectionTimeout);
                     break;
             }
 

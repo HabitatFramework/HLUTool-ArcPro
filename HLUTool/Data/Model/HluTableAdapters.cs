@@ -67,7 +67,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
         {
             try
             {
-                if (db == null) throw new ArgumentNullException("db");
+                ArgumentNullException.ThrowIfNull(db);
 
                 if (typeof(T).GetProperty("Item").PropertyType != typeof(R))
                     throw new ArgumentException("Type parameter R must be the row type of T.", "R");
@@ -189,7 +189,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             {
                 if (dataTable == null) dataTable = new T();
                 this.CommandCollection[0].CommandText = _originalSelectCommand +
-                    (!whereClause.TrimStart().ToUpper().StartsWith("WHERE") ? " WHERE " : "") + whereClause;
+                    (!whereClause.TrimStart().StartsWith("WHERE", StringComparison.CurrentCultureIgnoreCase) ? " WHERE " : "") + whereClause;
                 return Fill(dataTable);
             }
             return -1;
@@ -264,7 +264,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
 
         public virtual int Update(R dataRow)
         {
-            return _db.Update<T, R>(new R[] { dataRow });
+            return _db.Update<T, R>([dataRow]);
         }
 
         public virtual int Update(R[] dataRows)
@@ -314,16 +314,16 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             try
             {
                 for (int i = 0; i < _columnCount; i++)
-                    ((IDataParameter)this.Adapter.InsertCommand.Parameters[i]).Value = 
+                    ((IDataParameter)this.Adapter.InsertCommand.Parameters[i]).Value =
                         row.IsNull(row.Table.Columns[i]) ? DBNull.Value : row[i];
 
                 if ((this.Adapter.InsertCommand.Connection.State & ConnectionState.Open) != ConnectionState.Open)
                     this.Adapter.InsertCommand.Connection.Open();
 
                 if (_db.Transaction != null) this.Adapter.InsertCommand.Transaction = _db.Transaction;
-                
+
                 int returnValue = this.Adapter.InsertCommand.ExecuteNonQuery();
-                
+
                 return returnValue;
             }
             finally
@@ -337,7 +337,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
         public virtual int Update(R newRow, R originalRow)
         {
             ConnectionState previousConnectionState = this.Adapter.UpdateCommand.Connection.State;
-           
+
             try
             {
                 // on any error the entire operation should fail, so we don't check whether parameters are found
@@ -357,7 +357,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                 if (_db.Transaction != null) this.Adapter.UpdateCommand.Transaction = _db.Transaction;
 
                 int returnValue = this.Adapter.UpdateCommand.ExecuteNonQuery();
-                
+
                 return returnValue;
             }
             finally
@@ -494,8 +494,8 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
         private string _sameConnErrorMsg =
             "All TableAdapters managed by a TableAdapterManager must use the same connection string.";
 
-        public static Type[] DataTableTypes = [
-                typeof(HluDataSet.incidDataTable),
+        private static readonly Type[] value = [
+                        typeof(HluDataSet.incidDataTable),
                 typeof(HluDataSet.incid_bapDataTable),
                 typeof(HluDataSet.incid_conditionDataTable),
                 typeof(HluDataSet.incid_secondaryDataTable),
@@ -505,9 +505,10 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                 typeof(HluDataSet.incid_ihs_matrixDataTable),
                 typeof(HluDataSet.incid_sourcesDataTable),
                 typeof(HluDataSet.incid_osmm_updatesDataTable) ];
+        public static Type[] DataTableTypes = value;
 
-        public static Type[] LookupTableTypes = [
-                typeof(HluDataSet.exportsDataTable),
+        private static readonly Type[] value1 = [
+                        typeof(HluDataSet.exportsDataTable),
                 typeof(HluDataSet.exports_field_typesDataTable),
                 typeof(HluDataSet.exports_fieldsDataTable),
                 typeof(HluDataSet.lut_quality_determinationDataTable),
@@ -546,6 +547,8 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                 typeof(HluDataSet.lut_sourcesDataTable),
                 typeof(HluDataSet.lut_userDataTable),
                 typeof(HluDataSet.lut_versionDataTable) ];
+        public static Type[] LookupTableTypes = value1;
+
         #endregion
 
         #region Properties
@@ -1247,7 +1250,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
 
         internal TableAdapterManager(DbBase db, Scope createAdapters)
         {
-            if ((db == null) || (db.Connection == null)) throw new ArgumentNullException("db");
+            if ((db == null) || (db.Connection == null)) throw new ArgumentNullException(nameof(db));
 
             string errorMessage;
             if (!IsHluDataSet(db, out errorMessage)) throw new ArgumentException("db", errorMessage);
@@ -1255,11 +1258,11 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             _db = db;
 
             _tableAdapterMatches = (from pt in typeof(HluDataSet).GetProperties()
-                                    from pa in this.GetType().GetProperties().Where(pi => pi.PropertyType.GetGenericArguments().Any())
+                                    from pa in this.GetType().GetProperties().Where(pi => pi.PropertyType.GetGenericArguments().Length != 0)
                                     where pa.PropertyType.GetGenericArguments().Contains(pt.PropertyType)
-                                    select new 
-                                    { 
-                                        key = pt.PropertyType, 
+                                    select new
+                                    {
+                                        key = pt.PropertyType,
                                         value = pa
                                     }
                                     ).ToDictionary(kv => kv.key, kv => kv.value);
@@ -1300,7 +1303,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             {
                 DataTable schemaTable = db.GetSchema("Columns", db.RestrictionNameSchema, db.DefaultSchema,
                     (DbConnection)db.Connection, (DbTransaction)db.Transaction);
-                
+
                 if (schemaTable != null)
                 {
                     var cols = from t in TableAdapterManager.DataTableTypes
@@ -1318,7 +1321,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                                                                       Table = r.Field<string>("TABLE_NAME"),
                                                                       Column = r.Field<string>("COLUMN_NAME")
                                                                   }
-                                                     where schema.Count(s => s.Column == c.Column && s.Table == c.Table) == 0
+                                                     where !schema.Any(s => s.Column == c.Column && s.Table == c.Table)
                                                      select new string[] { db.QuoteIdentifier(c.Table), db.QuoteIdentifier(c.Column) }
                                                      ).ToArray();
 
@@ -1468,12 +1471,12 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
 
         public void Fill(HluDataSet hluDS, Type tableType, bool clearBeforeFill)
         {
-            Fill(hluDS, new Type[] { tableType }, clearBeforeFill);
+            Fill(hluDS, [tableType], clearBeforeFill);
         }
 
         public void Fill(HluDataSet hluDS, Type tableType, string whereClause, bool clearBeforeFill)
         {
-            Fill(hluDS, new Type[] { tableType }, new string[] { whereClause }, clearBeforeFill);
+            Fill(hluDS, [tableType], [whereClause], clearBeforeFill);
         }
 
         public void Fill(HluDataSet hluDS, Type[] tableTypes,  bool clearBeforeFill)
@@ -1485,20 +1488,20 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                     PropertyInfo adapterPropertyInfo;
                     PropertyInfo tablePropertyInfo;
                     object adapterProperty;
-                    
+
                     if (FillShared(hluDS, tableType, clearBeforeFill, out adapterPropertyInfo,
                         out tablePropertyInfo, out adapterProperty))
                     {
-                        MethodInfo fillMethodInfo = 
-                            adapterPropertyInfo.PropertyType.GetMethod("Fill", new Type[] { tableType });
+                        MethodInfo fillMethodInfo =
+                            adapterPropertyInfo.PropertyType.GetMethod("Fill", [tableType]);
 
-                        fillMethodInfo.Invoke(adapterProperty, new object[] { 
-                            hluDS.GetType().InvokeMember(tablePropertyInfo.Name, 
-                            BindingFlags.GetProperty, null, hluDS, null) });
+                        fillMethodInfo.Invoke(adapterProperty, [
+                            hluDS.GetType().InvokeMember(tablePropertyInfo.Name,
+                            BindingFlags.GetProperty, null, hluDS, null) ]);
                     }
                     else
                     {
-                        throw new ArgumentException("table", 
+                        throw new ArgumentException("table",
                             String.Format("Table '{0}' is not a member of HluDataSet.", tableType.Name));
                     }
                 }
@@ -1522,11 +1525,11 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                         out tablePropertyInfo, out adapterProperty))
                     {
                         MethodInfo fillMethodInfo = adapterPropertyInfo.PropertyType.GetMethod("Fill",
-                            new Type[] { tableType, typeof(string) });
+                            [tableType, typeof(string)]);
 
-                        fillMethodInfo.Invoke(adapterProperty, new object[] { 
-                            hluDS.GetType().InvokeMember(tablePropertyInfo.Name, 
-                            BindingFlags.GetProperty, null, hluDS, null), whereClauses[i] });
+                        fillMethodInfo.Invoke(adapterProperty, [
+                            hluDS.GetType().InvokeMember(tablePropertyInfo.Name,
+                            BindingFlags.GetProperty, null, hluDS, null), whereClauses[i] ]);
                     }
                     else
                     {
@@ -2165,7 +2168,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             if ((allAddedRows == null) || (allAddedRows.Count < 1)) return updatedRows;
 
             List<R> realUpdatedRows = [];
-            for (int i = 0; (i < updatedRows.Length); i = (i + 1))
+            for (int i = 0; (i < updatedRows.Length); i++)
             {
                 R row = updatedRows[i];
                 if ((allAddedRows.Contains(row) == false)) realUpdatedRows.Add(row);
@@ -2178,7 +2181,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
         ///</summary>
         public virtual int UpdateAll(HluDataSet dataSet)
         {
-            if (dataSet == null) throw new ArgumentNullException("dataSet");
+            ArgumentNullException.ThrowIfNull(dataSet);
 
             if (!dataSet.HasChanges()) return 0;
 
@@ -2268,22 +2271,22 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                 PrepareUpdate(this._lut_userTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
                 PrepareUpdate(this._lut_versionTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
 
-                // 
+                //
                 //---- Perform updates -----------
                 //
                 if ((this.UpdateOrder == UpdateOrderOption.UpdateInsertDelete))
                 {
-                    result = (result + this.UpdateUpdatedRows(dataSet, allChangedRows, allAddedRows));
-                    result = (result + this.UpdateInsertedRows(dataSet, allAddedRows));
+                    result += this.UpdateUpdatedRows(dataSet, allChangedRows, allAddedRows);
+                    result += this.UpdateInsertedRows(dataSet, allAddedRows);
                 }
                 else
                 {
-                    result = (result + this.UpdateInsertedRows(dataSet, allAddedRows));
-                    result = (result + this.UpdateUpdatedRows(dataSet, allChangedRows, allAddedRows));
+                    result += this.UpdateInsertedRows(dataSet, allAddedRows);
+                    result += this.UpdateUpdatedRows(dataSet, allChangedRows, allAddedRows);
                 }
-                result = (result + this.UpdateDeletedRows(dataSet, allChangedRows));
+                result += this.UpdateDeletedRows(dataSet, allChangedRows);
 
-                // 
+                //
                 //---- Commit updates -----------
                 //
                 _db.CommitTransaction();

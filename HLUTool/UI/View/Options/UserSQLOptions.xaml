@@ -17,161 +17,186 @@
                 <extensions:DesignOnlyResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
-
     </UserControl.Resources>
 
-    <StackPanel Margin="4">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
 
-        <Label Content="Set user options for SQL"
-            HorizontalAlignment="Left"
-            FontSize="14"
-            FontWeight="Medium" />
+        <StackPanel
+            Grid.Row="0"
+            Margin="4">
 
-        <Expander Header="Filter Options"
-            Margin="6,10,0,0"
-            IsExpanded="True">
+            <Label Content="Set user options for SQL"
+                HorizontalAlignment="Left"
+                FontSize="14"
+                FontWeight="Medium" />
 
-            <Grid
-                Margin="12,4,4,2"
-                HorizontalAlignment="Left">
-
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="4" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="4" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+            <Expander Header="Filter Options"
+                Margin="6,10,0,0"
+                IsExpanded="True">
 
                 <Grid
-                    x:Name="GridSQLSelect"
-                    Grid.Row="0">
-
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" MinWidth="140" />
-                        <ColumnDefinition Width="Auto" MinWidth="70" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <Label Content="Get Values Count"
-                        x:Name="LabelMaxGetValues"
-                        Grid.Column="0"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center" />
-                    <xctk:IntegerUpDown
-                        x:Name="TextBoxMaxGetValues"
-                        Grid.Column="1"
-                        Height="24"
-                        BorderThickness="1"
-                        Maximum="{Binding MaxGetValueRows}"
-                        Minimum="1"
-                        TextAlignment="Right"
-                        Value="{Binding GetValueRows}" />
-                    <controls:InfoButton Header="Get Values Count"
-                        Grid.Column="2"
-                        Margin="5,0,0,0"
-                        Description="Select the maximum number of unique field values that will be retrieved each time the 'Get Values' button is pressed when using the 'Advanced Query Builder'. The maximum number cannot exceed 100,000.&#10;&#10;This number should be reduced if performance issues are experienced." />
-                </Grid>
-
-                <Grid
-                    x:Name="GridWarnBeforeGISSelect"
-                    Grid.Row="2">
-
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" MinWidth="140" />
-                        <ColumnDefinition Width="Auto" MinWidth="70" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-
-                    <Label Content="Warn Before GIS Select"
-                        x:Name="LabelWarnBeforeGISSelect"
-                        Grid.Column="0"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center" />
-                    <ComboBox ItemsSource="{Binding WarnBeforeGISSelectOptions}"
-                        x:Name="ComboBoxWarnBeforeGISSelect"
-                        Grid.Column="1"
-                        BorderThickness="1"
-                        SelectedValue="{Binding WarnBeforeGISSelect,
-                                                ValidatesOnDataErrors=True}"
-                        Tag="ErrorContent" />
-                    <controls:InfoButton Header="Warn Before GIS Select"
-                        Grid.Column="2"
-                        Margin="5,0,0,0"
-                        Description="Select if/when a pop-up warning message should be displayed prior to selecting features in GIS, e.g. when applying a filter or when selecting the features for all INCIDs in the active filter. The available options are:&#10;&#10;  * Prompt - Always prompt the user when attempting to update a subset of INCID features (see Attribute Updates for an example of the prompt dialog).&#10;  * Split - Always perform a logical split before applying the attribute updates.&#10;  * All - Always apply the attribute update to all features belonging to the INCID regardless of which features of the INCID are currently selected." />
-                </Grid>
-
-                <Grid
-                    x:Name="GridSqlPath"
-                    Grid.Row="4">
+                    Margin="12,4,4,2"
+                    HorizontalAlignment="Left">
 
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="4" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="4" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <Grid Grid.Row="0">
+                    <Grid
+                        x:Name="GridSQLSelect"
+                        Grid.Row="0">
 
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" MinWidth="140" />
+                            <ColumnDefinition Width="Auto" MinWidth="70" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-
-                        <Label Content="Default Query Directory:"
-                            x:Name="LabelSqlPath"
-                            Grid.Row="0"
+                        <Label Content="Get Values Count"
+                            x:Name="LabelMaxGetValues"
                             Grid.Column="0"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center" />
-                        <controls:InfoButton Header="Default Query Directory"
-                            Grid.Row="0"
-                            Grid.Column="1"
-                            Margin="0,0,0,0"
-                            Description="Set a default folder path that will be used when saving or loading queries with the 'Advanced Query Builder'. A different path to the default can still be selected during the save and load process." />
-
-                    </Grid>
-
-                    <Grid Grid.Row="1">
-
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="20" />
-                            <ColumnDefinition Width="Auto" MinWidth="350" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-
-                        <TextBox Text="{Binding SqlPath, ValidatesOnDataErrors=True}"
-                            x:Name="TextBoxSqlPath"
+                        <xctk:IntegerUpDown
+                            x:Name="TextBoxMaxGetValues"
                             Grid.Column="1"
                             Height="24"
                             BorderThickness="1"
-                            IsEnabled="False"
-                            Tag="ErrorContent"
-                            TextAlignment="Left"
-                            ToolTipService.ShowOnDisabled="True" />
-                        <Button
-                            x:Name="ButtonBrowseSql"
+                            Maximum="{Binding MaxGetValueRows}"
+                            Minimum="1"
+                            TextAlignment="Right"
+                            Value="{Binding GetValueRows,
+                                            ValidatesOnDataErrors=True}" />
+                        <controls:InfoButton Header="Get Values Count"
                             Grid.Column="2"
-                            Width="24"
-                            Height="24"
-                            MinWidth="0"
-                            MinHeight="0"
-                            Margin="4,0,0,0"
-                            BorderThickness="0"
-                            Command="{Binding BrowseSqlPathCommand}"
-                            Style="{DynamicResource Esri_SmallButton}"
-                            ToolTip="Select default SQL path"
-                            ToolTipService.ShowOnDisabled="True">
-                            <Image
-                                Width="16"
-                                Height="16"
-                                Source="{Binding Path=ButtonOpenFolderImg}" />
-                        </Button>
+                            Margin="5,0,0,0"
+                            Description="Select the maximum number of unique field values that will be retrieved each time the 'Get Values' button is pressed when using the 'Advanced Query Builder'. The maximum number cannot exceed 100,000.&#10;&#10;This number should be reduced if performance issues are experienced." />
+                    </Grid>
 
+                    <Grid
+                        x:Name="GridWarnBeforeGISSelect"
+                        Grid.Row="2">
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" MinWidth="140" />
+                            <ColumnDefinition Width="Auto" MinWidth="70" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Label Content="Warn Before GIS Select"
+                            x:Name="LabelWarnBeforeGISSelect"
+                            Grid.Column="0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center" />
+                        <ComboBox ItemsSource="{Binding WarnBeforeGISSelectOptions}"
+                            x:Name="ComboBoxWarnBeforeGISSelect"
+                            Grid.Column="1"
+                            BorderThickness="1"
+                            SelectedValue="{Binding WarnBeforeGISSelect,
+                                                    ValidatesOnDataErrors=True}"
+                            Tag="ErrorContent" />
+                        <controls:InfoButton Header="Warn Before GIS Select"
+                            Grid.Column="2"
+                            Margin="5,0,0,0"
+                            Description="Select if/when a pop-up warning message should be displayed prior to selecting features in GIS, e.g. when applying a filter or when selecting the features for all INCIDs in the active filter. The available options are:&#10;&#10;  * Prompt - Always prompt the user when attempting to update a subset of INCID features (see Attribute Updates for an example of the prompt dialog).&#10;  * Split - Always perform a logical split before applying the attribute updates.&#10;  * All - Always apply the attribute update to all features belonging to the INCID regardless of which features of the INCID are currently selected." />
+                    </Grid>
+
+                    <Grid
+                        x:Name="GridSqlPath"
+                        Grid.Row="4">
+
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0">
+
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <Label Content="Default Query Directory:"
+                                x:Name="LabelSqlPath"
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center" />
+                            <controls:InfoButton Header="Default Query Directory"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Margin="0,0,0,0"
+                                Description="Set a default folder path that will be used when saving or loading queries with the 'Advanced Query Builder'. A different path to the default can still be selected during the save and load process." />
+
+                        </Grid>
+
+                        <Grid Grid.Row="1">
+
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="20" />
+                                <ColumnDefinition Width="Auto" MinWidth="350" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBox Text="{Binding SqlPath, ValidatesOnDataErrors=True}"
+                                x:Name="TextBoxSqlPath"
+                                Grid.Column="1"
+                                Height="24"
+                                BorderThickness="1"
+                                IsEnabled="False"
+                                Tag="ErrorContent"
+                                TextAlignment="Left"
+                                ToolTipService.ShowOnDisabled="True" />
+                            <Button
+                                x:Name="ButtonBrowseSql"
+                                Grid.Column="2"
+                                Width="24"
+                                Height="24"
+                                MinWidth="0"
+                                MinHeight="0"
+                                Margin="4,0,0,0"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Command="{Binding BrowseSqlPathCommand}"
+                                Style="{DynamicResource Esri_SmallButton}"
+                                ToolTip="Select default SQL path"
+                                ToolTipService.ShowOnDisabled="True">
+                                <Image
+                                    Width="16"
+                                    Height="16"
+                                    Source="{Binding Path=ButtonOpenFolderImg}" />
+                            </Button>
+
+                        </Grid>
                     </Grid>
                 </Grid>
-            </Grid>
 
-        </Expander>
+            </Expander>
 
-    </StackPanel>
+        </StackPanel>
+
+        <TextBlock
+            Grid.Row="1"
+            Margin="8,0,0,10"
+            HorizontalAlignment="Left"
+            FontWeight="Medium">
+            <Hyperlink
+                Command="{Binding OpenHyperlinkCommand}"
+                CommandParameter="{Binding NavigateUri,
+                                           RelativeSource={RelativeSource Self}}"
+                NavigateUri="{Binding Hyperlink_UserSQLHelp}">
+                Learn more about user SQL options
+            </Hyperlink>
+        </TextBlock>
+
+    </Grid>
 
 </UserControl>

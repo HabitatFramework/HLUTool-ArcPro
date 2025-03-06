@@ -39,8 +39,7 @@ namespace HLU.UI.View.Connection
 
         private void Window_Activated(object sender, EventArgs e)
         {
-            HwndSource hwndSrc = PresentationSource.FromVisual(this) as HwndSource;
-            if (hwndSrc != null) _windowHandle = hwndSrc.Handle;
+            if (PresentationSource.FromVisual(this) is HwndSource hwndSrc) _windowHandle = hwndSrc.Handle;
 
             ((ViewModelConnectOdbc)this.DataContext).ViewEvents(_windowHandle, null);
 

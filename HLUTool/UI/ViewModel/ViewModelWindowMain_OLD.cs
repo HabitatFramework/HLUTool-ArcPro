@@ -44,7 +44,6 @@ using HLU.Data.Connection;
 using HLU.Data.Model;
 using HLU.Data.Model.HluDataSetTableAdapters;
 using HLU.Date;
-using HLU.UI.UserControls;
 using HLU.GISApplication;
 using HLU.Properties;
 using HLU.UI.View;
@@ -68,6 +67,8 @@ using System.Windows.Controls;
 using ComboBox = ArcGIS.Desktop.Framework.Contracts.ComboBox;
 using ArcGIS.Desktop.Internal.Mapping.Locate;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
+using HLU.UI.UserControls.Toolbar;
+using System.Drawing.Printing;
 
 
 namespace HLU.UI.ViewModel
@@ -119,7 +120,6 @@ namespace HLU.UI.ViewModel
         private ICommand _autoZoomSelectedAlwaysCommand;
         private ICommand _autoSelectOnGisCommand;
         private ICommand _zoomSelectionCommand;
-        private ICommand _optionsCommand;
         private ICommand _aboutCommand;
 
         #endregion Commands
@@ -129,8 +129,6 @@ namespace HLU.UI.ViewModel
         private WindowMainCopySwitches _copySwitches = new();
         private WindowAbout _windowAbout;
         private ViewModelWindowAbout _viewModelAbout;
-        private WindowOptions _windowOptions;
-        private ViewModelOptions _viewModelOptions;
         private WindowQueryIncid _windowQueryIncid;
         private ViewModelWindowQueryIncid _viewModelWinQueryIncid;
         private WindowQuerySecondaries _windowQuerySecondaries;
@@ -450,16 +448,32 @@ namespace HLU.UI.ViewModel
         /// <returns></returns>
         internal async Task<bool> InitializeToolPaneAsync()
         {
-            // Database options
-            _dbConnectionTimeout = Settings.Default.DbConnectionTimeout;
+            // Application database options
+            _dbConnectionTimeout = _addInSettings.DbConnectionTimeout;
+            _incidPageSize = _addInSettings.IncidTablePageSize;
 
-            // GIS/Export options
+            // Dates options
+            // None
+
+            // Application interface options
+            _secondaryCodeDelimiter = _addInSettings.SecondaryCodeDelimiter;
+
+            // Updates options
+            _subsetUpdateAction = _addInSettings.SubsetUpdateAction;
+            _clearIHSUpdateAction = _addInSettings.ClearIHSUpdateAction;
+            _resetOSMMUpdatesStatus = _addInSettings.ResetOSMMUpdatesStatus;
+            _habitatSecondaryCodeValidation = _addInSettings.HabitatSecondaryCodeValidation;
+            _primarySecondaryCodeValidation = _addInSettings.PrimarySecondaryCodeValidation;
+            _qualityValidation = _addInSettings.QualityValidation;
+            _potentialPriorityDetermQtyValidation = _addInSettings.PotentialPriorityDetermQtyValidation;
+
+            // Filter options
+            _warnBeforeGISSelect = Settings.Default.WarnBeforeGISSelect;
+
+            // User GIS options
             _minZoom = Settings.Default.MinAutoZoom;
 
-            // History options
-            _historyDisplayLastN = Settings.Default.HistoryDisplayLastN;
-
-            // Interface options
+            // User interface options
             _preferredHabitatClass = Settings.Default.PreferredHabitatClass;
             _showGroupHeaders = Settings.Default.ShowGroupHeaders;
             _showIHSTab = Settings.Default.ShowIHSTab;
@@ -470,23 +484,14 @@ namespace HLU.UI.ViewModel
             _showOSMMUpdates = Settings.Default.ShowOSMMUpdatesOption;
             _preferredSecondaryGroup = Settings.Default.PreferredSecondaryGroup;
             _secondaryCodeOrder = Settings.Default.SecondaryCodeOrder;
-            _secondaryCodeDelimiter = Settings.Default.SecondaryCodeDelimiter;
 
-            // Updates options
-            _subsetUpdateAction = Settings.Default.SubsetUpdateAction;
-            _clearIHSUpdateAction = Settings.Default.ClearIHSUpdateAction;
+            // User updates options
             _notifyOnSplitMerge = Settings.Default.NotifyOnSplitMerge;
-            _resetOSMMUpdatesStatus = Settings.Default.ResetOSMMUpdatesStatus;
-            _habitatSecondaryCodeValidation = Settings.Default.HabitatSecondaryCodeValidation;
-            _primarySecondaryCodeValidation = Settings.Default.PrimarySecondaryCodeValidation;
-            _qualityValidation = Settings.Default.QualityValidation;
-            _potentialPriorityDetermQtyValidation = Settings.Default.PotentialPriorityDetermQtyValidation;
 
-            // Filter options
-            _warnBeforeGISSelect = Settings.Default.WarnBeforeGISSelect;
+            // User history options
+            _historyDisplayLastN = Settings.Default.HistoryDisplayLastN;
 
-            // Dates options
-            // None
+
 
             _codeDeleteRow = Settings.Default.CodeDeleteRow;
             _autoZoomSelection = Settings.Default.AutoZoomSelection;
@@ -496,14 +501,13 @@ namespace HLU.UI.ViewModel
             // Initialise statics.
             HistoryGeometry1ColumnName = Settings.Default.HistoryGeometry1ColumnName;
             HistoryGeometry2ColumnName = Settings.Default.HistoryGeometry2ColumnName;
-            IncidPageSize = Settings.Default.IncidTablePageSize;
 
             try
             {
                 // Open database connection and test whether it points to a valid HLU database
                 while (true)
                 {
-                    if ((_db = DbFactory.CreateConnection()) == null)
+                    if ((_db = DbFactory.CreateConnection(DbConnectionTimeout)) == null)
                         throw new Exception("No database connection.");
 
                     _hluDS = new HluDataSet();
@@ -578,7 +582,7 @@ namespace HLU.UI.ViewModel
                 _historyColumns = InitializeHistoryColumns(_historyColumns);
 
                 // Create scratch database
-                ScratchDb.CreateScratchMdb(_hluDS.incid, _hluDS.incid_mm_polygons);
+                ScratchDb.CreateScratchMdb(_hluDS.incid, _hluDS.incid_mm_polygons, DbConnectionTimeout);
 
                 // Count rows of incid table
                 IncidRowCount(true);
@@ -629,7 +633,7 @@ namespace HLU.UI.ViewModel
                 // Open database connection and test whether it points to a valid HLU database
                 while (true)
                 {
-                    if ((_db = DbFactory.CreateConnection()) == null)
+                    if ((_db = DbFactory.CreateConnection(DbConnectionTimeout)) == null)
                         throw new Exception("No database connection.");
 
                     _hluDS = new HluDataSet();
@@ -1705,7 +1709,7 @@ namespace HLU.UI.ViewModel
             set { _refillIncidTable = true; }
         }
 
-        internal int DBConnectionTimeout
+        public int DbConnectionTimeout
         {
             get { return _dbConnectionTimeout; }
         }
@@ -3164,10 +3168,22 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="proceed">if set to <c>true</c> [proceed].</param>
         /// <param name="split">if set to <c>true</c> [split].</param>
-        void _viewModelWinWarnSubsetUpdate_RequestClose(bool proceed, bool split)
+        void _viewModelWinWarnSubsetUpdate_RequestClose(bool proceed, bool split, int? subsetUpdateAction)
         {
             _viewModelWinWarnSubsetUpdate.RequestClose -= _viewModelWinWarnSubsetUpdate_RequestClose;
             _windowWarnSubsetUpdate.Close();
+
+            // If the user has set a default action for updating subsets of features
+            if (subsetUpdateAction.HasValue)
+            {
+                // Update add-in option
+                _subsetUpdateAction = subsetUpdateAction.Value;
+                _addInSettings.SubsetUpdateAction = (int)_subsetUpdateAction;
+
+                // Save changes back to XML.
+                SaveAddInSettings(_addInSettings);
+
+            }
 
             // If the user wants to proceed with the update then set whether they
             // want to update all the features or perform a logically split first.
@@ -3199,7 +3215,7 @@ namespace HLU.UI.ViewModel
         {
             _saving = false;
             if (_viewModelBulkUpdate == null)
-                _viewModelBulkUpdate = new ViewModelWindowMainBulkUpdate(this);
+                _viewModelBulkUpdate = new ViewModelWindowMainBulkUpdate(this, _addInSettings);
 
             // If already in bulk update mode then perform the bulk update
             // (only possible when this method was called after the 'Apply'
@@ -3456,6 +3472,16 @@ namespace HLU.UI.ViewModel
         /// <param name="param"></param>
         private void OSMMUpdateClicked(object param)
         {
+            // Can't start OSMM Update mode if the bulk OSMM source hasn't been set.
+            if (_addInSettings.BulkOSMMSourceId == null)
+            {
+                MessageBox.Show("The Bulk OSMM Source has not been set.\n\n" +
+                    "Please set the Bulk OSMM Source in the Options.",
+                    "HLU: OSMM Update", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+
+                return;
+            }
+
             _saving = false;
             if (_viewModelOSMMUpdate == null)
                 _viewModelOSMMUpdate = new ViewModelWindowMainOSMMUpdate(this);
@@ -4145,7 +4171,7 @@ namespace HLU.UI.ViewModel
         {
             _saving = false;
             if (_viewModelBulkUpdate == null)
-                _viewModelBulkUpdate = new ViewModelWindowMainBulkUpdate(this);
+                _viewModelBulkUpdate = new ViewModelWindowMainBulkUpdate(this, _addInSettings);
 
             // If the OSMM Bulk update mode is not already started.
             if (_osmmBulkUpdateMode == false)
@@ -4458,143 +4484,121 @@ namespace HLU.UI.ViewModel
         #region Options
 
         /// <summary>
-        /// Gets the options command.
+        /// Save the add-in settings.
         /// </summary>
-        /// <value>
-        /// The options command.
-        /// </value>
-        public ICommand OptionsCommand
+        /// <param name="addInSettings"></param>
+        public void SaveAddInSettings(AddInSettings addInSettings)
         {
-            get
-            {
-                if (_optionsCommand == null)
-                {
-                    Action<object> optionsAction = new(this.OptionsClicked);
-                    _optionsCommand = new RelayCommand(optionsAction);
-                }
-                return _optionsCommand;
-            }
+            // Save the application settings.
+            _xmlSettingsManager.SaveSettings(addInSettings);
         }
 
         /// <summary>
-        /// Open the options window.
+        /// Apply the settings in the main window.
         /// </summary>
-        /// <param name="param">The parameter.</param>
-        private void OptionsClicked(object param)
+        public void ApplySettings()
         {
-            _windowOptions = new WindowOptions
-            {
-                //DONE: App.Current.MainWindow
-                //_windowOptions.Owner = App.Current.MainWindow;
-                WindowStartupLocation = WindowStartupLocation.CenterScreen
-            };
-
-            _viewModelOptions = new ViewModelOptions(this);
-            _viewModelOptions.RequestClose +=
-                new ViewModelOptions.RequestCloseEventHandler(_viewModelOptions_RequestClose);
-
-            _windowOptions.DataContext = _viewModelOptions;
-
-            _windowOptions.ShowDialog();
-        }
-
-        /// <summary>
-        /// Save the options settings when the options window is closed.
-        /// </summary>
-        /// <param name="saveSettings">if set to <c>true</c> [save settings].</param>
-        void _viewModelOptions_RequestClose(bool saveSettings)
-        {
-            _viewModelOptions.RequestClose -= _viewModelOptions_RequestClose;
-            _windowOptions.Close();
-
             // Store old show source habitat group value
             bool _oldShowSourceHabitatGroup = _showSourceHabitatGroup;
 
-            // re-set static variables (IncidPageSize might be dangerous to change on the fly)
-            if (saveSettings)
+            // Apply application settings.
+            ApplyAddInSettings();
+
+            // Apply user settings.
+            ApplyUserSettings();
+
+            // If the show source habitat group value has changed and
+            // is now true, set the habitat class to null to force
+            // the user default value to be set.
+            if (_oldShowSourceHabitatGroup != _showSourceHabitatGroup
+                && _showSourceHabitatGroup == true)
             {
-                // Database options
-                _dbConnectionTimeout = Settings.Default.DbConnectionTimeout;
-
-                // GIS/Export options
-                _minZoom = Settings.Default.MinAutoZoom;
-
-                // History options
-                _historyDisplayLastN = Settings.Default.HistoryDisplayLastN;
-                _historyColumns = InitializeHistoryColumns(_historyColumns);
-
-                // Interface options
-                _preferredHabitatClass = Settings.Default.PreferredHabitatClass;
-                _showGroupHeaders = Settings.Default.ShowGroupHeaders;
-                _showIHSTab = Settings.Default.ShowIHSTab;
-                _showSourceHabitatGroup = Settings.Default.ShowSourceHabitatGroup;
-                _showHabitatSecondariesSuggested = Settings.Default.ShowHabitatSecondariesSuggested;
-                _showNVCCodes = Settings.Default.ShowNVCCodes;
-                _showHabitatSummary = Settings.Default.ShowHabitatSummary;
-                _showOSMMUpdates = Settings.Default.ShowOSMMUpdatesOption;
-                _preferredSecondaryGroup = Settings.Default.PreferredSecondaryGroup;
-                _secondaryCodeOrder = Settings.Default.SecondaryCodeOrder;
-                _secondaryCodeDelimiter = Settings.Default.SecondaryCodeDelimiter;
-
-                // Updates options
-                _subsetUpdateAction = Settings.Default.SubsetUpdateAction;
-                _clearIHSUpdateAction = Settings.Default.ClearIHSUpdateAction;
-                _notifyOnSplitMerge = Settings.Default.NotifyOnSplitMerge;
-                _resetOSMMUpdatesStatus = Settings.Default.ResetOSMMUpdatesStatus;
-                _habitatSecondaryCodeValidation = Settings.Default.HabitatSecondaryCodeValidation;
-                _primarySecondaryCodeValidation = Settings.Default.PrimarySecondaryCodeValidation;
-                SecondaryHabitat.PrimarySecondaryCodeValidation = _primarySecondaryCodeValidation; // Set in the secondary habitat environment
-                _qualityValidation = Settings.Default.QualityValidation;
-                _potentialPriorityDetermQtyValidation = Settings.Default.PotentialPriorityDetermQtyValidation;
-                BapEnvironment.PotentialPriorityDetermQtyValidation = _potentialPriorityDetermQtyValidation; // Used in the priority habitat environment
-
-                // Filter options
-                _warnBeforeGISSelect = Settings.Default.WarnBeforeGISSelect;
-
-                // Dates options
-                VagueDate.Delimiter = Settings.Default.VagueDateDelimiter;
-                VagueDate.SeasonNames = Settings.Default.SeasonNames.Cast<string>().ToArray();
-
-                // Bulk Update options
-                //None
-
-                // If the show source habitat group value has changed and
-                // is now true, set the habitat class to null to force
-                // the user default value to be set.
-                if (_oldShowSourceHabitatGroup != _showSourceHabitatGroup
-                    && _showSourceHabitatGroup == true)
-                {
-                    _habitatClass = null;
-                    OnPropertyChanged(nameof(HabitatClass));
-                }
-
-                // Refresh the user interface
-                RefreshGroupHeaders();
-
-                OnPropertyChanged(nameof(ShowSourceHabitatGroup));
-                OnPropertyChanged(nameof(ShowHabitatSecondariesSuggested));
-                OnPropertyChanged(nameof(ShowNVCCodes));
-                OnPropertyChanged(nameof(ShowHabitatSummary));
-                OnPropertyChanged(nameof(ShowIHSTab));
-                OnPropertyChanged(nameof(ShowIncidOSMMPendingGroup));
-
-                OnPropertyChanged(nameof(SecondaryGroupCodes));
-                SecondaryGroup = _preferredSecondaryGroup;
-                OnPropertyChanged(nameof(SecondaryGroup));
-
-                OnPropertyChanged(nameof(SecondaryHabitatCodes));
-                RefreshSecondaryHabitats();
-                OnPropertyChanged(nameof(HabitatTabLabel));
-                OnPropertyChanged(nameof(IncidSecondarySummary));
-
-                OnPropertyChanged(nameof(IncidCondition));
-                OnPropertyChanged(nameof(IncidConditionQualifier));
-                OnPropertyChanged(nameof(IncidConditionDate));
-
-                OnPropertyChanged(nameof(IncidQualityDetermination));
-                OnPropertyChanged(nameof(IncidQualityInterpretation));
-                OnPropertyChanged(nameof(IncidQualityComments));
+                _habitatClass = null;
+                OnPropertyChanged(nameof(HabitatClass));
             }
+
+            // Refresh the user interface
+            RefreshGroupHeaders();
+
+            OnPropertyChanged(nameof(ShowSourceHabitatGroup));
+            OnPropertyChanged(nameof(ShowHabitatSecondariesSuggested));
+            OnPropertyChanged(nameof(ShowNVCCodes));
+            OnPropertyChanged(nameof(ShowHabitatSummary));
+            OnPropertyChanged(nameof(ShowIHSTab));
+            OnPropertyChanged(nameof(ShowIncidOSMMPendingGroup));
+
+            OnPropertyChanged(nameof(SecondaryGroupCodes));
+            SecondaryGroup = _preferredSecondaryGroup;
+            OnPropertyChanged(nameof(SecondaryGroup));
+
+            OnPropertyChanged(nameof(SecondaryHabitatCodes));
+            RefreshSecondaryHabitats();
+            OnPropertyChanged(nameof(HabitatTabLabel));
+            OnPropertyChanged(nameof(IncidSecondarySummary));
+
+            OnPropertyChanged(nameof(IncidCondition));
+            OnPropertyChanged(nameof(IncidConditionQualifier));
+            OnPropertyChanged(nameof(IncidConditionDate));
+
+            OnPropertyChanged(nameof(IncidQualityDetermination));
+            OnPropertyChanged(nameof(IncidQualityInterpretation));
+            OnPropertyChanged(nameof(IncidQualityComments));
+        }
+
+        private void ApplyAddInSettings()
+        {
+            // Apply add-in database options
+            _dbConnectionTimeout = _addInSettings.DbConnectionTimeout;
+            //TODO - Is IncidPageSize too dangerous to change on the fly?
+
+            // Apply add-in dates options
+            VagueDate.Delimiter = _addInSettings.VagueDateDelimiter; // Set in the vague date class
+            VagueDate.SeasonNames = _addInSettings.SeasonNames.Cast<string>().ToArray(); // Set in the vague date class
+
+            // Apply add-in validation options
+            _habitatSecondaryCodeValidation = _addInSettings.HabitatSecondaryCodeValidation;
+            _primarySecondaryCodeValidation = _addInSettings.PrimarySecondaryCodeValidation;
+            SecondaryHabitat.PrimarySecondaryCodeValidation = _primarySecondaryCodeValidation; // Set in the secondary habitat class
+            _qualityValidation = _addInSettings.QualityValidation;
+            _potentialPriorityDetermQtyValidation = _addInSettings.PotentialPriorityDetermQtyValidation;
+            BapEnvironment.PotentialPriorityDetermQtyValidation = _potentialPriorityDetermQtyValidation; // Used in the priority habitat class
+
+            // Apply add-in updates options
+            _subsetUpdateAction = _addInSettings.SubsetUpdateAction;
+            _clearIHSUpdateAction = _addInSettings.ClearIHSUpdateAction;
+            _secondaryCodeDelimiter = _addInSettings.SecondaryCodeDelimiter;
+            _resetOSMMUpdatesStatus = _addInSettings.ResetOSMMUpdatesStatus;
+
+            // Apply add-in bulk update options
+            //None - done in bulk update class.
+        }
+
+        private void ApplyUserSettings()
+        {
+            // Apply user GIS options
+            _minZoom = Settings.Default.MinAutoZoom;
+
+            // Apply user history options
+            _historyDisplayLastN = Settings.Default.HistoryDisplayLastN;
+            _historyColumns = InitializeHistoryColumns(_historyColumns);
+
+            // Apply user interface options
+            _preferredHabitatClass = Settings.Default.PreferredHabitatClass;
+            _showGroupHeaders = Settings.Default.ShowGroupHeaders;
+            _showIHSTab = Settings.Default.ShowIHSTab;
+            _showSourceHabitatGroup = Settings.Default.ShowSourceHabitatGroup;
+            _showHabitatSecondariesSuggested = Settings.Default.ShowHabitatSecondariesSuggested;
+            _showNVCCodes = Settings.Default.ShowNVCCodes;
+            _showHabitatSummary = Settings.Default.ShowHabitatSummary;
+            _showOSMMUpdates = Settings.Default.ShowOSMMUpdatesOption;
+            _preferredSecondaryGroup = Settings.Default.PreferredSecondaryGroup;
+            _secondaryCodeOrder = Settings.Default.SecondaryCodeOrder;
+
+            // Apply user updates options
+            _notifyOnSplitMerge = Settings.Default.NotifyOnSplitMerge;
+
+            // Apply user SQL options
+            _warnBeforeGISSelect = Settings.Default.WarnBeforeGISSelect;
         }
 
         #endregion
@@ -4781,7 +4785,19 @@ namespace HLU.UI.ViewModel
             // Open the OSMM Updates query window if in OSMM Update mode.
             //
             if (_osmmUpdateMode == true || _osmmBulkUpdateMode == true)
+            {
+                // Can't start OSMM Update mode if the bulk OSMM source hasn't been set.
+                if (_addInSettings.BulkOSMMSourceId == null)
+                {
+                    MessageBox.Show("The Bulk OSMM Source has not been set.\n\n" +
+                        "Please set the Bulk OSMM Source in the Options.",
+                        "HLU: OSMM Update", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+
+                    return;
+                }
+
                 OpenWindowQueryOSMM(false);
+            }
             else
             {
                 // Open the select by attributes interface
@@ -5508,7 +5524,7 @@ namespace HLU.UI.ViewModel
                 if (_osmmBulkUpdateMode == true)
                 {
                     // Set the default source details
-                    IncidSourcesRows[0].source_id = Settings.Default.BulkOSMMSourceId;
+                    IncidSourcesRows[0].source_id = (int)_addInSettings.BulkOSMMSourceId;
                     IncidSourcesRows[0].source_habitat_class = "N/A";
                     //_viewModelMain.IncidSourcesRows[0].source_habitat_type = "N/A";
                     //Date.VagueDateInstance defaultSourceDate = DefaultSourceDate(null, Settings.Default.BulkOSMMSourceId);

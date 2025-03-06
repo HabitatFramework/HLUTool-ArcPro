@@ -39,8 +39,7 @@ namespace HLU.UI.View.Connection
 
         private void Window_Activated(object sender, EventArgs e)
         {
-            HwndSource hwndSrc = PresentationSource.FromVisual(this) as HwndSource;
-            if (hwndSrc != null) _windowHandle = hwndSrc.Handle;
+            if (PresentationSource.FromVisual(this) is HwndSource hwndSrc) _windowHandle = hwndSrc.Handle;
 
             if ((this.ComboBoxEncoding.Items.Count == 1) && (String.IsNullOrEmpty(this.ComboBoxEncoding.Text) ||
                 this.ComboBoxEncoding.Items.Contains(this.ComboBoxEncoding.Text))) this.ComboBoxEncoding.SelectedIndex = 0;

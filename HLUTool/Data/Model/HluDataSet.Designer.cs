@@ -19298,7 +19298,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableexports_fields.field_nameColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'field_name\' in table \'exports_fields\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'field_name\' in table \'exports_fields\' is DBNull.", e);
                     }
                 }
                 set {
@@ -19325,7 +19325,7 @@ namespace HLU.Data.Model {
                         return ((int)(this[this.tableexports_fields.fields_countColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'fields_count\' in table \'exports_fields\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'fields_count\' in table \'exports_fields\' is DBNull.", e);
                     }
                 }
                 set {
@@ -19352,7 +19352,7 @@ namespace HLU.Data.Model {
                         return ((int)(this[this.tableexports_fields.field_lengthColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'field_length\' in table \'exports_fields\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'field_length\' in table \'exports_fields\' is DBNull.", e);
                     }
                 }
                 set {
@@ -19368,7 +19368,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableexports_fields.field_formatColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'field_format\' in table \'exports_fields\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'field_format\' in table \'exports_fields\' is DBNull.", e);
                     }
                 }
                 set {
@@ -19513,7 +19513,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tablehistory.modified_user_idColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'modified_user_id\' in table \'history\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'modified_user_id\' in table \'history\' is DBNull.", e);
                     }
                 }
                 set {
@@ -19529,7 +19529,7 @@ namespace HLU.Data.Model {
                         return ((global::System.DateTime)(this[this.tablehistory.modified_dateColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'modified_date\' in table \'history\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'modified_date\' in table \'history\' is DBNull.", e);
                     }
                 }
                 set {
@@ -19545,7 +19545,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tablehistory.modified_processColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'modified_process\' in table \'history\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'modified_process\' in table \'history\' is DBNull.", e);
                     }
                 }
                 set {
@@ -19561,7 +19561,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tablehistory.modified_reasonColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'modified_reason\' in table \'history\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'modified_reason\' in table \'history\' is DBNull.", e);
                     }
                 }
                 set {
@@ -19577,7 +19577,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tablehistory.modified_operationColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'modified_operation\' in table \'history\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'modified_operation\' in table \'history\' is DBNull.", e);
                     }
                 }
                 set {
@@ -19593,7 +19593,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tablehistory.modified_incidColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'modified_incid\' in table \'history\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'modified_incid\' in table \'history\' is DBNull.", e);
                     }
                 }
                 set {
@@ -19609,7 +19609,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tablehistory.modified_toidfragidColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'modified_toidfragid\' in table \'history\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'modified_toidfragid\' in table \'history\' is DBNull.", e);
                     }
                 }
                 set {
@@ -19625,7 +19625,7 @@ namespace HLU.Data.Model {
                         return ((double)(this[this.tablehistory.modified_lengthColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'modified_length\' in table \'history\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'modified_length\' in table \'history\' is DBNull.", e);
                     }
                 }
                 set {
@@ -19641,7 +19641,7 @@ namespace HLU.Data.Model {
                         return ((double)(this[this.tablehistory.modified_areaColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'modified_area\' in table \'history\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'modified_area\' in table \'history\' is DBNull.", e);
                     }
                 }
                 set {
@@ -20023,7 +20023,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid.habitat_versionColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'habitat_version\' in table \'incid\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'habitat_version\' in table \'incid\' is DBNull.", e);
                     }
                 }
                 set {
@@ -20633,7 +20633,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_bap.interpretation_commentsColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'interpretation_comments\' in table \'incid_bap\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'interpretation_comments\' in table \'incid_bap\' is DBNull.", e);
                     }
                 }
                 set {
@@ -21097,7 +21097,7 @@ namespace HLU.Data.Model {
                         return ((double)(this[this.tableincid_mm_polygons.shape_lengthColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'shape_length\' in table \'incid_mm_polygons\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'shape_length\' in table \'incid_mm_polygons\' is DBNull.", e);
                     }
                 }
                 set {
@@ -21113,7 +21113,7 @@ namespace HLU.Data.Model {
                         return ((double)(this[this.tableincid_mm_polygons.shape_areaColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'shape_area\' in table \'incid_mm_polygons\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'shape_area\' in table \'incid_mm_polygons\' is DBNull.", e);
                     }
                 }
                 set {
@@ -21293,7 +21293,7 @@ namespace HLU.Data.Model {
                         return ((int)(this[this.tableincid_sources.source_date_startColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'source_date_start\' in table \'incid_sources\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'source_date_start\' in table \'incid_sources\' is DBNull.", e);
                     }
                 }
                 set {
@@ -21309,7 +21309,7 @@ namespace HLU.Data.Model {
                         return ((int)(this[this.tableincid_sources.source_date_endColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'source_date_end\' in table \'incid_sources\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'source_date_end\' in table \'incid_sources\' is DBNull.", e);
                     }
                 }
                 set {
@@ -21325,7 +21325,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_sources.source_date_typeColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'source_date_type\' in table \'incid_sources\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'source_date_type\' in table \'incid_sources\' is DBNull.", e);
                     }
                 }
                 set {
@@ -21341,7 +21341,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_sources.source_habitat_classColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'source_habitat_class\' in table \'incid_sources\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'source_habitat_class\' in table \'incid_sources\' is DBNull.", e);
                     }
                 }
                 set {
@@ -21357,7 +21357,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_sources.source_habitat_typeColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'source_habitat_type\' in table \'incid_sources\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'source_habitat_type\' in table \'incid_sources\' is DBNull.", e);
                     }
                 }
                 set {
@@ -21373,7 +21373,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_sources.source_boundary_importanceColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'source_boundary_importance\' in table \'incid_sources\' is DBN" +
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'source_boundary_importance\' in table \'incid_sources\' is DBN" +
                                 "ull.", e);
                     }
                 }
@@ -21390,7 +21390,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_sources.source_habitat_importanceColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'source_habitat_importance\' in table \'incid_sources\' is DBNu" +
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'source_habitat_importance\' in table \'incid_sources\' is DBNu" +
                                 "ll.", e);
                     }
                 }
@@ -21407,7 +21407,7 @@ namespace HLU.Data.Model {
                         return ((int)(this[this.tableincid_sources.sort_orderColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'sort_order\' in table \'incid_sources\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'sort_order\' in table \'incid_sources\' is DBNull.", e);
                     }
                 }
                 set {
@@ -21784,7 +21784,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tablelut_habitat_type.descriptionColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'description\' in table \'lut_habitat_type\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'description\' in table \'lut_habitat_type\' is DBNull.", e);
                     }
                 }
                 set {
@@ -21800,7 +21800,7 @@ namespace HLU.Data.Model {
                         return ((bool)(this[this.tablelut_habitat_type.bap_priorityColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'bap_priority\' in table \'lut_habitat_type\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'bap_priority\' in table \'lut_habitat_type\' is DBNull.", e);
                     }
                 }
                 set {
@@ -22801,7 +22801,7 @@ namespace HLU.Data.Model {
                         return ((bool)(this[this.tablelut_user.bulk_updateColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'bulk_update\' in table \'lut_user\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'bulk_update\' in table \'lut_user\' is DBNull.", e);
                     }
                 }
                 set {
@@ -23157,7 +23157,7 @@ namespace HLU.Data.Model {
                         return ((int)(this[this.tableincid_osmm_updates.osmm_xref_idColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'osmm_xref_id\' in table \'incid_osmm_updates\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'osmm_xref_id\' in table \'incid_osmm_updates\' is DBNull.", e);
                     }
                 }
                 set {
@@ -23173,7 +23173,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_osmm_updates.spatial_flagColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'spatial_flag\' in table \'incid_osmm_updates\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'spatial_flag\' in table \'incid_osmm_updates\' is DBNull.", e);
                     }
                 }
                 set {
@@ -23189,7 +23189,7 @@ namespace HLU.Data.Model {
                         return ((int)(this[this.tableincid_osmm_updates.process_flagColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'process_flag\' in table \'incid_osmm_updates\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'process_flag\' in table \'incid_osmm_updates\' is DBNull.", e);
                     }
                 }
                 set {
@@ -23205,7 +23205,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_osmm_updates.change_flagColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'change_flag\' in table \'incid_osmm_updates\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'change_flag\' in table \'incid_osmm_updates\' is DBNull.", e);
                     }
                 }
                 set {
@@ -23221,7 +23221,7 @@ namespace HLU.Data.Model {
                         return ((int)(this[this.tableincid_osmm_updates.statusColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'status\' in table \'incid_osmm_updates\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'status\' in table \'incid_osmm_updates\' is DBNull.", e);
                     }
                 }
                 set {
@@ -23444,7 +23444,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_condition.conditionColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'condition\' in table \'incid_condition\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'condition\' in table \'incid_condition\' is DBNull.", e);
                     }
                 }
                 set {
@@ -23460,7 +23460,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_condition.condition_qualifierColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'condition_qualifier\' in table \'incid_condition\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'condition_qualifier\' in table \'incid_condition\' is DBNull.", e);
                     }
                 }
                 set {
@@ -23476,7 +23476,7 @@ namespace HLU.Data.Model {
                         return ((int)(this[this.tableincid_condition.condition_date_startColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'condition_date_start\' in table \'incid_condition\' is DBNull." +
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'condition_date_start\' in table \'incid_condition\' is DBNull." +
                                 "", e);
                     }
                 }
@@ -23493,7 +23493,7 @@ namespace HLU.Data.Model {
                         return ((int)(this[this.tableincid_condition.condition_date_endColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'condition_date_end\' in table \'incid_condition\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'condition_date_end\' in table \'incid_condition\' is DBNull.", e);
                     }
                 }
                 set {
@@ -23509,7 +23509,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_condition.condition_date_typeColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'condition_date_type\' in table \'incid_condition\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'condition_date_type\' in table \'incid_condition\' is DBNull.", e);
                     }
                 }
                 set {
@@ -23655,7 +23655,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_secondary.secondaryColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'secondary\' in table \'incid_secondary\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'secondary\' in table \'incid_secondary\' is DBNull.", e);
                     }
                 }
                 set {
@@ -23671,7 +23671,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_secondary.secondary_groupColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'secondary_group\' in table \'incid_secondary\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'secondary_group\' in table \'incid_secondary\' is DBNull.", e);
                     }
                 }
                 set {
@@ -23981,7 +23981,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tablelut_primary.commentsColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'comments\' in table \'lut_primary\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'comments\' in table \'lut_primary\' is DBNull.", e);
                     }
                 }
                 set {
@@ -24872,7 +24872,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tablelut_ihs_primary_secondary.habitat_secondariesColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'habitat_secondaries\' in table \'lut_ihs_primary_secondary\' i" +
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'habitat_secondaries\' in table \'lut_ihs_primary_secondary\' i" +
                                 "s DBNull.", e);
                     }
                 }
@@ -25170,7 +25170,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tablelut_osmm_habitat_xref.habitat_primaryColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'habitat_primary\' in table \'lut_osmm_habitat_xref\' is DBNull" +
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'habitat_primary\' in table \'lut_osmm_habitat_xref\' is DBNull" +
                                 ".", e);
                     }
                 }
@@ -25187,7 +25187,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tablelut_osmm_habitat_xref.habitat_secondariesColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'habitat_secondaries\' in table \'lut_osmm_habitat_xref\' is DB" +
+                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'habitat_secondaries\' in table \'lut_osmm_habitat_xref\' is DB" +
                                 "Null.", e);
                     }
                 }

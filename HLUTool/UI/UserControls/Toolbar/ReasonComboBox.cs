@@ -11,16 +11,16 @@ using ComboBox = ArcGIS.Desktop.Framework.Contracts.ComboBox;
 using System.Runtime.CompilerServices;
 using HLU.UI.ViewModel;
 
-namespace HLU.UI.UserControls
+namespace HLU.UI.UserControls.Toolbar
 {
     /// <summary>
-    /// Represents a ComboBox control that allows the user to select the active layer name.
+    /// Represents a ComboBox control that allows the user to select the reason for updates.
     /// </summary>
-    internal class ActiveLayerComboBox : ComboBox
+    internal class ReasonComboBox : ComboBox
     {
         #region Fields
 
-        private static ActiveLayerComboBox _hluLayerComboBox;
+        private static ReasonComboBox _reasonComboBox;
         private ViewModelWindowMain _viewModel;
 
         private bool _isInitialized;
@@ -33,11 +33,11 @@ namespace HLU.UI.UserControls
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ActiveLayerComboBox()
+        public ReasonComboBox()
         {
             // Get this instance of the ComboBox.
-            if (_hluLayerComboBox == null)
-                _hluLayerComboBox = this;
+            if (_reasonComboBox == null)
+                _reasonComboBox = this;
 
             // Get the dockpane DAML id.
             DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
@@ -56,13 +56,13 @@ namespace HLU.UI.UserControls
         #region Methods
 
         /// <summary>
-        /// Gets the instance of the ActiveLayerComboBox.
+        /// Gets the instance of the ReasonComboBox.
         /// </summary>
         /// <returns></returns>
-        public static ActiveLayerComboBox GetInstance()
+        public static ReasonComboBox GetInstance()
         {
             // Return the instance of the ComboBox.
-            return _hluLayerComboBox;
+            return _reasonComboBox;
         }
 
         /// <summary>
@@ -74,11 +74,11 @@ namespace HLU.UI.UserControls
             if (!_isInitialized)
                 Initialize();
 
-            // Select the active layer if it hasn't been selected.
-            if (this.SelectedItem == null && _viewModel?.ActiveLayerName != null)
+            // Select the reason if it hasn't been selected.
+            if (SelectedItem == null && _viewModel?.Reason != null)
             {
-                this.SelectedItem = _viewModel.ActiveLayerName;
-                OnSelectionChange(this.SelectedItem);
+                SelectedItem = _viewModel.Reason;
+                OnSelectionChange(SelectedItem);
             }
 
             // Enable or disable the ComboBox.
@@ -108,27 +108,29 @@ namespace HLU.UI.UserControls
             Clear();
 
             // Clear the selected item.
-            this.SelectedItem = null;
+            SelectedItem = null;
             OnSelectionChange(null);
 
             _isEnabled = false;
 
-            // Load the available layers into the ComboBox list.
-            LoadAvailableLayers();
+            // Load the reasons into the ComboBox list.
+            LoadReasons();
 
             _isInitialized = true;
         }
 
         /// <summary>
-        /// Loads the available layers from the ViewModel and adds them to the ComboBox.
+        /// Loads the reasons from the ViewModel and adds them to the ComboBox.
         /// </summary>
-        private void LoadAvailableLayers()
+        private void LoadReasons()
         {
-            if (_viewModel?.AvailableHLULayerNames?.Any() == true)
+            if (_viewModel?.ReasonCodes?.Length != 0)
             {
                 // Add new layers from the ViewModel.
-                foreach (var layerName in _viewModel.AvailableHLULayerNames)
-                    Add(new ComboBoxItem(layerName));
+                foreach (var reasonCode in _viewModel.ReasonCodes)
+                {
+                    Add(new ComboBoxItem(reasonCode.description));
+                }
 
                 _isEnabled = true;
             }
@@ -143,30 +145,36 @@ namespace HLU.UI.UserControls
             _isEnabled = enabled;
         }
 
-        /// <summary>
-        /// Called when the selection changes.
-        /// </summary>
-        /// <param name="item"></param>
-        protected override void OnSelectionChange(ComboBoxItem item)
+        public string Reason
         {
-            // Switch the active layer (if different).
-            if (item != null)
-                _viewModel?.SwitchGISLayer(item.Text);
+            get { return SelectedItem?.ToString(); }
         }
 
-        /// <summary>
-        /// Sets the selected item in the ComboBox.
-        /// </summary>
-        /// <param name="value"></param>
-        public void SetSelectedItem(string value)
-        {
-            // Check if the ItemCollection is not null and has items.
-            if (this.ItemCollection?.Any() == true)
-            {
-                // Find and set the selected item if found.
-                this.SelectedItem = this.ItemCollection.FirstOrDefault(item => item.ToString() == value);
-            }
-        }
+
+        ///// <summary>
+        ///// Called when the selection changes.
+        ///// </summary>
+        ///// <param name="item"></param>
+        //protected override void OnSelectionChange(ComboBoxItem item)
+        //{
+        //    // Switch the active layer (if different).
+        //    if (item != null)
+        //        _viewModel?.SwitchGISLayer(item.Text);
+        //}
+
+        ///// <summary>
+        ///// Sets the selected item in the ComboBox.
+        ///// </summary>
+        ///// <param name="value"></param>
+        //public void SetSelectedItem(string value)
+        //{
+        //    // Check if the ItemCollection is not null and has items.
+        //    if (this.ItemCollection?.Any() == true)
+        //    {
+        //        // Find and set the selected item if found.
+        //        this.SelectedItem = this.ItemCollection.FirstOrDefault(item => item.ToString() == value);
+        //    }
+        //}
 
         #endregion Methods
 

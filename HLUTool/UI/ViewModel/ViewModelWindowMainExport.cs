@@ -1240,7 +1240,7 @@ namespace HLU.UI.ViewModel
                     Settings.Default.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders,
                     true, Settings.Default.DbIsUnicode, Settings.Default.DbUseTimeZone, 255,
                     Settings.Default.DbBinaryLength, Settings.Default.DbTimePrecision,
-                    Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, Settings.Default.DbConnectionTimeout);
+                    Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, _viewModelMain.DbConnectionTimeout);
 
                 // Throw an error if the table cannot be created.
                 if (!dbOut.CreateTable(exportTable))
@@ -1370,7 +1370,7 @@ namespace HLU.UI.ViewModel
                     // Execute the sql to retrieve the records.
                     // Apply user's option database connection timeout.
                     using (IDataReader reader = _viewModelMain.DataBase.ExecuteReader(sql,
-                        _viewModelMain.DBConnectionTimeout, CommandType.Text))
+                        _viewModelMain.DbConnectionTimeout, CommandType.Text))
                     {
                         // Exit if no records were exported.
                         if ((reader == null))

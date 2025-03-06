@@ -32,30 +32,42 @@ namespace HLU.Properties {
             }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public string DbDefaultSchema {
             get {
                 return ((string)(this["DbDefaultSchema"]));
             }
+            set {
+                this["DbDefaultSchema"] = value;
+            }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public bool DbPromptPwd {
             get {
                 return ((bool)(this["DbPromptPwd"]));
             }
+            set {
+                this["DbPromptPwd"] = value;
+            }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public string DbConnectionString {
             get {
                 return ((string)(this["DbConnectionString"]));
+            }
+            set {
+                this["DbConnectionString"] = value;
             }
         }
         
@@ -122,12 +134,16 @@ namespace HLU.Properties {
             }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public int DbConnectionType {
             get {
                 return ((int)(this["DbConnectionType"]));
+            }
+            set {
+                this["DbConnectionType"] = value;
             }
         }
         
@@ -256,12 +272,16 @@ namespace HLU.Properties {
             }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public bool CallUpgrade {
             get {
                 return ((bool)(this["CallUpgrade"]));
+            }
+            set {
+                this["CallUpgrade"] = value;
             }
         }
         
@@ -804,6 +824,19 @@ namespace HLU.Properties {
         public string PasswordMaskString {
             get {
                 return ((string)(this["PasswordMaskString"]));
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
+        public bool CallXMLUpgrade {
+            get {
+                return ((bool)(this["CallXMLUpgrade"]));
+            }
+            set {
+                this["CallXMLUpgrade"] = value;
             }
         }
     }
