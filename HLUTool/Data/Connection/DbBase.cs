@@ -1376,8 +1376,28 @@ namespace HLU.Data.Connection
 
         protected abstract string ParameterMarker(string parameterName);
 
+        /// <summary>
+        /// Defines a compiled regular expression for matching SQL type definitions
+        /// that contain a list of numeric values inside parentheses.
+        /// </summary>
+        /// <remarks>
+        /// - The pattern `\s*\(\s*[0-9]+(\s*,\s*[0-9]+\s*)*\)` matches:
+        ///   - Optional leading whitespace (`\s*`).
+        ///   - An opening parenthesis `(` with optional surrounding whitespace (`\s*`).
+        ///   - A numeric value (`[0-9]+`).
+        ///   - Zero or more occurrences of:
+        ///     - A comma `,` surrounded by optional whitespace (`\s*,\s*`).
+        ///     - Another numeric value (`[0-9]+`).
+        ///   - A closing parenthesis `)` with optional surrounding whitespace (`\s*`).
+        /// - This regex is useful for detecting SQL type definitions such as:
+        ///   - `(10)`, `(5, 2)`, `(255, 100, 20)`, etc.
+        /// - The `[GeneratedRegex]` attribute ensures that the regex is compiled at compile-time,
+        ///   improving performance.
+        /// </remarks>
+        /// <returns>A <see cref="Regex"/> instance that can be used to match SQL type definitions.</returns>
         [GeneratedRegex(@"\s*\(\s*[0-9]+(\s*,\s*[0-9]+\s*)*\)")]
         private static partial Regex SqlTypeRegex();
+
 
         #endregion
     }

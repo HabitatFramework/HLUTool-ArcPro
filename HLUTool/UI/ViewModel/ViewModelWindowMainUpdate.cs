@@ -29,6 +29,7 @@ using System.Windows;
 using System.Windows.Input;
 using HLU.Data;
 using HLU.Data.Model;
+using System.Threading.Tasks;
 
 namespace HLU.UI.ViewModel
 {
@@ -45,12 +46,11 @@ namespace HLU.UI.ViewModel
             _viewModelMain = viewModelMain;
         }
 
-        //TODO: Add wait?
         /// <summary>
         /// Writes changes made to current incid back to database and GIS layer.
         /// Also synchronizes shadow copy of GIS layer in DB and writes history.
         /// </summary>
-        internal bool Update()
+        internal async Task<bool> UpdateAsync()
         {
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
@@ -141,9 +141,6 @@ namespace HLU.UI.ViewModel
                             _viewModelMain.HluDataset.incid_sources.TableName));
                 }
 
-                //---------------------------------------------------------------------
-                // CHANGED: CR49 Process proposed OSMM Updates
-                //
                 // If there are OSMM update rows for this incid, and
                 // if the OSMM update status is to be reset after manual
                 // updates, and if the OSMM update status > 0 (proposed)
@@ -157,7 +154,6 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.IncidOSMMUpdatesRows[0].last_modified_date = nowDtTm;
                     _viewModelMain.IncidOSMMUpdatesRows[0].last_modified_user_id = _viewModelMain.UserID;
                 }
-                //---------------------------------------------------------------------
 
                 // Update the OSMM Update rows
                 if ((_viewModelMain.IncidOSMMUpdatesRows != null) && _viewModelMain.IsDirtyIncidOSMMUpdates())
@@ -178,7 +174,7 @@ namespace HLU.UI.ViewModel
                         _viewModelMain.HluDataset.incid_mm_polygons.incidColumn, _viewModelMain.Incid) ]);
 
                 // Update the GIS layer
-                DataTable historyTable = _viewModelMain.GISApplication.UpdateFeatures([
+                DataTable historyTable = await _viewModelMain.GISApplication.UpdateFeaturesAsync([
                     _viewModelMain.HluDataset.incid_mm_polygons.habprimaryColumn,
                     _viewModelMain.HluDataset.incid_mm_polygons.habsecondColumn,
                     _viewModelMain.HluDataset.incid_mm_polygons.determqtyColumn,
@@ -198,6 +194,7 @@ namespace HLU.UI.ViewModel
 
                 // TODO: GIS layer shadow copy update - Set length and area for each polygon (if possible)?
                 // Likewise update the DB shadow copy of the GIS layer
+                //TODO: Takes quite long to execute. Why?
                 String updateStatement = String.Format("UPDATE {0} SET {1}={2}, {3}={4}, {5}={6}, {7}={8} WHERE {9}",
                     _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
                     _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.habprimaryColumn.ColumnName),

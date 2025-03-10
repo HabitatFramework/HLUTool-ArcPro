@@ -16,7 +16,7 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
-// You should have received a copy of the GNU General Public License
+// You should have received a copy of the GNU General Public License"UP"
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
@@ -96,7 +96,6 @@ namespace HLU
         //public delegate void IsHluWorkspaceDelegate();
         //public delegate void ListHluLayersDelegate();
         //public delegate void IsHluLayerDelegate(int ixMap, int ixLayer);
-        //public delegate void IsEditingDelegate();
         //public delegate void ClearSelectionDelegate();
         //public delegate void CountSelectionDelegate();
 
@@ -175,7 +174,6 @@ namespace HLU
         //private static IsHluWorkspaceDelegate _isHluWorkspaceDel;
         //private static ListHluLayersDelegate _ListHluLayersDel;
         //private static IsHluLayerDelegate _isHluLayerDel;
-        //private static IsEditingDelegate _isEditingDel;
         //private static ClearSelectionDelegate _clearSelDel;
         //private static CountSelectionDelegate _countSelDel;
         //private static bool _exportInEditSession = Properties.Settings.Default.ExportInEditSession;
@@ -309,7 +307,6 @@ namespace HLU
             //_isHluWorkspaceDel = null;
             //_ListHluLayersDel = null;
             //_isHluLayerDel = null;
-            //_isEditingDel = null;
 
             //RemoveActiveViewEvents(_focusMap);
         }
@@ -355,7 +352,6 @@ namespace HLU
             //    _isHluWorkspaceDel = new IsHluWorkspaceDelegate(IsHluWorkspace);
             //    _ListHluLayersDel = new ListHluLayersDelegate(ListHluLayers);
             //    _isHluLayerDel = new IsHluLayerDelegate(IsHluLayer);
-            //    _isEditingDel = new IsEditingDelegate(IsEditing);
             //    _clearSelDel = new ClearSelectionDelegate(ClearSelection);
             //    _countSelDel = new CountSelectionDelegate(CountSelection);
             //}
@@ -960,10 +956,6 @@ namespace HLU
                             //}
                             //catch { _pipeData.Clear(); }
                         }
-                        break;
-                    case "ie": // IsEditing: cmd
-                        //try { _dummyControl.Invoke(_isEditingDel, null); }
-                        //catch { _pipeData.Clear(); }
                         break;
                     default:
                         //_pipeData.Clear();

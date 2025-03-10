@@ -47,7 +47,7 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <Label Content="Minimum Auto Zoom"
+                    <Label Content="{Binding MinAutoZoomText}"
                         Grid.Column="0"
                         HorizontalAlignment="Right" />
                     <xctk:IntegerUpDown

@@ -1569,6 +1569,8 @@ namespace HLU.UI.ViewModel
                     _changed = false;
                 else
                     _changed = value;
+
+                OnPropertyChanged(nameof(CanUpdate));
             }
         }
 
@@ -2267,6 +2269,32 @@ namespace HLU.UI.ViewModel
 
         #endregion
 
+        #region Checks
+
+        public bool CheckInSync(string action, string itemType, string itemTypes = "")
+        {
+            if (itemTypes == "")
+                itemTypes = itemType;
+
+            // Check if the GIS and database are in sync.
+            if ((_toidsIncidGisCount > _toidsIncidDbCount) ||
+               (_fragsIncidGisCount > _fragsIncidDbCount))
+            {
+                if (_fragsIncidGisCount == 1)
+                    MessageBox.Show(string.Format("{0} feature not found in database.", itemType), string.Format("HLU: {0}", action),
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                else
+                    MessageBox.Show(string.Format("{0} features not found in database.", itemTypes), string.Format("HLU: {0}", action),
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+
+                return false;
+            }
+
+            return true;
+        }
+
+        #endregion Checks
+
         #region Navigation Commands
 
         /// <summary>
@@ -2383,16 +2411,7 @@ namespace HLU.UI.ViewModel
             ChangeCursor(Cursors.Arrow, null);
 
             // Check if the GIS and database are in sync.
-            if ((_toidsIncidGisCount > _toidsIncidDbCount) ||
-               (_fragsIncidGisCount > _fragsIncidDbCount))
-            {
-                if (_fragsIncidGisCount == 1)
-                    MessageBox.Show("Map feature not found in database.", "HLU: Selection",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                else
-                    MessageBox.Show("Map features not found in database.", "HLU: Selection",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
+            CheckInSync("Selection", "Map");
         }
 
         /// <summary>
@@ -2425,16 +2444,7 @@ namespace HLU.UI.ViewModel
                 ChangeCursor(Cursors.Arrow, null);
 
                 // Check if the GIS and database are in sync.
-                if ((_toidsIncidGisCount > _toidsIncidDbCount) ||
-                   (_fragsIncidGisCount > _fragsIncidDbCount))
-                {
-                    if (_fragsIncidGisCount == 1)
-                        MessageBox.Show("Map feature not found in database.", "HLU: Selection",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
-                    else
-                        MessageBox.Show("Map features not found in database.", "HLU: Selection",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
+                CheckInSync("Selection", "Map");
             }
         }
 
@@ -2820,15 +2830,6 @@ namespace HLU.UI.ViewModel
             UpdateAsync(param);
         }
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR10 (Attribute updates for incid subsets)
-        // Enable users to change the attributes for an incid and then
-        // when saving them changes check if only a subset of features for
-        // the current incid are selected in GIS. If only a subset is
-        // selected confirm how to proceed - either logically split the
-        // subset of features first before updating, update all of the
-        // features for the incid, or cancel the update.
-        //
         /// <summary>
         /// UpdateCommand event handler.
         /// </summary>
@@ -2836,18 +2837,8 @@ namespace HLU.UI.ViewModel
         private async Task UpdateAsync(object param)
         {
             // Check if the GIS and database are in sync.
-            if ((_toidsIncidGisCount > _toidsIncidDbCount) ||
-               (_fragsIncidGisCount > _fragsIncidDbCount))
-            {
-                if (_fragsIncidGisCount == 1)
-                    MessageBox.Show("Cannot save: Map feature not found in database.", "HLU: Save",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                else
-                    MessageBox.Show("Cannot save: Map features not found in database.", "HLU: Save",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-
+            if (!CheckInSync("Save", "Cannot save: Map"))
                 return;
-            }
 
             // If there are no features selected in the GIS (because there is no
             // active filter).
@@ -2898,9 +2889,6 @@ namespace HLU.UI.ViewModel
                 return;
             }
 
-            _saving = true;
-            _savingAttempted = false;
-
             // Check if the record has changed and if it hasn't ask the user
             // if they still want to update the record (to create new history).
             //
@@ -2919,6 +2907,10 @@ namespace HLU.UI.ViewModel
                     return;
             }
 
+            // Set the saving in progress flags.
+            _saving = true;
+            _savingAttempted = false;
+
             // If there is no filter active (and hence all the features for the
             // current incid are to be updated) or all of the features for the
             // current incid have been selected in GIS then update them all and exit.
@@ -2932,7 +2924,7 @@ namespace HLU.UI.ViewModel
                     // Update the current incid.
                     _saving = true;
                     _savingAttempted = false;
-                    _viewModelUpd.Update();
+                    await _viewModelUpd.UpdateAsync();
                 }
                 return;
             }
@@ -2973,7 +2965,7 @@ namespace HLU.UI.ViewModel
             {
                 _saving = true;
                 _savingAttempted = false;
-                _viewModelUpd.Update();
+                await _viewModelUpd.UpdateAsync();
             }
             else
             {
@@ -3013,7 +3005,7 @@ namespace HLU.UI.ViewModel
                     // Apply the updates on the current incid.
                     _saving = true;
                     _savingAttempted = false;
-                    _viewModelUpd.Update();
+                    await _viewModelUpd.UpdateAsync();
 
                     // Recount the number of toids and fragments for the current incid
                     // selected in the GIS and in the database.
@@ -3023,35 +3015,23 @@ namespace HLU.UI.ViewModel
                     RefreshStatus();
 
                     // Check if the GIS and database are in sync.
-                    if ((_toidsIncidGisCount > _toidsIncidDbCount) ||
-                       (_fragsIncidGisCount > _fragsIncidDbCount))
-                    {
-                        if (_fragsIncidGisCount == 1)
-                            MessageBox.Show("Map feature not found in database.", "HLU: Selection",
-                            MessageBoxButton.OK, MessageBoxImage.Warning);
-                        else
-                            MessageBox.Show("Map features not found in database.", "HLU: Selection",
-                            MessageBoxButton.OK, MessageBoxImage.Warning);
-                    }
+                    CheckInSync("Selection", "Map");
                 }
                 else
                 {
                     MessageBox.Show("Cannot Save: The changes have not been applied - the update was cancelled.",
                         "HLU: Save", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                    //---------------------------------------------------------------------
-                    // FIXED: KI116 (Cancelled attribute updates)
-                    // 
+
                     // Clear the saving in progress flags so that the (still) pending
                     // changes aren't automatically applied when moving to another
-                    // incid (ore refreshing the current incid).
+                    // incid (or refreshing the current incid).
                     _saving = false;
                     _savingAttempted = true;
-                    //---------------------------------------------------------------------
+
                     return;
                 }
             }
         }
-        //---------------------------------------------------------------------
 
         /// <summary>
         /// Update is disabled if not currently in edit mode, if no changes have been
@@ -3062,10 +3042,14 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //TODO: Check for errors.
                 return EditMode &&
                     (Changed == true) &&
-                    (_bulkUpdateMode == false || _incidSelection != null) &&
-                    String.IsNullOrEmpty(this.Error);
+                    (_bulkUpdateMode == false || _incidSelection != null);
+                //return EditMode &&
+                //    (Changed == true) &&
+                //    (_bulkUpdateMode == false || _incidSelection != null) &&
+                //    String.IsNullOrEmpty(this.Error);
             }
         }
 
@@ -3078,7 +3062,14 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                bool editMode = IsAuthorisedUser && _gisApp.IsEditing;
+                // Return false if the current layer hasn't been set yet.
+                if (_gisApp.CurrentHluLayer == null)
+                    return false;
+
+                // Check if the user is authorised and the HLU layer is editable.
+                bool editMode = IsAuthorisedUser && _gisApp.CurrentHluLayer.IsEditable;
+
+                // If the edit mode has changed then update the window properties.
                 if (_editMode != editMode)
                 {
                     _editMode = editMode;
@@ -3088,12 +3079,8 @@ namespace HLU.UI.ViewModel
                     OnPropertyChanged(nameof(CanOSMMUpdateMode));
                     OnPropertyChanged(nameof(CanOSMMBulkUpdateMode));
                     OnPropertyChanged(nameof(ShowReasonProcessGroup));
-                    //---------------------------------------------------------------------
-                    // FIX: 103 Accept/Reject OSMM updates in edit mode.
-                    //
                     OnPropertyChanged(nameof(CanOSMMUpdateAccept));
                     OnPropertyChanged(nameof(CanOSMMUpdateReject));
-                    //---------------------------------------------------------------------
                 }
                 return _editMode;
             }
@@ -3660,16 +3647,7 @@ namespace HLU.UI.ViewModel
                 //---------------------------------------------------------------------
 
                 // Check if the GIS and database are in sync.
-                if ((_toidsIncidGisCount > _toidsIncidDbCount) ||
-                   (_fragsIncidGisCount > _fragsIncidDbCount))
-                {
-                    if (_fragsIncidGisCount == 1)
-                        MessageBox.Show("Map feature not found in database.", "HLU: Selection",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
-                    else
-                        MessageBox.Show("Map features not found in database.", "HLU: Selection",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
+                CheckInSync("Selection", "Map");
             }
         }
 
@@ -3758,16 +3736,7 @@ namespace HLU.UI.ViewModel
                 //---------------------------------------------------------------------
 
                 // Check if the GIS and database are in sync.
-                if ((_toidsIncidGisCount > _toidsIncidDbCount) ||
-                   (_fragsIncidGisCount > _fragsIncidDbCount))
-                {
-                    if (_fragsIncidGisCount == 1)
-                        MessageBox.Show("Map feature not found in database.", "HLU: Selection",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
-                    else
-                        MessageBox.Show("Map features not found in database.", "HLU: Selection",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
+                CheckInSync("Selection", "Map");
             }
         }
 
@@ -3852,16 +3821,7 @@ namespace HLU.UI.ViewModel
                     //---------------------------------------------------------------------
 
                     // Check if the GIS and database are in sync.
-                    if ((_toidsIncidGisCount > _toidsIncidDbCount) ||
-                       (_fragsIncidGisCount > _fragsIncidDbCount))
-                    {
-                        if (_fragsIncidGisCount == 1)
-                            MessageBox.Show("Map feature not found in database.", "HLU: Selection",
-                            MessageBoxButton.OK, MessageBoxImage.Warning);
-                        else
-                            MessageBox.Show("Map features not found in database.", "HLU: Selection",
-                            MessageBoxButton.OK, MessageBoxImage.Warning);
-                    }
+                    CheckInSync("Selection", "Map");
                 }
 
                 _osmmUpdating = false;
@@ -4052,16 +4012,7 @@ namespace HLU.UI.ViewModel
             //---------------------------------------------------------------------
 
             // Check if the GIS and database are in sync.
-            if ((_toidsIncidGisCount > _toidsIncidDbCount) ||
-               (_fragsIncidGisCount > _fragsIncidDbCount))
-            {
-                if (_fragsIncidGisCount == 1)
-                    MessageBox.Show("Map feature not found in database.", "HLU: Selection",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                else
-                    MessageBox.Show("Map features not found in database.", "HLU: Selection",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
+            CheckInSync("Selection", "Map");
         }
 
         /// <summary>
@@ -4122,16 +4073,7 @@ namespace HLU.UI.ViewModel
             //---------------------------------------------------------------------
 
             // Check if the GIS and database are in sync.
-            if ((_toidsIncidGisCount > _toidsIncidDbCount) ||
-               (_fragsIncidGisCount > _fragsIncidDbCount))
-            {
-                if (_fragsIncidGisCount == 1)
-                    MessageBox.Show("Map feature not found in database.", "HLU: Selection",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                else
-                    MessageBox.Show("Map features not found in database.", "HLU: Selection",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
+            CheckInSync("Selection", "Map");
         }
 
         /// <summary>
@@ -5022,24 +4964,16 @@ namespace HLU.UI.ViewModel
                             //---------------------------------------------------------------------
 
                             // Check if the GIS and database are in sync.
-                            if ((_toidsIncidGisCount > _toidsIncidDbCount) ||
-                               (_fragsIncidGisCount > _fragsIncidDbCount))
+                            if (CheckInSync("Selection", "Selected", "Not all selected"))
                             {
-                                if (_fragsIncidGisCount == 1)
-                                    MessageBox.Show("Selected feature not found in database.", "HLU: Selection",
+                                // Check if the counts returned are less than those expected.
+                                if ((_toidsIncidGisCount < _toidsSelectedDBCount) ||
+                                        (_fragsIncidGisCount < _fragsSelectedDBCount))
+                                {
+                                    MessageBox.Show("Not all selected features found in active layer.", "HLU: Selection",
                                     MessageBoxButton.OK, MessageBoxImage.Warning);
-                                else
-                                    MessageBox.Show("Not all selected features found in database.", "HLU: Selection",
-                                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                                }
                             }
-                            // Check if the counts returned are less than those expected.
-                            else if ((_toidsIncidGisCount < _toidsSelectedDBCount) ||
-                                    (_fragsIncidGisCount < _fragsSelectedDBCount))
-                            {
-                                MessageBox.Show("Not all selected features found in active layer.", "HLU: Selection",
-                                MessageBoxButton.OK, MessageBoxImage.Warning);
-                            }
-
                         }
                         else
                         {
@@ -5750,22 +5684,15 @@ namespace HLU.UI.ViewModel
                                     SetFilterAsync();
 
                                     // Check if the GIS and database are in sync.
-                                    if ((_toidsIncidGisCount > _toidsIncidDbCount) ||
-                                       (_fragsIncidGisCount > _fragsIncidDbCount))
+                                    if (CheckInSync("Selection", "Selected", "Not all selected"))
                                     {
-                                        if (_fragsIncidGisCount == 1)
-                                            MessageBox.Show("Selected feature not found in database.", "HLU: Selection",
+                                        // Check if the counts returned are less than those expected.
+                                        if ((_toidsIncidGisCount < _toidsSelectedDBCount) ||
+                                                (_fragsIncidGisCount < _fragsSelectedDBCount))
+                                        {
+                                            MessageBox.Show("Not all selected features found in active layer.", "HLU: Selection",
                                             MessageBoxButton.OK, MessageBoxImage.Warning);
-                                        else
-                                            MessageBox.Show("Not all selected features found in database.", "HLU: Selection",
-                                            MessageBoxButton.OK, MessageBoxImage.Warning);
-                                    }
-                                    // Check if the counts returned are less than those expected.
-                                    else if ((_toidsIncidGisCount < _toidsSelectedDBCount) ||
-                                            (_fragsIncidGisCount < _fragsSelectedDBCount))
-                                    {
-                                        MessageBox.Show("Not all selected features found in active layer.", "HLU: Selection",
-                                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                                        }
                                     }
                                 }
 
@@ -6225,22 +6152,15 @@ namespace HLU.UI.ViewModel
             ChangeCursor(Cursors.Arrow, null);
 
             // Check if the GIS and database are in sync.
-            if ((_toidsIncidGisCount > _toidsIncidDbCount) ||
-               (_fragsIncidGisCount > _fragsIncidDbCount))
+            if (CheckInSync("Selection", "Incid", "Not all incid"))
             {
-                if (_fragsIncidGisCount == 1)
-                    MessageBox.Show("Incid feature not found in database.", "HLU: Selection",
+                // Check if the counts returned are less than those expected.
+                if ((_toidsIncidGisCount < _toidsIncidDbCount) ||
+                        (_fragsIncidGisCount < _fragsIncidDbCount))
+                {
+                    MessageBox.Show("Not all incid features found in active layer.", "HLU: Selection",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
-                else
-                    MessageBox.Show("Not all incid features found in database.", "HLU: Selection",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-            // Check if the counts returned are less than those expected.
-            else if ((_toidsIncidGisCount < _toidsIncidDbCount) ||
-                    (_fragsIncidGisCount < _fragsIncidDbCount))
-            {
-                MessageBox.Show("Not all incid features found in active layer.", "HLU: Selection",
-                MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
             }
         }
 
@@ -6544,16 +6464,7 @@ namespace HLU.UI.ViewModel
                         ChangeCursor(Cursors.Arrow, null);
 
                         // Check if the GIS and database are in sync.
-                        if ((_toidsIncidGisCount > _toidsIncidDbCount) ||
-                           (_fragsIncidGisCount > _fragsIncidDbCount))
-                        {
-                            if (_fragsIncidGisCount == 1)
-                                MessageBox.Show("Map feature not found in database.", "HLU: Selection",
-                                MessageBoxButton.OK, MessageBoxImage.Warning);
-                            else
-                                MessageBox.Show("Map features not found in database.", "HLU: Selection",
-                                MessageBoxButton.OK, MessageBoxImage.Warning);
-                        }
+                        CheckInSync("Selection", "Map");
                     }
                 }
                 else
@@ -7110,22 +7021,15 @@ namespace HLU.UI.ViewModel
                         else
                         {
                             // Check if the GIS and database are in sync.
-                            if ((_toidsIncidGisCount > _toidsIncidDbCount) ||
-                               (_fragsIncidGisCount > _fragsIncidDbCount))
+                            if (CheckInSync("Selection", "Incid", "Not all incid"))
                             {
-                                if (_fragsIncidGisCount == 1)
-                                    MessageBox.Show("Incid feature not found in database.", "HLU: Selection",
+                                // Check if the counts returned are less than those expected.
+                                if ((_toidsIncidGisCount < expectedNumToids) ||
+                                        (_fragsIncidGisCount < expectedNumFeatures))
+                                {
+                                    MessageBox.Show("Not all incid features found in active layer.", "HLU: Selection",
                                     MessageBoxButton.OK, MessageBoxImage.Warning);
-                                else
-                                    MessageBox.Show("Not all incid features found in database.", "HLU: Selection",
-                                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                            }
-                            // Check if the counts returned are less than those expected.
-                            else if ((_toidsIncidGisCount < expectedNumToids) ||
-                                    (_fragsIncidGisCount < expectedNumFeatures))
-                            {
-                                MessageBox.Show("Not all incid features found in active layer.", "HLU: Selection",
-                                MessageBoxButton.OK, MessageBoxImage.Warning);
+                                }
                             }
                         }
                     }
@@ -10261,7 +10165,7 @@ namespace HLU.UI.ViewModel
                 if (_processComboBox.Process != null)
                     _process = _processComboBox.Process;
 
-                return _reason;
+                return _process;
 
             }
             set { _process = value; }
@@ -15514,7 +15418,7 @@ namespace HLU.UI.ViewModel
                         break;
                     case "IncidOSMMUpdateStatus":
                         if (_incidOSMMUpdatesStatus != null & _incidOSMMUpdatesStatus >= 0)
-                            error = "Warning: OSMM Update is outstanding";
+                            error = "Warning: OSMM UpdateAsync is outstanding";
                         break;
                 }
 
@@ -15634,8 +15538,22 @@ namespace HLU.UI.ViewModel
             _source3Errors = null;
         }
 
-        [GeneratedRegex(@"[A-Z][^A-Z\s]*")]
+        /// <summary>
+        /// Defines a compiled regular expression that matches capitalized words in a string.
+        /// </summary>
+        /// <remarks>
+        /// - The pattern `[A-Z][^A-Z]*` matches:
+        ///   - An uppercase letter (`[A-Z]`) at the beginning of a word.
+        ///   - Followed by zero or more non-uppercase letters (`[^A-Z]*`).
+        /// - This effectively extracts words that start with a capital letter and continue until
+        ///   the next capital letter is encountered, which is useful for splitting camel case or
+        ///   Pascal case strings.
+        /// - The `[GeneratedRegex]` attribute compiles the regex at compile time for performance benefits.
+        /// </remarks>
+        /// <returns>A `Regex` instance that can be used to match capitalized words in a string.</returns>
+        [GeneratedRegex("[A-Z][^A-Z]*")]
         private static partial Regex CapitalisedRegex();
+
 
         #endregion
 

@@ -28,7 +28,7 @@ namespace HLU.UI.ViewModel
     {
         #region Fields
 
-        private string _displayName = "Attribute Update";
+        private string _displayName = "Attribute UpdateAsync";
         private int _numFrags;
         private int _numTotalFrags;
         private GeometryTypes _gisFeaturesType;

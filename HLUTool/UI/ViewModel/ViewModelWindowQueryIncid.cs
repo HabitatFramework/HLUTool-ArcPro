@@ -161,7 +161,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if ((!String.IsNullOrEmpty(QueryIncid)) && (!validIncidRegex().IsMatch(QueryIncid)))
+                if ((!String.IsNullOrEmpty(QueryIncid)) && (!ValidIncidRegex().IsMatch(QueryIncid)))
                     return "Please enter a valid incid with format {nnnn:nnnnnnn}.";
                 else return null;
             }
@@ -176,7 +176,7 @@ namespace HLU.UI.ViewModel
                 switch (columnName)
                 {
                     case "QueryIncid":
-                        if ((!String.IsNullOrEmpty(QueryIncid)) && (!validIncidRegex().IsMatch(QueryIncid)))
+                        if ((!String.IsNullOrEmpty(QueryIncid)) && (!ValidIncidRegex().IsMatch(QueryIncid)))
                             error = "Error: You must enter a valid incid with format {nnnn:nnnnnnn}.";
                         break;
                 }
@@ -188,8 +188,23 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Defines a compiled case-insensitive regular expression that matches a valid incident identifier format.
+        /// </summary>
+        /// <remarks>
+        /// - The pattern `[0-9]{4}:[0-9]{7}` matches:
+        ///   - Exactly four numeric digits (`[0-9]{4}`).
+        ///   - A colon character (`:`) as a separator.
+        ///   - Exactly seven numeric digits (`[0-9]{7}`).
+        /// - This format is commonly used for structured incident identifiers.
+        /// - The `RegexOptions.IgnoreCase` flag is included but does not affect digit matching.
+        /// - The "en-GB" culture is specified to ensure consistent behavior in a UK English locale.
+        /// - The `[GeneratedRegex]` attribute ensures that the regex is compiled at compile-time,
+        ///   improving performance.
+        /// </remarks>
+        /// <returns>A <see cref="Regex"/> instance that can be used to validate incident identifiers.</returns>
         [GeneratedRegex(@"[0-9]{4}:[0-9]{7}", RegexOptions.IgnoreCase, "en-GB")]
-        private static partial Regex validIncidRegex();
+        private static partial Regex ValidIncidRegex();
 
         #endregion
     }

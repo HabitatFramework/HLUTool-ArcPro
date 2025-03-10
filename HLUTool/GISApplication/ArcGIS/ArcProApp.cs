@@ -39,6 +39,7 @@ using System.Windows.Interop;
 
 using ArcGIS.Core.Data;
 using Field = ArcGIS.Core.Data.Field;
+using QueryFilter = ArcGIS.Core.Data.QueryFilter;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using LinearUnit = ArcGIS.Core.Geometry.LinearUnit;
@@ -46,6 +47,7 @@ using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 //using ArcGIS.Desktop.Internal.Framework.Controls;
 using ArcGIS.Desktop.Mapping;
+using ArcGIS.Desktop.Editing;
 
 //TODO: ArcGIS
 //using ESRI.ArcGIS.ADF;
@@ -67,6 +69,7 @@ using Microsoft.Win32;
 using System.Linq.Expressions;
 using ArcGIS.Core.Internal.CIM;
 using ArcGIS.Core.Data.Analyst3D;
+using ArcGIS.Desktop.Internal.GeoProcessing.ModelBuilder;
 //using ArcGIS.Core.Internal.CIM;
 
 namespace HLU.GISApplication
@@ -176,7 +179,7 @@ namespace HLU.GISApplication
         /// <summary>
         /// The current valid HLU map layer in the document.
         /// </summary>
-        private GISLayer _hluCurrentLayer;
+        private HLULayer _hluCurrentLayer;
 
         //TODO: ArcGIS
         ///// <summary>
@@ -522,21 +525,21 @@ namespace HLU.GISApplication
             }
             else // single table
             {
-            //    selectionList = IpcArcMap([ "qf", subFields,
-            //        WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, whereConds)), "false" ]);
+                //    selectionList = IpcArcMap([ "qf", subFields,
+                //        WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, whereConds)), "false" ]);
 
-            //    try
-            //    {
-            //        CreateSelectionFieldList(_pipeData[1]);
-            //        IQueryFilter queryFilter = new QueryFilterClass();
-            //        queryFilter.SubFields = String.Join(",", _selectFields);
-            //        queryFilter.WhereClause = _pipeData[2];
-            //        _sendColumnHeaders = _pipeData[3] == "true";
-            //        _pipeData.Clear();
+                //    try
+                //    {
+                //        CreateSelectionFieldList(_pipeData[1]);
+                //        IQueryFilter queryFilter = new QueryFilterClass();
+                //        queryFilter.SubFields = String.Join(",", _selectFields);
+                //        queryFilter.WhereClause = _pipeData[2];
+                //        _sendColumnHeaders = _pipeData[3] == "true";
+                //        _pipeData.Clear();
 
-            //        _dummyControl.Invoke(_selByQFilterDel, new object[] { queryFilter });
-            //    }
-            //    catch (Exception ex) { PipeException(ex); }
+                //        _dummyControl.Invoke(_selByQFilterDel, new object[] { queryFilter });
+                //    }
+                //    catch (Exception ex) { PipeException(ex); }
             }
 
             //ThrowPipeError(selectionList);
@@ -841,7 +844,7 @@ namespace HLU.GISApplication
             return null;
         }
 
-        public DataTable UpdateFeatures(DataColumn[] updateColumns, object[] updateValues, 
+        public DataTable UpdateFeatures(DataColumn[] updateColumns, object[] updateValues,
             DataColumn[] historyColumns)
         {
             //try
@@ -859,23 +862,151 @@ namespace HLU.GISApplication
             return null;
         }
 
-        public DataTable UpdateFeatures(DataColumn[] updateColumns, object[] updateValues,
+        //public DataTable UpdateFeatures(DataColumn[] updateColumns, object[] updateValues,
+        //    DataColumn[] historyColumns, List<SqlFilterCondition> selectionWhereClause)
+        //{
+        //    try
+        //    {
+        //        string delimiter = PipeFieldDelimiter.ToString();
+
+        //        return ResultTableFromList(IpcArcMap(new string[] { "up",
+        //            WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, selectionWhereClause)) }
+        //            .Concat(updateColumns.Select(c => c.ColumnName))
+        //            .Concat([PipeTransmissionInterrupt])
+        //            .Concat(updateValues.Select(o => o.ToString()))
+        //            .Concat([PipeTransmissionInterrupt])
+        //            .Concat(historyColumns.Select(c => c.ColumnName)).ToArray()));
+        //    }
+        //    catch { throw; }
+        //    return null;
+        //}
+
+        public async Task<DataTable> UpdateFeaturesAsync(DataColumn[] updateColumns, object[] updateValues,
             DataColumn[] historyColumns, List<SqlFilterCondition> selectionWhereClause)
         {
-            //try
-            //{
-            //    string delimiter = PipeFieldDelimiter.ToString();
+            //TODO: Needed?
+            // Ensure selection event handlers do not interfere
+            //_selectFieldOrdinals = null;
 
-            //    return ResultTableFromList(IpcArcMap(new string[] { "up",
-            //        WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, selectionWhereClause)) }
-            //        .Concat(updateColumns.Select(c => c.ColumnName))
-            //        .Concat([PipeTransmissionInterrupt])
-            //        .Concat(updateValues.Select(o => o.ToString()))
-            //        .Concat([PipeTransmissionInterrupt])
-            //        .Concat(historyColumns.Select(c => c.ColumnName)).ToArray()));
-            //}
-            //catch { throw; }
-            return null;
+            // Create a query filter for selecting features
+            QueryFilter queryFilter = new()
+            {
+                WhereClause = WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, selectionWhereClause))
+            };
+
+            // Extract history column names
+            string[] historyColumnNames = historyColumns.Select(c => c.ColumnName).ToArray();
+
+            // Create a DataTable to store history data
+            DataTable historyTable = new();
+            foreach (string columnName in historyColumnNames)
+            {
+                historyTable.Columns.Add(columnName);
+            }
+
+            // Get the history field indexes
+            int[] historyFieldIndexes = HistorySchema(historyColumnNames);
+
+            // Cast the feature class as a Table
+            Table hluTable = _hluFeatureClass as Table;
+
+            // Perform updates and return history data
+            return await QueuedTask.Run(async () =>
+            {
+                try
+                {
+                    // Get update field indexes
+                    List<int> updateFieldIndexes = updateColumns.Select(c => _hluFeatureClass.GetDefinition().FindField(c.ColumnName)).ToList();
+
+                    // Create an EditOperation to perform the updates
+                    EditOperation editOperation = new()
+                    {
+                        Name = "UpdateAsync Feature Attributes"
+                    };
+
+                    // Execute within an EditOperation to support different data sources
+                    editOperation.Callback(context =>
+                    {
+                        // Use a RowCursor to iterate through the selected features
+                        using RowCursor rowCursor = _hluFeatureClass.Search(queryFilter, false);
+
+                        // Loop through the selected features until there are no more
+                        while (rowCursor.MoveNext())
+                        {
+                            // Get the current feature
+                            using Row row = rowCursor.Current;
+
+                            // Capture the history before modification
+                            DataRow historyRow = historyTable.NewRow();
+                            for (int i = 0; i < historyFieldIndexes.Length; i++)
+                            {
+                                historyRow[i] = row[historyFieldIndexes[i]] ?? DBNull.Value;
+                            }
+                            historyTable.Rows.Add(historyRow);
+
+                            // Apply updates
+                            for (int i = 0; i < updateFieldIndexes.Count; i++)
+                            {
+                                row[updateFieldIndexes[i]] = updateValues[i];
+                            }
+
+                            // Store the row.
+                            row.Store();
+                        }
+                    }, hluTable);
+
+                    // Execute the EditOperation
+                    if (await editOperation.ExecuteAsync())
+                    {
+                        // Return the history table
+                        return historyTable;
+                    }
+                    else
+                    {
+                        throw new Exception("Edit operation failed.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Error updating features: " + ex.Message, ex);
+                }
+            });
+
+            //        // Convert update column names and history column names into lists
+            //        List<string> updateFieldNames = updateColumns.Select(c => c.ColumnName).ToList();
+            //List<string> historyColumnNames = historyColumns.Select(c => c.ColumnName).ToList();
+
+            //// Execute the update operation within an ArcGIS Pro Task
+            //await QueuedTask.Run(() =>
+            //{
+            //    using (RowCursor rowCursor = _hluFeatureClass.Search(queryFilter, false))
+            //    {
+            //        using (FeatureClassDefinition featureDef = _hluFeatureClass.GetDefinition())
+            //        {
+            //            while (rowCursor.MoveNext())
+            //            {
+            //                using (Row row = rowCursor.Current)
+            //                {
+            //                    // Update each field
+            //                    for (int i = 0; i < updateFieldNames.Count; i++)
+            //                    {
+            //                        int fieldIndex = featureDef.FindField(updateFieldNames[i]);
+            //                        if (fieldIndex >= 0)
+            //                            row[fieldIndex] = updateValues[i];
+            //                    }
+
+            //                    // Save changes.
+            //                    row.Store();
+
+            //                    // Add history columns.
+            //                    History(_hluFeatureClass, historyFieldOrdinals, null);
+            //                }
+            //            }
+            //        }
+            //    }
+            //});
+
+            // Return results table.
         }
 
         public DataTable UpdateFeatures(DataColumn[] updateColumns, object[] updateValues,
@@ -895,6 +1026,149 @@ namespace HLU.GISApplication
             //catch { throw; }
             return null;
         }
+
+        #region History
+
+        private int[] HistorySchema(string[] historyColumns)
+        {
+            int ix;
+            var historyFields = from c in historyColumns
+                                let ordinal = (ix = MapField(c)) != -1 ? ix : FuzzyFieldOrdinal(c)
+                                where ordinal != -1
+                                select new
+                                {
+                                    FieldOrdinal = ordinal,
+                                    FieldName = c.Replace(HistoryAdditionalFieldsDelimiter, String.Empty)
+                                };
+
+            //for (int i = 0; i < historyFields.Count(); i++)
+            //{
+            //    var a = historyFields.ElementAt(i);
+            //    _pipeData.Add(String.Format("{0}{1}{2}", a.FieldName, _pipeFieldDelimiter,
+            //        _hluFieldSysTypeNames[a.FieldOrdinal]));
+            //}
+
+            //// GeometryColumn1: Length for polygons; length for polylines; X for points
+            //_pipeData.Add(String.Format("{0}{1}System.Double", _historyGeometry1ColumnName, _pipeFieldDelimiter));
+
+            //// GeometryColumn2: Area for polygons; empty for polylines; Y for points
+            //_pipeData.Add(String.Format("{0}{1}System.Double", _historyGeometry2ColumnName, _pipeFieldDelimiter));
+
+            //_pipeData.Add(_pipeTransmissionInterrupt);
+
+            return historyFields.Select(hf => hf.FieldOrdinal).ToArray();
+        }
+
+        private string History(FeatureClass feature, int[] historyFieldOrdinals, string[] additionalValues)
+        {
+            StringBuilder history = new();
+
+            //int j = 0;
+            //foreach (int i in historyFieldOrdinals)
+            //{
+            //    history.Append(String.Format("{0}{1}", _pipeFieldDelimiter, i != -1 ?
+            //        feature.get_Value(i) : additionalValues[j++]));
+            //}
+
+            //double geom1;
+            //double geom2;
+            //GetGeometryProperties(feature, out geom1, out geom2);
+
+            //history.Append(String.Format("{0}{1}{0}{2}", _pipeFieldDelimiter,
+            //    geom1 != -1 ? geom1.ToString() : String.Empty,
+            //    geom2 != -1 ? geom2.ToString() : String.Empty));
+
+            return history.Remove(0, 1).ToString();
+        }
+
+        private void GetGeometryProperties(FeatureClass feature, out double geom1, out double geom2)
+        {
+            geom1 = -1;
+            geom2 = -1;
+            //switch (feature.Shape.GeometryType)
+            //{
+            //    case esriGeometryType.esriGeometryPolygon:
+            //        IArea area = feature.Shape as IArea;
+            //        geom1 = ((IPolygon4)feature.Shape).Length;
+            //        geom2 = area.Area;
+            //        break;
+            //    case esriGeometryType.esriGeometryPolyline:
+            //        IPolyline5 pline = feature.Shape as IPolyline5;
+            //        geom1 = pline.Length;
+            //        break;
+            //    case esriGeometryType.esriGeometryPoint:
+            //        IPoint point = feature.Shape as IPoint;
+            //        geom1 = point.X;
+            //        geom2 = point.Y;
+            //        break;
+            //}
+        }
+
+        #endregion
+
+        #region Fields
+
+        private int MapField(string name)
+        {
+            name = name.Trim();
+            int o;
+            if ((o = FieldOrdinal(name)) != -1)
+            {
+                return o;
+            }
+            else if ((o = ColumnOrdinal(name)) != -1)
+            {
+                return FieldOrdinal(_hluLayerStructure.Columns[o].ColumnName);
+            }
+            return -1;
+        }
+
+        private int FieldOrdinal(string columnName)
+        {
+            int ordinal = -1;
+            if ((_hluFieldMap != null) && (_hluLayerStructure != null) && !String.IsNullOrEmpty(columnName) &&
+                ((ordinal = _hluLayerStructure.Columns.IndexOf(columnName.Trim())) != -1))
+
+                return _hluFieldMap[ordinal];
+            else
+                return -1;
+        }
+
+        private int FieldOrdinal(int columnOrdinal)
+        {
+            if ((_hluFieldMap != null) && (columnOrdinal > -1) && (columnOrdinal < _hluFieldMap.Length))
+                return _hluFieldMap[columnOrdinal];
+            else
+                return -1;
+        }
+
+        private int ColumnOrdinal(string fieldName)
+        {
+            if ((_hluFieldNames != null) && !String.IsNullOrEmpty((fieldName = fieldName.Trim())))
+                return System.Array.IndexOf<string>(_hluFieldNames, fieldName);
+            else
+                return -1;
+        }
+
+        private int FuzzyFieldOrdinal(string fieldName)
+        {
+            return FieldOrdinal(FuzzyColumnOrdinal(fieldName));
+        }
+
+        private int FuzzyColumnOrdinal(string fieldName)
+        {
+            if ((_hluFieldNames != null) && !String.IsNullOrEmpty((fieldName = fieldName.Trim())))
+            {
+                var q = from c in _hluLayerStructure.Columns.Cast<DataColumn>()
+                        join s in fieldName.Split([HistoryAdditionalFieldsDelimiter],
+                            StringSplitOptions.RemoveEmptyEntries).Distinct() on c.ColumnName equals s
+                        select c.Ordinal;
+                if (q.Count() == 1) return q.First();
+            }
+            return -1;
+        }
+
+        #endregion Fields
 
         public void ZoomSelected(int minZoom, string distUnits, bool alwaysZoom)
         {
@@ -1274,16 +1548,6 @@ namespace HLU.GISApplication
             get { return _maxSqlLength; }
         }
 
-        //TODO: ApplicationObject
-        ///// <summary>
-        ///// Reference to the running IApplication object.
-        ///// </summary>
-        //public object ApplicationObject
-        //{
-        //    //TODO: _arcMap
-        //    get { return _arcMap; }
-        //}
-
         public string HluLayerName
         {
             get { return _hluLayer?.Name; }
@@ -1315,15 +1579,15 @@ namespace HLU.GISApplication
         /// <summary>
         /// The properties of the current hlu layer.
         /// </summary>
-        public GISLayer CurrentHluLayer
+        public HLULayer CurrentHluLayer
         {
             get { return _hluCurrentLayer; }
         }
 
         /// <summary>
-        /// True if HLU layer is being edited in user initiated edit session.
+        /// True if HLU layer is editable.
         /// </summary>
-        public bool IsEditing
+        public bool IsEditable
         {
             get
             {
@@ -1352,7 +1616,7 @@ namespace HLU.GISApplication
             // Backup current layer variables.
             FeatureLayer hluLayerBak = _hluLayer;
             string hluTableNameBak = _hluTableName;
-            GISLayer hluCurrentLayerBak = _hluCurrentLayer;
+            HLULayer hluCurrentLayerBak = _hluCurrentLayer;
 
             // Initialise or clear the list of valid layers.
             if (_hluLayerNamesList == null)

@@ -41,26 +41,33 @@ namespace HLU.Data
     // Contains details of each valid HLU layer (map/window number,
     // map/window name, layer number and layer name.
     //---------------------------------------------------------------------
-    public class GISLayer
+    public class HLULayer
     {
         #region Fields
 
         private string _layerName;
+        private bool _isEditable = false;
 
         #endregion
 
         #region Constructor
 
-        public GISLayer()
+        public HLULayer()
         {
         }
 
-        public GISLayer(string layerName)
+        public HLULayer(string layerName)
         {
             _layerName = layerName;
         }
 
-        #endregion // Constructor
+        public HLULayer(string layerName, bool isEditable)
+        {
+            _layerName = layerName;
+            _isEditable = isEditable;
+        }
+
+        #endregion Constructor
 
         #region Properties
 
@@ -70,12 +77,18 @@ namespace HLU.Data
             set { _layerName = value; }
         }
 
+        public bool IsEditable
+        {
+            get { return _isEditable; }
+            set { _isEditable = value; }
+        }
+
         public string DisplayName
         {
             get { return _layerName; }
         }
 
-        #endregion // Properties
+        #endregion Properties
 
         #region Methods
 
@@ -89,7 +102,7 @@ namespace HLU.Data
             return this.LayerName.GetHashCode();
         }
 
-        public virtual bool Equals(GISLayer other)
+        public virtual bool Equals(HLULayer other)
         {
             if (other == null) return false;
 
@@ -100,10 +113,10 @@ namespace HLU.Data
         {
             if (this.GetType() != obj.GetType()) return false;
 
-            return Equals(obj as GISLayer);
+            return Equals(obj as HLULayer);
         }
 
-        #endregion // Methods
+        #endregion Methods
 
     }
 }

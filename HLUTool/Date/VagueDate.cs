@@ -913,7 +913,19 @@ namespace HLU.Date
             return new DateTime(year, 1, 1).AddMonths(month).AddDays(-1);
         }
 
+        /// <summary>
+        /// Defines a compiled regular expression that matches one or more whitespace characters.
+        /// </summary>
+        /// <remarks>
+        /// - The pattern `\s+` matches:
+        ///   - One or more whitespace characters (`\s+`), including spaces, tabs, and newlines.
+        /// - This regex is useful for detecting or replacing multiple whitespace occurrences in a string.
+        /// - The `[GeneratedRegex]` attribute ensures that the regex is compiled at compile-time,
+        ///   improving performance.
+        /// </remarks>
+        /// <returns>A <see cref="Regex"/> instance that can be used to match whitespace sequences.</returns>
         [GeneratedRegex(@"\s+")]
         private static partial Regex RegexWholeWord();
+
     }
 }

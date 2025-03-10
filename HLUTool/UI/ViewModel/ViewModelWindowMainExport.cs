@@ -488,7 +488,7 @@ namespace HLU.UI.ViewModel
                         // field ordinal.
                         string lutFieldName;
                         int lutFieldOrdinal;
-                        if ((r.table_name == _viewModelMain.HluDataset.incid_sources.TableName) && (idSuffixRegex().IsMatch(r.column_name)))
+                        if ((r.table_name == _viewModelMain.HluDataset.incid_sources.TableName) && (IdSuffixRegex().IsMatch(r.column_name)))
                         {
                             string lutSourceFieldName = Settings.Default.LutSourceFieldName;
                             int lutSourceFieldOrdinal = Settings.Default.LutSourceFieldOrdinal;
@@ -496,7 +496,7 @@ namespace HLU.UI.ViewModel
                             lutFieldName = lutSourceFieldName;
                             lutFieldOrdinal = lutSourceFieldOrdinal - 1;
                         }
-                        else if ((r.table_name == _viewModelMain.HluDataset.incid.TableName) && (useridSuffixRegex().IsMatch(r.column_name)))
+                        else if ((r.table_name == _viewModelMain.HluDataset.incid.TableName) && (UseridSuffixRegex().IsMatch(r.column_name)))
                         {
                             string lutUserFieldName = Settings.Default.LutUserFieldName;
                             int lutUserFieldOrdinal = Settings.Default.LutUserFieldOrdinal;
@@ -2253,7 +2253,7 @@ namespace HLU.UI.ViewModel
 
                     // Include the occurrence counter in the field name, either
                     // where the user chooses or at the end.
-                    if (occurrenceCounterRegex().IsMatch(fieldName))
+                    if (OccurrenceCounterRegex().IsMatch(fieldName))
                         fld.FieldName = fieldName.Replace("<no>", i.ToString());
                     else
                     {
@@ -2375,11 +2375,47 @@ namespace HLU.UI.ViewModel
             return null;
         }
 
+        /// <summary>
+        /// Defines a compiled case-insensitive regular expression that matches the suffix "_id".
+        /// </summary>
+        /// <remarks>
+        /// - The pattern `(_id)` matches the exact string "_id".
+        /// - The `RegexOptions.IgnoreCase` flag ensures that matching is case-insensitive.
+        /// - The "en-GB" culture is specified to ensure consistent behavior in a UK English locale.
+        /// - The `[GeneratedRegex]` attribute ensures that the regex is compiled at compile-time,
+        ///   improving performance.
+        /// </remarks>
+        /// <returns>A <see cref="Regex"/> instance that can be used to match an "_id" suffix.</returns>
         [GeneratedRegex(@"(_id)", RegexOptions.IgnoreCase, "en-GB")]
-        private static partial Regex idSuffixRegex();
+        private static partial Regex IdSuffixRegex();
+
+        /// <summary>
+        /// Defines a compiled case-insensitive regular expression that matches the suffix "_user_id".
+        /// </summary>
+        /// <remarks>
+        /// - The pattern `(_user_id)` matches the exact string "_user_id".
+        /// - The `RegexOptions.IgnoreCase` flag ensures that matching is case-insensitive.
+        /// - The "en-GB" culture is specified to ensure consistent behavior in a UK English locale.
+        /// - The `[GeneratedRegex]` attribute ensures that the regex is compiled at compile-time,
+        ///   improving performance.
+        /// </remarks>
+        /// <returns>A <see cref="Regex"/> instance that can be used to match a "_user_id" suffix.</returns>
         [GeneratedRegex(@"(_user_id)", RegexOptions.IgnoreCase, "en-GB")]
-        private static partial Regex useridSuffixRegex();
+        private static partial Regex UseridSuffixRegex();
+
+        /// <summary>
+        /// Defines a compiled case-insensitive regular expression that matches the string "<no>".
+        /// </summary>
+        /// <remarks>
+        /// - The pattern `(<no>)` matches the exact string "<no>", including the angle brackets.
+        /// - The `RegexOptions.IgnoreCase` flag ensures that matching is case-insensitive.
+        /// - The "en-GB" culture is specified to ensure consistent behavior in a UK English locale.
+        /// - The `[GeneratedRegex]` attribute ensures that the regex is compiled at compile-time,
+        ///   improving performance.
+        /// </remarks>
+        /// <returns>A <see cref="Regex"/> instance that can be used to match the string "<no>".</returns>
         [GeneratedRegex(@"(<no>)", RegexOptions.IgnoreCase, "en-GB")]
-        private static partial Regex occurrenceCounterRegex();
+        private static partial Regex OccurrenceCounterRegex();
+
     }
 }

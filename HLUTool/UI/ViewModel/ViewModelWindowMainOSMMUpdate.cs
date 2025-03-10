@@ -131,7 +131,7 @@ namespace HLU.UI.ViewModel
             catch (Exception ex)
             {
                 _viewModelMain.DataBase.RollbackTransaction();
-                MessageBox.Show("OSMM Update failed. The error message returned was:\n\n" +
+                MessageBox.Show("OSMM UpdateAsync failed. The error message returned was:\n\n" +
                     ex.Message, "HLU: OSMM Update", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
@@ -169,7 +169,7 @@ namespace HLU.UI.ViewModel
             catch (Exception ex)
             {
                 _viewModelMain.DataBase.RollbackTransaction();
-                MessageBox.Show("OSMM Update Failed. The error message returned was:\n\n" +
+                MessageBox.Show("OSMM UpdateAsync Failed. The error message returned was:\n\n" +
                     ex.Message, "HLU: OSMM Update", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally

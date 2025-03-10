@@ -51,6 +51,7 @@
     <Page Remove="UI\View\Connection\ViewConnectOleDb.xaml" />
     <Page Remove="UI\View\Dictionary\GeometryTypeConverterDictionary.xaml" />
     <Page Remove="UI\View\Dictionary\LayerConverterDictionary.xaml" />
+    <Page Remove="UI\View\Dictionary\MultiEqualityConverterDictionary.xaml" />
     <Page Remove="UI\View\Dictionary\SpatialReferenceConverterDictionary.xaml" />
     <Page Remove="UI\View\PaneHeader1View.xaml" />
     <Page Remove="UI\View\PaneHeader2View.xaml" />

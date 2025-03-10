@@ -36,6 +36,7 @@ using HLU.GISApplication;
 using HLU.Properties;
 using HLU.UI.View;
 using HLU.Date;
+using System.Threading.Tasks;
 
 namespace HLU.UI.ViewModel
 {
@@ -427,7 +428,8 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Perform the bulk updates on the GIS data, shadow copy in DB and history
-                BulkUpdateGis(incidOrdinal, _viewModelMain.IncidSelection, _bulkDeleteSecondaryCodes, _bulkCreateHistory, Operations.BulkUpdate, nowDtTm);
+                //TODO: Await call.
+                BulkUpdateGisAsync(incidOrdinal, _viewModelMain.IncidSelection, _bulkDeleteSecondaryCodes, _bulkCreateHistory, Operations.BulkUpdate, nowDtTm);
 
                 // Commit the transaction and accept the changes ???
                 _viewModelMain.DataBase.CommitTransaction();
@@ -776,7 +778,8 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Perform the bulk updates on the GIS data, shadow copy in DB and history
-                BulkUpdateGis(incidOrdinal, _viewModelMain.IncidSelection, _bulkDeleteSecondaryCodes, _bulkCreateHistory, Operations.OSMMUpdate, nowDtTm);
+                //TODO: Await call.
+                BulkUpdateGisAsync(incidOrdinal, _viewModelMain.IncidSelection, _bulkDeleteSecondaryCodes, _bulkCreateHistory, Operations.OSMMUpdate, nowDtTm);
 
                 // Commit the transaction and accept the changes ???
                 _viewModelMain.DataBase.CommitTransaction();
@@ -1512,7 +1515,7 @@ namespace HLU.UI.ViewModel
         /// or
         /// Failed to update GIS layer for incid
         /// </exception>
-        private void BulkUpdateGis(int incidOrdinal, DataTable incidSelection, bool deleteSecondaryCodes, bool createHistory, Operations operation, DateTime nowDtTm)
+        private async Task BulkUpdateGisAsync(int incidOrdinal, DataTable incidSelection, bool deleteSecondaryCodes, bool createHistory, Operations operation, DateTime nowDtTm)
         {
             // Get the columns and values to be updated in GIS
             DataColumn[] updateColumns;
@@ -1592,7 +1595,7 @@ namespace HLU.UI.ViewModel
                         throw new Exception("Failed to update GIS layer shadow copy");
 
                     // Update GIS layer row by row; no need for a joined scratch table
-                    DataTable historyTmp = _viewModelMain.GISApplication.UpdateFeatures(updateColumns,
+                    DataTable historyTmp = await _viewModelMain.GISApplication.UpdateFeaturesAsync(updateColumns,
                         updateGISValues, _viewModelMain.HistoryColumns, w);
 
                     if (historyTmp == null)

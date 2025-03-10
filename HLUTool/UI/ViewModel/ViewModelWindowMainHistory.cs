@@ -47,10 +47,13 @@ namespace HLU.UI.ViewModel
             Operations operation,
             DateTime nowDtTm)
         {
+            // Check there are some history records to write.
             if ((newHistoryRecords == null) || (newHistoryRecords.Rows.Count == 0)) return;
 
+            // Check if a transaction is already runnning.
             bool startTransaction = _viewModelMain.DataBase.Transaction == null;
 
+            // Begin a new transaction if one is not already running..
             if (startTransaction) _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
             try
@@ -62,19 +65,16 @@ namespace HLU.UI.ViewModel
                     foreach (KeyValuePair<int, string> kv in fixedValues)
                         fixedValueDict.Add(kv.Key, kv.Value);
                 }
+
+                // Add the modified user.
                 if (!fixedValueDict.ContainsKey(_viewModelMain.HluDataset.history.modified_user_idColumn.Ordinal))
                     fixedValueDict.Add(_viewModelMain.HluDataset.history.modified_user_idColumn.Ordinal, _viewModelMain.UserID);
-                if (!fixedValueDict.ContainsKey(_viewModelMain.HluDataset.history.modified_dateColumn.Ordinal))
-                //---------------------------------------------------------------------
-                // CHANGED: CR4 (Modified date)
-                // Store the time with the date in the modified_date column to make the history more exact
-                // and avoid separate updates with identical details (except the time) being merged together
-                // when displayed by the tool.
-                {
-                    fixedValueDict.Add(_viewModelMain.HluDataset.history.modified_dateColumn.Ordinal, nowDtTm);
-                }
-                //---------------------------------------------------------------------
 
+                // Add the modified date.
+                if (!fixedValueDict.ContainsKey(_viewModelMain.HluDataset.history.modified_dateColumn.Ordinal))
+                    fixedValueDict.Add(_viewModelMain.HluDataset.history.modified_dateColumn.Ordinal, nowDtTm);
+
+                // Add the modified reason.
                 if (!fixedValueDict.ContainsKey(_viewModelMain.HluDataset.history.modified_reasonColumn.Ordinal))
                 {
                     string reasonCode = ViewModelWindowMainHelpers.GetReasonCode(_viewModelMain.HluDataset, _viewModelMain.Reason);
@@ -86,6 +86,7 @@ namespace HLU.UI.ViewModel
                             operation.ToString()));
                 }
 
+                // Add the modified process.
                 if (!fixedValueDict.ContainsKey(_viewModelMain.HluDataset.history.modified_processColumn.Ordinal))
                 {
                     string processCode = ViewModelWindowMainHelpers.GetProcessCode(_viewModelMain.HluDataset, _viewModelMain.Process);
@@ -97,6 +98,7 @@ namespace HLU.UI.ViewModel
                             operation.ToString()));
                 }
 
+                // Add the modified operation.
                 if (!fixedValueDict.ContainsKey(_viewModelMain.HluDataset.history.modified_operationColumn.Ordinal))
                 {
                     string operationCode = ViewModelWindowMainHelpers.GetOperationsCode(_viewModelMain.HluDataset, operation);
@@ -172,11 +174,14 @@ namespace HLU.UI.ViewModel
                 if (_viewModelMain.HluTableAdapterManager.historyTableAdapter.Update(historyTable) == -1)
                     throw new Exception("Failed to update history table.");
 
+                // Commit the transaction if one was started.
                 if (startTransaction) _viewModelMain.DataBase.CommitTransaction();
             }
             catch
             {
+                // Roll back the transaction if one was started.
                 if (startTransaction) _viewModelMain.DataBase.RollbackTransaction();
+
                 throw;
             }
         }

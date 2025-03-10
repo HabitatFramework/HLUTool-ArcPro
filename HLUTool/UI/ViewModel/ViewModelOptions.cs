@@ -49,6 +49,9 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace HLU.UI.ViewModel
 {
+    /// <summary>
+    /// View model for the Options window.
+    /// </summary>
     partial class ViewModelOptions : ViewModelBase, IDataErrorInfo
     {
         #region Fields
@@ -147,7 +150,7 @@ namespace HLU.UI.ViewModel
         public ViewModelOptions()
         {
            // Get the dockpane DAML id.
-           DockPane pane = FrameworkApplication.DockPaneManager.Find(DockPaneID);
+           DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
             if (pane == null)
                 return;
 
@@ -233,7 +236,7 @@ namespace HLU.UI.ViewModel
             _warnBeforeGISSelect = Settings.Default.WarnBeforeGISSelect;
             _sqlPath = Settings.Default.SqlPath;
 
-            // Load the navigation items.
+            // Load the navigation items (the individual options pages).
             NavigationItems =
             [
                 new() { Name = "Database", Category = "Application", Content = new AppDatabaseOptions() },
@@ -252,23 +255,8 @@ namespace HLU.UI.ViewModel
             collectionView.GroupDescriptions.Add(new PropertyGroupDescription("Category"));
             GroupedNavigationItems = collectionView.View;
 
+            // Set the default selected view to the first page.
             SelectedView = NavigationItems.First();
-        }
-
-        private NavigationItem CreateNavigationItem(string name, string category, System.Windows.Controls.UserControl control)
-        {
-            if (!_controlInstances.TryGetValue(name, out System.Windows.Controls.UserControl value))
-            {
-                value = control;
-                _controlInstances[name] = value;
-            }
-
-            return new NavigationItem
-            {
-                Name = name,
-                Category = category,
-                Content = value
-            };
         }
 
         private string EscapeAccessKey(string s)
@@ -297,20 +285,6 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion
-
-        #region Properties
-
-        /// <summary>
-        /// ID of the DockPane.
-        /// </summary>
-        private const string _dockPaneID = "HLUTool_UI_WindowMain";
-
-        public static string DockPaneID
-        {
-            get => _dockPaneID;
-        }
-
-        #endregion Properties
 
         #region Button Images
 
@@ -471,7 +445,7 @@ namespace HLU.UI.ViewModel
         #region Save Command
 
         /// <summary>
-        /// Create Save button command
+        /// Create the Save button command.
         /// </summary>
         /// <value></value>
         /// <returns></returns>
@@ -491,7 +465,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Handles event when Save button is clicked
+        /// Handles event when Save button is clicked.
         /// </summary>
         /// <param name="param"></param>
         /// <remarks></remarks>
@@ -507,6 +481,9 @@ namespace HLU.UI.ViewModel
             this.RequestClose(true);
         }
 
+        /// <summary>
+        /// Save the add-in settings.
+        /// </summary>
         private void SaveAddInSettings()
         {
             // Update add-in database options
@@ -546,6 +523,9 @@ namespace HLU.UI.ViewModel
             _viewModelMain.SaveAddInSettings(_addInSettings);
         }
 
+        /// <summary>
+        /// Save the user settings.
+        /// </summary>
         private void SaveUserSettings()
         {
             // Update user GIS options
@@ -586,7 +566,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        ///
+        /// Check if the Save button can be clicked (there are no errors).
         /// </summary>
         /// <value></value>
         /// <returns></returns>
@@ -598,7 +578,7 @@ namespace HLU.UI.ViewModel
         #region Cancel Command
 
         /// <summary>
-        /// Create Cancel button command
+        /// Create the Cancel button command.
         /// </summary>
         /// <value></value>
         /// <returns></returns>
@@ -618,7 +598,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Handles event when Cancel button is clicked
+        /// Handles event when Cancel button is clicked.
         /// </summary>
         /// <param name="param"></param>
         /// <remarks></remarks>
@@ -633,7 +613,7 @@ namespace HLU.UI.ViewModel
         #region OpenHyperlink Command
 
         /// <summary>
-        /// Create OpenHyperlink command
+        /// Create the OpenHyperlink button command.
         /// </summary>
         /// <value></value>
         /// <returns></returns>
@@ -653,7 +633,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Handles event when OpenHyperlink command is fired
+        /// Handles event when OpenHyperlink is clicked.
         /// </summary>
         /// <param name="param"></param>
         /// <remarks></remarks>
@@ -668,7 +648,7 @@ namespace HLU.UI.ViewModel
 
         #endregion
 
-        #region Database
+        #region Application Database
 
         public int? DbConnectionTimeout
         {
@@ -694,7 +674,7 @@ namespace HLU.UI.ViewModel
 
         #endregion
 
-        #region GIS/Export
+        #region User GIS/Export
 
         /// <summary>
         /// Gets the default minimum auto zoom scale text.
@@ -707,7 +687,7 @@ namespace HLU.UI.ViewModel
             get
             {
                 string distUnits = Settings.Default.MapDistanceUnits;
-                return string.Format("Minimum auto zoom size [{0}]", distUnits);
+                return string.Format("Minimum auto zoom [{0}]", distUnits);
             }
         }
 
@@ -736,7 +716,7 @@ namespace HLU.UI.ViewModel
 
         #endregion
 
-        #region History
+        #region User History
 
         public SelectionList<string> HistoryColumns
         {
@@ -757,14 +737,8 @@ namespace HLU.UI.ViewModel
 
         #endregion
 
-        #region Interface
+        #region User Interface
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR29 (Habitat classification and conversion to IHS)
-        // Add an option for the user to select their preferred
-        // habitat class which will be automatically selected when
-        // the tool first starts.
-        //
         /// <summary>
         /// Gets or sets the list of possible habitat class codes.
         /// </summary>
@@ -792,7 +766,6 @@ namespace HLU.UI.ViewModel
                 _preferredHabitatClass = value;
             }
         }
-        //---------------------------------------------------------------------
 
         /// <summary>
         /// Gets or sets the preferred option to show or hide group headers.
@@ -860,11 +833,6 @@ namespace HLU.UI.ViewModel
             set { _showHabitatSummary = value; }
         }
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR49 Process proposed OSMM Updates
-        // A new option to enable the user to determine whether to show
-        // the OSMM update attributes for the current incid.
-        //
         /// <summary>
         /// Gets or sets the list of available show OSMM Update options from
         /// the class.
@@ -900,7 +868,6 @@ namespace HLU.UI.ViewModel
                 _showOSMMUpdatesOption = value;
             }
         }
-        //---------------------------------------------------------------------
 
         public HluDataSet.lut_secondary_groupRow[] SecondaryGroupCodes
         {
@@ -976,39 +943,7 @@ namespace HLU.UI.ViewModel
 
         #endregion
 
-        #region Updates
-
-        /// <summary>
-        /// Gets or sets the list of available subset update actions from
-        /// the enum.
-        /// </summary>
-        /// <value>
-        /// The list of subset update actions.
-        /// </value>
-        public SubsetUpdateActions[] SubsetUpdateActions
-        {
-            get
-            {
-                return Enum.GetValues(typeof(SubsetUpdateActions)).Cast<SubsetUpdateActions>()
-                    .ToArray();
-            }
-            set { }
-        }
-
-        /// <summary>
-        /// Gets or sets the preferred subset update action.
-        /// </summary>
-        /// <value>
-        /// The preferred subset update action.
-        /// </value>
-        public SubsetUpdateActions? SubsetUpdateAction
-        {
-            get { return (SubsetUpdateActions)_subsetUpdateAction; }
-            set
-            {
-                _subsetUpdateAction = (int)value;
-            }
-        }
+        #region Application Updates
 
         /// <summary>
         /// Gets or sets the clear IHS update actions.
@@ -1045,12 +980,6 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR39 (Split and merge complete messages)
-        // A new option to enable the user to determine if they
-        // want to be notified following the completion of a
-        // split or merge.
-        //
         /// <summary>
         /// Gets or sets the choice of whether the user will
         /// be notified when a split or merge has completed.
@@ -1063,14 +992,7 @@ namespace HLU.UI.ViewModel
             get { return _notifyOnSplitMerge; }
             set { _notifyOnSplitMerge = value; }
         }
-        //---------------------------------------------------------------------
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR49 Process proposed OSMM Updates
-        // A new option to enable the user to determine whether to reset
-        // the OSMM update process flag when manually updating the current
-        // incid.
-        //
         /// <summary>
         /// Gets or sets the preferred option to reset the OSMM Update
         /// process flag when applying manual updates.
@@ -1084,7 +1006,6 @@ namespace HLU.UI.ViewModel
             get { return _resetOSMMUpdatesStatus; }
             set { _resetOSMMUpdatesStatus = value; }
         }
-        //---------------------------------------------------------------------
 
         /// <summary>
         /// Gets the primary/secondary code validation options.
@@ -1211,7 +1132,43 @@ namespace HLU.UI.ViewModel
         }
         #endregion
 
-        #region Filter
+        #region User Updates
+
+        /// <summary>
+        /// Gets or sets the list of available subset update actions from
+        /// the enum.
+        /// </summary>
+        /// <value>
+        /// The list of subset update actions.
+        /// </value>
+        public SubsetUpdateActions[] SubsetUpdateActions
+        {
+            get
+            {
+                return Enum.GetValues(typeof(SubsetUpdateActions)).Cast<SubsetUpdateActions>()
+                    .ToArray();
+            }
+            set { }
+        }
+
+        /// <summary>
+        /// Gets or sets the preferred subset update action.
+        /// </summary>
+        /// <value>
+        /// The preferred subset update action.
+        /// </value>
+        public SubsetUpdateActions? SubsetUpdateAction
+        {
+            get { return (SubsetUpdateActions)_subsetUpdateAction; }
+            set
+            {
+                _subsetUpdateAction = (int)value;
+            }
+        }
+
+        #endregion
+
+        #region User SQL
 
         /// <summary>
         /// Gets or sets the maximum number of value rows to retrieve.
@@ -1236,11 +1193,6 @@ namespace HLU.UI.ViewModel
             get { return _maxGetValueRows; }
         }
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR5 (Select by attributes interface)
-        // A new option to enable the user to determine when to warn
-        // the user before performing a GIS selection.
-        //
         /// <summary>
         /// Gets or sets the list of available warn before GIS selection
         /// options from the enum.
@@ -1272,13 +1224,7 @@ namespace HLU.UI.ViewModel
                 _warnBeforeGISSelect = (int)value;
             }
         }
-        //---------------------------------------------------------------------
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR5 (Select by attributes interface)
-        // A new option to enable the user to set the default
-        // folder for saving and loading SQL queries.
-        //
         /// <summary>
         /// Get the browse SQL path command.
         /// </summary>
@@ -1355,11 +1301,10 @@ namespace HLU.UI.ViewModel
 
             return null;
         }
-        //---------------------------------------------------------------------
 
         #endregion
 
-        #region Date
+        #region Application Date
 
         public string SeasonSpring
         {
@@ -1397,7 +1342,7 @@ namespace HLU.UI.ViewModel
 
         #endregion
 
-        #region Bulk Update
+        #region Application Bulk Update
 
         /// <summary>
         /// Checks if the user has bulk update authority.
@@ -1478,9 +1423,6 @@ namespace HLU.UI.ViewModel
             set { _bulkDeleteIHSCodes = value; }
         }
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR49 Process bulk OSMM Updates
-        //
         /// <summary>
         /// Gets or sets the list of determination qualities that
         /// can be used when adding BAP habitats during an OSMM bulk
@@ -1552,12 +1494,14 @@ namespace HLU.UI.ViewModel
             get { return _bulkOSMMSourceId; }
             set { _bulkOSMMSourceId = value; }
         }
-        //---------------------------------------------------------------------
 
         #endregion
 
         #region IDataErrorInfo Members
 
+        /// <summary>
+        /// Are there any errors in the settings?
+        /// </summary>
         public string Error
         {
             get
@@ -1597,7 +1541,7 @@ namespace HLU.UI.ViewModel
                     error.Append("\n" + "Secondary code delimiter must be one or two characters.");
                 else
                 {
-                    Match m = secondaryCodeDelimeterRegex().Match(SecondaryCodeDelimiter);
+                    Match m = SecondaryCodeDelimeterRegex().Match(SecondaryCodeDelimiter);
                     if (m.Success == true)
                         error.Append("\n" + "Secondary code delimiter cannot contain letters or numbers.");
                 }
@@ -1629,7 +1573,7 @@ namespace HLU.UI.ViewModel
                     error.Append("\n" + "Vague date delimiter must be a single character.");
                 else
                 {
-                    Match m = vagueDateDelimeterRegex().Match(VagueDateDelimiter);
+                    Match m = VagueDateDelimeterRegex().Match(VagueDateDelimiter);
                     if (m.Success == true)
                         error.Append("\n" + "Vague date delimiter cannot contain letters or numbers.");
                 }
@@ -1649,6 +1593,11 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Get the error message for the specified column.
+        /// </summary>
+        /// <param name="columnName"></param>
+        /// <returns></returns>
         public string this[string columnName]
         {
             get
@@ -1729,7 +1678,7 @@ namespace HLU.UI.ViewModel
                             error = "Error: Secondary code delimiter must be one or two characters.";
                         else
                         {
-                            Match m = secondaryCodeDelimeterRegex().Match(SecondaryCodeDelimiter);
+                            Match m = SecondaryCodeDelimeterRegex().Match(SecondaryCodeDelimiter);
                             if (m.Success == true)
                                 error = "Error: Secondary code delimiter cannot contain letters or numbers.";
                         }
@@ -1767,7 +1716,7 @@ namespace HLU.UI.ViewModel
                             error = "Error: Vague date delimiter must be a single character.";
                         else
                         {
-                            Match m = vagueDateDelimeterRegex().Match(VagueDateDelimiter);
+                            Match m = VagueDateDelimeterRegex().Match(VagueDateDelimiter);
                             if (m.Success == true)
                                 error = "Error: Vague date delimiter cannot contain letters or numbers.";
                         }
@@ -1795,11 +1744,40 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Defines a compiled regular expression that matches any single alphanumeric character.
+        /// </summary>
+        /// <remarks>
+        /// - The pattern `[a-zA-Z0-9]` matches:
+        ///   - Any lowercase letter (`a-z`).
+        ///   - Any uppercase letter (`A-Z`).
+        ///   - Any numeric digit (`0-9`).
+        /// - This regex is useful for detecting or validating alphanumeric characters.
+        /// - The `[GeneratedRegex]` attribute ensures that the regex is compiled at compile-time,
+        ///   improving performance.
+        /// </remarks>
+        /// <returns>A <see cref="Regex"/> instance that can be used to match a single alphanumeric character.</returns>
         [GeneratedRegex(@"[a-zA-Z0-9]")]
-        private static partial Regex secondaryCodeDelimeterRegex();
+        private static partial Regex SecondaryCodeDelimeterRegex();
 
+
+
+        /// <summary>
+        /// Defines a compiled regular expression that matches any single alphanumeric character.
+        /// </summary>
+        /// <remarks>
+        /// - The pattern `[a-zA-Z0-9]` matches:
+        ///   - Any lowercase letter (`a-z`).
+        ///   - Any uppercase letter (`A-Z`).
+        ///   - Any numeric digit (`0-9`).
+        /// - This regex can be used to detect or validate alphanumeric characters that serve as vague date delimiters.
+        /// - The `[GeneratedRegex]` attribute ensures that the regex is compiled at compile-time,
+        ///   improving performance.
+        /// </remarks>
+        /// <returns>A <see cref="Regex"/> instance that can be used to match a single alphanumeric character.</returns>
         [GeneratedRegex(@"[a-zA-Z0-9]")]
-        private static partial Regex vagueDateDelimeterRegex();
+        private static partial Regex VagueDateDelimeterRegex();
+
 
         #endregion
     }
