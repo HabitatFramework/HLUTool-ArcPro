@@ -8,6 +8,9 @@ using System.Windows.Data;
 
 namespace HLU.Converters
 {
+    /// <summary>
+    /// Convert a number to a string with thousand separator and no decimal.
+    /// </summary>
     public class CountToStringConverter : IValueConverter
     {
         #region IValueConverter Members
@@ -23,9 +26,12 @@ namespace HLU.Converters
             return value;
         }
 
-        #endregion
+        #endregion IValueConverter Members
     }
 
+    /// <summary>
+    /// Convert a number to a string with thousand separator and 2 decimals.
+    /// </summary>
     public class AreaToStringConverter : IValueConverter
     {
         #region IValueConverter Members
@@ -46,6 +52,6 @@ namespace HLU.Converters
             return value;
         }
 
-        #endregion
+        #endregion IValueConverter Members
     }
 }

@@ -22,6 +22,9 @@ using System.Windows.Data;
 
 namespace HLU.Converters
 {
+    /// <summary>
+    /// Converts a boolean value to a Visibility value.
+    /// </summary>
     public class Bool2VisibilityConverter : IValueConverter
     {
         #region IValueConverter Members
@@ -40,6 +43,6 @@ namespace HLU.Converters
             return value;
         }
 
-        #endregion
+        #endregion IValueConverter Members
     }
 }

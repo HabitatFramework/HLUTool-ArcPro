@@ -23,6 +23,9 @@ using System.Windows.Data;
 
 namespace HLU.Converters
 {
+    /// <summary>
+    /// Converts a null value to a string.Empty value and vice versa.
+    /// </summary>
     class NullableValueConverter : IValueConverter
     {
          #region IValueConverter Members
@@ -40,6 +43,6 @@ namespace HLU.Converters
              return value;
          }
 
-         #endregion
+        #endregion IValueConverter Members
     }
 }

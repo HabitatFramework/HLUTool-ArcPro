@@ -22,10 +22,6 @@ using System.Windows.Data;
 
 namespace HLU.Converters
 {
-    //---------------------------------------------------------------------
-    // CHANGED: CR49 Process proposed OSMM Updates
-    // Functionality to display warning level messages.
-    //
     /// <summary>
     /// Converter to split leading text (before first colon)
     /// from an error message to determine the error level
@@ -65,7 +61,6 @@ namespace HLU.Converters
              return null;
          }
 
-         #endregion
+        #endregion IValueConverter Members
     }
-    //---------------------------------------------------------------------
 }

@@ -45,6 +45,9 @@ namespace HLU.UI.UserControls.Toolbar
 
         #endregion Constructor
 
+        /// <summary>
+        /// Show the options window.
+        /// </summary>
         protected override void OnClick()
         {
             try

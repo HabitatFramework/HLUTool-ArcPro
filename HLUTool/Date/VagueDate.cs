@@ -27,6 +27,9 @@ using HLU.Properties;
 
 namespace HLU.Date
 {
+    /// <summary>
+    /// Represents a vague date instance.
+    /// </summary>
     public class VagueDateInstance
     {
         public int StartDate;
@@ -34,23 +37,7 @@ namespace HLU.Date
         public string DateType;
         public string UserEntry;
 
-        public bool IsUnknown
-        {
-            get
-            {
-                return String.IsNullOrEmpty(this.DateType) ||
-                    (this.DateType == VagueDate.ToCode(VagueDate.VagueDateTypes.Unknown)) && !this.IsBad;
-            }
-        }
-
-        public bool IsBad
-        {
-            get
-            {
-                return String.IsNullOrEmpty(this.DateType) || (this.DateType == VagueDate.ToCode(VagueDate.VagueDateTypes.Unknown)) &&
-                    !VagueDate.IsUnknownDate(this.UserEntry);
-            }
-        }
+        #region Constructors
 
         public VagueDateInstance(int startDate, int endDate, string dateType)
         {
@@ -74,8 +61,41 @@ namespace HLU.Date
             EndDate = -693593;
             DateType = null;
         }
+
+        #endregion Constructors
+
+        #region Properties
+
+        /// <summary>
+        /// Gets a value indicating whether this instance is unknown.
+        /// </summary>
+        public bool IsUnknown
+        {
+            get
+            {
+                return String.IsNullOrEmpty(this.DateType) ||
+                    (this.DateType == VagueDate.ToCode(VagueDate.VagueDateTypes.Unknown)) && !this.IsBad;
+            }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether this instance is bad.
+        /// </summary>
+        public bool IsBad
+        {
+            get
+            {
+                return String.IsNullOrEmpty(this.DateType) || (this.DateType == VagueDate.ToCode(VagueDate.VagueDateTypes.Unknown)) &&
+                    !VagueDate.IsUnknownDate(this.UserEntry);
+            }
+        }
+
+        #endregion Properties
     }
 
+    /// <summary>
+    /// Represents a vague date.
+    /// </summary>
     partial class VagueDate
     {
         private static Dictionary<string, VagueDate.VagueDateTypes> _codeValueDictionary = Enum<VagueDate.VagueDateTypes>.ToCodeValueDictionary();
@@ -94,6 +114,8 @@ namespace HLU.Date
         /// </summary>
         //public static readonly int DateUnknown = -693593;
         public static readonly int DateUnknown = 0;
+
+        #region Enums
 
         public enum DateType { Start, End, Vague };
 
@@ -135,6 +157,10 @@ namespace HLU.Date
             Unknown
         }
 
+        #endregion Enums
+
+        #region Properties
+
         public static string _delimiter;
         public static string Delimiter
         {
@@ -148,6 +174,10 @@ namespace HLU.Date
             get { return _seasonNames; }
             set { _seasonNames = value; }
         }
+
+        #endregion Properties
+
+        #region Methods
 
         public static string ToCode(VagueDateTypes en)
         {
@@ -202,7 +232,7 @@ namespace HLU.Date
             string endDateString;
             bool delimiterFound;
             // Split the string into start and end parts (the end part will be null
-            // if there is only one part.
+            // if there is only one part).
             SplitDateString(userDateString, out startDateString, out endDateString, out delimiterFound);
 
             string formatString1 = String.Empty;
@@ -807,12 +837,20 @@ namespace HLU.Date
             startDateString = null;
             endDateString = null;
             delimiterFound = false;
+
             if (String.IsNullOrEmpty(dateString)) return false;
+
+            // Set a default delimiter if there isn't one (this shouldn't happen).
+            if (string.IsNullOrEmpty(Delimiter)) Delimiter = "-";
+
+            // Try and split the date string.
             string[] a = Regex.Split(dateString, @"\s*" + Delimiter + @"\s*");
 
             startDateString = a[0];
             if (a.Length == 2) endDateString = a[1];
+
             if (dateString.Contains(Delimiter)) delimiterFound = true;
+
             return a.Length <= 2;
         }
 
@@ -912,6 +950,8 @@ namespace HLU.Date
             // days to the last day the month
             return new DateTime(year, 1, 1).AddMonths(month).AddDays(-1);
         }
+
+        #endregion Methods
 
         /// <summary>
         /// Defines a compiled regular expression that matches one or more whitespace characters.

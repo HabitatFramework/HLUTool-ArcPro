@@ -26,14 +26,27 @@ using HLU.Data.Model;
 
 namespace HLU.UI.ViewModel
 {
+    /// <summary>
+    /// View model for the main window history handling.
+    /// </summary>
     class ViewModelWindowMainHistory
     {
+        #region Fields
+
         ViewModelWindowMain _viewModelMain;
+
+        #endregion Fields
+
+        #region Constructor
 
         public ViewModelWindowMainHistory(ViewModelWindowMain viewModelMain)
         {
             _viewModelMain = viewModelMain;
         }
+
+        #endregion Constructor
+
+        #region Methods
 
         /// <summary>
         /// Writes history records to DB.
@@ -213,4 +226,6 @@ namespace HLU.UI.ViewModel
             }
         }
     }
+
+    #endregion Methods
 }

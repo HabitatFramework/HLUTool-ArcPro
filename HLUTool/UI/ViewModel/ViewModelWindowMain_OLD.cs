@@ -448,32 +448,35 @@ namespace HLU.UI.ViewModel
         /// <returns></returns>
         internal async Task<bool> InitializeToolPaneAsync()
         {
-            // Application database options
+            // Set add-in database options
             _dbConnectionTimeout = _addInSettings.DbConnectionTimeout;
             _incidPageSize = _addInSettings.IncidTablePageSize;
 
-            // Dates options
-            // None
+            // Set add-in dates options
+            VagueDate.Delimiter = _addInSettings.VagueDateDelimiter; // Set in the vague date class
+            VagueDate.SeasonNames = _addInSettings.SeasonNames.Cast<string>().ToArray(); // Set in the vague date class
 
-            // Application interface options
-            _secondaryCodeDelimiter = _addInSettings.SecondaryCodeDelimiter;
-
-            // Updates options
-            _subsetUpdateAction = _addInSettings.SubsetUpdateAction;
-            _clearIHSUpdateAction = _addInSettings.ClearIHSUpdateAction;
-            _resetOSMMUpdatesStatus = _addInSettings.ResetOSMMUpdatesStatus;
+            // Set add-in validation options
             _habitatSecondaryCodeValidation = _addInSettings.HabitatSecondaryCodeValidation;
             _primarySecondaryCodeValidation = _addInSettings.PrimarySecondaryCodeValidation;
+            SecondaryHabitat.PrimarySecondaryCodeValidation = _primarySecondaryCodeValidation; // Set in the secondary habitat class
             _qualityValidation = _addInSettings.QualityValidation;
             _potentialPriorityDetermQtyValidation = _addInSettings.PotentialPriorityDetermQtyValidation;
+            BapEnvironment.PotentialPriorityDetermQtyValidation = _potentialPriorityDetermQtyValidation; // Used in the priority habitat class
 
-            // Filter options
+            // Set add-in updates options
+            _subsetUpdateAction = _addInSettings.SubsetUpdateAction;
+            _clearIHSUpdateAction = _addInSettings.ClearIHSUpdateAction;
+            _secondaryCodeDelimiter = _addInSettings.SecondaryCodeDelimiter;
+            _resetOSMMUpdatesStatus = _addInSettings.ResetOSMMUpdatesStatus;
+
+            // Set user filter options
             _warnBeforeGISSelect = Settings.Default.WarnBeforeGISSelect;
 
-            // User GIS options
+            // Set user GIS options
             _minZoom = Settings.Default.MinAutoZoom;
 
-            // User interface options
+            // Set user interface options
             _preferredHabitatClass = Settings.Default.PreferredHabitatClass;
             _showGroupHeaders = Settings.Default.ShowGroupHeaders;
             _showIHSTab = Settings.Default.ShowIHSTab;
@@ -485,14 +488,13 @@ namespace HLU.UI.ViewModel
             _preferredSecondaryGroup = Settings.Default.PreferredSecondaryGroup;
             _secondaryCodeOrder = Settings.Default.SecondaryCodeOrder;
 
-            // User updates options
+            // Set user updates options
             _notifyOnSplitMerge = Settings.Default.NotifyOnSplitMerge;
 
-            // User history options
+            // Set user history options
             _historyDisplayLastN = Settings.Default.HistoryDisplayLastN;
 
-
-
+            // Get application settings
             _codeDeleteRow = Settings.Default.CodeDeleteRow;
             _autoZoomSelection = Settings.Default.AutoZoomSelection;
             _autoSelectOnGis = Settings.Default.AutoSelectOnGis;
@@ -3045,7 +3047,10 @@ namespace HLU.UI.ViewModel
                 //TODO: Check for errors.
                 return EditMode &&
                     (Changed == true) &&
-                    (_bulkUpdateMode == false || _incidSelection != null);
+                    (Process != null) &&
+                    (Reason != null) &&
+                    (_bulkUpdateMode == false || _incidSelection != null) &&
+                    String.IsNullOrEmpty(this.Error);
                 //return EditMode &&
                 //    (Changed == true) &&
                 //    (_bulkUpdateMode == false || _incidSelection != null) &&
@@ -4485,6 +4490,9 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(IncidQualityDetermination));
             OnPropertyChanged(nameof(IncidQualityInterpretation));
             OnPropertyChanged(nameof(IncidQualityComments));
+
+            OnPropertyChanged(nameof(CanUpdate));
+            OnPropertyChanged(nameof(CanBulkUpdate));
         }
 
         private void ApplyAddInSettings()
@@ -13135,7 +13143,10 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                // Check if there are any valid condition rows.
                 if (!CheckCondition()) return null;
+
+
                 if ((_incidConditionRows.Length > 0) && (_incidConditionRows[0] != null) &&
                     !_incidConditionRows[0].IsNull(HluDataset.incid_condition.condition_date_startColumn) &&
                     !_incidConditionRows[0].IsNull(HluDataset.incid_condition.condition_date_endColumn) &&
@@ -15092,6 +15103,12 @@ namespace HLU.UI.ViewModel
 
         #region IDataErrorInfo Members
 
+        /// <summary>
+        /// Gets the error message for the property with the given column name.
+        /// </summary>
+        /// <param name="columnName"></param>
+        /// <param name="errorList"></param>
+        /// <returns></returns>
         private string ErrorMessage(string columnName, List<string[]> errorList)
         {
             if (errorList != null)
@@ -15102,6 +15119,11 @@ namespace HLU.UI.ViewModel
             return null;
         }
 
+        /// <summary>
+        /// Gets a list of all of the errors.
+        /// </summary>
+        /// <param name="errors"></param>
+        /// <returns></returns>
         private string ErrorMessageList(List<string[]> errors)
         {
             if ((errors == null) || (errors.Count == 0)) return null;
@@ -15125,6 +15147,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets a string of all of the errors.
+        /// </summary>
         public string Error
         {
             get
@@ -15224,6 +15249,11 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets the error message for the property with the given column name.
+        /// </summary>
+        /// <param name="columnName"></param>
+        /// <returns></returns>
         public string this[string columnName]
         {
             get
@@ -15422,8 +15452,10 @@ namespace HLU.UI.ViewModel
                         break;
                 }
 
+                // Exit if in OSMM bulk update mode.
                 if (_osmmUpdateMode == true) return null;
 
+                // Additional checks if not in bulk update mode.
                 if (_bulkUpdateMode == false)
                 {
                     switch (columnName)
@@ -15509,17 +15541,30 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Adds a column name to the list of errors.
+        /// </summary>
+        /// <param name="errorList"></param>
+        /// <param name="columnName"></param>
         public void AddErrorList(ref List<string> errorList, string columnName)
         {
             if (!errorList.Contains(columnName))
                 errorList.Add(columnName);
         }
 
+        /// <summary>
+        /// Removes a column name from the list of errors.
+        /// </summary>
+        /// <param name="errorList"></param>
+        /// <param name="columnName"></param>
         public void DelErrorList(ref List<string> errorList, string columnName)
         {
             errorList.Remove(columnName);
         }
 
+        /// <summary>
+        /// Resets all warnings and errors.
+        /// </summary>
         public void ResetWarningsErrors()
         {
             _habitatWarnings = [];
@@ -15538,6 +15583,8 @@ namespace HLU.UI.ViewModel
             _source3Errors = null;
         }
 
+        #endregion IDataErrorInfo Members
+
         /// <summary>
         /// Defines a compiled regular expression that matches capitalized words in a string.
         /// </summary>
@@ -15553,9 +15600,6 @@ namespace HLU.UI.ViewModel
         /// <returns>A `Regex` instance that can be used to match capitalized words in a string.</returns>
         [GeneratedRegex("[A-Z][^A-Z]*")]
         private static partial Regex CapitalisedRegex();
-
-
-        #endregion
 
     }
 }

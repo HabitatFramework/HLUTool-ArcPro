@@ -25,6 +25,9 @@ using HLU.Properties;
 
 namespace HLU.Converters
 {
+    /// <summary>
+    /// Converts a DataRow, DataRow[], DataView or DataTable to a list of code/description pairs or vice versa.
+    /// </summary>
     class CodeDescriptionConverter : IValueConverter
     {
         string _codeDeleteRow = Settings.Default.CodeDeleteRow;
@@ -32,6 +35,14 @@ namespace HLU.Converters
 
         #region IValueConverter Members
 
+        /// <summary>
+        /// Converts a DataRow, DataRow[], DataView or DataTable to a list of code/description pairs.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="targetType"></param>
+        /// <param name="parameter"></param>
+        /// <param name="culture"></param>
+        /// <returns></returns>
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             int codeColumnOrdinal = -1;
@@ -79,6 +90,14 @@ namespace HLU.Converters
             return value;
         }
 
+        /// <summary>
+        /// Converts a code/description pair to a string.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="targetType"></param>
+        /// <param name="parameter"></param>
+        /// <param name="culture"></param>
+        /// <returns></returns>
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value is string s)
@@ -87,8 +106,18 @@ namespace HLU.Converters
                 return value;
         }
 
-        #endregion
+        #endregion IValueConverter Members
 
+        #region Methods
+
+        /// <summary>
+        /// Gets the ordinals of the code, description and sort columns from the parameter.
+        /// </summary>
+        /// <param name="t"></param>
+        /// <param name="parameter"></param>
+        /// <param name="codeColumnOrdinal"></param>
+        /// <param name="descriptionColumnOrdinal"></param>
+        /// <param name="sortColumnOrdinal"></param>
         private void GetOrdinals(DataTable t, string parameter, out int codeColumnOrdinal,
             out int descriptionColumnOrdinal, out int sortColumnOrdinal)
         {
@@ -130,6 +159,14 @@ namespace HLU.Converters
             }
         }
 
+        /// <summary>
+        /// Formats a list of code/description pairs from the rows.
+        /// </summary>
+        /// <param name="rows"></param>
+        /// <param name="codeColumnOrdinal"></param>
+        /// <param name="descriptionColumnOrdinal"></param>
+        /// <param name="sortColumnOrdinal"></param>
+        /// <returns></returns>
         private object FormatList(DataRow[] rows, int codeColumnOrdinal,
             int descriptionColumnOrdinal, int sortColumnOrdinal)
         {
@@ -172,6 +209,13 @@ namespace HLU.Converters
                         }).OrderBy(r => r.sort_order);
         }
 
+        /// <summary>
+        /// Formats a code/description pair from the row.
+        /// </summary>
+        /// <param name="r"></param>
+        /// <param name="codeColumnOrdinal"></param>
+        /// <param name="descriptionColumnOrdinal"></param>
+        /// <returns></returns>
         private string FormatDescription(DataRow r, int codeColumnOrdinal, int descriptionColumnOrdinal)
         {
             string code = r.Field<string>(codeColumnOrdinal);
@@ -186,30 +230,52 @@ namespace HLU.Converters
             }
         }
 
-        private string UnformatString(string s)
+        /// <summary>
+        /// Extracts the first component of a string, unless it matches a special case.
+        /// </summary>
+        /// <param name="inString">The input string to process.</param>
+        /// <returns>
+        /// - If the input string is null or empty, it returns the original string.
+        /// - If the input string matches the special `_codeDeleteRow`, it is returned as is.
+        /// - Otherwise, the string is split using `_separator`, and the first part is returned.
+        /// </returns>
+        private string UnformatString(string inString)
         {
-            if (!String.IsNullOrEmpty(s))
+            if (!String.IsNullOrEmpty(inString))
             {
-                if (s == _codeDeleteRow)
+                if (inString == _codeDeleteRow)
                 {
-                    return s;
+                    return inString;
                 }
                 else
                 {
-                    string[] splitArray = s.Split(_separator, StringSplitOptions.None);
+                    string[] splitArray = inString.Split(_separator, StringSplitOptions.None);
                     return splitArray[0];
                 }
             }
-            return s;
+            return inString;
         }
+
+        #endregion Methods
     }
 
+    /// <summary>
+    /// Converts a DataRow, DataRow[], DataView or DataTable to a list of code/description pairs or vice versa.
+    /// </summary>
     class CodeDescriptionMultiConverter : IMultiValueConverter
     {
         internal static readonly string[] _separator = [" : "];
 
         #region IMultiValueConverter Members
 
+        /// <summary>
+        /// Converts a DataRow, DataRow[], DataView or DataTable to a list of code/description pairs.
+        /// </summary>
+        /// <param name="values"></param>
+        /// <param name="targetType"></param>
+        /// <param name="parameter"></param>
+        /// <param name="culture"></param>
+        /// <returns></returns>
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
             if ((values != null) && (values.Length == 2))
@@ -218,6 +284,14 @@ namespace HLU.Converters
                 return values;
         }
 
+        /// <summary>
+        /// Converts a code/description pair to a string.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="targetTypes"></param>
+        /// <param name="parameter"></param>
+        /// <param name="culture"></param>
+        /// <returns></returns>
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
         {
             if (value != null)
@@ -231,6 +305,6 @@ namespace HLU.Converters
             }
         }
 
-        #endregion
+        #endregion IMultiValueConverter Members
     }
 }

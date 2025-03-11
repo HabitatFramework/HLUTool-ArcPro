@@ -37,6 +37,7 @@ using HLU.Properties;
 using HLU.UI.View;
 using HLU.Date;
 using System.Threading.Tasks;
+using ArcGIS.Desktop.Editing;
 
 namespace HLU.UI.ViewModel
 {
@@ -1587,19 +1588,29 @@ namespace HLU.UI.ViewModel
                     incidSelection.AsEnumerable().Select(r => r.Field<string>(incidOrdinal)));
 
                 // Execute the UPDATE statement for each incid in the DB shadow copy of GIS layer
-                foreach (List<SqlFilterCondition> w in incidWhereClause)
+                foreach (List<SqlFilterCondition> whereClause in incidWhereClause)
                 {
                     if (_viewModelMain.DataBase.ExecuteNonQuery(String.Format(incidMMPolygonsUpdateCmdTemplate,
-                        _viewModelMain.DataBase.WhereClause(false, true, true, w)),
+                        _viewModelMain.DataBase.WhereClause(false, true, true, whereClause)),
                         _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text) == -1)
                         throw new Exception("Failed to update GIS layer shadow copy");
 
+                    // Start a GIS edit operation
+                    EditOperation editOperation = new()
+                    {
+                        Name = "Update GIS Features"
+                    };
+
+                    // Get the current values from the GIS layer
+                    DataTable historyTmp = await _viewModelMain.GISApplication.GetHistoryAsync(
+                         _viewModelMain.HistoryColumns, whereClause);
+
                     // Update GIS layer row by row; no need for a joined scratch table
-                    DataTable historyTmp = await _viewModelMain.GISApplication.UpdateFeaturesAsync(updateColumns,
-                        updateGISValues, _viewModelMain.HistoryColumns, w);
+                    await _viewModelMain.GISApplication.UpdateFeaturesAsync(updateColumns,
+                        updateGISValues, _viewModelMain.HistoryColumns, whereClause, editOperation);
 
                     if (historyTmp == null)
-                        throw new Exception(String.Format("Failed to update GIS layer for incid '{0}'", w[0].Value));
+                        throw new Exception(String.Format("Failed to update GIS layer for incid '{0}'", whereClause[0].Value));
 
                     // Append history rows to the history table
                     if (createHistory)

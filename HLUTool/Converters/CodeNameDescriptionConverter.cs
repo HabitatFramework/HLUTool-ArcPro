@@ -25,18 +25,25 @@ using HLU.Properties;
 
 namespace HLU.Converters
 {
-    //---------------------------------------------------------------------
-    // CHANGED: CR8 (Habitat types)
-    // A new converter class that generates the display value for
-    // habitat type fields by combining the code, name and
-    // description fields depending on their values.
-    //
+    /// <summary>
+    /// A converter class that generates the display value for
+    /// habitat type fields by combining the code, name and
+    /// description fields depending on their values.
+    /// </summary>
     class CodeNameDescriptionConverter : IValueConverter
     {
         string _codeDeleteRow = Settings.Default.CodeDeleteRow;
 
         #region IValueConverter Members
 
+        /// <summary>
+        /// Converts the value of a habitat type field to a display value
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="targetType"></param>
+        /// <param name="parameter"></param>
+        /// <param name="culture"></param>
+        /// <returns></returns>
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             int codeColumnOrdinal = -1;
@@ -85,6 +92,14 @@ namespace HLU.Converters
             return value;
         }
 
+        /// <summary>
+        /// Converts the display value of a habitat type field back to the
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="targetType"></param>
+        /// <param name="parameter"></param>
+        /// <param name="culture"></param>
+        /// <returns></returns>
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value is string s)
@@ -93,8 +108,19 @@ namespace HLU.Converters
                 return value;
         }
 
-        #endregion
+        #endregion IValueConverter Members
 
+        #region Methods
+
+        /// <summary>
+        /// Extracts the column ordinals from the parameter string.
+        /// </summary>
+        /// <param name="t"></param>
+        /// <param name="parameter"></param>
+        /// <param name="codeColumnOrdinal"></param>
+        /// <param name="nameColumnOrdinal"></param>
+        /// <param name="descriptionColumnOrdinal"></param>
+        /// <param name="sortColumnOrdinal"></param>
         private void GetOrdinals(DataTable t, string parameter, out int codeColumnOrdinal,
             out int nameColumnOrdinal, out int descriptionColumnOrdinal, out int sortColumnOrdinal)
         {
@@ -144,6 +170,15 @@ namespace HLU.Converters
             }
         }
 
+        /// <summary>
+        /// Formats a list of habitat type rows to return a combined name and description,
+        /// </summary>
+        /// <param name="rows"></param>
+        /// <param name="codeColumnOrdinal"></param>
+        /// <param name="nameColumnOrdinal"></param>
+        /// <param name="descriptionColumnOrdinal"></param>
+        /// <param name="sortColumnOrdinal"></param>
+        /// <returns></returns>
         private object FormatList(DataRow[] rows, int codeColumnOrdinal,
             int nameColumnOrdinal, int descriptionColumnOrdinal, int sortColumnOrdinal)
         {
@@ -218,6 +253,15 @@ namespace HLU.Converters
                        };
         }
 
+        /// <summary>
+        /// Formats a habitat type row to return a combined name and description,
+        /// if they are different, or just the name or description if they are the same.
+        /// </summary>
+        /// <param name="r"></param>
+        /// <param name="codeColumnOrdinal"></param>
+        /// <param name="nameColumnOrdinal"></param>
+        /// <param name="descriptionColumnOrdinal"></param>
+        /// <returns></returns>
         private string FormatDescription(DataRow r, int codeColumnOrdinal, int nameColumnOrdinal, int descriptionColumnOrdinal)
         {
             string code = r.Field<string>(codeColumnOrdinal);
@@ -247,6 +291,15 @@ namespace HLU.Converters
             }
         }
 
+        /// <summary>
+        /// Extracts the first component of a string, unless it matches a special case.
+        /// </summary>
+        /// <param name="inString">The input string to process.</param>
+        /// <returns>
+        /// - If the input string is null or empty, it returns the original string.
+        /// - If the input string matches the special `_codeDeleteRow`, it is returned as is.
+        /// - Otherwise, the string is split using `_separator`, and the first part is returned.
+        /// </returns>
         private string UnformatString(string s)
         {
             if (!String.IsNullOrEmpty(s))
@@ -263,12 +316,28 @@ namespace HLU.Converters
             }
             return s;
         }
+
+        #endregion Methods
     }
 
+    /// <summary>
+    /// A converter class that generates the display value for
+    /// habitat type fields by combining the code, name and
+    /// description fields depending on their values.
+    /// </summary>
     class CodeNameDescriptionMultiConverter : IMultiValueConverter
     {
         #region IMultiValueConverter Members
 
+        /// <summary>
+        /// Converts the value of a habitat type field to a display value
+        /// by combining the code, name and description fields.
+        /// </summary>
+        /// <param name="values"></param>
+        /// <param name="targetType"></param>
+        /// <param name="parameter"></param>
+        /// <param name="culture"></param>
+        /// <returns></returns>
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
             System.Diagnostics.Debugger.Break();
@@ -283,6 +352,15 @@ namespace HLU.Converters
                 return values;
         }
 
+        /// <summary>
+        /// Converts the display value of a habitat type field back to the
+        /// code value.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="targetTypes"></param>
+        /// <param name="parameter"></param>
+        /// <param name="culture"></param>
+        /// <returns></returns>
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
         {
             System.Diagnostics.Debugger.Break();
@@ -304,5 +382,4 @@ namespace HLU.Converters
 
         #endregion
     }
-    //---------------------------------------------------------------------
 }

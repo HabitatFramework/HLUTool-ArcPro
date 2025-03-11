@@ -74,8 +74,13 @@ using ArcGIS.Desktop.Internal.GeoProcessing.ModelBuilder;
 
 namespace HLU.GISApplication
 {
+    /// <summary>
+    /// Provides ArcGIS Pro application-specific functionality.
+    /// </summary>
     internal partial class ArcProApp : SqlBuilder
     {
+        #region Enums
+
         public enum DistanceUnits
         {
             Chains, Centimeters, Feet, Inches, Kilometers, Links, Meters,
@@ -89,37 +94,9 @@ namespace HLU.GISApplication
             SquareMiles, SquareMillimeters, SquareRods, SquareSurveyFeet, SquareYards
         }
 
-        #region Private Fields
+        #endregion Enums
 
-        //TODO: ArcGIS
-        ///// <summary>
-        ///// Full path to the HLU map document.
-        ///// </summary>
-        //private string _mapPath;
-
-        //TODO: ArcGIS
-        ///// <summary>
-        ///// Reference to the running ArcMap application object.
-        ///// </summary>
-        //private IApplication _arcMap;
-
-        //TODO: ArcGIS
-        ///// <summary>
-        ///// Object factory for creating Arc objects in ArcGIS's own memory space
-        ///// </summary>
-        //private IObjectFactory _objectFactory;
-
-        //TODO: ArcGIS
-        ///// <summary>
-        ///// Window handle of the running ArcMap application object.
-        ///// </summary>
-        //private IntPtr _arcMapWindow;
-
-        //TODO: ArcGIS
-        ///// <summary>
-        ///// Handles closing and adding events of ArcMap application objects.
-        ///// </summary>
-        //private AppROTClass _rot;
+        #region Fields
 
         /// <summary>
         /// Workspace-dependent prefix added to date values in SQL queries.
@@ -234,10 +211,13 @@ namespace HLU.GISApplication
         /// </summary>
         private int _maxSqlLength = Settings.Default.MaxSqlLengthArcGIS;
 
-        #endregion
+        #endregion Fields
 
         #region Implementation of SqlBuilder
 
+        /// <summary>
+        /// Get the quote prefix for ArcGIS Pro.
+        /// </summary>
         public override string QuotePrefix
         {
             get
@@ -248,6 +228,9 @@ namespace HLU.GISApplication
             }
         }
 
+        /// <summary>
+        /// Get the quote suffix for ArcGIS Pro.
+        /// </summary>
         public override string QuoteSuffix
         {
             get
@@ -258,12 +241,24 @@ namespace HLU.GISApplication
             }
         }
 
+        /// <summary>
+        /// Get the string literal delimiter for ArcGIS Pro.
+        /// </summary>
         public override string StringLiteralDelimiter { get { return "'"; } }
 
+        /// <summary>
+        /// Get the date literal prefix for ArcGIS Pro.
+        /// </summary>
         public override string DateLiteralPrefix { get { return _dateLiteralPrefix; ; } }
 
+        /// <summary>
+        /// Get the date literal suffix for ArcGIS Pro.
+        /// </summary>
         public override string DateLiteralSuffix { get { return _dateLiteralSuffix; } }
 
+        /// <summary>
+        ///  Get the wildcard single match character for ArcGIS Pro.
+        /// </summary>
         public override string WildcardSingleMatch
         {
             get
@@ -274,6 +269,9 @@ namespace HLU.GISApplication
             }
         }
 
+        /// <summary>
+        /// Get the wildcard many match character for ArcGIS Pro.
+        /// </summary>
         public override string WildcardManyMatch
         {
             get
@@ -284,8 +282,16 @@ namespace HLU.GISApplication
             }
         }
 
+        /// <summary>
+        /// Get the concatenate operator for ArcGIS Pro.
+        /// </summary>
         public override string ConcatenateOperator { get { return "&"; } }
 
+        /// <summary>
+        /// The the quote character for ArcGIS Pro.
+        /// </summary>
+        /// <param name="identifier"></param>
+        /// <returns></returns>
         public override string QuoteIdentifier(string identifier)
         {
             if (!String.IsNullOrEmpty(identifier))
@@ -337,6 +343,11 @@ namespace HLU.GISApplication
             }
         }
 
+        /// <summary>
+        /// Get the field name alis of a supplied data column.
+        /// </summary>
+        /// <param name="c"></param>
+        /// <returns></returns>
         public override string ColumnAlias(DataColumn c)
         {
             if (c == null)
@@ -345,6 +356,12 @@ namespace HLU.GISApplication
                 return ColumnAlias(c.Table.TableName, c.ColumnName);
         }
 
+        /// <summary>
+        /// Get the field name alias of a supplied table name and column name.
+        /// </summary>
+        /// <param name="tableName"></param>
+        /// <param name="columnName"></param>
+        /// <returns></returns>
         public override string ColumnAlias(string tableName, string columnName)
         {
             if (String.IsNullOrEmpty(columnName))
@@ -355,12 +372,26 @@ namespace HLU.GISApplication
                 return tableName + "." + columnName;
         }
 
+        /// <summary>
+        /// Qualify the column names of the supplied data columns.
+        /// </summary>
+        /// <param name="targetColumns"></param>
+        /// <returns></returns>
         public override bool QualifyColumnNames(DataColumn[] targetColumns)
         {
             if ((targetColumns == null) || (targetColumns.Length == 0)) return false;
             return targetColumns.Any(c => GetFieldName(_hluLayerStructure.Columns[c.ColumnName].Ordinal) == null);
         }
 
+        /// <summary>
+        /// Get the target list of data columns as a comma-seperated string.
+        /// </summary>
+        /// <param name="targetColumns"></param>
+        /// <param name="quoteIdentifiers"></param>
+        /// <param name="checkQualify"></param>
+        /// <param name="qualifyColumns"></param>
+        /// <param name="resultTable"></param>
+        /// <returns></returns>
         public override string TargetList(DataColumn[] targetColumns, bool quoteIdentifiers,
             bool checkQualify, ref bool qualifyColumns, out DataTable resultTable)
         {
@@ -476,6 +507,13 @@ namespace HLU.GISApplication
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="selectDistinct"></param>
+        /// <param name="targetTables"></param>
+        /// <param name="whereConds"></param>
+        /// <returns></returns>
         public override DataTable SqlSelect(bool selectDistinct,
             DataTable[] targetTables, List<SqlFilterCondition> whereConds)
         {
@@ -881,8 +919,7 @@ namespace HLU.GISApplication
         //    return null;
         //}
 
-        public async Task<DataTable> UpdateFeaturesAsync(DataColumn[] updateColumns, object[] updateValues,
-            DataColumn[] historyColumns, List<SqlFilterCondition> selectionWhereClause)
+        public async Task<DataTable> GetHistoryAsync(DataColumn[] historyColumns, List<SqlFilterCondition> selectionWhereClause)
         {
             //TODO: Needed?
             // Ensure selection event handlers do not interfere
@@ -907,22 +944,66 @@ namespace HLU.GISApplication
             // Get the history field indexes
             int[] historyFieldIndexes = HistorySchema(historyColumnNames);
 
+            // Build the history data to return
+            await QueuedTask.Run(() =>
+            {
+                try
+                {
+                    // Use a RowCursor to iterate through the selected features
+                    using RowCursor rowCursor = _hluFeatureClass.Search(queryFilter, false);
+
+                    // Loop through the selected features, until there are no more,
+                    // to capture the history.
+                    while (rowCursor.MoveNext())
+                    {
+                        // Get the current feature
+                        using Row row = rowCursor.Current;
+
+                        // Capture the history before modification
+                        DataRow historyRow = historyTable.NewRow();
+                        for (int i = 0; i < historyFieldIndexes.Length; i++)
+                        {
+                            historyRow[i] = row[historyFieldIndexes[i]] ?? DBNull.Value;
+                        }
+                        historyTable.Rows.Add(historyRow);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Error reading GIS features: " + ex.Message, ex);
+                }
+            });
+
+            // Return the history table
+            return historyTable;
+        }
+
+        public async Task UpdateFeaturesAsync(DataColumn[] updateColumns, object[] updateValues,
+            DataColumn[] historyColumns, List<SqlFilterCondition> selectionWhereClause, EditOperation editOperation)
+        {
+            //TODO: Needed?
+            // Ensure selection event handlers do not interfere
+            //_selectFieldOrdinals = null;
+
+            // Create a query filter for selecting features
+            QueryFilter queryFilter = new()
+            {
+                WhereClause = WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, selectionWhereClause))
+            };
+
+            // Extract history column names
+            string[] historyColumnNames = historyColumns.Select(c => c.ColumnName).ToArray();
+
             // Cast the feature class as a Table
             Table hluTable = _hluFeatureClass as Table;
 
             // Perform updates and return history data
-            return await QueuedTask.Run(async () =>
+            await QueuedTask.Run(() =>
             {
                 try
                 {
                     // Get update field indexes
                     List<int> updateFieldIndexes = updateColumns.Select(c => _hluFeatureClass.GetDefinition().FindField(c.ColumnName)).ToList();
-
-                    // Create an EditOperation to perform the updates
-                    EditOperation editOperation = new()
-                    {
-                        Name = "UpdateAsync Feature Attributes"
-                    };
 
                     // Execute within an EditOperation to support different data sources
                     editOperation.Callback(context =>
@@ -936,14 +1017,6 @@ namespace HLU.GISApplication
                             // Get the current feature
                             using Row row = rowCursor.Current;
 
-                            // Capture the history before modification
-                            DataRow historyRow = historyTable.NewRow();
-                            for (int i = 0; i < historyFieldIndexes.Length; i++)
-                            {
-                                historyRow[i] = row[historyFieldIndexes[i]] ?? DBNull.Value;
-                            }
-                            historyTable.Rows.Add(historyRow);
-
                             // Apply updates
                             for (int i = 0; i < updateFieldIndexes.Count; i++)
                             {
@@ -954,59 +1027,12 @@ namespace HLU.GISApplication
                             row.Store();
                         }
                     }, hluTable);
-
-                    // Execute the EditOperation
-                    if (await editOperation.ExecuteAsync())
-                    {
-                        // Return the history table
-                        return historyTable;
-                    }
-                    else
-                    {
-                        throw new Exception("Edit operation failed.");
-                    }
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception("Error updating features: " + ex.Message, ex);
+                    throw new Exception("Error updating GIS features: " + ex.Message, ex);
                 }
             });
-
-            //        // Convert update column names and history column names into lists
-            //        List<string> updateFieldNames = updateColumns.Select(c => c.ColumnName).ToList();
-            //List<string> historyColumnNames = historyColumns.Select(c => c.ColumnName).ToList();
-
-            //// Execute the update operation within an ArcGIS Pro Task
-            //await QueuedTask.Run(() =>
-            //{
-            //    using (RowCursor rowCursor = _hluFeatureClass.Search(queryFilter, false))
-            //    {
-            //        using (FeatureClassDefinition featureDef = _hluFeatureClass.GetDefinition())
-            //        {
-            //            while (rowCursor.MoveNext())
-            //            {
-            //                using (Row row = rowCursor.Current)
-            //                {
-            //                    // Update each field
-            //                    for (int i = 0; i < updateFieldNames.Count; i++)
-            //                    {
-            //                        int fieldIndex = featureDef.FindField(updateFieldNames[i]);
-            //                        if (fieldIndex >= 0)
-            //                            row[fieldIndex] = updateValues[i];
-            //                    }
-
-            //                    // Save changes.
-            //                    row.Store();
-
-            //                    // Add history columns.
-            //                    History(_hluFeatureClass, historyFieldOrdinals, null);
-            //                }
-            //            }
-            //        }
-            //    }
-            //});
-
-            // Return results table.
         }
 
         public DataTable UpdateFeatures(DataColumn[] updateColumns, object[] updateValues,
@@ -1584,26 +1610,6 @@ namespace HLU.GISApplication
             get { return _hluCurrentLayer; }
         }
 
-        /// <summary>
-        /// True if HLU layer is editable.
-        /// </summary>
-        public bool IsEditable
-        {
-            get
-            {
-                //try
-                //{
-                //    List<string> retList = IpcArcMap(["ie"]);
-                //    if (retList.Count > 0)
-                //        return Convert.ToBoolean(retList[0]);
-                //    else
-                //        return false;
-                //}
-                //catch { return false; }
-                return false;
-            }
-        }
-
         //TODO: Is _hluFeatureClass Needed?
         /// <summary>
         /// Checks whether the current document contains an HLU layer. Also initializes the fields
@@ -1779,8 +1785,10 @@ namespace HLU.GISApplication
         {
             _hluFieldMap = null;
             _hluFieldNames = null;
+
             //TODO: Needed?
             //_hluFeatureClass = null;
+
             _hluLayer = null;
             _hluView = null;
         }

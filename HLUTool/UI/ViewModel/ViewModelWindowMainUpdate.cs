@@ -30,12 +30,23 @@ using System.Windows.Input;
 using HLU.Data;
 using HLU.Data.Model;
 using System.Threading.Tasks;
+using ArcGIS.Desktop.Editing;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 
 namespace HLU.UI.ViewModel
 {
+    /// <summary>
+    /// View model for the main window updates handling.
+    /// </summary>
     class ViewModelWindowMainUpdate
     {
+        #region Fields
+
         ViewModelWindowMain _viewModelMain;
+
+        #endregion Fields
+
+        #region Constructors
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ViewModelWindowMainUpdate"/> class.
@@ -46,13 +57,24 @@ namespace HLU.UI.ViewModel
             _viewModelMain = viewModelMain;
         }
 
+        #endregion Constructors
+
+        #region Methods
+
         /// <summary>
         /// Writes changes made to current incid back to database and GIS layer.
         /// Also synchronizes shadow copy of GIS layer in DB and writes history.
         /// </summary>
         internal async Task<bool> UpdateAsync()
         {
+            // Start database transaction
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
+
+            // Start a GIS edit operation
+            EditOperation editOperation = new()
+            {
+                Name = "Update GIS Features"
+            };
 
             try
             {
@@ -80,37 +102,8 @@ namespace HLU.UI.ViewModel
                     throw new Exception(String.Format("Failed to update '{0}' table.",
                         _viewModelMain.HluDataset.incid.TableName));
 
-                if ((_viewModelMain.IncidIhsMatrixRows != null) && _viewModelMain.IsDirtyIncidIhsMatrix())
-                {
-                    if (_viewModelMain.HluTableAdapterManager.incid_ihs_matrixTableAdapter.Update(
-                        (HluDataSet.incid_ihs_matrixDataTable)_viewModelMain.HluDataset.incid_ihs_matrix.GetChanges()) == -1)
-                        throw new Exception(String.Format("Failed to update '{0}' table.",
-                            _viewModelMain.HluDataset.incid_ihs_matrix.TableName));
-                }
-
-                if ((_viewModelMain.IncidIhsFormationRows != null) && _viewModelMain.IsDirtyIncidIhsFormation())
-                {
-                    if (_viewModelMain.HluTableAdapterManager.incid_ihs_formationTableAdapter.Update(
-                        (HluDataSet.incid_ihs_formationDataTable)_viewModelMain.HluDataset.incid_ihs_formation.GetChanges()) == -1)
-                        throw new Exception(String.Format("Failed to update '{0}' table.",
-                            _viewModelMain.HluDataset.incid_ihs_formation.TableName));
-                }
-
-                if ((_viewModelMain.IncidIhsManagementRows != null) && _viewModelMain.IsDirtyIncidIhsManagement())
-                {
-                    if (_viewModelMain.HluTableAdapterManager.incid_ihs_managementTableAdapter.Update(
-                        (HluDataSet.incid_ihs_managementDataTable)_viewModelMain.HluDataset.incid_ihs_management.GetChanges()) == -1)
-                        throw new Exception(String.Format("Failed to update '{0}' table.",
-                            _viewModelMain.HluDataset.incid_ihs_management.TableName));
-                }
-
-                if ((_viewModelMain.IncidIhsComplexRows != null) && _viewModelMain.IsDirtyIncidIhsComplex())
-                {
-                    if (_viewModelMain.HluTableAdapterManager.incid_ihs_complexTableAdapter.Update(
-                        (HluDataSet.incid_ihs_complexDataTable)_viewModelMain.HluDataset.incid_ihs_complex.GetChanges()) == -1)
-                        throw new Exception(String.Format("Failed to update '{0}' table.",
-                            _viewModelMain.HluDataset.incid_ihs_complex.TableName));
-                }
+                // Update IHS tables
+                UpdateIHSTables();
 
                 // Update condition rows
                 if ((_viewModelMain.IncidConditionRows != null) && _viewModelMain.IsDirtyIncidCondition())
@@ -127,6 +120,7 @@ namespace HLU.UI.ViewModel
                 // Update the BAP rows
                 if (_viewModelMain.IsDirtyIncidBap()) UpdateBap();
 
+                //TODO: Check if the source rows are dirty?
                 // Update the source rows
                 if (_viewModelMain.IncidSourcesRows != null)
                 {
@@ -173,43 +167,38 @@ namespace HLU.UI.ViewModel
                     new SqlFilterCondition(_viewModelMain.HluDataset.incid_mm_polygons,
                         _viewModelMain.HluDataset.incid_mm_polygons.incidColumn, _viewModelMain.Incid) ]);
 
-                // Update the GIS layer
-                DataTable historyTable = await _viewModelMain.GISApplication.UpdateFeaturesAsync([
-                    _viewModelMain.HluDataset.incid_mm_polygons.habprimaryColumn,
-                    _viewModelMain.HluDataset.incid_mm_polygons.habsecondColumn,
-                    _viewModelMain.HluDataset.incid_mm_polygons.determqtyColumn,
-                    _viewModelMain.HluDataset.incid_mm_polygons.interpqtyColumn ],
-                    [ _viewModelMain.IncidPrimary ?? "",
-                        _viewModelMain.IncidSecondarySummary ?? "",
-                        _viewModelMain.IncidQualityDetermination ?? "",
-                        _viewModelMain.IncidQualityInterpretation ?? ""],
-                    _viewModelMain.HistoryColumns, incidCond);
+                // Get the current values from the GIS layer
+                DataTable historyTable = await _viewModelMain.GISApplication.GetHistoryAsync(
+                     _viewModelMain.HistoryColumns, incidCond);
 
-                // Check if a history table was returned from updating
-                // the GIS rows
+                // Check if a history table was returned
                 if (historyTable == null)
                     throw new Exception("Error updating GIS layer.");
                 else if (historyTable.Rows.Count == 0)
                     throw new Exception("No GIS features were updated.");
 
-                // TODO: GIS layer shadow copy update - Set length and area for each polygon (if possible)?
-                // Likewise update the DB shadow copy of the GIS layer
-                //TODO: Takes quite long to execute. Why?
-                String updateStatement = String.Format("UPDATE {0} SET {1}={2}, {3}={4}, {5}={6}, {7}={8} WHERE {9}",
-                    _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
-                    _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.habprimaryColumn.ColumnName),
-                    _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidPrimary),
-                    _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.habsecondColumn.ColumnName),
-                    _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidSecondarySummary),
-                    _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.determqtyColumn.ColumnName),
-                    _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidQualityDetermination),
-                    _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.interpqtyColumn.ColumnName),
-                    _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidQualityInterpretation),
-                    _viewModelMain.DataBase.WhereClause(false, true, true, incidCond));
-
-                if (_viewModelMain.DataBase.ExecuteNonQuery(updateStatement,
-                    _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text) == -1)
+                //TODO: GIS layer shadow copy update - Set length and area for each polygon (if possible)?
+                // Perform database shadow copy update
+                if (!UpdateGISShadowCopy(incidCond))
+                {
                     throw new Exception("Failed to update database copy of GIS layer.");
+                }
+
+                // Build a list of columns and values to update
+                DataColumn[] updateColumns = [
+                    _viewModelMain.HluDataset.incid_mm_polygons.habprimaryColumn,
+                    _viewModelMain.HluDataset.incid_mm_polygons.habsecondColumn,
+                    _viewModelMain.HluDataset.incid_mm_polygons.determqtyColumn,
+                    _viewModelMain.HluDataset.incid_mm_polygons.interpqtyColumn ];
+
+                object[] updateValues = [ _viewModelMain.IncidPrimary ?? "",
+                        _viewModelMain.IncidSecondarySummary ?? "",
+                        _viewModelMain.IncidQualityDetermination ?? "",
+                        _viewModelMain.IncidQualityInterpretation ?? ""];
+
+                // Queue updates to the GIS layer
+                await _viewModelMain.GISApplication.UpdateFeaturesAsync(updateColumns, updateValues,
+                     _viewModelMain.HistoryColumns, incidCond, editOperation);
 
                 // Save the history returned from GIS
                 Dictionary<int, string> fixedValues = new()
@@ -218,6 +207,23 @@ namespace HLU.UI.ViewModel
                 };
                 ViewModelWindowMainHistory vmHist = new(_viewModelMain);
                 vmHist.HistoryWrite(fixedValues, historyTable, Operations.AttributeUpdate, nowDtTm);
+
+                // Commit updates to the GIS layer
+                await QueuedTask.Run(async () =>
+                {
+                    try
+                    {
+                        // Commit GIS EditOperation
+                        if (!await editOperation.ExecuteAsync())
+                        {
+                            throw new Exception("Failed to update GIS layer.");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception("Error updating GIS features: " + ex.Message, ex);
+                    }
+                });
 
                 // Commit the transation and accept the changes
                 _viewModelMain.DataBase.CommitTransaction();
@@ -234,19 +240,26 @@ namespace HLU.UI.ViewModel
             }
             catch (Exception ex)
             {
+                // Rollback the database updates
                 _viewModelMain.DataBase.RollbackTransaction();
-                //TODO: ArcGIS
-                //if (_viewModelMain.HaveGisApp)
-                //{
+
+                try
+                {
+                    // Abort the GIS updates
+                    editOperation.Abort();
+                }
+                catch (Exception ex2)
+                {
+                    MessageBox.Show("Error" + ex2.Message);
+                }
+
+                // Flag the updates weren't saved
                 _viewModelMain.Saved = false;
-                MessageBox.Show("Your changes could not be saved. The error message returned was:\n\n" +
-                    ex.Message, "HLU: Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                MessageBox.Show(string.Format("Your changes could not be saved. The error message returned was:\n\n{0}",
+                    ex.Message), "HLU: Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
                 return false;
-                //}
-                //else
-                //{
-                //    return true;
-                //}
             }
             finally
             {
@@ -254,6 +267,60 @@ namespace HLU.UI.ViewModel
                 _viewModelMain.Saving = false;
                 _viewModelMain.ChangeCursor(Cursors.Arrow, null);
             }
+        }
+
+        //TODO: Needed?
+        /// <summary>
+        /// Update the related IHS tables.
+        /// </summary>
+        private void UpdateIHSTables()
+        {
+            UpdateTableIfDirty(_viewModelMain.IncidIhsMatrixRows, _viewModelMain.IsDirtyIncidIhsMatrix,
+                _viewModelMain.HluTableAdapterManager.incid_ihs_matrixTableAdapter, _viewModelMain.HluDataset.incid_ihs_matrix);
+
+            UpdateTableIfDirty(_viewModelMain.IncidIhsFormationRows, _viewModelMain.IsDirtyIncidIhsFormation,
+                _viewModelMain.HluTableAdapterManager.incid_ihs_formationTableAdapter, _viewModelMain.HluDataset.incid_ihs_formation);
+
+            UpdateTableIfDirty(_viewModelMain.IncidIhsManagementRows, _viewModelMain.IsDirtyIncidIhsManagement,
+                _viewModelMain.HluTableAdapterManager.incid_ihs_managementTableAdapter, _viewModelMain.HluDataset.incid_ihs_management);
+
+            UpdateTableIfDirty(_viewModelMain.IncidIhsComplexRows, _viewModelMain.IsDirtyIncidIhsComplex,
+                _viewModelMain.HluTableAdapterManager.incid_ihs_complexTableAdapter, _viewModelMain.HluDataset.incid_ihs_complex);
+        }
+
+        private void UpdateTableIfDirty(object dataRows, Func<bool> isDirty, dynamic tableAdapter, dynamic datasetTable)
+        {
+            if (dataRows != null && isDirty())
+            {
+                if (tableAdapter.Update((DataTable)datasetTable.GetChanges()) == -1)
+                {
+                    throw new Exception(string.Format("Failed to update '{0}' table.", datasetTable.TableName));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Updates the GIS shadow copy (of the incid_mm_polygons table).
+        /// </summary>
+        /// <param name="incidCond"></param>
+        /// <returns></returns>
+        private bool UpdateGISShadowCopy(List<SqlFilterCondition> incidCond)
+        {
+            string updateStatement = string.Format(
+                "UPDATE {0} SET {1}={2}, {3}={4}, {5}={6}, {7}={8} WHERE {9}",
+                _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
+                _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.habprimaryColumn.ColumnName),
+                _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidPrimary),
+                _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.habsecondColumn.ColumnName),
+                _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidSecondarySummary),
+                _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.determqtyColumn.ColumnName),
+                _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidQualityDetermination),
+                _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.interpqtyColumn.ColumnName),
+                _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidQualityInterpretation),
+                _viewModelMain.DataBase.WhereClause(false, true, true, incidCond));
+
+            return _viewModelMain.DataBase.ExecuteNonQuery(updateStatement,
+                _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text) != -1;
         }
 
         /// <summary>
@@ -529,4 +596,6 @@ namespace HLU.UI.ViewModel
                 throw new Exception("Failed to update incid table modified details.");
         }
     }
+
+    #endregion Methods
 }

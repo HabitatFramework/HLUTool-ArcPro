@@ -577,7 +577,7 @@ namespace HLU.Data.Connection
             try
             {
                 _errorMessage = String.Empty;
-                if (_transaction != null)
+                if (_transaction != null && _transaction.Connection != null)
                 {
                     if (commitPrevious)
                         _transaction.Commit();
@@ -606,6 +606,7 @@ namespace HLU.Data.Connection
                 if (_transaction != null)
                 {
                     _transaction.Commit();
+                    _transaction = null;
                     _commandBuilder.RefreshSchema();
                 }
                 return false;
@@ -625,6 +626,7 @@ namespace HLU.Data.Connection
                 if (_transaction != null)
                 {
                     _transaction.Rollback();
+                    _transaction = null;
                     _commandBuilder.RefreshSchema();
                 }
                 return true;

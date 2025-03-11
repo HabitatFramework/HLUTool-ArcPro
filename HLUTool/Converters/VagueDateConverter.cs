@@ -23,6 +23,9 @@ using HLU.Date;
 
 namespace HLU.Converters
 {
+    /// <summary>
+    /// Converts a VagueDateInstance to a string and vice versa.
+    /// </summary>
     class VagueDateConverter : IValueConverter
     {
         #region IValueConverter Members
@@ -41,7 +44,8 @@ namespace HLU.Converters
             {
                 if (value is not Date.VagueDateInstance vd)
                     return null;
-                else if (vd.IsBad)
+
+                if (vd.IsBad)
                     return vd.UserEntry;
                 else if (vd.IsUnknown)
                     return VagueDate.VagueDateTypes.Unknown.ToString();
@@ -67,21 +71,21 @@ namespace HLU.Converters
             {
                 if (value is not string vagueDateString) return value;
 
+                // Get the type of date string.
                 string formattedDateString;
                 string dateType = VagueDate.GetType(vagueDateString, out formattedDateString);
+
+                // Set the start and end dates.
                 int startDate = Date.VagueDate.ToTimeSpanDays(formattedDateString, dateType, VagueDate.DateType.Start);
                 int endDate = Date.VagueDate.ToTimeSpanDays(formattedDateString, dateType, VagueDate.DateType.End);
 
-                if ((startDate < endDate) || (endDate == VagueDate.DateUnknown))
-                    return new Date.VagueDateInstance(startDate, endDate, dateType, vagueDateString);
-                else
-                    return new Date.VagueDateInstance(startDate, endDate, dateType, vagueDateString);
+                return new Date.VagueDateInstance(startDate, endDate, dateType, vagueDateString);
             }
             catch { }
 
             return value;
         }
 
-        #endregion
+        #endregion IValueConverter Members
     }
 }
