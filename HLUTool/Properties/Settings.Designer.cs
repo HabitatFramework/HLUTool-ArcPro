@@ -709,8 +709,8 @@ namespace HLU.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=ZIPY\\SQLEXPRESS2017;Initial Catalog=HLUData_v401;Integrated Security=" +
-            "True")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=LAPTOP-8C1RJG21\\SQLSERVER2017;Initial Catalog=HLUData;Integrated Secu" +
+            "rity=True")]
         public string HLUData_v401ConnectionString_2017 {
             get {
                 return ((string)(this["HLUData_v401ConnectionString_2017"]));

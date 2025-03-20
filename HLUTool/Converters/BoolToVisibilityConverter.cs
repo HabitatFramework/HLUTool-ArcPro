@@ -25,7 +25,7 @@ namespace HLU.Converters
     /// <summary>
     /// Converts a boolean value to a Visibility value.
     /// </summary>
-    public class Bool2VisibilityConverter : IValueConverter
+    public class BoolToVisibilityConverter : IValueConverter
     {
         #region IValueConverter Members
 

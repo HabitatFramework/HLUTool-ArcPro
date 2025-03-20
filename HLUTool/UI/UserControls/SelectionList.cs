@@ -23,7 +23,7 @@ using System.Linq;
 
 namespace HLU.UI.UserControls
 {
-    public class SelectionList<T> : ObservableCollection<SelectionItem<T>> 
+    public class SelectionList<T> : ObservableCollection<SelectionItem<T>>
         where T : IComparable<T>
     {
         #region Properties

@@ -17013,6 +17013,8 @@ namespace HLU.Data.Model {
             
             private global::System.Data.DataColumn columnis_local;
             
+            private global::System.Data.DataColumn columnpreferred;
+            
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             public lut_habitat_type_primaryDataTable() {
@@ -17090,6 +17092,14 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public global::System.Data.DataColumn preferredColumn {
+                get {
+                    return this.columnpreferred;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             [global::System.ComponentModel.Browsable(false)]
             public int Count {
                 get {
@@ -17125,14 +17135,15 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public lut_habitat_type_primaryRow Addlut_habitat_type_primaryRow(lut_habitat_typeRow parentlut_habitat_typeRowByfk_lut_habitat_type_primary_lut_habitat_type, lut_primaryRow parentlut_primaryRowByfk_lut_habitat_type_primary_lut_primary, string habitat_secondaries, string comments, bool is_local) {
+            public lut_habitat_type_primaryRow Addlut_habitat_type_primaryRow(lut_habitat_typeRow parentlut_habitat_typeRowByfk_lut_habitat_type_primary_lut_habitat_type, lut_primaryRow parentlut_primaryRowByfk_lut_habitat_type_primary_lut_primary, string habitat_secondaries, string comments, bool is_local, bool preferred) {
                 lut_habitat_type_primaryRow rowlut_habitat_type_primaryRow = ((lut_habitat_type_primaryRow)(this.NewRow()));
                 object[] columnValuesArray = new object[] {
                         null,
                         null,
                         habitat_secondaries,
                         comments,
-                        is_local};
+                        is_local,
+                        preferred};
                 if ((parentlut_habitat_typeRowByfk_lut_habitat_type_primary_lut_habitat_type != null)) {
                     columnValuesArray[0] = parentlut_habitat_typeRowByfk_lut_habitat_type_primary_lut_habitat_type[1];
                 }
@@ -17174,6 +17185,7 @@ namespace HLU.Data.Model {
                 this.columnhabitat_secondaries = base.Columns["habitat_secondaries"];
                 this.columncomments = base.Columns["comments"];
                 this.columnis_local = base.Columns["is_local"];
+                this.columnpreferred = base.Columns["preferred"];
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -17189,6 +17201,8 @@ namespace HLU.Data.Model {
                 base.Columns.Add(this.columncomments);
                 this.columnis_local = new global::System.Data.DataColumn("is_local", typeof(bool), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnis_local);
+                this.columnpreferred = new global::System.Data.DataColumn("preferred", typeof(bool), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnpreferred);
                 this.Constraints.Add(new global::System.Data.UniqueConstraint("Constraint1", new global::System.Data.DataColumn[] {
                                 this.columncode_habitat_type,
                                 this.columncode_primary}, true));
@@ -17199,6 +17213,7 @@ namespace HLU.Data.Model {
                 this.columnhabitat_secondaries.MaxLength = 80;
                 this.columncomments.MaxLength = 254;
                 this.columnis_local.AllowDBNull = false;
+                this.columnpreferred.AllowDBNull = false;
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -19298,7 +19313,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableexports_fields.field_nameColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'field_name\' in table \'exports_fields\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'field_name\' in table \'exports_fields\' is DBNull.", e);
                     }
                 }
                 set {
@@ -19325,7 +19340,7 @@ namespace HLU.Data.Model {
                         return ((int)(this[this.tableexports_fields.fields_countColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'fields_count\' in table \'exports_fields\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'fields_count\' in table \'exports_fields\' is DBNull.", e);
                     }
                 }
                 set {
@@ -19352,7 +19367,7 @@ namespace HLU.Data.Model {
                         return ((int)(this[this.tableexports_fields.field_lengthColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'field_length\' in table \'exports_fields\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'field_length\' in table \'exports_fields\' is DBNull.", e);
                     }
                 }
                 set {
@@ -19368,7 +19383,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableexports_fields.field_formatColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'field_format\' in table \'exports_fields\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'field_format\' in table \'exports_fields\' is DBNull.", e);
                     }
                 }
                 set {
@@ -19513,7 +19528,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tablehistory.modified_user_idColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'modified_user_id\' in table \'history\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'modified_user_id\' in table \'history\' is DBNull.", e);
                     }
                 }
                 set {
@@ -19529,7 +19544,7 @@ namespace HLU.Data.Model {
                         return ((global::System.DateTime)(this[this.tablehistory.modified_dateColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'modified_date\' in table \'history\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'modified_date\' in table \'history\' is DBNull.", e);
                     }
                 }
                 set {
@@ -19545,7 +19560,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tablehistory.modified_processColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'modified_process\' in table \'history\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'modified_process\' in table \'history\' is DBNull.", e);
                     }
                 }
                 set {
@@ -19561,7 +19576,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tablehistory.modified_reasonColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'modified_reason\' in table \'history\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'modified_reason\' in table \'history\' is DBNull.", e);
                     }
                 }
                 set {
@@ -19577,7 +19592,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tablehistory.modified_operationColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'modified_operation\' in table \'history\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'modified_operation\' in table \'history\' is DBNull.", e);
                     }
                 }
                 set {
@@ -19593,7 +19608,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tablehistory.modified_incidColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'modified_incid\' in table \'history\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'modified_incid\' in table \'history\' is DBNull.", e);
                     }
                 }
                 set {
@@ -19609,7 +19624,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tablehistory.modified_toidfragidColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'modified_toidfragid\' in table \'history\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'modified_toidfragid\' in table \'history\' is DBNull.", e);
                     }
                 }
                 set {
@@ -19625,7 +19640,7 @@ namespace HLU.Data.Model {
                         return ((double)(this[this.tablehistory.modified_lengthColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'modified_length\' in table \'history\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'modified_length\' in table \'history\' is DBNull.", e);
                     }
                 }
                 set {
@@ -19641,7 +19656,7 @@ namespace HLU.Data.Model {
                         return ((double)(this[this.tablehistory.modified_areaColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'modified_area\' in table \'history\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'modified_area\' in table \'history\' is DBNull.", e);
                     }
                 }
                 set {
@@ -20023,7 +20038,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid.habitat_versionColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'habitat_version\' in table \'incid\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'habitat_version\' in table \'incid\' is DBNull.", e);
                     }
                 }
                 set {
@@ -20633,7 +20648,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_bap.interpretation_commentsColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'interpretation_comments\' in table \'incid_bap\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'interpretation_comments\' in table \'incid_bap\' is DBNull.", e);
                     }
                 }
                 set {
@@ -21097,7 +21112,7 @@ namespace HLU.Data.Model {
                         return ((double)(this[this.tableincid_mm_polygons.shape_lengthColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'shape_length\' in table \'incid_mm_polygons\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'shape_length\' in table \'incid_mm_polygons\' is DBNull.", e);
                     }
                 }
                 set {
@@ -21113,7 +21128,7 @@ namespace HLU.Data.Model {
                         return ((double)(this[this.tableincid_mm_polygons.shape_areaColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'shape_area\' in table \'incid_mm_polygons\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'shape_area\' in table \'incid_mm_polygons\' is DBNull.", e);
                     }
                 }
                 set {
@@ -21293,7 +21308,7 @@ namespace HLU.Data.Model {
                         return ((int)(this[this.tableincid_sources.source_date_startColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'source_date_start\' in table \'incid_sources\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'source_date_start\' in table \'incid_sources\' is DBNull.", e);
                     }
                 }
                 set {
@@ -21309,7 +21324,7 @@ namespace HLU.Data.Model {
                         return ((int)(this[this.tableincid_sources.source_date_endColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'source_date_end\' in table \'incid_sources\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'source_date_end\' in table \'incid_sources\' is DBNull.", e);
                     }
                 }
                 set {
@@ -21325,7 +21340,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_sources.source_date_typeColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'source_date_type\' in table \'incid_sources\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'source_date_type\' in table \'incid_sources\' is DBNull.", e);
                     }
                 }
                 set {
@@ -21341,7 +21356,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_sources.source_habitat_classColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'source_habitat_class\' in table \'incid_sources\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'source_habitat_class\' in table \'incid_sources\' is DBNull.", e);
                     }
                 }
                 set {
@@ -21357,7 +21372,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_sources.source_habitat_typeColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'source_habitat_type\' in table \'incid_sources\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'source_habitat_type\' in table \'incid_sources\' is DBNull.", e);
                     }
                 }
                 set {
@@ -21373,7 +21388,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_sources.source_boundary_importanceColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'source_boundary_importance\' in table \'incid_sources\' is DBN" +
+                        throw new global::System.Data.StrongTypingException("The value for column \'source_boundary_importance\' in table \'incid_sources\' is DBN" +
                                 "ull.", e);
                     }
                 }
@@ -21390,7 +21405,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_sources.source_habitat_importanceColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'source_habitat_importance\' in table \'incid_sources\' is DBNu" +
+                        throw new global::System.Data.StrongTypingException("The value for column \'source_habitat_importance\' in table \'incid_sources\' is DBNu" +
                                 "ll.", e);
                     }
                 }
@@ -21407,7 +21422,7 @@ namespace HLU.Data.Model {
                         return ((int)(this[this.tableincid_sources.sort_orderColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'sort_order\' in table \'incid_sources\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'sort_order\' in table \'incid_sources\' is DBNull.", e);
                     }
                 }
                 set {
@@ -21784,7 +21799,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tablelut_habitat_type.descriptionColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'description\' in table \'lut_habitat_type\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'description\' in table \'lut_habitat_type\' is DBNull.", e);
                     }
                 }
                 set {
@@ -21800,7 +21815,7 @@ namespace HLU.Data.Model {
                         return ((bool)(this[this.tablelut_habitat_type.bap_priorityColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'bap_priority\' in table \'lut_habitat_type\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'bap_priority\' in table \'lut_habitat_type\' is DBNull.", e);
                     }
                 }
                 set {
@@ -22801,7 +22816,7 @@ namespace HLU.Data.Model {
                         return ((bool)(this[this.tablelut_user.bulk_updateColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'bulk_update\' in table \'lut_user\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'bulk_update\' in table \'lut_user\' is DBNull.", e);
                     }
                 }
                 set {
@@ -23157,7 +23172,7 @@ namespace HLU.Data.Model {
                         return ((int)(this[this.tableincid_osmm_updates.osmm_xref_idColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'osmm_xref_id\' in table \'incid_osmm_updates\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'osmm_xref_id\' in table \'incid_osmm_updates\' is DBNull.", e);
                     }
                 }
                 set {
@@ -23173,7 +23188,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_osmm_updates.spatial_flagColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'spatial_flag\' in table \'incid_osmm_updates\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'spatial_flag\' in table \'incid_osmm_updates\' is DBNull.", e);
                     }
                 }
                 set {
@@ -23189,7 +23204,7 @@ namespace HLU.Data.Model {
                         return ((int)(this[this.tableincid_osmm_updates.process_flagColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'process_flag\' in table \'incid_osmm_updates\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'process_flag\' in table \'incid_osmm_updates\' is DBNull.", e);
                     }
                 }
                 set {
@@ -23205,7 +23220,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_osmm_updates.change_flagColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'change_flag\' in table \'incid_osmm_updates\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'change_flag\' in table \'incid_osmm_updates\' is DBNull.", e);
                     }
                 }
                 set {
@@ -23221,7 +23236,7 @@ namespace HLU.Data.Model {
                         return ((int)(this[this.tableincid_osmm_updates.statusColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'status\' in table \'incid_osmm_updates\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'status\' in table \'incid_osmm_updates\' is DBNull.", e);
                     }
                 }
                 set {
@@ -23444,7 +23459,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_condition.conditionColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'condition\' in table \'incid_condition\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'condition\' in table \'incid_condition\' is DBNull.", e);
                     }
                 }
                 set {
@@ -23460,7 +23475,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_condition.condition_qualifierColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'condition_qualifier\' in table \'incid_condition\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'condition_qualifier\' in table \'incid_condition\' is DBNull.", e);
                     }
                 }
                 set {
@@ -23476,7 +23491,7 @@ namespace HLU.Data.Model {
                         return ((int)(this[this.tableincid_condition.condition_date_startColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'condition_date_start\' in table \'incid_condition\' is DBNull." +
+                        throw new global::System.Data.StrongTypingException("The value for column \'condition_date_start\' in table \'incid_condition\' is DBNull." +
                                 "", e);
                     }
                 }
@@ -23493,7 +23508,7 @@ namespace HLU.Data.Model {
                         return ((int)(this[this.tableincid_condition.condition_date_endColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'condition_date_end\' in table \'incid_condition\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'condition_date_end\' in table \'incid_condition\' is DBNull.", e);
                     }
                 }
                 set {
@@ -23509,7 +23524,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_condition.condition_date_typeColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'condition_date_type\' in table \'incid_condition\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'condition_date_type\' in table \'incid_condition\' is DBNull.", e);
                     }
                 }
                 set {
@@ -23655,7 +23670,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_secondary.secondaryColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'secondary\' in table \'incid_secondary\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'secondary\' in table \'incid_secondary\' is DBNull.", e);
                     }
                 }
                 set {
@@ -23671,7 +23686,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_secondary.secondary_groupColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'secondary_group\' in table \'incid_secondary\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'secondary_group\' in table \'incid_secondary\' is DBNull.", e);
                     }
                 }
                 set {
@@ -23981,7 +23996,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tablelut_primary.commentsColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'comments\' in table \'lut_primary\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'comments\' in table \'lut_primary\' is DBNull.", e);
                     }
                 }
                 set {
@@ -24691,6 +24706,17 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public bool preferred {
+                get {
+                    return ((bool)(this[this.tablelut_habitat_type_primary.preferredColumn]));
+                }
+                set {
+                    this[this.tablelut_habitat_type_primary.preferredColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             public lut_habitat_typeRow lut_habitat_typeRow {
                 get {
                     return ((lut_habitat_typeRow)(this.GetParentRow(this.Table.ParentRelations["fk_lut_habitat_type_primary_lut_habitat_type"])));
@@ -24872,7 +24898,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tablelut_ihs_primary_secondary.habitat_secondariesColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'habitat_secondaries\' in table \'lut_ihs_primary_secondary\' i" +
+                        throw new global::System.Data.StrongTypingException("The value for column \'habitat_secondaries\' in table \'lut_ihs_primary_secondary\' i" +
                                 "s DBNull.", e);
                     }
                 }
@@ -25170,7 +25196,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tablelut_osmm_habitat_xref.habitat_primaryColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'habitat_primary\' in table \'lut_osmm_habitat_xref\' is DBNull" +
+                        throw new global::System.Data.StrongTypingException("The value for column \'habitat_primary\' in table \'lut_osmm_habitat_xref\' is DBNull" +
                                 ".", e);
                     }
                 }
@@ -25187,7 +25213,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tablelut_osmm_habitat_xref.habitat_secondariesColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'habitat_secondaries\' in table \'lut_osmm_habitat_xref\' is DB" +
+                        throw new global::System.Data.StrongTypingException("The value for column \'habitat_secondaries\' in table \'lut_osmm_habitat_xref\' is DB" +
                                 "Null.", e);
                     }
                 }
@@ -48523,10 +48549,11 @@ SELECT code, description, sort_order FROM lut_secondary_group WHERE (code = @cod
             tableMapping.ColumnMappings.Add("habitat_secondaries", "habitat_secondaries");
             tableMapping.ColumnMappings.Add("comments", "comments");
             tableMapping.ColumnMappings.Add("is_local", "is_local");
+            tableMapping.ColumnMappings.Add("preferred", "preferred");
             this._adapter.TableMappings.Add(tableMapping);
             this._adapter.DeleteCommand = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._adapter.DeleteCommand.Connection = this.Connection;
-            this._adapter.DeleteCommand.CommandText = @"DELETE FROM [lut_habitat_type_primary] WHERE (([code_habitat_type] = @Original_code_habitat_type) AND ([code_primary] = @Original_code_primary) AND ((@IsNull_habitat_secondaries = 1 AND [habitat_secondaries] IS NULL) OR ([habitat_secondaries] = @Original_habitat_secondaries)) AND ((@IsNull_comments = 1 AND [comments] IS NULL) OR ([comments] = @Original_comments)) AND ([is_local] = @Original_is_local))";
+            this._adapter.DeleteCommand.CommandText = @"DELETE FROM [lut_habitat_type_primary] WHERE (([code_habitat_type] = @Original_code_habitat_type) AND ([code_primary] = @Original_code_primary) AND ([preferred] = @Original_preferred) AND ((@IsNull_habitat_secondaries = 1 AND [habitat_secondaries] IS NULL) OR ([habitat_secondaries] = @Original_habitat_secondaries)) AND ((@IsNull_comments = 1 AND [comments] IS NULL) OR ([comments] = @Original_comments)) AND ([is_local] = @Original_is_local))";
             this._adapter.DeleteCommand.CommandType = global::System.Data.CommandType.Text;
             global::Microsoft.Data.SqlClient.SqlParameter param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@Original_code_habitat_type";
@@ -48540,6 +48567,14 @@ SELECT code, description, sort_order FROM lut_secondary_group WHERE (code = @cod
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
             param.IsNullable = true;
             param.SourceColumn = "code_primary";
+            param.SourceVersion = global::System.Data.DataRowVersion.Original;
+            this._adapter.DeleteCommand.Parameters.Add(param);
+            param = new global::Microsoft.Data.SqlClient.SqlParameter();
+            param.ParameterName = "@Original_preferred";
+            param.DbType = global::System.Data.DbType.Boolean;
+            param.SqlDbType = global::System.Data.SqlDbType.Bit;
+            param.IsNullable = true;
+            param.SourceColumn = "preferred";
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.DeleteCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
@@ -48584,8 +48619,8 @@ SELECT code, description, sort_order FROM lut_secondary_group WHERE (code = @cod
             this._adapter.DeleteCommand.Parameters.Add(param);
             this._adapter.UpdateCommand = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._adapter.UpdateCommand.Connection = this.Connection;
-            this._adapter.UpdateCommand.CommandText = @"UPDATE [lut_habitat_type_primary] SET [code_habitat_type] = @code_habitat_type, [code_primary] = @code_primary, [habitat_secondaries] = @habitat_secondaries, [comments] = @comments, [is_local] = @is_local WHERE (([code_habitat_type] = @Original_code_habitat_type) AND ([code_primary] = @Original_code_primary) AND ((@IsNull_habitat_secondaries = 1 AND [habitat_secondaries] IS NULL) OR ([habitat_secondaries] = @Original_habitat_secondaries)) AND ((@IsNull_comments = 1 AND [comments] IS NULL) OR ([comments] = @Original_comments)) AND ([is_local] = @Original_is_local));
-SELECT code_habitat_type, code_primary, habitat_secondaries, comments, is_local FROM lut_habitat_type_primary WHERE (code_habitat_type = @code_habitat_type) AND (code_primary = @code_primary)";
+            this._adapter.UpdateCommand.CommandText = @"UPDATE [lut_habitat_type_primary] SET [code_habitat_type] = @code_habitat_type, [code_primary] = @code_primary, [preferred] = @preferred, [habitat_secondaries] = @habitat_secondaries, [comments] = @comments, [is_local] = @is_local WHERE (([code_habitat_type] = @Original_code_habitat_type) AND ([code_primary] = @Original_code_primary) AND ([preferred] = @Original_preferred) AND ((@IsNull_habitat_secondaries = 1 AND [habitat_secondaries] IS NULL) OR ([habitat_secondaries] = @Original_habitat_secondaries)) AND ((@IsNull_comments = 1 AND [comments] IS NULL) OR ([comments] = @Original_comments)) AND ([is_local] = @Original_is_local));
+SELECT code_habitat_type, code_primary, preferred, habitat_secondaries, comments, is_local FROM lut_habitat_type_primary WHERE (code_habitat_type = @code_habitat_type) AND (code_primary = @code_primary)";
             this._adapter.UpdateCommand.CommandType = global::System.Data.CommandType.Text;
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@code_habitat_type";
@@ -48598,6 +48633,13 @@ SELECT code_habitat_type, code_primary, habitat_secondaries, comments, is_local 
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
             param.IsNullable = true;
             param.SourceColumn = "code_primary";
+            this._adapter.UpdateCommand.Parameters.Add(param);
+            param = new global::Microsoft.Data.SqlClient.SqlParameter();
+            param.ParameterName = "@preferred";
+            param.DbType = global::System.Data.DbType.Boolean;
+            param.SqlDbType = global::System.Data.SqlDbType.Bit;
+            param.IsNullable = true;
+            param.SourceColumn = "preferred";
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@habitat_secondaries";
@@ -48630,6 +48672,14 @@ SELECT code_habitat_type, code_primary, habitat_secondaries, comments, is_local 
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
             param.IsNullable = true;
             param.SourceColumn = "code_primary";
+            param.SourceVersion = global::System.Data.DataRowVersion.Original;
+            this._adapter.UpdateCommand.Parameters.Add(param);
+            param = new global::Microsoft.Data.SqlClient.SqlParameter();
+            param.ParameterName = "@Original_preferred";
+            param.DbType = global::System.Data.DbType.Boolean;
+            param.SqlDbType = global::System.Data.SqlDbType.Bit;
+            param.IsNullable = true;
+            param.SourceColumn = "preferred";
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
@@ -48678,7 +48728,7 @@ SELECT code_habitat_type, code_primary, habitat_secondaries, comments, is_local 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v401ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v401ConnectionString_2017;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -48687,8 +48737,8 @@ SELECT code_habitat_type, code_primary, habitat_secondaries, comments, is_local 
             this._commandCollection = new global::Microsoft.Data.SqlClient.SqlCommand[1];
             this._commandCollection[0] = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._commandCollection[0].Connection = this.Connection;
-            this._commandCollection[0].CommandText = "SELECT code_habitat_type, code_primary, habitat_secondaries, comments, is_local F" +
-                "ROM lut_habitat_type_primary";
+            this._commandCollection[0].CommandText = "SELECT code_habitat_type, code_primary, preferred, habitat_secondaries, comments," +
+                " is_local FROM lut_habitat_type_primary";
             this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;
         }
         
@@ -48749,7 +48799,7 @@ SELECT code_habitat_type, code_primary, habitat_secondaries, comments, is_local 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Delete, true)]
-        public virtual int Delete(string Original_code_habitat_type, string Original_code_primary, string Original_habitat_secondaries, string Original_comments, bool Original_is_local) {
+        public virtual int Delete(string Original_code_habitat_type, string Original_code_primary, bool Original_preferred, string Original_habitat_secondaries, string Original_comments, bool Original_is_local) {
             if ((Original_code_habitat_type == null)) {
                 throw new global::System.ArgumentNullException("Original_code_habitat_type");
             }
@@ -48762,23 +48812,24 @@ SELECT code_habitat_type, code_primary, habitat_secondaries, comments, is_local 
             else {
                 this.Adapter.DeleteCommand.Parameters[1].Value = ((string)(Original_code_primary));
             }
+            this.Adapter.DeleteCommand.Parameters[2].Value = ((bool)(Original_preferred));
             if ((Original_habitat_secondaries == null)) {
-                this.Adapter.DeleteCommand.Parameters[2].Value = ((object)(1));
-                this.Adapter.DeleteCommand.Parameters[3].Value = global::System.DBNull.Value;
+                this.Adapter.DeleteCommand.Parameters[3].Value = ((object)(1));
+                this.Adapter.DeleteCommand.Parameters[4].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.DeleteCommand.Parameters[2].Value = ((object)(0));
-                this.Adapter.DeleteCommand.Parameters[3].Value = ((string)(Original_habitat_secondaries));
+                this.Adapter.DeleteCommand.Parameters[3].Value = ((object)(0));
+                this.Adapter.DeleteCommand.Parameters[4].Value = ((string)(Original_habitat_secondaries));
             }
             if ((Original_comments == null)) {
-                this.Adapter.DeleteCommand.Parameters[4].Value = ((object)(1));
-                this.Adapter.DeleteCommand.Parameters[5].Value = global::System.DBNull.Value;
+                this.Adapter.DeleteCommand.Parameters[5].Value = ((object)(1));
+                this.Adapter.DeleteCommand.Parameters[6].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.DeleteCommand.Parameters[4].Value = ((object)(0));
-                this.Adapter.DeleteCommand.Parameters[5].Value = ((string)(Original_comments));
+                this.Adapter.DeleteCommand.Parameters[5].Value = ((object)(0));
+                this.Adapter.DeleteCommand.Parameters[6].Value = ((string)(Original_comments));
             }
-            this.Adapter.DeleteCommand.Parameters[6].Value = ((bool)(Original_is_local));
+            this.Adapter.DeleteCommand.Parameters[7].Value = ((bool)(Original_is_local));
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.DeleteCommand.Connection.State;
             if (((this.Adapter.DeleteCommand.Connection.State & global::System.Data.ConnectionState.Open) 
                         != global::System.Data.ConnectionState.Open)) {
@@ -48799,7 +48850,7 @@ SELECT code_habitat_type, code_primary, habitat_secondaries, comments, is_local 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Update, true)]
-        public virtual int Update(string code_habitat_type, string code_primary, string habitat_secondaries, string comments, bool is_local, string Original_code_habitat_type, string Original_code_primary, string Original_habitat_secondaries, string Original_comments, bool Original_is_local) {
+        public virtual int Update(string code_habitat_type, string code_primary, bool preferred, string habitat_secondaries, string comments, bool is_local, string Original_code_habitat_type, string Original_code_primary, bool Original_preferred, string Original_habitat_secondaries, string Original_comments, bool Original_is_local) {
             if ((code_habitat_type == null)) {
                 throw new global::System.ArgumentNullException("code_habitat_type");
             }
@@ -48812,48 +48863,50 @@ SELECT code_habitat_type, code_primary, habitat_secondaries, comments, is_local 
             else {
                 this.Adapter.UpdateCommand.Parameters[1].Value = ((string)(code_primary));
             }
+            this.Adapter.UpdateCommand.Parameters[2].Value = ((bool)(preferred));
             if ((habitat_secondaries == null)) {
-                this.Adapter.UpdateCommand.Parameters[2].Value = global::System.DBNull.Value;
-            }
-            else {
-                this.Adapter.UpdateCommand.Parameters[2].Value = ((string)(habitat_secondaries));
-            }
-            if ((comments == null)) {
                 this.Adapter.UpdateCommand.Parameters[3].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[3].Value = ((string)(comments));
+                this.Adapter.UpdateCommand.Parameters[3].Value = ((string)(habitat_secondaries));
             }
-            this.Adapter.UpdateCommand.Parameters[4].Value = ((bool)(is_local));
+            if ((comments == null)) {
+                this.Adapter.UpdateCommand.Parameters[4].Value = global::System.DBNull.Value;
+            }
+            else {
+                this.Adapter.UpdateCommand.Parameters[4].Value = ((string)(comments));
+            }
+            this.Adapter.UpdateCommand.Parameters[5].Value = ((bool)(is_local));
             if ((Original_code_habitat_type == null)) {
                 throw new global::System.ArgumentNullException("Original_code_habitat_type");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[5].Value = ((string)(Original_code_habitat_type));
+                this.Adapter.UpdateCommand.Parameters[6].Value = ((string)(Original_code_habitat_type));
             }
             if ((Original_code_primary == null)) {
                 throw new global::System.ArgumentNullException("Original_code_primary");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[6].Value = ((string)(Original_code_primary));
+                this.Adapter.UpdateCommand.Parameters[7].Value = ((string)(Original_code_primary));
             }
+            this.Adapter.UpdateCommand.Parameters[8].Value = ((bool)(Original_preferred));
             if ((Original_habitat_secondaries == null)) {
-                this.Adapter.UpdateCommand.Parameters[7].Value = ((object)(1));
-                this.Adapter.UpdateCommand.Parameters[8].Value = global::System.DBNull.Value;
-            }
-            else {
-                this.Adapter.UpdateCommand.Parameters[7].Value = ((object)(0));
-                this.Adapter.UpdateCommand.Parameters[8].Value = ((string)(Original_habitat_secondaries));
-            }
-            if ((Original_comments == null)) {
                 this.Adapter.UpdateCommand.Parameters[9].Value = ((object)(1));
                 this.Adapter.UpdateCommand.Parameters[10].Value = global::System.DBNull.Value;
             }
             else {
                 this.Adapter.UpdateCommand.Parameters[9].Value = ((object)(0));
-                this.Adapter.UpdateCommand.Parameters[10].Value = ((string)(Original_comments));
+                this.Adapter.UpdateCommand.Parameters[10].Value = ((string)(Original_habitat_secondaries));
             }
-            this.Adapter.UpdateCommand.Parameters[11].Value = ((bool)(Original_is_local));
+            if ((Original_comments == null)) {
+                this.Adapter.UpdateCommand.Parameters[11].Value = ((object)(1));
+                this.Adapter.UpdateCommand.Parameters[12].Value = global::System.DBNull.Value;
+            }
+            else {
+                this.Adapter.UpdateCommand.Parameters[11].Value = ((object)(0));
+                this.Adapter.UpdateCommand.Parameters[12].Value = ((string)(Original_comments));
+            }
+            this.Adapter.UpdateCommand.Parameters[13].Value = ((bool)(Original_is_local));
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.UpdateCommand.Connection.State;
             if (((this.Adapter.UpdateCommand.Connection.State & global::System.Data.ConnectionState.Open) 
                         != global::System.Data.ConnectionState.Open)) {
@@ -48874,8 +48927,8 @@ SELECT code_habitat_type, code_primary, habitat_secondaries, comments, is_local 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Update, true)]
-        public virtual int Update(string habitat_secondaries, string comments, bool is_local, string Original_code_habitat_type, string Original_code_primary, string Original_habitat_secondaries, string Original_comments, bool Original_is_local) {
-            return this.Update(Original_code_habitat_type, Original_code_primary, habitat_secondaries, comments, is_local, Original_code_habitat_type, Original_code_primary, Original_habitat_secondaries, Original_comments, Original_is_local);
+        public virtual int Update(bool preferred, string habitat_secondaries, string comments, bool is_local, string Original_code_habitat_type, string Original_code_primary, bool Original_preferred, string Original_habitat_secondaries, string Original_comments, bool Original_is_local) {
+            return this.Update(Original_code_habitat_type, Original_code_primary, preferred, habitat_secondaries, comments, is_local, Original_code_habitat_type, Original_code_primary, Original_preferred, Original_habitat_secondaries, Original_comments, Original_is_local);
         }
     }
     

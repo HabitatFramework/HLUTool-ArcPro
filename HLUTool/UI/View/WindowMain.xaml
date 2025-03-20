@@ -18,6 +18,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <extensions:DesignOnlyResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
                 <ResourceDictionary Source="Dictionary\CodeDescriptionConverterDictionary.xaml" />
+                <ResourceDictionary Source="Dictionary\CodeDescriptionBoolConverterDictionary.xaml" />
                 <ResourceDictionary Source="Dictionary\CodeNameDescriptionConverterDictionary.xaml" />
                 <ResourceDictionary Source="Dictionary\VagueDateConverterDictionary.xaml" />
                 <ResourceDictionary Source="Dictionary\ErrorMessageConverterDictionary.xaml" />
@@ -526,24 +527,52 @@
                                                 Margin="0,0,0,2"
                                                 HorizontalAlignment="Right"
                                                 VerticalAlignment="Center" />
-                                            <ComboBox ItemsSource="{Binding PrimaryCodes, ConverterParameter=code^description^sort_order, Converter={StaticResource codeDescriptionConverter}, UpdateSourceTrigger=PropertyChanged}"
+                                            <ComboBox ItemsSource="{Binding PrimaryCodes, Converter={StaticResource codeDescriptionBoolConverter}, UpdateSourceTrigger=PropertyChanged}"
                                                 x:Name="ComboBoxPrimary"
                                                 Grid.Row="0"
                                                 Grid.Column="1"
                                                 Margin="0,0,0,2"
                                                 VerticalAlignment="Center"
-                                                DisplayMemberPath="description"
                                                 IsEditable="True"
                                                 IsEnabled="{Binding PrimaryEnabled,
                                                                     Mode=OneWay}"
                                                 IsReadOnly="False"
                                                 SelectedValue="{Binding IncidPrimary,
-                                                                        ConverterParameter=code^description^sort_order,
-                                                                        Converter={StaticResource codeDescriptionConverter},
+                                                                        Converter={StaticResource codeDescriptionBoolConverter},
                                                                         ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
                                                 Tag="ErrorContent"
-                                                ToolTipService.ShowOnDisabled="True" />
+                                                ToolTipService.ShowOnDisabled="True">
+                                                <ComboBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding description}">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <!-- Default to ArcGIS Pro theme color -->
+                                                                    <Setter Property="Foreground" Value="{DynamicResource SystemBaseHighColor}" />
+
+                                                                    <!-- Only override Foreground for preferred items -->
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger
+                                                                            Binding="{Binding preferred}"
+                                                                            Value="False">
+                                                                            <Setter Property="Foreground" Value="{DynamicResource SystemBaseHighColor}" />
+                                                                            <Setter Property="FontWeight" Value="Normal" />
+                                                                        </DataTrigger>
+                                                                        <DataTrigger
+                                                                            Binding="{Binding preferred}"
+                                                                            Value="True">
+                                                                            <Setter Property="Foreground" Value="DarkGreen" />
+                                                                            <Setter Property="FontWeight" Value="Medium" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </DataTemplate>
+                                                </ComboBox.ItemTemplate>
+                                            </ComboBox>
+                                            <!-- DisplayMemberPath="description" -->
                                             <CheckBox
                                                 x:Name="CheckBoxCopyPrimary"
                                                 Grid.Row="0"
@@ -3158,8 +3187,8 @@
                             Command="{Binding UpdateCommand}"
                             Foreground="White"
                             IsEnabled="{Binding CanUpdate}"
-                            ToolTip="Apply updates"
-                            Style="{DynamicResource Esri_Button}" />
+                            Style="{DynamicResource Esri_Button}"
+                            ToolTip="Apply updates" />
                     </Grid>
                 </Grid>
 

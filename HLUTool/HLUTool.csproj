@@ -11,6 +11,7 @@
     <RootNamespace>HLU</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Converters\BoolToColorConverter.cs" />
     <Compile Remove="GISApplication\GISApp.cs" />
     <Compile Remove="GISApplication\GISAppFactory.cs" />
     <Compile Remove="GISApplication\WinAPI.cs" />
@@ -49,8 +50,11 @@
   </ItemGroup>
   <ItemGroup>
     <Page Remove="UI\View\Connection\ViewConnectOleDb.xaml" />
+    <Page Remove="UI\View\Dictionary\BoolToColorConverterDictionary.xaml" />
+    <Page Remove="UI\View\Dictionary\FeatureClassAdminResources.xaml" />
     <Page Remove="UI\View\Dictionary\GeometryTypeConverterDictionary.xaml" />
     <Page Remove="UI\View\Dictionary\LayerConverterDictionary.xaml" />
+    <Page Remove="UI\View\Dictionary\MergeFeaturesWindowDictionary.xaml" />
     <Page Remove="UI\View\Dictionary\MultiEqualityConverterDictionary.xaml" />
     <Page Remove="UI\View\Dictionary\SpatialReferenceConverterDictionary.xaml" />
     <Page Remove="UI\View\PaneHeader1View.xaml" />
