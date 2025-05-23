@@ -274,6 +274,7 @@ namespace HLU.UI.ViewModel
         private static HluDataSet.lut_secondary_groupRow[] _secondaryGroupsAll; // Used in the options window
         private HluDataSet.lut_secondaryRow[] _secondaryCodesAll;
         private HluDataSet.lut_secondaryRow[] _secondaryCodesValid;
+        private IEnumerable<string> _secondaryCodesOptional;
         private IEnumerable<string> _secondaryCodesMandatory;
 
         private ObservableCollection<SecondaryHabitat> _incidSecondaryHabitats;
@@ -301,7 +302,6 @@ namespace HLU.UI.ViewModel
         private string _reason;
         private string _habitatClass;
         private string _habitatType;
-        private string _habitatSecondariesMandatory;
         private string _habitatSecondariesSuggested;
         private string _habitatTips;
         private string _secondaryGroup;
@@ -9422,7 +9422,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(IncidPrimary));
             OnPropertyChanged(nameof(NvcCodes));
             OnPropertyChanged(nameof(IncidSecondaryHabitats));
-            OnPropertyChanged(nameof(HabitatSecondariesMandatory)); //TODO: Needed twice?
+            //OnPropertyChanged(nameof(HabitatSecondariesMandatory)); //TODO: Needed twice?
             OnPropertyChanged(nameof(IncidSecondarySummary));
             OnPropertyChanged(nameof(LegacyHabitatCodes));
             OnPropertyChanged(nameof(IncidLegacyHabitat));
@@ -10139,7 +10139,7 @@ namespace HLU.UI.ViewModel
                 if (_reasonComboBox == null)
                     _reasonComboBox = ReasonComboBox.GetInstance();
 
-                if (_reasonComboBox.Reason != null)
+                if ((_reasonComboBox != null) && (_reasonComboBox.Reason != null))
                     _reason = _reasonComboBox.Reason;
 
                 return _reason;
@@ -10171,7 +10171,7 @@ namespace HLU.UI.ViewModel
                 if (_processComboBox == null)
                     _processComboBox = ProcessComboBox.GetInstance();
 
-                if (_processComboBox.Process != null)
+                if ((_processComboBox != null) && (_processComboBox.Process != null))
                     _process = _processComboBox.Process;
 
                 return _process;
@@ -10294,8 +10294,7 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Gets the list of all local habitat type codes related to
-        /// the selected habitat class that have at least one
-        /// cross reference to a primary habitat.
+        /// the selected habitat class.
         /// </summary>
         /// <value>
         /// A list of habitat type codes.
@@ -10310,7 +10309,7 @@ namespace HLU.UI.ViewModel
                     // Only load codes with a primary habitat type for
                     // the selected class.
                     _habitatTypeCodes = (from ht in _lutHabitatType
-                                         join htp in _lutHabitatTypePrimary on ht.code equals htp.code_habitat_type
+                                         //join htp in _lutHabitatTypePrimary on ht.code equals htp.code_habitat_type
                                          where ht.habitat_class_code == _habitatClass
                                          select ht).Distinct().OrderBy(c => c.sort_order).ThenBy(c => c.description).ToArray();
 
@@ -10335,28 +10334,53 @@ namespace HLU.UI.ViewModel
             {
                 _habitatType = value;
 
+                //TODO: Use a default (all habitats) if no primary codes are found?
+
                 if (!String.IsNullOrEmpty(_habitatType))
                 {
                     // Load all primary habitat codes where the primary habitat code
                     // and primary habitat category are both flagged as local and
                     // are related to the current habitat type.
+
+                    // Combine both primary and secondary-derived codes,
+                    // but allow only one entry per code, preferring the one marked as preferred.
                     _primaryCodes = (
-                         from p in _lutPrimary
-                         join pc in _lutPrimaryCategory on p.category equals pc.code // Needed to only include local categories.
-                         from htp in _lutHabitatTypePrimary
-                         where htp.code_habitat_type == _habitatType
-                         && (p.code == htp.code_primary
-                         || (htp.code_primary.EndsWith('*') && Regex.IsMatch(p.code, @"\A" + htp.code_primary.TrimEnd('*') + @"")))
-                         select new CodeDescriptionBool
-                         {
-                             code = p.code,
-                             description = p.description,
-                             nvc_codes = p.nvc_codes,
-                             preferred = htp.preferred
-                         })
-                        .OrderByDescending(x => x.preferred) // Preferred = true first.
-                        .ThenBy(x => x.code) // Then sort by code.
-                        .ToArray();
+                        // First query – directly matched primary codes.
+                        from p in _lutPrimary
+                        join pc in _lutPrimaryCategory on p.category equals pc.code // Needed to only include local categories.
+                        from htp in _lutHabitatTypePrimary
+                        where htp.code_habitat_type == _habitatType
+                            && (p.code == htp.code_primary
+                                || (htp.code_primary.EndsWith('*') && Regex.IsMatch(p.code, @"\A" + htp.code_primary.TrimEnd('*') + @"")))
+                        select new CodeDescriptionBool
+                        {
+                            code = p.code,
+                            description = p.description,
+                            nvc_codes = p.nvc_codes,
+                            preferred = htp.preferred
+                        })
+                    .Concat(
+                        // Second query – inferred primary codes via secondary links.
+                        from s in _lutSecondary
+                        join hts in _lutHabitatTypeSecondary on s.code equals hts.code_secondary
+                        join ps in _lutPrimarySecondary on hts.code_secondary equals ps.code_secondary
+                        from p in _lutPrimary
+                        where (ps.code_primary.EndsWith("*")
+                                ? Regex.IsMatch(p.code, @"\A" + ps.code_primary.TrimEnd('*') + @"")
+                                : p.code == ps.code_primary)
+                        join pc in _lutPrimaryCategory on p.category equals pc.code
+                        where hts.code_habitat_type == _habitatType
+                        select new CodeDescriptionBool
+                        {
+                            code = p.code,
+                            description = p.description,
+                            nvc_codes = p.nvc_codes,
+                            preferred = false
+                        })
+                    .DistinctBy(x => new { x.code, x.preferred }) // Remove exact duplicates only
+                    .OrderByDescending(x => x.preferred) // Prefer 'true' if present
+                    .ThenBy(x => x.code)
+                    .ToArray();
 
                     //_primaryCodes = new ObservableCollection<CodeDescriptionBool>(
                     //    (from p in _lutPrimary
@@ -10383,16 +10407,26 @@ namespace HLU.UI.ViewModel
                     //    }).ToList());
 
                     // Load all secondary habitat codes where the habitat type
-                    // has one of more mandatory codes.
-                    IEnumerable<HluDataSet.lut_secondaryRow> secondaryCodesMandatory = (from hts in _lutHabitatTypeSecondary
+                    // has one of more optional codes.
+                    IEnumerable<HluDataSet.lut_secondaryRow> secondaryCodesOptional = (from hts in _lutHabitatTypeSecondary
                                                 join s in _lutSecondary on hts.code_secondary equals s.code
                                                 where hts.code_habitat_type == _habitatType
-                                                && hts.mandatory == 1
+                                                && hts.mandatory == 0
                                                 select s).OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
+
+                    // Store the list of optional secondary codes.
+                    _secondaryCodesOptional = secondaryCodesOptional.Select(hts => hts.code);
+
+                    // Load all secondary habitat codes where the habitat type
+                    // has one of more mandatory codes.
+                    IEnumerable<HluDataSet.lut_secondaryRow> secondaryCodesMandatory = (from hts in _lutHabitatTypeSecondary
+                                                                                        join s in _lutSecondary on hts.code_secondary equals s.code
+                                                                                        where hts.code_habitat_type == _habitatType
+                                                                                        && hts.mandatory == 1
+                                                                                        select s).OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
 
                     // Store the list of mandatory secondary codes.
                     _secondaryCodesMandatory = secondaryCodesMandatory.Select(hts => hts.code);
-                    _habitatSecondariesMandatory = string.Join(",", _secondaryCodesMandatory);
                 }
                 else
                 {
@@ -10409,13 +10443,14 @@ namespace HLU.UI.ViewModel
                              preferred = false
                          }).ToArray();
 
-                    // Clear the list of mandatory secondary codes.
+                    // Clear the list of optional and mandatory secondary codes.
+                    _secondaryCodesOptional = [];
                     _secondaryCodesMandatory = [];
-                    _habitatSecondariesMandatory = null;
                 }
 
                 // Refresh the mandatory habitat secondaries and tips
                 OnPropertyChanged(nameof(HabitatSecondariesMandatory));
+                OnPropertyChanged(nameof(HabitatSecondariesSuggested));
 
                 OnPropertyChanged(nameof(PrimaryCodes));
                 OnPropertyChanged(nameof(PrimaryEnabled));
@@ -10452,7 +10487,10 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return _habitatSecondariesMandatory;
+                if (_secondaryCodesMandatory != null)
+                    return string.Join(", ", _secondaryCodesMandatory);
+                else
+                    return null;
             }
         }
 
@@ -10490,7 +10528,10 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return _habitatSecondariesSuggested;
+                if ((_habitatSecondariesSuggested == null) && (_secondaryCodesOptional != null))
+                    return string.Join(", ", _secondaryCodesOptional);
+                else
+                    return _habitatSecondariesSuggested;
             }
         }
 
@@ -10635,11 +10676,22 @@ namespace HLU.UI.ViewModel
                     _habitatTips = null;
                     if (_incidPrimary != null && _habitatType != null)
                     {
+                        // Get exact match on the primary code first.
                         var q = (from htp in _lutHabitatTypePrimary
                                  where ((htp.code_habitat_type == _habitatType)
-                                 && (htp.code_primary == _incidPrimary
-                                 || (htp.code_primary.EndsWith('*') && Regex.IsMatch(_incidPrimary, @"\A" + htp.code_primary.TrimEnd('*') + @"") == true)))
+                                 && (htp.code_primary == _incidPrimary))
                                  select htp);
+
+                        // If there is no exact match.
+                        if (!q.Any())
+                        {
+                            // Try to get a wildcard match on the primary code.
+                            q = (from htp in _lutHabitatTypePrimary
+                                 where ((htp.code_habitat_type == _habitatType)
+                                 && (htp.code_primary.EndsWith('*') && Regex.IsMatch(_incidPrimary, @"\A" + htp.code_primary.TrimEnd('*') + @"") == true))
+                                 select htp);
+                        }
+
                         if (q.Any())
                         {
                             //TODO: Add any optional secondary codes to the list of suggested secondary codes?
