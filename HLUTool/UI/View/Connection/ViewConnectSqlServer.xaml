@@ -10,7 +10,7 @@
     ShowInTaskbar="False"
     SizeToContent="Height"
     Visibility="Collapsed"
-    WindowStartupLocation="CenterScreen">
+    WindowStartupLocation="CenterOwner">
     <!-- Background="{DynamicResource WindowBackgroundBrush}" -->
     <!-- Icon="..\..\..\Icons\HLUIcon.png" -->
 

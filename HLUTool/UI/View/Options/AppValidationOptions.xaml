@@ -6,7 +6,6 @@
     xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
     xmlns:local="clr-namespace:HLU.UI.ViewModel"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
     d:DataContext="{d:DesignInstance Type=local:ViewModelOptions}"
     mc:Ignorable="d">
 
@@ -57,7 +56,7 @@
 
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" MinWidth="320" />
-                            <ColumnDefinition Width="Auto" MinWidth="70" />
+                            <ColumnDefinition Width="Auto" MinWidth="80" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
@@ -85,7 +84,7 @@
 
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" MinWidth="320" />
-                            <ColumnDefinition Width="Auto" MinWidth="70" />
+                            <ColumnDefinition Width="Auto" MinWidth="80" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
@@ -113,7 +112,7 @@
 
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" MinWidth="320" />
-                            <ColumnDefinition Width="Auto" MinWidth="90" />
+                            <ColumnDefinition Width="Auto" MinWidth="95" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
@@ -140,7 +139,7 @@
 
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" MinWidth="320" />
-                            <ColumnDefinition Width="Auto" MinWidth="70" />
+                            <ColumnDefinition Width="Auto" MinWidth="80" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 

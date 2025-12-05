@@ -1,48 +1,37 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2019 London & South East Record Centres (LaSER)
-// 
+//
 // This file is part of HLUTool.
-// 
+//
 // HLUTool is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using System.Windows;
 using System.Reflection;
 using System.Windows.Controls;
-//using System.Windows.Data;
-//using System.Collections;
-//using System.Collections.Generic;
-//using System.ComponentModel;
-//using System.Text;
-//using Microsoft.Windows.Controls;
 using HLU.UI.ViewModel;
+using ArcGIS.Desktop.Framework.Controls;
 
 namespace HLU.UI.View
 {
-    //---------------------------------------------------------------------
-    // CHANGED: CR49 Process proposed OSMM Updates
-    // Functionality to process proposed OSMM Updates.
-    //    
     /// <summary>
     /// Interaction logic for WindowQueryOSMM.xaml
     /// </summary>
-    public partial class WindowQueryOSMM : Window
+    public partial class WindowQueryOSMM : ProWindow
     {
         public WindowQueryOSMM()
         {
             InitializeComponent();
-
-            //DataGridOSMMUpdatesSummary.Sorting += new DataGridSortingEventHandler(SortHandler);
         }
 
         void OSMMUpdates_SelectionChanged(object sender, SelectionChangedEventArgs e)

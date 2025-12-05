@@ -26,6 +26,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
+using ArcGIS.Desktop.Framework;
 
 namespace HLU.Data.Connection
 {
@@ -769,10 +770,14 @@ namespace HLU.Data.Connection
                 if (connStrBuilder.ContainsKey("Password"))
                     connStrBuilder.Remove("Password");
 
-                _pwdWindow = new UI.View.Connection.ViewPassword();
-                //TODO: App.GetActiveWindow
-                //if ((_pwdWindow.Owner = App.GetActiveWindow()) == null)
-                //    throw (new Exception("No parent window loaded"));
+                // Create password prompt window
+                _pwdWindow = new()
+                {
+                    // Set ArcGIS Pro as the parent
+                    Owner = FrameworkApplication.Current.MainWindow,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Topmost = true
+                };
 
                 // create ViewModel to which main window binds
                 _pwdViewModel = new UI.ViewModel.ViewModelPassword();
@@ -796,14 +801,12 @@ namespace HLU.Data.Connection
                 }
 
                 // when ViewModel asks to be closed, close window
+                _pwdViewModel.RequestClose -= _pwdViewModel_RequestClose; // Safety: avoid double subscription.
                 _pwdViewModel.RequestClose +=
                     new UI.ViewModel.ViewModelPassword.RequestCloseEventHandler(_pwdViewModel_RequestClose);
 
                 // allow all controls in window to bind to ViewModel by setting DataContext
                 _pwdWindow.DataContext = _pwdViewModel;
-
-                _pwdWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-                _pwdWindow.Topmost = true;
 
                 // show window
                 _pwdWindow.ShowDialog();

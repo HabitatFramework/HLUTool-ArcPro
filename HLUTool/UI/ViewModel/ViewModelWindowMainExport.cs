@@ -36,6 +36,7 @@ using HLU.Properties;
 using HLU.UI.View;
 using HLU.Data;
 using HLU.Date;
+using ArcGIS.Desktop.Framework;
 
 //DONE: using Microsoft.Office.Interop.Access.Dao
 using Microsoft.Office.Interop.Access.Dao;
@@ -44,6 +45,8 @@ namespace HLU.UI.ViewModel
 {
     partial class ViewModelWindowMainExport
     {
+        #region Fields
+
         public static HluDataSet HluDatasetStatic = null;
 
         ViewModelWindowMain _viewModelMain;
@@ -71,18 +74,28 @@ namespace HLU.UI.ViewModel
         private List<int> _sourceDateTypeOrdinals;
         private int _attributesLength;
 
+        #endregion Fields
+
+        #region Constructor
+
         public ViewModelWindowMainExport(ViewModelWindowMain viewModelMain)
         {
             _viewModelMain = viewModelMain;
         }
 
+        #endregion Constructor
+
+        #region Initiate Export
+
         public void InitiateExport()
         {
+            // Create the export window.
             _windowExport = new WindowExport
             {
-                //DONE: App.Current.MainWindow
-                //_windowExport.Owner = App.Current.MainWindow;
-                WindowStartupLocation = WindowStartupLocation.CenterScreen
+                // Set ArcGIS Pro as the parent
+                Owner = FrameworkApplication.Current.MainWindow,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Topmost = true
             };
 
             // Fill all export formats if there are any export fields
@@ -104,9 +117,6 @@ namespace HLU.UI.ViewModel
                 return;
             }
 
-            //---------------------------------------------------------------------
-            // FIX: 102 Display correct number of selected features on export.
-            //
             // Display the export interface to prompt the user
             // to select which export format they want to use.
             int fragCount = 0;
@@ -120,13 +130,21 @@ namespace HLU.UI.ViewModel
             {
                 DisplayName = "Export"
             };
-            //---------------------------------------------------------------------
+
+            // Subscribe to the export window request close event.
+            _viewModelExport.RequestClose -= _viewModelExport_RequestClose; // Safety: avoid double subscription.
             _viewModelExport.RequestClose += new ViewModelExport.RequestCloseEventHandler(_viewModelExport_RequestClose);
 
+            // Set the data context for the export window.
             _windowExport.DataContext = _viewModelExport;
 
+            // Show the export window.
             _windowExport.ShowDialog();
         }
+
+        #endregion Initiate Export
+
+        #region Request Close
 
         //---------------------------------------------------------------------
         // CHANGED: CR14 (Exporting IHS codes or descriptions)
@@ -148,6 +166,10 @@ namespace HLU.UI.ViewModel
                 Export(exportID, selectedOnly);
             }
         }
+
+        #endregion Request Close
+
+        #region Export
 
         /// <summary>
         /// Exports the combined GIS and database data using the
@@ -352,6 +374,10 @@ namespace HLU.UI.ViewModel
                 _viewModelMain.ChangeCursor(Cursors.Arrow, null);
             }
         }
+
+        #endregion Export
+
+        #region Export Joins
 
         private void ExportJoins(string tableAlias, ref List<ExportField> exportFields, out DataTable exportTable,
             out int[][] fieldMapTemplate, out StringBuilder targetList, out StringBuilder fromClause,
@@ -1219,6 +1245,10 @@ namespace HLU.UI.ViewModel
             if (targetList.Length > 1) targetList.Remove(0, 1);
         }
 
+        #endregion Export Joins
+
+        #region Export MDB
+
         private string ExportEmptyMdb(DataTable exportTable)
         {
             DbOleDb dbOut = null;
@@ -1765,6 +1795,10 @@ namespace HLU.UI.ViewModel
 
             }
         }
+
+        #endregion Export MDB
+
+        #region Methods
 
         /// <summary>
         /// Gets the length of the original input field.
@@ -2375,6 +2409,10 @@ namespace HLU.UI.ViewModel
             return null;
         }
 
+        #endregion Methods
+
+        #region Regex Definitions
+
         /// <summary>
         /// Defines a compiled case-insensitive regular expression that matches the suffix "_id".
         /// </summary>
@@ -2417,5 +2455,6 @@ namespace HLU.UI.ViewModel
         [GeneratedRegex(@"(<no>)", RegexOptions.IgnoreCase, "en-GB")]
         private static partial Regex OccurrenceCounterRegex();
 
+        #endregion Regex Definitions
     }
 }

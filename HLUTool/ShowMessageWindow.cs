@@ -21,6 +21,7 @@ using System;
 using System.Windows;
 using HLU.UI.View;
 using HLU.UI.ViewModel;
+using ArcGIS.Desktop.Framework;
 
 namespace HLU
 {
@@ -31,12 +32,13 @@ namespace HLU
 
         internal static void ShowMessage(string messageText, string messageHeader)
         {
+            // Create message window
             _messageWindow = new()
             {
-                //if ((_messageWindow.Owner = App.GetActiveWindow()) == null)
-                //    throw (new Exception("No parent window loaded"));
-
-                //WindowStartupLocation = WindowStartupLocation.CenterScreen
+                // Set ArcGIS Pro as the parent
+                Owner = FrameworkApplication.Current.MainWindow,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Topmost = true
             };
 
             // Create ViewModel to which main window binds
@@ -47,13 +49,14 @@ namespace HLU
             };
 
             // When ViewModel asks to be closed, close window
+            _messageWindowViewModel.RequestClose -= CloseMessageWindow; // Safety: avoid double subscription.
             _messageWindowViewModel.RequestClose += new EventHandler(CloseMessageWindow);
 
             // Allow all controls in window to bind to ViewModel by setting DataContext
             _messageWindow.DataContext = _messageWindowViewModel;
 
             // Show window
-            //_messageWindow.ShowDialog();
+            _messageWindow.ShowDialog();
         }
 
         /// <summary>

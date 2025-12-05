@@ -18,13 +18,13 @@
 
 using System.Windows;
 using System.Windows.Forms;
-
+using ArcGIS.Desktop.Framework.Controls;
 namespace HLU.UI.View
 {
     /// <summary>
     /// Interaction logic for MessageWindow.xaml
     /// </summary>
-    public partial class MessageWindow : Window
+    public partial class MessageWindow : ProWindow
     {
         public MessageWindow()
         {

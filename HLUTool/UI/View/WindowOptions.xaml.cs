@@ -21,13 +21,14 @@ using System.Windows;
 using HLU.UI.UserControls;
 using System.Windows.Controls;
 using System.Collections.Generic;
+using ArcGIS.Desktop.Framework.Controls;
 
 namespace HLU.UI.View
 {
     /// <summary>
     /// Interaction logic for WindowOptions.xaml
     /// </summary>
-    public partial class WindowOptions : Window
+    public partial class WindowOptions : ProWindow
     {
         public WindowOptions()
         {

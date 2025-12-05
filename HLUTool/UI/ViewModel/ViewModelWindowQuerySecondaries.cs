@@ -93,7 +93,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void OkCommandClick(object param)
         {
-            this.RequestClose(QuerySecondaries);
+            RequestClose?.Invoke(QuerySecondaries);
         }
 
         /// <summary>
@@ -140,7 +140,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void CancelCommandClick(object param)
         {
-            this.RequestClose(null);
+            RequestClose?.Invoke(null);
         }
 
         #endregion
@@ -194,5 +194,4 @@ namespace HLU.UI.ViewModel
 
         #endregion
     }
-    //---------------------------------------------------------------------
 }

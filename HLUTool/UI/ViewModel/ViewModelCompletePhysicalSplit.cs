@@ -90,7 +90,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void OkCommandClick(object param)
         {
-            this.RequestClose?.Invoke(_reason, _process);
+            RequestClose?.Invoke(_reason, _process);
         }
 
         /// <summary>

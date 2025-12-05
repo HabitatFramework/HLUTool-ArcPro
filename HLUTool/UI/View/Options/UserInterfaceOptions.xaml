@@ -6,7 +6,6 @@
     xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
     xmlns:local="clr-namespace:HLU.UI.ViewModel"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
     d:DataContext="{d:DesignInstance Type=local:ViewModelOptions}"
     mc:Ignorable="d">
 
@@ -208,7 +207,7 @@
                             HorizontalAlignment="Left" />
                         <ComboBox ItemsSource="{Binding ShowOSMMUpdatesOptions}"
                             Grid.Column="1"
-                            MinWidth="130"
+                            MinWidth="135"
                             SelectedValue="{Binding ShowOSMMUpdatesOption,
                                                     ValidatesOnDataErrors=True}" />
                         <controls:InfoButton Header="Show OSMM Update Attributes"

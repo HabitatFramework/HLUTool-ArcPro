@@ -55,20 +55,23 @@ namespace HLU.UI.UserControls.Toolbar
                 // Ensure the window is shown on the UI thread
                 System.Windows.Application.Current.Dispatcher.Invoke(() =>
                 {
+                    // Create Options window
                     _windowOptions = new()
                     {
                         // Set ArcGIS Pro as the parent
-                        Owner = System.Windows.Application.Current.MainWindow,
-                        WindowStartupLocation = WindowStartupLocation.CenterScreen
+                        Owner = FrameworkApplication.Current.MainWindow,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                        Topmost = true
                     };
 
-                    // create ViewModel to which main window binds
+                    // create ViewModel to which window binds
                     _viewModelOptions = new()
                     {
                         DisplayName = "Options"
                     };
 
                     // when ViewModel asks to be closed, close window
+                    _viewModelOptions.RequestClose -= _viewModelOptions_RequestClose; // Safety: avoid double subscription.
                     _viewModelOptions.RequestClose +=
                         new ViewModelOptions.RequestCloseEventHandler(_viewModelOptions_RequestClose);
 

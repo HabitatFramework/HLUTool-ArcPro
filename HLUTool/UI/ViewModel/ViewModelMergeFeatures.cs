@@ -112,7 +112,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void OkCommandClick(object param)
         {
-            this.RequestClose(_selectedIndex);
+            RequestClose?.Invoke(_selectedIndex);
         }
 
         private bool CanOk { get { return String.IsNullOrEmpty(this.Error); } }
@@ -148,7 +148,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void CancelCommandClick(object param)
         {
-            this.RequestClose(-1);
+            RequestClose?.Invoke(-1);
         }
 
         #endregion

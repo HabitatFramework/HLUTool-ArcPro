@@ -5,7 +5,7 @@
         Title="{Binding Path=WindowTitle}"
         Height="136"
         MinWidth="300"
-        WindowStartupLocation="CenterScreen"
+        WindowStartupLocation="CenterOwner"
         Visibility="Collapsed"
         SizeToContent="WidthAndHeight"
         ShowInTaskbar="False"

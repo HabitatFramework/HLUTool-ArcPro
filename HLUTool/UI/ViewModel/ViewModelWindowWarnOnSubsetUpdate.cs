@@ -104,9 +104,9 @@ namespace HLU.UI.ViewModel
         {
             // Set the default value to 'Subset'.
             if (_makeDefaultReponse == true)
-                this.RequestClose(true, true, 1);
+                RequestClose?.Invoke(true, true, 1);
             else
-                this.RequestClose(true, true, null);
+                RequestClose?.Invoke(true, true, null);
         }
 
         #endregion
@@ -142,9 +142,9 @@ namespace HLU.UI.ViewModel
         {
             // Set the default value to 'All'.
             if (_makeDefaultReponse == true)
-                this.RequestClose(true, true, 2);
+                RequestClose?.Invoke(true, true, 2);
             else
-                this.RequestClose(true, true, null);
+                RequestClose?.Invoke(true, true, null);
         }
 
         #endregion
@@ -178,10 +178,12 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void CancelCommandClick(object param)
         {
-            this.RequestClose(false, false, null);
+            RequestClose?.Invoke(false, false, null);
         }
 
         #endregion
+
+        #region Content Properties
 
         public string GroupBoxWarnOnSubsetUpdateHeader
         {
@@ -209,5 +211,7 @@ namespace HLU.UI.ViewModel
             get { return _makeDefaultReponse; }
             set { _makeDefaultReponse = value; }
         }
+
+        #endregion Content Properties
     }
 }

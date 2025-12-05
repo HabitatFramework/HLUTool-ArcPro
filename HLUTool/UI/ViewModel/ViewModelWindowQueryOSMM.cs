@@ -40,17 +40,13 @@ using HLU.UI.UserControls;
 
 namespace HLU.UI.ViewModel
 {
-    //---------------------------------------------------------------------
-    // CHANGED: CR49 Process proposed OSMM Updates
-    // Functionality to process proposed OSMM Updates.
-    //
-
     public class OSMMUpdates
     {
+        #region Fields
+
         public string Process { get; set; }
         public string Spatial { get; set; }
         public string Change { get; set; }
-        //public string Summary { get; set; }
         public int Rejected { get; set; }
         public int Ignored { get; set; }
         public int Proposed { get; set; }
@@ -59,8 +55,12 @@ namespace HLU.UI.ViewModel
         public int Total { get; set; }
     }
 
+    #endregion Fields
+
     class ViewModelWindowQueryOSMM : ViewModelBase, INotifyPropertyChanged
     {
+        #region Fields
+
         //public delegate void SelectionChangedEventHandler(object sender, SelectionChangedEventArgs e);
 
         //public event SelectionChangedEventHandler SelectionChanged;
@@ -68,8 +68,6 @@ namespace HLU.UI.ViewModel
         ViewModelWindowMain _viewModelMain;
 
         public static HluDataSet HluDatasetStatic = null;
-
-        #region Fields
 
         private HluDataSet _hluDataset;
         private DbBase _db;
@@ -206,7 +204,8 @@ namespace HLU.UI.ViewModel
         private void ApplyOSMMFilterClicked(object param)
         {
             HluDatasetStatic = null;
-            this.RequestClose(IncidOSMMUpdatesProcessFlag, IncidOSMMUpdatesSpatialFlag, IncidOSMMUpdatesChangeFlag, IncidOSMMUpdatesStatus, true);
+
+            RequestClose?.Invoke(IncidOSMMUpdatesProcessFlag, IncidOSMMUpdatesSpatialFlag, IncidOSMMUpdatesChangeFlag, IncidOSMMUpdatesStatus, true);
         }
 
         public bool CanApplyOSMMFilter
@@ -301,10 +300,13 @@ namespace HLU.UI.ViewModel
         private void CancelCommandClicked(object param)
         {
             HluDatasetStatic = null;
-            this.RequestClose(null, null, null, null, false);
+
+            RequestClose?.Invoke(null, null, null, null, false);
         }
 
-        #endregion
+        #endregion Cancel Command
+
+        #region Flags
 
         public HluDataSet.lut_osmm_updates_processRow[] IncidOSMMUpdatesProcessFlags
         {
@@ -396,6 +398,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        #endregion Flags
+
+        #region Statuses
+
         /// <summary>
         /// Gets or sets the list of available show OSMM Update options from
         /// the class.
@@ -436,6 +442,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        #endregion Statuses
+
+        #region Any Rows
+
         private HluDataSet.lut_osmm_updates_processRow[] AnyRowOSMMUpdatesProcess(int sortOrder)
         {
             HluDataSet.lut_osmm_updates_processRow anyRow = _hluDataset.lut_osmm_updates_process.Newlut_osmm_updates_processRow();
@@ -462,6 +472,10 @@ namespace HLU.UI.ViewModel
             anyRow.description = String.Empty;
             return [anyRow];
         }
+
+        #endregion Any Rows
+
+        #region Counts
 
         public string IncidOSMMUpdatesRejectedCount
         {
@@ -603,6 +617,10 @@ namespace HLU.UI.ViewModel
             ChangeCursor(Cursors.Arrow);
 
         }
+
+        #endregion Counts
+
+        #region OSMM Updates Summary
 
         /// <summary>
         /// Summarise the OSMM Updates in the database.
@@ -834,6 +852,8 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        #endregion OSMM Updates Summary
+
         #region Cursor
 
         /// <summary>
@@ -855,5 +875,4 @@ namespace HLU.UI.ViewModel
         #endregion
 
     }
-    //---------------------------------------------------------------------
 }

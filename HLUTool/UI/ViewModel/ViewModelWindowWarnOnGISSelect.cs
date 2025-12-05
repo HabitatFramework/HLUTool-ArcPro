@@ -38,7 +38,7 @@ namespace HLU.UI.ViewModel
         private ICommand _noCommand;
         private ICommand _yesCommand;
 
-        #endregion
+        #endregion Fields
 
         #region ctor
 
@@ -60,7 +60,7 @@ namespace HLU.UI.ViewModel
             //---------------------------------------------------------------------
         }
 
-        #endregion
+        #endregion ctor
 
         #region ViewModelBase members
 
@@ -75,7 +75,7 @@ namespace HLU.UI.ViewModel
             get { return DisplayName; }
         }
 
-        #endregion
+        #endregion ViewModelBase members
 
         #region RequestClose
 
@@ -83,7 +83,7 @@ namespace HLU.UI.ViewModel
 
         public event RequestCloseEventHandler RequestClose;
 
-        #endregion
+        #endregion RequestClose
 
         #region Yes Command
 
@@ -119,10 +119,10 @@ namespace HLU.UI.ViewModel
             Settings.Default.Save();
 
             // Close the window.
-            this.RequestClose(true);
+            RequestClose?.Invoke(true);
         }
 
-        #endregion
+        #endregion Yes Command
 
         #region No Command
 
@@ -153,10 +153,12 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void NoCommandClick(object param)
         {
-            this.RequestClose(false);
+            RequestClose?.Invoke(false);
         }
 
-        #endregion
+        #endregion No Command
+
+        #region Content Properties
 
         public string GroupBoxWarnOnGISSelectHeader
         {
@@ -254,5 +256,7 @@ namespace HLU.UI.ViewModel
                     return false;
             }
         }
+
+        #endregion Content Properties
     }
 }

@@ -18,13 +18,14 @@
 
 using System.Windows;
 using System.Windows.Input;
+using ArcGIS.Desktop.Framework.Controls;
 
 namespace HLU.UI.View
 {
     /// <summary>
     /// Interaction logic for EditPotentialHabitatsWindow.xaml
     /// </summary>
-    public partial class WindowEditPotentialHabitats : Window
+    public partial class WindowEditPotentialHabitats : ProWindow
     {
         public WindowEditPotentialHabitats()
         {

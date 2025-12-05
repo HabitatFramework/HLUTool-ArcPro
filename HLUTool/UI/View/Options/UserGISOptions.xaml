@@ -6,7 +6,6 @@
     xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
     xmlns:local="clr-namespace:HLU.UI.ViewModel"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
     d:DataContext="{d:DesignInstance Type=local:ViewModelOptions}"
     mc:Ignorable="d">
 
@@ -50,15 +49,13 @@
                     <Label Content="{Binding MinAutoZoomText}"
                         Grid.Column="0"
                         HorizontalAlignment="Right" />
-                    <xctk:IntegerUpDown
-                        x:Name="TextBoxMaxGetValues"
+                    <TextBox Text="{Binding MinAutoZoom, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
+                        x:Name="TextBoxMinAutoZoom"
                         Grid.Column="1"
                         Height="24"
-                        Maximum="{Binding MaxAutoZoom}"
-                        Minimum="100"
-                        TextAlignment="Right"
-                        Value="{Binding MinAutoZoom,
-                                        ValidatesOnDataErrors=True}" />
+                        HorizontalContentAlignment="Right"
+                        BorderThickness="1"
+                        Tag="ErrorContent" />
                     <controls:InfoButton Header="Minimum Auto Zoom"
                         Grid.Column="2"
                         Margin="5,0,0,0"

@@ -9,7 +9,7 @@
     ShowInTaskbar="False"
     SizeToContent="Height"
     Visibility="Collapsed"
-    WindowStartupLocation="CenterScreen">
+    WindowStartupLocation="CenterOwner">
     <!-- Icon="..\..\..\Icons\HLUIcon.png" Activated="Window_Activated"> -->
     <!-- Background="{DynamicResource WindowBackgroundBrush}" -->
 

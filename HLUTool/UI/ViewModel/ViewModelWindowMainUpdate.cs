@@ -288,6 +288,22 @@ namespace HLU.UI.ViewModel
                 _viewModelMain.HluTableAdapterManager.incid_ihs_complexTableAdapter, _viewModelMain.HluDataset.incid_ihs_complex);
         }
 
+        /// <summary>
+        /// Updates the specified table if there are pending changes.
+        /// </summary>
+        /// <remarks>This method checks if the table has unsaved changes by invoking the <paramref
+        /// name="isDirty"/> function. If changes are detected, it attempts to update the table using the provided
+        /// <paramref name="tableAdapter"/> and the modified rows from <paramref name="datasetTable"/>. If the update
+        /// operation fails, an exception is thrown.</remarks>
+        /// <param name="dataRows">The data rows to check for changes. This parameter must not be <see langword="null"/> if updates are
+        /// required.</param>
+        /// <param name="isDirty">A function that determines whether the table has unsaved changes. The function should return <see
+        /// langword="true"/> if changes exist; otherwise, <see langword="false"/>.</param>
+        /// <param name="tableAdapter">The table adapter used to perform the update operation. This must support the <c>Update</c> method for
+        /// applying changes.</param>
+        /// <param name="datasetTable">The dataset table containing the changes to be updated. This must support the <c>GetChanges</c> method to
+        /// retrieve modified rows.</param>
+        /// <exception cref="Exception">Thrown if the update operation fails, indicating that the table could not be updated successfully.</exception>
         private void UpdateTableIfDirty(object dataRows, Func<bool> isDirty, dynamic tableAdapter, dynamic datasetTable)
         {
             if (dataRows != null && isDirty())

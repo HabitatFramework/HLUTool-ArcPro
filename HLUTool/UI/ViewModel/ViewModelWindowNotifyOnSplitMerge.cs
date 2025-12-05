@@ -95,7 +95,7 @@ namespace HLU.UI.ViewModel
         private void OkCommandClick(object param)
         {
             Settings.Default.Save();
-            this.RequestClose();
+            RequestClose?.Invoke();
         }
 
         #endregion

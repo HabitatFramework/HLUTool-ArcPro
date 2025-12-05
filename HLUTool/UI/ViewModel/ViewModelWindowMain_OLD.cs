@@ -2770,18 +2770,20 @@ namespace HLU.UI.ViewModel
         {
             if (_notifyOnSplitMerge)
             {
+                // Create window to show message
                 _windowWarnSplitMerge = new()
                 {
-                    //TODO: App.GetActiveWindow
-                    //if ((_windowWarnSplitMerge.Owner = App.GetActiveWindow()) == null)
-                    //    throw (new Exception("No parent window loaded"));
-                    WindowStartupLocation = WindowStartupLocation.CenterScreen
+                    // Set ArcGIS Pro as the parent
+                    Owner = FrameworkApplication.Current.MainWindow,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Topmost = true
                 };
 
                 // create ViewModel to which main window binds
                 _viewModelWinWarnSplitMerge = new ViewModelWindowNotifyOnSplitMerge(msgText);
 
                 // when ViewModel asks to be closed, close window
+                _viewModelWinWarnSplitMerge.RequestClose -= _viewModelWinWarnSplitMerge_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinWarnSplitMerge.RequestClose +=
                     new ViewModelWindowNotifyOnSplitMerge.RequestCloseEventHandler(_viewModelWinWarnSplitMerge_RequestClose);
 
@@ -3129,12 +3131,13 @@ namespace HLU.UI.ViewModel
             {
                 _updateCancelled = true;
 
+                // Create window to show message
                 _windowWarnSubsetUpdate = new WindowWarnOnSubsetUpdate
                 {
-                    //TODO: App.GetActiveWindow
-                    //if ((_windowWarnSubsetUpdate.Owner = App.GetActiveWindow()) == null)
-                    //    throw (new Exception("No parent window loaded"));
-                    WindowStartupLocation = WindowStartupLocation.CenterScreen
+                    // Set ArcGIS Pro as the parent
+                    Owner = FrameworkApplication.Current.MainWindow,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Topmost = true
                 };
 
                 // create ViewModel to which main window binds
@@ -3142,6 +3145,7 @@ namespace HLU.UI.ViewModel
                     _fragsIncidGisCount, _fragsIncidDbCount, _gisLayerType);
 
                 // when ViewModel asks to be closed, close window
+                _viewModelWinWarnSubsetUpdate.RequestClose -= _viewModelWinWarnSubsetUpdate_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinWarnSubsetUpdate.RequestClose +=
                     new ViewModelWindowWarnOnSubsetUpdate.RequestCloseEventHandler(_viewModelWinWarnSubsetUpdate_RequestClose);
 
@@ -4626,12 +4630,13 @@ namespace HLU.UI.ViewModel
             dbSettings = _db.ConnectionString.Replace(";", "\n");
             //---------------------------------------------------------------------
 
+            // Create about window
             _windowAbout = new WindowAbout
             {
-                //DONE: App.Current.MainWindow
-                //_windowAbout.Owner = App.Current.MainWindow;
-                //TODO: ArcGIS
-                //WindowStartupLocation = WindowStartupLocation.CenterScreen
+                // Set ArcGIS Pro as the parent
+                Owner = FrameworkApplication.Current.MainWindow,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Topmost = true
             };
 
             // Create ViewModel to which main window binds
@@ -4652,6 +4657,7 @@ namespace HLU.UI.ViewModel
             };
 
             // When ViewModel asks to be closed, close window
+            _viewModelAbout.RequestClose -= _viewModelAbout_RequestClose; // Safety: avoid double subscription.
             _viewModelAbout.RequestClose += new ViewModelWindowAbout.RequestCloseEventHandler(_viewModelAbout_RequestClose);
 
             // Allow all controls in window to bind to ViewModel by setting DataContext
@@ -4833,12 +4839,13 @@ namespace HLU.UI.ViewModel
         {
             try
             {
+                // Create advanced query window
                 _windowQueryAdvanced = new WindowQueryAdvanced
                 {
-                    //TODO: App.GetActiveWindow
-                    //if ((_windowQueryAdvanced.Owner = App.GetActiveWindow()) == null)
-                    //    throw (new Exception("No parent window loaded"));
-                    WindowStartupLocation = WindowStartupLocation.CenterScreen
+                    // Set ArcGIS Pro as the parent
+                    Owner = FrameworkApplication.Current.MainWindow,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Topmost = true
                 };
 
                 // create ViewModel to which main window binds
@@ -4848,6 +4855,7 @@ namespace HLU.UI.ViewModel
                 };
 
                 // when ViewModel asks to be closed, close window
+                _viewModelWinQueryAdvanced.RequestClose -= _viewModelWinQueryAdvanced_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinQueryAdvanced.RequestClose +=
                     new ViewModelWindowQueryAdvanced.RequestCloseEventHandler(_viewModelWinQueryAdvanced_RequestClose);
 
@@ -5069,12 +5077,13 @@ namespace HLU.UI.ViewModel
                 (selectByjoin && _warnBeforeGISSelect == 1))
             //---------------------------------------------------------------------
             {
+                // Create warning GIS on selection window
                 _windowWarnGISSelect = new()
                 {
-                    //TODO: App.GetActiveWindow
-                    //if ((_windowWarnGISSelect.Owner = App.GetActiveWindow()) == null)
-                    //    throw (new Exception("No parent window loaded"));
-                    WindowStartupLocation = WindowStartupLocation.CenterScreen
+                    // Set ArcGIS Pro as the parent
+                    Owner = FrameworkApplication.Current.MainWindow,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Topmost = true
                 };
 
                 // Create ViewModel to which main window binds
@@ -5082,6 +5091,7 @@ namespace HLU.UI.ViewModel
                     expectedNumFeatures, expectedNumIncids, expectedNumFeatures > -1 ? _gisLayerType : GeometryTypes.Unknown, selectByjoin);
 
                 // When ViewModel asks to be closed, close window
+                _viewModelWinWarnGISSelect.RequestClose -= _viewModelWinWarnGISSelect_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinWarnGISSelect.RequestClose +=
                     new ViewModelWindowWarnOnGISSelect.RequestCloseEventHandler(_viewModelWinWarnGISSelect_RequestClose);
 
@@ -5172,12 +5182,13 @@ namespace HLU.UI.ViewModel
         {
             try
             {
+                // Create query by incid window
                 _windowQueryIncid = new()
                 {
-                    //TODO: App.GetActiveWindow
-                    //if ((_windowQueryIncid.Owner = App.GetActiveWindow()) == null)
-                    //    throw (new Exception("No parent window loaded"));
-                    WindowStartupLocation = WindowStartupLocation.CenterScreen
+                    // Set ArcGIS Pro as the parent
+                    Owner = FrameworkApplication.Current.MainWindow,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Topmost = true
                 };
 
                 // create ViewModel to which main window binds
@@ -5187,6 +5198,7 @@ namespace HLU.UI.ViewModel
                 };
 
                 // when ViewModel asks to be closed, close window
+                _viewModelWinQueryIncid.RequestClose -= _viewModelWinQueryIncid_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinQueryIncid.RequestClose +=
                     new ViewModelWindowQueryIncid.RequestCloseEventHandler(_viewModelWinQueryIncid_RequestClose);
 
@@ -5416,12 +5428,13 @@ namespace HLU.UI.ViewModel
 
             try
             {
+                // Create OSMM Updates query window
                 _windowQueryOSMM = new WindowQueryOSMM
                 {
-                    //TODO: App.GetActiveWindow
-                    //if ((_windowQueryOSMM.Owner = App.GetActiveWindow()) == null)
-                    //    throw (new Exception("No parent window loaded"));
-                    WindowStartupLocation = WindowStartupLocation.CenterScreen
+                    // Set ArcGIS Pro as the parent
+                    Owner = FrameworkApplication.Current.MainWindow,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Topmost = true
                 };
 
                 // create ViewModel to which main window binds
@@ -5431,6 +5444,7 @@ namespace HLU.UI.ViewModel
                 };
 
                 // when ViewModel asks to be closed, close window
+                _viewModelWinQueryOSMM.RequestClose -= _viewModelWinQueryOSMM_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinQueryOSMM.RequestClose +=
                     new ViewModelWindowQueryOSMM.RequestCloseEventHandler(_viewModelWinQueryOSMM_RequestClose);
 
@@ -5524,12 +5538,13 @@ namespace HLU.UI.ViewModel
 
             try
             {
+                // Create OSMM Updates advanced query window
                 _windowQueryAdvanced = new()
                 {
-                    //TODO: App.GetActiveWindow
-                    //if ((_windowQueryAdvanced.Owner = App.GetActiveWindow()) == null)
-                    //    throw (new Exception("No parent window loaded"));
-                    WindowStartupLocation = WindowStartupLocation.CenterScreen
+                    // Set ArcGIS Pro as the parent
+                    Owner = FrameworkApplication.Current.MainWindow,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Topmost = true
                 };
 
                 // create ViewModel to which main window binds
@@ -5539,6 +5554,7 @@ namespace HLU.UI.ViewModel
                 };
 
                 // when ViewModel asks to be closed, close window
+                _viewModelWinQueryAdvanced.RequestClose -= _viewModelWinQueryOSMMAdvanced_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinQueryAdvanced.RequestClose +=
                     new ViewModelWindowQueryAdvanced.RequestCloseEventHandler(_viewModelWinQueryOSMMAdvanced_RequestClose);
 
@@ -6437,15 +6453,26 @@ namespace HLU.UI.ViewModel
                         {
                             if (!CanPhysicallySplit)
                             {
+                                // Create complete physical split reason/process window.
                                 _windowCompSplit = new()
                                 {
-                                    //DONE: App.Current.MainWindow
-                                    //_windowCompSplit.Owner = App.Current.MainWindow;
-                                    WindowStartupLocation = WindowStartupLocation.CenterScreen
+                                    // Set ArcGIS Pro as the parent
+                                    Owner = FrameworkApplication.Current.MainWindow,
+                                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                                    Topmost = true
                                 };
+
+                                // Create ViewModel to which main window binds
                                 _vmCompSplit = new ViewModelCompletePhysicalSplit(_reason, _process, _reasonCodes, _processCodes);
+
+                                // When ViewModel asks to be closed, close window
+                                _vmCompSplit.RequestClose -= vmCompSplit_RequestClose; // Safety: avoid double subscription.
                                 _vmCompSplit.RequestClose += new ViewModelCompletePhysicalSplit.RequestCloseEventHandler(vmCompSplit_RequestClose);
+
+                                // Allow all controls in window to bind to ViewModel by setting DataContext
                                 _windowCompSplit.DataContext = _vmCompSplit;
+
+                                // Show window
                                 _windowCompSplit.ShowDialog();
                             }
                             if (CanPhysicallySplit)
@@ -6552,11 +6579,13 @@ namespace HLU.UI.ViewModel
         {
             try
             {
+                // Create window
                 _windowEditPriorityHabitats = new()
                 {
-                    //DONE: App.Current.MainWindow
-                    //_windowEditPriorityHabitats.Owner = App.Current.MainWindow;
-                    WindowStartupLocation = WindowStartupLocation.CenterScreen
+                    // Set ArcGIS Pro as the parent
+                    Owner = FrameworkApplication.Current.MainWindow,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Topmost = true
                 };
 
                 // create ViewModel to which main window binds
@@ -6566,6 +6595,7 @@ namespace HLU.UI.ViewModel
                 };
 
                 // when ViewModel asks to be closed, close window
+                _viewModelWinEditPriorityHabitats.RequestClose -= _viewModelWinEditPriorityHabitats_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinEditPriorityHabitats.RequestClose += new ViewModelWindowEditPriorityHabitats
                     .RequestCloseEventHandler(_viewModelWinEditPriorityHabitats_RequestClose);
 
@@ -6636,11 +6666,13 @@ namespace HLU.UI.ViewModel
         {
             try
             {
+                // Create window
                 _windowEditPotentialHabitats = new()
                 {
-                    //DONE: App.Current.MainWindow
-                    //_windowEditPotentialHabitats.Owner = App.Current.MainWindow;
-                    WindowStartupLocation = WindowStartupLocation.CenterScreen
+                    // Set ArcGIS Pro as the parent
+                    Owner = FrameworkApplication.Current.MainWindow,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Topmost = true
                 };
 
                 // create ViewModel to which main window binds
@@ -6650,6 +6682,7 @@ namespace HLU.UI.ViewModel
                 };
 
                 // when ViewModel asks to be closed, close window
+                _viewModelWinEditPotentialHabitats.RequestClose -= _viewModelWinEditPotentialHabitats_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinEditPotentialHabitats.RequestClose += new ViewModelWindowEditPotentialHabitats
                     .RequestCloseEventHandler(_viewModelWinEditPotentialHabitats_RequestClose);
 
@@ -6810,12 +6843,13 @@ namespace HLU.UI.ViewModel
         {
             try
             {
+                // Create window
                 _windowQuerySecondaries = new()
                 {
-                    //TODO: App.GetActiveWindow
-                    //if ((_windowQuerySecondaries.Owner = App.GetActiveWindow()) == null)
-                    //    throw (new Exception("No parent window loaded"));
-                    WindowStartupLocation = WindowStartupLocation.CenterScreen
+                    // Set ArcGIS Pro as the parent
+                    Owner = FrameworkApplication.Current.MainWindow,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Topmost = true
                 };
 
                 // create ViewModel to which main window binds
@@ -6825,6 +6859,7 @@ namespace HLU.UI.ViewModel
                 };
 
                 // when ViewModel asks to be closed, close window
+                _viewModelWinQuerySecondaries.RequestClose -= _viewModelWinQuerySecondaries_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinQuerySecondaries.RequestClose +=
                     new ViewModelWindowQuerySecondaries.RequestCloseEventHandler(_viewModelWinQuerySecondaries_RequestClose);
 
@@ -10365,7 +10400,7 @@ namespace HLU.UI.ViewModel
                         join hts in _lutHabitatTypeSecondary on s.code equals hts.code_secondary
                         join ps in _lutPrimarySecondary on hts.code_secondary equals ps.code_secondary
                         from p in _lutPrimary
-                        where (ps.code_primary.EndsWith("*")
+                        where (ps.code_primary.EndsWith('*')
                                 ? Regex.IsMatch(p.code, @"\A" + ps.code_primary.TrimEnd('*') + @"")
                                 : p.code == ps.code_primary)
                         join pc in _lutPrimaryCategory on p.category equals pc.code

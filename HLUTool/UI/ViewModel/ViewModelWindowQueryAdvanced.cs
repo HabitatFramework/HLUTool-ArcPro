@@ -524,7 +524,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void OkCommandClick(object param)
         {
-            this.RequestClose(SqlFromTables, SqlWhereClause);
+            RequestClose?.Invoke(SqlFromTables, SqlWhereClause);
         }
 
         /// <summary>
@@ -567,7 +567,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void CancelCommandClick(object param)
         {
-            this.RequestClose(null, null);
+            RequestClose?.Invoke(null, null);
         }
 
         #endregion

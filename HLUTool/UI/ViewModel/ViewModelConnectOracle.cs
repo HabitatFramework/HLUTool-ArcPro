@@ -131,7 +131,7 @@ namespace HLU.UI.ViewModel
                 cn.Open();
                 cn.Close();
 
-                this.RequestClose(_connStrBuilder.ConnectionString, _defaultSchema, null);
+                RequestClose?.Invoke(_connStrBuilder.ConnectionString, _defaultSchema, null);
             }
             catch (OracleException exOra)
             {
@@ -192,7 +192,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void CancelCommandClick(object param)
         {
-            this.RequestClose(null, null, null);
+            RequestClose?.Invoke(null, null, null);
         }
 
         #endregion

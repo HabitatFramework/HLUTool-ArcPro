@@ -78,7 +78,7 @@ namespace HLU.UI.ViewModel
         /// <param name="param"></param>
         private void Ok(object param)
         {
-            this.RequestClose(this, EventArgs.Empty);
+            RequestClose?.Invoke(this, EventArgs.Empty);
         }
 
         #endregion

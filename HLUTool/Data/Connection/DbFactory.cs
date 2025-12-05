@@ -17,11 +17,13 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using System;
-using System.Windows;
+using ActiproSoftware.Windows.Controls;
 using HLU.Properties;
 using HLU.UI.View.Connection;
 using HLU.UI.ViewModel;
+using System;
+using System.Windows;
+using ArcGIS.Desktop.Framework;
 
 namespace HLU.Data.Connection
 {
@@ -136,10 +138,14 @@ namespace HLU.Data.Connection
         {
             try
             {
-                _selConnWindow = new ViewSelectConnection();
-                //TODO: App.GetActiveWindow
-                //if ((_selConnWindow.Owner = App.GetActiveWindow()) == null)
-                //    throw (new Exception("No parent window loaded"));
+                // Create window
+                _selConnWindow = new()
+                {
+                    // Set ArcGIS Pro as the parent
+                    Owner = FrameworkApplication.Current.MainWindow,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Topmost = true
+                };
 
                 // create ViewModel to which main window binds
                 _selConnViewModel = new()
@@ -148,14 +154,12 @@ namespace HLU.Data.Connection
                 };
 
                 // when ViewModel asks to be closed, close window
+                _selConnViewModel.RequestClose -= _selConnViewModel_RequestClose; // Safety: avoid double subscription.
                 _selConnViewModel.RequestClose +=
                     new ViewModelSelectConnection.RequestCloseEventHandler(_selConnViewModel_RequestClose);
 
                 // allow all controls in window to bind to ViewModel by setting DataContext
                 _selConnWindow.DataContext = _selConnViewModel;
-
-                _selConnWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-                _selConnWindow.Topmost = true;
 
                 // show window
                 _selConnWindow.ShowDialog();

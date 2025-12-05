@@ -40,13 +40,29 @@ namespace HLU.UI.ViewModel
     //
     class ViewModelWindowMainOSMMUpdate
     {
+        #region Fields
+
         private ViewModelWindowMain _viewModelMain;
+
+        #endregion Fields
+
+        #region Constructor
 
         public ViewModelWindowMainOSMMUpdate(ViewModelWindowMain viewModelMain)
         {
             _viewModelMain = viewModelMain;
         }
 
+        #endregion Constructor
+
+        #region OSMM Update
+
+        /// <summary>
+        /// Initiates the OSMM Update mode, disabling all tabs and refreshing the user interface.
+        /// </summary>
+        /// <remarks>This method sets the application into OSMM Update mode by enabling the corresponding
+        /// mode flag,  disabling controls across all tabs, and refreshing the user interface to reflect the updated
+        /// state.  It is intended to prepare the application for operations specific to OSMM updates.</remarks>
         public void StartOSMMUpdate()
         {
             // Start the OSMM Update mode
@@ -72,6 +88,16 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Writes changes made to current incid_osmm_updates back to database.
         /// </summary>
+        /// <remarks>This method updates the <c>last_modified_date</c> and <c>last_modified_user_id</c>
+        /// fields of the OSMM record to the current date and time (rounded to the nearest second) and the current user
+        /// ID, respectively. The status field is updated based on the <paramref name="updateStatus"/> parameter.
+        /// Changes are committed to the database within a transaction. If an error occurs, the transaction is rolled
+        /// back, and an error message is displayed.</remarks>
+        /// <param name="updateStatus">Specifies the update action to perform. Valid values are: <list type="bullet"> <item><description><c>1</c>:
+        /// Skip the update and increment the status if it is greater than 0.</description></item>
+        /// <item><description><c>0</c>: Accept the update and reset the status to 0.</description></item>
+        /// <item><description><c>-99</c>: Reject the update and set the status to -99.</description></item> </list></param>
+        /// <returns><see langword="true"/> if the update operation completes successfully; otherwise, <see langword="false"/>.</returns>
         internal bool OSMMUpdate(int updateStatus)
         {
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
@@ -142,9 +168,16 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Writes changes made to all the remaining selected incid_osmm_updates
-        /// back to database.
+        /// Writes changes made to all the remaining selected incid_osmm_updates back to the database.
         /// </summary>
+        /// <remarks>This method performs a bulk update operation on the dataset, applying the specified
+        /// OSMM status to the current incident and all subsequent incidents. The operation is performed within a
+        /// database transaction to ensure atomicity. If the operation succeeds, the changes are committed  and the
+        /// dataset is updated. If an error occurs, the transaction is rolled back, and an error  message is displayed
+        /// to the user.  The method temporarily changes the cursor to indicate a long-running operation and restores it
+        /// upon completion. After a successful update, the current incident index is moved beyond the end  of the
+        /// dataset to indicate that all incidents have been processed.</remarks>
+        /// <param name="updateStatus">The new OSMM status to apply. This value is used to update the relevant incidents.</param>
         internal void OSMMUpdateAll(int updateStatus)
         {
             _viewModelMain.ChangeCursor(Cursors.Wait, "Updating all ...");
@@ -178,6 +211,25 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        #endregion OSMM Update
+
+        #region Bulk OSMM Updates
+
+        /// <summary>
+        /// Updates the status and metadata for records in the "incid_osmm_updates" table based on the specified status
+        /// and starting incident identifier.
+        /// </summary>
+        /// <remarks>This method constructs and executes an SQL UPDATE statement to modify the
+        /// "incid_osmm_updates" table. If a custom WHERE clause is defined in the
+        /// <c>_viewModelMain.OSMMUpdateWhereClause</c>, it will be used to filter the records to update. Otherwise,
+        /// the method will iterate through the selected rows in <c>_viewModelMain.IncidSelection</c> and update
+        /// records individually based on the incident identifier. The method ensures that the "last_modified_date"
+        /// field is updated to the current date and time (rounded to the nearest second) and the
+        /// "last_modified_user_id" field is updated to the current user ID.</remarks>
+        /// <param name="updateStatus">The new status value to be applied to the records.</param>
+        /// <param name="fromIncid">The starting incident identifier. Records with an incident identifier greater than  or equal to this value
+        /// will be updated.</param>
+        /// <exception cref="Exception">Thrown if the update operation fails for any record in the "incid_osmm_updates" table.</exception>
         private void BulkIncidOSMMUpdates(int updateStatus, string fromIncid)
         {
             // Get the incid column number
@@ -259,11 +311,32 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        #endregion Bulk OSMM Updates
+
+        #region Cancel OSMM Update
+
+        /// <summary>
+        /// Cancels the ongoing OSMM update process and resets the associated controls.
+        /// </summary>
+        /// <remarks>This method should be called to terminate an in-progress OSMM update operation.  It
+        /// ensures that any related controls are reset to their default state.</remarks>
         public void CancelOSMMUpdate()
         {
             OSMMUpdateResetControls();
         }
 
+        #endregion Cancel OSMM Update
+
+        #region Reset Controls
+
+        /// <summary>
+        /// Resets the controls and state related to the OSMM update mode.
+        /// </summary>
+        /// <remarks>This method performs the following actions: <list type="bullet"> <item>Resets the
+        /// incident filter and sets the current row index to 1.</item> <item>Disables the bulk update mode.</item>
+        /// <item>Enables all tabs in the user interface.</item> <item>Refreshes all controls to reflect the updated
+        /// state.</item> <item>Resets the cursor to the default arrow.</item> </list> This method is typically called
+        /// to exit the OSMM update mode and restore the default application state.</remarks>
         private void OSMMUpdateResetControls()
         {
             // Reset the incid filter
@@ -286,6 +359,7 @@ namespace HLU.UI.ViewModel
             // Reset the cursor
             _viewModelMain.ChangeCursor(Cursors.Arrow, String.Empty);
         }
+
+        #endregion Reset Controls
     }
-    //---------------------------------------------------------------------
 }

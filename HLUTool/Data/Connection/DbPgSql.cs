@@ -26,6 +26,7 @@ using System.Windows;
 using Npgsql;
 using NpgsqlTypes;
 using System.Text;
+using ArcGIS.Desktop.Framework;
 
 namespace HLU.Data.Connection
 {
@@ -787,10 +788,10 @@ namespace HLU.Data.Connection
             {
                 _connWindow = new()
                 {
-                    //TODO: App.GetActiveWindow
-                    //if ((_connWindow.Owner = App.GetActiveWindow()) == null)
-                    //    throw (new Exception("No parent window loaded"));
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner
+                    // Set ArcGIS Pro as the parent
+                    Owner = FrameworkApplication.Current.MainWindow,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Topmost = true
                 };
 
                 // create ViewModel to which main window binds
@@ -800,14 +801,12 @@ namespace HLU.Data.Connection
                 };
 
                 // when ViewModel asks to be closed, close window
+                _connViewModel.RequestClose -= _connViewModel_RequestClose; // Safety: avoid double subscription.
                 _connViewModel.RequestClose +=
                     new UI.ViewModel.ViewModelConnectPgSql.RequestCloseEventHandler(_connViewModel_RequestClose);
 
                 // allow all controls in window to bind to ViewModel by setting DataContext
                 _connWindow.DataContext = _connViewModel;
-
-                _connWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-                _connWindow.Topmost = true;
 
                 // show window
                 _connWindow.ShowDialog();

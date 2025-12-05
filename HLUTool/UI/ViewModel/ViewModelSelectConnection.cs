@@ -105,7 +105,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void OkCommandClick(object param)
         {
-            this.RequestClose(_connectionType, null);
+            RequestClose?.Invoke(_connectionType, null);
         }
 
         /// <summary>
@@ -147,7 +147,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void CancelCommandClick(object param)
         {
-            this.RequestClose(Data.Connection.ConnectionTypes.Unknown, null);
+            RequestClose?.Invoke(Data.Connection.ConnectionTypes.Unknown, null);
         }
 
         #endregion

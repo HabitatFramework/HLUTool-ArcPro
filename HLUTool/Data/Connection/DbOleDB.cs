@@ -872,7 +872,7 @@ namespace HLU.Data.Connection
                 //// allow all controls in window to bind to ViewModel by setting DataContext
                 //_connWindow.DataContext = _connViewModel;
 
-                //_connWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                //_connWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
                 //_connWindow.Topmost = true;
 
                 //// show window

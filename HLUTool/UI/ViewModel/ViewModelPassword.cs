@@ -101,7 +101,7 @@ namespace HLU.UI.ViewModel
         {
             try
             {
-                this.RequestClose(_password, null);
+                RequestClose?.Invoke(_password, null);
             }
             catch (Exception ex)
             {
@@ -148,7 +148,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void CancelCommandClick(object param)
         {
-            this.RequestClose(null, null);
+            RequestClose?.Invoke(null, null);
         }
 
         #endregion

@@ -31,6 +31,8 @@ namespace HLU.UI.ViewModel
     /// </summary>
     static partial class ViewModelWindowMainHelpers
     {
+        #region Helpers
+
         /// <summary>
         /// Converts a selection of GIS-related database rows into a structured SQL WHERE clause.
         /// </summary>
@@ -280,6 +282,10 @@ namespace HLU.UI.ViewModel
                 return null;
         }
 
+        #endregion Helpers
+
+        #region Regex Definitions
+
         /// <summary>
         /// Defines a compiled regular expression that matches capitalized words in a string.
         /// </summary>
@@ -295,5 +301,6 @@ namespace HLU.UI.ViewModel
         [GeneratedRegex("[A-Z][^A-Z]*")]
         private static partial Regex CapitalisedRegex();
 
+        #endregion Regex Definitions
     }
 }

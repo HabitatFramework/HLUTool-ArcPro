@@ -19,13 +19,14 @@
 using System.Windows;
 using System.Diagnostics;
 using System.Windows.Navigation;
+using ArcGIS.Desktop.Framework.Controls;
 
 namespace HLU.UI.View
 {
     /// <summary>
     /// Interaction logic for WindowAbout.xaml
     /// </summary>
-    public partial class WindowAbout : Window
+    public partial class WindowAbout : ProWindow
     {
         public WindowAbout()
         {

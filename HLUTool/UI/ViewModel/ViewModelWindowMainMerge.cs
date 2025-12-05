@@ -32,11 +32,14 @@ using HLU.Properties;
 using HLU.UI.View;
 using System.Windows.Threading;
 using System.Threading.Tasks;
+using ArcGIS.Desktop.Framework;
 
 namespace HLU.UI.ViewModel
 {
     class ViewModelWindowMainMerge
     {
+        #region Fields
+
         private ViewModelWindowMain _viewModelMain;
         private WindowMergeFeatures _mergeFeaturesWindow;
         private ViewModelMergeFeatures<HluDataSet.incidDataTable, HluDataSet.incidRow> _mergeFeaturesViewModelLogical;
@@ -44,17 +47,19 @@ namespace HLU.UI.ViewModel
             _mergeFeaturesViewModelPhysical;
         private int _mergeResultFeatureIndex;
 
+        #endregion Fields
+
+        #region Constructor
+
         public ViewModelWindowMainMerge(ViewModelWindowMain viewModelMain)
         {
             _viewModelMain = viewModelMain;
         }
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR39 (Split and merge complete messages)
-        // Return true or false success so the main class knows
-        // whether to notify the user following the completion of
-        // the merge.
-        //
+        #endregion Constructor
+
+        #region Logical Merge
+
         /// <summary>
         /// There must be at least two selected features that either share the same toid but not the same incid,
         /// or they do not share the same incid.
@@ -92,53 +97,26 @@ namespace HLU.UI.ViewModel
             else
                 return false;
         }
-        //---------------------------------------------------------------------
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR39 (Split and merge complete messages)
-        // Return true or false success so the main class knows
-        // whether to notify the user following the completion of
-        // the merge.
-        //
         /// <summary>
-        /// There must be at least two selected features that share the same incid and toid.
+        /// Performs a logical merge operation on selected features, optionally prompting the user to perform a physical
+        /// merge as well.
         /// </summary>
-        internal async Task<bool> PhysicalMergeAsync()
-        {
-            if ((_viewModelMain.GisSelection == null) || (_viewModelMain.GisSelection.Rows.Count == 0))
-            {
-                MessageBox.Show("Cannot physically merge: Nothing is selected on the map.", "HLU: Physical Merge",
-                    MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                return false;
-            }
-            else if (_viewModelMain.GisSelection.Rows.Count <= 1)
-            {
-                MessageBox.Show("Cannot physically merge: Map selection must contain more than one feature for a merge.",
-                    "HLU: Physical Merge", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                return false;
-            }
-            else if (!_viewModelMain.CountSelectedToidFrags(false))
-            {
-                MessageBox.Show("Cannot physically merge: One or more selected map features missing from database.",
-                    "HLU: Logical Merge", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                return false;
-            }
-            else if ((_viewModelMain.IncidsSelectedMapCount == 1) && (_viewModelMain.ToidsSelectedMapCount == 1))
-            {
-                // selected features share same incid and toid
-                return await PerformPhysicalMergeAsync();
-            }
-            else
-                return false;
-        }
-        //---------------------------------------------------------------------
-
-        //---------------------------------------------------------------------
-        // CHANGED: CR39 (Split and merge complete messages)
-        // Return true or false success so the main class knows
-        // whether to notify the user following the completion of
-        // the merge.
-        //
+        /// <remarks>This method performs a logical merge of selected features by consolidating their data
+        /// into a single feature. The user is prompted to select which feature to keep, and the remaining features are
+        /// updated accordingly. If <paramref name="physicallyMerge"/> is <see langword="true"/>, the user is given the
+        /// option to perform a physical merge after the logical merge completes.  The method ensures that database
+        /// transactions are used to maintain data integrity during the merge process. If an error occurs, the
+        /// transaction is rolled back, and the operation is aborted.  Preconditions: - The number of selected features
+        /// must be greater than zero; otherwise, the method returns <see langword="false"/>.  Postconditions: - The
+        /// selected features are logically merged, with the data consolidated into the chosen feature. - If the user
+        /// opts for a physical merge, additional operations are performed to merge the features physically. - The
+        /// database and application state are updated to reflect the changes.  Exceptions: - If an error occurs during
+        /// the merge process, an error message is displayed to the user, and the operation is aborted.</remarks>
+        /// <param name="physicallyMerge">A boolean value indicating whether to prompt the user to perform a physical merge after the logical merge.
+        /// If <see langword="true"/>, the user will be prompted to confirm a physical merge.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result is <see langword="true"/> if the merge
+        /// operation succeeds; otherwise, <see langword="false"/>.</returns>
         private async Task<bool> PerformLogicalMergeAsync(bool physicallyMerge)
         {
             bool success = true;
@@ -149,13 +127,14 @@ namespace HLU.UI.ViewModel
                     return false;
 
                 // Prompt the user to choose which incid to keep
+
+                // Create the merge features window
                 _mergeFeaturesWindow = new WindowMergeFeatures
                 {
-                    //DONE: App.Current.MainWindow
-                    //Owner = App.Current.MainWindow;
-                    WindowStartupLocation = WindowStartupLocation.CenterScreen
-                    //DONE: App.Current.MainWindow
-                    //MaxHeight = App.Current.MainWindow.ActualHeight;
+                    // Set ArcGIS Pro as the parent
+                    Owner = FrameworkApplication.Current.MainWindow,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Topmost = true
                 };
 
                 HluDataSet.incidDataTable selectTable = new();
@@ -174,10 +153,16 @@ namespace HLU.UI.ViewModel
                 {
                     DisplayName = "Select INCID To Keep"
                 };
+
+                // Handle the RequestClose event to get the selected feature index
+                _mergeFeaturesViewModelLogical.RequestClose -= _mergeFeaturesViewModelLogical_RequestClose; // Safety: avoid double subscription.
                 _mergeFeaturesViewModelLogical.RequestClose += new ViewModelMergeFeatures<HluDataSet.incidDataTable,
                         HluDataSet.incidRow>.RequestCloseEventHandler(_mergeFeaturesViewModelLogical_RequestClose);
 
+                // Set the DataContext for data binding
                 _mergeFeaturesWindow.DataContext = _mergeFeaturesViewModelLogical;
+
+                // Reset the result feature index
                 _mergeResultFeatureIndex = -1;
 
                 // Show the window
@@ -223,9 +208,9 @@ namespace HLU.UI.ViewModel
 
                     // Build an array of polygons to update (all except those with incid to keep)
                     var updatePolygons = from r in polygons
-                                            where r.incid != keepIncid
-                                            orderby r.toid, r.toidfragid
-                                            select r;
+                                         where r.incid != keepIncid
+                                         orderby r.toid, r.toidfragid
+                                         select r;
 
                     // update shadow DB copy of GIS layer
                     foreach (HluDataSet.incid_mm_polygonsRow r in updatePolygons)
@@ -346,8 +331,11 @@ namespace HLU.UI.ViewModel
             finally { _viewModelMain.ChangeCursor(Cursors.Arrow, null); }
             return success;
         }
-        //---------------------------------------------------------------------
 
+        /// <summary>
+        /// Handles the closure of the merge features view model and updates the selected feature index.
+        /// </summary>
+        /// <param name="selectedIndex">The index of the selected feature to be used after the merge operation.</param>
         private void _mergeFeaturesViewModelLogical_RequestClose(int selectedIndex)
         {
             _mergeFeaturesViewModelLogical.RequestClose -= _mergeFeaturesViewModelLogical_RequestClose;
@@ -356,12 +344,52 @@ namespace HLU.UI.ViewModel
             _mergeResultFeatureIndex = selectedIndex;
         }
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR39 (Split and merge complete messages)
-        // Return true or false success so the main class knows
-        // whether to notify the user following the completion of
-        // the merge.
-        //
+        #endregion Logical Merge
+
+        #region Physical Merge
+
+        /// <summary>
+        /// There must be at least two selected features that share the same incid and toid.
+        /// </summary>
+        internal async Task<bool> PhysicalMergeAsync()
+        {
+            if ((_viewModelMain.GisSelection == null) || (_viewModelMain.GisSelection.Rows.Count == 0))
+            {
+                MessageBox.Show("Cannot physically merge: Nothing is selected on the map.", "HLU: Physical Merge",
+                    MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                return false;
+            }
+            else if (_viewModelMain.GisSelection.Rows.Count <= 1)
+            {
+                MessageBox.Show("Cannot physically merge: Map selection must contain more than one feature for a merge.",
+                    "HLU: Physical Merge", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                return false;
+            }
+            else if (!_viewModelMain.CountSelectedToidFrags(false))
+            {
+                MessageBox.Show("Cannot physically merge: One or more selected map features missing from database.",
+                    "HLU: Logical Merge", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                return false;
+            }
+            else if ((_viewModelMain.IncidsSelectedMapCount == 1) && (_viewModelMain.ToidsSelectedMapCount == 1))
+            {
+                // selected features share same incid and toid
+                return await PerformPhysicalMergeAsync();
+            }
+            else
+                return false;
+        }
+
+        /// <summary>
+        /// Performs a physical merge operation on selected GIS features and updates the database to reflect the
+        /// changes.
+        /// </summary>
+        /// <remarks>This method merges multiple GIS features into a single feature, updates the database
+        /// to synchronize with the GIS layer,  and records the history of the merge operation. The user may be prompted
+        /// to select the feature to retain if multiple  features are eligible. The method ensures that the GIS layer
+        /// and database remain consistent after the merge.</remarks>
+        /// <returns><see langword="true"/> if the merge operation completes successfully; otherwise, <see langword="false"/>.</returns>
+        /// <exception cref="Exception">Thrown if the GIS merge operation fails, or if the database synchronization process encounters an error.</exception>
         private async Task<bool> PerformPhysicalMergeAsync()
         {
             bool success = true;
@@ -392,11 +420,13 @@ namespace HLU.UI.ViewModel
                 }
                 else
                 {
+                    // Create the merge features window
                     _mergeFeaturesWindow = new WindowMergeFeatures
                     {
-                        //DONE: App.Current.MainWindow
-                        //Owner = App.Current.MainWindow;
-                        WindowStartupLocation = WindowStartupLocation.CenterScreen
+                        // Set ArcGIS Pro as the parent
+                        Owner = FrameworkApplication.Current.MainWindow,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                        Topmost = true
                     };
 
                     _mergeFeaturesViewModelPhysical = new(selectTable,
@@ -405,13 +435,20 @@ namespace HLU.UI.ViewModel
                     {
                         DisplayName = "Select Feature To Keep"
                     };
+
+                    // Handle the RequestClose event to get the selected feature index
+                    _mergeFeaturesViewModelPhysical.RequestClose -= _mergeFeaturesViewModelPhysical_RequestClose; // Safety: avoid double subscription.
                     _mergeFeaturesViewModelPhysical.RequestClose += new ViewModelMergeFeatures
                         <HluDataSet.incid_mm_polygonsDataTable, HluDataSet.incid_mm_polygonsRow>
                         .RequestCloseEventHandler(_mergeFeaturesViewModelPhysical_RequestClose);
 
+                    // Set the DataContext for data binding
                     _mergeFeaturesWindow.DataContext = _mergeFeaturesViewModelPhysical;
+
+                    // Reset the result feature index
                     _mergeResultFeatureIndex = -1;
 
+                    // Show the window
                     _mergeFeaturesWindow.ShowDialog();
                 }
 
@@ -520,8 +557,11 @@ namespace HLU.UI.ViewModel
             finally { _viewModelMain.ChangeCursor(Cursors.Arrow, null); }
             return success;
         }
-        //---------------------------------------------------------------------
 
+        /// <summary>
+        /// Handles the closure of the merge features view model and updates the selected feature index.
+        /// </summary>
+        /// <param name="selectedIndex">The index of the selected feature to be set after the view model is closed.</param>
         private void _mergeFeaturesViewModelPhysical_RequestClose(int selectedIndex)
         {
             _mergeFeaturesViewModelPhysical.RequestClose -= _mergeFeaturesViewModelPhysical_RequestClose;
@@ -530,6 +570,26 @@ namespace HLU.UI.ViewModel
             _mergeResultFeatureIndex = selectedIndex;
         }
 
+        #endregion Physical Merge
+
+        #region Merge Synchronization
+
+        /// <summary>
+        /// Synchronizes and merges polygon features in the specified dataset by updating the result feature with new
+        /// attributes and removing merged features from the dataset.
+        /// </summary>
+        /// <remarks>This method performs the following operations: <list type="bullet">
+        /// <item><description>Updates the result feature with the new identifier and, if applicable, the combined shape
+        /// length and area of the merged features.</description></item> <item><description>Deletes the merged features
+        /// from the dataset.</description></item> <item><description>Ensures transactional integrity by wrapping the
+        /// operations in a database transaction.</description></item> </list> The method supports different geometry
+        /// types (point, line, polygon) and adjusts the update logic accordingly.</remarks>
+        /// <param name="selectTable">The source table containing the polygon features to be merged.</param>
+        /// <param name="resultTable">The table containing the result feature to be updated with the merged attributes.</param>
+        /// <param name="newToidFragmentID">The new identifier to assign to the result feature after the merge.</param>
+        /// <param name="resultFeatureWhereClause">A list of conditions used to identify the result feature to be updated.</param>
+        /// <param name="mergeFeaturesWhereClause">A collection of condition lists, where each list specifies the criteria for identifying the features to be
+        /// merged and removed from the dataset.</param>
         private void MergeSynchronizeIncidMMPolygons(HluDataSet.incid_mm_polygonsDataTable selectTable,
             DataTable resultTable, string newToidFragmentID, List<SqlFilterCondition> resultFeatureWhereClause,
             List<List<SqlFilterCondition>> mergeFeaturesWhereClause)
@@ -607,5 +667,7 @@ namespace HLU.UI.ViewModel
                 throw;
             }
         }
+
+        #endregion Merge Synchronization
     }
 }

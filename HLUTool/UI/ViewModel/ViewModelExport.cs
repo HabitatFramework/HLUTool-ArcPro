@@ -116,15 +116,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void OkCommandClick(object param)
         {
-            //---------------------------------------------------------------------
-            // CHANGED: CR14 (Exporting IHS codes or descriptions)
-            // Enable users to specify if individual fields should be
-            // exported with descriptions, rather than the whole export,
-            // by moving this option to the exports_fields table.
-            //
-            this.RequestClose(_exportID, _selectedOnly);
-            //this.RequestClose(_exportID, _exportDescriptions, _selectedOnly);
-            //---------------------------------------------------------------------
+            RequestClose?.Invoke(_exportID, _selectedOnly);
         }
 
         /// <summary>
@@ -165,10 +157,12 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void CancelCommandClick(object param)
         {
-            this.RequestClose(-1, false);
+            RequestClose?.Invoke(-1, false);
         }
 
         #endregion
+
+        #region Control Properties
 
         public string LayerName
         {
@@ -200,6 +194,8 @@ namespace HLU.UI.ViewModel
         {
             get { return HaveSelection ? String.Format("({0} selected feature{1})", _selectedNumber, _selectedNumber > 1 ? "s" : String.Empty) : String.Empty; }
         }
+
+        #endregion Control Properties
 
         #region IDataErrorInfo Members
 

@@ -478,7 +478,7 @@ namespace HLU.UI.ViewModel
             SaveUserSettings();
 
             // Close the window and trigger the event to apply the settings.
-            this.RequestClose(true);
+            RequestClose?.Invoke(true);
         }
 
         /// <summary>
@@ -605,7 +605,7 @@ namespace HLU.UI.ViewModel
         private void CancelCommandClick(object param)
         {
             // Don't save the changes.
-            this.RequestClose(false);
+            RequestClose?.Invoke(false);
         }
 
         #endregion

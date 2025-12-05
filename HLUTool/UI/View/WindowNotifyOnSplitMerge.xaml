@@ -1,48 +1,100 @@
-﻿<Window x:Class="HLU.UI.View.WindowNotifyOnSplitMerge"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="{Binding Path=WindowTitle}" WindowStyle="SingleBorderWindow" ResizeMode="CanResize" SizeToContent="WidthAndHeight"
-        Height="160" MinWidth="300" ShowInTaskbar="False" Icon="..\..\Icons\HLUIcon.png">
+﻿<controls:ProWindow x:Class="HLU.UI.View.WindowNotifyOnSplitMerge"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+    xmlns:hlu="clr-namespace:HLU.UI.UserControls"
+    Title="{Binding Path=WindowTitle}"
+    MinWidth="300"
+    MinHeight="160"
+    Icon="..\..\Icons\HLUIcon.png"
+    ResizeMode="CanResize"
+    ShowInTaskbar="False"
+    SizeToContent="WidthAndHeight"
+    Style="{DynamicResource ProWindowStyle}"
+    WindowStartupLocation="CenterOwner">
 
-    <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="4,4,4,4" Width="Auto">
+    <DockPanel
+        Width="Auto"
+        Margin="4,4,4,4"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Stretch">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="4" />
                 <RowDefinition Height="23" />
             </Grid.RowDefinitions>
-            <GroupBox Name="GroupNotifyOnSplitMerge" Header="{Binding Path=GroupBoxNotifyOnSplitMergeHeader}">
-                <Grid Name="GridNotifyOnSplitMerge" Margin="2,2,2,2">
+            <GroupBox Header="{Binding Path=GroupBoxNotifyOnSplitMergeHeader}"
+                Name="GroupNotifyOnSplitMerge">
+                <Grid
+                    Name="GridNotifyOnSplitMerge"
+                    Margin="2,2,2,2">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="26"/>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="26" />
                     </Grid.ColumnDefinitions>
-                        <Label Name="LabelMessage" Grid.Row="0" Grid.ColumnSpan="2"
-                           HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,4,0,4">
-                            <TextBlock Name="TextBlockMessage" TextWrapping="Wrap" Text="{Binding Path=LabelMessage}" />
-                        </Label>
-                    <Border Grid.Row="1" Grid.ColumnSpan="2" Margin="0,8,0,8" BorderThickness="0.5" Padding="0" BorderBrush="Black" Opacity="0.5" />
-                    <Label Name="LabelDoNotTellAgain" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right" 
-                           VerticalAlignment="Center" Margin="0,4,0,4">Don't tell me again</Label>
-                    <CheckBox Name="CheckBoxDoNotTellAgain" Grid.Row="2" Grid.Column="1" 
-                              VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,4,0,4"
-                              IsChecked="{Binding Path=DoNotTellAgain, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <Label
+                        Name="LabelMessage"
+                        Grid.Row="0"
+                        Grid.ColumnSpan="2"
+                        Margin="0,4,0,4"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Path=LabelMessage}"
+                            Name="TextBlockMessage"
+                            TextWrapping="Wrap" />
+                    </Label>
+                    <Border
+                        Grid.Row="1"
+                        Grid.ColumnSpan="2"
+                        Margin="0,8,0,8"
+                        Padding="0"
+                        BorderBrush="Black"
+                        BorderThickness="0.5"
+                        Opacity="0.5" />
+                    <Label
+                        Name="LabelDoNotTellAgain"
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        Margin="0,4,0,4"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center">
+                        Don't tell me again
+                    </Label>
+                    <CheckBox
+                        Name="CheckBoxDoNotTellAgain"
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        Margin="0,4,0,4"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        IsChecked="{Binding Path=DoNotTellAgain,
+                                            Mode=TwoWay,
+                                            UpdateSourceTrigger=PropertyChanged}" />
                 </Grid>
             </GroupBox>
-            <Grid Name="GridButtons" Grid.Row="2">
+            <Grid
+                Name="GridButtons"
+                Grid.Row="2">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="82" />
                     <ColumnDefinition Width="82" />
                 </Grid.ColumnDefinitions>
-                <Button Name="ButtonOk" Grid.Column="2" IsDefault="True" Margin="0,0,0,0"
-                        Command="{Binding Path=OkCommand}" >_Ok</Button>
+                <Button
+                    Name="ButtonOk"
+                    Grid.Column="2"
+                    Margin="0,0,0,0"
+                    Command="{Binding Path=OkCommand}"
+                    IsDefault="True">
+                    _Ok
+                </Button>
             </Grid>
         </Grid>
     </DockPanel>
-</Window>
+</controls:ProWindow>

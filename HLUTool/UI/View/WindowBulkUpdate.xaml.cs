@@ -28,22 +28,18 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using ArcGIS.Desktop.Framework.Controls;
 
 namespace HLU.UI.View
 {
-    //---------------------------------------------------------------------
-    // CHANGED: CR49 Process proposed OSMM Updates
-    // Functionality to process proposed OSMM Updates.
-    //
     /// <summary>
     /// Interaction logic for WindowBulkUpdate.xaml
     /// </summary>
-    public partial class WindowBulkUpdate : Window
+    public partial class WindowBulkUpdate : ProWindow
     {
         public WindowBulkUpdate()
         {
             InitializeComponent();
         }
     }
-    //---------------------------------------------------------------------
 }

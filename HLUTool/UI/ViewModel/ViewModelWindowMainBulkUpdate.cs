@@ -38,11 +38,14 @@ using HLU.UI.View;
 using HLU.Date;
 using System.Threading.Tasks;
 using ArcGIS.Desktop.Editing;
+using ArcGIS.Desktop.Framework;
 
 namespace HLU.UI.ViewModel
 {
     class ViewModelWindowMainBulkUpdate
     {
+        #region Fields
+
         private ViewModelWindowMain _viewModelMain;
         private WindowBulkUpdate _windowBulkUpdate;
         private ViewModelBulkUpdate _viewModelBulkUpdate;
@@ -65,6 +68,8 @@ namespace HLU.UI.ViewModel
         private bool _osmmBulkUpdateMode;
 
         //private DataTable _incidSelectionBackup;
+
+        #endregion Fields
 
         #region #ctor
 
@@ -194,11 +199,13 @@ namespace HLU.UI.ViewModel
                 deleteSecondaryCodes = false;
             }
 
+            // create window
             _windowBulkUpdate = new()
             {
-                //DONE: App.Current.MainWindow
-                //_windowBulkUpdate.Owner = App.Current.MainWindow;
-                WindowStartupLocation = WindowStartupLocation.CenterScreen
+                // Set ArcGIS Pro as the parent
+                Owner = FrameworkApplication.Current.MainWindow,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Topmost = true
             };
 
             // Count the non-blank rows from the user interface
@@ -217,11 +224,15 @@ namespace HLU.UI.ViewModel
                 _viewModelBulkUpdate.DisplayName = "OSMM Bulk Update";
             else
                 _viewModelBulkUpdate.DisplayName = "Bulk Update";
+
+            _viewModelBulkUpdate.RequestClose -= _viewModelBulkUpdate_RequestClose; // Safety: avoid double subscription.
             _viewModelBulkUpdate.RequestClose +=
                 new ViewModelBulkUpdate.RequestCloseEventHandler(_viewModelBulkUpdate_RequestClose);
 
+            // allow all controls in window to bind to ViewModel by setting DataContext
             _windowBulkUpdate.DataContext = _viewModelBulkUpdate;
 
+            // show window
             _windowBulkUpdate.ShowDialog();
         }
 
@@ -2040,7 +2051,5 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion
-
     }
-
 }

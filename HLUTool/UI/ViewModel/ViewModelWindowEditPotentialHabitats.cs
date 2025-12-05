@@ -118,7 +118,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void OkCommandClick(object param)
         {
-            this.RequestClose(_incidBapRowsUser);
+            RequestClose?.Invoke(_incidBapRowsUser);
         }
 
         /// <summary>
@@ -175,7 +175,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void CancelCommandClick(object param)
         {
-            this.RequestClose(null);
+            RequestClose?.Invoke(null);
         }
 
         #endregion

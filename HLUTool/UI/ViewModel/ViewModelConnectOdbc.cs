@@ -131,7 +131,7 @@ namespace HLU.UI.ViewModel
 
                 if (DbOdbc.GetBackend(cn) == Backends.Access) _defaultSchema = String.Empty;
 
-                this.RequestClose(_connStrBuilder.ConnectionString, _defaultSchema, null);
+                RequestClose?.Invoke(_connStrBuilder.ConnectionString, _defaultSchema, null);
             }
             catch (OdbcException exOdbc)
             {
@@ -189,7 +189,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void CancelCommandClick(object param)
         {
-            this.RequestClose(null, null, null);
+            RequestClose?.Invoke(null, null, null);
         }
 
         #endregion

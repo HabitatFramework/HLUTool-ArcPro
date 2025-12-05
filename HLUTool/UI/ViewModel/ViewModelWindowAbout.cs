@@ -99,10 +99,12 @@ namespace HLU.UI.ViewModel
         /// <param name="param"></param>
         private void Ok(object param)
         {
-            this.RequestClose();
+            RequestClose?.Invoke();
         }
 
         #endregion
+
+        #region Control Properties
 
         public string AppVersion
         {
@@ -175,5 +177,7 @@ namespace HLU.UI.ViewModel
             get { return _technicalGuideText; }
             set { _technicalGuideText = value; }
         }
+
+        #endregion Control Properties
     }
 }

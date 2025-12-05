@@ -130,7 +130,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void OkCommandClick(object param)
         {
-            this.RequestClose(true,
+            RequestClose?.Invoke(true,
                 _deleteOrphanBapHabitats,
                 _deletePotentialBapHabitats,
                 _deleteIHSCodes,
@@ -184,7 +184,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void CancelCommandClick(object param)
         {
-            this.RequestClose(false, false, false, false, false, false, null, null);
+            RequestClose?.Invoke(false, false, false, false, false, false, null, null);
         }
 
         #endregion
