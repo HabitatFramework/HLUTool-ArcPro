@@ -27,6 +27,7 @@ using Npgsql;
 using NpgsqlTypes;
 using System.Text;
 using ArcGIS.Desktop.Framework;
+using CommandType = System.Data.CommandType;
 
 namespace HLU.Data.Connection
 {

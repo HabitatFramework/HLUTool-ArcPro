@@ -39,6 +39,7 @@ using HLU.Date;
 using System.Threading.Tasks;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework;
+using CommandType = System.Data.CommandType;
 
 namespace HLU.UI.ViewModel
 {

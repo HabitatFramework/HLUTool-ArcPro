@@ -56,7 +56,8 @@
                 MinRowHeight="24"
                 RowDetailsVisibilityMode="Visible"
                 RowHeaderWidth="20"
-                RowHeight="24">
+                RowHeight="24"
+                Style="{DynamicResource Esri_DataGrid}">
                 <DataGrid.RowValidationRules>
                     <DataErrorValidationRule />
                 </DataGrid.RowValidationRules>

@@ -33,6 +33,7 @@ using HLU.UI.View;
 using System.Windows.Threading;
 using System.Threading.Tasks;
 using ArcGIS.Desktop.Framework;
+using CommandType = System.Data.CommandType;
 
 namespace HLU.UI.ViewModel
 {

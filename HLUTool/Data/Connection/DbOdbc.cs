@@ -26,6 +26,7 @@ using System.Linq;
 using System.Text;
 using System.Windows;
 using ArcGIS.Desktop.Framework;
+using CommandType = System.Data.CommandType;
 
 namespace HLU.Data.Connection
 {

@@ -26,6 +26,7 @@ using System.Windows;
 using Oracle.ManagedDataAccess.Client;
 using System.Text;
 using ArcGIS.Desktop.Framework;
+using CommandType = System.Data.CommandType;
 
 namespace HLU.Data.Connection
 {

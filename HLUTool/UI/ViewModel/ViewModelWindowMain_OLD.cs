@@ -12393,7 +12393,7 @@ namespace HLU.UI.ViewModel
             get
             {
                 return true;
-                //return _bulkUpdateMode == true || (IncidBapHabitatsAuto != null && 
+                //return _bulkUpdateMode == true || (IncidBapHabitatsAuto != null &&
                 //    IncidBapHabitatsAuto.Count > 0) || (IncidBapHabitatsUser.Count > 0);
             }
         }

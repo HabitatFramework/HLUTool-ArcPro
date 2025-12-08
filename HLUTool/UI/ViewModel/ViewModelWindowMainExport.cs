@@ -37,6 +37,7 @@ using HLU.UI.View;
 using HLU.Data;
 using HLU.Date;
 using ArcGIS.Desktop.Framework;
+using CommandType = System.Data.CommandType;
 
 //DONE: using Microsoft.Office.Interop.Access.Dao
 using Microsoft.Office.Interop.Access.Dao;
