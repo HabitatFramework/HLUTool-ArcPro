@@ -2198,6 +2198,15 @@ namespace HLU.UI.ViewModel
             set { _copySwitches = value; }
         }
 
+        /// <summary>
+        /// Handles the <see cref="INotifyPropertyChanged.PropertyChanged"/> event for properties related to copy
+        /// operations.
+        /// </summary>
+        /// <remarks>This method raises the <see cref="INotifyPropertyChanged.PropertyChanged"/> event for
+        /// the  <see cref="CanCopy"/> property if the changed property name starts with "Copy", or for the  <see
+        /// cref="CanPaste"/> property otherwise.</remarks>
+        /// <param name="sender">The source of the event, typically the object whose property changed.</param>
+        /// <param name="e">The event data containing the name of the property that changed.</param>
         void _copySwitches_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName.StartsWith("Copy"))
@@ -2207,26 +2216,17 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Copy command.
+        /// Copies the attribute values from the current Incid row.
         /// </summary>
-        public ICommand CopyCommand
-        {
-            get
-            {
-                if (_copyCommand == null)
-                {
-                    Action<object> copyAction = new(this.CopyClicked);
-                    _copyCommand = new RelayCommand(copyAction, param => this.CanCopy);
-                }
-                return _copyCommand;
-            }
-        }
-
-        private void CopyClicked(object param)
+        /// <remarks>This method stores the current instance's attribute values</remarks>
+        public void CopyAttributes()
         {
             _copySwitches.CopyValues(this);
         }
 
+        /// <summary>
+        /// Can the user copy attribute values from the current Incid row?
+        /// </summary>
         public bool CanCopy
         {
             get
@@ -2239,26 +2239,18 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Paste command.
+        /// Pastes attribute values from a copied source into the current instance.
         /// </summary>
-        public ICommand PasteCommand
-        {
-            get
-            {
-                if (_pasteCommand == null)
-                {
-                    Action<object> pasteAction = new(this.PasteClicked);
-                    _pasteCommand = new RelayCommand(pasteAction, param => this.CanPaste);
-                }
-                return _pasteCommand;
-            }
-        }
-
-        private void PasteClicked(object param)
+        /// <remarks>This method applies copied attribute values to the current instance using the
+        /// internal copy mechanism.</remarks>
+        public void PasteAttributes()
         {
             _copySwitches.PasteValues(this);
         }
 
+        /// <summary>
+        /// Can the user paste attribute values to the current Incid row?
+        /// </summary>
         public bool CanPaste
         {
             get
@@ -2463,39 +2455,13 @@ namespace HLU.UI.ViewModel
 
         #endregion
 
-        #region Split
-
-        /// <summary>
-        /// Logical Split command.
-        /// </summary>
-        public ICommand LogicalSplitCommand
-        {
-            get
-            {
-                if (_logicalSplitCommand == null)
-                {
-                    Action<object> logicalSplitAction = new(this.LogicalSplitClicked);
-                    _logicalSplitCommand = new RelayCommand(logicalSplitAction, param => this.CanLogicallySplit);
-                }
-                return _logicalSplitCommand;
-            }
-        }
+        #region Split & Merge
 
         /// <summary>
         /// LogicalSplitCommand event handler.
         /// </summary>
         /// <param name="param"></param>
-        private void LogicalSplitClicked(object param)
-        {
-            // Logically split the selected features (don't wait).
-            LogicalSplitAsync();
-        }
-
-        /// <summary>
-        /// LogicalSplitCommand event handler.
-        /// </summary>
-        /// <param name="param"></param>
-        private async Task LogicalSplitAsync()
+        public async Task LogicalSplitAsync()
         {
             _autoSplit = false;
 
@@ -2523,36 +2489,10 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Physical Split command.
-        /// </summary>
-        public ICommand PhysicalSplitCommand
-        {
-            get
-            {
-                if (_physicalSplitCommand == null)
-                {
-                    Action<object> physicalSplitAction = new(this.PhysicalSplitClicked);
-                    _physicalSplitCommand = new RelayCommand(physicalSplitAction, param => this.CanPhysicallySplit);
-                }
-                return _physicalSplitCommand;
-            }
-        }
-
-        /// <summary>
         /// PhysicalSplitCommand event handler.
         /// </summary>
         /// <param name="param"></param>
-        private void PhysicalSplitClicked(object param)
-        {
-            // Physically split the selected features (don't wait).
-            PhysicalSplitAsync();
-        }
-
-        /// <summary>
-        /// PhysicalSplitCommand event handler.
-        /// </summary>
-        /// <param name="param"></param>
-        private async Task PhysicalSplitAsync()
+        public async Task PhysicalSplitAsync()
         {
             _autoSplit = false;
 
@@ -2572,7 +2512,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// At least one feature in selection that share the same incid, but *not* toid and toidfragid
         /// </summary>
-        private bool CanLogicallySplit
+        public bool CanLogicallySplit
         {
             get
             {
@@ -2596,7 +2536,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// At least two features in selection that share the same incid, toid and toidfragid
         /// </summary>
-        private bool CanPhysicallySplit
+        public bool CanPhysicallySplit
         {
             get
             {
@@ -2609,41 +2549,11 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
-
-        #region Merge
-
-        /// <summary>
-        /// Logical Merge command.
-        /// </summary>
-        public ICommand LogicalMergeCommand
-        {
-            get
-            {
-                if (_logicalMergeCommand == null)
-                {
-                    Action<object> logcalMergeAction = new(this.LogicalMergeClicked);
-                    _logicalMergeCommand = new RelayCommand(logcalMergeAction, param => this.CanLogicallyMerge);
-                }
-                return _logicalMergeCommand;
-            }
-        }
-
         /// <summary>
         /// LogicalMergeCommand event handler.
         /// </summary>
         /// <param name="param"></param>
-        private void LogicalMergeClicked(object param)
-        {
-            // Logically merge the selected features (don't wait).
-            LogicalMergeAsync();
-        }
-
-        /// <summary>
-        /// LogicalMergeCommand event handler.
-        /// </summary>
-        /// <param name="param"></param>
-        private async Task LogicalMergeAsync()
+        public async Task LogicalMergeAsync()
         {
             // Get the GIS layer selection again (just in case)
             await ReadMapSelectionAsync(false);
@@ -2667,36 +2577,10 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Physical Merge command.
-        /// </summary>
-        public ICommand PhysicalMergeCommand
-        {
-            get
-            {
-                if (_physicalMergeCommand == null)
-                {
-                    Action<object> logcalMergeAction = new(this.PhysicalMergeClicked);
-                    _physicalMergeCommand = new RelayCommand(logcalMergeAction, param => this.CanPhysicallyMerge);
-                }
-                return _physicalMergeCommand;
-            }
-        }
-
-        /// <summary>
         /// PhysicalMergeCommand event handler.
         /// </summary>
         /// <param name="param"></param>
-        private void PhysicalMergeClicked(object param)
-        {
-            // Physically merge the selected features (don't wait).
-            PhysicalMergeAsync();
-        }
-
-        /// <summary>
-        /// PhysicalMergeCommand event handler.
-        /// </summary>
-        /// <param name="param"></param>
-        private async Task PhysicalMergeAsync()
+        public async Task PhysicalMergeAsync()
         {
             // Get the GIS layer selection again (just in case)
             await ReadMapSelectionAsync(false);
@@ -2719,11 +2603,10 @@ namespace HLU.UI.ViewModel
                 NotifySplitMerge("Physical merge completed.");
         }
 
-
         /// <summary>
         /// At least one feature in selection that do not share the same incid or toidfragid
         /// </summary>
-        private bool CanLogicallyMerge
+        public bool CanLogicallyMerge
         {
             get
             {
@@ -2739,7 +2622,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// At least one feature in selection that share the same incid and toid but *not* the same toidfragid
         /// </summary>
-        private bool CanPhysicallyMerge
+        public bool CanPhysicallyMerge
         {
             get
             {
@@ -2752,22 +2635,18 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Split & Merge
 
         #region Notify SplitMerge
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR39 (Split and merge complete messages)
-        // Check the options to see if the user wants to be notified
-        // following the completion of a split or merge, and display
-        // the supplied message if they do.
-        //
         /// <summary>
         /// Notify the user following the completion of a split of merge
         /// if the options specify they want to be notified.
         /// </summary>
         private void NotifySplitMerge(string msgText)
         {
+            // If the user wants to be notified following the completion of
+            // a split or merge, and display the supplied message if they do.
             if (_notifyOnSplitMerge)
             {
                 // Create window to show message
@@ -2807,7 +2686,6 @@ namespace HLU.UI.ViewModel
             _notifyOnSplitMerge = Settings.Default.NotifyOnSplitMerge;
 
         }
-        //---------------------------------------------------------------------
 
         #endregion
 
@@ -4560,25 +4438,6 @@ namespace HLU.UI.ViewModel
 
         #region About
 
-        /// <summary>
-        /// Gets the about command.
-        /// </summary>
-        /// <value>
-        /// The about command.
-        /// </value>
-        public ICommand AboutCommand
-        {
-            get
-            {
-                if (_aboutCommand == null)
-                {
-                    Action<object> aboutAction = new(this.AboutClicked);
-                    _aboutCommand = new RelayCommand(aboutAction);
-                }
-                return _aboutCommand;
-            }
-        }
-
         //---------------------------------------------------------------------
         // CHANGED: CR9 (Current userid)
         // Retrieve the copyright notice for the assembly to display with the
@@ -4609,17 +4468,9 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Show the about window.
         /// </summary>
-        /// <param name="param">The parameter.</param>
-        private void AboutClicked(object param)
+        public void ShowAbout()
         {
-            //---------------------------------------------------------------------
-            // CHANGED: CR30 (Database validation on startup)
-            // Show the database version in the 'About' box.
-            //
-            // CHANGED: CR9 (Current userid)
-            // Show the current userid and username together with the version
-            // and copyright notice in the 'About' box.
-            //
+            // Get the database backend and settings
             string dbBackend;
             dbBackend = String.Format("{0}{1}{2}{3}",
                 _db.Backend.ToString(),
@@ -4628,7 +4479,6 @@ namespace HLU.UI.ViewModel
                 String.IsNullOrEmpty(_db.DefaultSchema) ? null : ")");
             string dbSettings;
             dbSettings = _db.ConnectionString.Replace(";", "\n");
-            //---------------------------------------------------------------------
 
             // Create about window
             _windowAbout = new WindowAbout
@@ -4682,32 +4532,6 @@ namespace HLU.UI.ViewModel
         #endregion
 
         #region Export
-
-        /// <summary>
-        /// Export command.
-        /// </summary>
-        public ICommand ExportCommand
-        {
-            get
-            {
-                if (_exportCommand == null)
-                {
-                    Action<object> exportAction = new(this.ExportClicked);
-                    _exportCommand = new RelayCommand(exportAction, param => this.CanExport);
-                }
-                return _exportCommand;
-            }
-        }
-
-        /// <summary>
-        /// Initiates the exports process.
-        /// </summary>
-        /// <param name="param">The parameter.</param>
-        private void ExportClicked(object param)
-        {
-            ViewModelWindowMainExport viewModelExport = new(this);
-            viewModelExport.InitiateExport();
-        }
 
         public bool CanExport { get { return _bulkUpdateMode == false && _osmmUpdateMode == false && _hluDS != null; } }
 

@@ -127,15 +127,10 @@ namespace HLU.UI.ViewModel
         Error
     };
 
-    //---------------------------------------------------------------------
-    // CHANGED: CR49 Process proposed OSMM Updates
-    // Functionality to process proposed OSMM Updates.
-    //
     /// <summary>
     /// Update operations.
     /// </summary>
     public enum Operations { PhysicalMerge, PhysicalSplit, LogicalMerge, LogicalSplit, AttributeUpdate, BulkUpdate, OSMMUpdate };
-    //---------------------------------------------------------------------
 
     /// <summary>
     /// User Interface control visibility values.

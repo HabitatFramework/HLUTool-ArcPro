@@ -38,26 +38,43 @@
 					<group refID="HLUTool_Group1" />
 					<group refID="HLUTool_Group2" />
 					<group refID="HLUTool_Group3" />
+					<group refID="HLUTool_Group4" />
+					<group refID="HLUTool_Group5" />
+					<group refID="HLUTool_Group9" />
 				</tab>
 			</tabs>
 
 			<groups>
-				<group id="HLUTool_Group1" caption="GIS" keytip="G0">
+				<group id="HLUTool_Group1" caption="GIS" keytip="G1">
 					<comboBox refID="HLUTool_ActiveLayerComboBox" size="middle" />
 				</group>
-				<group id="HLUTool_Group2" caption="Edits" keytip="G1">
+				<group id="HLUTool_Group2" caption="Edits" keytip="G2">
 					<comboBox refID="HLUTool_ReasonComboBox" size="middle" />
 					<comboBox refID="HLUTool_ProcessComboBox" size="middle" />
 				</group>
-				<group id="HLUTool_Group3" caption="Options" keytip="G2">
+				<group id="HLUTool_Group3" caption="Export" keytip="G3">
+					<button refID="HLUTool_btnExportButton" size="middle" />
+				</group>
+				<group id="HLUTool_Group4" caption="Copy/Paste" keytip="G4">
+					<button refID="HLUTool_btnCopyButton" size="middle" />
+					<button refID="HLUTool_btnPasteButton" size="middle" />
+				</group>
+				<group id="HLUTool_Group5" caption="Split/Merge" keytip="G5">
+					<button refID="HLUTool_btnLogicalSplitButton" size="large" />
+					<button refID="HLUTool_btnLogicalMergeButton" size="large" />
+					<button refID="HLUTool_btnPhysicalSplitButton" size="large" />
+					<button refID="HLUTool_btnPhysicalMergeButton" size="large" />
+				</group>
+				<group id="HLUTool_Group9" caption="Options" keytip="G9">
 					<button refID="HLUTool_btnOptionsButton" size="middle" />
+					<button refID="HLUTool_btnAboutButton" size="middle" />
 				</group>
 			</groups>
 
 			<controls>
 				<button id="HLUTool_btnHLUToolDockPane"
 						caption="HLU Tool"
-						className="HLU.UI.UserControls.Toolbar.ShowMainWindowButton"
+						className="HLU.UI.UserControls.Toolbar.MainWindowButton"
 						loadOnClick="true"
 						keytip="DY"
 						smallImage="pack://application:,,,/HLUTool;component/Images/HLUTool16.png"
@@ -68,13 +85,111 @@
 					</tooltip>
 				</button>
 
+				<button id="HLUTool_btnExportButton"
+						caption="Export"
+						className="HLU.UI.UserControls.Toolbar.ExportWindowButton"
+						loadOnClick="false"
+						keytip="Ex"
+						smallImage="pack://application:,,,/HLUTool;component/Images/Export16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/Export32.png">
+					<tooltip heading="Export">
+						Export data using a pre-defined format<disabledText />
+					</tooltip>
+				</button>
+
+				<button id="HLUTool_btnCopyButton"
+						caption="Copy"
+						className="HLU.UI.UserControls.Toolbar.CopyAttributesButton"
+						loadOnClick="false"
+						keytip="Co"
+						smallImage="pack://application:,,,/HLUTool;component/Images/Copy16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/Copy32.png">
+					<tooltip heading="Copy">
+						Copies selected attributes<disabledText />
+					</tooltip>
+				</button>
+
+				<button id="HLUTool_btnPasteButton"
+						caption="Paste"
+						className="HLU.UI.UserControls.Toolbar.PasteAttributesButton"
+						loadOnClick="false"
+						keytip="Pa"
+						smallImage="pack://application:,,,/HLUTool;component/Images/Paste16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/Paste32.png">
+					<tooltip heading="Paste">
+						Paste the copied attributes<disabledText />
+					</tooltip>
+				</button>
+
+				<button id="HLUTool_btnLogicalSplitButton"
+						caption="Logical Split"
+						className="HLU.UI.UserControls.Toolbar.LogicalSplitButton"
+						loadOnClick="false"
+						keytip="Pa"
+						smallImage="pack://application:,,,/HLUTool;component/Images/LogicalSplit16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/LogicalSplit32.png">
+					<tooltip heading="Logical Split">
+						Splits features from the current INCID into a new INCID. Logical splits are used to isolate one or more features from one INCID into a new INCID so that they can be updated independently.<disabledText />
+					</tooltip>
+				</button>
+
+				<button id="HLUTool_btnLogicalMergeButton"
+						caption="Logical Merge"
+						className="HLU.UI.UserControls.Toolbar.LogicalMergeButton"
+						loadOnClick="false"
+						keytip="Pa"
+						smallImage="pack://application:,,,/HLUTool;component/Images/LogicalMerge16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/LogicalMerge32.png">
+					<tooltip heading="Logical Merge">
+						Combines two or more selected features into the INCID of one of those features (selected from the list of INCIDs displayed during the process).<disabledText />
+					</tooltip>
+				</button>
+
+				<button id="HLUTool_btnPhysicalSplitButton"
+						caption="Physical Split"
+						className="HLU.UI.UserControls.Toolbar.PhysicalSplitButton"
+						loadOnClick="false"
+						keytip="Pa"
+						smallImage="pack://application:,,,/HLUTool;component/Images/PhysicalSplit16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/PhysicalSplit32.png">
+					<tooltip heading="Physical Split">
+						Sub-divides a single feature, that has already been split in the GIS layer, into one or more new TOID fragments by assigning new TOID fragment identifiers. The fragments can then be assigned different attributes (once they have been logically split from one another).<disabledText />
+					</tooltip>
+				</button>
+
+				<button id="HLUTool_btnPhysicalMergeButton"
+						caption="Physical Merge"
+						className="HLU.UI.UserControls.Toolbar.PhysicalMergeButton"
+						loadOnClick="false"
+						keytip="Pa"
+						smallImage="pack://application:,,,/HLUTool;component/Images/PhysicalMerge16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/PhysicalMerge32.png">
+					<tooltip heading="Physical Merge">
+						Combines two or more fragments of a single TOID, that are also associated with the same INCID, into a new single merged feature in the GIS layer and assigns them to the same TOID fragment identifier.<disabledText />
+					</tooltip>
+				</button>
+
 				<button id="HLUTool_btnOptionsButton"
 						caption="Options"
-						className="HLU.UI.UserControls.Toolbar.ShowOptionsButton"
+						className="HLU.UI.UserControls.Toolbar.OptionsWindowButton"
 						loadOnClick="true"
-						keytip="OP">
+						keytip="Op"
+						smallImage="pack://application:,,,/HLUTool;component/Images/Options16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/Options32.png">
 					<tooltip heading="Tool options">
-						View and update the tool options<disabledText />
+						View and update the application and user tool options.<disabledText />
+					</tooltip>
+				</button>
+
+				<button id="HLUTool_btnAboutButton"
+						caption="About"
+						className="HLU.UI.UserControls.Toolbar.AboutWindowButton"
+						loadOnClick="true"
+						keytip="Ab"
+						smallImage="pack://application:,,,/HLUTool;component/Images/About16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/About32.png">
+					<tooltip heading="About">
+						Information about the tool version, database connection, current user, copyrights and online guides.<disabledText />
 					</tooltip>
 				</button>
 

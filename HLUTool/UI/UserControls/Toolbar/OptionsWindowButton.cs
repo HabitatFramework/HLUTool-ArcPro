@@ -14,9 +14,9 @@ using Xceed.Wpf.Toolkit.Primitives;
 namespace HLU.UI.UserControls.Toolbar
 {
     /// <summary>
-    /// Button implementation for the button on the menu of the burger button.
+    /// Button implementation to open the options window.
     /// </summary>
-    internal class ShowOptionsButton : Button
+    internal class OptionsWindowButton : Button
     {
         #region Fields
 
@@ -32,7 +32,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ShowOptionsButton()
+        public OptionsWindowButton()
         {
             // Get the dockpane DAML id.
             DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
@@ -46,7 +46,7 @@ namespace HLU.UI.UserControls.Toolbar
         #endregion Constructor
 
         /// <summary>
-        /// Show the options window.
+        /// Show the options window. Called when the button is clicked.
         /// </summary>
         protected override void OnClick()
         {

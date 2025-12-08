@@ -42,9 +42,23 @@
     <None Remove="Icons\HLUIcon.png" />
     <None Remove="Icons\ReadMapSelection.png" />
     <None Remove="Icons\ZoomTable.png" />
+    <None Remove="Images\About16.png" />
+    <None Remove="Images\About32.png" />
     <None Remove="Images\AddInDesktop16.png" />
     <None Remove="Images\AddInDesktop32.png" />
+    <None Remove="Images\Copy16.png" />
+    <None Remove="Images\Copy32.png" />
     <None Remove="Images\Error32.png" />
+    <None Remove="Images\Export16.png" />
+    <None Remove="Images\Export32.png" />
+    <None Remove="Images\Options16.png" />
+    <None Remove="Images\Options32.png" />
+    <None Remove="Images\Paste16.png" />
+    <None Remove="Images\Paste32.png" />
+    <None Remove="Images\PhysicalMerge16.png" />
+    <None Remove="Images\PhysicalMerge32.png" />
+    <None Remove="Images\PhysicalSplit16.png" />
+    <None Remove="Images\PhysicalSplit32.png" />
     <None Remove="Images\Success32.png" />
     <None Remove="Images\Warning32.png" />
   </ItemGroup>
@@ -98,6 +112,24 @@
     <Resource Include="Icons\ZoomTable.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="Images\About16.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\About32.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\Copy16.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\Copy32.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\Export16.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\Export32.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Images\HLUTool16.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
@@ -105,6 +137,30 @@
 	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	</Resource>
 	<Resource Include="Images\Error32.png">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Resource>
+	<Resource Include="Images\Options16.png">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Resource>
+	<Resource Include="Images\Options32.png">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Resource>
+	<Resource Include="Images\Paste16.png">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Resource>
+	<Resource Include="Images\Paste32.png">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Resource>
+	<Resource Include="Images\PhysicalMerge16.png">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Resource>
+	<Resource Include="Images\PhysicalMerge32.png">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Resource>
+	<Resource Include="Images\PhysicalSplit16.png">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Resource>
+	<Resource Include="Images\PhysicalSplit32.png">
 	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	</Resource>
 	<Resource Include="Images\Success32.png">
