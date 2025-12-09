@@ -11,7 +11,7 @@
 		<Image>Images\AddinDesktop32.png</Image>
 		<Author>Andy Foy, andy@andyfoyconsulting.co.uk</Author>
 		<Company>Andy Foy Consulting</Company>
-		<Date>06/03/2025 15:57:00 AM</Date>
+		<Date>09/12/2025 17:38:00 AM</Date>
 		<Subject>Framework, Geodatabase</Subject>
 		<!-- Note subject can be one or more of these topics:
                     Content, Framework, Editing, Geodatabase, Geometry, Geoprocessing, Layouts, Map Authoring, Map Exploration -->
@@ -40,34 +40,47 @@
 					<group refID="HLUTool_Group3" />
 					<group refID="HLUTool_Group4" />
 					<group refID="HLUTool_Group5" />
+					<group refID="HLUTool_Group7" />
+					<group refID="HLUTool_Group8" />
 					<group refID="HLUTool_Group9" />
 				</tab>
 			</tabs>
 
 			<groups>
 				<group id="HLUTool_Group1" caption="GIS" keytip="G1">
-					<comboBox refID="HLUTool_ActiveLayerComboBox" size="middle" />
+					<comboBox refID="HLUTool_cmbActiveLayer" size="middle" />
 				</group>
 				<group id="HLUTool_Group2" caption="Edits" keytip="G2">
-					<comboBox refID="HLUTool_ReasonComboBox" size="middle" />
-					<comboBox refID="HLUTool_ProcessComboBox" size="middle" />
+					<comboBox refID="HLUTool_cmbReason" size="middle" />
+					<comboBox refID="HLUTool_cmbProcess" size="middle" />
 				</group>
-				<group id="HLUTool_Group3" caption="Export" keytip="G3">
-					<button refID="HLUTool_btnExportButton" size="middle" />
+				<group id="HLUTool_Group3" caption="Copy/Paste" keytip="G3">
+					<button refID="HLUTool_btnCopy" size="large" />
+					<button refID="HLUTool_btnPaste" size="large" />
 				</group>
-				<group id="HLUTool_Group4" caption="Copy/Paste" keytip="G4">
-					<button refID="HLUTool_btnCopyButton" size="middle" />
-					<button refID="HLUTool_btnPasteButton" size="middle" />
+				<group id="HLUTool_Group4" caption="Select" keytip="G4">
+					<button refID="HLUTool_btnFilterByAttributes" size="large" />
+					<editBox refID="HLUTool_edbFilterByIncidx" size="large" />
+					<button refID="HLUTool_btnClearFilter" size="large" />
+					<button refID="HLUTool_btnSelectCurrentIncid" size="middle" />
+					<button refID="HLUTool_btnSelectFilteredIncids" size="middle" />
+					<button refID="HLUTool_btnGetMapSelection" size="large" />
 				</group>
 				<group id="HLUTool_Group5" caption="Split/Merge" keytip="G5">
-					<button refID="HLUTool_btnLogicalSplitButton" size="large" />
-					<button refID="HLUTool_btnLogicalMergeButton" size="large" />
-					<button refID="HLUTool_btnPhysicalSplitButton" size="large" />
-					<button refID="HLUTool_btnPhysicalMergeButton" size="large" />
+					<button refID="HLUTool_btnLogicalSplit" size="middle" />
+					<button refID="HLUTool_btnLogicalMerge" size="middle" />
+					<button refID="HLUTool_btnPhysicalSplit" size="middle" />
+					<button refID="HLUTool_btnPhysicalMerge" size="middle" />
 				</group>
-				<group id="HLUTool_Group9" caption="Options" keytip="G9">
-					<button refID="HLUTool_btnOptionsButton" size="middle" />
-					<button refID="HLUTool_btnAboutButton" size="middle" />
+				<group id="HLUTool_Group7" caption="Export" keytip="G7">
+					<button refID="HLUTool_btnExport" size="middle" />
+				</group>
+				<group id="HLUTool_Group8" caption="Options" keytip="G8">
+					<button refID="HLUTool_btnOptions" size="middle" />
+					<button refID="HLUTool_btnAutoZoom" size="small" />
+				</group>
+				<group id="HLUTool_Group9" caption="Help" keytip="G9">
+					<button refID="HLUTool_btnAbout" size="middle" />
 				</group>
 			</groups>
 
@@ -85,19 +98,7 @@
 					</tooltip>
 				</button>
 
-				<button id="HLUTool_btnExportButton"
-						caption="Export"
-						className="HLU.UI.UserControls.Toolbar.ExportWindowButton"
-						loadOnClick="false"
-						keytip="Ex"
-						smallImage="pack://application:,,,/HLUTool;component/Images/Export16.png"
-						largeImage="pack://application:,,,/HLUTool;component/Images/Export32.png">
-					<tooltip heading="Export">
-						Export data using a pre-defined format<disabledText />
-					</tooltip>
-				</button>
-
-				<button id="HLUTool_btnCopyButton"
+				<button id="HLUTool_btnCopyn"
 						caption="Copy"
 						className="HLU.UI.UserControls.Toolbar.CopyAttributesButton"
 						loadOnClick="false"
@@ -105,11 +106,11 @@
 						smallImage="pack://application:,,,/HLUTool;component/Images/Copy16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/Copy32.png">
 					<tooltip heading="Copy">
-						Copies selected attributes<disabledText />
+						Copies selected attributes.<disabledText />
 					</tooltip>
 				</button>
 
-				<button id="HLUTool_btnPasteButton"
+				<button id="HLUTool_btnPaste"
 						caption="Paste"
 						className="HLU.UI.UserControls.Toolbar.PasteAttributesButton"
 						loadOnClick="false"
@@ -117,15 +118,89 @@
 						smallImage="pack://application:,,,/HLUTool;component/Images/Paste16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/Paste32.png">
 					<tooltip heading="Paste">
-						Paste the copied attributes<disabledText />
+						Paste the copied attributes.<disabledText />
 					</tooltip>
 				</button>
 
-				<button id="HLUTool_btnLogicalSplitButton"
+				<button id="HLUTool_btnFilterByAttributes"
+						caption="Filter by Attributes"
+						className="HLU.UI.UserControls.Toolbar.FilterByAttributesButton"
+						loadOnClick="false"
+						disableIfBusy="true"
+						keytip="Pa"
+						smallImage="pack://application:,,,/HLUTool;component/Images/Filter16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/Filter32.png">
+					<tooltip heading="Filter by Attributes">
+						Filter the INCID records based upon non-spatial criteria using the query builder.<disabledText />
+					</tooltip>
+				</button>
+
+				<editBox id="HLUTool_edbFilterByIncid"
+						 caption="Filter by INCID:"
+						 className="HLU.UI.UserControls.Toolbar.FilterByIncidEditBox"
+						 condition="esri_mapping_mapPane"
+						 dataType="string"
+						 editHint="Enter INCID"
+						 keytip="FI"
+						 sizeString="120">
+					<tooltip heading="Filter by INCID">
+						Filter the records for a single INCID.<disabledText />
+					</tooltip>
+				</editBox>
+
+				<button id="HLUTool_btnClearFilter"
+						caption="Paste"
+						className="HLU.UI.UserControls.Toolbar.ClearFilterButton"
+						loadOnClick="false"
+						keytip="Pa"
+						smallImage="pack://application:,,,/HLUTool;component/Images/ClearFilter16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/ClearFilter32.png">
+					<tooltip heading="Clear Filter">
+						Clears the current filter so that all INCID records are available for viewing using the record selectors.<disabledText />
+					</tooltip>
+				</button>
+
+				<button id="HLUTool_btnSelectCurrentIncid"
+						caption="Select Current Incid"
+						className="HLU.UI.UserControls.Toolbar.SelectCurrentIncidButton"
+						loadOnClick="false"
+						keytip="SC"
+						smallImage="pack://application:,,,/HLUTool;component/Images/SelectCurrentIncid.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/SelectCurrentIncid32.png">
+					<tooltip heading="Select Current Incid">
+						Selects all of the features associated with only the current INCID record in the active GIS layer.<disabledText />
+					</tooltip>
+				</button>
+
+				<button id="HLUTool_btnSelectFilteredIncids"
+						caption="Select All Filtered INCIDs"
+						className="HLU.UI.UserControls.Toolbar.SelectFilteredIncidsButton"
+						loadOnClick="false"
+						keytip="SA"
+						smallImage="pack://application:,,,/HLUTool;component/Images/SelectFilteredIncids16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/SelectFilteredIncids32.png">
+					<tooltip heading="Select All Filtered INCIDs">
+						Selects all of the features associated with all of the currently filtered INCID records in the active GIS layer.<disabledText />
+					</tooltip>
+				</button>
+
+				<button id="HLUTool_btnGetMapSelection"
+						caption="Get Map Selection"
+						className="HLU.UI.UserControls.Toolbar.GetMapSelectionButton"
+						loadOnClick="false"
+						keytip="GM"
+						smallImage="pack://application:,,,/HLUTool;component/Images/GetMapSelection16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/GetMapSelection32.png">
+					<tooltip heading="Get Map Selection">
+						Filters the Incid records associated with the selected features in the active GIS layer.<disabledText />
+					</tooltip>
+				</button>
+
+				<button id="HLUTool_btnLogicalSplit"
 						caption="Logical Split"
 						className="HLU.UI.UserControls.Toolbar.LogicalSplitButton"
 						loadOnClick="false"
-						keytip="Pa"
+						keytip="LS"
 						smallImage="pack://application:,,,/HLUTool;component/Images/LogicalSplit16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/LogicalSplit32.png">
 					<tooltip heading="Logical Split">
@@ -133,11 +208,11 @@
 					</tooltip>
 				</button>
 
-				<button id="HLUTool_btnLogicalMergeButton"
+				<button id="HLUTool_btnLogicalMerge"
 						caption="Logical Merge"
 						className="HLU.UI.UserControls.Toolbar.LogicalMergeButton"
 						loadOnClick="false"
-						keytip="Pa"
+						keytip="LM"
 						smallImage="pack://application:,,,/HLUTool;component/Images/LogicalMerge16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/LogicalMerge32.png">
 					<tooltip heading="Logical Merge">
@@ -145,34 +220,46 @@
 					</tooltip>
 				</button>
 
-				<button id="HLUTool_btnPhysicalSplitButton"
+				<button id="HLUTool_btnPhysicalSplit"
 						caption="Physical Split"
 						className="HLU.UI.UserControls.Toolbar.PhysicalSplitButton"
 						loadOnClick="false"
-						keytip="Pa"
+						keytip="PS"
 						smallImage="pack://application:,,,/HLUTool;component/Images/PhysicalSplit16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/PhysicalSplit32.png">
 					<tooltip heading="Physical Split">
-						Sub-divides a single feature, that has already been split in the GIS layer, into one or more new TOID fragments by assigning new TOID fragment identifiers. The fragments can then be assigned different attributes (once they have been logically split from one another).<disabledText />
+						Sub-divides a single feature, that has already been split in the active GIS layer, into one or more new TOID fragments by assigning new TOID fragment identifiers. The fragments can then be assigned different attributes (once they have been logically split from one another).<disabledText />
 					</tooltip>
 				</button>
 
-				<button id="HLUTool_btnPhysicalMergeButton"
+				<button id="HLUTool_btnPhysicalMerge"
 						caption="Physical Merge"
 						className="HLU.UI.UserControls.Toolbar.PhysicalMergeButton"
 						loadOnClick="false"
-						keytip="Pa"
+						keytip="PM"
 						smallImage="pack://application:,,,/HLUTool;component/Images/PhysicalMerge16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/PhysicalMerge32.png">
 					<tooltip heading="Physical Merge">
-						Combines two or more fragments of a single TOID, that are also associated with the same INCID, into a new single merged feature in the GIS layer and assigns them to the same TOID fragment identifier.<disabledText />
+						Combines two or more fragments of a single TOID, that are also associated with the same INCID, into a new single merged feature in the active GIS layer and assigns them to the same TOID fragment identifier.<disabledText />
 					</tooltip>
 				</button>
 
-				<button id="HLUTool_btnOptionsButton"
+				<button id="HLUTool_btnExport"
+						caption="Export"
+						className="HLU.UI.UserControls.Toolbar.ExportWindowButton"
+						loadOnClick="false"
+						keytip="Ex"
+						smallImage="pack://application:,,,/HLUTool;component/Images/Export16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/Export32.png">
+					<tooltip heading="Export">
+						Export data using a pre-defined format.<disabledText />
+					</tooltip>
+				</button>
+
+				<button id="HLUTool_btnOptions"
 						caption="Options"
 						className="HLU.UI.UserControls.Toolbar.OptionsWindowButton"
-						loadOnClick="true"
+						loadOnClick="false"
 						keytip="Op"
 						smallImage="pack://application:,,,/HLUTool;component/Images/Options16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/Options32.png">
@@ -181,10 +268,22 @@
 					</tooltip>
 				</button>
 
-				<button id="HLUTool_btnAboutButton"
+				<button id="HLUTool_btnAutoSelectOnGis"
+						caption="Auto Zoom"
+						className="HLU.UI.UserControls.Toolbar.AutoSelectOnGisButton"
+						loadOnClick="false"
+						keytip="AZ"
+						smallImage="pack://application:,,,/HLUTool;component/Images/Options16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/Options32.png">
+					<tooltip heading="Auto zoom">
+						Automatically select the features associated with the current INCID record in the active GIS layer.<disabledText />
+					</tooltip>
+				</button>
+
+				<button id="HLUTool_btnAbout"
 						caption="About"
 						className="HLU.UI.UserControls.Toolbar.AboutWindowButton"
-						loadOnClick="true"
+						loadOnClick="false"
 						keytip="Ab"
 						smallImage="pack://application:,,,/HLUTool;component/Images/About16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/About32.png">
@@ -193,7 +292,7 @@
 					</tooltip>
 				</button>
 
-				<comboBox id="HLUTool_ActiveLayerComboBox"
+				<comboBox id="HLUTool_cmbActiveLayer"
 						  caption=" Active Layer:"
 						  extendedCaption="Select Active Layer"
 						  className="HLU.UI.UserControls.Toolbar.ActiveLayerComboBox"
@@ -204,11 +303,11 @@
 						  resizable="true"
 						  keytip="AL">
 					<tooltip heading="Active Layer">
-						Select the active feature layer<disabledText />
+						Select the active feature layer.<disabledText />
 					</tooltip>
 				</comboBox>
 
-				<comboBox id="HLUTool_ReasonComboBox"
+				<comboBox id="HLUTool_cmbReason"
 						  caption=" Reason:"
 						  extendedCaption="Select reason for updates"
 						  className="HLU.UI.UserControls.Toolbar.ReasonComboBox"
@@ -219,11 +318,11 @@
 						  resizable="true"
 						  keytip="RC">
 					<tooltip heading="Reason">
-						Select the reason for updates<disabledText />
+						Select the reason for updates.<disabledText />
 					</tooltip>
 				</comboBox>
 
-				<comboBox id="HLUTool_ProcessComboBox"
+				<comboBox id="HLUTool_cmbProcess"
 						  caption=" Process:"
 						  extendedCaption="Select process for updates"
 						  className="HLU.UI.UserControls.Toolbar.ProcessComboBox"
@@ -234,7 +333,7 @@
 						  resizable="true"
 						  keytip="PC">
 					<tooltip heading="Process">
-						Select the process for updates<disabledText />
+						Select the process for updates.<disabledText />
 					</tooltip>
 				</comboBox>
 			</controls>

@@ -16,6 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Desktop.Framework.Controls;
 using System.Windows;
 
 namespace HLU.UI.View.Connection
@@ -23,7 +24,7 @@ namespace HLU.UI.View.Connection
     /// <summary>
     /// Interaction logic for ViewPassword.xaml
     /// </summary>
-    public partial class ViewPassword : Window
+    public partial class ViewPassword : ProWindow
     {
         public ViewPassword()
         {

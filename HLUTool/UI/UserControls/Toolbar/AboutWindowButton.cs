@@ -57,7 +57,7 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            // Initiate the export process.
+            // Show the about window.
             _viewModel.ShowAbout();
         }
     }

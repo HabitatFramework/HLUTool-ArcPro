@@ -12,7 +12,7 @@ namespace HLU.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.12.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.14.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -698,19 +698,7 @@ namespace HLU.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=ZIPY\\SQLDEVELOPER2017;Initial Catalog=HLUData_v401;Integrated Securit" +
-            "y=True")]
-        public string HLUData_v401ConnectionString {
-            get {
-                return ((string)(this["HLUData_v401ConnectionString"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=LAPTOP-8C1RJG21\\SQLSERVER2017;Initial Catalog=HLUData;Integrated Secu" +
-            "rity=True")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=NEO\\SQLSERVER2017;Initial Catalog=HLUData;Integrated Security=True")]
         public string HLUData_v401ConnectionString_2017 {
             get {
                 return ((string)(this["HLUData_v401ConnectionString_2017"]));
@@ -837,6 +825,16 @@ namespace HLU.Properties {
             }
             set {
                 this["CallXMLUpgrade"] = value;
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=localhost;Initial Catalog=HLUData;Integrated Security=True")]
+        public string HLUData_v401ConnectionString {
+            get {
+                return ((string)(this["HLUData_v401ConnectionString"]));
             }
         }
     }

@@ -1,4 +1,5 @@
-﻿<controls:ProWindow x:Class="HLU.UI.View.WindowOptions"
+﻿<controls:ProWindow
+    x:Class="HLU.UI.View.WindowOptions"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
@@ -30,42 +31,44 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
-                <!-- Content Area (expands) -->
+                <!--  Content Area (expands)  -->
                 <RowDefinition Height="Auto" />
-                <!-- Fixed Buttons -->
+                <!--  Fixed Buttons  -->
             </Grid.RowDefinitions>
 
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="120" />
-                <!-- Navigation -->
+                <!--  Navigation  -->
                 <ColumnDefinition Width="*" />
-                <!-- Content -->
+                <!--  Content  -->
             </Grid.ColumnDefinitions>
 
-            <!-- Navigation List with Border -->
+            <!--  Navigation List with Border  -->
             <Border
                 Grid.Column="0"
                 Margin="0,0,5,0"
                 BorderBrush="Gray"
                 BorderThickness="1">
 
-                <ListBox ItemsSource="{Binding GroupedNavigationItems}"
+                <ListBox
                     x:Name="NavigationList"
                     Grid.Row="0"
                     Grid.Column="0"
                     Background="Transparent"
                     BorderThickness="0"
+                    ItemsSource="{Binding GroupedNavigationItems}"
                     SelectedItem="{Binding SelectedView}">
 
                     <ListBox.GroupStyle>
                         <GroupStyle>
                             <GroupStyle.HeaderTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding Path=Name}"
+                                    <TextBlock
                                         Padding="5,3"
                                         Background="DarkGray"
                                         FontSize="14"
-                                        FontWeight="Medium" />
+                                        FontWeight="Medium"
+                                        Text="{Binding Path=Name}" />
                                 </DataTemplate>
                             </GroupStyle.HeaderTemplate>
                         </GroupStyle>
@@ -73,15 +76,14 @@
 
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Name}"
-                                Padding="0,3" />
+                            <TextBlock Padding="0,3" Text="{Binding Name}" />
                         </DataTemplate>
                     </ListBox.ItemTemplate>
 
                 </ListBox>
             </Border>
 
-            <!-- Content Area with Border and ScrollViewer -->
+            <!--  Content Area with Border and ScrollViewer  -->
             <Border
                 Grid.Column="1"
                 BorderBrush="Gray"
@@ -91,29 +93,30 @@
                     Grid.Row="0"
                     Grid.Column="1"
                     VerticalScrollBarVisibility="Auto">
-                    <ContentControl Content="{Binding SelectedView.Content}"
-                        Padding="5" />
+                    <ContentControl Padding="5" Content="{Binding SelectedView.Content}" />
                 </ScrollViewer>
             </Border>
 
-            <!-- Buttons (Fixed Position) -->
+            <!--  Buttons (Fixed Position)  -->
             <StackPanel
                 Grid.Row="1"
                 Grid.ColumnSpan="2"
                 Margin="0,10,0,0"
                 HorizontalAlignment="Right"
                 Orientation="Horizontal">
-                <Button Content="_OK"
+                <Button
                     x:Name="ButtonSave"
                     Width="80"
                     Margin="5"
                     Command="{Binding SaveCommand}"
+                    Content="_OK"
                     Style="{DynamicResource Esri_Button}" />
-                <Button Content="_Cancel"
+                <Button
                     x:Name="ButtonCancel"
                     Width="80"
                     Margin="5"
                     Command="{Binding CancelCommand}"
+                    Content="_Cancel"
                     Style="{DynamicResource Esri_Button}" />
             </StackPanel>
 

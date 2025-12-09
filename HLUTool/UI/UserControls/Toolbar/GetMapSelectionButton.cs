@@ -14,9 +14,9 @@ using Xceed.Wpf.Toolkit.Primitives;
 namespace HLU.UI.UserControls.Toolbar
 {
     /// <summary>
-    /// Button implementation to start the export process.
+    /// Button implementation to get the map selection.
     /// </summary>
-    internal class ExportWindowButton : Button
+    internal class GetMapSelectionButton : Button
     {
         #region Fields
 
@@ -29,7 +29,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ExportWindowButton()
+        public GetMapSelectionButton()
         {
             // Get the dockpane DAML id.
             DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
@@ -43,15 +43,12 @@ namespace HLU.UI.UserControls.Toolbar
         #endregion Constructor
 
         /// <summary>
-        /// Initiate the export process. Called when the button is clicked.
+        /// Read the map selection. Called when the button is clicked.
         /// </summary>
         protected override void OnClick()
         {
-            // Get the ViewModel of the main export class.
-            var viewModelExport = new ViewModelWindowMainExport(_viewModel);
-
-            // Initiate the export process.
-            viewModelExport.InitiateExport();
+            // Call the ViewModel to read the map selection.
+            _viewModel.ReadMapSelectionAsync(true);
         }
 
         /// <summary>
@@ -66,15 +63,15 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            bool canExport = _viewModel.CanExport;
+            bool canReadMapSelection = _viewModel.CanReadMapSelection;
 
-            // Enable or disable the button based on CanExport.
-            Enabled = canExport;
+            // Enable or disable the button based on CanReadMapSelection.
+            Enabled = canReadMapSelection;
 
             // Optional: explain why it is disabled.
-            if (!canExport)
+            if (!canReadMapSelection)
             {
-                DisabledTooltip = "Available only when not in a bulk or OSMM update mode.";
+                DisabledTooltip = "Available only when not in bulk update mode.";
             }
             else
             {

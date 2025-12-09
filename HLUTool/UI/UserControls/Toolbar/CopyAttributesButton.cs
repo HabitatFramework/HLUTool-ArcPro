@@ -71,7 +71,7 @@ namespace HLU.UI.UserControls.Toolbar
             // Optional: explain why it is disabled.
             if (!canCopy)
             {
-                DisabledTooltip = "Available only when an INCID is loaded and at least one copy option is enabled.";
+                DisabledTooltip = "Available only when an INCID is loaded and at least one copy option is selected.";
             }
             else
             {

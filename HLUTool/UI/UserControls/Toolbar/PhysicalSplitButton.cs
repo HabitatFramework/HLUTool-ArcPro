@@ -47,6 +47,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override void OnClick()
         {
+            // Call the ViewModel to start the physical split process.
             _viewModel.PhysicalSplitAsync();
         }
 

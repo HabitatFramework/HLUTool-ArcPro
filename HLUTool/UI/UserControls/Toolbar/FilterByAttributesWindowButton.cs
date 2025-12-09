@@ -14,9 +14,9 @@ using Xceed.Wpf.Toolkit.Primitives;
 namespace HLU.UI.UserControls.Toolbar
 {
     /// <summary>
-    /// Button implementation to start the export process.
+    /// Button implementation to open the relevant query window.
     /// </summary>
-    internal class ExportWindowButton : Button
+    internal class FilterByAttributesButton : Button
     {
         #region Fields
 
@@ -29,7 +29,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ExportWindowButton()
+        public FilterByAttributesButton()
         {
             // Get the dockpane DAML id.
             DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
@@ -43,15 +43,12 @@ namespace HLU.UI.UserControls.Toolbar
         #endregion Constructor
 
         /// <summary>
-        /// Initiate the export process. Called when the button is clicked.
+        /// Open the relevant query window. Called when the button is clicked.
         /// </summary>
         protected override void OnClick()
         {
-            // Get the ViewModel of the main export class.
-            var viewModelExport = new ViewModelWindowMainExport(_viewModel);
-
-            // Initiate the export process.
-            viewModelExport.InitiateExport();
+            // Open the relevant query window.
+            _viewModel.FilterByAttributes();
         }
 
         /// <summary>
@@ -66,13 +63,13 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            bool canExport = _viewModel.CanExport;
+            bool canFilterByAttributes = _viewModel.CanFilterByAttributes;
 
-            // Enable or disable the button based on CanExport.
-            Enabled = canExport;
+            // Enable or disable the button based on CanFilterByAttributes.
+            Enabled = canFilterByAttributes;
 
             // Optional: explain why it is disabled.
-            if (!canExport)
+            if (!canFilterByAttributes)
             {
                 DisabledTooltip = "Available only when not in a bulk or OSMM update mode.";
             }

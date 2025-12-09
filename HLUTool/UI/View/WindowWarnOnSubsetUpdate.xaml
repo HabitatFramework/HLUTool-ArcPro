@@ -1,4 +1,5 @@
-﻿<controls:ProWindow x:Class="HLU.UI.View.WindowWarnOnSubsetUpdate"
+﻿<controls:ProWindow
+    x:Class="HLU.UI.View.WindowWarnOnSubsetUpdate"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
@@ -23,11 +24,8 @@
                 <RowDefinition Height="4" />
                 <RowDefinition Height="23" />
             </Grid.RowDefinitions>
-            <GroupBox Header="{Binding Path=GroupBoxWarnOnSubsetUpdateHeader}"
-                Name="GroupWarnOnSubsetUpdate">
-                <Grid
-                    Name="GridWarnOnSubsetUpdate"
-                    Margin="2,2,2,2">
+            <GroupBox Name="GroupWarnOnSubsetUpdate" Header="{Binding Path=GroupBoxWarnOnSubsetUpdateHeader}">
+                <Grid Name="GridWarnOnSubsetUpdate" Margin="2,2,2,2">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
@@ -44,8 +42,9 @@
                         Margin="0,4,0,4"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center">
-                        <TextBlock Text="{Binding Path=LabelMessage}"
+                        <TextBlock
                             Name="TextBlockMessage"
+                            Text="{Binding Path=LabelMessage}"
                             TextWrapping="Wrap" />
                     </Label>
                     <Border
@@ -72,14 +71,10 @@
                         Margin="0,4,0,4"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center"
-                        IsChecked="{Binding Path=MakeDefaultReponse,
-                                            Mode=TwoWay,
-                                            UpdateSourceTrigger=PropertyChanged}" />
+                        IsChecked="{Binding Path=MakeDefaultReponse, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 </Grid>
             </GroupBox>
-            <Grid
-                Name="GridButtons"
-                Grid.Row="2">
+            <Grid Name="GridButtons" Grid.Row="2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="82" />
@@ -91,7 +86,8 @@
                     Grid.Column="1"
                     Margin="0,0,2,0"
                     Command="{Binding Path=YesCommand}"
-                    IsDefault="True">
+                    IsDefault="True"
+                    Style="{DynamicResource Esri_Button}">
                     _Yes
                 </Button>
                 <Button
@@ -99,7 +95,8 @@
                     Grid.Column="2"
                     Margin="2,0,0,0"
                     Command="{Binding Path=NoCommand}"
-                    IsCancel="True">
+                    IsCancel="True"
+                    Style="{DynamicResource Esri_Button}">
                     _No
                 </Button>
                 <Button
@@ -107,7 +104,8 @@
                     Grid.Column="3"
                     Margin="2,0,0,0"
                     Command="{Binding Path=CancelCommand}"
-                    IsCancel="True">
+                    IsCancel="True"
+                    Style="{DynamicResource Esri_Button}">
                     _Cancel
                 </Button>
             </Grid>

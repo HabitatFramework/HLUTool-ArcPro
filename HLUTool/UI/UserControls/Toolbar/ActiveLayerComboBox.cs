@@ -70,6 +70,13 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override void OnUpdate()
         {
+            //if (_viewModel == null)
+            //{
+            //    Enabled = false;
+            //    DisabledTooltip = "HLU main window is not available.";
+            //    return;
+            //}
+
             // Initialize the ComboBox if it's not already.
             if (!_isInitialized)
                 Initialize();
@@ -81,8 +88,22 @@ namespace HLU.UI.UserControls.Toolbar
                 OnSelectionChange(SelectedItem);
             }
 
-            // Enable or disable the ComboBox.
-            Enabled = _isEnabled;
+            //TODO: Fix CanSwitchGISLayer
+            bool canSwitchGISLayer = _viewModel.CanSwitchGISLayer;
+            canSwitchGISLayer = true;
+
+            // Enable or disable the combobox based on CanSwitchGISLayer.
+            Enabled = canSwitchGISLayer;
+
+            // Optional: explain why it is disabled.
+            if (!canSwitchGISLayer)
+            {
+                DisabledTooltip = "Available only when not in a bulk or OSMM update mode.";
+            }
+            else
+            {
+                DisabledTooltip = string.Empty;
+            }
         }
 
         /// <summary>
@@ -169,6 +190,5 @@ namespace HLU.UI.UserControls.Toolbar
         }
 
         #endregion Methods
-
     }
 }

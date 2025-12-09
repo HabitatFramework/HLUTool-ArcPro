@@ -14,11 +14,14 @@ using Xceed.Wpf.Toolkit.Primitives;
 namespace HLU.UI.UserControls.Toolbar
 {
     /// <summary>
-    /// Button implementation to start the export process.
+    ///     /// Button implementation to select if auto zoom is on or off.
     /// </summary>
-    internal class ExportWindowButton : Button
+    internal class AutoSelectOnGisButton : Button
     {
         #region Fields
+
+        private WindowAbout _windowAbout;
+        private ViewModelWindowAbout _viewModelAbout;
 
         private ViewModelWindowMain _viewModel;
 
@@ -29,7 +32,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ExportWindowButton()
+        public AutoSelectOnGisButton()
         {
             // Get the dockpane DAML id.
             DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
@@ -43,21 +46,18 @@ namespace HLU.UI.UserControls.Toolbar
         #endregion Constructor
 
         /// <summary>
-        /// Initiate the export process. Called when the button is clicked.
+        /// Gets or sets the auto select on GIS enabled state.
         /// </summary>
-        protected override void OnClick()
+        public static bool AutoSelectOnGisEnabled
         {
-            // Get the ViewModel of the main export class.
-            var viewModelExport = new ViewModelWindowMainExport(_viewModel);
-
-            // Initiate the export process.
-            viewModelExport.InitiateExport();
+            get;
+            private set;
         }
 
         /// <summary>
-        /// Called periodically by the framework to update button state.
+        /// Show the about window. Called when the button is clicked.
         /// </summary>
-        protected override void OnUpdate()
+        protected override void OnClick()
         {
             if (_viewModel == null)
             {
@@ -66,20 +66,11 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            bool canExport = _viewModel.CanExport;
+            // Toggle the auto zoom state.
+            AutoSelectOnGisEnabled = !AutoSelectOnGisEnabled;
 
-            // Enable or disable the button based on CanExport.
-            Enabled = canExport;
-
-            // Optional: explain why it is disabled.
-            if (!canExport)
-            {
-                DisabledTooltip = "Available only when not in a bulk or OSMM update mode.";
-            }
-            else
-            {
-                DisabledTooltip = string.Empty;
-            }
+            // Update the button checked state.
+            IsChecked = AutoSelectOnGisEnabled;
         }
     }
 }

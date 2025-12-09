@@ -10,13 +10,14 @@ using System.Threading.Tasks;
 using System.Windows;
 using HLU.UI;
 using Xceed.Wpf.Toolkit.Primitives;
+using System.Windows.Controls;
 
 namespace HLU.UI.UserControls.Toolbar
 {
     /// <summary>
-    /// Button implementation to start the export process.
+    /// Edit box implementation used to filter features by INCID.
     /// </summary>
-    internal class ExportWindowButton : Button
+    internal class FilterByIncidEditBox : EditBox
     {
         #region Fields
 
@@ -29,7 +30,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ExportWindowButton()
+        public FilterByIncidEditBox()
         {
             // Get the dockpane DAML id.
             DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
@@ -43,15 +44,27 @@ namespace HLU.UI.UserControls.Toolbar
         #endregion Constructor
 
         /// <summary>
-        /// Initiate the export process. Called when the button is clicked.
+        /// Filter by the specified Incid. Called when the user presses
+        /// Enter in the edit box or the control loses keyboard focus.
         /// </summary>
-        protected override void OnClick()
+        protected override void OnEnter()
         {
-            // Get the ViewModel of the main export class.
-            var viewModelExport = new ViewModelWindowMainExport(_viewModel);
+            if (_viewModel == null)
+            {
+                Enabled = false;
+                DisabledTooltip = "HLU main window is not available.";
+                return;
+            }
 
-            // Initiate the export process.
-            viewModelExport.InitiateExport();
+            string incidText = Text?.Trim();
+            if (string.IsNullOrEmpty(incidText))
+            {
+                // Nothing to filter on.
+                return;
+            }
+
+            // Filter by the specified Incid.
+            _viewModel.FilterByIncid(incidText);
         }
 
         /// <summary>
@@ -66,13 +79,13 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            bool canExport = _viewModel.CanExport;
+            bool canFilterByIncid = _viewModel.CanFilterByIncid;
 
-            // Enable or disable the button based on CanExport.
-            Enabled = canExport;
+            // Enable or disable the button based on CanFilterByIncid.
+            Enabled = canFilterByIncid;
 
             // Optional: explain why it is disabled.
-            if (!canExport)
+            if (!canFilterByIncid)
             {
                 DisabledTooltip = "Available only when not in a bulk or OSMM update mode.";
             }

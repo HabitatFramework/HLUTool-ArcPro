@@ -16,19 +16,20 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Desktop.Framework.Controls;
+using HLU.UI.ViewModel;
 using System;
 using System.Windows;
-using System.Windows.Interop;
 using System.Windows.Controls;
 using System.Windows.Data;
-using HLU.UI.ViewModel;
+using System.Windows.Interop;
 
 namespace HLU.UI.View.Connection
 {
     /// <summary>
     /// Interaction logic for ViewConnectOracle.xaml
     /// </summary>
-    public partial class ViewConnectOracle : Window
+    public partial class ViewConnectOracle : ProWindow
     {
         IntPtr _windowHandle;
 

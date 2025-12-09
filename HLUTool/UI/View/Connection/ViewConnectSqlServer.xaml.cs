@@ -16,19 +16,20 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Desktop.Framework.Controls;
+using HLU.UI.ViewModel;
 using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Interop;
-using HLU.UI.ViewModel;
 
 namespace HLU.UI.View.Connection
 {
     /// <summary>
     /// Interaction logic for ViewConnectSqlServer.xaml
     /// </summary>
-    public partial class ViewConnectSqlServer : Window
+    public partial class ViewConnectSqlServer : ProWindow
     {
         IntPtr _windowHandle;
 

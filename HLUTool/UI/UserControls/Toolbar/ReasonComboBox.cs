@@ -81,8 +81,27 @@ namespace HLU.UI.UserControls.Toolbar
                 OnSelectionChange(SelectedItem);
             }
 
-            // Enable or disable the ComboBox.
-            Enabled = _isEnabled;
+            //if (_viewModel == null)
+            //{
+            //    Enabled = false;
+            //    DisabledTooltip = "HLU main window is not available.";
+            //    return;
+            //}
+
+            bool reasonProcessEnabled = _viewModel.ReasonProcessEnabled;
+
+            // Enable or disable the ComboBox based on ReasonProcessEnabled.
+            Enabled = reasonProcessEnabled;
+
+            // Optional: explain why it is disabled.
+            if (!reasonProcessEnabled)
+            {
+                DisabledTooltip = "Available only when not in a bulk or OSMM update mode.";
+            }
+            else
+            {
+                DisabledTooltip = string.Empty;
+            }
         }
 
         /// <summary>

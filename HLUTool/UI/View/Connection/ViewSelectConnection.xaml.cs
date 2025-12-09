@@ -16,6 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Desktop.Framework.Controls;
 using System;
 using System.Windows;
 using System.Windows.Input;
@@ -26,7 +27,7 @@ namespace HLU.UI.View.Connection
     /// <summary>
     /// Interaction logic for ViewSelectConnection.xaml
     /// </summary>
-    public partial class ViewSelectConnection : Window
+    public partial class ViewSelectConnection : ProWindow
     {
         IntPtr _windowHandle;
 
