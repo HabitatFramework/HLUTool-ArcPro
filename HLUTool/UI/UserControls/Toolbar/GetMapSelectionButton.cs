@@ -67,16 +67,6 @@ namespace HLU.UI.UserControls.Toolbar
 
             // Enable or disable the button based on CanReadMapSelection.
             Enabled = canReadMapSelection;
-
-            // Optional: explain why it is disabled.
-            if (!canReadMapSelection)
-            {
-                DisabledTooltip = "Available only when not in bulk update mode.";
-            }
-            else
-            {
-                DisabledTooltip = string.Empty;
-            }
         }
     }
 }

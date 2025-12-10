@@ -457,7 +457,7 @@ namespace HLU.UI.ViewModel
                         {
                             // Warn the user that the SQL is invalid.
                             //TODO: App.GetActiveWindow removed as window owner
-                            MessageBox.Show(String.Format("Sql is invalid.\n\n{0}", validity), "HLU Query",
+                            MessageBox.Show(String.Format("{0}.", validity), "HLU Query",
                                 MessageBoxButton.OK, MessageBoxImage.Error);
                         }
                     }

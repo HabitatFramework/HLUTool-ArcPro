@@ -9,7 +9,7 @@
     Width="800"
     MinWidth="500"
     MinHeight="250"
-    Icon="..\..\Icons\HLUIcon.png"
+    Icon="..\..\Images\HLUTool16.png"
     ResizeMode="CanResize"
     ShowInTaskbar="False"
     SizeToContent="Height"

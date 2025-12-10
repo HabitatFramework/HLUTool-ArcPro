@@ -13,7 +13,7 @@
     Style="{DynamicResource ProWindowStyle}"
     Visibility="Collapsed"
     WindowStartupLocation="CenterOwner">
-    <!--  Icon="..\..\..\Icons\HLUIcon.png" Activated="Window_Activated">  -->
+    <!--  Icon="..\..\..\Images\HLUIcon.png" Activated="Window_Activated">  -->
     <!--  Background="{DynamicResource WindowBackgroundBrush}"  -->
 
     <controls:ProWindow.Resources>

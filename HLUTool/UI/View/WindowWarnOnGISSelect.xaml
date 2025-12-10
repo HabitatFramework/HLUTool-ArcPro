@@ -5,8 +5,8 @@
     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
     Title="{Binding Path=WindowTitle}"
     MinWidth="300"
-    MinHeight="160"
-    Icon="..\..\Icons\HLUIcon.png"
+    MinHeight="210"
+    Icon="..\..\Images\HLUTool16.png"
     ResizeMode="CanResize"
     ShowInTaskbar="False"
     SizeToContent="WidthAndHeight"
@@ -22,7 +22,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="4" />
-                <RowDefinition Height="23" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <GroupBox Name="GroupWarnOnGISSelect" Header="{Binding Path=GroupBoxWarnOnGISSelectHeader}">
                 <Grid Name="GridWarnOnGISSelect" Margin="2,2,2,2">
@@ -50,7 +50,7 @@
                     <Border
                         Grid.Row="1"
                         Grid.ColumnSpan="2"
-                        Margin="0,8,0,8"
+                        Margin="0,4,0,4"
                         Padding="0"
                         BorderBrush="Black"
                         BorderThickness="0.5"
@@ -75,7 +75,10 @@
                         IsEnabled="{Binding Path=DoNotAskAgainEnabled, Mode=OneWay}" />
                 </Grid>
             </GroupBox>
-            <Grid Name="GridButtons" Grid.Row="2">
+            <Grid
+                Name="GridButtons"
+                Grid.Row="2"
+                Margin="4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="82" />

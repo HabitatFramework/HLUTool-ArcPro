@@ -67,16 +67,6 @@ namespace HLU.UI.UserControls.Toolbar
 
             // Enable or disable the button based on CanFilterByAttributes.
             Enabled = canFilterByAttributes;
-
-            // Optional: explain why it is disabled.
-            if (!canFilterByAttributes)
-            {
-                DisabledTooltip = "Available only when not in a bulk or OSMM update mode.";
-            }
-            else
-            {
-                DisabledTooltip = string.Empty;
-            }
         }
     }
 }

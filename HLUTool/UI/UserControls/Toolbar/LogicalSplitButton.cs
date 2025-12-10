@@ -66,16 +66,6 @@ namespace HLU.UI.UserControls.Toolbar
 
             // Enable or disable the button based on CanLogicallySplit.
             Enabled = canLogicallySplit;
-
-            // Optional: explain why it is disabled.
-            if (!canLogicallySplit)
-            {
-                DisabledTooltip = "Available only when not in bulk or OSMM update mode, editing is active, and only a subset of features from one INCID is selected.";
-            }
-            else
-            {
-                DisabledTooltip = string.Empty;
-            }
         }
     }
 }

@@ -67,16 +67,6 @@ namespace HLU.UI.UserControls.Toolbar
 
             // Enable or disable the button based on CanSelectOnMap.
             Enabled = canSelectOnMap;
-
-            // Optional: explain why it is disabled.
-            if (!canSelectOnMap)
-            {
-                DisabledTooltip = "Available only when not in bulk or OSMM update mode.";
-            }
-            else
-            {
-                DisabledTooltip = string.Empty;
-            }
         }
     }
 }

@@ -20,9 +20,6 @@ namespace HLU.UI.UserControls.Toolbar
     {
         #region Fields
 
-        private WindowAbout _windowAbout;
-        private ViewModelWindowAbout _viewModelAbout;
-
         private ViewModelWindowMain _viewModel;
 
         #endregion Fields

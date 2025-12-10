@@ -14,14 +14,11 @@ using Xceed.Wpf.Toolkit.Primitives;
 namespace HLU.UI.UserControls.Toolbar
 {
     /// <summary>
-    ///     /// Button implementation to select if auto zoom is on or off.
+    ///     /// Checkbox implementation to select if auto zoom is on or off.
     /// </summary>
-    internal class AutoSelectOnGisButton : Button
+    internal class AutoSelectOnGisButton : CheckBox
     {
         #region Fields
-
-        private WindowAbout _windowAbout;
-        private ViewModelWindowAbout _viewModelAbout;
 
         private ViewModelWindowMain _viewModel;
 
@@ -55,7 +52,7 @@ namespace HLU.UI.UserControls.Toolbar
         }
 
         /// <summary>
-        /// Show the about window. Called when the button is clicked.
+        /// Set the auto select enabled state. Called when the checkbox is clicked.
         /// </summary>
         protected override void OnClick()
         {
@@ -66,11 +63,14 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            // Toggle the auto zoom state.
+            // Toggle the auto select state.
             AutoSelectOnGisEnabled = !AutoSelectOnGisEnabled;
 
-            // Update the button checked state.
+            // Update the checkbox state.
             IsChecked = AutoSelectOnGisEnabled;
+
+            // Update the main window state.
+            _viewModel.AutoSelectOnGis(AutoSelectOnGisEnabled);
         }
     }
 }

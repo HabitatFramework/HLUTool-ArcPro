@@ -6,15 +6,15 @@
     xmlns:hlu="clr-namespace:HLU.UI.UserControls"
     xmlns:viewModel="clr-namespace:HLU.UI.ViewModel"
     Title="{Binding Path=WindowTitle}"
-    MinWidth="700"
-    MinHeight="570"
-    MaxWidth="800"
-    MaxHeight="600"
+    MinWidth="750"
+    MinHeight="500"
+    MaxWidth="1000"
+    MaxHeight="800"
     Focusable="True"
-    Icon="..\..\Icons\HLUIcon.png"
+    Icon="..\..\Images\HLUTool16.png"
     ResizeMode="NoResize"
     ShowInTaskbar="False"
-    SizeToContent="Height"
+    SizeToContent="WidthAndHeight"
     Style="{DynamicResource ProWindowStyle}"
     WindowStartupLocation="CenterOwner">
 
@@ -110,6 +110,7 @@
                     Margin="5"
                     Command="{Binding SaveCommand}"
                     Content="_OK"
+                    IsDefault="True"
                     Style="{DynamicResource Esri_Button}" />
                 <Button
                     x:Name="ButtonCancel"
@@ -117,6 +118,7 @@
                     Margin="5"
                     Command="{Binding CancelCommand}"
                     Content="_Cancel"
+                    IsCancel="True"
                     Style="{DynamicResource Esri_Button}" />
             </StackPanel>
 

@@ -1,11 +1,12 @@
-﻿<controls:ProWindow x:Class="HLU.UI.View.WindowCompletePhysicalSplit"
+﻿<controls:ProWindow
+    x:Class="HLU.UI.View.WindowCompletePhysicalSplit"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
     Title="{Binding Path=WindowTitle}"
-    Height="249"
+    Height="250"
     MinWidth="300"
-    Icon="..\..\Icons\HLUIcon.png"
+    Icon="..\..\Images\HLUTool16.png"
     ResizeMode="NoResize"
     ShowInTaskbar="False"
     SizeToContent="WidthAndHeight"
@@ -33,19 +34,18 @@
                 <RowDefinition Height="4" />
                 <RowDefinition Height="23" />
             </Grid.RowDefinitions>
-            <GroupBox Header="Reason"
+            <GroupBox
                 Name="GroupBoxReason"
-                Grid.Row="0">
-                <Grid
-                    Name="GridReason"
-                    Margin="2,8,2,8">
+                Grid.Row="0"
+                Header="Reason">
+                <Grid Name="GridReason" Margin="2,8,2,8">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <ComboBox ItemsSource="{Binding Path=ReasonCodes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    <ComboBox
                         Name="ComboBoxReason"
                         Grid.Row="0"
                         Grid.Column="0"
@@ -55,26 +55,25 @@
                         IsEditable="True"
                         IsEnabled="{Binding Path=ReasonProcessEnabled}"
                         IsReadOnly="False"
-                        SelectedValue="{Binding Path=Reason,
-                                                ValidatesOnDataErrors=True}"
+                        ItemsSource="{Binding Path=ReasonCodes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        SelectedValue="{Binding Path=Reason, ValidatesOnDataErrors=True}"
                         SelectedValuePath="code"
                         Tag="ErrorContent"
                         ToolTipService.ShowOnDisabled="True" />
                 </Grid>
             </GroupBox>
-            <GroupBox Header="Process"
+            <GroupBox
                 Name="GroupBoxProcess"
-                Grid.Row="2">
-                <Grid
-                    Name="GridProcess"
-                    Margin="2,8,2,8">
+                Grid.Row="2"
+                Header="Process">
+                <Grid Name="GridProcess" Margin="2,8,2,8">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <ComboBox ItemsSource="{Binding Path=ProcessCodes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    <ComboBox
                         Name="ComboBoxProcess"
                         Grid.Row="1"
                         Grid.Column="0"
@@ -84,16 +83,14 @@
                         IsEditable="True"
                         IsEnabled="{Binding Path=ReasonProcessEnabled}"
                         IsReadOnly="False"
-                        SelectedValue="{Binding Path=Process,
-                                                ValidatesOnDataErrors=True}"
+                        ItemsSource="{Binding Path=ProcessCodes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        SelectedValue="{Binding Path=Process, ValidatesOnDataErrors=True}"
                         SelectedValuePath="code"
                         Tag="ErrorContent"
                         ToolTipService.ShowOnDisabled="True" />
                 </Grid>
             </GroupBox>
-            <Grid
-                Name="GridButtons"
-                Grid.Row="4">
+            <Grid Name="GridButtons" Grid.Row="4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="82" />

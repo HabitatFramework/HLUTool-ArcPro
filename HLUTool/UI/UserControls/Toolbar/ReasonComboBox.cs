@@ -92,16 +92,6 @@ namespace HLU.UI.UserControls.Toolbar
 
             // Enable or disable the ComboBox based on ReasonProcessEnabled.
             Enabled = reasonProcessEnabled;
-
-            // Optional: explain why it is disabled.
-            if (!reasonProcessEnabled)
-            {
-                DisabledTooltip = "Available only when not in a bulk or OSMM update mode.";
-            }
-            else
-            {
-                DisabledTooltip = string.Empty;
-            }
         }
 
         /// <summary>

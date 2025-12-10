@@ -2337,6 +2337,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                         }
                     }
                 }
+                //TODO: Don't rethrow error
                 throw ex;
             }
             finally

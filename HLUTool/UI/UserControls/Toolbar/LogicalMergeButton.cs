@@ -66,16 +66,6 @@ namespace HLU.UI.UserControls.Toolbar
 
             // Enable or disable the button based on CanLogicallyMerge.
             Enabled = canLogicallyMerge;
-
-            // Optional: explain why it is disabled.
-            if (!canLogicallyMerge)
-            {
-                DisabledTooltip = "Available only when not in bulk or OSMM update mode, editing is active, and multiple features are selected from more than one INCID.";
-            }
-            else
-            {
-                DisabledTooltip = string.Empty;
-            }
         }
     }
 }

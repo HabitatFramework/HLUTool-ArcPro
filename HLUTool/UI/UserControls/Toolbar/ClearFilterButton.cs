@@ -20,9 +20,6 @@ namespace HLU.UI.UserControls.Toolbar
     {
         #region Fields
 
-        private WindowAbout _windowAbout;
-        private ViewModelWindowAbout _viewModelAbout;
-
         private ViewModelWindowMain _viewModel;
 
         #endregion Fields
@@ -78,16 +75,6 @@ namespace HLU.UI.UserControls.Toolbar
 
             // Enable or disable the button based on CanClearFilter.
             Enabled = canClearFilter;
-
-            // Optional: explain why it is disabled.
-            if (!canClearFilter)
-            {
-                DisabledTooltip = "Available only when not in a bulk or OSMM update mode and a filter is active.";
-            }
-            else
-            {
-                DisabledTooltip = string.Empty;
-            }
         }
     }
 }

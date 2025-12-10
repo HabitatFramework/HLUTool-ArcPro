@@ -14,7 +14,7 @@
     Visibility="Collapsed"
     WindowStartupLocation="CenterOwner">
     <!--  Background="{DynamicResource WindowBackgroundBrush}"  -->
-    <!--  Icon="..\..\..\Icons\HLUIcon.png"  -->
+    <!--  Icon="..\..\..\Images\HLUIcon.png"  -->
 
     <controls:ProWindow.Resources>
         <ResourceDictionary>

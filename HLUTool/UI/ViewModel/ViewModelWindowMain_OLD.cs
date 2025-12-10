@@ -87,21 +87,12 @@ namespace HLU.UI.ViewModel
         private ICommand _navigateNextCommand;
         private ICommand _navigateLastCommand;
         private ICommand _navigateIncidCommand;
-        private ICommand _filterByAttributesCommand;
         private ICommand _filterByAttributesOSMMCommand;
-        private ICommand _filterByIncidCommand;
-        private ICommand _selectOnMapCommand;
-        private ICommand _selectAllOnMapCommand;
-        private ICommand _clearFilterCommand;
         private ICommand _readMapSelectionCommand;
         private ICommand _editPriorityHabitatsCommand;
         private ICommand _editPotentialHabitatsCommand;
         private ICommand _addSecondaryHabitatCommand;
         private ICommand _addSecondaryHabitatListCommand;
-        private ICommand _logicalSplitCommand;
-        private ICommand _physicalSplitCommand;
-        private ICommand _logicalMergeCommand;
-        private ICommand _physicalMergeCommand;
         private ICommand _updateCommand;
         private ICommand _bulkUpdateCommandMenu;
         private ICommand _cancelBulkUpdateCommand;
@@ -112,16 +103,7 @@ namespace HLU.UI.ViewModel
         private ICommand _osmmAcceptCommand;
         private ICommand _osmmRejectCommand;
         private ICommand _osmmBulkUpdateCommandMenu;
-        private ICommand _exportCommand;
         private ICommand _closeCommand;
-        private ICommand _copyCommand;
-        private ICommand _pasteCommand;
-        private ICommand _autoZoomSelectedOffCommand;
-        private ICommand _autoZoomSelectedWhenCommand;
-        private ICommand _autoZoomSelectedAlwaysCommand;
-        private ICommand _autoSelectOnGisCommand;
-        private ICommand _zoomSelectionCommand;
-        private ICommand _aboutCommand;
 
         #endregion Commands
 
@@ -1801,7 +1783,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                string imageSource = "pack://application:,,,/HLUTool;component/Icons/AddRowSquare.png";
+                string imageSource = "pack://application:,,,/HLUTool;component/Images/AddRowSquare16.png";
                 return new BitmapImage(new Uri(imageSource)) as ImageSource;
             }
         }
@@ -1813,7 +1795,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                string imageSource = "pack://application:,,,/HLUTool;component/Icons/AddScript.png";
+                string imageSource = "pack://application:,,,/HLUTool;component/Images/AddScript16.png";
                 return new BitmapImage(new Uri(imageSource)) as ImageSource;
             }
         }
@@ -1825,7 +1807,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                string imageSource = "pack://application:,,,/HLUTool;component/Icons/ReadMapSelection.png";
+                string imageSource = "pack://application:,,,/HLUTool;component/Images/ReadMapSelection16.png";
                 return new BitmapImage(new Uri(imageSource)) as ImageSource;
             }
         }
@@ -1837,7 +1819,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                string imageSource = "pack://application:,,,/HLUTool;component/Icons/ZoomTable.png";
+                string imageSource = "pack://application:,,,/HLUTool;component/Images/ZoomTable16.png";
                 return new BitmapImage(new Uri(imageSource)) as ImageSource;
             }
         }
@@ -1849,7 +1831,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                string imageSource = "pack://application:,,,/HLUTool;component/Icons/ZoomTable.png";
+                string imageSource = "pack://application:,,,/HLUTool;component/Images/ZoomTable16.png";
                 return new BitmapImage(new Uri(imageSource)) as ImageSource;
             }
         }
@@ -4218,7 +4200,7 @@ namespace HLU.UI.ViewModel
             Settings.Default.Save();
         }
 
-        private void AutoSelectOnGisClicked(object param)
+        public void AutoSelectOnGis(bool autoSelectOnGis)
         {
             // Update the auto select on GIS option.
             _autoSelectOnGis = !_autoSelectOnGis;

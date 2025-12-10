@@ -8,7 +8,7 @@
     Title="{Binding WindowTitle}"
     Width="650"
     Height="450"
-    Icon="..\..\Icons\HLUIcon.png"
+    Icon="..\..\Images\HLUTool16.png"
     ResizeMode="CanResize"
     ShowInTaskbar="False"
     Style="{DynamicResource ProWindowStyle}"

@@ -67,16 +67,6 @@ namespace HLU.UI.UserControls.Toolbar
 
             // Enable or disable the button based on CanPaste.
             Enabled = canPaste;
-
-            // Optional: explain why it is disabled.
-            if (!canPaste)
-            {
-                DisabledTooltip = "Available only when an INCID is loaded and at least one value has been copied.";
-            }
-            else
-            {
-                DisabledTooltip = string.Empty;
-            }
         }
     }
 }

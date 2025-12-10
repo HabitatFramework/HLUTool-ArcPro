@@ -6,7 +6,7 @@
     Title="{Binding Path=WindowTitle}"
     Height="Auto"
     MinWidth="480"
-    Icon="..\..\Icons\HLUIcon.png"
+    Icon="..\..\Images\HLUTool16.png"
     ResizeMode="NoResize"
     ShowInTaskbar="False"
     SizeToContent="WidthAndHeight"

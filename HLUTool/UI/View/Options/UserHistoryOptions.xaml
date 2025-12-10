@@ -1,4 +1,5 @@
-﻿<UserControl x:Class="HLU.UI.View.UserHistoryOptions"
+﻿<UserControl
+    x:Class="HLU.UI.View.UserHistoryOptions"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
@@ -24,22 +25,20 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <StackPanel
-            Grid.Row="0"
-            Margin="4">
+        <StackPanel Grid.Row="0" Margin="4">
 
-            <Label Content="Set user options for history"
+            <Label
                 HorizontalAlignment="Left"
+                Content="Set user options for history"
                 FontSize="14"
                 FontWeight="Medium" />
 
-            <Expander Header="Display Columns"
+            <Expander
                 Margin="6,10,0,0"
+                Header="Display Columns"
                 IsExpanded="True">
 
-                <Grid
-                    Margin="12,4,4,2"
-                    HorizontalAlignment="Left">
+                <Grid Margin="12,4,4,2" HorizontalAlignment="Left">
 
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -52,30 +51,31 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Label Content="Columns to Display"
+                        <Label
                             Grid.Row="0"
                             Grid.Column="0"
-                            HorizontalAlignment="Left" />
-                        <controls:InfoButton Header="History Display Columns"
+                            HorizontalAlignment="Left"
+                            Content="Columns to Display" />
+                        <controls:InfoButton
                             Grid.Column="1"
                             Margin="0,0,0,0"
-                            Description="Select which additional columns from the GIS layer are displayed in the History tab for each update. If the checkbox for a column is selected the column will be displayed." />
+                            Description="Select which additional columns from the GIS layer are displayed in the History tab for each update. If the checkbox for a column is selected the column will be displayed."
+                            Header="History Display Columns" />
 
                     </Grid>
 
-                    <ListBox ItemsSource="{Binding HistoryColumns}"
+                    <ListBox
                         Grid.Row="1"
                         Width="Auto"
                         MinWidth="200"
                         Margin="6,4,4,2"
                         HorizontalAlignment="Left"
+                        ItemsSource="{Binding HistoryColumns}"
                         SelectionMode="Extended">
 
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <CheckBox Content="{Binding Item, Mode=TwoWay}"
-                                    IsChecked="{Binding IsSelected,
-                                                        Mode=TwoWay}" />
+                                <CheckBox Content="{Binding Item, Mode=TwoWay}" IsChecked="{Binding IsSelected, Mode=TwoWay}" />
                             </DataTemplate>
                         </ListBox.ItemTemplate>
 
@@ -85,13 +85,12 @@
 
             </Expander>
 
-            <Expander Header="Display Rows"
+            <Expander
                 Margin="6,10,0,0"
+                Header="Display Rows"
                 IsExpanded="True">
 
-                <Grid
-                    Margin="12,4,4,2"
-                    HorizontalAlignment="Left">
+                <Grid Margin="12,4,4,2" HorizontalAlignment="Left">
 
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -99,20 +98,23 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <Label Content="Rows to Display"
+                    <Label
                         Grid.Column="0"
-                        HorizontalAlignment="Right" />
-                    <TextBox Text="{Binding HistoryDisplayLastN, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
+                        HorizontalAlignment="Right"
+                        Content="Rows to Display" />
+                    <TextBox
                         x:Name="TextBoxHistoryDisplayLastN"
                         Grid.Column="1"
                         Height="24"
                         HorizontalContentAlignment="Right"
                         BorderThickness="1"
-                        Tag="ErrorContent" />
-                    <controls:InfoButton Header="Display History Rows"
+                        Tag="ErrorContent"
+                        Text="{Binding HistoryDisplayLastN, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}" />
+                    <controls:InfoButton
                         Grid.Column="2"
                         Margin="5,0,0,0"
-                        Description="Sets the number of entries displayed in the ‘History’ tab of the main interface." />
+                        Description="Sets the number of entries displayed in the ‘History’ tab of the main interface."
+                        Header="Display History Rows" />
 
                 </Grid>
 
@@ -127,8 +129,7 @@
             FontWeight="Medium">
             <Hyperlink
                 Command="{Binding OpenHyperlinkCommand}"
-                CommandParameter="{Binding NavigateUri,
-                                           RelativeSource={RelativeSource Self}}"
+                CommandParameter="{Binding NavigateUri, RelativeSource={RelativeSource Self}}"
                 NavigateUri="{Binding Hyperlink_UserHistoryHelp}">
                 Learn more about user history options
             </Hyperlink>

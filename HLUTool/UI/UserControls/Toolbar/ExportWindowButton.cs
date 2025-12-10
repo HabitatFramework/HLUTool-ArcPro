@@ -70,16 +70,6 @@ namespace HLU.UI.UserControls.Toolbar
 
             // Enable or disable the button based on CanExport.
             Enabled = canExport;
-
-            // Optional: explain why it is disabled.
-            if (!canExport)
-            {
-                DisabledTooltip = "Available only when not in a bulk or OSMM update mode.";
-            }
-            else
-            {
-                DisabledTooltip = string.Empty;
-            }
         }
     }
 }

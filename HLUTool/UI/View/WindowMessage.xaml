@@ -7,7 +7,7 @@
     Width="500"
     Height="237"
     Focusable="True"
-    Icon="..\..\Icons\HLUIcon.png"
+    Icon="..\..\Images\HLUTool16.png"
     Style="{DynamicResource ProWindowStyle}"
     WindowStartupLocation="CenterOwner">
 

@@ -67,16 +67,6 @@ namespace HLU.UI.UserControls.Toolbar
 
             // Enable or disable the button based on CanCopy.
             Enabled = canCopy;
-
-            // Optional: explain why it is disabled.
-            if (!canCopy)
-            {
-                DisabledTooltip = "Available only when an INCID is loaded and at least one copy option is selected.";
-            }
-            else
-            {
-                DisabledTooltip = string.Empty;
-            }
         }
     }
 }

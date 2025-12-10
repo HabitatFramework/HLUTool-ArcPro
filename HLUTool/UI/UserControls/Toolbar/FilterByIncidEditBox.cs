@@ -65,6 +65,9 @@ namespace HLU.UI.UserControls.Toolbar
 
             // Filter by the specified Incid.
             _viewModel.FilterByIncid(incidText);
+
+            // Clear the edit box.
+            Text = null;
         }
 
         /// <summary>
@@ -83,16 +86,6 @@ namespace HLU.UI.UserControls.Toolbar
 
             // Enable or disable the button based on CanFilterByIncid.
             Enabled = canFilterByIncid;
-
-            // Optional: explain why it is disabled.
-            if (!canFilterByIncid)
-            {
-                DisabledTooltip = "Available only when not in a bulk or OSMM update mode.";
-            }
-            else
-            {
-                DisabledTooltip = string.Empty;
-            }
         }
     }
 }
