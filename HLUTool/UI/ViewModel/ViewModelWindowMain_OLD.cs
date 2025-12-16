@@ -2826,7 +2826,16 @@ namespace HLU.UI.ViewModel
             // Recheck the selected features in GIS to make sure they
             // all belong to the current incid (passing a new GIS
             // selection table so that it knows the columns to return.
-            _gisSelection = await _gisApp.ReadMapSelectionAsync(_gisSelection);
+            try
+            {
+                _gisSelection = await _gisApp.ReadMapSelectionAsync(_gisSelection);
+            }
+            catch (HluToolException ex)
+            {
+                // Friendly message (no giant stack trace dumped on the user)
+                MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
             // Count the number of toids and fragments for the current incid
             // selected in the GIS and in the database.
@@ -5925,7 +5934,16 @@ namespace HLU.UI.ViewModel
 
                 // Read which features are selected in GIS (passing it a new
                 // GIS selection table so that it knows the columns to return.
-                _gisSelection = await _gisApp.ReadMapSelectionAsync(_gisSelection);
+                try
+                {
+                    _gisSelection = await _gisApp.ReadMapSelectionAsync(_gisSelection);
+                }
+                catch (HluToolException ex)
+                {
+                    // Friendly message (no giant stack trace dumped on the user)
+                    MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
 
                 // Count how many incids, toids and fragments are selected in GIS
                 _incidSelectionWhereClause = null;
@@ -7594,7 +7612,16 @@ namespace HLU.UI.ViewModel
 
                 // Recheck the selected features in GIS (passing a new GIS
                 // selection table so that it knows the columns to return.
-                _gisSelection = await _gisApp.ReadMapSelectionAsync(_gisSelection);
+                try
+                {
+                    _gisSelection = await _gisApp.ReadMapSelectionAsync(_gisSelection);
+                }
+                catch (HluToolException ex)
+                {
+                    // Friendly message (no giant stack trace dumped on the user)
+                    MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
 
                 _incidSelectionWhereClause = null;
 

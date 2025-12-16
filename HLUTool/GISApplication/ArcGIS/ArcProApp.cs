@@ -674,9 +674,12 @@ namespace HLU.GISApplication
             if (resultTable == null)
                 return resultTable;
 
+            // Capture the current layer once (prevents confusing mid-call changes)
+            FeatureLayer hluLayer = _hluLayer;
+
             // Return if the active layer hasn't been set yet.
-            if (_hluLayer == null)
-                return resultTable;
+            if (hluLayer == null)
+                throw new GisSelectionException("No active HLU layer is set.");
 
             // Execute the query on the main CIM thread
             await QueuedTask.Run(() =>
@@ -689,6 +692,20 @@ namespace HLU.GISApplication
                     // Return if there are no selected features
                     if (selection.GetCount() == 0)
                         return;
+
+                    // Validate that required columns exist on the layer
+                    // so you don't blow up halfway through filling the DataTable.
+                    var table = hluLayer.GetTable();
+                    var def = table.GetDefinition();
+
+                    var missing = resultTable.Columns
+                        .Cast<DataColumn>()
+                        .Select(c => c.ColumnName)
+                        .Where(colName => def.FindField(colName) < 0)   // If FindField isn't available in your refs, tell me and I'll swap it.
+                        .ToList();
+
+                    if (missing.Count > 0)
+                        throw new MissingLayerFieldsException(missing);
 
                     // Use a RowCursor to iterate through the selected features
                     using RowCursor rowCursor = selection.Search();
@@ -718,10 +735,15 @@ namespace HLU.GISApplication
                         resultTable.Rows.Add(dataRow);
                     }
                 }
+                catch (HluToolException)
+                {
+                    // Preserve meaning + stack trace for our own exceptions
+                    throw;
+                }
                 catch (Exception ex)
                 {
-                    // Throw an exception if there is an error
-                    throw new Exception("Error reading map selection: " + ex.Message);
+                    // Preserve stack trace and wrap in a meaningful type for the UI layer
+                    throw new HluToolException("Error reading map selection.", ex);
                 }
             });
 
