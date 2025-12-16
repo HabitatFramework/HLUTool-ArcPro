@@ -1351,7 +1351,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return _viewModelMain.CanBulkUpdate;
+                return _viewModelMain.CanUserBulkUpdate;
             }
         }
 

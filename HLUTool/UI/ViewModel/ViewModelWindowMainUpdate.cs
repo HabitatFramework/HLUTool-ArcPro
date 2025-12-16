@@ -158,9 +158,9 @@ namespace HLU.UI.ViewModel
                             _viewModelMain.HluDataset.incid_osmm_updates.TableName));
                 }
 
-                //---------------------------------------------------------------------
+                // ---------------------------------------------------------------------
                 // Update all of the GIS rows corresponding to this incid
-                //---------------------------------------------------------------------
+                // ---------------------------------------------------------------------
 
                 // Set the SQL condition for the update
                 List<SqlFilterCondition> incidCond = new([

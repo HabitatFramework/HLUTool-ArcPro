@@ -140,13 +140,7 @@ namespace HLU.UI.ViewModel
                 if (!CloneCurrentIncid(false, out msg)) throw new Exception(msg);
                 string newIncid = _viewModelMain.RecIDs.CurrentIncid;
 
-                //---------------------------------------------------------------------
-                // CHANGED: CR10 (Attribute updates for incid subsets)
-                // Pass the old incid number together with the new incid number
-                // so that only features belonging to the old incid are
-                // updated.
-                //
-                // update GIS layer
+                // Update the GIS layer
                 DataTable historyTable = _viewModelMain.GISApplication.SplitFeaturesLogically(_viewModelMain.Incid, newIncid,
                     _viewModelMain.HistoryColumns.Concat([ new(
                             _viewModelMain.HluDataset.history.modified_toidfragidColumn.ColumnName.Replace(
@@ -159,7 +153,6 @@ namespace HLU.UI.ViewModel
                 // if no history row were collected then throw an exception.
                 if ((historyTable == null) || (historyTable.Rows.Count == 0))
                     throw new Exception("Failed to update GIS layer.");
-                //---------------------------------------------------------------------
 
                 // update DB shadow copy of GIS layer
                 HluDataSet.incid_mm_polygonsDataTable polygons = new();
@@ -299,8 +292,6 @@ namespace HLU.UI.ViewModel
                 // find the last used toidfragid for the selected toid
                 string lastToidFragmentID = _viewModelMain.RecIDs.MaxToidFragmentId(_viewModelMain.ToidsSelectedMap.ElementAt(0));
 
-                //---------------------------------------------------------------------
-                // FIXED: KI110 (Physical split)
                 // Skip all but one of the GIS select criteria as they are all the same in the case of a physical split anyway
                 int skipCount = _viewModelMain.GisSelection.Rows.Count - 1;
 
@@ -308,7 +299,6 @@ namespace HLU.UI.ViewModel
                 List<List<SqlFilterCondition>> featuresFilter = ViewModelWindowMainHelpers.GisSelectionToWhereClause(
                     _viewModelMain.GisSelection.AsEnumerable().Skip(skipCount).ToArray(), _viewModelMain.GisIDColumnOrdinals,
                     ViewModelWindowMain.IncidPageSize, _viewModelMain.HluDataset.incid_mm_polygons);
-                //---------------------------------------------------------------------
 
                 if (featuresFilter.Count != 1)
                     throw new Exception("Error finding features in database.");
@@ -468,9 +458,9 @@ namespace HLU.UI.ViewModel
 
             try
             {
-                //---------------------------------------------------------------------
+                // ---------------------------------------------------------------------
                 // Create a local copy of the Incid row.
-                //---------------------------------------------------------------------
+                // ---------------------------------------------------------------------
                 HluDataSet.incidRow newIncidRow = _viewModelMain.IncidTable.NewincidRow();
                 for (int i = 0; i < _viewModelMain.IncidTable.Columns.Count; i++)
                     if (!_viewModelMain.IncidCurrentRow.IsNull(i)) newIncidRow[i] = _viewModelMain.IncidCurrentRow[i];
@@ -507,9 +497,9 @@ namespace HLU.UI.ViewModel
                 if (_viewModelMain.HluTableAdapterManager.incidTableAdapter.Update(_viewModelMain.HluDataset.incid) == -1)
                     throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid.TableName));
 
-                //---------------------------------------------------------------------
+                // ---------------------------------------------------------------------
                 // Clone IncidIhsMatrix rows
-                //---------------------------------------------------------------------
+                // ---------------------------------------------------------------------
                 if ((_viewModelMain.IncidIhsMatrixRows != null) && (_viewModelMain.IncidIhsMatrixRows.Length > 0))
                 {
                     // Copy the values of any IncidIhsMatrix rows rather than
@@ -563,9 +553,9 @@ namespace HLU.UI.ViewModel
                         throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid_ihs_matrix.TableName));
                 }
 
-                //---------------------------------------------------------------------
+                // ---------------------------------------------------------------------
                 // Clone IncidIhsFormation rows
-                //---------------------------------------------------------------------
+                // ---------------------------------------------------------------------
                 if ((_viewModelMain.IncidIhsFormationRows != null) && (_viewModelMain.IncidIhsFormationRows.Length > 0))
                 {
                     // Copy the values of any IncidIhsFormation rows rather than
@@ -619,9 +609,9 @@ namespace HLU.UI.ViewModel
                         throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid_ihs_formation.TableName));
                 }
 
-                //---------------------------------------------------------------------
+                // ---------------------------------------------------------------------
                 // Clone IncidIhsManagement rows
-                //---------------------------------------------------------------------
+                // ---------------------------------------------------------------------
                 if ((_viewModelMain.IncidIhsManagementRows != null) && (_viewModelMain.IncidIhsManagementRows.Length > 0))
                 {
                     // Copy the values of any IncidIhsManagement rows rather than
@@ -675,9 +665,9 @@ namespace HLU.UI.ViewModel
                         throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid_ihs_management.TableName));
                 }
 
-                //---------------------------------------------------------------------
+                // ---------------------------------------------------------------------
                 // Clone IncidIhsComplex rows
-                //---------------------------------------------------------------------
+                // ---------------------------------------------------------------------
                 if ((_viewModelMain.IncidIhsComplexRows != null) && (_viewModelMain.IncidIhsComplexRows.Length > 0))
                 {
                     // Copy the values of any IncidIhsComplex rows rather than
@@ -731,9 +721,9 @@ namespace HLU.UI.ViewModel
                         throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid_ihs_complex.TableName));
                 }
 
-                //---------------------------------------------------------------------
+                // ---------------------------------------------------------------------
                 // Clone IncidSecondary rows
-                //---------------------------------------------------------------------
+                // ---------------------------------------------------------------------
                 if ((_viewModelMain.IncidSecondaryRows != null) && (_viewModelMain.IncidSecondaryRows.Length > 0))
                 {
                     // Copy the values of any IncidSecondary rows rather than
@@ -784,9 +774,9 @@ namespace HLU.UI.ViewModel
                         throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid_secondary.TableName));
                 }
 
-                //---------------------------------------------------------------------
+                // ---------------------------------------------------------------------
                 // Clone IncidBap rows
-                //---------------------------------------------------------------------
+                // ---------------------------------------------------------------------
                 // Copy the values of any IncidBap rows rather than
                 // copying the rows themselves so that any pending changes
                 // to the rows can be discarded afterwards.
@@ -878,9 +868,9 @@ namespace HLU.UI.ViewModel
                         throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid_bap.TableName));
                 }
 
-                //---------------------------------------------------------------------
+                // ---------------------------------------------------------------------
                 // Clone IncidCondition rows
-                //---------------------------------------------------------------------
+                // ---------------------------------------------------------------------
                 if ((_viewModelMain.IncidConditionRows != null) && (_viewModelMain.IncidConditionRows.Length > 0))
                 {
                     // Copy the values of any IncidCondition rows rather than
@@ -931,9 +921,9 @@ namespace HLU.UI.ViewModel
                         throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid_condition.TableName));
                 }
 
-                //---------------------------------------------------------------------
+                // ---------------------------------------------------------------------
                 // Clone IncidSources rows
-                //---------------------------------------------------------------------
+                // ---------------------------------------------------------------------
                 if ((_viewModelMain.IncidSourcesRows != null) && (_viewModelMain.IncidSourcesRows.Length > 0))
                 {
                     // Copy the values of any IncidSources rows rather than
@@ -984,9 +974,9 @@ namespace HLU.UI.ViewModel
                         throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid_sources.TableName));
                 }
 
-                //---------------------------------------------------------------------
+                // ---------------------------------------------------------------------
                 // Clone IncidOSMMUpdates rows
-                //---------------------------------------------------------------------
+                // ---------------------------------------------------------------------
                 if ((_viewModelMain.IncidOSMMUpdatesRows != null) && (_viewModelMain.IncidOSMMUpdatesRows.Length > 0))
                 {
                     // Copy the values of any IncidOSMMUpdates rows rather than

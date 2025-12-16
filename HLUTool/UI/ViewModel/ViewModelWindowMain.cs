@@ -130,12 +130,49 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// Update operations.
     /// </summary>
-    public enum Operations { PhysicalMerge, PhysicalSplit, LogicalMerge, LogicalSplit, AttributeUpdate, BulkUpdate, OSMMUpdate };
+    public enum Operations
+    {
+        PhysicalMerge,
+        PhysicalSplit,
+        LogicalMerge,
+        LogicalSplit,
+        AttributeUpdate,
+        BulkUpdate,
+        OSMMUpdate
+    };
 
     /// <summary>
-    /// User Interface control visibility values.
+    /// Represents the current operational state(s) of the HLU tool.
+    /// 
+    /// This enum uses the [Flags] attribute, meaning each value corresponds
+    /// to a single bit in a binary number. Because of that, multiple values
+    /// can be combined using bitwise OR (e.g. Edit | Bulk).
+    ///
+    /// For example:
+    ///   Edit       = 0001 (1)
+    ///   Bulk       = 0010 (2)
+    ///   OsmmReview = 0100 (4)
+    ///   OsmmBulk   = 1000 (8)
+    ///
+    /// If the tool is simultaneously in Edit mode and Bulk Update mode,
+    /// the combined state is:
+    ///   0001 | 0010 = 0011  (decimal value 3)
+    ///
+    /// Checking whether a specific mode is active is done with:
+    ///   WorkMode.HasFlag(HluEditMode.Bulk)
+    ///
+    /// This creates a clean, extensible state system without relying
+    /// on multiple unrelated booleans.
     /// </summary>
-    //public enum Visibility { Visible, Hidden, Collapsed };
+    [Flags]
+    public enum HluWorkMode
+    {
+        None = 0,
+        Edit = 1 << 0, // Previously EditMode.
+        Bulk = 1 << 1, // Previously _bulkUpdateMode.
+        OSMMReview = 1 << 2, // Previously _osmmUpdateMode.
+        OSMMBulk = 1 << 3  // Previously _osmmBulkUpdateMode.
+    }
 
     #endregion enums
 

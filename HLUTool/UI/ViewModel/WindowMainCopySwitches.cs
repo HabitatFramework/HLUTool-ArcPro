@@ -135,9 +135,6 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR44 (Editable Legacy Habitat field)
-        // Make the legacy habitat field editable in the interface.
         public bool CopyIncidLegacyHabitat
         {
             get { return _copyIncidLegacyHabitat; }
@@ -147,7 +144,6 @@ namespace HLU.UI.ViewModel
                 PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidLegacyHabitat)));
             }
         }
-        //---------------------------------------------------------------------
 
         public bool CopyIncidBapHabitatsUser
         {
@@ -189,9 +185,6 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR37 (Site reference and site name)
-        // Display the site reference with the site name in the interface.
         public bool CopyIncidSiteRef
         {
             get { return _copyIncidSiteRef; }
@@ -201,7 +194,6 @@ namespace HLU.UI.ViewModel
                 PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(CopyIncidSiteRef)));
             }
         }
-        //---------------------------------------------------------------------
 
         public bool CopyIncidSiteName
         {
@@ -483,9 +475,6 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR44 (Editable Legacy Habitat field)
-        // Make the legacy habitat field editable in the interface.
         public string IncidLegacyHabitat
         {
             get { return _copyIncidLegacyHabitat ? _incidLegacyHabitat : null; }
@@ -495,7 +484,6 @@ namespace HLU.UI.ViewModel
                 PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidLegacyHabitat)));
             }
         }
-        //---------------------------------------------------------------------
 
         public ObservableCollection<BapEnvironment> IncidBapHabitatsUser
         {
@@ -543,9 +531,6 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR37 (Site reference and site name)
-        // Display the site reference with the site name in the interface.
         public string IncidSiteRef
         {
             get { return _incidSiteRef; }
@@ -555,7 +540,6 @@ namespace HLU.UI.ViewModel
                 PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidSiteRef)));
             }
         }
-        //---------------------------------------------------------------------
 
         public string IncidSiteName
         {

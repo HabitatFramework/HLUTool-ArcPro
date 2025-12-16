@@ -48,26 +48,23 @@
 			</tabs>
 
 			<groups>
-				<group id="HLUTool_Group"
-					   caption="HLU Tool"
-					   appearsOnAddInTab="false"
-					   keytip="HL">
-					<button refID="HLUTool_btnHLUToolDockPane"
-							size="large" />
+				<group id="HLUTool_Group" caption="HLU Tool" appearsOnAddInTab="false" keytip="HG">
+					<button refID="HLUTool_btnHLUToolDockPane" size="large" />
 				</group>
-				
+
 				<group id="HLUTool_Group1" caption="GIS" keytip="G1">
 					<comboBox refID="HLUTool_cmbActiveLayer" size="middle" />
 				</group>
-				<group id="HLUTool_Group2" caption="Edits" keytip="G2">
+				<group id="HLUTool_Group2" caption="Edit" keytip="G2">
 					<comboBox refID="HLUTool_cmbReason" size="middle" />
 					<comboBox refID="HLUTool_cmbProcess" size="middle" />
+					<button refID="HLUTool_btnBulkUpdate" size="middle" />
 				</group>
 				<group id="HLUTool_Group3" caption="Copy/Paste" keytip="G3">
 					<button refID="HLUTool_btnCopy" size="middle" />
 					<button refID="HLUTool_btnPaste" size="middle" />
 				</group>
-				<group id="HLUTool_Group4" caption="Select" keytip="G4">
+				<group id="HLUTool_Group4" caption="Filter" keytip="G4">
 					<button refID="HLUTool_btnFilterByAttributes" size="middle" />
 					<button refID="HLUTool_btnClearFilter" size="middle" />
 					<editBox refID="HLUTool_edbFilterByIncid" size="large" />
@@ -77,21 +74,26 @@
 					<button refID="HLUTool_btnSelectCurrentIncid" size="middle" />
 					<button refID="HLUTool_btnSelectFilteredIncids" size="middle" />
 				</group>
-				<group id="HLUTool_Group6" caption="Split/Merge" keytip="G6">
-					<subgroup refID="HLUTool_SubGroup1" />
-					<subgroup refID="HLUTool_SubGroup2" />
+				<group id="HLUTool_Group6"
+					   caption="Split/Merge"
+					   keytip="G6">
+					<menu refID="HLUTool_SplitMenu"
+						  size="large" />
+					<menu refID="HLUTool_MergeMenu"
+						  size="large" />
 				</group>
-				<group id="HLUTool_Group7" caption="Export" keytip="G7">
-					<button refID="HLUTool_btnExport" size="middle" />
+				<group id="HLUTool_Group7" caption="OSMM Updates" keytip="G7">
 				</group>
 				<group id="HLUTool_Group8" caption="Options" keytip="G8">
 					<button refID="HLUTool_btnOptions" size="middle" />
 					<button refID="HLUTool_btnAutoSelectOnGis" size="middle" />
+					<button refID="HLUTool_btnExport" size="middle" />
 				</group>
 				<group id="HLUTool_Group9" caption="Help" keytip="G9">
 					<button refID="HLUTool_btnAbout" size="middle" />
 				</group>
 			</groups>
+
 			<subgroups>
 				<subgroup id="HLUTool_SubGroup1" verticalAlignment="Center" horizontalAlignment="Left" size="MediumThenSmallWhenSmall">
 					<button refID="HLUTool_btnPhysicalSplit" size="middle" />
@@ -102,6 +104,32 @@
 					<button refID="HLUTool_btnLogicalMerge" size="middle" />
 				</subgroup>
 			</subgroups>
+
+			<menus>
+				<!-- Split dropdown: Physical + Logical -->
+				<menu id="HLUTool_SplitMenu"
+					  caption="Split"
+					  smallImage="Images\Split16.png"
+					  largeImage="Images\Split32.png">
+					<tooltip heading="Split options">
+						Split features physically or logically<disabledText />
+					</tooltip>
+					<button refID="HLUTool_btnPhysicalSplit" />
+					<button refID="HLUTool_btnLogicalSplit" />
+				</menu>
+
+				<!-- Merge dropdown: Physical + Logical -->
+				<menu id="HLUTool_MergeMenu"
+					  caption="Merge"
+					  smallImage="Images\Merge16.png"
+					  largeImage="Images\Merge32.png">
+					<tooltip heading="Merge options">
+						Merge features physically or logically<disabledText />
+					</tooltip>
+					<button refID="HLUTool_btnPhysicalMerge" />
+					<button refID="HLUTool_btnLogicalMerge" />
+				</menu>
+			</menus>
 
 			<controls>
 				<comboBox id="HLUTool_cmbActiveLayer"
@@ -119,6 +147,19 @@
 					</tooltip>
 				</comboBox>
 
+				<button id="HLUTool_btnBulkUpdate"
+						caption="Copy"
+						className="HLU.UI.UserControls.Toolbar.BulkUpdateButton"
+						loadOnClick="false"
+						keytip="BU"
+						smallImage="pack://application:,,,/HLUTool;component/Images/BulkUpdate16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/BulkUpdate32.png">
+					<tooltip heading="Bulk Update">
+						Enable updates to attributes of multiple selected features simultaneously.
+						<disabledText>Available only when not in a bulk or OSMM update mode and a filter is active.</disabledText>
+					</tooltip>
+				</button>
+
 				<comboBox id="HLUTool_cmbReason"
 						  caption=" Reason:"
 						  extendedCaption="Select reason for updates"
@@ -131,7 +172,7 @@
 						  keytip="RC">
 					<tooltip heading="Reason">
 						Select the reason for upcoming updates.
-						<disabledText>"Available only when not in a bulk or OSMM update mode."</disabledText>
+						<disabledText>Available only when not in a bulk or OSMM update mode.</disabledText>
 					</tooltip>
 				</comboBox>
 
@@ -147,7 +188,7 @@
 						  keytip="PC">
 					<tooltip heading="Process">
 						Select the process for upcoming updates.
-						<disabledText>"Available only when not in a bulk or OSMM update mode."</disabledText>
+						<disabledText>Available only when not in a bulk or OSMM update mode.</disabledText>
 					</tooltip>
 				</comboBox>
 
@@ -173,7 +214,7 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/Copy32.png">
 					<tooltip heading="Copy">
 						Copy selected attributes.
-						<disabledText>"Available only when an INCID is loaded and at least one copy option is selected."</disabledText>
+						<disabledText>Available only when an INCID is loaded and at least one copy option is selected.</disabledText>
 					</tooltip>
 				</button>
 
@@ -186,7 +227,7 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/Paste32.png">
 					<tooltip heading="Paste">
 						Paste the copied attributes.
-						<disabledText>"Available only when an INCID is loaded and at least one value has been copied."</disabledText>
+						<disabledText>Available only when an INCID is loaded and at least one value has been copied.</disabledText>
 					</tooltip>
 				</button>
 
@@ -200,7 +241,7 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/Filter32.png">
 					<tooltip heading="Filter by Attributes">
 						Filter the INCID records based upon non-spatial criteria using the query builder.
-						<disabledText>"Available only when not in a bulk or OSMM update mode."</disabledText>
+						<disabledText>Available only when not in a bulk or OSMM update mode.</disabledText>
 					</tooltip>
 				</button>
 
@@ -214,7 +255,7 @@
 						 sizeString="123456789012">
 					<tooltip heading="Filter by INCID">
 						Filter the records for a single INCID.
-						<disabledText>"Available only when not in a bulk or OSMM update mode."</disabledText>
+						<disabledText>Available only when not in a bulk or OSMM update mode.</disabledText>
 					</tooltip>
 				</editBox>
 
@@ -240,7 +281,7 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/SelectOnMap32.png">
 					<tooltip heading="Select Current Incid">
 						Select all of the features associated with only the current INCID record in the active GIS layer.
-						<disabledText>"Available only when not in bulk or OSMM update mode."</disabledText>
+						<disabledText>Available only when not in bulk or OSMM update mode.</disabledText>
 					</tooltip>
 				</button>
 
@@ -253,7 +294,7 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/SelectAllOnMap32.png">
 					<tooltip heading="Select All Filtered INCIDs">
 						Select all of the features associated with all of the currently filtered INCID records in the active GIS layer.
-						<disabledText>"Available only when not in bulk or OSMM update mode."</disabledText>
+						<disabledText>Available only when not in bulk or OSMM update mode.</disabledText>
 					</tooltip>
 				</button>
 
@@ -266,7 +307,7 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/ReadMapSelection32.png">
 					<tooltip heading="Get Map Selection">
 						Filter the Incid records associated with the selected features in the active GIS layer.
-						<disabledText>"Available only when not in bulk update mode."</disabledText>
+						<disabledText>Available only when not in bulk update mode.</disabledText>
 					</tooltip>
 				</button>
 
@@ -279,7 +320,7 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/LogicalSplit32.png">
 					<tooltip heading="Logical Split">
 						Split selected features from the current INCID into a new INCID. Used to isolate features from one INCID into a new INCID so that they can be updated independently.
-						<disabledText>"Available only when not in bulk or OSMM update mode, editing is active, and only a subset of features from one INCID is selected."</disabledText>
+						<disabledText>Available only when not in bulk or OSMM update mode, editing is active, and only a subset of features from one INCID is selected.</disabledText>
 					</tooltip>
 				</button>
 
@@ -292,7 +333,7 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/LogicalMerge32.png">
 					<tooltip heading="Logical Merge">
 						Combine selected features into the INCID of one of those features (selected from the list of INCIDs displayed during the process).
-						<disabledText>"Available only when not in bulk or OSMM update mode, editing is active, and multiple features are selected from more than one INCID."</disabledText>
+						<disabledText>Available only when not in bulk or OSMM update mode, editing is active, and multiple features are selected from more than one INCID.</disabledText>
 					</tooltip>
 				</button>
 
@@ -305,7 +346,7 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/PhysicalSplit32.png">
 					<tooltip heading="Physical Split">
 						Sub-divide a single feature, that has already been split in the active GIS layer, into one or more new TOID fragments by assigning new TOID fragment identifiers. The fragments can then be assigned different attributes (once they have been logically split from one another).
-						<disabledText>"Available only when not in bulk or OSMM update mode, editing is active, and more than one feature is selected that share the same INCID, TOID, and fragment ID."</disabledText>
+						<disabledText>Available only when not in bulk or OSMM update mode, editing is active, and more than one feature is selected that share the same INCID, TOID, and fragment ID.</disabledText>
 					</tooltip>
 				</button>
 
@@ -318,7 +359,7 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/PhysicalMerge32.png">
 					<tooltip heading="Physical Merge">
 						Merge two or more fragments of a single TOID in the active GIS layer, that are also associated with the same INCID, into a new single feature and assigns them to the same TOID fragment identifier.
-						<disabledText>"Available only when not in bulk or OSMM update mode, editing is active, and multiple features are selected for the same INCID and TOID but different fragments."</disabledText>
+						<disabledText>Available only when not in bulk or OSMM update mode, editing is active, and multiple features are selected for the same INCID and TOID but different fragments.</disabledText>
 					</tooltip>
 				</button>
 
@@ -331,7 +372,7 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/Export32.png">
 					<tooltip heading="Export">
 						Export data using a pre-defined format.
-						<disabledText>"Available only when not in a bulk or OSMM update mode."</disabledText>
+						<disabledText>Available only when not in a bulk or OSMM update mode.</disabledText>
 					</tooltip>
 				</button>
 
@@ -385,12 +426,11 @@
 		</insertModule>
 
 		<updateModule refID="DataTools_Module">
-			<groups>
-				<updateGroup refID="Data_Group">
-					<insertButton refID="HLUTool_btnHLUToolDockPane"
-								  size="large" />
-				</updateGroup>
-			</groups>
+			<tabs>
+				<updateTab refID="Data_Tab">
+					<insertGroup refID="HLUTool_Group" insert="after" />
+				</updateTab>
+			</tabs>
 		</updateModule>
 	</modules>
 

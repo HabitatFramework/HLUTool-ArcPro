@@ -392,9 +392,6 @@ namespace HLU.Data.Connection
             }
         }
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR49 Process bulk OSMM Updates
-        //
         /// <summary>
         /// Count the number database rows that match the list of
         /// WHERE conditions.
@@ -430,16 +427,7 @@ namespace HLU.Data.Connection
                 return 0;
             }
         }
-        //---------------------------------------------------------------------
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR49 Process bulk OSMM Updates
-        //
-        //---------------------------------------------------------------------
-        // CHANGED: CR5 (Select by attributes interface)
-        // Count the number of database rows using a WHERE statement
-        // based on both a list of conditions and a free-text string.
-        //
         /// <summary>
         /// Count the number database rows that match the list of
         /// WHERE conditions and string of WHERE clauses.
@@ -498,8 +486,6 @@ namespace HLU.Data.Connection
                 return 0;
             }
         }
-        //---------------------------------------------------------------------
-        //---------------------------------------------------------------------
 
         #endregion
 
@@ -915,13 +901,11 @@ namespace HLU.Data.Connection
                                 QuoteIdentifier(c.ColumnName), QuoteIdentifier(columnAlias)));
                         else
                             sbTargetList.Append(String.Format(",{0}.{1} AS {2}", c.Table.TableName, c.ColumnName, columnAlias));
+
                         resultTable.Columns.Add(new DataColumn(columnAlias, c.DataType));
                     }
                     else
                     {
-                        //---------------------------------------------------------------------
-                        // CHANGED: CR49 Process bulk OSMM Updates
-                        //
                         // Qualify column names with the table name and name using the column name
                         if (quoteIdentifiers)
                             sbTargetList.Append(String.Format(",{0}.{1} AS {2}", QuoteIdentifier(c.Table.TableName),
@@ -929,7 +913,7 @@ namespace HLU.Data.Connection
                         else
                             sbTargetList.Append(String.Format(",{0}.{1} AS {2}", c.Table.TableName,
                                 c.ColumnName, c.ColumnName));
-                        //---------------------------------------------------------------------
+
                         resultTable.Columns.Add(new DataColumn(c.ColumnName, c.DataType));
                     }
                 }
@@ -1016,11 +1000,6 @@ namespace HLU.Data.Connection
             }
         }
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR5 (Select by attributes interface)
-        // Count the number of database rows using a WHERE statement
-        // based on both a list of conditions and a free-text string.
-        //
         /// <summary>
         /// Select database records using a SQL statement based on an array
         /// of target columns to select, a list of tables to select from, and
@@ -1049,14 +1028,10 @@ namespace HLU.Data.Connection
                 List<SqlFilterCondition> fromConds = [];
                 string fromList = FromList(true, true, targetColumns, sqlFromTables, ref fromConds, out additionalTables);
 
-                //---------------------------------------------------------------------
-                // CHANGED: CR49 Process bulk OSMM Updates
-                //
                 // Force the column names to be qualified only if there are any
                 // additional tables and there are multiple columns.
                 if (targetColumns.Length > 1)
                     qualifyColumns |= additionalTables;
-                //---------------------------------------------------------------------
 
                 // Build a sql command.
                 StringBuilder sbCommandText = new(selectDistinct ? "SELECT DISTINCT " : "SELECT ");
@@ -1067,13 +1042,9 @@ namespace HLU.Data.Connection
                 // Append the tables to select from.
                 sbCommandText.Append(fromList);
 
-                //---------------------------------------------------------------------
-                // CHANGED: CR49 Process bulk OSMM Updates
-                //
                 // Force the column names to be qualified if there are any
                 // additional tables.
                 qualifyColumns |= additionalTables;
-                //---------------------------------------------------------------------
 
                 // Append the where clauses relating to the from table joins.
                 string fromClause = WhereClause(true, true, qualifyColumns, fromConds);
@@ -1102,7 +1073,6 @@ namespace HLU.Data.Connection
                 return new();
             }
         }
-        //---------------------------------------------------------------------
 
         /// <summary>
         /// Select database records using a SQL statement based on an array
@@ -1134,14 +1104,10 @@ namespace HLU.Data.Connection
 
                 whereConds = fromConds.Concat(whereConds).ToList();
 
-                //---------------------------------------------------------------------
-                // CHANGED: CR49 Process bulk OSMM Updates
-                //
                 // Force the column names to be qualified only if there are any
                 // additional tables and there are multiple columns.
                 if (targetColumns.Length > 1)
                     qualifyColumns |= additionalTables;
-                //---------------------------------------------------------------------
 
                 // Build a sql command.
                 StringBuilder sbCommandText = new(selectDistinct ? "SELECT DISTINCT " : "SELECT ");
@@ -1152,13 +1118,9 @@ namespace HLU.Data.Connection
                 // Append the tables to select from.
                 sbCommandText.Append(fromList);
 
-                //---------------------------------------------------------------------
-                // CHANGED: CR49 Process bulk OSMM Updates
-                //
                 // Force the column names to be qualified if there are any
                 // additional tables.
                 qualifyColumns |= additionalTables;
-                //---------------------------------------------------------------------
 
                 // Append the where clauses relating to the from table joins.
                 string fromClause = WhereClause(true, true, qualifyColumns, whereConds);
@@ -1191,13 +1153,10 @@ namespace HLU.Data.Connection
             }
         }
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR5 (Select by attributes interface)
-        // Execute the SQL statement to check if it is valid and
-        // see if it returns at least one record.
         //
         /// <summary>
-        /// SQLs the validate.
+        /// Execute the SQL statement to check if it is valid and
+        /// see if it returns at least one record.
         /// </summary>
         /// <param name="targetColumns">The target columns.</param>
         /// <param name="sqlFromTables">The SQL from tables.</param>
@@ -1274,7 +1233,6 @@ namespace HLU.Data.Connection
                 return _errorMessage;
             }
         }
-        //---------------------------------------------------------------------
 
         #endregion
 

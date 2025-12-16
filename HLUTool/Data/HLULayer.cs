@@ -33,14 +33,12 @@ namespace HLU.Data
 
     #endregion
 
-    //---------------------------------------------------------------------
-    // CHANGED: CR31 (Switching between GIS layers)
-    // Enable the user to switch between different HLU layers, where
-    // there is more than one valid layer in the current document.
-    //
-    // Contains details of each valid HLU layer (map/window number,
-    // map/window name, layer number and layer name.
-    //---------------------------------------------------------------------
+    /// <summary>
+    /// Enable the user to switch between different HLU layers, where
+    /// there is more than one valid layer in the current document.
+    /// Contains details of each valid HLU layer (map/window number,
+    /// map/window name, layer number and layer name.
+    /// </summary>
     public class HLULayer
     {
         #region Fields

@@ -194,18 +194,7 @@ namespace HLU.UI.ViewModel
             }
             else if ((_currChildRows != null) && (_currChildRows.Length > 0))
             {
-                //---------------------------------------------------------------------
-                // CHANGED: CR23 (Merged features)
-                // Flash all the features relating to the selected incid at once.
-                //
-                //foreach (HluDataSet.incid_mm_polygonsRow r in _currChildRows)
-                //{
-                //    List<List<SqlFilterCondition>> whereClause =
-                //        ViewModelWindowMainHelpers.GisSelectionToWhereClause(new HluDataSet.incid_mm_polygonsRow[] { r },
-                //        _keyOrdinals, 100, _selectedFeatures);
-                //    if (whereClause.Count == 1)
-                //        _gisApp.FlashSelectedFeature(whereClause[0]);
-                //}
+                // Get the where clauses for the selected rows.
                 List<List<SqlFilterCondition>> whereClauses =
                     ViewModelWindowMainHelpers.GisSelectionToWhereClause(_currChildRows,
                     _keyOrdinals, 100, _selectedFeatures);
@@ -217,7 +206,6 @@ namespace HLU.UI.ViewModel
                     _gisApp.FlashSelectedFeature(whereClauses[0]);
                 else
                     _gisApp.FlashSelectedFeatures(whereClauses);
-                //---------------------------------------------------------------------
             }
         }
 

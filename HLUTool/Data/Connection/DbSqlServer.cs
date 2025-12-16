@@ -532,11 +532,6 @@ namespace HLU.Data.Connection
             finally { if (previousConnectionState == ConnectionState.Closed) _connection.Close(); }
         }
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR5 (Select by attributes interface)
-        // Execute a SQL query to check if it is valid. Errors
-        // will be thrown back to the calling method.
-        //
         /// <summary>
         /// Validates the SQL query by executing it and throwing
         /// any execeptions raised back to the calling method.
@@ -572,7 +567,6 @@ namespace HLU.Data.Connection
             }
             finally { if (previousConnectionState == ConnectionState.Closed) _connection.Close(); }
         }
-        //---------------------------------------------------------------------
 
         public override bool BeginTransaction(bool commitPrevious, IsolationLevel isolationLevel)
         {

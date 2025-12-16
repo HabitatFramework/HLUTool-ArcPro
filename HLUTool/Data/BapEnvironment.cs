@@ -296,8 +296,6 @@ namespace HLU.Data
             _secondaryPriorityHabitat = true;
         }
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR49 Process bulk OSMM Updates
         /// <summary>
         /// Determines whether the specified row is a secondary priority habitat.
         /// </summary>
@@ -309,7 +307,6 @@ namespace HLU.Data
         {
             return (r.quality_determination == BAPDetQltyPrevious || r.quality_determination == BAPDetQltyUserAdded);
         }
-        //---------------------------------------------------------------------
 
         /// <summary>
         /// Makes the row a secondary priority habitat.
@@ -388,8 +385,6 @@ namespace HLU.Data
                     // to be validated.
                     if (_potentialPriorityDetermQtyValidation == 1)
                     {
-                        //---------------------------------------------------------------------
-                        // CHANGED: CR49 Process bulk OSMM Updates
                         // Validate that the determination quality can ONLY be
                         // 'Not present but close to definition' or
                         // 'Previously present, but may no longer exist'.
@@ -400,15 +395,12 @@ namespace HLU.Data
                                 .Append(String.Format("Determination quality for potential priority habitats can only be '{0}' or '{1}'",
                                 BAPDetQltyUserAddedDesc, BAPDetQltyPreviousDesc));
                         }
-                        //---------------------------------------------------------------------
                     }
                 }
                 // If this is not a secondary priority habitat (i.e. in the primary
                 // list).
                 else
                 {
-                    //---------------------------------------------------------------------
-                    // CHANGED: CR49 Process bulk OSMM Updates
                     // Validate that the determination quality can be anything EXCEPT
                     // 'Not present but close to definition' or
                     // 'Previously present, but may no longer exist'.
@@ -422,7 +414,6 @@ namespace HLU.Data
                         sbError.Append(Environment.NewLine)
                             .Append(String.Format("Determination quality cannot be '{0}' for 'primary' priority habitats", BAPDetQltyPreviousDesc));
                     }
-                    //---------------------------------------------------------------------
                 }
             }
 
@@ -496,8 +487,6 @@ namespace HLU.Data
                                 // to be validated.
                                 if (_potentialPriorityDetermQtyValidation == 1)
                                 {
-                                    //---------------------------------------------------------------------
-                                    // CHANGED: CR49 Process bulk OSMM Updates
                                     // Validate that the determination quality can ONLY be
                                     // 'Not present but close to definition' or
                                     // 'Previously present, but may no longer exist'.
@@ -507,14 +496,11 @@ namespace HLU.Data
                                         return String.Format("Error: Determination quality for potential priority habitats can only be '{0}' or '{1}'",
                                             BAPDetQltyUserAddedDesc, BAPDetQltyPreviousDesc);
                                     }
-                                    //---------------------------------------------------------------------
                                 }
                             }
                             // If this is an automatic priority habitat.
                             else
                             {
-                                //---------------------------------------------------------------------
-                                // CHANGED: CR49 Process bulk OSMM Updates
                                 // Validate that the determination quality can be anything EXCEPT
                                 // 'Not present but close to definition' or
                                 // 'Previously present, but may no longer exist'.
@@ -528,9 +514,7 @@ namespace HLU.Data
                                     return String.Format("Error: Determination quality cannot be '{0}' for priority habitats",
                                         BAPDetQltyPreviousDesc);
                                 }
-                                //---------------------------------------------------------------------
                             }
-                            //---------------------------------------------------------------------
                         }
 
                         break;

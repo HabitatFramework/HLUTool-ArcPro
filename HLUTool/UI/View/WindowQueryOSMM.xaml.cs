@@ -76,7 +76,6 @@ namespace HLU.UI.View
         //}    
     
     }
-    //---------------------------------------------------------------------
 
     //public class ResultSort : IComparer
     //{

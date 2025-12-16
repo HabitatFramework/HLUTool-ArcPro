@@ -34,10 +34,9 @@ using HLU.Properties;
 
 namespace HLU.UI.ViewModel
 {
-    //---------------------------------------------------------------------
-    // CHANGED: CR49 Process proposed OSMM Updates
-    // Functionality to process proposed OSMM Updates.
-    //
+    /// <summary>
+    /// Functionality to process proposed OSMM Updates.
+    /// </summary>
     class ViewModelWindowMainOSMMUpdate
     {
         #region Fields
@@ -76,13 +75,6 @@ namespace HLU.UI.ViewModel
 
             // Refresh all the controls
             _viewModelMain.RefreshAll();
-
-            // Open the OSMM Update filter
-            //---------------------------------------------------------------------
-            // FIX: 101 Enable get map selection when in OSMM update mode.
-            //
-            //_viewModelMain.OpenWindowQueryOSMM(true);
-            //---------------------------------------------------------------------
         }
 
         /// <summary>
@@ -111,7 +103,7 @@ namespace HLU.UI.ViewModel
                 // comparing DateTime fields later in some databases.
                 DateTime currDtTm = DateTime.Now;
                 DateTime nowDtTm = new(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
-                //---------------------------------------------------------------------
+
                 _viewModelMain.IncidOSMMUpdatesRows[0].last_modified_date = nowDtTm;
                 _viewModelMain.IncidOSMMUpdatesRows[0].last_modified_user_id = _viewModelMain.UserID;
 
@@ -145,12 +137,8 @@ namespace HLU.UI.ViewModel
                 _viewModelMain.HluDataset.AcceptChanges();
                 _viewModelMain.Saved = true;
 
-                //---------------------------------------------------------------------
-                // FIX: 103 Accept/Reject OSMM updates in edit mode.
-                //
                 //// Move to the next Incid
                 //_viewModelMain.IncidCurrentRowIndex += 1;
-                //---------------------------------------------------------------------
 
                 return true;
             }
@@ -339,12 +327,14 @@ namespace HLU.UI.ViewModel
         /// to exit the OSMM update mode and restore the default application state.</remarks>
         private void OSMMUpdateResetControls()
         {
-            // Reset the incid filter
-            _viewModelMain.OSMMUpdateMode = null;
-            _viewModelMain.IncidCurrentRowIndex = 1;
-
             // Stop the bulk update mode
             _viewModelMain.OSMMUpdateMode = false;
+
+            // Reset the incid filter
+            _viewModelMain.SuppressUserNotifications = true;
+            //TODO: Await call.
+            _viewModelMain.IncidCurrentRowIndex = 1;
+            _viewModelMain.SuppressUserNotifications = false;
 
             // Enable all the tabs
             _viewModelMain.TabHabitatControlsEnabled = true;

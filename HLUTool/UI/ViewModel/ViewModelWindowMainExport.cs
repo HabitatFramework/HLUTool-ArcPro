@@ -147,14 +147,12 @@ namespace HLU.UI.ViewModel
 
         #region Request Close
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR14 (Exporting IHS codes or descriptions)
-        // Enable users to specify if individual fields should be
-        // exported with descriptions, rather than the whole export,
-        // by moving this option to the exports_fields table.
-        //
+        /// <summary>
+        /// Handles the RequestClose event of the _viewModelExport control.
+        /// </summary>
+        /// <param name="exportID"></param>
+        /// <param name="selectedOnly"></param>
         private void _viewModelExport_RequestClose(int exportID, bool selectedOnly)
-        //---------------------------------------------------------------------
         {
             _viewModelExport.RequestClose -= _viewModelExport_RequestClose;
             _windowExport.Close();
@@ -469,16 +467,12 @@ namespace HLU.UI.ViewModel
                 // Get the relationships for the table/column if a
                 // value from a lookup table is required.
                 string fieldFormat = !r.IsNull(_viewModelMain.HluDataset.exports_fields.field_formatColumn) ? r.field_format : null;
-                //---------------------------------------------------------------------
-                // CHANGED: CR14 (Exporting IHS codes or descriptions)
-                // Enable users to specify if individual fields should be
-                // exported with descriptions in the exports_fields table.
-                //
+
+                // Get the list of data relations for this table/column.
                 var relations = ((fieldFormat != null) && (fieldFormat.Equals("both", StringComparison.CurrentCultureIgnoreCase)
                     || fieldFormat.Equals("lookup", StringComparison.CurrentCultureIgnoreCase))) ? _viewModelMain.HluDataRelations.Where(rel =>
                     rel.ChildTable.TableName == r.table_name && rel.ChildColumns
                     .Count(ch => ch.ColumnName == r.column_name) == 1) : [];
-                //---------------------------------------------------------------------
 
                 switch (relations.Count())
                 {
@@ -546,12 +540,6 @@ namespace HLU.UI.ViewModel
                         // If the lookup table contains the required field name.
                         if (lutRelation.ParentTable.Columns.Contains(lutFieldName))
                         {
-                            //---------------------------------------------------------------------
-                            // CHANGED: CR15 (Concatenate IHS codes and descriptions)
-                            // Enable users to specify if individual fields should be
-                            // exported with both codes and descriptions concatenated
-                            // together.
-                            //
                             // If both the original field and it's corresponding lookup
                             // table field are required then add them both to the sql
                             // target list.
@@ -573,7 +561,6 @@ namespace HLU.UI.ViewModel
                                 // for the concatenation string length.
                                 fieldLength += lutColumns.First(c => c.ColumnName == lutFieldName).MaxLength + 3;
                             }
-                            //---------------------------------------------------------------------
                             else
                             {
                                 // Add the corresponding lookup table field to the sql
@@ -605,12 +592,6 @@ namespace HLU.UI.ViewModel
                         // name, but does contain the required field ordinal.
                         else if (lutRelation.ParentTable.Columns.Count >= lutFieldOrdinal)
                         {
-                            //---------------------------------------------------------------------
-                            // CHANGED: CR15 (Concatenate IHS codes and descriptions)
-                            // Enable users to specify if individual fields should be
-                            // exported with both codes and descriptions concatenated
-                            // together.
-                            //
                             // If both the original field and it's corresponding lookup
                             // table field are required then add them both to the sql
                             // target list.
@@ -630,7 +611,6 @@ namespace HLU.UI.ViewModel
                                 // Set the field length of the lookup table field.
                                 fieldLength = lutColumns.First(c => c.ColumnName == lutFieldName).MaxLength;
                             }
-                            //---------------------------------------------------------------------
                             else
                             {
                                 // Add the corresponding lookup table field to the sql
@@ -985,13 +965,9 @@ namespace HLU.UI.ViewModel
                     _matrixIdOrdinal = lastFieldOrdinal += 1;
                 }
 
-                //---------------------------------------------------------------------
-                // CHANGED: CR43 (Sort multiple fields in exports)
-                //
                 // Add the input field position to the list of fields
                 // that will be used to sort the input records.
                 sortFields.Add(_matrixIdOrdinal + 1);
-                //---------------------------------------------------------------------
             }
 
             // If any incid_ihs_formation fields are in the export file.
@@ -1010,13 +986,9 @@ namespace HLU.UI.ViewModel
                     _formationIdOrdinal = lastFieldOrdinal += 1;
                 }
 
-                //---------------------------------------------------------------------
-                // CHANGED: CR43 (Sort multiple fields in exports)
-                //
                 // Add the input field position to the list of fields
                 // that will be used to sort the input records.
                 sortFields.Add(_formationIdOrdinal + 1);
-                //---------------------------------------------------------------------
             }
 
             // If any incid_ihs_management fields are in the export file.
@@ -1035,13 +1007,9 @@ namespace HLU.UI.ViewModel
                     _managementIdOrdinal = lastFieldOrdinal += 1;
                 }
 
-                //---------------------------------------------------------------------
-                // CHANGED: CR43 (Sort multiple fields in exports)
-                //
                 // Add the input field position to the list of fields
                 // that will be used to sort the input records.
                 sortFields.Add(_managementIdOrdinal + 1);
-                //---------------------------------------------------------------------
             }
 
             // If any incid_ihs_complex fields are in the export file.
@@ -1060,13 +1028,9 @@ namespace HLU.UI.ViewModel
                     _complexIdOrdinal = lastFieldOrdinal += 1;
                 }
 
-                //---------------------------------------------------------------------
-                // CHANGED: CR43 (Sort multiple fields in exports)
-                //
                 // Add the input field position to the list of fields
                 // that will be used to sort the input records.
                 sortFields.Add(_complexIdOrdinal + 1);
-                //---------------------------------------------------------------------
             }
 
             // If any incid_bap fields are in the export file.
@@ -1156,9 +1120,6 @@ namespace HLU.UI.ViewModel
                     _sourceIdOrdinal = lastFieldOrdinal += 1;
                 }
 
-                //---------------------------------------------------------------------
-                // CHANGED: CR43 (Sort multiple fields in exports)
-                //
                 // If the sort_order column is not included then add
                 // it so that the sources can be sorted.
                 if (sourceSortOrderOrdinal == -1)
@@ -1175,13 +1136,7 @@ namespace HLU.UI.ViewModel
                 // Add the input field position to the list of fields
                 // that will be used to sort the input records.
                 sortFields.Add(sourceSortOrderOrdinal + 1);
-                //---------------------------------------------------------------------
 
-                //---------------------------------------------------------------------
-                // CHANGED: CR17 (Exporting date fields)
-                // Store all of the source date fields for use later when
-                // formatting the attribute data.
-                //
                 // If the source_date_start column is not included then add
                 // it for use later.
                 if ((_sourceDateStartOrdinals == null) || (_sourceDateStartOrdinals.Count == 0))
@@ -1217,16 +1172,11 @@ namespace HLU.UI.ViewModel
                     // Store the input field ordinal for use later.
                     _sourceDateTypeOrdinals.Add(lastFieldOrdinal += 1);
                 }
-                //---------------------------------------------------------------------
             }
 
-            //---------------------------------------------------------------------
-            // CHANGED: CR43 (Sort multiple fields in exports)
-            //
             // Store which export fields will be used to sort the
             // input records.
             sortOrdinals = sortFields.ToArray();
-            //---------------------------------------------------------------------
 
             // Store the field ordinals for all the fields for
             // every child table.
@@ -1507,11 +1457,6 @@ namespace HLU.UI.ViewModel
                                     currSourceId = -1;
                             }
 
-                            //---------------------------------------------------------------------
-                            // CHANGED: CR17 (Exporting date fields)
-                            // Store all of the source date fields for use later when
-                            // formatting the attribute data.
-                            //
                             // Get the current source date start.
                             if ((_sourceDateStartOrdinals.Count != 0) &&
                                 !reader.IsDBNull(_sourceDateStartOrdinals[0]))
@@ -1544,7 +1489,6 @@ namespace HLU.UI.ViewModel
                             if ((_conditionDateTypeOrdinal != -1) &&
                                 !reader.IsDBNull(_conditionDateTypeOrdinal))
                                 currConditionDateType = reader.GetString(_conditionDateTypeOrdinal);
-                            //---------------------------------------------------------------------
 
                             // If this incid is different to the last record's incid
                             // then process all the fields.
@@ -1856,9 +1800,7 @@ namespace HLU.UI.ViewModel
             System.Type outType, string outFormat, int sourceDateStart, int sourceDateEnd, string sourceDateType,
             int conditionDateStart, int conditionDateEnd, string conditionDateType)
         {
-            //---------------------------------------------------------------------
             // If the output field is a DateTime.
-            //---------------------------------------------------------------------
             if (outType == System.Type.GetType("System.DateTime"))
             {
                 // If the input field is also a DateTime
@@ -1940,16 +1882,12 @@ namespace HLU.UI.ViewModel
                         return null;
                 }
             }
-            //---------------------------------------------------------------------
             // If the output field is a string and there is
             // a required output format.
-            //---------------------------------------------------------------------
             else if ((outType == System.Type.GetType("System.String")) &&
                 (outFormat != null))
             {
-                //---------------------------------------------------------------------
                 // If the input field is a DateTime field.
-                //---------------------------------------------------------------------
                 if (inType == System.Type.GetType("System.DateTime"))
                 {
                     // If the input value is a valid DateTime then
@@ -1973,14 +1911,8 @@ namespace HLU.UI.ViewModel
                     else
                         return null;
                 }
-                //---------------------------------------------------------------------
-                // CHANGED: CR17 (Exporting date fields)
-                // Convert source dates into a text field with the required
-                // date format.
-                //
                 // If the input field is an integer and is part of
                 // the source date.
-                //---------------------------------------------------------------------
                 else if ((inType == System.Type.GetType("System.Int32")) &&
                     (_sourceDateStartOrdinals.Contains(inOrdinal) || _sourceDateEndOrdinals.Contains(inOrdinal)))
                 {
@@ -2053,12 +1985,8 @@ namespace HLU.UI.ViewModel
                             VagueDate.DateType dateType = VagueDate.DateType.Vague;
                             if (_sourceDateStartOrdinals.Contains(inOrdinal))
                                 dateType = VagueDate.DateType.Start;
-                            //---------------------------------------------------------------------
-                            // FIX: 109 Fix bug exporting source dates.
-                            //
                             else if (_sourceDateEndOrdinals.Contains(inOrdinal))
                                 dateType = VagueDate.DateType.End;
-                            //---------------------------------------------------------------------
 
                             string inStr = VagueDate.FromVagueDateInstance(new VagueDateInstance(sourceDateStart, sourceDateEnd, "D"), dateType);
                             DateTime inDate;
@@ -2069,25 +1997,13 @@ namespace HLU.UI.ViewModel
                             string outDate;
                             outDate = inDate.ToString(outFormat);
 
-                            //---------------------------------------------------------------------
-                            // FIX: 109 Fix bug exporting source dates.
-                            //
-                            //// Parse the formatted date back into a date using the
-                            //// output format to check it is a valid date.
-                            //DateTime inDateAgain;
-                            //if (!DateTime.TryParseExact(outDate, outFormat, null, DateTimeStyles.None, out inDateAgain) ||
-                            //    (inDate != inDateAgain))
-                            //    return null;
-                            //else
+                            // Return the formatted date string.
                             return outDate;
-                            //---------------------------------------------------------------------
                         }
                     }
                 }
-                //---------------------------------------------------------------------
                 // If the input field is an integer and is part of
                 // the condition date.
-                //---------------------------------------------------------------------
                 else if ((inType == System.Type.GetType("System.Int32")) &&
                     (_conditionDateStartOrdinal == inOrdinal || _conditionDateEndOrdinal == inOrdinal))
                 {

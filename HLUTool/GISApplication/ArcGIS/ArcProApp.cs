@@ -626,14 +626,10 @@ namespace HLU.GISApplication
             return null;
         }
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR12 (Select by attribute performance)
-        // Calculate the approximate length of the SQL statement that will be
-        // used in GIS so that it can be determined if the selection can be
-        // performed using a direct query or if a table join is needed.
-        //---------------------------------------------------------------------
         /// <summary>
-        /// Calculate the approximate length of the resulting SQL query.
+        /// Calculate the approximate length of the SQL statement that will be
+        /// used in GIS so that it can be determined if the selection can be
+        /// performed using a direct query or if a table join is needed.
         /// </summary>
         /// <param name="targetList">The target list of data columns.</param>
         /// <param name="whereConds">The SQL WHERE conditions.</param>
@@ -665,9 +661,13 @@ namespace HLU.GISApplication
                 return 0;
             }
         }
-        //---------------------------------------------------------------------
 
-        // Asynchronous method to read the map selection and populate the DataTable
+        /// <summary>
+        /// Asynchronous method to read the map selection and populate the DataTable.
+        /// </summary>
+        /// <param name="resultTable"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
         public async Task<DataTable> ReadMapSelectionAsync(DataTable resultTable)
         {
             // Return if the supplied resultTable is null
@@ -729,9 +729,7 @@ namespace HLU.GISApplication
             return resultTable;
         }
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR49 Process proposed OSMM Updates
-        //
+        //TODO: ArcGIS
         /// <summary>
         /// Clears the currently selected map features.
         /// </summary>
@@ -739,11 +737,8 @@ namespace HLU.GISApplication
         {
             //IpcArcMap(["cs"]);
         }
-        //---------------------------------------------------------------------
 
-        //---------------------------------------------------------------------
-        // FIX: 102 Display correct number of selected features on export.
-        //
+        //TODO: ArcGIS
         /// <summary>
         /// Counts the currently selected map features.
         /// </summary>
@@ -755,7 +750,6 @@ namespace HLU.GISApplication
             //else
             //    fragCount = 0;
         }
-        //---------------------------------------------------------------------
 
         /// <summary>
         /// Check if all selected rows have unique keys to avoid
@@ -775,7 +769,6 @@ namespace HLU.GISApplication
             //catch { return true; }
             return false;
         }
-        //---------------------------------------------------------------------
 
         public void FlashSelectedFeature(List<SqlFilterCondition> whereClause)
         {
@@ -801,11 +794,16 @@ namespace HLU.GISApplication
             return null;
         }
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR10 (Attribute updates for incid subsets)
-        // Pass the old incid number together with the new incid number
-        // so that only features belonging to the old incid are
-        // updated.
+        /// <summary>
+        /// Split features logically by changing their incid number.
+        /// Pass the old incid number together with the new incid number
+        /// so that only features belonging to the old incid are
+        /// updated.
+        /// </summary>
+        /// <param name="oldIncid"></param>
+        /// <param name="newIncid"></param>
+        /// <param name="historyColumns"></param>
+        /// <returns></returns>
         public DataTable SplitFeaturesLogically(string oldIncid, string newIncid, DataColumn[] historyColumns)
         {
             //try
@@ -825,7 +823,6 @@ namespace HLU.GISApplication
             //catch { throw; }
             return null;
         }
-        //---------------------------------------------------------------------
 
         public DataTable MergeFeatures(string newToidFragmentID,
             List<SqlFilterCondition> resultWhereClause, DataColumn[] historyColumns)

@@ -42,22 +42,29 @@ namespace HLU.UI.ViewModel
 
         #region ctor
 
+        /// <summary>
+        /// Stores details of the warning dialog to be displayed.
+        /// </summary>
+        /// <param name="numFeatures"></param>
+        /// <param name="numIncids"></param>
+        /// <param name="typeFeatures"></param>
+        /// <param name="selectByjoin"></param>
         public ViewModelWindowWarnOnGISSelect(int numFeatures, int numIncids, GeometryTypes typeFeatures, bool selectByjoin)
         {
             // Store the expected number of features to be selected in GIS.
             _gisFeaturesNum = numFeatures;
-            //---------------------------------------------------------------------
-            // CHANGED: CR12 (Select by attribute performance)
+
             // Store the expected number of incids to be selected in GIS.
             _gisIncidNum = numIncids;
+
             // If the type of feature is not known then just use 'feature'.
             if (typeFeatures != GeometryTypes.Unknown)
                 _gisFeaturesType = typeFeatures.ToString().ToLower();
             else
                 _gisFeaturesType = "feature";
+
             // Store if a GIS table join will be used to perform the selection.
             _selectByjoin = selectByjoin;
-            //---------------------------------------------------------------------
         }
 
         #endregion ctor
@@ -170,8 +177,6 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                //---------------------------------------------------------------------
-                // CHANGED: CR12 (Select by attribute performance)
                 // Display the expected number of features and/or the expected
                 // number of incids to be selected in GIS, depending upon which
                 // values are valid.
@@ -217,7 +222,6 @@ namespace HLU.UI.ViewModel
                 labelMsg.Append("\n\nWould you like to proceed?");
 
                 return labelMsg.ToString();
-                //---------------------------------------------------------------------
             }
             set { }
         }
@@ -233,15 +237,12 @@ namespace HLU.UI.ViewModel
             }
             set
             {
-                //---------------------------------------------------------------------
-                // CHANGED: CR12 (Select by attribute performance)
                 // Only set the warning down a 'notch' based on the
                 // current warning level.
                 if (Settings.Default.WarnBeforeGISSelect == 0)
                     Settings.Default.WarnBeforeGISSelect = 1;
                 else if ((_selectByjoin) & (Settings.Default.WarnBeforeGISSelect == 1))
                     Settings.Default.WarnBeforeGISSelect = 2;
-                //---------------------------------------------------------------------
             }
         }
 

@@ -90,18 +90,15 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public void StartBulkUpdate(bool osmmBulkUpdateMode)
         {
-            //---------------------------------------------------------------------
-            // CHANGED: CR49 Process proposed OSMM Updates
-            // Functionality for applying pending OSMM Bulk Updates.
-            //
             // Store whether we are starting in OSMM Bulk update
             // mode or just standard Bulk Update mode
             _osmmBulkUpdateMode = osmmBulkUpdateMode;
 
             // Update the modes in the main view model
-            _viewModelMain.BulkUpdateMode = true;
             if (_osmmBulkUpdateMode == true)
                 _viewModelMain.OSMMBulkUpdateMode = true;
+            else
+                _viewModelMain.BulkUpdateMode = true;
 
             // Clear all the form fields.
             _viewModelMain.ClearForm();
@@ -131,11 +128,10 @@ namespace HLU.UI.ViewModel
                 if (_viewModelMain.TabItemSelected == 5)
                     _viewModelMain.TabItemSelected = 0;
             }
-            //---------------------------------------------------------------------
 
             // Clear any interface warning and error messages
             _viewModelMain.ResetWarningsErrors();
-            _viewModelMain.RefreshAll();
+            //_viewModelMain.RefreshAll(); // Now done when setting mode.
 
             if (_osmmBulkUpdateMode == true)
             {
@@ -487,15 +483,14 @@ namespace HLU.UI.ViewModel
             // local copy.
             _viewModelMain.RefillIncidTable = true;
 
-            // Reset the incid filter
-            _viewModelMain.BulkUpdateMode = null;
-
-            // Clear the active filter.
-            //TODO: Await call.
-            _viewModelMain.ClearFilterAsync(true);
-
             // Stop the bulk update mode
             _viewModelMain.BulkUpdateMode = false;
+
+            // Clear the active filter.
+            _viewModelMain.SuppressUserNotifications = true;
+            //TODO: Await call.
+            _viewModelMain.ClearFilterAsync(true);
+            _viewModelMain.SuppressUserNotifications = false;
 
             // Enable the history tab
             _viewModelMain.TabItemHistoryEnabled = true;
@@ -511,12 +506,8 @@ namespace HLU.UI.ViewModel
 
         #region OSMM Bulk Update
 
-        //---------------------------------------------------------------------
-        // CHANGED: CR49 Process proposed OSMM Updates
-        // Functionality for applying pending OSMM Bulk Updates.
-        //
         /// <summary>
-        /// Applies the osmm bulk update.
+        /// Applies the pending OSMM Bulk Updates.
         /// </summary>
         public void ApplyOSMMBulkUpdate()
         {
@@ -837,15 +828,16 @@ namespace HLU.UI.ViewModel
 
             // Reset the incid and map selections and move
             // to the first incid in the database.
-            _viewModelMain.BulkUpdateMode = null;
-            _viewModelMain.OSMMBulkUpdateMode = false;
-
-            // Clear the active filter.
-            //TODO: Await call.
-            _viewModelMain.ClearFilterAsync(true);
 
             // Stop the bulk update mode
             _viewModelMain.BulkUpdateMode = false;
+            _viewModelMain.OSMMBulkUpdateMode = false;
+
+            // Clear the active filter.
+            _viewModelMain.SuppressUserNotifications = true;
+            //TODO: Await call.
+            _viewModelMain.ClearFilterAsync(true);
+            _viewModelMain.SuppressUserNotifications = false;
 
             // Enable the habitat, IHS and history tabs
             _viewModelMain.TabItemHabitatEnabled = true;
@@ -861,7 +853,6 @@ namespace HLU.UI.ViewModel
             // Reset the cursor
             _viewModelMain.ChangeCursor(Cursors.Arrow, String.Empty);
         }
-        //---------------------------------------------------------------------
 
         #endregion
 
@@ -892,9 +883,9 @@ namespace HLU.UI.ViewModel
             bool bulkDeleteOrphanBapHabitats,
             bool bulkDeletePotentialBapHabitats)
         {
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Update the incid table
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Execute the UPDATE incid statement for the current row
             if (!String.IsNullOrEmpty(updateCommandIncid))
             {
@@ -903,9 +894,9 @@ namespace HLU.UI.ViewModel
                     throw new Exception("Failed to update incid table.");
             }
 
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Delete existing secondary habitat rows
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Execute the DELETE secondary habitats statement for the current row
             if (!String.IsNullOrEmpty(secondaryDeleteStatement))
             {
@@ -914,9 +905,9 @@ namespace HLU.UI.ViewModel
                     throw new Exception("Failed to delete incid_secondary rows.");
             }
 
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Delete any orphaned IHS multiplex rows
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             if (ihsMultiplexDeleteStatements != null)
             {
                 foreach (string s in ihsMultiplexDeleteStatements)
@@ -925,9 +916,9 @@ namespace HLU.UI.ViewModel
                         throw new Exception("Failed to delete IHS multiplex rows.");
             }
 
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Update the incid_osmm_updates table
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Execute the UPDATE incid_osmm_updates statement for the current row
             if (!String.IsNullOrEmpty(updateCommandIncidOSMMUpdates))
             {
@@ -939,9 +930,9 @@ namespace HLU.UI.ViewModel
             // Create an array of the value of the current incid
             object[] relValues = [currIncid];
 
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Retrieve the primary habitat
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Execute the SELECT statement to get the primary habitat code
             object retValue = _viewModelMain.DataBase.ExecuteScalar(String.Format(selectCommandIncid, currIncid),
                 _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text);
@@ -952,9 +943,9 @@ namespace HLU.UI.ViewModel
             // Set the primary habitat code
             string primaryHabitat = retValue.ToString();
 
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Update the secondary habitats
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Store a copy of the table for the current incid
             HluDataSet.incid_secondaryDataTable secondaryTable =
                 (HluDataSet.incid_secondaryDataTable)_viewModelMain.HluDataset.incid_secondary.Clone();
@@ -964,9 +955,9 @@ namespace HLU.UI.ViewModel
             // Update the rows in the database
             BulkUpdateSecondary(currIncid, primaryHabitat, secondaryTable, secondaryHabitats);
 
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Update the BAP habitats
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Store a copy of the table for the current incid
             HluDataSet.incid_bapDataTable bapTable =
                 (HluDataSet.incid_bapDataTable)_viewModelMain.HluDataset.incid_bap.Clone();
@@ -976,9 +967,9 @@ namespace HLU.UI.ViewModel
             // Update the rows in the database
             BulkUpdateBap(currIncid, primaryHabitat, bapTable, secondaryHabitats, bulkDeleteOrphanBapHabitats, bulkDeletePotentialBapHabitats);
 
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Update the conditions
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Store the row from the user interface
             HluDataSet.incid_conditionRow[] incidConditionRows = _viewModelMain.IncidConditionRows;
             // Store a copy of the table for the current incid
@@ -997,9 +988,9 @@ namespace HLU.UI.ViewModel
                 _viewModelMain.HluTableAdapterManager.incid_conditionTableAdapter,
                 incidConditionTable, ref incidConditionRows);
 
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Update the sources
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Store the rows from the user interface
             HluDataSet.incid_sourcesRow[] incidSourcesRows = _viewModelMain.IncidSourcesRows;
             // Store a copy of the table for the current incid
@@ -1044,9 +1035,9 @@ namespace HLU.UI.ViewModel
             bool bulkDeleteOrphanBapHabitats,
             bool bulkDeletePotentialBapHabitats)
         {
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Update the incid table
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Execute the UPDATE incid statement for the current row
             if (!String.IsNullOrEmpty(updateCommandIncid))
             {
@@ -1055,9 +1046,9 @@ namespace HLU.UI.ViewModel
                     throw new Exception("Failed to update incid table.");
             }
 
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Delete existing secondary habitat rows
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Execute the DELETE secondary habitats statement for the current row
             if (!String.IsNullOrEmpty(secondaryDeleteStatement))
             {
@@ -1066,9 +1057,9 @@ namespace HLU.UI.ViewModel
                     throw new Exception("Failed to delete incid_secondary rows.");
             }
 
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Delete any orphaned IHS multiplex rows
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             if (ihsMultiplexDeleteStatements != null)
             {
                 foreach (string s in ihsMultiplexDeleteStatements)
@@ -1077,9 +1068,9 @@ namespace HLU.UI.ViewModel
                         throw new Exception("Failed to delete IHS multiplex rows.");
             }
 
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Update the incid_osmm_updates table
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Execute the UPDATE incid_osmm_updates statement for the current row
             if (!String.IsNullOrEmpty(updateCommandIncidOSMMUpdates))
             {
@@ -1091,9 +1082,9 @@ namespace HLU.UI.ViewModel
             // Create an array of the value of the current incid
             object[] relValues = [currIncid];
 
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Retrieve the primary habitat
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Execute the SELECT statement to get the primary habitat code
             object retValue = _viewModelMain.DataBase.ExecuteScalar(String.Format(selectCommandIncid, currIncid),
                 _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text);
@@ -1104,9 +1095,9 @@ namespace HLU.UI.ViewModel
             // Set the primary habitat code
             string primaryHabitat = retValue.ToString();
 
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Update the secondary habitats
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Store a copy of the table for the current incid
             HluDataSet.incid_secondaryDataTable secondaryTable =
                 (HluDataSet.incid_secondaryDataTable)_viewModelMain.HluDataset.incid_secondary.Copy();
@@ -1118,9 +1109,9 @@ namespace HLU.UI.ViewModel
             // Update the rows in the database
             BulkUpdateSecondary(currIncid, primaryHabitat, secondaryTable, secondaryHabitats);
 
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Update the BAP habitats
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Store a copy of the table for the current incid
             HluDataSet.incid_bapDataTable bapTable =
                 (HluDataSet.incid_bapDataTable)_viewModelMain.HluDataset.incid_bap.Copy();
@@ -1130,9 +1121,9 @@ namespace HLU.UI.ViewModel
             // Update the rows in the database
             BulkUpdateBap(currIncid, primaryHabitat, bapTable, secondaryHabitats, bulkDeleteOrphanBapHabitats, bulkDeletePotentialBapHabitats);
 
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Update the conditions
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Store the row from the user interface
             HluDataSet.incid_conditionRow[] incidConditionRows = _viewModelMain.IncidConditionRows;
             // Store a copy of the table for the current incid
@@ -1151,9 +1142,9 @@ namespace HLU.UI.ViewModel
                 _viewModelMain.HluTableAdapterManager.incid_conditionTableAdapter,
                 incidConditionTable, ref incidConditionRows);
 
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Update the sources
-            //---------------------------------------------------------------------
+            // ---------------------------------------------------------------------
             // Store the rows from the user interface
             HluDataSet.incid_sourcesRow[] incidSourcesRows = _viewModelMain.IncidSourcesRows;
             // Store a copy of the table for the current incid

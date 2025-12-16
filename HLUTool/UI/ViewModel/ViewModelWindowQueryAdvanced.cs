@@ -861,11 +861,8 @@ namespace HLU.UI.ViewModel
                         DataColumn sortOrderColumn = lut.Columns.Contains(_sortOrderFieldName) ?
                             lut.Columns[_sortOrderFieldName] : lutColumn;
 
-                        //---------------------------------------------------------------------
-                        // CHANGED: CR52 Enable support for multiple priority habitat classifications
                         // Enable multiple priority habitat types (from the same or different
                         // classifications) to be assigned
-                        //
                         //// If the select table is the 'incid_bap' table then only
                         //// 'PHAP' values from the related lookup table (lut_habitat_type).
                         //var q = lut is HluDataSet.lut_habitat_typeDataTable && Table is HluDataSet.incid_bapDataTable ?
@@ -894,7 +891,6 @@ namespace HLU.UI.ViewModel
                             r[descriptionColumn].ToString() != r[lutColumn].ToString()) ?
                                 " : " + r[descriptionColumn].ToString() : String.Empty), r => r[lutColumn]);
                         }
-                        //---------------------------------------------------------------------
 
                         // Reset the cursor back to normal.
                         ChangeCursor(Cursors.Arrow);
