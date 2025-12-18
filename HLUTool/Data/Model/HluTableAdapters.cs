@@ -2337,8 +2337,8 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                         }
                     }
                 }
-                //TODO: Don't rethrow error
-                throw ex;
+                // Preserve stack trace and wrap in a meaningful type for the UI layer.
+                throw new HLUToolException("Error updating database.", ex);
             }
             finally
             {

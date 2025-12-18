@@ -47,8 +47,9 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override void OnClick()
         {
-            // Call the ViewModel to read the map selection.
-            _viewModel.ReadMapSelectionAsync(true);
+            // Call the safe fire and forget helper to read the map selection asynchronously.
+            AsyncHelpers.SafeFireAndForget(_viewModel.ReadMapSelectionAsync(true),
+                Exception => System.Diagnostics.Debug.WriteLine(Exception.Message));
         }
 
         /// <summary>

@@ -47,7 +47,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override void OnClick()
         {
-            // Call the ViewModel to start the bulk update mode.
+            // Start the bulk update mode.
             _viewModel.StartBulkUpdate();
         }
 

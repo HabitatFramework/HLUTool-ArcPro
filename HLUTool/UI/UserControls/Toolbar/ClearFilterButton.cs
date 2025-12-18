@@ -54,9 +54,10 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            // Reset the incid and map selections and move
-            // to the first incid in the database (don't wait).
-            _viewModel.ClearFilterAsync(true);
+            // Call the safe fire and forget helper to reset the incid and
+            // map selections and move to the first incid in the database asynchronously.
+            AsyncHelpers.SafeFireAndForget(_viewModel.ClearFilterAsync(true),
+                Exception => System.Diagnostics.Debug.WriteLine(Exception.Message));
         }
 
         /// <summary>

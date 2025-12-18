@@ -84,82 +84,35 @@ namespace HLU.UI.ViewModel
 
         #region Bulk Update
 
-        //TODO: Add wait?
         /// <summary>
-        /// Starts the bulk update mode.
+        /// Starts standard bulk update mode.
         /// </summary>
-        public void StartBulkUpdate(bool osmmBulkUpdateMode)
+        public void StartStandardBulkUpdate()
         {
             // Store whether we are starting in OSMM Bulk update
             // mode or just standard Bulk Update mode
-            _osmmBulkUpdateMode = osmmBulkUpdateMode;
+            _osmmBulkUpdateMode = false;
 
             // Update the modes in the main view model
-            if (_osmmBulkUpdateMode == true)
-                _viewModelMain.OSMMBulkUpdateMode = true;
-            else
-                _viewModelMain.BulkUpdateMode = true;
+            _viewModelMain.BulkUpdateMode = true;
 
             // Clear all the form fields.
             _viewModelMain.ClearForm();
 
             // Select another tab if the currently selected tab
             // will be disabled.
-            if (_osmmBulkUpdateMode == true)
-            {
-                // Disable the Habitat and IHS tabs
-                _viewModelMain.TabItemHabitatEnabled = false;
-                _viewModelMain.TabItemIHSEnabled = false;
-
-                // Clear the selection (filter).
-                _viewModelMain.IncidSelection = null;
-
-                // If the habitat, IHS or history tab is currently selected then
-                // select the priority habitats tab
-                if (_viewModelMain.TabItemSelected == 0 ||
-                    _viewModelMain.TabItemSelected == 1 ||
-                    _viewModelMain.TabItemSelected == 5)
-                    _viewModelMain.TabItemSelected = 2;
-            }
-            else
-            {
-                // If the history tab is currently selected then
-                // select the habitat tab
-                if (_viewModelMain.TabItemSelected == 5)
-                    _viewModelMain.TabItemSelected = 0;
-            }
+            if (_viewModelMain.TabItemSelected == 5)
+                _viewModelMain.TabItemSelected = 0;
 
             // Clear any interface warning and error messages
             _viewModelMain.ResetWarningsErrors();
             //_viewModelMain.RefreshAll(); // Now done when setting mode.
-
-            if (_osmmBulkUpdateMode == true)
-            {
-                // Can't start OSMM Update mode if the bulk OSMM source hasn't been set.
-                if (_addInSettings.BulkOSMMSourceId == null)
-                {
-                    MessageBox.Show("The Bulk OSMM Source has not been set.\n\n" +
-                        "Please set the Bulk OSMM Source in the Options.",
-                        "HLU: OSMM Update", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-
-                    return;
-                }
-
-                // Reset the database counts
-                _viewModelMain.NumIncidSelectedDB = 0;
-                _viewModelMain.NumToidSelectedDB = 0;
-                _viewModelMain.NumFragmentsSelectedDB = 0;
-
-                // Open the OSMM Update filter
-                _viewModelMain.OpenWindowQueryOSMM(true);
-            }
-
         }
 
         /// <summary>
         /// Displays the bulk update window.
         /// </summary>
-        public void BulkUpdate()
+        public void ShowBulkUpdateWindow()
         {
             // Backup the current selection (filter).
             //_incidSelectionBackup = _viewModelMain.IncidSelection;
@@ -233,7 +186,7 @@ namespace HLU.UI.ViewModel
             _windowBulkUpdate.ShowDialog();
         }
 
-        private void _viewModelBulkUpdate_RequestClose(bool apply,
+        private async void _viewModelBulkUpdate_RequestClose(bool apply,
             bool bulkDeleteOrphanBapHabitats,
             bool bulkDeletePotentialBapHabitats,
             bool bulkDeleteIHSCodes,
@@ -262,16 +215,16 @@ namespace HLU.UI.ViewModel
 
                 // Apply the bulk update
                 if (_osmmBulkUpdateMode == true)
-                    ApplyOSMMBulkUpdate();
+                    await ApplyOSMMBulkUpdateAsync();
                 else
-                    ApplyBulkUpdate();
+                    await ApplyBulkUpdateAsync();
             }
         }
 
         /// <summary>
         /// Applies the bulk update.
         /// </summary>
-        public void ApplyBulkUpdate()
+        public async Task ApplyBulkUpdateAsync()
         {
             _viewModelMain.ChangeCursor(Cursors.Wait, "Bulk updating ...");
 
@@ -437,8 +390,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Perform the bulk updates on the GIS data, shadow copy in DB and history
-                //TODO: Await call.
-                BulkUpdateGisAsync(incidOrdinal, _viewModelMain.IncidSelection, _bulkDeleteSecondaryCodes, _bulkCreateHistory, Operations.BulkUpdate, nowDtTm);
+                await BulkUpdateGisAsync(incidOrdinal, _viewModelMain.IncidSelection, _bulkDeleteSecondaryCodes, _bulkCreateHistory, Operations.BulkUpdate, nowDtTm);
 
                 // Commit the transaction and accept the changes ???
                 _viewModelMain.DataBase.CommitTransaction();
@@ -458,25 +410,25 @@ namespace HLU.UI.ViewModel
             }
             finally
             {
-                //TODO: Await call.
-                BulkUpdateResetControls();
+                // Stop the bulk update mode and reset all the controls
+                await BulkUpdateResetControlsAsync();
             }
         }
 
         /// <summary>
         /// Cancels the bulk update mode.
         /// </summary>
-        public void CancelBulkUpdate()
+        public async Task CancelBulkUpdateAsync()
         {
-            //TODO: Await call.
-            BulkUpdateResetControls();
+            // Stop the bulk update mode and reset all the controls
+            await BulkUpdateResetControlsAsync();
         }
 
         /// <summary>
         /// Stops the bulk update mode and resets all
         /// the controls to normal.
         /// </summary>
-        private void BulkUpdateResetControls()
+        private async Task BulkUpdateResetControlsAsync()
         {
             // Force the Incid table to be refilled because it has been
             // updated directly in the database rather than via the
@@ -488,8 +440,7 @@ namespace HLU.UI.ViewModel
 
             // Clear the active filter.
             _viewModelMain.SuppressUserNotifications = true;
-            //TODO: Await call.
-            _viewModelMain.ClearFilterAsync(true);
+            await _viewModelMain.ClearFilterAsync(true);
             _viewModelMain.SuppressUserNotifications = false;
 
             // Enable the history tab
@@ -507,9 +458,64 @@ namespace HLU.UI.ViewModel
         #region OSMM Bulk Update
 
         /// <summary>
+        /// Starts OSMM bulk update mode.
+        /// </summary>
+        public void StartOSMMBulkUpdate()
+        {
+            // Store whether we are starting in OSMM Bulk update
+            // mode or just standard Bulk Update mode
+            _osmmBulkUpdateMode = true;
+
+            // Update the modes in the main view model
+            _viewModelMain.OSMMBulkUpdateMode = true;
+
+            // Clear all the form fields.
+            _viewModelMain.ClearForm();
+
+            // Disable the Habitat and IHS tabs
+            _viewModelMain.TabItemHabitatEnabled = false;
+            _viewModelMain.TabItemIHSEnabled = false;
+
+            // Clear the selection (filter).
+            _viewModelMain.IncidSelection = null;
+
+            // If the habitat, IHS or history tab is currently selected then
+            // select the priority habitats tab
+            if (_viewModelMain.TabItemSelected == 0 ||
+                _viewModelMain.TabItemSelected == 1 ||
+                _viewModelMain.TabItemSelected == 5)
+                _viewModelMain.TabItemSelected = 2;
+
+            // Clear any interface warning and error messages
+            _viewModelMain.ResetWarningsErrors();
+            //_viewModelMain.RefreshAll(); // Now done when setting mode.
+
+            // Can't start OSMM Update mode if the bulk OSMM source hasn't been set.
+            if (_addInSettings.BulkOSMMSourceId == null)
+            {
+                MessageBox.Show(
+                    "The Bulk OSMM Source has not been set.\n\n" +
+                    "Please set the Bulk OSMM Source in the Options.",
+                    "HLU: OSMM Update",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Exclamation);
+
+                return;
+            }
+
+            // Reset the database counts
+            _viewModelMain.NumIncidSelectedDB = 0;
+            _viewModelMain.NumToidSelectedDB = 0;
+            _viewModelMain.NumFragmentsSelectedDB = 0;
+
+            // Open the OSMM Update filter
+            _viewModelMain.OpenWindowQueryOSMM(true);
+        }
+
+        /// <summary>
         /// Applies the pending OSMM Bulk Updates.
         /// </summary>
-        public void ApplyOSMMBulkUpdate()
+        public async Task ApplyOSMMBulkUpdateAsync()
         {
             _viewModelMain.ChangeCursor(Cursors.Wait, "OSMM Bulk updating ...");
 
@@ -782,8 +788,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Perform the bulk updates on the GIS data, shadow copy in DB and history
-                //TODO: Await call.
-                BulkUpdateGisAsync(incidOrdinal, _viewModelMain.IncidSelection, _bulkDeleteSecondaryCodes, _bulkCreateHistory, Operations.OSMMUpdate, nowDtTm);
+                await BulkUpdateGisAsync(incidOrdinal, _viewModelMain.IncidSelection, _bulkDeleteSecondaryCodes, _bulkCreateHistory, Operations.OSMMUpdate, nowDtTm);
 
                 // Commit the transaction and accept the changes ???
                 _viewModelMain.DataBase.CommitTransaction();
@@ -803,23 +808,25 @@ namespace HLU.UI.ViewModel
             }
             finally
             {
-                OSMMBulkUpdateResetControls();
+                // Stop the bulk update mode and reset all the controls
+                await OSMMBulkUpdateResetControls();
             }
         }
 
         /// <summary>
         /// Cancels the osmm bulk update mode.
         /// </summary>
-        public void CancelOSMMBulkUpdate()
+        public async void CancelOSMMBulkUpdate()
         {
-            OSMMBulkUpdateResetControls();
+            // Stop the osmm bulk update mode and reset all the controls
+            await OSMMBulkUpdateResetControls();
         }
 
         /// <summary>
         /// Stops the osmm bulk update mode and resets all
         /// the controls to normal.
         /// </summary>
-        private void OSMMBulkUpdateResetControls()
+        private async Task OSMMBulkUpdateResetControls()
         {
             // Force the Incid table to be refilled because it has been
             // updated directly in the database rather than via the
@@ -835,8 +842,7 @@ namespace HLU.UI.ViewModel
 
             // Clear the active filter.
             _viewModelMain.SuppressUserNotifications = true;
-            //TODO: Await call.
-            _viewModelMain.ClearFilterAsync(true);
+            await _viewModelMain.ClearFilterAsync(true);
             _viewModelMain.SuppressUserNotifications = false;
 
             // Enable the habitat, IHS and history tabs
@@ -1604,10 +1610,12 @@ namespace HLU.UI.ViewModel
                         Name = "Update GIS Features"
                     };
 
+                    //TODO: Catch exceptions
                     // Get the current values from the GIS layer
                     DataTable historyTmp = await _viewModelMain.GISApplication.GetHistoryAsync(
                          _viewModelMain.HistoryColumns, whereClause);
 
+                    //TODO: Catch exceptions
                     // Update GIS layer row by row; no need for a joined scratch table
                     await _viewModelMain.GISApplication.UpdateFeaturesAsync(updateColumns,
                         updateGISValues, _viewModelMain.HistoryColumns, whereClause, editOperation);

@@ -11,6 +11,7 @@
     <RootNamespace>HLU</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="ArcGISFunctions OLD.cs" />
     <Compile Remove="Converters\BoolToColorConverter.cs" />
     <Compile Remove="GISApplication\GISApp.cs" />
     <Compile Remove="GISApplication\GISAppFactory.cs" />

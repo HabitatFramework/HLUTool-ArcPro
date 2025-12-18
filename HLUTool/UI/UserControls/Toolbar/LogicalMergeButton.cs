@@ -47,7 +47,9 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override void OnClick()
         {
-            _viewModel.LogicalMergeAsync();
+            // Call the safe fire and forget helper to logically merge the features asynchronously.
+            AsyncHelpers.SafeFireAndForget(_viewModel.LogicalMergeAsync(),
+                Exception => System.Diagnostics.Debug.WriteLine(Exception.Message));
         }
 
         /// <summary>

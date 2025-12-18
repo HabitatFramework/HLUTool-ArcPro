@@ -47,8 +47,9 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override void OnClick()
         {
-            // Call the ViewModel to start the physical split process.
-            _viewModel.PhysicalSplitAsync();
+            // Call the safe fire and forget helper to physically split the features asynchronously.
+            AsyncHelpers.SafeFireAndForget(_viewModel.PhysicalSplitAsync(),
+                Exception => System.Diagnostics.Debug.WriteLine(Exception.Message));
         }
 
         /// <summary>

@@ -44,11 +44,15 @@ namespace HLU.UI.UserControls.Toolbar
         #endregion Constructor
 
         /// <summary>
-        /// Select all features associated with the currently filtered INCID records in the map. Called when the button is clicked.
+        /// Select all features associated with the currently filtered INCID
+        /// records in the map. Called when the button is clicked.
         /// </summary>
         protected override void OnClick()
         {
-            _viewModel.SelectAllOnMap();
+            // Call the safe fire and forget helper to select all incid features
+            // on the map asynchronously.
+            AsyncHelpers.SafeFireAndForget(_viewModel.SelectAllOnMapAsync(),
+                Exception => System.Diagnostics.Debug.WriteLine(Exception.Message));
         }
 
         /// <summary>

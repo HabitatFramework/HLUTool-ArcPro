@@ -46,8 +46,9 @@ namespace HLU
         {
             _sdeFileName = sdeFileName;
 
+            //TODO: Remove this from the constructor?
             // Open a connection to the geodatabase (don't wait it will be checked later).
-            OpenGeodatabaseAsync();
+            //OpenGeodatabaseAsync();
         }
 
         #endregion Constructor

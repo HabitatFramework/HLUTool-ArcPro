@@ -1704,7 +1704,7 @@ namespace HLU.UI.ViewModel
             _cursorType = cursorType;
             OnPropertyChanged(nameof(WindowCursor));
             if (cursorType == Cursors.Wait)
-                DispatcherHelper.DoEvents();
+                DispatcherHelper.DoEvents(); //TODO: Replace with modern equivalent?
         }
 
         #endregion

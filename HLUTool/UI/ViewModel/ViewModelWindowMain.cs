@@ -24,29 +24,30 @@ using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Controls;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ArcGIS.Desktop.Internal.Framework.Controls;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using HLU;
+using HLU.Data;
+using HLU.Date;
 using HLU.Properties;
 using HLU.UI.UserControls;
+using HLU.UI.View;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Configuration;
+using System.Diagnostics;
+using System.Drawing.Printing;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
-using ArcGIS.Desktop.Internal.Framework.Controls;
-using System.Collections.ObjectModel;
-using HLU.Data;
-using System.Linq;
-using HLU.UI.View;
-using HLU.Date;
-using System.Drawing.Printing;
 
 namespace HLU.UI.ViewModel
 {
@@ -186,6 +187,10 @@ namespace HLU.UI.ViewModel
 
         private ViewModelWindowMain _dockPane;
 
+        private readonly object _initializationLock = new();
+
+        private Task _initializationTask;
+
         private bool _mapEventsSubscribed;
         private bool _projectClosedEventsSubscribed;
         private bool _layersChangedEventsSubscribed;
@@ -229,8 +234,9 @@ namespace HLU.UI.ViewModel
         /// </summary>
         internal ViewModelWindowMain()
         {
+            //TODO: Needed?
             // Initialise the DockPane components (don't wait for it to complete).
-            InitializeComponentAsync();
+            //InitializeComponentAsync();
         }
 
         /// <summary>
@@ -238,8 +244,145 @@ namespace HLU.UI.ViewModel
         /// </summary>
         internal ViewModelWindowMain(bool minimal)
         {
+            //TODO: Catch exceptions?
             // Load the data grid combo box sources.
             LoadComboBoxSources();
+        }
+
+        /// <summary>
+        /// Show the DockPane.
+        /// </summary>
+        internal static async Task ShowDockPane()
+        {
+            // Get the dockpane DAML id.
+            DockPane pane = FrameworkApplication.DockPaneManager.Find(DockPaneID);
+            if (pane == null)
+                return;
+
+            // Get the ViewModel by casting the dockpane.
+            ViewModelWindowMain vm = pane as ViewModelWindowMain;
+
+            // If the ViewModel is uninitialised then initialise it.
+            if (!vm.Initialised)
+                await vm.EnsureInitializedAsync();
+
+            // If the ViewModel is in error then don't show the dockpane.
+            if (vm.InError)
+            {
+                pane = null;
+                return;
+            }
+
+            // Active the dockpane.
+            pane.Activate();
+        }
+
+        protected override void OnShow(bool isVisible)
+        {
+            // Hide the dockpane if there is no active map.
+            if (MapView.Active == null)
+                DockpaneVisibility = Visibility.Hidden;
+
+            // Is the dockpane visible (or is the window not showing the map).
+            if (isVisible)
+            {
+                if (!_mapEventsSubscribed)
+                {
+                    _mapEventsSubscribed = true;
+
+                    // Subscribe from OnActiveMapViewChangedAsync events.
+                    ActiveMapViewChangedEvent.Subscribe(OnActiveMapViewChangedAsync);
+                }
+
+                if (!_projectClosedEventsSubscribed)
+                {
+                    _projectClosedEventsSubscribed = true;
+
+                    // Subscribe to OnProjectClosed events.
+                    ProjectClosedEvent.Subscribe(OnProjectClosed);
+                }
+
+                if (!_layersChangedEventsSubscribed)
+                {
+                    _layersChangedEventsSubscribed = true;
+
+                    // Subscribe to the LayersAddedEvent
+                    LayersAddedEvent.Subscribe(OnLayersAddedAsync);
+
+                    // Subscribe to the LayersRemovedEvent
+                    LayersRemovedEvent.Subscribe(OnLayersRemovedAsync);
+                }
+
+                // Re-check map/layers state when the pane is shown.
+                // This covers the case where changes happened while hidden.
+                try
+                {
+                    _ = CheckActiveMapAsync();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex);
+                }
+            }
+            else
+            {
+                if (_mapEventsSubscribed)
+                {
+                    _mapEventsSubscribed = false;
+
+                    // Unsubscribe from OnActiveMapViewChangedAsync events.
+                    ActiveMapViewChangedEvent.Unsubscribe(OnActiveMapViewChangedAsync);
+                }
+
+                if (_layersChangedEventsSubscribed)
+                {
+                    _layersChangedEventsSubscribed = false;
+
+                    // Unsubscribe from the LayersAddedEvents.
+                    LayersAddedEvent.Unsubscribe(OnLayersAddedAsync);
+
+                    // Unsubscribe from the LayersRemovedEvents.
+                    LayersRemovedEvent.Unsubscribe(OnLayersRemovedAsync);
+                }
+
+                if (_projectClosedEventsSubscribed)
+                {
+                    // Unsubscribe from OnProjectClosed events.
+                    _projectClosedEventsSubscribed = false;
+                    ProjectClosedEvent.Unsubscribe(OnProjectClosed);
+                }
+            }
+
+            base.OnShow(isVisible);
+
+            // Toggle the tab state to visible.
+            ToggleState("HLUTool_tab_state", true);
+        }
+
+        #endregion ViewModelBase Members
+
+        #region Initialisation
+
+        /// <summary>
+        /// Ensures the DockPane is initialised exactly once and returns the in-flight task.
+        /// </summary>
+        /// <returns>A task that completes when initialisation completes.</returns>
+        public Task EnsureInitializedAsync()
+        {
+            // Fast path.
+            if (_initialised)
+                return Task.CompletedTask;
+
+            lock (_initializationLock)
+            {
+                // If initialisation is already running, return the in-flight task.
+                if (_initializationTask != null)
+                    return _initializationTask;
+
+                // Start initialisation once and cache the task.
+                _initializationTask = InitializeComponentAsync();
+                return _initializationTask;
+            }
         }
 
         /// <summary>
@@ -276,6 +419,7 @@ namespace HLU.UI.ViewModel
                 // Upgrade the user settings if necessary.
                 UpgradeUserSettings();
 
+                //TODO: Catch exceptions?
                 // Initialise the main view (start the tool)
                 if (!await InitializeToolPaneAsync())
                 {
@@ -328,99 +472,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        /// <summary>
-        /// Show the DockPane.
-        /// </summary>
-        internal static async Task ShowDockPane()
-        {
-            // Get the dockpane DAML id.
-            DockPane pane = FrameworkApplication.DockPaneManager.Find(DockPaneID);
-            if (pane == null)
-                return;
-
-            // Get the ViewModel by casting the dockpane.
-            ViewModelWindowMain vm = pane as ViewModelWindowMain;
-
-            //// If the ViewModel is uninitialised then initialise it.
-            if (!vm.Initialised)
-                await vm.InitializeComponentAsync();
-
-            // If the ViewModel is in error then don't show the dockpane.
-            if (vm.InError)
-            {
-                pane = null;
-                return;
-            }
-
-            // Active the dockpane.
-            pane.Activate();
-        }
-
-        protected override void OnShow(bool isVisible)
-        {
-            // Hide the dockpane if there is no active map.
-            if (MapView.Active == null)
-                DockpaneVisibility = Visibility.Hidden;
-
-            // Is the dockpane visible (or is the window not showing the map).
-            if (isVisible)
-            {
-                if (!_mapEventsSubscribed)
-                {
-                    _mapEventsSubscribed = true;
-
-                    // Subscribe from map changed events.
-                    ActiveMapViewChangedEvent.Subscribe(OnActiveMapViewChangedAsync);
-                }
-
-                if (!_projectClosedEventsSubscribed)
-                {
-                    _projectClosedEventsSubscribed = true;
-
-                    // Suscribe to project closed events.
-                    ProjectClosedEvent.Subscribe(OnProjectClosed);
-                }
-
-                if (!_layersChangedEventsSubscribed)
-                {
-                    _layersChangedEventsSubscribed = true;
-
-                    // Subscribe to the LayersAddedEvent
-                    LayersAddedEvent.Subscribe(OnLayersAddedAsync);
-
-                    // Subscribe to the LayersRemovedEvent
-                    LayersRemovedEvent.Subscribe(OnLayersRemovedAsync);
-                }
-            }
-            else
-            {
-                if (_mapEventsSubscribed)
-                {
-                    _mapEventsSubscribed = false;
-
-                    // Unsubscribe from map changed events.
-                    ActiveMapViewChangedEvent.Unsubscribe(OnActiveMapViewChangedAsync);
-                }
-
-                if (_layersChangedEventsSubscribed)
-                {
-                    _layersChangedEventsSubscribed = false;
-
-                    // Subscribe to the LayersAddedEvent
-                    LayersAddedEvent.Unsubscribe(OnLayersAddedAsync);
-
-                    // Subscribe to the LayersRemovedEvent
-                    LayersRemovedEvent.Unsubscribe(OnLayersRemovedAsync);
-                }
-            }
-
-            base.OnShow(isVisible);
-
-            // Toggle the tab state to visible.
-            ToggleState("tab_state", true);
-        }
-
-        #endregion ViewModelBase Members
+        #endregion Initialisation
 
         #region Properties
 
@@ -519,9 +571,6 @@ namespace HLU.UI.ViewModel
 
                 // Display an error message.
                 ShowMessage("No active map.", MessageType.Warning);
-
-                // Clear the form lists.
-                //_paneH2VM?.ClearFormLists();
             }
             else
             {
@@ -529,6 +578,7 @@ namespace HLU.UI.ViewModel
                 // Check the active map is valid.
                 if (MapView.Active != _activeMapView)
                 {
+                    // Check that there is an active map and that it contains a valid HLU workspace.
                     if (!await CheckActiveMapAsync())
                     {
                         _activeMapView = null;
@@ -548,6 +598,7 @@ namespace HLU.UI.ViewModel
 
         private async void OnLayersAddedAsync(LayerEventsArgs args)
         {
+            // Check that there is an active map and that it contains a valid HLU workspace.
             if (!await CheckActiveMapAsync())
             {
                 _activeMapView = null;
@@ -566,6 +617,7 @@ namespace HLU.UI.ViewModel
                     _gisApp = null;
             }
 
+            // Check that there is an active map and that it contains a valid HLU workspace.
             if (!await CheckActiveMapAsync())
             {
                 _activeMapView = null;
@@ -608,19 +660,42 @@ namespace HLU.UI.ViewModel
         /// </summary>
         protected override void OnHidden()
         {
-            // Get the dockpane DAML id.
-            DockPane pane = FrameworkApplication.DockPaneManager.Find(DockPaneID);
-            if (pane == null)
-                return;
+            //TODO: Needed?
+            if (_mapEventsSubscribed)
+            {
+                _mapEventsSubscribed = false;
 
-            // Get the ViewModel by casting the dockpane.
-            ViewModelWindowMain vm = pane as ViewModelWindowMain;
+                // Unsubscribe from OnActiveMapViewChangedAsync events
+                // (in case the tool is never shown again).
+                ActiveMapViewChangedEvent.Unsubscribe(OnActiveMapViewChangedAsync);
+            }
 
-            // Force the dockpane to be re-initialised next time it's shown.
-            vm.Initialised = false;
+            //TODO: Needed?
+            if (_layersChangedEventsSubscribed)
+            {
+                _layersChangedEventsSubscribed = false;
+
+                // Unsubscribe from the LayersAddedEvents
+                // (in case the tool is never shown again).
+                LayersAddedEvent.Unsubscribe(OnLayersAddedAsync);
+
+                // Unsubscribe from the LayersRemovedEvents
+                // (in case the tool is never shown again).
+                LayersRemovedEvent.Unsubscribe(OnLayersRemovedAsync);
+            }
+
+            //TODO: Needed?
+            if (_projectClosedEventsSubscribed)
+            {
+                _projectClosedEventsSubscribed = false;
+
+                // Unsubscribe from the OnProjectClosed events
+                // (in case the tool is never shown again).
+                ProjectClosedEvent.Unsubscribe(OnProjectClosed);
+            }
 
             // Toggle the tab state to hidden.
-            ToggleState("tab_state", false);
+            ToggleState("HLUTool_tab_state", false);
         }
 
         #endregion Active Map View
@@ -732,7 +807,7 @@ namespace HLU.UI.ViewModel
                     _gisApp = new();
 
                 // Switch the GIS layer.
-                if (await _gisApp.IsHluLayer(selectedValue, true))
+                if (await _gisApp.IsHluLayerAsync(selectedValue, true))
                 {
                     // Refresh the layer name
                     OnPropertyChanged(nameof(ActiveLayerName));

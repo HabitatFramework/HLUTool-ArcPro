@@ -26,6 +26,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Globalization;
@@ -152,7 +153,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="exportID"></param>
         /// <param name="selectedOnly"></param>
-        private void _viewModelExport_RequestClose(int exportID, bool selectedOnly)
+        private async void _viewModelExport_RequestClose(int exportID, bool selectedOnly)
         {
             _viewModelExport.RequestClose -= _viewModelExport_RequestClose;
             _windowExport.Close();
@@ -161,8 +162,7 @@ namespace HLU.UI.ViewModel
             // perform the export using that format.
             if (exportID != -1)
             {
-                DispatcherHelper.DoEvents();
-                Export(exportID, selectedOnly);
+                await ExportAsync(exportID, selectedOnly);
             }
         }
 
@@ -170,6 +170,7 @@ namespace HLU.UI.ViewModel
 
         #region Export
 
+        //TODO: Add wait calls.
         /// <summary>
         /// Exports the combined GIS and database data using the
         /// specified export format.
@@ -183,13 +184,16 @@ namespace HLU.UI.ViewModel
         /// or
         /// Export query did not retrieve any rows
         /// </exception>
-        private void Export(int userExportId, bool selectedOnly)
+        private async Task ExportAsync(int userExportId, bool selectedOnly)
         {
             string tempPath = null;
 
             try
             {
                 _viewModelMain.ChangeCursor(Cursors.Wait, "Creating export table ...");
+
+                // Let WPF render the cursor/message before heavy work begins.
+                await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
 
                 // Create a new unique table name to export to.
                 string tableAlias = GetTableAlias();

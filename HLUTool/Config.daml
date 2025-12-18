@@ -23,7 +23,7 @@
 
 	<conditions>
 		<insertCondition id="HLUTool_Tab1_condition" caption="Toggle HLUTool_Tab1">
-			<state id="tab_state" />
+			<state id="HLUTool_tab_state" />
 		</insertCondition>
 	</conditions>
 
@@ -246,14 +246,14 @@
 				</button>
 
 				<editBox id="HLUTool_edbFilterByIncid"
-						 caption="Filter by INCID:"
+						 caption="Find INCID:"
 						 className="HLU.UI.UserControls.Toolbar.FilterByIncidEditBox"
 						 condition="esri_mapping_mapPane"
 						 dataType="string"
 						 editHint="Enter INCID"
 						 keytip="FI"
 						 sizeString="123456789012">
-					<tooltip heading="Filter by INCID">
+					<tooltip heading="Find INCID">
 						Filter the records for a single INCID.
 						<disabledText>Available only when not in a bulk or OSMM update mode.</disabledText>
 					</tooltip>

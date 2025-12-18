@@ -24,6 +24,7 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using HLU.Data;
@@ -166,7 +167,7 @@ namespace HLU.UI.ViewModel
         /// upon completion. After a successful update, the current incident index is moved beyond the end  of the
         /// dataset to indicate that all incidents have been processed.</remarks>
         /// <param name="updateStatus">The new OSMM status to apply. This value is used to update the relevant incidents.</param>
-        internal void OSMMUpdateAll(int updateStatus)
+        internal async Task OSMMUpdateAllAsync(int updateStatus)
         {
             _viewModelMain.ChangeCursor(Cursors.Wait, "Updating all ...");
 
@@ -185,7 +186,8 @@ namespace HLU.UI.ViewModel
 
                 // Move beyond the end of the Incids (to show they have
                 // all been processed)
-                _viewModelMain.IncidCurrentRowIndex = _viewModelMain.IncidSelection.Rows.Count + 1;
+                int newIndex = _viewModelMain.IncidSelection.Rows.Count + 1;
+                await _viewModelMain.MoveIncidCurrentRowIndexAsync(newIndex);
             }
             catch (Exception ex)
             {
@@ -308,9 +310,9 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <remarks>This method should be called to terminate an in-progress OSMM update operation.  It
         /// ensures that any related controls are reset to their default state.</remarks>
-        public void CancelOSMMUpdate()
+        public async Task CancelOSMMUpdateAsync()
         {
-            OSMMUpdateResetControls();
+            await OSMMUpdateResetControlsAsync();
         }
 
         #endregion Cancel OSMM Update
@@ -325,15 +327,14 @@ namespace HLU.UI.ViewModel
         /// <item>Enables all tabs in the user interface.</item> <item>Refreshes all controls to reflect the updated
         /// state.</item> <item>Resets the cursor to the default arrow.</item> </list> This method is typically called
         /// to exit the OSMM update mode and restore the default application state.</remarks>
-        private void OSMMUpdateResetControls()
+        private async Task OSMMUpdateResetControlsAsync()
         {
             // Stop the bulk update mode
             _viewModelMain.OSMMUpdateMode = false;
 
             // Reset the incid filter
             _viewModelMain.SuppressUserNotifications = true;
-            //TODO: Await call.
-            _viewModelMain.IncidCurrentRowIndex = 1;
+            await _viewModelMain.MoveIncidCurrentRowIndexAsync(1);
             _viewModelMain.SuppressUserNotifications = false;
 
             // Enable all the tabs

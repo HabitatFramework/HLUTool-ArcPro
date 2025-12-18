@@ -7,16 +7,16 @@ namespace HLU
     /// <summary>
     /// Base exception for HLU Tool failures that should be shown to the user.
     /// </summary>
-    public class HluToolException : Exception
+    public class HLUToolException : Exception
     {
-        public HluToolException(string message) : base(message) { }
-        public HluToolException(string message, Exception inner) : base(message, inner) { }
+        public HLUToolException(string message) : base(message) { }
+        public HLUToolException(string message, Exception inner) : base(message, inner) { }
     }
 
     /// <summary>
     /// Thrown when a GIS selection cannot be read or is invalid.
     /// </summary>
-    public sealed class GisSelectionException : HluToolException
+    public sealed class GisSelectionException : HLUToolException
     {
         public GisSelectionException(string message) : base(message) { }
         public GisSelectionException(string message, Exception inner) : base(message, inner) { }
@@ -25,7 +25,7 @@ namespace HLU
     /// <summary>
     /// Thrown when expected fields do not exist on the active layer.
     /// </summary>
-    public sealed class MissingLayerFieldsException : HluToolException
+    public sealed class MissingLayerFieldsException : HLUToolException
     {
         public IReadOnlyList<string> MissingFields { get; }
 
@@ -39,7 +39,7 @@ namespace HLU
     /// <summary>
     /// Thrown when a database query fails.
     /// </summary>
-    public sealed class DatabaseQueryException : HluToolException
+    public sealed class DatabaseQueryException : HLUToolException
     {
         public DatabaseQueryException(string message) : base(message) { }
         public DatabaseQueryException(string message, Exception inner) : base(message, inner) { }
@@ -48,7 +48,7 @@ namespace HLU
     /// <summary>
     /// Thrown when an edit operation fails.
     /// </summary>
-    public sealed class EditOperationException : HluToolException
+    public sealed class EditOperationException : HLUToolException
     {
         public EditOperationException(string message) : base(message) { }
         public EditOperationException(string message, Exception inner) : base(message, inner) { }
@@ -57,7 +57,7 @@ namespace HLU
     /// <summary>
     /// Thrown when there is a configuration error.
     /// </summary>
-    public sealed class ConfigurationException : HluToolException
+    public sealed class ConfigurationException : HLUToolException
     {
         public ConfigurationException(string message) : base(message) { }
         public ConfigurationException(string message, Exception inner) : base(message, inner) { }

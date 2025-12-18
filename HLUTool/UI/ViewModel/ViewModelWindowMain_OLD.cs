@@ -77,7 +77,6 @@ namespace HLU.UI.ViewModel
 
     public partial class ViewModelWindowMain : PanelViewModelBase, INotifyPropertyChanged
     {
-
         #region Fields
 
         #region Commands
@@ -303,6 +302,7 @@ namespace HLU.UI.ViewModel
         private bool _pasting = false;
         private bool _changed = false;
         private bool _readingMap = false;
+        private bool _moving = false;
         private bool _saving = false;
         private bool _closing = false;
         private bool _autoSplit = true;
@@ -491,7 +491,7 @@ namespace HLU.UI.ViewModel
                 while (true)
                 {
                     if ((_db = DbFactory.CreateConnection(DbConnectionTimeout)) == null)
-                        throw new Exception("No database connection.");
+                        throw new HLUToolException("No database connection.");
 
                     _hluDS = new HluDataSet();
 
@@ -511,12 +511,13 @@ namespace HLU.UI.ViewModel
                                 "\n\nWould like to see a list of those errors?", "HLU: Initialise Dataset",
                                 MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.Yes)
                                 ShowMessageWindow.ShowMessage(errorMessage, "HLU Dataset");
+
                             errorMessage = String.Empty;
                         }
                         if (MessageBox.Show("There were errors loading data from the database." +
                             errorMessage + "\n\nWould you like to connect to another database?", "HLU: Initialise Dataset",
                             MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.No)
-                            throw new Exception("cancelled");
+                            throw new HLUToolException("cancelled");
                     }
                     else
                     {
@@ -593,6 +594,7 @@ namespace HLU.UI.ViewModel
             }
             catch (Exception ex)
             {
+                //TODO: Check exception type instead
                 if (ex.Message != "cancelled")
                     MessageBox.Show(ex.Message, "HLU: Initialise Application",
                         MessageBoxButton.OK, MessageBoxImage.Error);
@@ -614,7 +616,7 @@ namespace HLU.UI.ViewModel
                 while (true)
                 {
                     if ((_db = DbFactory.CreateConnection(DbConnectionTimeout)) == null)
-                        throw new Exception("No database connection.");
+                        throw new HLUToolException("No database connection.");
 
                     _hluDS = new HluDataSet();
 
@@ -634,12 +636,13 @@ namespace HLU.UI.ViewModel
                                 "\n\nWould like to see a list of those errors?", "HLU: Initialise Dataset",
                                 MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.Yes)
                                 ShowMessageWindow.ShowMessage(errorMessage, "HLU Dataset");
+
                             errorMessage = String.Empty;
                         }
                         if (MessageBox.Show("There were errors loading data from the database." +
                             errorMessage + "\n\nWould you like to connect to another database?", "HLU: Initialise Dataset",
                             MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.No)
-                            throw new Exception("cancelled");
+                            throw new HLUToolException("cancelled");
                     }
                     else
                     {
@@ -669,6 +672,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Check that there is an active map and that it contains a valid HLU workspace.
+        /// </summary>
+        /// <returns></returns>
         private async Task<bool> CheckActiveMapAsync()
         {
             // Check the GIS workspace
@@ -702,7 +709,7 @@ namespace HLU.UI.ViewModel
                     _activeLayerComboBox?.Initialize();
 
                     // Display an error message.
-                    ShowMessage("Invalid HLU workspace.", MessageType.Warning);
+                    ShowMessage("Active map does not contain valid HLU layers.", MessageType.Warning);
 
                     // Hide the dockpane.
                     DockpaneVisibility = Visibility.Hidden;
@@ -723,7 +730,7 @@ namespace HLU.UI.ViewModel
                 if (_activeLayerComboBox == null)
                 {
                     // Switch the GIS layer.
-                    if (await _gisApp.IsHluLayer(ActiveLayerName, true))
+                    if (await _gisApp.IsHluLayerAsync(ActiveLayerName, true))
                     {
                         // Refresh the layer name
                         OnPropertyChanged(nameof(ActiveLayerName));
@@ -821,7 +828,7 @@ namespace HLU.UI.ViewModel
             if (addVersion.CompareTo(appVersion) < 0)
             {
                 // Trap error if database requires a later application version.
-                throw new Exception(String.Format("The minimum application version must be {0}.", appVersion.ToString()));
+                throw new HLUToolException(String.Format("The minimum application version must be {0}.", appVersion.ToString()));
             }
 
             // Get the minimum database version.
@@ -831,7 +838,7 @@ namespace HLU.UI.ViewModel
             if (Base36.Base36ToNumber(lutDbVersion) < Base36.Base36ToNumber(minDbVersion))
             {
                 // Trap error if application requires a later database version.
-                throw new Exception(String.Format("The minimum database version must be {0}.", minDbVersion));
+                throw new HLUToolException(String.Format("The minimum database version must be {0}.", minDbVersion));
             }
 
             // Store the application, database and data versions for displaying in the 'About' box.
@@ -1745,7 +1752,7 @@ namespace HLU.UI.ViewModel
 
         public void ChangeCursor(Cursor cursorType, string processingMessage)
         {
-            //TODO: ChanceCursor
+            //TODO: ChangeCursor
             ProgressUpdate(processingMessage, -1, -1);
 
             //_windowCursor = cursorType;
@@ -1937,6 +1944,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        //TODO: Check if still correct approach with dispatcher
         /// <summary>
         /// Update the progress bar.
         /// </summary>
@@ -2295,6 +2303,8 @@ namespace HLU.UI.ViewModel
 
         #region Navigation Commands
 
+        private bool _isNavigating = false;
+
         /// <summary>
         /// Navigate to first record command.
         /// </summary>
@@ -2313,8 +2323,24 @@ namespace HLU.UI.ViewModel
 
         private async void NavigateFirstClicked(object param)
         {
-            // Move to first record.
-            await NavigateToRecordAsync(1);
+            if (_isNavigating)
+                return;
+
+            try
+            {
+                _isNavigating = true;
+
+                // Move to first record.
+                await NavigateToRecordAsync(1);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _isNavigating = false;
+            }
         }
 
         /// <summary>
@@ -2335,8 +2361,24 @@ namespace HLU.UI.ViewModel
 
         private async void NavigatePreviousClicked(object param)
         {
-            // Move to previous record.
-            await NavigateToRecordAsync(_incidCurrentRowIndex - 1);
+            if (_isNavigating)
+                return;
+
+            try
+            {
+                _isNavigating = true;
+
+                // Move to previous record.
+                await NavigateToRecordAsync(_incidCurrentRowIndex - 1);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _isNavigating = false;
+            }
         }
 
         public bool CanNavigateBackward
@@ -2362,8 +2404,24 @@ namespace HLU.UI.ViewModel
 
         private async void NavigateNextClicked(object param)
         {
-            // Move to next record.
-            await NavigateToRecordAsync(_incidCurrentRowIndex + 1);
+            if (_isNavigating)
+                return;
+
+            try
+            {
+                _isNavigating = true;
+
+                // Move to next record.
+                await NavigateToRecordAsync(_incidCurrentRowIndex + 1);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _isNavigating = false;
+            }
         }
 
         public bool CanNavigateForward
@@ -2393,8 +2451,24 @@ namespace HLU.UI.ViewModel
 
         private async void NavigateLastClicked(object param)
         {
-            // Move to last record.
-            await NavigateToRecordAsync(IsFiltered ? _incidSelection.Rows.Count : _incidRowCount);
+            if (_isNavigating)
+                return;
+
+            try
+            {
+                _isNavigating = true;
+
+                // Move to last record.
+                await NavigateToRecordAsync(IsFiltered ? _incidSelection.Rows.Count : _incidRowCount);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _isNavigating = false;
+            }
         }
 
         private async Task NavigateToRecordAsync(int value)
@@ -2415,7 +2489,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Navigate to the specified record command.
         /// </summary>
-        public ICommand NavigateIncidCommand
+        private ICommand NavigateIncidCommand
         {
             get
             {
@@ -2428,7 +2502,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        public async void NavigateIncidClicked(object param)
+        private async void NavigateIncidClicked(object param)
         {
             if (param is string newText && int.TryParse(newText, out int value))
             {
@@ -2446,7 +2520,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        public bool CanNavigateIncid
+        private bool CanNavigateIncid
         {
             get
             {
@@ -2711,10 +2785,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        private void UpdateClicked(object param)
+        private async void UpdateClicked(object param)
         {
             // Update the attributes (don't wait).
-            UpdateAsync(param);
+            await UpdateAsync(param);
         }
 
         /// <summary>
@@ -2811,6 +2885,8 @@ namespace HLU.UI.ViewModel
                     // Update the current incid.
                     _saving = true;
                     _savingAttempted = false;
+
+                    //TODO: Catch exceptions?
                     await _viewModelUpd.UpdateAsync();
                 }
                 return;
@@ -2818,7 +2894,8 @@ namespace HLU.UI.ViewModel
 
             ChangeCursor(Cursors.Wait, "Filtering ...");
 
-            DispatcherHelper.DoEvents();
+            // Let WPF render the cursor/message before heavy work begins.
+            await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
 
             // Initialise the GIS selection table.
             _gisSelection = NewGisSelectionTable();
@@ -2830,9 +2907,9 @@ namespace HLU.UI.ViewModel
             {
                 _gisSelection = await _gisApp.ReadMapSelectionAsync(_gisSelection);
             }
-            catch (HluToolException ex)
+            catch (HLUToolException ex)
             {
-                // Friendly message (no giant stack trace dumped on the user)
+                // Preserve stack trace and wrap in a meaningful type
                 MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
@@ -2861,6 +2938,8 @@ namespace HLU.UI.ViewModel
             {
                 _saving = true;
                 _savingAttempted = false;
+
+                //TODO: Catch exceptions?
                 await _viewModelUpd.UpdateAsync();
             }
             else
@@ -2901,6 +2980,8 @@ namespace HLU.UI.ViewModel
                     // Apply the updates on the current incid.
                     _saving = true;
                     _savingAttempted = false;
+
+                    //TODO: Catch exceptions?
                     await _viewModelUpd.UpdateAsync();
 
                     // Recount the number of toids and fragments for the current incid
@@ -3106,35 +3187,35 @@ namespace HLU.UI.ViewModel
             if (_viewModelBulkUpdate == null)
                 _viewModelBulkUpdate = new ViewModelWindowMainBulkUpdate(this, _addInSettings);
 
-            // If already in bulk update mode then perform the bulk update
-            // (only possible when this method was called after the 'Apply'
-            // button was clicked.
-            if (BulkUpdateMode == true)
-            {
-                _viewModelBulkUpdate.BulkUpdate();
-            }
-            else
-            {
-                // Check there are no outstanding edits.
-                _readingMap = false;
-                MessageBoxResult userResponse = CheckDirty();
+            //TODO: Needed?
+            //// If already in bulk update mode then perform the bulk update
+            //// (only possible when this method was called after the 'Apply'
+            //// button was clicked.
+            //if (BulkUpdateMode == true)
+            //{
+            //    _viewModelBulkUpdate.ShowBulkUpdateWindow();
+            //}
+            //else
 
-                // Ask the user if they want to apply the
-                // outstanding edits.
-                switch (userResponse)
-                {
-                    case MessageBoxResult.Yes:
-                        //if (!_viewModelUpd.Update()) return;
-                        break;
-                    case MessageBoxResult.No:
-                        break;
-                    case MessageBoxResult.Cancel:
-                        return;
-                }
+            // Check there are no outstanding edits.
+            _readingMap = false;
+            MessageBoxResult userResponse = CheckDirty();
 
-                // Start the bulk update process.
-                _viewModelBulkUpdate.StartBulkUpdate(false);
+            // Ask the user if they want to apply the
+            // outstanding edits.
+            switch (userResponse)
+            {
+                case MessageBoxResult.Yes:
+                    //if (!_viewModelUpd.Update()) return;
+                    break;
+                case MessageBoxResult.No:
+                    break;
+                case MessageBoxResult.Cancel:
+                    return;
             }
+
+            // Start the standard bulk update process.
+            _viewModelBulkUpdate.StartStandardBulkUpdate();
         }
 
         /// <summary>
@@ -3148,10 +3229,8 @@ namespace HLU.UI.ViewModel
                 _viewModelBulkUpdate = new ViewModelWindowMainBulkUpdate(this, _addInSettings);
 
             // If already in bulk update mode then perform the bulk update
-            // (only possible when this method was called after the 'Apply'
-            // button was clicked.
             if (BulkUpdateMode == true)
-                _viewModelBulkUpdate.BulkUpdate();
+                _viewModelBulkUpdate.ShowBulkUpdateWindow();
         }
 
         /// <summary>
@@ -3186,7 +3265,7 @@ namespace HLU.UI.ViewModel
          /// Cancel the bulk update.
          /// </summary>
          /// <param name="param">The parameter.</param>
-        private void CancelBulkUpdateClicked(object param)
+        private async void CancelBulkUpdateClicked(object param)
         {
             if (_viewModelBulkUpdate != null)
             {
@@ -3196,8 +3275,8 @@ namespace HLU.UI.ViewModel
                 if (OSMMBulkUpdateMode == true)
                     _viewModelBulkUpdate.CancelOSMMBulkUpdate();
                 else
-                    //TODO: Await call.
-                    _viewModelBulkUpdate.CancelBulkUpdate();
+                    // Cancels the bulk update mode
+                    await _viewModelBulkUpdate.CancelBulkUpdateAsync();
 
                 _viewModelBulkUpdate = null;
             }
@@ -3432,13 +3511,13 @@ namespace HLU.UI.ViewModel
         /// Cancel the OSMM Update mode.
         /// </summary>
         /// <param name="param"></param>
-        private void CancelOSMMUpdateClicked(object param)
+        private async void CancelOSMMUpdateClicked(object param)
         {
             if (_viewModelOSMMUpdate != null)
             {
                 _osmmUpdatesEmpty = false;
 
-                _viewModelOSMMUpdate.CancelOSMMUpdate();
+                await _viewModelOSMMUpdate.CancelOSMMUpdateAsync();
 
                 _viewModelOSMMUpdate = null;
                 // Prevent OSMM updates being actioned too quickly.
@@ -3468,11 +3547,11 @@ namespace HLU.UI.ViewModel
         /// Skip the OSMM Update for the current incid.
         /// </summary>
         /// <param name="param"></param>
-        private void OSMMSkipClicked(object param)
+        private async void OSMMSkipClicked(object param)
         {
 
             // Skip the OSMM Update for the current incid (don't wait).
-            OSMMSkipAsync();
+            await OSMMSkipAsync();
         }
 
         /// <summary>
@@ -3548,10 +3627,10 @@ namespace HLU.UI.ViewModel
         /// Accept the OSMM Update for the current incid.
         /// </summary>
         /// <param name="param"></param>
-        private void OSMMAcceptClicked(object param)
+        private async void OSMMAcceptClicked(object param)
         {
             // Accept the OSMM Update for the current incid. (don't wait).
-            OSMMAcceptAsync();
+            await OSMMAcceptAsync();
         }
 
         /// <summary>
@@ -3568,7 +3647,7 @@ namespace HLU.UI.ViewModel
                 if (OSMMAcceptTag == "Ctrl")
                 {
                     // Mark all the remaining OSMM Update rows as accepted
-                    _viewModelOSMMUpdate.OSMMUpdateAll(0);
+                    await _viewModelOSMMUpdate.OSMMUpdateAllAsync(0);
 
                     // Reset the button tags
                     OSMMAcceptTag = "";
@@ -3631,10 +3710,10 @@ namespace HLU.UI.ViewModel
         /// Reject the OSMM Update for the current incid.
         /// </summary>
         /// <param name="param"></param>
-        private void OSMMRejectClicked(object param)
+        private async void OSMMRejectClicked(object param)
         {
             // Reject the OSMM Update for the current incid (don't wait).
-            OSMMRejectAsync();
+            await OSMMRejectAsync();
         }
 
         /// <summary>
@@ -3651,7 +3730,7 @@ namespace HLU.UI.ViewModel
                 if (OSMMRejectTag == "Ctrl")
                 {
                     // Mark all the remaining OSMM Update rows as accepted
-                    _viewModelOSMMUpdate.OSMMUpdateAll(-99);
+                    await _viewModelOSMMUpdate.OSMMUpdateAllAsync(-99);
 
                     // Reset the button tags
                     OSMMAcceptTag = "";
@@ -3831,10 +3910,10 @@ namespace HLU.UI.ViewModel
         /// Accept the proposed OSMM Update.
         /// </summary>
         /// <param name="param"></param>
-        private void OSMMUpdateAcceptClicked()
+        private async Task OSMMUpdateAcceptClickedAsync()
         {
             //Accept the proposed OSMM Update (don't wait).
-            OSMMUpdateAcceptAsync();
+            await OSMMUpdateAcceptAsync();
         }
 
         /// <summary>
@@ -3882,10 +3961,10 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Reject the proposed OSMM Update.
         /// </summary>
-        private void OSMMUpdateRejectClicked()
+        private async Task OSMMUpdateRejectClickedAsync()
         {
             //Reject the proposed OSMM Update (don't wait).
-            OSMMUpdateRejectAsync();
+            await OSMMUpdateRejectAsync();
         }
 
         /// <summary>
@@ -3938,7 +4017,7 @@ namespace HLU.UI.ViewModel
         /// Start the OSMM Bulk Update mode.
         /// </summary>
         /// <param name="param"></param>
-        private void OSMMBulkUpdateClicked(object param)
+        private void StartOSMMBulkUpdateClicked(object param)
         {
             _saving = false;
             if (_viewModelBulkUpdate == null)
@@ -3963,7 +4042,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Start the OSMM update mode
-                _viewModelBulkUpdate.StartBulkUpdate(true);
+                _viewModelBulkUpdate.StartOSMMBulkUpdate();
             }
         }
 
@@ -4096,7 +4175,7 @@ namespace HLU.UI.ViewModel
                 CancelOSMMBulkUpdateClicked(param);
             else
                 // Start the OSMM Bulk update mode
-                OSMMBulkUpdateClicked(param);
+                StartOSMMBulkUpdateClicked(param);
         }
 
         /// <summary>
@@ -4119,10 +4198,10 @@ namespace HLU.UI.ViewModel
         /// Accept the OSMM proposed update.
         /// </summary>
         /// <param name="param"></param>
-        private void OSMMUpdateAcceptCommandMenuClicked(object param)
+        private async void OSMMUpdateAcceptCommandMenuClicked(object param)
         {
             // Accept the OSMM proposed update
-            OSMMUpdateAcceptClicked();
+            await OSMMUpdateAcceptClickedAsync();
         }
 
         /// <summary>
@@ -4145,10 +4224,10 @@ namespace HLU.UI.ViewModel
         /// Reject the OSMM proposed update.
         /// </summary>
         /// <param name="param"></param>
-        private void OSMMUpdateRejectCommandMenuClicked(object param)
+        private async void OSMMUpdateRejectCommandMenuClicked(object param)
         {
             // Reject the OSMM proposed update
-            OSMMUpdateRejectClicked();
+            await OSMMUpdateRejectClickedAsync();
         }
 
         #endregion
@@ -4196,7 +4275,7 @@ namespace HLU.UI.ViewModel
 
         }
 
-        private void ZoomSelectionClicked(object param)
+        protected void ZoomSelectionClicked(object param)
         {
             // Get the minimum auto zoom value and map distance units.
             string distUnits = Settings.Default.MapDistanceUnits;
@@ -4561,12 +4640,13 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        //TODO: Add wait calls.
         /// <summary>
         /// Process the sql when the advanced query window is closed.
         /// </summary>
         /// <param name="sqlFromTables">The tables to query.</param>
         /// <param name="sqlWhereClause">The where clause to apply in the query.</param>
-        protected void _viewModelWinQueryAdvanced_RequestClose(string sqlFromTables, string sqlWhereClause)
+        protected async void _viewModelWinQueryAdvanced_RequestClose(string sqlFromTables, string sqlWhereClause)
         {
             _viewModelWinQueryAdvanced.RequestClose -= _viewModelWinQueryAdvanced_RequestClose;
             _windowQueryAdvanced.Close();
@@ -4657,8 +4737,7 @@ namespace HLU.UI.ViewModel
                             _filterByMap = false;
 
                             // Set the filter back to the first incid.
-                            //TODO: await call.
-                            SetFilterAsync();
+                            await SetFilterAsync();
 
                             // Reset the cursor back to normal.
                             ChangeCursor(Cursors.Arrow, null);
@@ -4687,8 +4766,7 @@ namespace HLU.UI.ViewModel
                             _filterByMap = false;
 
                             // Set the filter back to the first incid.
-                            //TODO: await call.
-                            SetFilterAsync();
+                            await SetFilterAsync();
 
                             // Reset the cursor back to normal.
                             ChangeCursor(Cursors.Arrow, null);
@@ -4710,8 +4788,7 @@ namespace HLU.UI.ViewModel
                         _filterByMap = false;
 
                         // Set the filter back to the first incid.
-                        //TODO: await call.
-                        SetFilterAsync();
+                        await SetFilterAsync();
 
                         // Reset the cursor back to normal
                         ChangeCursor(Cursors.Arrow, null);
@@ -4820,11 +4897,12 @@ namespace HLU.UI.ViewModel
             get { return BulkUpdateMode == false && OSMMUpdateMode == false && IncidCurrentRow != null; }
         }
 
+        //TODO: Add wait calls.
         /// <summary>
         /// Select the required incid.
         /// </summary>
         /// <param name="queryIncid">The query incid.</param>
-        public void FilterByIncid(String queryIncid)
+        public async void FilterByIncid(String queryIncid)
         {
             if (String.IsNullOrEmpty(queryIncid))
                 return;
@@ -4886,8 +4964,7 @@ namespace HLU.UI.ViewModel
                         _filterByMap = false;
 
                         // Set the filter back to the first incid.
-                        //TODO: await call.
-                        SetFilterAsync();
+                        await SetFilterAsync();
 
                         // Reset the cursor back to normal.
                         ChangeCursor(Cursors.Arrow, null);
@@ -4920,12 +4997,10 @@ namespace HLU.UI.ViewModel
                         _incidSelection = null;
 
                         // Indicate the selection didn't come from the map.
-                        //TODO: await call.
                         _filterByMap = false;
 
                         // Set the filter back to the first incid.
-                        //TODO: await call.
-                        SetFilterAsync();
+                        await SetFilterAsync();
 
                         // Reset the cursor back to normal.
                         ChangeCursor(Cursors.Arrow, null);
@@ -4947,8 +5022,7 @@ namespace HLU.UI.ViewModel
                     _filterByMap = false;
 
                     // Set the filter back to the first incid.
-                    //TODO: await call.
-                    SetFilterAsync();
+                    await SetFilterAsync();
 
                     // Reset the cursor back to normal
                     ChangeCursor(Cursors.Arrow, null);
@@ -5005,7 +5079,7 @@ namespace HLU.UI.ViewModel
                 // Refresh all the controls
                 RefreshAll();
 
-                DispatcherHelper.DoEvents();
+                DispatcherHelper.DoEvents(); //TODO: Replace with modern equivalent?
             }
 
             try
@@ -5051,7 +5125,7 @@ namespace HLU.UI.ViewModel
         /// <param name="changeFlag">The change flag value.</param>
         /// <param name="status">The OSMM status value.</param>
         /// <param name="apply">Whether to apply (or cancel) the query.</param>
-        protected void _viewModelWinQueryOSMM_RequestClose(string processFlag, string spatialFlag, string changeFlag, string status, bool apply)
+        protected async void _viewModelWinQueryOSMM_RequestClose(string processFlag, string spatialFlag, string changeFlag, string status, bool apply)
         {
             // Close the window
             _viewModelWinQueryOSMM.RequestClose -= _viewModelWinQueryOSMM_RequestClose;
@@ -5077,7 +5151,7 @@ namespace HLU.UI.ViewModel
 
                 // Apply the OSMM Updates filter
                 if (processFlag != null || spatialFlag != null || changeFlag != null || status != null)
-                    ApplyOSMMUpdatesFilter(processFlag, spatialFlag, changeFlag, status);
+                    await ApplyOSMMUpdatesFilterAsync(processFlag, spatialFlag, changeFlag, status);
             }
         }
 
@@ -5115,7 +5189,7 @@ namespace HLU.UI.ViewModel
                 // Refresh all the controls
                 RefreshAll();
 
-                DispatcherHelper.DoEvents();
+                DispatcherHelper.DoEvents(); //TODO: Replace with modern equivalent?
             }
 
             try
@@ -5153,12 +5227,13 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        //TODO: Add wait calls.
         /// <summary>
         /// Process the sql when the advanced query window is closed.
         /// </summary>
         /// <param name="sqlFromTables">The tables to query.</param>
         /// <param name="sqlWhereClause">The where clause to apply in the query.</param>
-        protected void _viewModelWinQueryOSMMAdvanced_RequestClose(string sqlFromTables, string sqlWhereClause)
+        protected async void _viewModelWinQueryOSMMAdvanced_RequestClose(string sqlFromTables, string sqlWhereClause)
         {
             _viewModelWinQueryAdvanced.RequestClose -= _viewModelWinQueryOSMMAdvanced_RequestClose;
             _windowQueryAdvanced.Close();
@@ -5184,7 +5259,9 @@ namespace HLU.UI.ViewModel
                 try
                 {
                     ChangeCursor(Cursors.Wait, "Validating ...");
-                    DispatcherHelper.DoEvents();
+
+                    // Let WPF render the cursor/message before heavy work begins.
+                    await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
 
                     // Get a list of all the possible query tables.
                     List<DataTable> tables = [];
@@ -5279,8 +5356,7 @@ namespace HLU.UI.ViewModel
                                     OnPropertyChanged(nameof(CanOSMMSkip));
 
                                     // Set the filter to the first incid.
-                                    //TODO: await call.
-                                    SetFilterAsync();
+                                    await SetFilterAsync();
 
                                     // Check if the GIS and database are in sync.
                                     if (CheckInSync("Selection", "Selected", "Not all selected"))
@@ -5393,6 +5469,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        //TODO: Add wait calls.
         /// <summary>
         /// Applies the OSMM updates filter.
         /// </summary>
@@ -5400,12 +5477,14 @@ namespace HLU.UI.ViewModel
         /// <param name="spatialFlag">The spatial flag.</param>
         /// <param name="changeFlag">The change flag.</param>
         /// <param name="status">The status.</param>
-        public void ApplyOSMMUpdatesFilter(string processFlag, string spatialFlag, string changeFlag, string status)
+        public async Task ApplyOSMMUpdatesFilterAsync(string processFlag, string spatialFlag, string changeFlag, string status)
         {
             try
             {
                 ChangeCursor(Cursors.Wait, "Validating ...");
-                DispatcherHelper.DoEvents();
+
+                // Let WPF render the cursor/message before heavy work begins.
+                await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
 
                 // Select only the incid_osmm_updates database table to use in the query.
                 List<DataTable> whereTables = [];
@@ -5504,8 +5583,7 @@ namespace HLU.UI.ViewModel
                             _osmmUpdatesEmpty = false;
 
                             // Set the filter to the first incid.
-                            //TODO: await call.
-                            SetFilterAsync();
+                            await SetFilterAsync();
 
                             OnPropertyChanged(nameof(CanOSMMAccept));
                             OnPropertyChanged(nameof(CanOSMMSkip));
@@ -5600,7 +5678,9 @@ namespace HLU.UI.ViewModel
             catch (Exception ex)
             {
                 _incidSelection = null;
+
                 ChangeCursor(Cursors.Arrow, null);
+
                 MessageBox.Show(ex.Message, "HLU: Apply Query",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
@@ -5890,11 +5970,11 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        internal void ReadMapSelectionClicked(object param)
+        internal async void ReadMapSelectionClicked(object param)
         {
             // Get the GIS layer selection and warn the user if no
             // features are found (don't wait).
-            ReadMapSelectionAsync(true);
+            await ReadMapSelectionAsync(true);
         }
 
         internal bool CanReadMapSelection
@@ -5927,7 +6007,8 @@ namespace HLU.UI.ViewModel
 
                 ChangeCursor(Cursors.Wait, "Filtering ...");
 
-                DispatcherHelper.DoEvents();
+                // Let WPF render the cursor/message before heavy work begins.
+                await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
 
                 // Initialise the GIS selection table.
                 _gisSelection = NewGisSelectionTable();
@@ -5938,9 +6019,9 @@ namespace HLU.UI.ViewModel
                 {
                     _gisSelection = await _gisApp.ReadMapSelectionAsync(_gisSelection);
                 }
-                catch (HluToolException ex)
+                catch (HLUToolException ex)
                 {
-                    // Friendly message (no giant stack trace dumped on the user)
+                    // Preserve stack trace and wrap in a meaningful type
                     MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
@@ -6509,10 +6590,11 @@ namespace HLU.UI.ViewModel
 
         #region Select All On Map Command
 
+        //TODO: Add wait?
         /// <summary>
         /// Select all the incids in the active filter in GIS.
         /// </summary>
-        public async Task SelectAllOnMap()
+        internal async Task SelectAllOnMapAsync()
         {
             // If there are any records in the selection (and the tool is
             // not currently in bulk update mode).
@@ -6627,9 +6709,9 @@ namespace HLU.UI.ViewModel
         {
             // Reset the OSMM Updates filter when in OSMM Update mode.
             if (OSMMUpdateMode == true)
-                ApplyOSMMUpdatesFilter(null, null, null, null);
+                await ApplyOSMMUpdatesFilterAsync(null, null, null, null);
             else if (OSMMBulkUpdateMode == true)
-                ApplyOSMMUpdatesFilter(null, null, null, "Pending");
+                await ApplyOSMMUpdatesFilterAsync(null, null, null, "Pending");
             else
             {
                 _incidSelection = null;
@@ -6938,7 +7020,8 @@ namespace HLU.UI.ViewModel
                     {
                         // Save the incids to the selected to a temporary database
                         ScratchDb.WriteSelectionScratchTable(_gisIDColumns, _incidSelection);
-                        DispatcherHelper.DoEvents();
+
+                        DispatcherHelper.DoEvents(); //TODO: Replace with modern equivalent?
 
                         // Select all features for incid selection in active layer.
                         _gisSelection = _gisApp.SqlSelect(ScratchDb.ScratchMdbPath,
@@ -6956,7 +7039,7 @@ namespace HLU.UI.ViewModel
                 {
                     if ((!confirmSelect) || (ConfirmGISSelect(false, expectedNumFeatures, expectedNumIncids)))
                     {
-                        DispatcherHelper.DoEvents();
+                        DispatcherHelper.DoEvents(); //TODO: Replace with modern equivalent?
 
                         // Select all features for incid selection in active layer.
                         _gisSelection = _gisApp.SqlSelect(true, false, _gisIDColumns,
@@ -7408,21 +7491,30 @@ namespace HLU.UI.ViewModel
             get { return _incidCurrentRowIndex; }
             set
             {
-                // Move to the required incid current row (don't wait).
-                //TODO: Await call.
-                MoveIncidCurrentRowIndexAsync(value);
+                // Call the safe fire and forget helper to move to the
+                // new current row index asynchronously.
+                AsyncHelpers.SafeFireAndForget(MoveIncidCurrentRowIndexAsync(value),
+                Exception => System.Diagnostics.Debug.WriteLine(Exception.Message));
             }
         }
 
         /// <summary>
-        /// Gets or sets the index of the incid current row.
+        /// Sets the index of the incid current row.
         /// </summary>
         /// <value>
         /// The index of the incid current row.
         /// </value>
         public async Task MoveIncidCurrentRowIndexAsync(int value)
         {
+            // Check if already moving
+            if (_moving)
+                return;
+
+            // Flag that we are moving
+            _moving = true;
+
             MessageBoxResult userResponse = MessageBoxResult.No;
+
             // Check there are no outstanding edits (unless this has
             // already been checked before reading the map selection).
             if (!_readingMap)
@@ -7491,6 +7583,9 @@ namespace HLU.UI.ViewModel
                 case MessageBoxResult.Cancel:
                     break;
             }
+
+            // Unflag that we are moving
+            _moving = false;
         }
 
         // Check if the record has changed and if it hasn't ask the user
@@ -7602,7 +7697,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         private async Task NewIncidCurrentRowAsync()
         {
-            //TODO: Check if the slection is already being read so it
+            //TODO: Check if the selection is already being read so it
             // doesn't repeat itself.
             // Re-check GIS selection in case it has changed.
             if (_gisApp != null)
@@ -7616,9 +7711,9 @@ namespace HLU.UI.ViewModel
                 {
                     _gisSelection = await _gisApp.ReadMapSelectionAsync(_gisSelection);
                 }
-                catch (HluToolException ex)
+                catch (HLUToolException ex)
                 {
-                    // Friendly message (no giant stack trace dumped on the user)
+                    // Preserve stack trace and wrap in a meaningful type
                     MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
@@ -8601,6 +8696,10 @@ namespace HLU.UI.ViewModel
         /// </returns>
         internal bool IsDirtyIncidSecondary()
         {
+            //TODO: Check this works/is needed
+            if (_incidSecondaryHabitats == null)
+                return false;
+
             if (_incidSecondaryRows.Any(r => r.RowState == DataRowState.Deleted)) return true;
 
             if (_incidSecondaryHabitats != null)
@@ -8647,7 +8746,12 @@ namespace HLU.UI.ViewModel
         /// </returns>
         internal bool IsDirtyIncidBap()
         {
+            //TODO: Check if works/is needed
+            if (_incidBapRowsAuto == null)
+                return false;
+
             if (_incidBapRows.Any(r => r.RowState == DataRowState.Deleted)) return true;
+
             int incidBapRowsAutoNum = 0;
             if (_incidBapRowsAuto != null)
             {
@@ -15194,6 +15298,8 @@ namespace HLU.UI.ViewModel
 
         #endregion IDataErrorInfo Members
 
+        #region Regex
+
         /// <summary>
         /// Defines a compiled regular expression that matches capitalized words in a string.
         /// </summary>
@@ -15210,5 +15316,6 @@ namespace HLU.UI.ViewModel
         [GeneratedRegex("[A-Z][^A-Z]*")]
         private static partial Regex CapitalisedRegex();
 
+        #endregion Regex
     }
 }

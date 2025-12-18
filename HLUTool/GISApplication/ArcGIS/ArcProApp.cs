@@ -735,15 +735,15 @@ namespace HLU.GISApplication
                         resultTable.Rows.Add(dataRow);
                     }
                 }
-                catch (HluToolException)
+                catch (HLUToolException)
                 {
                     // Preserve meaning + stack trace for our own exceptions
                     throw;
                 }
                 catch (Exception ex)
                 {
-                    // Preserve stack trace and wrap in a meaningful type for the UI layer
-                    throw new HluToolException("Error reading map selection.", ex);
+                    // Preserve stack trace and wrap in a meaningful type
+                    throw new HLUToolException("Error reading map selection.", ex);
                 }
             });
 
@@ -989,7 +989,8 @@ namespace HLU.GISApplication
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception("Error reading GIS features: " + ex.Message, ex);
+                    // Preserve stack trace and wrap in a meaningful type
+                    throw new HLUToolException("Error reading GIS features: " + ex.Message, ex);
                 }
             });
 
@@ -1049,7 +1050,8 @@ namespace HLU.GISApplication
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception("Error updating GIS features: " + ex.Message, ex);
+                    // Preserve stack trace and wrap in a meaningful type
+                    throw new HLUToolException("Error updating GIS features: " + ex.Message, ex);
                 }
             });
         }
@@ -1599,7 +1601,7 @@ namespace HLU.GISApplication
         }
 
         //TODO: ArcPro
-        public async Task<string> IncidFieldName()
+        public async Task<string> IncidFieldNameAsync()
         {
             Field field = await GetFieldAsync(_hluLayerStructure.incidColumn.Ordinal);
             return field.Name;
@@ -1655,8 +1657,13 @@ namespace HLU.GISApplication
             //TODO: ArcGIS
             try
             {
+                //TODO: Check whether QueuedTask is needed here
                 // Get all of the feature layers in the active map view.
-                IEnumerable<FeatureLayer> featureLayers = GetFeatureLayers();
+                //IEnumerable<FeatureLayer> featureLayers = GetFeatureLayers();
+                IEnumerable<FeatureLayer> featureLayers = await QueuedTask.Run(() =>
+                {
+                    return GetFeatureLayers()?.ToList() ?? [];
+                });
 
                 // Loop through all of the feature layers.
                 foreach(FeatureLayer layer in featureLayers)
@@ -1905,6 +1912,144 @@ namespace HLU.GISApplication
                 return null;
         }
 
+        /// <summary>
+        /// Get a field position in a feature class by name.
+        /// </summary>
+        /// <param name="layerPath"></param>
+        /// <param name="fieldName"></param>
+        /// <returns>bool</returns>
+        public async Task<int> GetFieldOrdinalAsync(string layerPath, string fieldName)
+        {
+            // Check there is an input feature featureLayer path.
+            if (String.IsNullOrEmpty(layerPath))
+                return -1;
+
+            // Check there is an input field name.
+            if (String.IsNullOrEmpty(fieldName))
+                return -1;
+
+            try
+            {
+                // Find the feature featureLayer by name if it exists. Only search existing layers.
+                FeatureLayer featurelayer = await FindLayerAsync(layerPath);
+
+                if (featurelayer == null)
+                    return -1;
+
+                int fieldOrd = -1;
+
+                await QueuedTask.Run(() =>
+                {
+                    // Get the underlying feature class as a table.
+                    using ArcGIS.Core.Data.Table table = featurelayer.GetTable();
+                    if (table != null)
+                    {
+                        // Get the table definition of the table.
+                        using TableDefinition tableDef = table.GetDefinition();
+
+                        // Get the fields in the table.
+                        IReadOnlyList<Field> fields = tableDef.GetFields();
+
+                        // Loop through all fields looking for a name match.
+                        int fieldNum = 0;
+                        foreach (Field fld in fields)
+                        {
+                            if (fld.Name.Equals(fieldName, StringComparison.OrdinalIgnoreCase) ||
+                                fld.AliasName.Equals(fieldName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                fieldOrd = fieldNum;
+                                break;
+                            }
+
+                            fieldNum += 1;
+                        }
+                    }
+                });
+
+                return fieldOrd;
+            }
+            catch
+            {
+                // Handle Exception.
+                return -1;
+            }
+        }
+
+        /// <summary>
+        /// Get a field position in a feature class by name, type and length.
+        /// </summary>
+        /// <param name="layerPath"></param>
+        /// <param name="fieldName"></param>
+        /// <returns>bool</returns>
+        public async Task<int> GetFieldOrdinalAsync(FeatureLayer featurelayer, string fieldName, esriFieldType fieldType, int fieldMaxLength = 0)
+        {
+            // Check there is an input feature featureLayer.
+            if (featurelayer == null)
+                return -1;
+
+            // Check there is an input field name.
+            if (String.IsNullOrEmpty(fieldName))
+                return -1;
+
+            // Check there is an input field type.
+            if (fieldType == 0)
+                return -1;
+
+            try
+            {
+                int fieldOrd = -1;
+
+                await QueuedTask.Run(() =>
+                {
+                    // Get the underlying feature class as a table.
+                    using ArcGIS.Core.Data.Table table = featurelayer.GetTable();
+                    if (table != null)
+                    {
+                        // Get the table definition of the table.
+                        using TableDefinition tableDef = table.GetDefinition();
+
+                        // Get the fields in the table.
+                        IReadOnlyList<Field> fields = tableDef.GetFields();
+
+                        // Loop through all fields looking for a name match.
+                        int fieldNum = 0;
+                        foreach (Field fld in fields)
+                        {
+                            // Get the field names.
+                            string fldName = fld.Name;
+                            string fldAlias = fld.AliasName;
+
+                            // Get the esri field type.
+                            esriFieldType esriFldType = (esriFieldType)fld.FieldType;
+
+                            // Get the field length.
+                            int fldLength = 0;
+                            if (fld.FieldType == FieldType.String)
+                                fldLength = fld.Length;
+
+                            if (((fldName.Equals(fieldName, StringComparison.OrdinalIgnoreCase) ||
+                                fldAlias.Equals(fieldName, StringComparison.OrdinalIgnoreCase)))
+                                && (esriFldType == fieldType)
+                                && (fldLength == fieldMaxLength))
+                            {
+                                fieldOrd = fieldNum;
+                                break;
+                            }
+
+                            fieldNum += 1;
+                        }
+                    }
+                });
+
+                return fieldOrd;
+            }
+            catch
+            {
+                // Handle Exception.
+                return -1;
+            }
+        }
+
         //TODO: Is _hluFeatureClass Needed?
         /// <summary>
         /// Retrieves the column of _hluLayerStructure that corresponds to the field of _hluFeatureClass whose ordinal is passed in.
@@ -1929,7 +2074,7 @@ namespace HLU.GISApplication
         /// </summary>
         /// <param name="fieldName">The name of the field of _hluFeatureClass.</param>
         /// <returns>The column of _hluLayerStructure corresponding to the field named fieldName in _hluFeatureClass.</returns>
-        private async Task<DataColumn> GetColumn(string fieldName)
+        private async Task<DataColumn> GetColumnAsync(string fieldName)
         {
             if ((_hluLayerStructure == null) || (_hluFieldMap == null) ||
                 (_hluFeatureClass == null) || String.IsNullOrEmpty(fieldName)) return null;

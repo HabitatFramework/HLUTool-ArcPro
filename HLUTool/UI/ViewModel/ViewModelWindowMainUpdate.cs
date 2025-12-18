@@ -196,6 +196,7 @@ namespace HLU.UI.ViewModel
                         _viewModelMain.IncidQualityDetermination ?? "",
                         _viewModelMain.IncidQualityInterpretation ?? ""];
 
+                //TODO: Catch exceptions
                 // Queue updates to the GIS layer
                 await _viewModelMain.GISApplication.UpdateFeaturesAsync(updateColumns, updateValues,
                      _viewModelMain.HistoryColumns, incidCond, editOperation);
@@ -216,12 +217,14 @@ namespace HLU.UI.ViewModel
                         // Commit GIS EditOperation
                         if (!await editOperation.ExecuteAsync())
                         {
-                            throw new Exception("Failed to update GIS layer.");
+                            // Preserve stack trace and wrap in a meaningful type
+                            throw new HLUToolException("Failed to update GIS layer.");
                         }
                     }
                     catch (Exception ex)
                     {
-                        throw new Exception("Error updating GIS features: " + ex.Message, ex);
+                        // Preserve stack trace and wrap in a meaningful type
+                        throw new HLUToolException("Error updating GIS features: " + ex.Message, ex);
                     }
                 });
 
@@ -234,7 +237,7 @@ namespace HLU.UI.ViewModel
                 _viewModelMain.IncidRowCount(true);
 
                 // Reload the current row index
-                _viewModelMain.IncidCurrentRowIndex = incidCurrRowIx;
+                await _viewModelMain.MoveIncidCurrentRowIndexAsync(incidCurrRowIx);
 
                 return true;
             }

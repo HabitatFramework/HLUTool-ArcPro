@@ -47,7 +47,9 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override void OnClick()
         {
-            _viewModel.LogicalSplitAsync();
+            // Call the safe fire and forget helper to logcial split the features asynchronously.
+            AsyncHelpers.SafeFireAndForget(_viewModel.LogicalSplitAsync(),
+                Exception => System.Diagnostics.Debug.WriteLine(Exception.Message));
         }
 
         /// <summary>
