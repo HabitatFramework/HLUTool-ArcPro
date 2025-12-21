@@ -4,20 +4,95 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
     xmlns:hlu="clr-namespace:HLU.UI.UserControls;assembly="
+    xmlns:themes="clr-namespace:ActiproSoftware.Windows.Themes;assembly=ArcGIS.Desktop.Shared.Wpf"
     xmlns:tkit="http://schemas.microsoft.com/wpf/2008/toolkit"
     Title="{Binding Path=WindowTitle}"
-    Width="800"
-    MinWidth="500"
+    MinWidth="800"
     MinHeight="250"
     Icon="..\..\Images\HLUTool16.png"
     ResizeMode="CanResize"
     ShowInTaskbar="False"
-    SizeToContent="Height"
+    SizeToContent="WidthAndHeight"
     Style="{DynamicResource ProWindowStyle}"
     WindowStartupLocation="CenterOwner">
 
     <controls:ProWindow.Resources>
         <ResourceDictionary>
+            <!--  Dropdown items in a standard WPF ComboBox.  -->
+            <Style x:Key="EsriComboBoxItemStyle" TargetType="ComboBoxItem">
+                <Setter Property="Background" Value="{DynamicResource Esri_ControlBackgroundBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource Esri_TextControlBrush}" />
+                <Setter Property="BorderBrush" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+
+                <Style.Triggers>
+                    <Trigger Property="IsHighlighted" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource Esri_BackgroundSelectedBrush}" />
+                        <Setter Property="Foreground" Value="{DynamicResource Esri_TextControlBrush}" />
+                        <Setter Property="BorderBrush" Value="{DynamicResource Esri_BackgroundSelectedBrush}" />
+                        <Setter Property="BorderThickness" Value="0" />
+                    </Trigger>
+                    <Trigger Property="IsSelected" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource Esri_BackgroundSelectedBrush}" />
+                        <Setter Property="Foreground" Value="{DynamicResource Esri_TextControlBrush}" />
+                        <Setter Property="BorderBrush" Value="{DynamicResource Esri_BackgroundSelectedBrush}" />
+                        <Setter Property="BorderThickness" Value="0" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <!--  Dropdown items if the popup is using a ListBox internally (common in templated combos).  -->
+            <Style x:Key="EsriListBoxItemStyle" TargetType="ListBoxItem">
+                <Setter Property="Background" Value="{DynamicResource Esri_ControlBackgroundBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource Esri_TextControlBrush}" />
+                <Setter Property="BorderBrush" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource Esri_BackgroundSelectedBrush}" />
+                        <Setter Property="Foreground" Value="{DynamicResource Esri_TextControlBrush}" />
+                        <Setter Property="BorderBrush" Value="{DynamicResource Esri_BackgroundSelectedBrush}" />
+                        <Setter Property="BorderThickness" Value="0" />
+                    </Trigger>
+
+                    <Trigger Property="IsSelected" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource Esri_BackgroundSelectedBrush}" />
+                        <Setter Property="Foreground" Value="{DynamicResource Esri_TextControlBrush}" />
+                        <Setter Property="BorderBrush" Value="{DynamicResource Esri_BackgroundSelectedBrush}" />
+                        <Setter Property="BorderThickness" Value="0" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style x:Key="DataGridComboBoxStyle" TargetType="ComboBox">
+                <Style.Resources>
+                    <!--  This will apply to ListBoxItems created inside the ComboBox popup.  -->
+                    <Style BasedOn="{StaticResource EsriListBoxItemStyle}" TargetType="ListBoxItem" />
+                </Style.Resources>
+
+                <Setter Property="Background" Value="{DynamicResource Esri_ControlBackgroundBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource Esri_TextControlBrush}" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+                <Setter Property="ItemContainerStyle" Value="{StaticResource EsriComboBoxItemStyle}" />
+
+                <Style.Triggers>
+                    <!--  When the DataGrid cell is selected, force the Export-style look.  -->
+                    <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=DataGridCell}}" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource Esri_BackgroundSelectedBrush}" />
+                        <Setter Property="Foreground" Value="{DynamicResource Esri_TextControlBrush}" />
+                    </DataTrigger>
+
+                    <!--  Optional: when the dropdown opens, keep it in the “selected” look too.  -->
+                    <Trigger Property="IsDropDownOpen" Value="True">
+                        <Setter Property="Background" Value="{DynamicResource Esri_BackgroundSelectedBrush}" />
+                        <Setter Property="Foreground" Value="{DynamicResource Esri_TextControlBrush}" />
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Dictionary\CodeDescriptionConverterDictionary.xaml" />
                 <ResourceDictionary Source="Dictionary\CodeNameDescriptionConverterDictionary.xaml" />
@@ -30,7 +105,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="4" />
-            <RowDefinition Height="23" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <GroupBox
@@ -55,6 +130,7 @@
                 CanUserSortColumns="True"
                 HeadersVisibility="All"
                 IsEnabled="{Binding BapHabitatsAutoEnabled}"
+                IsReadOnly="False"
                 ItemsSource="{Binding IncidBapHabitatsAuto}"
                 MinRowHeight="24"
                 RowDetailsVisibilityMode="Visible"
@@ -81,10 +157,20 @@
                         CanUserResize="True"
                         DisplayMemberPath="description"
                         Header="Habitat"
-                        IsReadOnly="True"
-                        ItemsSource="{Binding DataContext.BapHabitatCodes, IsAsync=true, RelativeSource={RelativeSource AncestorType={x:Type Window}, Mode=FindAncestor}}"
+                        IsReadOnly="False"
                         SelectedValueBinding="{Binding bap_habitat, UpdateSourceTrigger=PropertyChanged}"
-                        SelectedValuePath="code" />
+                        SelectedValuePath="code">
+                        <DataGridComboBoxColumn.EditingElementStyle>
+                            <Style BasedOn="{StaticResource DataGridComboBoxStyle}" TargetType="ComboBox">
+                                <Setter Property="ItemsSource" Value="{Binding DataContext.BapHabitatCodes, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                            </Style>
+                        </DataGridComboBoxColumn.EditingElementStyle>
+                        <DataGridComboBoxColumn.ElementStyle>
+                            <Style BasedOn="{StaticResource DataGridComboBoxStyle}" TargetType="ComboBox">
+                                <Setter Property="ItemsSource" Value="{Binding DataContext.BapHabitatCodes, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                            </Style>
+                        </DataGridComboBoxColumn.ElementStyle>
+                    </DataGridComboBoxColumn>
                     <!--  EditingElementStyle="{DynamicResource ComboBoxStyle}"  -->
                     <DataGridComboBoxColumn
                         Width="SizeToCells"
@@ -92,9 +178,24 @@
                         CanUserResize="True"
                         DisplayMemberPath="description"
                         Header="Determ. Quality"
-                        ItemsSource="{Binding DataContext.BapDeterminationQualityCodesAuto, IsAsync=true, RelativeSource={RelativeSource AncestorType={x:Type Window}, Mode=FindAncestor}}"
+                        IsReadOnly="False"
                         SelectedValueBinding="{Binding quality_determination, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
-                        SelectedValuePath="code" />
+                        SelectedValuePath="code">
+                        <DataGridComboBoxColumn.ElementStyle>
+                            <Style BasedOn="{StaticResource DataGridComboBoxStyle}" TargetType="ComboBox">
+                                <Setter Property="VerticalContentAlignment" Value="Center" />
+                                <Setter Property="ItemsSource" Value="{Binding DataContext.BapDeterminationQualityCodesAuto, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                <Setter Property="ItemContainerStyle" Value="{StaticResource EsriComboBoxItemStyle}" />
+                            </Style>
+                        </DataGridComboBoxColumn.ElementStyle>
+                        <DataGridComboBoxColumn.EditingElementStyle>
+                            <Style BasedOn="{StaticResource DataGridComboBoxStyle}" TargetType="ComboBox">
+                                <Setter Property="VerticalContentAlignment" Value="Center" />
+                                <Setter Property="ItemsSource" Value="{Binding DataContext.BapDeterminationQualityCodesAuto, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                <Setter Property="ItemContainerStyle" Value="{StaticResource EsriComboBoxItemStyle}" />
+                            </Style>
+                        </DataGridComboBoxColumn.EditingElementStyle>
+                    </DataGridComboBoxColumn>
                     <!--  EditingElementStyle="{DynamicResource ComboBoxStyle}"  -->
                     <DataGridComboBoxColumn
                         Width="SizeToCells"
@@ -102,16 +203,45 @@
                         CanUserResize="True"
                         DisplayMemberPath="description"
                         Header="Interp. Quality"
-                        ItemsSource="{Binding DataContext.BapInterpretationQualityCodes, IsAsync=true, RelativeSource={RelativeSource AncestorType={x:Type Window}, Mode=FindAncestor}}"
+                        IsReadOnly="False"
                         SelectedValueBinding="{Binding quality_interpretation, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
-                        SelectedValuePath="code" />
+                        SelectedValuePath="code">
+                        <DataGridComboBoxColumn.ElementStyle>
+                            <Style BasedOn="{StaticResource DataGridComboBoxStyle}" TargetType="ComboBox">
+                                <Setter Property="VerticalContentAlignment" Value="Center" />
+                                <Setter Property="ItemsSource" Value="{Binding DataContext.BapInterpretationQualityCodes, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                <Setter Property="ItemContainerStyle" Value="{StaticResource EsriComboBoxItemStyle}" />
+                            </Style>
+                        </DataGridComboBoxColumn.ElementStyle>
+                        <DataGridComboBoxColumn.EditingElementStyle>
+                            <Style BasedOn="{StaticResource DataGridComboBoxStyle}" TargetType="ComboBox">
+                                <Setter Property="VerticalContentAlignment" Value="Center" />
+                                <Setter Property="ItemsSource" Value="{Binding DataContext.BapInterpretationQualityCodes, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                <Setter Property="ItemContainerStyle" Value="{StaticResource EsriComboBoxItemStyle}" />
+                            </Style>
+                        </DataGridComboBoxColumn.EditingElementStyle>
+                    </DataGridComboBoxColumn>
                     <!--  EditingElementStyle="{DynamicResource ComboBoxStyle}"  -->
                     <DataGridTextColumn
                         Width="SizeToCells"
                         MinWidth="200"
                         Binding="{Binding interpretation_comments, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
                         CanUserResize="True"
-                        Header="Interp. Comments" />
+                        Header="Interp. Comments"
+                        IsReadOnly="False">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center" />
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                        <DataGridTextColumn.EditingElementStyle>
+                            <Style TargetType="TextBox">
+                                <Setter Property="VerticalContentAlignment" Value="Center" />
+                                <Setter Property="Background" Value="{DynamicResource Esri_ControlBackgroundBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource Esri_TextControlBrush}" />
+                            </Style>
+                        </DataGridTextColumn.EditingElementStyle>
+                    </DataGridTextColumn>
                     <!--  EditingElementStyle="{DynamicResource TextBoxStyle}"  -->
                 </DataGrid.Columns>
             </DataGrid>
@@ -120,7 +250,8 @@
         <Grid
             Name="GridButtons"
             Grid.Row="2"
-            Grid.Column="0">
+            Grid.Column="0"
+            Margin="4">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="82" />
                 <ColumnDefinition Width="*" />
