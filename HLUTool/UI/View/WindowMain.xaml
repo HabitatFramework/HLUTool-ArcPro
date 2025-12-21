@@ -821,21 +821,22 @@
                                                         DisplayMemberPath="description"
                                                         Header="Group"
                                                         IsReadOnly="True"
-                                                        SelectedValueBinding="{Binding secondary_group, ConverterParameter=code^description^sort_order, Converter={StaticResource codeDescriptionConverter}, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                                                        SelectedValueBinding="{Binding secondary_group, Mode=TwoWay, ConverterParameter=code^description^sort_order, Converter={StaticResource codeDescriptionConverter}, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
                                                         SelectedValuePath="code">
                                                         <DataGridComboBoxColumn.EditingElementStyle>
                                                             <Style TargetType="ComboBox">
                                                                 <Setter Property="VerticalContentAlignment" Value="Center" />
+                                                                <Setter Property="ItemsSource" Value="{Binding DataContext.SecondaryGroupCodesAll, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                             </Style>
                                                         </DataGridComboBoxColumn.EditingElementStyle>
                                                         <DataGridComboBoxColumn.ElementStyle>
                                                             <Style TargetType="ComboBox">
                                                                 <Setter Property="VerticalContentAlignment" Value="Center" />
+                                                                <Setter Property="ItemsSource" Value="{Binding DataContext.SecondaryGroupCodesAll, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                             </Style>
                                                         </DataGridComboBoxColumn.ElementStyle>
                                                     </DataGridComboBoxColumn>
-                                                    <!--  EditingElementStyle="{DynamicResource ComboBoxStyle}"  -->
-                                                    <!--  Visibility="{Binding ShowSecondaryGroupColumn}"  -->
+
                                                     <DataGridComboBoxColumn
                                                         x:Name="DataGridComboBoxSecondaryCode"
                                                         Width="*"
@@ -843,17 +844,19 @@
                                                         DisplayMemberPath="description"
                                                         Header="Code"
                                                         IsReadOnly="True"
-                                                        SelectedValueBinding="{Binding secondary_habitat, ConverterParameter=code^description^sort_order, Converter={StaticResource codeDescriptionConverter}, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                                                        SelectedValueBinding="{Binding secondary_habitat, Mode=TwoWay, ConverterParameter=code^description^sort_order, Converter={StaticResource codeDescriptionConverter}, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
                                                         SelectedValuePath="code"
                                                         SortDirection="Ascending">
                                                         <DataGridComboBoxColumn.EditingElementStyle>
                                                             <Style TargetType="ComboBox">
                                                                 <Setter Property="VerticalContentAlignment" Value="Center" />
+                                                                <Setter Property="ItemsSource" Value="{Binding DataContext.SecondaryHabitatCodesAll, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                             </Style>
                                                         </DataGridComboBoxColumn.EditingElementStyle>
                                                         <DataGridComboBoxColumn.ElementStyle>
                                                             <Style TargetType="ComboBox">
                                                                 <Setter Property="VerticalContentAlignment" Value="Center" />
+                                                                <Setter Property="ItemsSource" Value="{Binding DataContext.SecondaryHabitatCodesAll, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                             </Style>
                                                         </DataGridComboBoxColumn.ElementStyle>
                                                     </DataGridComboBoxColumn>
@@ -1475,15 +1478,17 @@
                                                         <DataGridComboBoxColumn.EditingElementStyle>
                                                             <Style TargetType="ComboBox">
                                                                 <Setter Property="VerticalContentAlignment" Value="Center" />
+                                                                <Setter Property="ItemsSource" Value="{Binding DataContext.BapHabitatCodes, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                             </Style>
                                                         </DataGridComboBoxColumn.EditingElementStyle>
                                                         <DataGridComboBoxColumn.ElementStyle>
                                                             <Style TargetType="ComboBox">
                                                                 <Setter Property="VerticalContentAlignment" Value="Center" />
+                                                                <Setter Property="ItemsSource" Value="{Binding DataContext.BapHabitatCodes, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                             </Style>
                                                         </DataGridComboBoxColumn.ElementStyle>
                                                     </DataGridComboBoxColumn>
-                                                    <!--  EditingElementStyle="{DynamicResource ComboBoxStyle}"  -->
+
                                                     <DataGridComboBoxColumn
                                                         x:Name="DataGridComboBoxPrimaryBapDeterminationQualityCodesUser"
                                                         Width="SizeToHeader"
@@ -1496,15 +1501,17 @@
                                                         <DataGridComboBoxColumn.EditingElementStyle>
                                                             <Style TargetType="ComboBox">
                                                                 <Setter Property="VerticalContentAlignment" Value="Center" />
+                                                                <Setter Property="ItemsSource" Value="{Binding DataContext.BapDeterminationQualityCodesAuto, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                             </Style>
                                                         </DataGridComboBoxColumn.EditingElementStyle>
                                                         <DataGridComboBoxColumn.ElementStyle>
                                                             <Style TargetType="ComboBox">
                                                                 <Setter Property="VerticalContentAlignment" Value="Center" />
+                                                                <Setter Property="ItemsSource" Value="{Binding DataContext.BapDeterminationQualityCodesAuto, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                             </Style>
                                                         </DataGridComboBoxColumn.ElementStyle>
                                                     </DataGridComboBoxColumn>
-                                                    <!--  EditingElementStyle="{DynamicResource ComboBoxStyle}"  -->
+
                                                     <DataGridComboBoxColumn
                                                         x:Name="DataGridComboBoxPrimaryyBapInterpretationQualityCodes"
                                                         Width="SizeToHeader"
@@ -1517,15 +1524,18 @@
                                                         <DataGridComboBoxColumn.EditingElementStyle>
                                                             <Style TargetType="ComboBox">
                                                                 <Setter Property="VerticalContentAlignment" Value="Center" />
+                                                                <Setter Property="ItemsSource" Value="{Binding DataContext.BapInterpretationQualityCodes, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                             </Style>
                                                         </DataGridComboBoxColumn.EditingElementStyle>
                                                         <DataGridComboBoxColumn.ElementStyle>
                                                             <Style TargetType="ComboBox">
                                                                 <Setter Property="VerticalContentAlignment" Value="Center" />
+                                                                <Setter Property="ItemsSource" Value="{Binding DataContext.BapInterpretationQualityCodes, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                             </Style>
                                                         </DataGridComboBoxColumn.ElementStyle>
                                                     </DataGridComboBoxColumn>
                                                     <!--  EditingElementStyle="{DynamicResource ComboBoxStyle}"  -->
+
                                                     <DataGridTextColumn
                                                         Width="SizeToHeader"
                                                         MinWidth="100"
@@ -1650,11 +1660,13 @@
                                                         <DataGridComboBoxColumn.EditingElementStyle>
                                                             <Style TargetType="ComboBox">
                                                                 <Setter Property="VerticalContentAlignment" Value="Center" />
+                                                                <Setter Property="ItemsSource" Value="{Binding DataContext.BapHabitatCodes, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                             </Style>
                                                         </DataGridComboBoxColumn.EditingElementStyle>
                                                         <DataGridComboBoxColumn.ElementStyle>
                                                             <Style TargetType="ComboBox">
                                                                 <Setter Property="VerticalContentAlignment" Value="Center" />
+                                                                <Setter Property="ItemsSource" Value="{Binding DataContext.BapHabitatCodes, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                             </Style>
                                                         </DataGridComboBoxColumn.ElementStyle>
                                                     </DataGridComboBoxColumn>
@@ -1671,11 +1683,13 @@
                                                         <DataGridComboBoxColumn.EditingElementStyle>
                                                             <Style TargetType="ComboBox">
                                                                 <Setter Property="VerticalContentAlignment" Value="Center" />
+                                                                <Setter Property="ItemsSource" Value="{Binding DataContext.BapDeterminationQualityCodesUser, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                             </Style>
                                                         </DataGridComboBoxColumn.EditingElementStyle>
                                                         <DataGridComboBoxColumn.ElementStyle>
                                                             <Style TargetType="ComboBox">
                                                                 <Setter Property="VerticalContentAlignment" Value="Center" />
+                                                                <Setter Property="ItemsSource" Value="{Binding DataContext.BapDeterminationQualityCodesUser, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                             </Style>
                                                         </DataGridComboBoxColumn.ElementStyle>
                                                     </DataGridComboBoxColumn>
@@ -1692,11 +1706,13 @@
                                                         <DataGridComboBoxColumn.EditingElementStyle>
                                                             <Style TargetType="ComboBox">
                                                                 <Setter Property="VerticalContentAlignment" Value="Center" />
+                                                                <Setter Property="ItemsSource" Value="{Binding DataContext.BapInterpretationQualityCodes, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                             </Style>
                                                         </DataGridComboBoxColumn.EditingElementStyle>
                                                         <DataGridComboBoxColumn.ElementStyle>
                                                             <Style TargetType="ComboBox">
                                                                 <Setter Property="VerticalContentAlignment" Value="Center" />
+                                                                <Setter Property="ItemsSource" Value="{Binding DataContext.BapInterpretationQualityCodes, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                             </Style>
                                                         </DataGridComboBoxColumn.ElementStyle>
                                                     </DataGridComboBoxColumn>

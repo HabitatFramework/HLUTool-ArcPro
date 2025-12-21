@@ -64,7 +64,7 @@ namespace HLU.UI.ViewModel
         private Dictionary<Type, Int32> _typeMapSystemToSQL = [];
 
         private string _displayName = "Advanced Query Builder";
-        private Cursor _cursorType = Cursors.Arrow;
+        private Cursor _windowCursor = Cursors.Arrow;
 
         private DbBase _db;
 
@@ -1697,11 +1697,11 @@ namespace HLU.UI.ViewModel
         /// <value>
         /// The window cursor type.
         /// </value>
-        public Cursor WindowCursor { get { return _cursorType; } }
+        public Cursor WindowCursor { get { return _windowCursor; } }
 
         public void ChangeCursor(Cursor cursorType)
         {
-            _cursorType = cursorType;
+            _windowCursor = cursorType;
             OnPropertyChanged(nameof(WindowCursor));
             if (cursorType == Cursors.Wait)
                 DispatcherHelper.DoEvents(); //TODO: Replace with modern equivalent?

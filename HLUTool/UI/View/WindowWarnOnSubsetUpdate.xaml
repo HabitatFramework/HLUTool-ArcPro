@@ -22,7 +22,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="4" />
-                <RowDefinition Height="23" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <GroupBox Name="GroupWarnOnSubsetUpdate" Header="{Binding Path=GroupBoxWarnOnSubsetUpdateHeader}">
                 <Grid Name="GridWarnOnSubsetUpdate" Margin="2,2,2,2">
@@ -74,7 +74,10 @@
                         IsChecked="{Binding Path=MakeDefaultReponse, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 </Grid>
             </GroupBox>
-            <Grid Name="GridButtons" Grid.Row="2">
+            <Grid
+                Name="GridButtons"
+                Grid.Row="2"
+                Margin="4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="82" />

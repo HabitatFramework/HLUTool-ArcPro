@@ -43,7 +43,7 @@ namespace HLU.Data
     //    private Dictionary<string, DataTable> _tables;
     //    private string[] _booleanOperators;
     //    private string[] _comparisonOperators;
-    //    private Cursor _cursorType = Cursors.Arrow;
+    //    private Cursor _windowCursor = Cursors.Arrow;
     //    private string _descriptionFieldName = Settings.Default.LutDescriptionFieldName;
     //    private int _descriptionFieldOrdinal = Settings.Default.LutDescriptionFieldOrdinal;
     //    private Regex _queryValueRegex = new Regex(@"\s+:\s+", RegexOptions.IgnoreCase); // @"\A(?<code>[^:\s]+)\s+:\s+(?<desc>[^:]+)\z", RegexOptions.IgnoreCase);
@@ -139,8 +139,8 @@ namespace HLU.Data
     //            if ((Table == null) || (Column == null) || (!String.IsNullOrEmpty(_sqlCond.Operator) &&
     //                _sqlCond.Operator.ToUpper().EndsWith("NULL"))) return null;
 
-    //            _cursorType = Cursors.Wait;
-    //            OnPropertyChanged(nameof(CursorType));
+    //            _windowCursor = Cursors.Wait;
+    //            OnPropertyChanged(nameof(WindowCursor));
 
     //            // Find the related lookup tables for the selected table and column
     //            IEnumerable<DataRelation> parentRelations = Table.ParentRelations.Cast<DataRelation>();
@@ -189,9 +189,9 @@ namespace HLU.Data
 
     //    #endregion
 
-    //    public Cursor CursorType
+    //    public Cursor WindowCursor
     //    {
-    //        get { return _cursorType; }
+    //        get { return _windowCursor; }
     //    }
 
     //    #region SQLFilterCondition Values
@@ -275,8 +275,8 @@ namespace HLU.Data
     //        {
     //            if (String.IsNullOrEmpty(_queryValueText) || (_queryValueRegex.Split(_queryValueText).Length > 1))
     //                _sqlCond.Value = value;
-    //            _cursorType = Cursors.Arrow;
-    //            OnPropertyChanged(nameof(CursorType));
+    //            _windowCursor = Cursors.Arrow;
+    //            OnPropertyChanged(nameof(WindowCursor));
     //            OnPropertyChanged(nameof(QueryValue));
     //            OnPropertyChanged(nameof(QueryValueText));
     //        }
@@ -287,8 +287,8 @@ namespace HLU.Data
     //        get { return _sqlCond.Value != null ? _sqlCond.Value.ToString() : null; }
     //        set
     //        {
-    //            _cursorType = Cursors.Arrow;
-    //            OnPropertyChanged(nameof(CursorType));
+    //            _windowCursor = Cursors.Arrow;
+    //            OnPropertyChanged(nameof(WindowCursor));
 
     //            if ((_queryValueText == null) || !_queryValueText.Equals(value))
     //            {

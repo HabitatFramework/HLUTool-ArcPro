@@ -24,9 +24,9 @@
 
     <Grid Margin="4">
         <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="4" />
-            <RowDefinition Height="23" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <GroupBox
@@ -67,7 +67,8 @@
         <Grid
             Name="GridButtons"
             Grid.Row="2"
-            Grid.Column="0">
+            Grid.Column="0"
+            Margin="4">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="82" />
                 <ColumnDefinition Width="*" />

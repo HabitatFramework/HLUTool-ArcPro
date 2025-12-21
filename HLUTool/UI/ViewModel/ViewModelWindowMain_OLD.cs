@@ -93,6 +93,7 @@ namespace HLU.UI.ViewModel
         private ICommand _addSecondaryHabitatCommand;
         private ICommand _addSecondaryHabitatListCommand;
         private ICommand _updateCommand;
+        private ICommand _cancelBulkUpdateCommand;
         private ICommand _osmmUpdateCommandMenu;
         private ICommand _osmmUpdateAcceptCommandMenu;
         private ICommand _osmmUpdateRejectCommandMenu;
@@ -676,7 +677,7 @@ namespace HLU.UI.ViewModel
         /// Check that there is an active map and that it contains a valid HLU workspace.
         /// </summary>
         /// <returns></returns>
-        private async Task<bool> CheckActiveMapAsync()
+        internal async Task<bool> CheckActiveMapAsync()
         {
             // Check the GIS workspace
             ChangeCursor(Cursors.Wait, "Checking GIS workspace ...");
@@ -1750,6 +1751,14 @@ namespace HLU.UI.ViewModel
 
         #region Cursor
 
+        /// <summary>
+        /// Gets the cursor type to use when the cursor is over the window.
+        /// </summary>
+        /// <value>
+        /// The window cursor type.
+        /// </value>
+        public Cursor WindowCursor { get { return _windowCursor; } }
+
         public void ChangeCursor(Cursor cursorType, string processingMessage)
         {
             //TODO: ChangeCursor
@@ -2489,7 +2498,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Navigate to the specified record command.
         /// </summary>
-        private ICommand NavigateIncidCommand
+        public ICommand NavigateIncidCommand
         {
             get
             {
@@ -3261,10 +3270,29 @@ namespace HLU.UI.ViewModel
             }
         }
 
-         /// <summary>
-         /// Cancel the bulk update.
-         /// </summary>
-         /// <param name="param">The parameter.</param>
+        /// <summary>
+        /// Gets the cancel bulk update command.
+        /// </summary>
+        /// <value>
+        /// The cancel bulk update command.
+        /// </value>
+        public ICommand CancelBulkUpdateCommand
+        {
+            get
+            {
+                if (_cancelBulkUpdateCommand == null)
+                {
+                    Action<object> cancelBulkUpdateAction = new(this.CancelBulkUpdateClicked);
+                    _cancelBulkUpdateCommand = new RelayCommand(cancelBulkUpdateAction, param => this.CanCancelBulkUpdate);
+                }
+                return _cancelBulkUpdateCommand;
+            }
+        }
+
+        /// <summary>
+        /// Cancel the bulk update.
+        /// </summary>
+        /// <param name="param">The parameter.</param>
         private async void CancelBulkUpdateClicked(object param)
         {
             if (_viewModelBulkUpdate != null)
@@ -5977,7 +6005,7 @@ namespace HLU.UI.ViewModel
             await ReadMapSelectionAsync(true);
         }
 
-        internal bool CanReadMapSelection
+        public bool CanReadMapSelection
         {
             // Can read map selection if not in bulk update mode.
             get { return BulkUpdateMode == false; }

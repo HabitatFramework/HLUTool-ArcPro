@@ -31,9 +31,9 @@
 
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="4" />
-                <RowDefinition Height="23" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <AdornerDecorator>
@@ -427,7 +427,10 @@
                 </Grid>
             </AdornerDecorator>
 
-            <Grid x:Name="GridOSMMUpdatesFilterButtons" Grid.Row="4">
+            <Grid
+                x:Name="GridOSMMUpdatesFilterButtons"
+                Grid.Row="4"
+                Margin="4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="82" />

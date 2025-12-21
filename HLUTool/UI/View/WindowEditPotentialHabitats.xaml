@@ -6,13 +6,12 @@
     xmlns:hlu="clr-namespace:HLU.UI.UserControls;assembly="
     xmlns:tkit="http://schemas.microsoft.com/wpf/2008/toolkit"
     Title="{Binding Path=WindowTitle}"
-    Width="800"
-    MinWidth="500"
+    MinWidth="800"
     MinHeight="250"
     Icon="..\..\Images\HLUTool16.png"
     ResizeMode="CanResize"
     ShowInTaskbar="False"
-    SizeToContent="Height"
+    SizeToContent="WidthAndHeight"
     Style="{DynamicResource ProWindowStyle}"
     WindowStartupLocation="CenterOwner">
 
@@ -30,7 +29,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="4" />
-            <RowDefinition Height="23" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <GroupBox
@@ -55,6 +54,7 @@
                 CanUserSortColumns="True"
                 HeadersVisibility="All"
                 IsEnabled="{Binding BapHabitatsUserEnabled}"
+                IsReadOnly="False"
                 ItemsSource="{Binding IncidBapHabitatsUser}"
                 MinRowHeight="24"
                 RowDetailsVisibilityMode="Visible"
@@ -82,9 +82,21 @@
                         DisplayMemberPath="description"
                         Header="Habitat"
                         IsReadOnly="False"
-                        ItemsSource="{Binding DataContext.BapHabitatCodes, IsAsync=true, RelativeSource={RelativeSource AncestorType={x:Type Window}, Mode=FindAncestor}}"
                         SelectedValueBinding="{Binding bap_habitat, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
-                        SelectedValuePath="code" />
+                        SelectedValuePath="code">
+                        <DataGridComboBoxColumn.EditingElementStyle>
+                            <Style TargetType="ComboBox">
+                                <Setter Property="ItemsSource" Value="{Binding DataContext.BapHabitatCodes, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                <Setter Property="VerticalContentAlignment" Value="Center" />
+                            </Style>
+                        </DataGridComboBoxColumn.EditingElementStyle>
+                        <DataGridComboBoxColumn.ElementStyle>
+                            <Style TargetType="ComboBox">
+                                <Setter Property="ItemsSource" Value="{Binding DataContext.BapHabitatCodes, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                <Setter Property="VerticalContentAlignment" Value="Center" />
+                            </Style>
+                        </DataGridComboBoxColumn.ElementStyle>
+                    </DataGridComboBoxColumn>
                     <!--  EditingElementStyle="{DynamicResource ComboBoxStyle}"  -->
                     <DataGridComboBoxColumn
                         Width="SizeToCells"
@@ -92,9 +104,21 @@
                         CanUserResize="True"
                         DisplayMemberPath="description"
                         Header="Determ. Quality"
-                        ItemsSource="{Binding DataContext.BapDeterminationQualityCodesUser, IsAsync=true, RelativeSource={RelativeSource AncestorType={x:Type Window}, Mode=FindAncestor}}"
                         SelectedValueBinding="{Binding quality_determination, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
-                        SelectedValuePath="code" />
+                        SelectedValuePath="code">
+                        <DataGridComboBoxColumn.ElementStyle>
+                            <Style TargetType="ComboBox">
+                                <Setter Property="VerticalContentAlignment" Value="Center" />
+                                <Setter Property="ItemsSource" Value="{Binding DataContext.BapDeterminationQualityCodesUser, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                            </Style>
+                        </DataGridComboBoxColumn.ElementStyle>
+                        <DataGridComboBoxColumn.EditingElementStyle>
+                            <Style TargetType="ComboBox">
+                                <Setter Property="VerticalContentAlignment" Value="Center" />
+                                <Setter Property="ItemsSource" Value="{Binding DataContext.BapDeterminationQualityCodesUser, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                            </Style>
+                        </DataGridComboBoxColumn.EditingElementStyle>
+                    </DataGridComboBoxColumn>
                     <!--  EditingElementStyle="{DynamicResource ComboBoxStyle}"  -->
                     <DataGridComboBoxColumn
                         Width="SizeToCells"
@@ -102,9 +126,21 @@
                         CanUserResize="True"
                         DisplayMemberPath="description"
                         Header="Interp. Quality"
-                        ItemsSource="{Binding DataContext.BapInterpretationQualityCodes, IsAsync=true, RelativeSource={RelativeSource AncestorType={x:Type Window}, Mode=FindAncestor}}"
                         SelectedValueBinding="{Binding quality_interpretation, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
-                        SelectedValuePath="code" />
+                        SelectedValuePath="code">
+                        <DataGridComboBoxColumn.ElementStyle>
+                            <Style TargetType="ComboBox">
+                                <Setter Property="VerticalContentAlignment" Value="Center" />
+                                <Setter Property="ItemsSource" Value="{Binding DataContext.BapInterpretationQualityCodes, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                            </Style>
+                        </DataGridComboBoxColumn.ElementStyle>
+                        <DataGridComboBoxColumn.EditingElementStyle>
+                            <Style TargetType="ComboBox">
+                                <Setter Property="VerticalContentAlignment" Value="Center" />
+                                <Setter Property="ItemsSource" Value="{Binding DataContext.BapInterpretationQualityCodes, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                            </Style>
+                        </DataGridComboBoxColumn.EditingElementStyle>
+                    </DataGridComboBoxColumn>
                     <!--  EditingElementStyle="{DynamicResource ComboBoxStyle}"  -->
                     <DataGridTextColumn
                         Width="SizeToCells"
@@ -120,7 +156,8 @@
         <Grid
             Name="GridButtons"
             Grid.Row="2"
-            Grid.Column="0">
+            Grid.Column="0"
+            Margin="4">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="82" />
                 <ColumnDefinition Width="*" />

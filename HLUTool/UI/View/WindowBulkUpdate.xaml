@@ -29,9 +29,9 @@
         VerticalAlignment="Stretch">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="4" />
-                <RowDefinition Height="23" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <GroupBox Name="GroupBoxWindowBulkUpdate" Header="Bulk Update Options">
 
@@ -291,7 +291,10 @@
                 </Grid>
 
             </GroupBox>
-            <Grid Name="GridButtons" Grid.Row="2">
+            <Grid
+                Name="GridButtons"
+                Grid.Row="2"
+                Margin="4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="82" />

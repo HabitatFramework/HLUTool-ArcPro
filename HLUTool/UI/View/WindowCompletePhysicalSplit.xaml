@@ -32,7 +32,7 @@
                 <RowDefinition Height="4" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="4" />
-                <RowDefinition Height="23" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <GroupBox
                 Name="GroupBoxReason"
@@ -90,7 +90,10 @@
                         ToolTipService.ShowOnDisabled="True" />
                 </Grid>
             </GroupBox>
-            <Grid Name="GridButtons" Grid.Row="4">
+            <Grid
+                Name="GridButtons"
+                Grid.Row="4"
+                Margin="4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="82" />

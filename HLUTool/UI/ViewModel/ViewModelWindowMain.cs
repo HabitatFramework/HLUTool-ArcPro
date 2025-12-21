@@ -234,9 +234,9 @@ namespace HLU.UI.ViewModel
         /// </summary>
         internal ViewModelWindowMain()
         {
-            //TODO: Needed?
+            ViewModelWindowMain temp = this;
             // Initialise the DockPane components (don't wait for it to complete).
-            //InitializeComponentAsync();
+            //_ = EnsureInitializedAsync();
         }
 
         /// <summary>
@@ -244,6 +244,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         internal ViewModelWindowMain(bool minimal)
         {
+            ViewModelWindowMain temp = this;
             //TODO: Catch exceptions?
             // Load the data grid combo box sources.
             LoadComboBoxSources();
@@ -277,6 +278,10 @@ namespace HLU.UI.ViewModel
             pane.Activate();
         }
 
+        /// <summary>
+        /// Called when the DockPane is shown or hidden.
+        /// </summary>
+        /// <param name="isVisible"></param>
         protected override void OnShow(bool isVisible)
         {
             // Hide the dockpane if there is no active map.
@@ -286,6 +291,7 @@ namespace HLU.UI.ViewModel
             // Is the dockpane visible (or is the window not showing the map).
             if (isVisible)
             {
+                // Subscribe to events when the dockpane is shown.
                 if (!_mapEventsSubscribed)
                 {
                     _mapEventsSubscribed = true;
@@ -313,19 +319,35 @@ namespace HLU.UI.ViewModel
                     LayersRemovedEvent.Subscribe(OnLayersRemovedAsync);
                 }
 
-                // Re-check map/layers state when the pane is shown.
-                // This covers the case where changes happened while hidden.
-                try
+                // Build a single task then check.
+                Task checkTask;
+
+                // Ensure the dockpane is initialised when Pro restores it on startup.
+                if (!Initialised && !InError)
                 {
-                    _ = CheckActiveMapAsync();
+                    checkTask = EnsureInitializedAsync()
+                        .ContinueWith(_ => CheckActiveMapAsync(), TaskScheduler.Default)
+                        .Unwrap();
                 }
-                catch (Exception ex)
+                else if (Initialised && !InError)
                 {
-                    Debug.WriteLine(ex);
+                    checkTask = CheckActiveMapAsync();
                 }
+                else
+                {
+                    // In error: do nothing.
+                    checkTask = Task.CompletedTask;
+                }
+
+                // Trap and report any exceptions to the user.
+                AsyncHelpers.ObserveTask(
+                    checkTask,
+                    "HLU Tool",
+                    "The HLU Tool encountered an error initialising or checking the active map.");
             }
             else
             {
+                // Unsubscribe from events when the dockpane is hidden.
                 if (_mapEventsSubscribed)
                 {
                     _mapEventsSubscribed = false;
@@ -380,8 +402,40 @@ namespace HLU.UI.ViewModel
                     return _initializationTask;
 
                 // Start initialisation once and cache the task.
-                _initializationTask = InitializeComponentAsync();
+                _initializationTask = RunInitializationAsync();
                 return _initializationTask;
+            }
+        }
+
+        /// <summary>
+        /// Runs the initialisation sequence and manages state consistently.
+        /// </summary>
+        /// <returns>A task that completes when initialisation completes.</returns>
+        private async Task RunInitializationAsync()
+        {
+            try
+            {
+                _dockPane = this;
+                _inError = false;
+                _initialised = false;
+                _initializationException = null;
+
+                await InitializeComponentAsync();
+
+                _initialised = true;
+            }
+            catch (Exception ex)
+            {
+                _inError = true;
+                _initializationException = ex;
+
+                // Allow a retry if the failure was transient.
+                lock (_initializationLock)
+                {
+                    _initializationTask = null;
+                }
+
+                throw;
             }
         }
 
@@ -390,49 +444,35 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public async Task InitializeComponentAsync()
         {
-            //TODO: Needed?
-            //if (!Initialised)
-            //{
-            _dockPane = this;
-            _initialised = false;
-            _inError = false;
-
             // Open the add-in XML settings file.
             _xmlSettingsManager = new();
 
             try
             {
+                // Upgrade the XML settings if necessary.
                 UpgradeXMLSettings();
-            }
-            finally
-            {
+
                 // Load the add-in settings from the XML file.
                 _addInSettings = _xmlSettingsManager.LoadSettings();
-            }
 
-            // Set the help URL.
-            _dockPane.HelpURL = _addInSettings.HelpURL;
+                // Set the help URL.
+                _dockPane.HelpURL = _addInSettings.HelpURL;
 
-            try
-            {
                 //TODO: What to do if the upgrade fails?
                 // Upgrade the user settings if necessary.
                 UpgradeUserSettings();
 
-                //TODO: Catch exceptions?
-                // Initialise the main view (start the tool)
-                if (!await InitializeToolPaneAsync())
-                {
-                    //TODO: What to do if initialise fails?
-                }
+                // Initialise the main view (start the tool).
+                bool initialized = await InitializeToolPaneAsync();
+                if (!initialized)
+                    throw new InvalidOperationException("InitializeComponentAsync returned false.");
             }
-            finally
+            catch (Exception ex)
             {
-                // Indicate that the dockpane has been initialised.
-                _initialised = true;
+                // Preserve stack trace and wrap in a meaningful type
+                throw new HLUToolException("InitializeComponentAsync returned false", ex);
             }
         }
-        //}
 
         /// <summary>
         /// Upgrade the XML settings if necessary.
@@ -503,6 +543,7 @@ namespace HLU.UI.ViewModel
         }
 
         private bool _initialised = false;
+        private Exception _initializationException;
 
         /// <summary>
         /// Has the DockPane been initialised?
@@ -647,7 +688,13 @@ namespace HLU.UI.ViewModel
 
         public Visibility DockpaneVisibility
         {
-            get { return _dockpaneVisibility; }
+            get
+            {
+                if (!Initialised || InError)
+                    return Visibility.Hidden;
+                else
+                    return _dockpaneVisibility;
+            }
             set
             {
                 _dockpaneVisibility = value;
@@ -746,7 +793,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_dockPane.ProcessStatus != null
+                if (_dockPane == null
+                || _dockPane.ProcessStatus != null
                 || string.IsNullOrEmpty(_message))
                     return Visibility.Collapsed;
                 else

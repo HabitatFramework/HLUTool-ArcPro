@@ -23,7 +23,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="4" />
-                <RowDefinition Height="23" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <GroupBox Name="GroupNotifyOnSplitMerge" Header="{Binding Path=GroupBoxNotifyOnSplitMergeHeader}">
                 <Grid Name="GridNotifyOnSplitMerge" Margin="2,2,2,2">
@@ -75,7 +75,10 @@
                         IsChecked="{Binding Path=DoNotTellAgain, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 </Grid>
             </GroupBox>
-            <Grid Name="GridButtons" Grid.Row="2">
+            <Grid
+                Name="GridButtons"
+                Grid.Row="2"
+                Margin="4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="82" />

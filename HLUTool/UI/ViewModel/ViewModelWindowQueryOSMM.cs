@@ -72,7 +72,7 @@ namespace HLU.UI.ViewModel
         private HluDataSet _hluDataset;
         private DbBase _db;
 
-        private Cursor _cursorType = Cursors.Arrow;
+        private Cursor _windowCursor = Cursors.Arrow;
 
         private ICommand _applyOSMMFilterCommand;
         private ICommand _resetOSMMFilterCommand;
@@ -862,11 +862,11 @@ namespace HLU.UI.ViewModel
         /// <value>
         /// The window cursor type.
         /// </value>
-        public Cursor WindowCursor { get { return _cursorType; } }
+        public Cursor WindowCursor { get { return _windowCursor; } }
 
         public void ChangeCursor(Cursor cursorType)
         {
-            _cursorType = cursorType;
+            _windowCursor = cursorType;
             OnPropertyChanged(nameof(WindowCursor));
             if (cursorType == Cursors.Wait)
                 DispatcherHelper.DoEvents(); //TODO: Replace with modern equivalent?

@@ -127,7 +127,7 @@ namespace HLU.UI.ViewModel
         /// <value></value>
         /// <returns></returns>
         /// <remarks></remarks>
-        private bool CanOk
+        public bool CanOk
         {
             get
             {

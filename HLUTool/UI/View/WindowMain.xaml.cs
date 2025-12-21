@@ -19,14 +19,17 @@
 // You should have received a copy of the GNU General Public License
 // along with with program.  If not, see <http://www.gnu.org/licenses/>.
 
-using HLU.Data.Model;
-using HLU.UI.ViewModel;
-using HLU.Data;
-using System.Linq;
-using System.Windows.Controls;
-using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
+using HLU.Data;
+using HLU.Data.Model;
+using HLU.UI.ViewModel;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace HLU.UI.View
 {
@@ -35,38 +38,96 @@ namespace HLU.UI.View
     /// </summary>
     public partial class WindowMain : UserControl
     {
-        private ViewModelWindowMain viewModel;
+        private bool _initialiseStarted;
 
+        private ViewModelWindowMain _viewModel;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WindowMain"/> class.
+        /// </summary>
         public WindowMain()
         {
             InitializeComponent();
 
+            DataContextChanged += OnDataContextChanged;
+
             // Initialise the ViewModel for the WindowMain (just to load the combo box sources).
-            ViewModelWindowMain viewModel;
-            viewModel = new ViewModelWindowMain(true);
+            _viewModel = new ViewModelWindowMain(true);
 
             // Set the DataContext for the WindowMain.
-            this.DataContext = viewModel;
+            //this.DataContext = _viewModel;
 
-            // Assign items source to the combo box columns in the secondary habitat data grid
-            DataGridComboBoxSecondaryGroup.ItemsSource = viewModel.SecondaryGroupCodesAll;
-            DataGridComboBoxSecondaryCode.ItemsSource = viewModel.SecondaryHabitatCodesAll;
+            //// Assign items source to the combo box columns in the secondary habitat data grid
+            //DataGridComboBoxSecondaryGroup.ItemsSource = _viewModel.SecondaryGroupCodesAll;
+            //DataGridComboBoxSecondaryCode.ItemsSource = _viewModel.SecondaryHabitatCodesAll;
 
-            // Assign items source to the combo box columns in the primary BAP data grid
-            DataGridComboBoxPrimaryBapHabitatCodes.ItemsSource = viewModel.BapHabitatCodes;
-            DataGridComboBoxPrimaryBapDeterminationQualityCodesUser.ItemsSource = viewModel.BapDeterminationQualityCodesAuto;
-            DataGridComboBoxPrimaryyBapInterpretationQualityCodes.ItemsSource = viewModel.BapInterpretationQualityCodes;
+            //// Assign items source to the combo box columns in the primary BAP data grid
+            //DataGridComboBoxPrimaryBapHabitatCodes.ItemsSource = _viewModel.BapHabitatCodes;
+            //DataGridComboBoxPrimaryBapDeterminationQualityCodesUser.ItemsSource = _viewModel.BapDeterminationQualityCodesAuto;
+            //DataGridComboBoxPrimaryyBapInterpretationQualityCodes.ItemsSource = _viewModel.BapInterpretationQualityCodes;
 
-            // Assign items source to the combo box columns in the secondary BAP data grid
-            DataGridComboBoxSecondaryBapHabitatCodes.ItemsSource = viewModel.BapHabitatCodes;
-            DataGridComboBoxSecondaryBapDeterminationQualityCodesUser.ItemsSource = viewModel.BapDeterminationQualityCodesUser;
-            DataGridComboBoxSecondaryBapInterpretationQualityCodes.ItemsSource = viewModel.BapInterpretationQualityCodes;
+            //// Assign items source to the combo box columns in the secondary BAP data grid
+            //DataGridComboBoxSecondaryBapHabitatCodes.ItemsSource = _viewModel.BapHabitatCodes;
+            //DataGridComboBoxSecondaryBapDeterminationQualityCodesUser.ItemsSource = _viewModel.BapDeterminationQualityCodesUser;
+            //DataGridComboBoxSecondaryBapInterpretationQualityCodes.ItemsSource = _viewModel.BapInterpretationQualityCodes;
         }
 
+        /// <summary>
+        /// Handles the DataContext changed event to initialise the real dockpane view model.
+        /// </summary>
+        private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (_initialiseStarted)
+                return;
+
+            if (e.NewValue is not ViewModelWindowMain vm)
+                return;
+
+            _initialiseStarted = true;
+
+            AsyncHelpers.ObserveTask(
+                vm.EnsureInitializedAsync()
+                    .ContinueWith(_ => vm.CheckActiveMapAsync(), TaskScheduler.Default)
+                    .Unwrap(),
+                "HLU Tool",
+                "The HLU Tool encountered an error initialising or checking the active map.");
+        }
+
+        ///// <summary>
+        ///// Handles the view loaded event.
+        ///// </summary>
+        //private async void OnLoaded(object sender, RoutedEventArgs e)
+        //{
+        //    if (_initialiseStarted)
+        //        return;
+
+        //    _initialiseStarted = true;
+
+        //    if (DataContext is ViewModelWindowMain vm)
+        //    {
+        //        try
+        //        {
+        //            await vm.EnsureInitializedAsync();
+        //            await vm.CheckActiveMapAsync();
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show(
+        //                ex.Message,
+        //                "HLU Tool");
+        //        }
+        //    }
+        //}
+
+        /// <summary>
+        /// Handles the preview key down event for the secondary habitats data grid.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void DataGridSecondaryHabitats_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             // Set the view model if not already set.
-            if (viewModel == null)
+            if (_viewModel == null)
             {
                 // Get the dockpane DAML id.
                 DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
@@ -74,7 +135,7 @@ namespace HLU.UI.View
                     return;
 
                 // Get the real ViewModel by casting the dockpane.
-                viewModel = pane as ViewModelWindowMain;
+                _viewModel = pane as ViewModelWindowMain;
             }
 
             if (e.Key == Key.Delete)
@@ -83,7 +144,7 @@ namespace HLU.UI.View
                 var selectedItems = grid.SelectedItems.Cast<SecondaryHabitat>().ToList();
                 foreach (var item in selectedItems)
                 {
-                    viewModel.IncidSecondaryHabitats.Remove(item);
+                    _viewModel.IncidSecondaryHabitats.Remove(item);
                 }
             }
         }

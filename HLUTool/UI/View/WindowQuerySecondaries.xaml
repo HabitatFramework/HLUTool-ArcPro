@@ -4,12 +4,13 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
     Title="{Binding Path=WindowTitle}"
-    Width="430"
-    Height="120"
+    MinWidth="430"
+    MinHeight="120"
+    MaxWidth="600"
     Icon="..\..\Images\HLUTool16.png"
     ResizeMode="NoResize"
     ShowInTaskbar="False"
-    SizeToContent="Height"
+    SizeToContent="WidthAndHeight"
     Style="{DynamicResource ProWindowStyle}"
     WindowStartupLocation="CenterOwner">
 
@@ -29,9 +30,9 @@
         FocusManager.FocusedElement="{Binding ElementName=TextBoxQuerySecondaries}">
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="4" />
-                <RowDefinition Height="23" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <GroupBox Name="GroupQuerySecondaries">
@@ -41,8 +42,8 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="220" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition MinWidth="220" />
                     </Grid.ColumnDefinitions>
                     <Label
                         Name="LabelSecondaries"
@@ -65,7 +66,10 @@
 
             </GroupBox>
 
-            <Grid Name="GridButtons" Grid.Row="2">
+            <Grid
+                Name="GridButtons"
+                Grid.Row="2"
+                Margin="4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="82" />

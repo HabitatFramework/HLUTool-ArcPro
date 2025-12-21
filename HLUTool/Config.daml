@@ -64,23 +64,21 @@
 					<button refID="HLUTool_btnCopy" size="middle" />
 					<button refID="HLUTool_btnPaste" size="middle" />
 				</group>
-				<group id="HLUTool_Group4" caption="Filter" keytip="G4">
+				<group id="HLUTool_Group4" caption="Filter Incids" keytip="G4">
 					<button refID="HLUTool_btnFilterByAttributes" size="middle" />
 					<button refID="HLUTool_btnClearFilter" size="middle" />
 					<editBox refID="HLUTool_edbFilterByIncid" size="large" />
 					<button refID="HLUTool_btnGetMapSelection" size="large" />
 				</group>
-				<group id="HLUTool_Group5" caption="Select" keytip="G5">
+				<group id="HLUTool_Group5" caption="Select in GIS" keytip="G5">
+					<toolPalette refID="esri_mapping_selectToolPalette" />
 					<button refID="HLUTool_btnSelectCurrentIncid" size="middle" />
 					<button refID="HLUTool_btnSelectFilteredIncids" size="middle" />
+					<button refID="esri_mapping_clearSelectionButton" size="middle" />
 				</group>
-				<group id="HLUTool_Group6"
-					   caption="Split/Merge"
-					   keytip="G6">
-					<menu refID="HLUTool_SplitMenu"
-						  size="large" />
-					<menu refID="HLUTool_MergeMenu"
-						  size="large" />
+				<group id="HLUTool_Group6" caption="Split/Merge" keytip="G6">
+					<menu refID="HLUTool_SplitMenu" size="large" />
+					<menu refID="HLUTool_MergeMenu" size="large" />
 				</group>
 				<group id="HLUTool_Group7" caption="OSMM Updates" keytip="G7">
 				</group>
@@ -148,7 +146,7 @@
 				</comboBox>
 
 				<button id="HLUTool_btnBulkUpdate"
-						caption="Copy"
+						caption="Bulk Update"
 						className="HLU.UI.UserControls.Toolbar.BulkUpdateButton"
 						loadOnClick="false"
 						keytip="BU"
@@ -246,15 +244,15 @@
 				</button>
 
 				<editBox id="HLUTool_edbFilterByIncid"
-						 caption="Find INCID:"
+						 caption="Find Incid:"
 						 className="HLU.UI.UserControls.Toolbar.FilterByIncidEditBox"
 						 condition="esri_mapping_mapPane"
 						 dataType="string"
-						 editHint="Enter INCID"
+						 editHint="Enter Incid"
 						 keytip="FI"
 						 sizeString="123456789012">
-					<tooltip heading="Find INCID">
-						Filter the records for a single INCID.
+					<tooltip heading="Find Incid">
+						Filter the records for a single Incid.
 						<disabledText>Available only when not in a bulk or OSMM update mode.</disabledText>
 					</tooltip>
 				</editBox>

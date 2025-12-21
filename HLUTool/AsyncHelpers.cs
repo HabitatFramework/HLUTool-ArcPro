@@ -25,5 +25,33 @@ namespace HLU
                 Debug.WriteLine(ex);
             }
         }
+
+        /// <summary>
+        /// Observes a task and reports any exceptions to the user.
+        /// </summary>
+        /// <param name="task">The task to observe.</param>
+        /// <param name="title">The message box title.</param>
+        /// <param name="message">A user-friendly message prefix.</param>
+        public static async void ObserveTask(
+            Task task,
+            string title,
+            string message)
+        {
+            try
+            {
+                await task.ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show(
+                        $"{message}{Environment.NewLine}{Environment.NewLine}{ex.Message}",
+                        title);
+                });
+
+                System.Diagnostics.Debug.WriteLine(ex);
+            }
+        }
     }
 }
