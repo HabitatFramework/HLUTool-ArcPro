@@ -45,7 +45,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// <summary>
         /// Show the about window. Called when the button is clicked.
         /// </summary>
-        protected override void OnClick()
+        protected override async void OnClick()
         {
             if (_viewModel == null)
             {
@@ -54,10 +54,15 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            // Call the safe fire and forget helper to reset the incid and
-            // map selections and move to the first incid in the database asynchronously.
-            AsyncHelpers.SafeFireAndForget(_viewModel.ClearFilterAsync(true),
-                Exception => System.Diagnostics.Debug.WriteLine(Exception.Message));
+            // Reset the incid and map selections and move to the first incid in the database.
+            try
+            {
+                await _viewModel.ClearFilterAsync(true);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+            }
         }
 
         /// <summary>

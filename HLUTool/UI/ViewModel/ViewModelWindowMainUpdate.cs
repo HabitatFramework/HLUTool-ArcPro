@@ -18,6 +18,10 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Desktop.Editing;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
+using HLU.Data;
+using HLU.Data.Model;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -25,13 +29,10 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using HLU.Data;
-using HLU.Data.Model;
-using System.Threading.Tasks;
-using ArcGIS.Desktop.Editing;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
+using System.Windows.Threading;
 
 namespace HLU.UI.ViewModel
 {
@@ -79,6 +80,10 @@ namespace HLU.UI.ViewModel
             try
             {
                 _viewModelMain.ChangeCursor(Cursors.Wait, "Saving ...");
+
+                //TODO: Needed?
+                // Let WPF render the cursor/message before heavy work begins.
+                //await Dispatcher.Yield(DispatcherPriority.Background);
 
                 // Store row index for reloading the row after the update
                 int incidCurrRowIx = _viewModelMain.IncidCurrentRowIndex;

@@ -21,7 +21,7 @@ namespace HLU.UI.UserControls.Toolbar
         #region Fields
 
         private WindowOptions _windowOptions;
-        private ViewModelOptions _viewModelOptions;
+        private ViewModelWindowOptions _viewModelOptions;
 
         private ViewModelWindowMain _viewModel;
 
@@ -73,7 +73,7 @@ namespace HLU.UI.UserControls.Toolbar
                     // when ViewModel asks to be closed, close window
                     _viewModelOptions.RequestClose -= _viewModelOptions_RequestClose; // Safety: avoid double subscription.
                     _viewModelOptions.RequestClose +=
-                        new ViewModelOptions.RequestCloseEventHandler(_viewModelOptions_RequestClose);
+                        new ViewModelWindowOptions.RequestCloseEventHandler(_viewModelOptions_RequestClose);
 
                     // allow all controls in window to bind to ViewModel by setting DataContext
                     _windowOptions.DataContext = _viewModelOptions;

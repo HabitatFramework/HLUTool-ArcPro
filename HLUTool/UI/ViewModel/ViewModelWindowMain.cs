@@ -79,7 +79,7 @@ namespace HLU.UI.ViewModel
     /// An enumeration of the different options for whether
     /// to auto zoom to the GIS selection.
     /// </summary>
-    public enum AutoZoomSelection
+    public enum AutoZoomToSelection
     {
         Off,
         When,
@@ -296,8 +296,8 @@ namespace HLU.UI.ViewModel
                 {
                     _mapEventsSubscribed = true;
 
-                    // Subscribe from OnActiveMapViewChangedAsync events.
-                    ActiveMapViewChangedEvent.Subscribe(OnActiveMapViewChangedAsync);
+                    // Subscribe from ActiveMapViewChangedEvent events.
+                    ActiveMapViewChangedEvent.Subscribe(OnActiveMapViewChanged);
                 }
 
                 if (!_projectClosedEventsSubscribed)
@@ -313,10 +313,10 @@ namespace HLU.UI.ViewModel
                     _layersChangedEventsSubscribed = true;
 
                     // Subscribe to the LayersAddedEvent
-                    LayersAddedEvent.Subscribe(OnLayersAddedAsync);
+                    LayersAddedEvent.Subscribe(OnLayersAdded);
 
                     // Subscribe to the LayersRemovedEvent
-                    LayersRemovedEvent.Subscribe(OnLayersRemovedAsync);
+                    LayersRemovedEvent.Subscribe(OnLayersRemoved);
                 }
 
                 // Build a single task then check.
@@ -352,8 +352,8 @@ namespace HLU.UI.ViewModel
                 {
                     _mapEventsSubscribed = false;
 
-                    // Unsubscribe from OnActiveMapViewChangedAsync events.
-                    ActiveMapViewChangedEvent.Unsubscribe(OnActiveMapViewChangedAsync);
+                    // Unsubscribe from ActiveMapViewChangedEvent events.
+                    ActiveMapViewChangedEvent.Unsubscribe(OnActiveMapViewChanged);
                 }
 
                 if (_layersChangedEventsSubscribed)
@@ -361,10 +361,10 @@ namespace HLU.UI.ViewModel
                     _layersChangedEventsSubscribed = false;
 
                     // Unsubscribe from the LayersAddedEvents.
-                    LayersAddedEvent.Unsubscribe(OnLayersAddedAsync);
+                    LayersAddedEvent.Unsubscribe(OnLayersAdded);
 
                     // Unsubscribe from the LayersRemovedEvents.
-                    LayersRemovedEvent.Unsubscribe(OnLayersRemovedAsync);
+                    LayersRemovedEvent.Unsubscribe(OnLayersRemoved);
                 }
 
                 if (_projectClosedEventsSubscribed)
@@ -402,16 +402,16 @@ namespace HLU.UI.ViewModel
                     return _initializationTask;
 
                 // Start initialisation once and cache the task.
-                _initializationTask = RunInitializationAsync();
+                _initializationTask = InitializeOnceAsync();
                 return _initializationTask;
             }
         }
 
         /// <summary>
-        /// Runs the initialisation sequence and manages state consistently.
+        /// Runs the initialisation sequence exactly once and manages state consistently.
         /// </summary>
         /// <returns>A task that completes when initialisation completes.</returns>
-        private async Task RunInitializationAsync()
+        private async Task InitializeOnceAsync()
         {
             try
             {
@@ -420,35 +420,9 @@ namespace HLU.UI.ViewModel
                 _initialised = false;
                 _initializationException = null;
 
-                await InitializeComponentAsync();
+                // Open the add-in XML settings file.
+                _xmlSettingsManager = new();
 
-                _initialised = true;
-            }
-            catch (Exception ex)
-            {
-                _inError = true;
-                _initializationException = ex;
-
-                // Allow a retry if the failure was transient.
-                lock (_initializationLock)
-                {
-                    _initializationTask = null;
-                }
-
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// Initialise the DockPane components.
-        /// </summary>
-        public async Task InitializeComponentAsync()
-        {
-            // Open the add-in XML settings file.
-            _xmlSettingsManager = new();
-
-            try
-            {
                 // Upgrade the XML settings if necessary.
                 UpgradeXMLSettings();
 
@@ -465,12 +439,26 @@ namespace HLU.UI.ViewModel
                 // Initialise the main view (start the tool).
                 bool initialized = await InitializeToolPaneAsync();
                 if (!initialized)
-                    throw new InvalidOperationException("InitializeComponentAsync returned false.");
+                    throw new HLUToolException("DockPane initialisation failed in InitializeToolPaneAsync.");
+
+                _initialised = true;
             }
             catch (Exception ex)
             {
-                // Preserve stack trace and wrap in a meaningful type
-                throw new HLUToolException("InitializeComponentAsync returned false", ex);
+                _inError = true;
+                _initializationException = ex;
+
+                // Allow a retry if the failure was transient.
+                lock (_initializationLock)
+                {
+                    _initializationTask = null;
+                }
+
+                // Wrap unknown exceptions in a meaningful type.
+                if (ex is HLUToolException)
+                    throw;
+
+                throw new HLUToolException("DockPane initialisation failed.", ex);
             }
         }
 
@@ -603,7 +591,7 @@ namespace HLU.UI.ViewModel
 
         #region Active Map View
 
-        private async void OnActiveMapViewChangedAsync(ActiveMapViewChangedEventArgs obj)
+        private async void OnActiveMapViewChanged(ActiveMapViewChangedEventArgs obj)
         {
             if (MapView.Active == null)
             {
@@ -637,7 +625,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        private async void OnLayersAddedAsync(LayerEventsArgs args)
+        private async void OnLayersAdded(LayerEventsArgs args)
         {
             // Check that there is an active map and that it contains a valid HLU workspace.
             if (!await CheckActiveMapAsync())
@@ -647,7 +635,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        private async void OnLayersRemovedAsync(LayerEventsArgs args)
+        private async void OnLayersRemoved(LayerEventsArgs args)
         {
             foreach (var layer in args.Layers)
             {
@@ -712,9 +700,9 @@ namespace HLU.UI.ViewModel
             {
                 _mapEventsSubscribed = false;
 
-                // Unsubscribe from OnActiveMapViewChangedAsync events
+                // Unsubscribe from ActiveMapViewChangedEvent events
                 // (in case the tool is never shown again).
-                ActiveMapViewChangedEvent.Unsubscribe(OnActiveMapViewChangedAsync);
+                ActiveMapViewChangedEvent.Unsubscribe(OnActiveMapViewChanged);
             }
 
             //TODO: Needed?
@@ -724,11 +712,11 @@ namespace HLU.UI.ViewModel
 
                 // Unsubscribe from the LayersAddedEvents
                 // (in case the tool is never shown again).
-                LayersAddedEvent.Unsubscribe(OnLayersAddedAsync);
+                LayersAddedEvent.Unsubscribe(OnLayersAdded);
 
                 // Unsubscribe from the LayersRemovedEvents
                 // (in case the tool is never shown again).
-                LayersRemovedEvent.Unsubscribe(OnLayersRemovedAsync);
+                LayersRemovedEvent.Unsubscribe(OnLayersRemoved);
             }
 
             //TODO: Needed?
@@ -845,7 +833,7 @@ namespace HLU.UI.ViewModel
         /// Switch the active layer.
         /// </summary>
         /// <param name="selectedValue"></param>
-        public async void SwitchGISLayer(string selectedValue)
+        public async Task SwitchGISLayerAsync(string selectedValue)
         {
             // Check if the layer name has actually changed.
             if (selectedValue != ActiveLayerName)
@@ -862,7 +850,7 @@ namespace HLU.UI.ViewModel
 
                     // Get the GIS layer selection and warn the user if no
                     // features are found
-                    await ReadMapSelectionAsync(true);
+                    await GetMapSelectionAsync(true);
                 }
             }
         }

@@ -34,6 +34,7 @@
 					  caption="HLU Tool module">
 
 			<tabs>
+				<!-- Toolbar groups -->
 				<tab id="HLUTool_Tab1" caption="HLU Tool" keytip="T0" condition="HLUTool_Tab1_condition" >
 					<group refID="HLUTool_Group1" />
 					<group refID="HLUTool_Group2" />
@@ -48,55 +49,76 @@
 			</tabs>
 
 			<groups>
+				<!-- HLU Tool group (on Tools toolbar) -->
 				<group id="HLUTool_Group" caption="HLU Tool" appearsOnAddInTab="false" keytip="HG">
 					<button refID="HLUTool_btnHLUToolDockPane" size="large" />
 				</group>
 
+				<!-- GIS group -->
 				<group id="HLUTool_Group1" caption="GIS" keytip="G1">
 					<comboBox refID="HLUTool_cmbActiveLayer" size="middle" />
 				</group>
+
+				<!-- Edit group -->
 				<group id="HLUTool_Group2" caption="Edit" keytip="G2">
 					<comboBox refID="HLUTool_cmbReason" size="middle" />
 					<comboBox refID="HLUTool_cmbProcess" size="middle" />
 					<button refID="HLUTool_btnBulkUpdate" size="middle" />
 				</group>
+
+				<!-- Copy/Paste group -->
 				<group id="HLUTool_Group3" caption="Copy/Paste" keytip="G3">
 					<button refID="HLUTool_btnCopy" size="middle" />
 					<button refID="HLUTool_btnPaste" size="middle" />
 				</group>
+
+				<!-- Filter Incids group -->
 				<group id="HLUTool_Group4" caption="Filter Incids" keytip="G4">
 					<button refID="HLUTool_btnFilterByAttributes" size="middle" />
 					<button refID="HLUTool_btnClearFilter" size="middle" />
 					<editBox refID="HLUTool_edbFilterByIncid" size="large" />
 					<button refID="HLUTool_btnGetMapSelection" size="large" />
 				</group>
-				<group id="HLUTool_Group5" caption="Select in GIS" keytip="G5">
+
+				<!-- GIS Selection group -->
+				<group id="HLUTool_Group5" caption="GIS Selection" keytip="G5">
 					<toolPalette refID="esri_mapping_selectToolPalette" />
 					<button refID="HLUTool_btnSelectCurrentIncid" size="middle" />
 					<button refID="HLUTool_btnSelectFilteredIncids" size="middle" />
 					<button refID="esri_mapping_clearSelectionButton" size="middle" />
 				</group>
+
+				<!-- Split/Merge group -->
 				<group id="HLUTool_Group6" caption="Split/Merge" keytip="G6">
 					<menu refID="HLUTool_SplitMenu" size="large" />
 					<menu refID="HLUTool_MergeMenu" size="large" />
 				</group>
+
+				<!-- OSMM Updates group -->
 				<group id="HLUTool_Group7" caption="OSMM Updates" keytip="G7">
 				</group>
+
+				<!-- Options group -->
 				<group id="HLUTool_Group8" caption="Options" keytip="G8">
 					<button refID="HLUTool_btnOptions" size="middle" />
 					<button refID="HLUTool_btnAutoSelectOnGis" size="middle" />
 					<button refID="HLUTool_btnExport" size="middle" />
 				</group>
+
+				<!-- Help group -->
 				<group id="HLUTool_Group9" caption="Help" keytip="G9">
 					<button refID="HLUTool_btnAbout" size="middle" />
 				</group>
 			</groups>
 
 			<subgroups>
+				<!-- Physical buttons -->
 				<subgroup id="HLUTool_SubGroup1" verticalAlignment="Center" horizontalAlignment="Left" size="MediumThenSmallWhenSmall">
 					<button refID="HLUTool_btnPhysicalSplit" size="middle" />
 					<button refID="HLUTool_btnPhysicalMerge" size="middle" />
 				</subgroup>
+
+				<!-- Logical buttons -->
 				<subgroup id="HLUTool_SubGroup2" verticalAlignment="Center" horizontalAlignment="Left" size="MediumThenSmallWhenSmall">
 					<button refID="HLUTool_btnLogicalSplit" size="middle" />
 					<button refID="HLUTool_btnLogicalMerge" size="middle" />

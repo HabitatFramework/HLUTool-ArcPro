@@ -20,25 +20,17 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Windows;
-using System.Windows.Input;
-using System.Windows.Interop;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Threading.Tasks;
-
+using ArcGIS.Core.Data;
+using ArcGIS.Desktop.Core.Events;
+using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Framework.Contracts;
+using ArcGIS.Desktop.Framework.Controls;
+using ArcGIS.Desktop.Internal.Framework.Controls;
+using ArcGIS.Desktop.Internal.Mapping.Locate;
+using ArcGIS.Desktop.Mapping;
+using ArcGIS.Desktop.Mapping.Events;
+using Azure;
+using Azure.Identity;
 using HLU.Data;
 using HLU.Data.Connection;
 using HLU.Data.Model;
@@ -46,30 +38,35 @@ using HLU.Data.Model.HluDataSetTableAdapters;
 using HLU.Date;
 using HLU.GISApplication;
 using HLU.Properties;
+using HLU.UI.UserControls;
+using HLU.UI.UserControls.Toolbar;
 using HLU.UI.View;
 using HLU.UI.ViewModel;
-
-using ArcGIS.Desktop.Core.Events;
-using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Contracts;
-using ArcGIS.Desktop.Framework.Controls;
-using ArcGIS.Desktop.Mapping;
-using ArcGIS.Desktop.Mapping.Events;
-using System.Windows.Threading;
-
-using CommandType = System.Data.CommandType;
-using Azure.Identity;
-using System.Runtime.InteropServices;
-using Azure;
-using ArcGIS.Desktop.Internal.Framework.Controls;
-using System.Windows.Controls;
-
-using ComboBox = ArcGIS.Desktop.Framework.Contracts.ComboBox;
-using ArcGIS.Desktop.Internal.Mapping.Locate;
-using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
-using HLU.UI.UserControls.Toolbar;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Data;
+using System.Diagnostics;
 using System.Drawing.Printing;
-using HLU.UI.UserControls;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Interop;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Threading;
+using ComboBox = ArcGIS.Desktop.Framework.Contracts.ComboBox;
+using CommandType = System.Data.CommandType;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 
 namespace HLU.UI.ViewModel
@@ -87,7 +84,7 @@ namespace HLU.UI.ViewModel
         private ICommand _navigateLastCommand;
         private ICommand _navigateIncidCommand;
         private ICommand _filterByAttributesOSMMCommand;
-        private ICommand _readMapSelectionCommand;
+        private ICommand _getMapSelectionCommand;
         private ICommand _editPriorityHabitatsCommand;
         private ICommand _editPotentialHabitatsCommand;
         private ICommand _addSecondaryHabitatCommand;
@@ -122,7 +119,7 @@ namespace HLU.UI.ViewModel
         private ViewModelWindowNotifyOnSplitMerge _viewModelWinWarnSplitMerge;
         private WindowWarnOnSubsetUpdate _windowWarnSubsetUpdate;
         private WindowCompletePhysicalSplit _windowCompSplit;
-        private ViewModelCompletePhysicalSplit _vmCompSplit;
+        private ViewModelWindowCompletePhysicalSplit _vmCompSplit;
         private ViewModelWindowWarnOnSubsetUpdate _viewModelWinWarnSubsetUpdate;
         private ViewModelWindowMainBulkUpdate _viewModelBulkUpdate;
         private ViewModelWindowMainOSMMUpdate _viewModelOSMMUpdate;
@@ -141,6 +138,8 @@ namespace HLU.UI.ViewModel
 
         // GIS/Export options
         private int _minZoom;
+        private int _autoZoomToSelection;
+        private string _workingFileGDBPath;
 
         // History options
         private DataColumn[] _historyColumns;
@@ -284,6 +283,7 @@ namespace HLU.UI.ViewModel
         private string _habitatTips;
         private string _secondaryGroup;
         private string _secondaryHabitat;
+
         private bool _reasonProcessEnabled = true;
         private bool _tabControlDataEnabled = true;
         private int _tabItemSelected = 0;
@@ -310,7 +310,9 @@ namespace HLU.UI.ViewModel
         private bool _splitting = false;
         private bool _filterByMap = false;
         private bool _osmmUpdating = false;
+
         private Cursor _windowCursor = Cursors.Arrow;
+
         private DataColumn[] _gisIDColumns;
         private int[] _gisIDColumnOrdinals;
         private IEnumerable<string> _incidsSelectedMap;
@@ -403,8 +405,9 @@ namespace HLU.UI.ViewModel
         private bool _updateCancelled = true;
         private bool _updateAllFeatures = true;
         private bool _refillIncidTable = false;
-        private int _autoZoomSelection;
         private bool _autoSelectOnGis;
+
+        private string _workingFileGDBName;
 
         private ActiveLayerComboBox _activeLayerComboBox;
         private ReasonComboBox _reasonComboBox;
@@ -457,6 +460,8 @@ namespace HLU.UI.ViewModel
 
             // Get user GIS options
             _minZoom = Settings.Default.MinAutoZoom;
+            _autoZoomToSelection = Settings.Default.AutoZoomToSelection;
+            _workingFileGDBPath = Settings.Default.WorkingFileGDBPath;
 
             // Get user interface options
             _preferredHabitatClass = Settings.Default.PreferredHabitatClass;
@@ -478,7 +483,6 @@ namespace HLU.UI.ViewModel
 
             // Get application settings
             _codeDeleteRow = Settings.Default.CodeDeleteRow;
-            _autoZoomSelection = Settings.Default.AutoZoomSelection;
             _autoSelectOnGis = Settings.Default.AutoSelectOnGis;
             _codeAnyRow = Settings.Default.CodeAnyRow;
 
@@ -528,6 +532,37 @@ namespace HLU.UI.ViewModel
 
                 ChangeCursor(Cursors.Wait, "Initiating ...");
 
+                //TODO: Needed?
+                // Let WPF render the cursor/message before heavy work begins.
+                //await Dispatcher.Yield(DispatcherPriority.Background);
+
+                //// Let WPF render cursor/message before heavy work begins.
+                //try
+                //{
+                //    var dispatcher = ArcGIS.Desktop.Framework.FrameworkApplication.Current?.Dispatcher
+                //        ?? System.Windows.Application.Current?.Dispatcher;
+
+                //    if (dispatcher != null)
+                //        await dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Background);
+                //}
+                //catch (Exception ex)
+                //{
+                //    System.Diagnostics.Debug.WriteLine(ex);
+
+                //    // If you really want a UI warning, marshal it onto the UI thread.
+                //    var dispatcher = ArcGIS.Desktop.Framework.FrameworkApplication.Current?.Dispatcher
+                //        ?? System.Windows.Application.Current?.Dispatcher;
+
+                //    if (dispatcher != null)
+                //    {
+                //        await dispatcher.InvokeAsync(() =>
+                //        {
+                //            MessageBox.Show(ex.Message, "HLU: Initialise Application",
+                //                MessageBoxButton.OK, MessageBoxImage.Warning);
+                //        });
+                //    }
+                //}
+
                 // Create table adapter manager for the dataset and connection
                 _hluTableAdapterMgr = new TableAdapterManager(_db, TableAdapterManager.Scope.AllButMMPolygonsHistory);
 
@@ -563,6 +598,7 @@ namespace HLU.UI.ViewModel
                 // Columns to be displayed in history (always includes _gisIDColumns)
                 _historyColumns = InitializeHistoryColumns(_historyColumns);
 
+                //TODO: Needed?
                 // Create scratch database
                 ScratchDb.CreateScratchMdb(_hluDS.incid, _hluDS.incid_mm_polygons, DbConnectionTimeout);
 
@@ -587,6 +623,10 @@ namespace HLU.UI.ViewModel
 
                 // Set the validation option for potential priority habitats
                 BapEnvironment.PotentialPriorityDetermQtyValidation = _potentialPriorityDetermQtyValidation;
+
+                // Prepare the temporary geodatabase
+                if (!PrepareTemporaryGDB())
+                    return false;
 
                 // Clear the status bar (or reset the cursor to an arrow)
                 ChangeCursor(Cursors.Arrow, null);
@@ -738,7 +778,7 @@ namespace HLU.UI.ViewModel
 
                         // Get the GIS layer selection and warn the user if no
                         // features are found
-                        await ReadMapSelectionAsync(true);
+                        await GetMapSelectionAsync(true);
                     }
                 }
                 // Otherwise (re)initialise the ComboBox, select the active
@@ -754,8 +794,8 @@ namespace HLU.UI.ViewModel
                 }
 
                 //DONE: No needed as triggered by above when setting active layer?
-                // Read the selected features from the map
-                //await ReadMapSelectionAsync(false);
+                // Get the selected features from the map
+                //await GetMapSelectionAsync(false);
             }
             else
             {
@@ -822,8 +862,8 @@ namespace HLU.UI.ViewModel
             }
 
             // Convert the version strings to version mumbers.
-            Version addVersion = new(addInVersion);
-            Version appVersion = new(lutAppVersion);
+            System.Version addVersion = new(addInVersion);
+            System.Version appVersion = new(lutAppVersion);
 
             // Compare the addin and application versions.
             if (addVersion.CompareTo(appVersion) < 0)
@@ -849,6 +889,31 @@ namespace HLU.UI.ViewModel
 
             return true;
         }
+
+        /// <summary>
+        /// Prepare a new working GDB to use for large/complex GIS queries.
+        /// </summary>
+        /// <returns></returns>
+        private bool PrepareTemporaryGDB()
+        {
+            // Create a unique name for the working file geodatabase.
+            string uniqueID = Guid.NewGuid().ToString("N").Substring(0, 8);
+            _workingFileGDBName = Path.Combine(_workingFileGDBPath, $"Temp_HLUTool_{uniqueID}.gdb");
+
+            // Create the working file geodatabase if it doesn't exist.
+            if (!FileFunctions.DirExists(_workingFileGDBName))
+            {
+                Geodatabase tempGDB = ArcGISFunctions.CreateFileGeodatabase(_workingFileGDBName);
+                if (tempGDB == null)
+                    return false;
+            }
+
+            return true;
+        }
+
+        #endregion
+
+        #region Load Lookup Tables
 
         /// <summary>
         /// Loads all of the lookup tables (with the exception of a few
@@ -1807,13 +1872,13 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Get the image for the ReadMapSelection button.
+        /// Get the image for the GetMapSelection button.
         /// </summary>
-        public static ImageSource ButtonReadMapSelectionImg
+        public static ImageSource ButtonGetMapSelectionImg
         {
             get
             {
-                string imageSource = "pack://application:,,,/HLUTool;component/Images/ReadMapSelection16.png";
+                string imageSource = "pack://application:,,,/HLUTool;component/Images/GetMapSelection16.png";
                 return new BitmapImage(new Uri(imageSource)) as ImageSource;
             }
         }
@@ -2486,6 +2551,10 @@ namespace HLU.UI.ViewModel
             // whilst moving to the new Incid.
             ChangeCursor(Cursors.Wait, "Selecting record ...");
 
+            //TODO: Needed?
+            // Let WPF render the cursor/message before heavy work begins.
+            //await Dispatcher.Yield(DispatcherPriority.Background);
+
             // Move to the first record.
             await MoveIncidCurrentRowIndexAsync(value);
 
@@ -2515,17 +2584,8 @@ namespace HLU.UI.ViewModel
         {
             if (param is string newText && int.TryParse(newText, out int value))
             {
-                // Show the wait cursor and processing message in the status area
-                // whilst moving to the new Incid.
-                ChangeCursor(Cursors.Wait, "Selecting record ...");
-
-                // Move to the required incid current row (don't wait).
-                await MoveIncidCurrentRowIndexAsync(value);
-
-                ChangeCursor(Cursors.Arrow, null);
-
-                // Check if the GIS and database are in sync.
-                CheckInSync("Selection", "Map");
+                // Move to the required incid current row.
+                await NavigateToRecordAsync(value);
             }
         }
 
@@ -2552,7 +2612,7 @@ namespace HLU.UI.ViewModel
             _autoSplit = false;
 
             // Get the GIS layer selection again (just in case)
-            await ReadMapSelectionAsync(false);
+            await GetMapSelectionAsync(false);
 
             _autoSplit = true;
 
@@ -2586,7 +2646,7 @@ namespace HLU.UI.ViewModel
             _autoSplit = false;
 
             // Get the GIS layer selection again (just in case)
-            await ReadMapSelectionAsync(false);
+            await GetMapSelectionAsync(false);
 
             _autoSplit = true;
 
@@ -2643,7 +2703,7 @@ namespace HLU.UI.ViewModel
         public async Task LogicalMergeAsync()
         {
             // Get the GIS layer selection again (just in case)
-            await ReadMapSelectionAsync(false);
+            await GetMapSelectionAsync(false);
 
             // Check the selected rows are unique before attempting to merge them.
             if (!_gisApp.SelectedRowsUnique())
@@ -2670,7 +2730,7 @@ namespace HLU.UI.ViewModel
         public async Task PhysicalMergeAsync()
         {
             // Get the GIS layer selection again (just in case)
-            await ReadMapSelectionAsync(false);
+            await GetMapSelectionAsync(false);
 
             // Check the selected rows are unique before attempting to merge them.
             if (!_gisApp.SelectedRowsUnique())
@@ -2822,8 +2882,12 @@ namespace HLU.UI.ViewModel
                     // Set the status to processing and the cursor to wait.
                     ChangeCursor(Cursors.Wait, "Selecting ...");
 
+                    //TODO: Needed?
+                    // Let WPF render the cursor/message before heavy work begins.
+                    //await Dispatcher.Yield(DispatcherPriority.Background);
+
                     // Select all features for current incid
-                    SelectOnMap(false);
+                    await SelectOnMapAsync(false);
 
                     // If there are still no features selected in the GIS this suggests
                     // that the feature layer contains only a subset of the database
@@ -2902,9 +2966,6 @@ namespace HLU.UI.ViewModel
             }
 
             ChangeCursor(Cursors.Wait, "Filtering ...");
-
-            // Let WPF render the cursor/message before heavy work begins.
-            await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
 
             // Initialise the GIS selection table.
             _gisSelection = NewGisSelectionTable();
@@ -3301,7 +3362,7 @@ namespace HLU.UI.ViewModel
                 // to work out which mode was active and cancel the
                 // right one
                 if (OSMMBulkUpdateMode == true)
-                    _viewModelBulkUpdate.CancelOSMMBulkUpdate();
+                    await _viewModelBulkUpdate.CancelOSMMBulkUpdateAsync();
                 else
                     // Cancels the bulk update mode
                     await _viewModelBulkUpdate.CancelBulkUpdateAsync();
@@ -4120,11 +4181,11 @@ namespace HLU.UI.ViewModel
         /// Cancel the OSMM Bulk Update mode.
         /// </summary>
         /// <param name="param"></param>
-        private void CancelOSMMBulkUpdateClicked(object param)
+        private async void CancelOSMMBulkUpdateClicked(object param)
         {
             if (_viewModelBulkUpdate != null)
             {
-                _viewModelBulkUpdate.CancelOSMMBulkUpdate();
+                await _viewModelBulkUpdate.CancelOSMMBulkUpdateAsync();
                 _viewModelBulkUpdate = null;
             }
         }
@@ -4262,36 +4323,6 @@ namespace HLU.UI.ViewModel
 
         #region View
 
-        private void AutoZoomSelectedOffClicked(object param)
-        {
-            // Update the auto zoom on selected option.
-            _autoZoomSelection = (int)AutoZoomSelection.Off;
-
-            // Save the new auto zoom option in the user settings.
-            Settings.Default.AutoZoomSelection = _autoZoomSelection;
-            Settings.Default.Save();
-        }
-
-        private void AutoZoomSelectedWhenClicked(object param)
-        {
-            // Update the auto zoom on selected option.
-            _autoZoomSelection = (int)AutoZoomSelection.When;
-
-            // Save the new auto zoom option in the user settings.
-            Settings.Default.AutoZoomSelection = _autoZoomSelection;
-            Settings.Default.Save();
-        }
-
-        private void AutoZoomSelectedAlwaysClicked(object param)
-        {
-            // Update the auto zoom on selected option.
-            _autoZoomSelection = (int)AutoZoomSelection.Always;
-
-            // Save the new auto zoom option in the user settings.
-            Settings.Default.AutoZoomSelection = _autoZoomSelection;
-            Settings.Default.Save();
-        }
-
         public void AutoSelectOnGis(bool autoSelectOnGis)
         {
             // Update the auto select on GIS option.
@@ -4303,15 +4334,7 @@ namespace HLU.UI.ViewModel
 
         }
 
-        protected void ZoomSelectionClicked(object param)
-        {
-            // Get the minimum auto zoom value and map distance units.
-            string distUnits = Settings.Default.MapDistanceUnits;
-
-            _gisApp.ZoomSelected(_minZoom, distUnits, true);
-        }
-
-        public bool CanZoomSelection { get { return _gisSelection != null; } }
+        public bool CanZoomToSelection { get { return _gisSelection != null; } }
 
         #endregion
 
@@ -4685,6 +4708,10 @@ namespace HLU.UI.ViewModel
                 {
                     ChangeCursor(Cursors.Wait, "Validating ...");
 
+                    //TODO: Needed?
+                    // Let WPF render the cursor/message before heavy work begins.
+                    //await Dispatcher.Yield(DispatcherPriority.Background);
+
                     // Get a list of all the possible query tables.
                     List<DataTable> tables = [];
                     if ((ViewModelWindowQueryAdvanced.HluDatasetStatic != null))
@@ -4749,8 +4776,9 @@ namespace HLU.UI.ViewModel
                         _incidsSelectedDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
 
                         ChangeCursor(Cursors.Wait, "Filtering ...");
+
                         // Select the required incid(s) in GIS.
-                        if (PerformGisSelection(true, _fragsSelectedDBCount, _incidsSelectedDBCount))
+                        if (await PerformGisSelectionAsync(true, _fragsSelectedDBCount, _incidsSelectedDBCount))
                         {
                             // Analyse the results, set the filter and reset the cursor AFTER
                             // returning from performing the GIS selection so that other calls
@@ -4930,7 +4958,7 @@ namespace HLU.UI.ViewModel
         /// Select the required incid.
         /// </summary>
         /// <param name="queryIncid">The query incid.</param>
-        public async void FilterByIncid(String queryIncid)
+        public async Task FilterByIncidAsync(String queryIncid)
         {
             if (String.IsNullOrEmpty(queryIncid))
                 return;
@@ -4938,6 +4966,10 @@ namespace HLU.UI.ViewModel
             try
             {
                 ChangeCursor(Cursors.Wait, "Validating ...");
+
+                //TODO: Needed?
+                // Let WPF render the cursor/message before heavy work begins.
+                //await Dispatcher.Yield(DispatcherPriority.Background);
 
                 // Select only the incid database table to use in the query.
                 List<DataTable> whereTables = [];
@@ -4981,8 +5013,9 @@ namespace HLU.UI.ViewModel
                     _incidsSelectedDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
 
                     ChangeCursor(Cursors.Wait, "Filtering ...");
+
                     // Select the required incid(s) in GIS.
-                    if (PerformGisSelection(true, _fragsSelectedDBCount, _incidsSelectedDBCount))
+                    if (await PerformGisSelectionAsync(true, _fragsSelectedDBCount, _incidsSelectedDBCount))
                     {
                         // Analyse the results of the GIS selection by counting the number of
                         // incids, toids and fragments selected.
@@ -5288,8 +5321,9 @@ namespace HLU.UI.ViewModel
                 {
                     ChangeCursor(Cursors.Wait, "Validating ...");
 
+                    //TODO: Needed?
                     // Let WPF render the cursor/message before heavy work begins.
-                    await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
+                    //await Dispatcher.Yield(DispatcherPriority.Background);
 
                     // Get a list of all the possible query tables.
                     List<DataTable> tables = [];
@@ -5360,8 +5394,9 @@ namespace HLU.UI.ViewModel
                             _incidsSelectedDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
 
                             ChangeCursor(Cursors.Wait, "Filtering ...");
+
                             // Select the required incid(s) in GIS.
-                            if (PerformGisSelection(true, _fragsSelectedDBCount, _incidsSelectedDBCount))
+                            if (await PerformGisSelectionAsync(true, _fragsSelectedDBCount, _incidsSelectedDBCount))
                             {
                                 // Analyse the results, set the filter and reset the cursor AFTER
                                 // returning from performing the GIS selection so that other calls
@@ -5511,8 +5546,9 @@ namespace HLU.UI.ViewModel
             {
                 ChangeCursor(Cursors.Wait, "Validating ...");
 
+                //TODO: Needed?
                 // Let WPF render the cursor/message before heavy work begins.
-                await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
+                //await Dispatcher.Yield(DispatcherPriority.Background);
 
                 // Select only the incid_osmm_updates database table to use in the query.
                 List<DataTable> whereTables = [];
@@ -5590,8 +5626,9 @@ namespace HLU.UI.ViewModel
                     _incidsSelectedDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
 
                     ChangeCursor(Cursors.Wait, "Filtering ...");
+
                     // Select the required incid(s) in GIS.
-                    if (PerformGisSelection(true, _fragsSelectedDBCount, _incidsSelectedDBCount))
+                    if (await PerformGisSelectionAsync(true, _fragsSelectedDBCount, _incidsSelectedDBCount))
                     {
                         // Analyse the results, set the filter and reset the cursor AFTER
                         // returning from performing the GIS selection so that other calls
@@ -5802,38 +5839,66 @@ namespace HLU.UI.ViewModel
 
         #region Select On Map Command
 
-
-        //TODO: Add wait?
         /// <summary>
-        /// Selects the current incid on the map.
+        /// Selects the current incid on the map and refreshes internal selection state.
         /// </summary>
-        public void SelectCurrentOnMap()
+        internal async Task SelectCurrentOnMapAsync()
         {
-            // Set the status to processing and the cursor to wait.
-            ChangeCursor(Cursors.Wait, "Selecting ...");
-
-            SelectOnMap(false);
-
-            // Count the number of toids and fragments for the current incid
-            // selected in the GIS and in the database.
-            CountToidFrags();
-
-            // Refresh all the status type fields.
-            RefreshStatus();
-
-            // Reset the cursor back to normal
-            ChangeCursor(Cursors.Arrow, null);
-
-            // Check if the GIS and database are in sync.
-            if (CheckInSync("Selection", "Incid", "Not all incid"))
+            if (_gisApp == null)
             {
-                // Check if the counts returned are less than those expected.
-                if ((_toidsIncidGisCount < _toidsIncidDbCount) ||
-                        (_fragsIncidGisCount < _fragsIncidDbCount))
+                MessageBox.Show("GIS application is not initialised.", "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (_incidCurrentRow == null || string.IsNullOrWhiteSpace(_incidCurrentRow.incid))
+            {
+                MessageBox.Show("No current incid is set.", "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            try
+            {
+                // Set the status to processing and the cursor to wait.
+                ChangeCursor(Cursors.Wait, "Selecting ...");
+
+                // Initialise the GIS selection table schema.
+                _gisSelection = NewGisSelectionTable();
+
+                // Select and read selection back from the map.
+                _gisSelection = await _gisApp.SelectCurrentOnMapAsync(_incidCurrentRow.incid, _gisSelection);
+
+                // Analyse the results of the GIS selection by counting the number of
+                // incids, toids and fragments selected. Do not overwrite DB filter selection.
+                _incidSelectionWhereClause = null;
+                AnalyzeGisSelectionSet(false);
+
+                // Indicate the selection did not originate from "Get map selection".
+                _filterByMap = false;
+
+                // Warn the user that no features were found in GIS.
+                if (_gisSelection == null || _gisSelection.Rows.Count == 0)
                 {
-                    MessageBox.Show("Not all incid features found in active layer.", "HLU: Selection",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("No features for incid found in active layer.", "HLU: Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
                 }
+
+                //TODO: Remove minZoom if not needed
+                // Zoom to the GIS selection (if auto zoom configured).
+                await _gisApp.ZoomSelectedAsync(_minZoom, _autoZoomToSelection);
+            }
+            catch (HLUToolException ex)
+            {
+                MessageBox.Show(ex.Message, "HLU: Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "HLU: Selection", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            // Make sure the cursor is always reset.
+            finally
+            {
+                // Reset the cursor back to normal
+                ChangeCursor(Cursors.Arrow, null);
             }
         }
 
@@ -5842,11 +5907,12 @@ namespace HLU.UI.ViewModel
             get { return BulkUpdateMode == false && OSMMUpdateMode == false && IncidCurrentRow != null; }
         }
 
-        //TODO: Add wait?
+        //TODO: Add waits?
         /// <summary>
-        /// Select current DB record on map.
+        /// Select the current DB record on the map.
         /// </summary>
-        public void SelectOnMap(bool updateIncidSelection)
+        /// <param name="updateIncidSelection">Should the incid selection be updated afterwards?</param>
+        public async Task SelectOnMapAsync(bool updateIncidSelection)
         {
             if (IncidCurrentRow == null) return;
 
@@ -5878,7 +5944,7 @@ namespace HLU.UI.ViewModel
                 _incidSelection.Rows.Add(selRow);
 
                 // Select all the features for the current incid in GIS.
-                PerformGisSelection(false, -1, -1);
+                await PerformGisSelectionAsync(false, -1, -1);
 
                 // If a multi-incid filter was previously active then restore it.
                 if (multiIncidFilter)
@@ -5918,8 +5984,7 @@ namespace HLU.UI.ViewModel
                         // incid then add all the rows for all the other incids in
                         // the previous table of selected GIS features to the current
                         // table of selected GIS features (thereby replacing the previously
-                        // selected features for the current incid with the new
-                        // selection).
+                        // selected features for the current incid with the new selection).
                         if (prevGISSelection != null)
                         {
                             selRow = _gisSelection.NewRow();
@@ -5955,23 +6020,20 @@ namespace HLU.UI.ViewModel
                 // Indicate the selection didn't come from the map.
                 _filterByMap = false;
 
-                // Zoom to the GIS selection if auto zoom is on.
-                if (_gisSelection != null && _autoZoomSelection != 0)
+                // Warn the user that no features were found in GIS.
+                if (_gisSelection == null || _gisSelection.Rows.Count == 0)
                 {
-                    // Get the map distance units.
-                    string distUnits = Settings.Default.MapDistanceUnits;
-
-                    _gisApp.ZoomSelected(_minZoom, distUnits, _autoZoomSelection == 2);
+                    MessageBox.Show("No features for incid found in active layer.", "HLU: Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
                 }
 
-                // Warn the user that no features were found in GIS.
-                if ((_gisSelection == null) || (_gisSelection.Rows.Count == 0))
-                    MessageBox.Show("No features for incid found in active layer.", "HLU: Selection",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                //TODO: Remove minZoom if not needed
+                // Zoom to the GIS selection (if auto zoom configured).
+                await _gisApp.ZoomSelectedAsync(_minZoom, _autoZoomToSelection);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "HLU: Selection", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -5980,38 +6042,50 @@ namespace HLU.UI.ViewModel
 
         #endregion
 
-        #region Read Map Selection Command
+        #region Get Map Selection
 
         /// <summary>
-        /// ReadMapSelectionAsync command.
+        /// GetMapSelectionAsync command.
         /// </summary>
-        public ICommand ReadMapSelectionCommand
+        public ICommand GetMapSelectionCommand
         {
             get
             {
-                if (_readMapSelectionCommand == null)
+                if (_getMapSelectionCommand == null)
                 {
-                    Action<object> readMapSelectionAction = new(this.ReadMapSelectionClicked);
-                    _readMapSelectionCommand = new RelayCommand(readMapSelectionAction, param => this.CanReadMapSelection);
+                    Action<object> getMapSelectionAction = new(this.GetMapSelectionClicked);
+                    _getMapSelectionCommand = new RelayCommand(getMapSelectionAction, param => this.CanGetMapSelection);
                 }
-                return _readMapSelectionCommand;
+                return _getMapSelectionCommand;
             }
         }
 
-        internal async void ReadMapSelectionClicked(object param)
+        /// <summary>
+        /// Gets the map selection. Called when the command is invoked. 
+        /// </summary>
+        /// <param name="param"></param>
+        internal async void GetMapSelectionClicked(object param)
         {
             // Get the GIS layer selection and warn the user if no
             // features are found (don't wait).
-            await ReadMapSelectionAsync(true);
+            await GetMapSelectionAsync(true);
         }
 
-        public bool CanReadMapSelection
+        /// <summary>
+        /// Can the map selection be read.
+        /// </summary>
+        public bool CanGetMapSelection
         {
-            // Can read map selection if not in bulk update mode.
+            // Can get map selection if not in bulk update mode.
             get { return BulkUpdateMode == false; }
         }
 
-        internal async Task ReadMapSelectionAsync(bool showMessage)
+        /// <summary>
+        /// Gets the map selection from the GIS application.
+        /// </summary>
+        /// <param name="showMessage"></param>
+        /// <returns></returns>
+        internal async Task GetMapSelectionAsync(bool showMessage)
         {
             try
             {
@@ -6034,9 +6108,6 @@ namespace HLU.UI.ViewModel
                 }
 
                 ChangeCursor(Cursors.Wait, "Filtering ...");
-
-                // Let WPF render the cursor/message before heavy work begins.
-                await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
 
                 // Initialise the GIS selection table.
                 _gisSelection = NewGisSelectionTable();
@@ -6109,11 +6180,11 @@ namespace HLU.UI.ViewModel
                                 };
 
                                 // Create ViewModel to which main window binds
-                                _vmCompSplit = new ViewModelCompletePhysicalSplit(_reason, _process, _reasonCodes, _processCodes);
+                                _vmCompSplit = new ViewModelWindowCompletePhysicalSplit(_reason, _process, _reasonCodes, _processCodes);
 
                                 // When ViewModel asks to be closed, close window
                                 _vmCompSplit.RequestClose -= vmCompSplit_RequestClose; // Safety: avoid double subscription.
-                                _vmCompSplit.RequestClose += new ViewModelCompletePhysicalSplit.RequestCloseEventHandler(vmCompSplit_RequestClose);
+                                _vmCompSplit.RequestClose += new ViewModelWindowCompletePhysicalSplit.RequestCloseEventHandler(vmCompSplit_RequestClose);
 
                                 // Allow all controls in window to bind to ViewModel by setting DataContext
                                 _windowCompSplit.DataContext = _vmCompSplit;
@@ -6193,7 +6264,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Get Map Selection
 
         #region Priority Habitats Command
         /// <summary>
@@ -6618,7 +6689,6 @@ namespace HLU.UI.ViewModel
 
         #region Select All On Map Command
 
-        //TODO: Add wait?
         /// <summary>
         /// Select all the incids in the active filter in GIS.
         /// </summary>
@@ -6626,87 +6696,90 @@ namespace HLU.UI.ViewModel
         {
             // If there are any records in the selection (and the tool is
             // not currently in bulk update mode).
-            if (IsFiltered)
+            if (!IsFiltered)
+                return;
+
+            try
             {
-                try
+                // Set the status to processing and the cursor to wait.
+                ChangeCursor(Cursors.Wait, "Selecting ...");
+
+                //TODO: Needed?
+                // Let WPF render the cursor/message before heavy work begins.
+                //await Dispatcher.Yield(DispatcherPriority.Background);
+
+                // Backup the current selection (filter).
+                DataTable incidSelectionBackup = _incidSelection;
+
+                //TODO: Keep or replace with GIS query?
+                // Build a where clause list for the incids to be selected.
+                List<List<SqlFilterCondition>> whereClause = [ScratchDb.GisWhereClause(_incidSelection, null, false)];
+
+                //TODO: Await?
+                // Find the expected number of features to be selected in GIS
+                // (by querying the database).
+                int expectedNumToids = -1;
+                int expectedNumFeatures = -1;
+                ExpectedSelectionFeatures(whereClause, ref expectedNumToids, ref expectedNumFeatures);
+
+                // Find the expected number of incids to be selected in GIS.
+                int expectedNumIncids = _incidSelection.Rows.Count;
+
+                // Select the required incid(s) in GIS and read the selection.
+                if (await PerformGisSelectionAsync(true, expectedNumFeatures, expectedNumIncids)
+                    )
                 {
-                    // Set the status to processing and the cursor to wait.
-                    ChangeCursor(Cursors.Wait, "Selecting ...");
+                    //TODO: Await?
+                    // Analyse the results of the GIS selection by counting the number of
+                    // incids, toids and fragments selected. Do not overwrite DB filter selection.
+                    AnalyzeGisSelectionSet(false);
 
-                    // Backup the current selection (filter).
-                    DataTable incidSelectionBackup = _incidSelection;
+                    // Indicate the selection came from the map.
+                    if ((_gisSelection != null) && (_gisSelection.Rows.Count > 0))
+                        _filterByMap = true;
 
-                    // Build a where clause list for the incids to be selected.
-                    List<List<SqlFilterCondition>> whereClause = [ScratchDb.GisWhereClause(_incidSelection, null, false)];
+                    // Set the filter back to the first incid.
+                    await SetFilterAsync();
 
-                    // Find the expected number of features to be selected in GIS.
-                    int expectedNumToids = -1;
-                    int expectedNumFeatures = -1;
-                    ExpectedSelectionFeatures(whereClause, ref expectedNumToids, ref expectedNumFeatures);
-
-                    // Find the expected number of incids to be selected in GIS.
-                    int expectedNumIncids = _incidSelection.Rows.Count;
-
-                    // Select the required incid(s) in GIS.
-                    if (PerformGisSelection(true, expectedNumFeatures, expectedNumIncids))
+                    // Warn the user that no features were found in GIS.
+                    if (_gisSelection == null || _gisSelection.Rows.Count == 0)
                     {
-                        // Analyse the results of the GIS selection by counting the number of
-                        // incids, toids and fragments selected.
-                        AnalyzeGisSelectionSet(false);
+                        MessageBox.Show("No incid features found in active layer.", "HLU: Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+                        return;
+                    }
 
-                        // Indicate the selection came from the map.
-                        if ((_gisSelection != null) && (_gisSelection.Rows.Count > 0))
-                            _filterByMap = true;
+                    //TODO: Remove minZoom if not needed
+                    // Zoom to the GIS selection (if auto zoom configured).
+                    await _gisApp.ZoomSelectedAsync(_minZoom, _autoZoomToSelection);
 
-                        // Set the filter back to the first incid.
-                        await SetFilterAsync();
-
-                        // Zoom to the GIS selection if auto zoom is on.
-                        if (_gisSelection != null && _autoZoomSelection != 0)
+                    // Check if the GIS and database are in sync.
+                    if (CheckInSync("Selection", "Incid", "Not all incid"))
+                    {
+                        // Check if the counts returned are less than those expected.
+                        if ((_toidsIncidGisCount < expectedNumToids) ||
+                                (_fragsIncidGisCount < expectedNumFeatures))
                         {
-                            // Get the map distance units.
-                            string distUnits = Settings.Default.MapDistanceUnits;
-
-                            _gisApp.ZoomSelected(_minZoom, distUnits, _autoZoomSelection == 2);
-                        }
-
-                        // Warn the user that no records were found.
-                        if ((_gisSelection == null) || (_gisSelection.Rows.Count == 0))
-                            MessageBox.Show("No incid features found in active layer.", "HLU: Selection",
-                                MessageBoxButton.OK, MessageBoxImage.Information);
-                        else
-                        {
-                            // Check if the GIS and database are in sync.
-                            if (CheckInSync("Selection", "Incid", "Not all incid"))
-                            {
-                                // Check if the counts returned are less than those expected.
-                                if ((_toidsIncidGisCount < expectedNumToids) ||
-                                        (_fragsIncidGisCount < expectedNumFeatures))
-                                {
-                                    MessageBox.Show("Not all incid features found in active layer.", "HLU: Selection",
-                                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                                }
-                            }
+                            MessageBox.Show("Not all incid features found in active layer.", "HLU: Selection",
+                            MessageBoxButton.OK, MessageBoxImage.Warning);
                         }
                     }
-                    else
-                    {
-                        // Restore the previous selection (filter).
-                        _incidSelection = incidSelectionBackup;
-                    }
                 }
-                catch (Exception ex)
+                else
                 {
-                    _incidSelection = null;
-                    MessageBox.Show(ex.Message, "HLU: Selection", MessageBoxButton.OK, MessageBoxImage.Error);
+                    // Restore the previous selection (filter).
+                    _incidSelection = incidSelectionBackup;
                 }
-                // Make sure the cursor is always reset.
-                finally
-                {
-                    // Reset the cursor back to normal
-                    ChangeCursor(Cursors.Arrow, null);
-                }
-                //RefreshStatus();
+            }
+            catch (Exception ex)
+            {
+                _incidSelection = null;
+                MessageBox.Show(ex.Message, "HLU: Selection", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            // Make sure the cursor is always reset.
+            finally
+            {
+                // Reset the cursor back to normal
+                ChangeCursor(Cursors.Arrow, null);
             }
         }
 
@@ -6897,6 +6970,8 @@ namespace HLU.UI.ViewModel
         /// by the sql query based upon a list of conditions.
         /// </summary>
         /// <param name="whereClause">The list of where clause conditions.</param>
+        /// <param name="numToids">The number of toids expected.</param>
+        /// <param name="numFragments">The number of fragments expected.</param>
         /// <returns>An integer of the number of GIS features to be selected.</returns>
         private void ExpectedSelectionFeatures(List<List<SqlFilterCondition>> whereClause, ref int numToids, ref int numFragments)
         {
@@ -7013,77 +7088,130 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        //TODO: Add wait?
+        ///// <summary>
+        ///// Performs the GIS selection for the current incid selection.
+        ///// No longer set the filter or reset the cursor AFTER performing
+        ///// the GIS selection so that methods that call this method
+        ///// can control if/when these things are done.
+        ///// </summary>
+        ///// <param name="confirmSelect"></param>
+        ///// <param name="expectedNumFeatures"></param>
+        ///// <param name="expectedNumIncids"></param>
+        ///// <returns></returns>
+        //private bool PerformGisSelection(bool confirmSelect, int expectedNumFeatures, int expectedNumIncids)
+        //{
+        //    if (_gisApp != null)
+        //    {
+        //        //ChangeCursor(Cursors.Wait, "Processing ...");
+
+        //        // Build a where clause list for the incids to be selected.
+        //        List<SqlFilterCondition> whereClause = [];
+        //        whereClause = ScratchDb.GisWhereClause(_incidSelection, _gisApp, false);
+
+        //        // Calculate the length of the SQL statement to be sent to GIS.
+        //        int sqlLen = _gisApp.SqlLength(_gisIDColumns, whereClause);
+
+        //        // Check if the length exceeds the maximum for the GIS application.
+        //        bool selectByJoin = (sqlLen > _gisApp.MaxSqlLength);
+
+        //        // If the length exceeds the maximum for the GIS application then
+        //        // perform the selection using a join.
+        //        if (selectByJoin)
+        //        {
+        //            if ((!confirmSelect) || (ConfirmGISSelect(true, expectedNumFeatures, expectedNumIncids)))
+        //            {
+        //                // Save the incids to the selected to a temporary database
+        //                ScratchDb.WriteSelectionScratchTable(_gisIDColumns, _incidSelection);
+
+        //                DispatcherHelper.DoEvents(); //TODO: Replace with modern equivalent?
+
+        //                // Select all features for incid selection in active layer.
+        //                _gisSelection = _gisApp.SqlSelect(ScratchDb.ScratchMdbPath,
+        //                    ScratchDb.ScratchSelectionTable, _gisIDColumns);
+
+        //                // Check if any features found when applying filter.
+        //                if ((_gisSelection != null) && (_gisSelection.Rows.Count > 0))
+        //                    return true;
+        //                else
+        //                    return false;
+        //            }
+        //        }
+        //        // Otherwise, perform the selection using a SQL query in GIS.
+        //        else
+        //        {
+        //            if ((!confirmSelect) || (ConfirmGISSelect(false, expectedNumFeatures, expectedNumIncids)))
+        //            {
+        //                DispatcherHelper.DoEvents(); //TODO: Replace with modern equivalent?
+
+        //                // Select all features for incid selection in active layer.
+        //                _gisSelection = _gisApp.SqlSelect(true, false, _gisIDColumns,
+        //                    whereClause);
+
+        //                // Check if any features found when applying filter.
+        //                if ((_gisSelection != null) && (_gisSelection.Rows.Count > 0))
+        //                    return true;
+        //                else
+        //                    return false;
+        //            }
+        //        }
+        //    }
+
+        //    // The selection didn't happen.
+        //    return false;
+        //}
+
         /// <summary>
         /// Performs the GIS selection for the current incid selection.
-        /// No longer set the filter or reset the cursor AFTER performing
-        /// the GIS selection so that methods that call this method
-        /// can control if/when these things are done.
+        /// In ArcGIS Pro this selects directly on the active HLU FeatureLayer and then
+        /// reads the selection back into <see cref="_gisSelection"/>.
         /// </summary>
-        /// <param name="confirmSelect"></param>
-        /// <param name="expectedNumFeatures"></param>
-        /// <param name="expectedNumIncids"></param>
-        /// <returns></returns>
-        private bool PerformGisSelection(bool confirmSelect, int expectedNumFeatures, int expectedNumIncids)
+        /// <param name="confirmSelect">
+        /// If true, show the "warn before GIS select" dialog depending on user options.
+        /// </param>
+        /// <param name="expectedNumFeatures">
+        /// Expected number of features (for warning/integrity messaging).
+        /// </param>
+        /// <param name="expectedNumIncids">
+        /// Expected number of incids (for warning/integrity messaging).
+        /// </param>
+        /// <returns>
+        /// True if selection was performed and at least one row was selected; otherwise false.
+        /// </returns>
+        private async Task<bool> PerformGisSelectionAsync(
+            bool confirmSelect,
+            int expectedNumFeatures,
+            int expectedNumIncids)
         {
-            if (_gisApp != null)
+            if (_gisApp == null)
+                return false;
+
+            // Respect existing warning behaviour.
+            // In the old ArcMap code you sometimes warned only for joins; in Pro we no longer join,
+            // so the dialog should be treated as a general "large selection" warning.
+            if (confirmSelect)
             {
-                //ChangeCursor(Cursors.Wait, "Processing ...");
+                // selectByJoin is now always false in Pro, but keep the meaning:
+                // we are not doing a join-based selection anymore.
+                bool proceed = ConfirmGISSelect(
+                    selectByjoin: false,
+                    expectedNumFeatures: expectedNumFeatures,
+                    expectedNumIncids: expectedNumIncids);
 
-                // Build a where clause list for the incids to be selected.
-                List<SqlFilterCondition> whereClause = [];
-                whereClause = ScratchDb.GisWhereClause(_incidSelection, _gisApp, false);
-
-                // Calculate the length of the SQL statement to be sent to GIS.
-                int sqlLen = _gisApp.SqlLength(_gisIDColumns, whereClause);
-
-                // Check if the length exceeds the maximum for the GIS application.
-                bool selectByJoin = (sqlLen > _gisApp.MaxSqlLength);
-
-                // If the length exceeds the maximum for the GIS application then
-                // perform the selection using a join.
-                if (selectByJoin)
-                {
-                    if ((!confirmSelect) || (ConfirmGISSelect(true, expectedNumFeatures, expectedNumIncids)))
-                    {
-                        // Save the incids to the selected to a temporary database
-                        ScratchDb.WriteSelectionScratchTable(_gisIDColumns, _incidSelection);
-
-                        DispatcherHelper.DoEvents(); //TODO: Replace with modern equivalent?
-
-                        // Select all features for incid selection in active layer.
-                        _gisSelection = _gisApp.SqlSelect(ScratchDb.ScratchMdbPath,
-                            ScratchDb.ScratchSelectionTable, _gisIDColumns);
-
-                        // Check if any features found when applying filter.
-                        if ((_gisSelection != null) && (_gisSelection.Rows.Count > 0))
-                            return true;
-                        else
-                            return false;
-                    }
-                }
-                // Otherwise, perform the selection using a SQL query in GIS.
-                else
-                {
-                    if ((!confirmSelect) || (ConfirmGISSelect(false, expectedNumFeatures, expectedNumIncids)))
-                    {
-                        DispatcherHelper.DoEvents(); //TODO: Replace with modern equivalent?
-
-                        // Select all features for incid selection in active layer.
-                        _gisSelection = _gisApp.SqlSelect(true, false, _gisIDColumns,
-                            whereClause);
-
-                        // Check if any features found when applying filter.
-                        if ((_gisSelection != null) && (_gisSelection.Rows.Count > 0))
-                            return true;
-                        else
-                            return false;
-                    }
-                }
+                if (!proceed)
+                    return false;
             }
 
-            // The selection didn't happen.
-            return false;
+            // Ensure the output selection table has the right schema before filling it.
+            _gisSelection = NewGisSelectionTable();
+
+            // Pro-native: select all INCIDs in _incidSelection on the active HLU layer and read them back.
+            // This is the replacement for _gisApp.SqlSelect(...) + scratch/join logic.
+            _gisSelection = await _gisApp.SelectAllOnMapAsync(
+                incidSelection: _incidSelection,
+                resultTable: _gisSelection);
+
+            // Return true only if we actually got selected rows back.
+            return (_gisSelection != null) && (_gisSelection.Rows.Count > 0);
         }
 
         private async Task SetFilterAsync()
@@ -7367,6 +7495,10 @@ namespace HLU.UI.ViewModel
 
         #region Data Rows
 
+        /// <summary>
+        /// Are there any filters applied to the Incid table and
+        /// is the tool currently not in bulk update mode?
+        /// </summary>
         public bool IsFiltered
         {
             get
@@ -7398,6 +7530,9 @@ namespace HLU.UI.ViewModel
             return _incidRowCount;
         }
 
+        /// <summary>
+        /// Get the status string for the current Incid selection.
+        /// </summary>
         public string StatusIncid
         {
             get
@@ -7459,6 +7594,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Get the status tool tip for the current Incid selection.
+        /// </summary>
         public string StatusIncidToolTip { get { return IsFiltered ? "Double click to clear filter" : null; } }
 
         public string StatusBar
@@ -7519,6 +7657,7 @@ namespace HLU.UI.ViewModel
             get { return _incidCurrentRowIndex; }
             set
             {
+                //TODO: Should this really be fire and forget?
                 // Call the safe fire and forget helper to move to the
                 // new current row index asynchronously.
                 AsyncHelpers.SafeFireAndForget(MoveIncidCurrentRowIndexAsync(value),
@@ -7727,34 +7866,34 @@ namespace HLU.UI.ViewModel
         {
             //TODO: Check if the selection is already being read so it
             // doesn't repeat itself.
-            // Re-check GIS selection in case it has changed.
-            if (_gisApp != null)
-            {
-                // Initialise the GIS selection table.
-                _gisSelection = NewGisSelectionTable();
+            //// Re-check GIS selection in case it has changed.
+            //if (_gisApp != null)
+            //{
+            //    // Initialise the GIS selection table.
+            //    _gisSelection = NewGisSelectionTable();
 
-                // Recheck the selected features in GIS (passing a new GIS
-                // selection table so that it knows the columns to return.
-                try
-                {
-                    _gisSelection = await _gisApp.ReadMapSelectionAsync(_gisSelection);
-                }
-                catch (HLUToolException ex)
-                {
-                    // Preserve stack trace and wrap in a meaningful type
-                    MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
+            //    // Recheck the selected features in GIS (passing a new GIS
+            //    // selection table so that it knows the columns to return.
+            //    try
+            //    {
+            //        _gisSelection = await _gisApp.ReadMapSelectionAsync(_gisSelection);
+            //    }
+            //    catch (HLUToolException ex)
+            //    {
+            //        // Preserve stack trace and wrap in a meaningful type
+            //        MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Warning);
+            //        return;
+            //    }
 
-                _incidSelectionWhereClause = null;
+            //    _incidSelectionWhereClause = null;
 
-                AnalyzeGisSelectionSet(false);
-            }
+            //    AnalyzeGisSelectionSet(false);
+            //}
 
             bool canMove = false;
             if (!IsFiltered)
             {
-                //TODO: Bug here sometimes.
+                //TODO: Bug here sometimes?
                 int newRowIndex = SeekIncid(_incidCurrentRowIndex);
                 if ((canMove = newRowIndex != -1))
                     _incidCurrentRow = _hluDS.incid[newRowIndex];
@@ -7773,6 +7912,7 @@ namespace HLU.UI.ViewModel
 
                 _incidArea = -1;
                 _incidLength = -1;
+
                 // Flag that the current record has not been changed yet so that the
                 // apply button does not appear.
                 Changed = false;
@@ -7810,7 +7950,7 @@ namespace HLU.UI.ViewModel
                 if (_gisApp != null && _autoSelectOnGis && BulkUpdateMode == false && !_filterByMap)
                 {
                     // Select the current DB record on the Map.
-                    SelectOnMap(false);
+                    await SelectOnMapAsync(false);
                 }
 
                 // Count the number of toids and fragments for the current incid
@@ -8968,7 +9108,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(StatusIncid));
             OnPropertyChanged(nameof(StatusIncidToolTip));
             OnPropertyChanged(nameof(StatusBar));
-            OnPropertyChanged(nameof(CanZoomSelection));
+            OnPropertyChanged(nameof(CanZoomToSelection));
             //OnPropertyChanged(nameof(CanUserBulkUpdate)); // Not needed as this is cached.
             OnPropertyChanged(nameof(CanUpdate));
             OnPropertyChanged(nameof(CanBulkUpdate)); //TODO: Check if needed (previously commented out)
@@ -9957,6 +10097,10 @@ namespace HLU.UI.ViewModel
             get { return _habitatType; }
             set
             {
+                // Check if the habitat type has changed.
+                if (string.Equals(_habitatType, value, StringComparison.Ordinal))
+                    return;
+
                 _habitatType = value;
 
                 //TODO: Use a default (all habitats) if no primary codes are found?
@@ -10077,7 +10221,7 @@ namespace HLU.UI.ViewModel
                 OnPropertyChanged(nameof(HabitatSecondariesMandatory));
                 OnPropertyChanged(nameof(HabitatSecondariesSuggested));
 
-                OnPropertyChanged(nameof(PrimaryCodes));
+                //OnPropertyChanged(nameof(PrimaryCodes)); //TODO: No longer needed as it's an ObservableCollection.
                 OnPropertyChanged(nameof(PrimaryEnabled));
                 //OnPropertyChanged(nameof(NvcCodes));
             }

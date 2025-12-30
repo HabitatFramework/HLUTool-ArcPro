@@ -52,7 +52,7 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// View model for the Options window.
     /// </summary>
-    partial class ViewModelOptions : ViewModelBase, IDataErrorInfo
+    partial class ViewModelWindowOptions : ViewModelBase, IDataErrorInfo
     {
         #region Fields
 
@@ -62,7 +62,8 @@ namespace HLU.UI.ViewModel
 
         private ICommand _saveCommand;
         private ICommand _cancelCommand;
-        private ICommand _browseSqlPathCommand;
+        private ICommand _browseSQLPathCommand;
+        private ICommand _browseWorkingFileGDBPathCommand;
         private ICommand _openHyperlinkCommand;
 
         private string _displayName = "Options";
@@ -103,8 +104,11 @@ namespace HLU.UI.ViewModel
         private int? _bulkOSMMSourceId;
 
         // User GIS options
+        private string[] _autoZoomToSelectionOptions;
+        private string _autoZoomToSelection;
         private int? _minAutoZoom;
         private int _maxAutoZoom;
+        private string _workingFileGDBPath;
 
         // User History options
         private SelectionList<string> _historyColumns;
@@ -134,7 +138,8 @@ namespace HLU.UI.ViewModel
         private string _sqlPath;
 
         // Backup variables
-        private string _bakSqlPath;
+        private string _bakSQLPath;
+        private string _bakWorkingFileGDBPath;
 
         public ObservableCollection<NavigationItem> NavigationItems { get; }
         public ICollectionView GroupedNavigationItems { get; set; }
@@ -147,7 +152,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Default constructor
         /// </summary>
-        public ViewModelOptions()
+        public ViewModelWindowOptions()
         {
            // Get the dockpane DAML id.
            DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
@@ -196,8 +201,11 @@ namespace HLU.UI.ViewModel
             _bulkOSMMSourceId = _addInSettings.BulkOSMMSourceId;
 
             // Set the user GIS options
+            var enumValue = (AutoZoomToSelection)Settings.Default.AutoZoomToSelection;
+            _autoZoomToSelection = AutoZoomToSelectionString(enumValue);
             _minAutoZoom = Settings.Default.MinAutoZoom;
             _maxAutoZoom = Settings.Default.MaxAutoZoom;
+            _workingFileGDBPath = Settings.Default.WorkingFileGDBPath;
 
             // User History options
             _historyColumns = new SelectionList<string>(_incidMMPolygonsTable.Columns.Cast<DataColumn>()
@@ -234,7 +242,7 @@ namespace HLU.UI.ViewModel
             _getValueRows = Settings.Default.GetValueRows;
             _maxGetValueRows = Settings.Default.MaxGetValueRows;
             _warnBeforeGISSelect = Settings.Default.WarnBeforeGISSelect;
-            _sqlPath = Settings.Default.SqlPath;
+            _sqlPath = Settings.Default.SQLPath;
 
             // Load the navigation items (the individual options pages).
             NavigationItems =
@@ -529,7 +537,10 @@ namespace HLU.UI.ViewModel
         private void SaveUserSettings()
         {
             // Update user GIS options
+            var enumValue = AutoZoomToSelectionEnum(_autoZoomToSelection);
+            Settings.Default.AutoZoomToSelection = (int)enumValue;
             Settings.Default.MinAutoZoom = (int)_minAutoZoom;
+            Settings.Default.WorkingFileGDBPath = _workingFileGDBPath;
 
             // Update user history options
             //TOOO: Fix this
@@ -556,7 +567,7 @@ namespace HLU.UI.ViewModel
             // Update user SQL options
             Settings.Default.GetValueRows = (int)_getValueRows;
             Settings.Default.WarnBeforeGISSelect = (int)_warnBeforeGISSelect;
-            Settings.Default.SqlPath = _sqlPath;
+            Settings.Default.SQLPath = _sqlPath;
 
             // Update user updates options
             Settings.Default.NotifyOnSplitMerge = _notifyOnSplitMerge;
@@ -573,7 +584,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private bool CanSave { get { return String.IsNullOrEmpty(Error); } }
 
-        #endregion
+        #endregion Save Command
 
         #region Cancel Command
 
@@ -608,7 +619,7 @@ namespace HLU.UI.ViewModel
             RequestClose?.Invoke(false);
         }
 
-        #endregion
+        #endregion Cancel Command
 
         #region OpenHyperlink Command
 
@@ -646,7 +657,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion OpenHyperlink Command
 
         #region Application Database
 
@@ -672,9 +683,72 @@ namespace HLU.UI.ViewModel
             get { return 1000; }
         }
 
-        #endregion
+        #endregion Application Database
 
-        #region User GIS/Export
+        #region User GIS
+
+        /// <summary>
+        /// Gets or sets the auto zoom selection options.
+        /// </summary>
+        /// <value>
+        /// The auto zoom selection options.
+        /// </value>
+        public string[] AutoZoomToSelectionOptions
+        {
+            get
+            {
+                if (_autoZoomToSelectionOptions == null)
+                {
+                    _autoZoomToSelectionOptions = Settings.Default.AutoZoomToSelectionOptions.Cast<string>().ToArray();
+                }
+
+                return _autoZoomToSelectionOptions;
+            }
+            set { }
+        }
+
+        /// <summary>
+        /// Gets or sets the auto zoom selection choice.
+        /// </summary>
+        /// <value>
+        /// The auto zoom selection choice.
+        /// </value>
+        public string AutoZoomToSelectionOption
+        {
+            get { return _autoZoomToSelection; }
+            set
+            {
+                _autoZoomToSelection = value;
+            }
+        }
+
+        /// <summary>
+        /// Converts an AutoZooToSelection enum to the display string.
+        /// </summary>
+        private string AutoZoomToSelectionString(AutoZoomToSelection value)
+        {
+            return value switch
+            {
+                AutoZoomToSelection.Off => "Off",
+                AutoZoomToSelection.When => "When out of view",
+                AutoZoomToSelection.Always => "Always",
+                _ => "Off"
+            };
+        }
+
+        /// <summary>
+        /// Converts a display string to an AutoZoomToSelection enum.
+        /// </summary>
+        private static AutoZoomToSelection AutoZoomToSelectionEnum(string value)
+        {
+            return value switch
+            {
+                "Off" => AutoZoomToSelection.Off,
+                "When out of view" => AutoZoomToSelection.When,
+                "Always" => AutoZoomToSelection.Always,
+                _ => AutoZoomToSelection.Off
+            };
+        }
 
         /// <summary>
         /// Gets the default minimum auto zoom scale text.
@@ -687,7 +761,7 @@ namespace HLU.UI.ViewModel
             get
             {
                 string distUnits = Settings.Default.MapDistanceUnits;
-                return string.Format("Minimum auto zoom [{0}]", distUnits);
+                return string.Format("Minimum Auto Zoom [{0}]", distUnits);
             }
         }
 
@@ -714,7 +788,85 @@ namespace HLU.UI.ViewModel
             get { return _maxAutoZoom; }
         }
 
-        #endregion
+        /// <summary>
+        /// Get the working File GDB path command.
+        /// </summary>
+        /// <value>
+        /// The browse working File GDB path command.
+        /// </value>
+        public ICommand BrowseWorkingFileGDBPathCommand
+        {
+            get
+            {
+                if (_browseWorkingFileGDBPathCommand == null)
+                {
+                    Action<object> browseWorkingFileGDBPathAction = new(this.BrowseWorkingFileGDBPathClicked);
+                    _browseWorkingFileGDBPathCommand = new RelayCommand(browseWorkingFileGDBPathAction);
+                }
+
+                return _browseWorkingFileGDBPathCommand;
+            }
+        }
+
+        /// <summary>
+        /// Action when the browse working File GDB path button is clicked.
+        /// </summary>
+        /// <param name="param"></param>
+        private void BrowseWorkingFileGDBPathClicked(object param)
+        {
+            _bakWorkingFileGDBPath = _workingFileGDBPath;
+            WorkingFileGDBPath = String.Empty;
+            WorkingFileGDBPath = GetWorkingFileGDBPath();
+
+            if (String.IsNullOrEmpty(WorkingFileGDBPath))
+            {
+                WorkingFileGDBPath = _bakWorkingFileGDBPath;
+            }
+            OnPropertyChanged(nameof(WorkingFileGDBPath));
+        }
+
+        /// <summary>
+        /// Gets or sets the working File GDB path.
+        /// </summary>
+        /// <value>
+        /// The working File GDB path.
+        /// </value>
+        public string WorkingFileGDBPath
+        {
+            get { return _workingFileGDBPath; }
+            set { _workingFileGDBPath = value; }
+        }
+
+        /// <summary>
+        /// Prompt the user to set the working File GDB path.
+        /// </summary>
+        /// <returns></returns>
+        public static string GetWorkingFileGDBPath()
+        {
+            try
+            {
+                string workingFileGDBPath = Settings.Default.WorkingFileGDBPath;
+
+                FolderBrowserDialog openFolderDlg = new()
+                {
+                    Description = "Select Working File GDB Directory",
+                    UseDescriptionForTitle = true,
+                    SelectedPath = workingFileGDBPath,
+                    //openFolderDlg.RootFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                    ShowNewFolderButton = true
+                };
+                if (openFolderDlg.ShowDialog() == DialogResult.OK)
+                {
+                    if (Directory.Exists(openFolderDlg.SelectedPath))
+                        return openFolderDlg.SelectedPath;
+                }
+            }
+            catch { }
+
+            return null;
+        }
+
+        #endregion User GIS
 
         #region User History
 
@@ -735,7 +887,7 @@ namespace HLU.UI.ViewModel
             get { return 50; }
         }
 
-        #endregion
+        #endregion User History
 
         #region User Interface
 
@@ -941,7 +1093,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion User Interface
 
         #region Application Updates
 
@@ -1130,7 +1282,7 @@ namespace HLU.UI.ViewModel
                 _potentialPriorityDetermQtyValidation = (int)value;
             }
         }
-        #endregion
+        #endregion Application Updates
 
         #region User Updates
 
@@ -1166,7 +1318,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion User Updates
 
         #region User SQL
 
@@ -1231,17 +1383,17 @@ namespace HLU.UI.ViewModel
         /// <value>
         /// The browse SQL path command.
         /// </value>
-        public ICommand BrowseSqlPathCommand
+        public ICommand BrowseSQLPathCommand
         {
             get
             {
-                if (_browseSqlPathCommand == null)
+                if (_browseSQLPathCommand == null)
                 {
-                    Action<object> browseSqlPathAction = new(this.BrowseSqlPathClicked);
-                    _browseSqlPathCommand = new RelayCommand(browseSqlPathAction);
+                    Action<object> browseSQLPathAction = new(this.BrowseSQLPathClicked);
+                    _browseSQLPathCommand = new RelayCommand(browseSQLPathAction);
                 }
 
-                return _browseSqlPathCommand;
+                return _browseSQLPathCommand;
             }
         }
 
@@ -1249,17 +1401,17 @@ namespace HLU.UI.ViewModel
         /// Action when the browse SQL path button is clicked.
         /// </summary>
         /// <param name="param"></param>
-        private void BrowseSqlPathClicked(object param)
+        private void BrowseSQLPathClicked(object param)
         {
-            _bakSqlPath = _sqlPath;
-            SqlPath = String.Empty;
-            SqlPath = GetSqlPath();
+            _bakSQLPath = _sqlPath;
+            SQLPath = String.Empty;
+            SQLPath = GetSQLPath();
 
-            if (String.IsNullOrEmpty(SqlPath))
+            if (String.IsNullOrEmpty(SQLPath))
             {
-                SqlPath = _bakSqlPath;
+                SQLPath = _bakSQLPath;
             }
-            OnPropertyChanged(nameof(SqlPath));
+            OnPropertyChanged(nameof(SQLPath));
         }
 
         /// <summary>
@@ -1268,7 +1420,7 @@ namespace HLU.UI.ViewModel
         /// <value>
         /// The SQL path.
         /// </value>
-        public string SqlPath
+        public string SQLPath
         {
             get { return _sqlPath; }
             set { _sqlPath = value; }
@@ -1278,15 +1430,16 @@ namespace HLU.UI.ViewModel
         /// Prompt the user to set the default SQL path.
         /// </summary>
         /// <returns></returns>
-        public static string GetSqlPath()
+        public static string GetSQLPath()
         {
             try
             {
-                string sqlPath = Settings.Default.SqlPath;
+                string sqlPath = Settings.Default.SQLPath;
 
                 FolderBrowserDialog openFolderDlg = new()
                 {
-                    Description = "Select Sql Query Default Directory",
+                    Description = "Select SQL Query Default Path",
+                    UseDescriptionForTitle = true,
                     SelectedPath = sqlPath,
                     //openFolderDlg.RootFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                     ShowNewFolderButton = true
@@ -1302,7 +1455,7 @@ namespace HLU.UI.ViewModel
             return null;
         }
 
-        #endregion
+        #endregion User SQL
 
         #region Application Date
 
@@ -1340,7 +1493,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Application Date
 
         #region Application Bulk Update
 
@@ -1495,7 +1648,7 @@ namespace HLU.UI.ViewModel
             set { _bulkOSMMSourceId = value; }
         }
 
-        #endregion
+        #endregion Application Bulk Update
 
         #region IDataErrorInfo Members
 
@@ -1515,10 +1668,14 @@ namespace HLU.UI.ViewModel
                     error.Append("\n" + "Enter a database page size greater than 0 rows.");
 
                 // GIS options
+                if (AutoZoomToSelectionOption == null)
+                    error.Append("Select option of when to auto zoom to selected feature(s).");
                 if (Convert.ToInt32(MinAutoZoom) < 100 || MinAutoZoom == null)
                     error.Append("\n" + "Minimum auto zoom scale must be at least 100.");
                 if (Convert.ToInt32(MinAutoZoom) > Settings.Default.MaxAutoZoom)
                     error.Append("\n" + String.Format("Minimum auto zoom scale must not be greater than {0}.", Settings.Default.MaxAutoZoom));
+                if (String.IsNullOrEmpty(WorkingFileGDBPath))
+                    error.Append("\n" + "You must enter a working File Geodatabase path.");
 
                 // History options
                 if (Convert.ToInt32(HistoryDisplayLastN) <= 0 || HistoryDisplayLastN == null)
@@ -1528,7 +1685,7 @@ namespace HLU.UI.ViewModel
                 if (PreferredHabitatClass == null)
                     error.Append("Select your preferred habitat class.");
                 if (ShowOSMMUpdatesOption == null)
-                    error.Append("Select the option of when to display any OSMM Updates.");
+                    error.Append("Select option of when to display any OSMM Updates.");
                 if (PreferredSecondaryGroup == null)
                     error.Append("Select your preferred secondary group.");
                 if (HabitatSecondaryCodeValidation == null)
@@ -1557,6 +1714,8 @@ namespace HLU.UI.ViewModel
                     error.Append("\n" + "Number of value rows to be retrieved must be greater than 0.");
                 if (Convert.ToInt32(GetValueRows) > Settings.Default.MaxGetValueRows)
                     error.Append("\n" + String.Format("Number of value rows to be retrieved must not be greater than {0}.", Settings.Default.MaxGetValueRows));
+                if (String.IsNullOrEmpty(SQLPath))
+                    error.Append("\n" + "You must enter a default SQL path.");
 
                 // Date options
                 if (String.IsNullOrEmpty(SeasonSpring))
@@ -1619,11 +1778,19 @@ namespace HLU.UI.ViewModel
                         break;
 
                     // GIS options
+                    case "AutoZoomToSelectionOption":
+                        if (AutoZoomToSelectionOption == null)
+                            error = "Select option of when to auto zoom to selected feature(s).";
+                        break;
                     case "MinAutoZoom":
                         if (Convert.ToInt32(MinAutoZoom) < 100 || MinAutoZoom == null)
                             error = "Error: Minimum auto zoom scale must be at least 100.";
                         if (Convert.ToInt32(MinAutoZoom) > Settings.Default.MaxAutoZoom)
                             error = String.Format("Error: Minimum auto zoom scale must not be greater than {0}.", Settings.Default.MaxAutoZoom);
+                        break;
+                    case "WorkingFileGDBPath":
+                        if (String.IsNullOrEmpty(WorkingFileGDBPath))
+                            error = "Error: You must enter a working File Geodatabase path.";
                         break;
 
                     // History options
@@ -1690,6 +1857,10 @@ namespace HLU.UI.ViewModel
                             error = "Error: Number of value rows to be retrieved must be greater than 0.";
                         if (Convert.ToInt32(GetValueRows) > Settings.Default.MaxGetValueRows)
                             error = String.Format("Error: Number of value rows to be retrieved must not be greater than {0}.", Settings.Default.MaxGetValueRows);
+                        break;
+                    case "SQLPath":
+                        if (String.IsNullOrEmpty(SQLPath))
+                            error = "Error: You must enter a default SQL path.";
                         break;
 
                     // Date options

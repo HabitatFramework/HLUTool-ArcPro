@@ -168,11 +168,11 @@ namespace HLU.UI.UserControls.Toolbar
         /// Called when the selection changes.
         /// </summary>
         /// <param name="item"></param>
-        protected override void OnSelectionChange(ComboBoxItem item)
+        protected override async void OnSelectionChange(ComboBoxItem item)
         {
             // Switch the active layer (if different).
             if (item != null)
-                _viewModel?.SwitchGISLayer(item.Text);
+                await _viewModel?.SwitchGISLayerAsync(item.Text);
         }
 
         /// <summary>

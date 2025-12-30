@@ -19,6 +19,22 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Core.CIM;
+using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.Analyst3D;
+using ArcGIS.Core.Geometry;
+using ArcGIS.Core.Internal.CIM;
+using ArcGIS.Desktop.Editing;
+using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ArcGIS.Desktop.Internal.GeoProcessing.ModelBuilder;
+using ArcGIS.Desktop.Layouts;
+//using ArcGIS.Desktop.Internal.Framework.Controls;
+using ArcGIS.Desktop.Mapping;
+using HLU.Data;
+using HLU.Data.Model;
+using HLU.Properties;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -27,6 +43,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -34,42 +51,11 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
-//using AppModule.InterProcessComm;
-//using AppModule.NamedPipes;
-
-using ArcGIS.Core.Data;
+using Envelope = ArcGIS.Core.Geometry.Envelope;
 using Field = ArcGIS.Core.Data.Field;
-using QueryFilter = ArcGIS.Core.Data.QueryFilter;
-using ArcGIS.Core.CIM;
-using ArcGIS.Core.Geometry;
 using LinearUnit = ArcGIS.Core.Geometry.LinearUnit;
-using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
-//using ArcGIS.Desktop.Internal.Framework.Controls;
-using ArcGIS.Desktop.Mapping;
-using ArcGIS.Desktop.Editing;
-
-//TODO: ArcGIS
-//using ESRI.ArcGIS.ADF;
-//using ESRI.ArcGIS.ArcMapUI;
-//using ESRI.ArcGIS.Carto;
-//using ESRI.ArcGIS.Catalog;
-//using ESRI.ArcGIS.CatalogUI;
-//using ESRI.ArcGIS.DataSourcesFile;
-//using ESRI.ArcGIS.DataSourcesGDB;
-//using ESRI.ArcGIS.esriSystem;
-//using ESRI.ArcGIS.Framework;
-//using ESRI.ArcGIS.Geodatabase;
-//using ESRI.ArcGIS.Geometry;
-
-using HLU.Data;
-using HLU.Data.Model;
-using HLU.Properties;
-using Microsoft.Win32;
-using System.Linq.Expressions;
-using ArcGIS.Core.Internal.CIM;
-using ArcGIS.Core.Data.Analyst3D;
-using ArcGIS.Desktop.Internal.GeoProcessing.ModelBuilder;
+using QueryFilter = ArcGIS.Core.Data.QueryFilter;
+using SpatialReference = ArcGIS.Core.Geometry.SpatialReference;
 //using ArcGIS.Core.Internal.CIM;
 
 namespace HLU.GISApplication
@@ -216,15 +202,50 @@ namespace HLU.GISApplication
         #region Implementation of SqlBuilder
 
         /// <summary>
+        /// Quotes a string literal for SQL where clauses.
+        /// </summary>
+        /// <param name="value">The raw string.</param>
+        /// <returns>A single-quoted and escaped literal.</returns>
+        private static string QuoteStringLiteral(string value)
+        {
+            // Escape single quotes by doubling them.
+            string escaped = (value ?? string.Empty).Replace("'", "''");
+            return $"'{escaped}'";
+        }
+
+        /// <summary>
+        /// Quotes an identifier using the configured quote prefix/suffix.
+        /// </summary>
+        /// <param name="identifier">The field or table name.</param>
+        /// <returns>The quoted identifier.</returns>
+        public override string QuoteIdentifier(string identifier)
+        {
+            if (string.IsNullOrWhiteSpace(identifier))
+                return identifier;
+
+            var prefix = QuotePrefix;
+            var suffix = QuoteSuffix;
+
+            if (string.IsNullOrEmpty(prefix) || string.IsNullOrEmpty(suffix))
+                return identifier;
+
+            if (!identifier.StartsWith(prefix, StringComparison.Ordinal))
+                identifier = prefix + identifier;
+
+            if (!identifier.EndsWith(suffix, StringComparison.Ordinal))
+                identifier += suffix;
+
+            return identifier;
+        }
+
+        /// <summary>
         /// Get the quote prefix for ArcGIS Pro.
         /// </summary>
         public override string QuotePrefix
         {
             get
             {
-                //TODO: ArcGIS
-                //return SQLSyntax.GetSpecialCharacter(esriSQLSpecialCharacters.esriSQL_DelimitedIdentifierPrefix);
-                return null;
+                return GetIdentifierQuoteDelimiters().Prefix;
             }
         }
 
@@ -235,11 +256,114 @@ namespace HLU.GISApplication
         {
             get
             {
-                //TODO: ArcGIS
-                //return SQLSyntax.GetSpecialCharacter(esriSQLSpecialCharacters.esriSQL_DelimitedIdentifierSuffix);
-                return null;
+                return GetIdentifierQuoteDelimiters().Suffix;
             }
         }
+
+        /// <summary>
+        /// Gets identifier quote delimiters suitable for the active layer's datastore.
+        /// </summary>
+        /// <remarks>
+        /// Shapefiles and file geodatabases typically do not require identifier delimiters,
+        /// so empty strings are returned for those sources.
+        /// </remarks>
+        private (string Prefix, string Suffix) GetIdentifierQuoteDelimiters()
+        {
+            return QueuedTask.Run(() =>
+            {
+                var map = MapView.Active?.Map;
+                if (map == null)
+                    return (string.Empty, string.Empty);
+
+                // Pick a representative feature layer.
+                // If you know the specific layer you're querying, pass it in instead.
+                var layer = map.Layers.OfType<FeatureLayer>().FirstOrDefault();
+                if (layer == null)
+                    return (string.Empty, string.Empty);
+
+                using var table = layer.GetTable();
+                var datastore = table.GetDatastore();
+
+                // Shapefiles / folders (FileSystemDatastore) and file-based sources generally don't need quoting.
+                // This covers shapefiles and other folder-based vector sources.
+                if (datastore is ArcGIS.Core.Data.FileSystemDatastore)
+                    return (string.Empty, string.Empty);
+
+                // Geodatabases: could be file GDB, mobile GDB, or enterprise.
+                if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase)
+                {
+                    // Fast path: treat local GDBs as no-quote.
+                    // We detect enterprise by looking for telltale connection-string markers.
+                    var cs = SafeGetConnectionString(datastore);
+
+                    if (IsSqlServer(cs))
+                        return ("[", "]");
+
+                    if (IsOracle(cs) || IsPostgreSql(cs))
+                        return ("\"", "\"");
+
+                    return (string.Empty, string.Empty);
+                }
+
+                // Default: don't quote.
+                return (string.Empty, string.Empty);
+            }).Result;
+        }
+
+        /// <summary>
+        /// Safely returns a datastore connection string, or an empty string.
+        /// </summary>
+        private static string SafeGetConnectionString(ArcGIS.Core.Data.Datastore datastore)
+        {
+            try
+            {
+                return datastore.GetConnectionString() ?? string.Empty;
+            }
+            catch
+            {
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Returns true if the connection string appears to be SQL Server.
+        /// </summary>
+        private static bool IsSqlServer(string connectionString)
+        {
+            if (string.IsNullOrWhiteSpace(connectionString))
+                return false;
+
+            // Common markers seen in Pro connection strings for SQL Server / SDE.
+            return connectionString.Contains("SQLServer", StringComparison.OrdinalIgnoreCase) ||
+                   connectionString.Contains("DBCLIENT=sqlserver", StringComparison.OrdinalIgnoreCase) ||
+                   connectionString.Contains("INSTANCE=", StringComparison.OrdinalIgnoreCase) ||
+                   connectionString.Contains("SERVER=", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Returns true if the connection string appears to be Oracle.
+        /// </summary>
+        private static bool IsOracle(string connectionString)
+        {
+            if (string.IsNullOrWhiteSpace(connectionString))
+                return false;
+
+            return connectionString.Contains("Oracle", StringComparison.OrdinalIgnoreCase) ||
+                   connectionString.Contains("DBCLIENT=oracle", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Returns true if the connection string appears to be PostgreSQL.
+        /// </summary>
+        private static bool IsPostgreSql(string connectionString)
+        {
+            if (string.IsNullOrWhiteSpace(connectionString))
+                return false;
+
+            return connectionString.Contains("PostgreSQL", StringComparison.OrdinalIgnoreCase) ||
+                   connectionString.Contains("DBCLIENT=postgresql", StringComparison.OrdinalIgnoreCase);
+        }
+
 
         /// <summary>
         /// Get the string literal delimiter for ArcGIS Pro.
@@ -287,20 +411,20 @@ namespace HLU.GISApplication
         /// </summary>
         public override string ConcatenateOperator { get { return "&"; } }
 
-        /// <summary>
-        /// The the quote character for ArcGIS Pro.
-        /// </summary>
-        /// <param name="identifier"></param>
-        /// <returns></returns>
-        public override string QuoteIdentifier(string identifier)
-        {
-            if (!String.IsNullOrEmpty(identifier))
-            {
-                if (!identifier.StartsWith(QuotePrefix)) identifier = identifier.Insert(0, QuotePrefix);
-                if (!identifier.EndsWith(QuoteSuffix)) identifier += QuoteSuffix;
-            }
-            return identifier;
-        }
+        ///// <summary>
+        ///// The the quote character for ArcGIS Pro.
+        ///// </summary>
+        ///// <param name="identifier"></param>
+        ///// <returns></returns>
+        //public override string QuoteIdentifier(string identifier)
+        //{
+        //    if (!String.IsNullOrEmpty(identifier))
+        //    {
+        //        if (!identifier.StartsWith(QuotePrefix)) identifier = identifier.Insert(0, QuotePrefix);
+        //        if (!identifier.EndsWith(QuoteSuffix)) identifier += QuoteSuffix;
+        //    }
+        //    return identifier;
+        //}
 
         /// <summary>
         /// Does not escape string delimiter or other special characters.
@@ -701,7 +825,7 @@ namespace HLU.GISApplication
                     var missing = resultTable.Columns
                         .Cast<DataColumn>()
                         .Select(c => c.ColumnName)
-                        .Where(colName => def.FindField(colName) < 0)   // If FindField isn't available in your refs, tell me and I'll swap it.
+                        .Where(colName => def.FindField(colName) < 0)
                         .ToList();
 
                     if (missing.Count > 0)
@@ -751,7 +875,601 @@ namespace HLU.GISApplication
             return resultTable;
         }
 
-        //TODO: ArcGIS
+        #region Selection
+
+        /// <summary>
+        /// Selects the feature(s) for a single incid in the active HLU layer and returns the selected IDs.
+        /// </summary>
+        /// <param name="incid">The incid to select.</param>
+        /// <param name="resultTable">
+        /// A DataTable defining the columns to return (typically incid/toid/toidfragid).
+        /// </param>
+        /// <returns>The populated selection table.</returns>
+        /// <exception cref="GisSelectionException">Thrown if no active HLU layer is set.</exception>
+        public async Task<DataTable> SelectCurrentOnMapAsync(
+            string incid,
+            DataTable resultTable)
+        {
+            if (string.IsNullOrWhiteSpace(incid))
+                return resultTable;
+
+            if (_hluLayer == null)
+                throw new GisSelectionException("No active HLU layer is set.");
+
+            // Build a where clause using the actual layer field name for incid.
+            // Assumes incid is a text field in the layer, as per legacy behaviour.
+            string incidFieldName = GetFieldName(_hluLayerStructure.incidColumn.Ordinal);
+
+            if (string.IsNullOrWhiteSpace(incidFieldName))
+                throw new GisSelectionException("Could not resolve the incid field name for the active HLU layer.");
+
+            string whereClause = $"{QuoteIdentifier(incidFieldName)} = {QuoteStringLiteral(incid)}";
+
+            await SelectByWhereClauseAsync(whereClause, SelectionCombinationMethod.New).ConfigureAwait(false);
+
+            // Read selection back into the passed table schema.
+            return await ReadMapSelectionAsync(resultTable).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Selects all INCIDs from a supplied selection table on the active HLU layer and
+        /// returns the selected features into the supplied result table schema.
+        /// </summary>
+        /// <param name="incidSelection">
+        /// A DataTable containing the INCID values that should be selected in GIS.
+        /// </param>
+        /// <param name="resultTable">
+        /// A DataTable defining the schema of the rows to be returned from GIS.
+        /// </param>
+        /// <returns>
+        /// The populated result table containing the selected GIS features.
+        /// </returns>
+        public async Task<DataTable> SelectAllOnMapAsync(
+            DataTable incidSelection,
+            DataTable resultTable)
+        {
+            // Defensive programming: the caller must supply a result table schema.
+            if (resultTable == null)
+                throw new ArgumentNullException(nameof(resultTable));
+
+            // Nothing to select – return an empty table with the correct schema.
+            if (incidSelection == null || incidSelection.Rows.Count == 0)
+                return resultTable;
+
+            // The active HLU layer must already be known (as with SelectCurrentOnMapAsync).
+            if (_hluLayer == null)
+                throw new GisSelectionException("No active HLU layer is set.");
+
+            // Determine the ordinal of the INCID column from the layer structure.
+            // This keeps the logic consistent with the rest of the tool.
+            int incidOrdinal = _hluLayerStructure.incidColumn.Ordinal;
+
+            // Resolve the actual GIS field name for the INCID column.
+            string incidFieldName = GetFieldName(incidOrdinal);
+
+            // If we can't resolve the field name, we can't proceed.
+            if (string.IsNullOrWhiteSpace(incidFieldName))
+                throw new GisSelectionException(
+                    "Could not resolve the incid field name for the active HLU layer.");
+
+            // Extract all distinct INCID values from the selection table, and:
+            //  - convert to string (INCID is stored as text),
+            //  - ignore null/empty values,
+            //  - remove duplicates (important for SQL length and performance).
+            var incids = incidSelection.Rows
+                .Cast<DataRow>()
+                .Select(r => r[incidOrdinal]?.ToString())
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            // If no valid INCIDs were found, there is nothing to select.
+            if (incids.Count == 0)
+                return resultTable;
+
+            // Build one or more WHERE clauses of the form:
+            //   <incidField> IN ('A','B','C',...)
+            //
+            // The clauses are chunked to avoid provider SQL length limits
+            // (FGDB, SDE, shapefile, etc.).
+            IEnumerable<string> whereClauses = BuildInWhereClauses(
+                QuoteIdentifier(incidFieldName),
+                incids,
+                maxClauseLength: 8000);
+
+            // First selection replaces the current map selection,
+            // subsequent clauses are added to it.
+            bool first = true;
+
+            foreach (string whereClause in whereClauses)
+            {
+                await SelectByWhereClauseAsync(
+                    whereClause,
+                    first
+                        ? SelectionCombinationMethod.New
+                        : SelectionCombinationMethod.Add).ConfigureAwait(false);
+
+                first = false;
+            }
+
+            // Read the current GIS selection back into the supplied result table.
+            return await ReadMapSelectionAsync(resultTable).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Calculates the expected number of TOIDs and features for a given INCID selection
+        /// by querying the active HLU layer directly.
+        /// </summary>
+        /// <param name="incidSelection">
+        /// A DataTable containing INCID values to test.
+        /// </param>
+        /// <returns>
+        /// A tuple containing:
+        ///  - the expected number of distinct TOIDs,
+        ///  - the expected number of feature rows.
+        /// </returns>
+        public async Task<(int ExpectedNumToids, int ExpectedNumFeatures)>
+            ExpectedSelectionFeaturesAsync(DataTable incidSelection)
+        {
+            // No selection supplied – nothing expected.
+            if (incidSelection == null || incidSelection.Rows.Count == 0)
+                return (0, 0);
+
+            // The active HLU layer must already be known.
+            if (_hluLayer == null)
+                throw new GisSelectionException("No active HLU layer is set.");
+
+            // Resolve column ordinals from the layer structure.
+            int incidOrdinal = _hluLayerStructure.incidColumn.Ordinal;
+            int toidOrdinal = _hluLayerStructure.toidColumn.Ordinal;
+
+            // Resolve GIS field names.
+            string incidFieldName = GetFieldName(incidOrdinal);
+            string toidFieldName = GetFieldName(toidOrdinal);
+
+            if (string.IsNullOrWhiteSpace(incidFieldName))
+                throw new GisSelectionException(
+                    "Could not resolve the incid field name for the active HLU layer.");
+
+            if (string.IsNullOrWhiteSpace(toidFieldName))
+                throw new GisSelectionException(
+                    "Could not resolve the toid field name for the active HLU layer.");
+
+            // Extract distinct INCIDs from the selection table.
+            var incids = incidSelection.Rows
+                .Cast<DataRow>()
+                .Select(r => r[incidOrdinal]?.ToString())
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (incids.Count == 0)
+                return (0, 0);
+
+            // Build chunked WHERE clauses for querying the layer.
+            IEnumerable<string> whereClauses = BuildInWhereClauses(
+                QuoteIdentifier(incidFieldName),
+                incids,
+                maxClauseLength: 8000);
+
+            // Run the counting logic on the MCT.
+            return await QueuedTask.Run(() =>
+            {
+                int featureCount = 0;
+
+                // Track unique TOIDs explicitly.
+                var distinctToids =
+                    new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                foreach (string whereClause in whereClauses)
+                {
+                    // Limit returned fields for performance.
+                    QueryFilter qf = new()
+                    {
+                        WhereClause = whereClause,
+                        SubFields = QuoteIdentifier(toidFieldName)
+                    };
+
+                    using RowCursor cursor = _hluLayer.Search(qf);
+                    while (cursor.MoveNext())
+                    {
+                        using Row row = cursor.Current;
+
+                        // Every row corresponds to a GIS feature.
+                        featureCount++;
+
+                        // Collect unique TOIDs.
+                        object toidObj = row[toidFieldName];
+                        string toid = toidObj?.ToString();
+
+                        if (!string.IsNullOrWhiteSpace(toid))
+                            distinctToids.Add(toid);
+                    }
+                }
+
+                return (distinctToids.Count, featureCount);
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Builds a series of SQL "field IN (...)" clauses, chunked to stay under an approximate maximum length.
+        /// </summary>
+        /// <param name="fieldExpression">The (already quoted) field name or expression.</param>
+        /// <param name="values">The values to include.</param>
+        /// <param name="maxClauseLength">Maximum clause length.</param>
+        /// <returns>An enumerable of where clauses.</returns>
+        private IEnumerable<string> BuildInWhereClauses(
+            string fieldExpression,
+            IEnumerable<string> values,
+            int maxClauseLength)
+        {
+            if (string.IsNullOrWhiteSpace(fieldExpression))
+                yield break;
+
+            var quotedValues = values
+                .Where(v => !string.IsNullOrWhiteSpace(v))
+                .Select(QuoteStringLiteral)
+                .ToList();
+
+            if (quotedValues.Count == 0)
+                yield break;
+
+            string prefix = $"{fieldExpression} IN (";
+            string suffix = ")";
+
+            var current = new List<string>();
+            int currentLength = prefix.Length + suffix.Length;
+
+            foreach (string v in quotedValues)
+            {
+                int extra = (current.Count == 0 ? 0 : 1) + v.Length;
+
+                if (current.Count > 0 && currentLength + extra > maxClauseLength)
+                {
+                    yield return prefix + string.Join(",", current) + suffix;
+                    current.Clear();
+                    currentLength = prefix.Length + suffix.Length;
+                    extra = v.Length;
+                }
+
+                current.Add(v);
+                currentLength += extra;
+            }
+
+            if (current.Count > 0)
+                yield return prefix + string.Join(",", current) + suffix;
+        }
+
+        /// <summary>
+        /// Selects features in the active HLU layer using a where clause.
+        /// </summary>
+        /// <param name="whereClause">The SQL where clause.</param>
+        /// <param name="selectionMethod">The selection combination method.</param>
+        /// <exception cref="GisSelectionException">Thrown if no active HLU layer is set.</exception>
+        public async Task SelectByWhereClauseAsync(
+            string whereClause,
+            SelectionCombinationMethod selectionMethod)
+        {
+            if (_hluLayer == null)
+                throw new GisSelectionException("No active HLU layer is set.");
+
+            if (string.IsNullOrWhiteSpace(whereClause))
+                return;
+
+            await QueuedTask.Run(() =>
+            {
+                QueryFilter filter = new()
+                {
+                    WhereClause = whereClause
+                };
+
+                _hluLayer.Select(filter, selectionMethod);
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Clears the selection on the active HLU layer.
+        /// </summary>
+        public async Task ClearMapSelectionAsync()
+        {
+            if (_hluLayer == null)
+                return;
+
+            await QueuedTask.Run(() =>
+            {
+                _hluLayer.ClearSelection();
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Counts the selected features on the active HLU layer.
+        /// </summary>
+        /// <returns>The selection count, or 0 if no layer/selection.</returns>
+        public async Task<int> CountMapSelectionAsync()
+        {
+            if (_hluLayer == null)
+                return 0;
+
+            return await QueuedTask.Run(() =>
+            {
+                return _hluLayer.SelectionCount;
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Checks whether the selected rows are unique by (incid,toid,toidfragid) in the active HLU layer.
+        /// </summary>
+        /// <remarks>
+        /// This mirrors the legacy "SelectedRowsUnique" intent to protect against integrity issues.
+        /// </remarks>
+        /// <returns>True if unique or empty selection; false if duplicates found.</returns>
+        public async Task<bool> SelectedRowsUniqueAsync()
+        {
+            if (_hluLayer == null)
+                return true;
+
+            return await QueuedTask.Run(() =>
+            {
+                var selection = _hluLayer.GetSelection();
+                if (selection == null || selection.GetCount() == 0)
+                    return true;
+
+                // Resolve field names from structure ordinals.
+                string incidField = GetFieldName(_hluLayerStructure.incidColumn.Ordinal);
+                string toidField = GetFieldName(_hluLayerStructure.toidColumn.Ordinal);
+                string fragField = GetFieldName(_hluLayerStructure.toidfragidColumn.Ordinal);
+
+                if (string.IsNullOrWhiteSpace(incidField) ||
+                    string.IsNullOrWhiteSpace(toidField) ||
+                    string.IsNullOrWhiteSpace(fragField))
+                    return true;
+
+                HashSet<string> keys = new(StringComparer.Ordinal);
+
+                using RowCursor cursor = selection.Search();
+                while (cursor.MoveNext())
+                {
+                    using Row row = cursor.Current;
+
+                    string incid = Convert.ToString(row[incidField]) ?? string.Empty;
+                    string toid = Convert.ToString(row[toidField]) ?? string.Empty;
+                    string frag = Convert.ToString(row[fragField]) ?? string.Empty;
+
+                    string key = $"{incid}|{toid}|{frag}";
+
+                    if (!keys.Add(key))
+                        return false;
+                }
+
+                return true;
+            }).ConfigureAwait(false);
+        }
+
+        #endregion Selection
+
+        #region Zoom
+
+        //TODO: Remove minZoom and distUnits if not needed
+        /// <summary>
+        /// Zooms the active map view to the current selection in the active HLU layer,
+        /// with ArcMap-compatible behaviour:
+        /// - "always": always zoom to the selection.
+        /// - "when": only zoom if the selection is not fully within the current view extent.
+        /// </summary>
+        /// <param name="minZoom">
+        /// Minimum allowable scale (legacy meaning: do not remain more zoomed-in than this).
+        /// Interpreted as a map scale (e.g. 10000).
+        /// </param>
+        /// <param name="autoZoomToSelection">
+        /// 2 = always zoom, 1 = zoom only when selection is outside the visible area, 0 = do not zoom.
+        /// </param>
+        /// <param name="ratio">
+        /// Optional zoom ratio applied after zooming, unless a valid scale list is provided.
+        /// </param>
+        /// <param name="validScales">
+        /// Optional list of valid scales used to snap to the next scale up instead of applying the ratio directly.
+        /// </param>
+        public async Task ZoomSelectedAsync(
+            int minZoom,
+            int autoZoomToSelection,
+            double? ratio = null,
+            List<int> validScales = null)
+        {
+            // Respect caller setting: 0 means do not zoom.
+            if (autoZoomToSelection == 0)
+                return;
+
+            if (_hluLayer == null)
+                return;
+
+            MapView view = MapView.Active;
+            if (view == null)
+                return;
+
+            await QueuedTask.Run(async () =>
+            {
+                var selection = _hluLayer.GetSelection();
+                if (selection == null || selection.GetCount() == 0)
+                    return;
+
+                // Determine whether we should zoom based on ArcMap-style behaviour.
+                // autoZoomToSelection meanings:
+                //   2 = always zoom to selection.
+                //   1 = zoom only when the selection is not fully within the visible map extent.
+                //   0 = do not zoom at all.
+                bool shouldZoom = (autoZoomToSelection == 2);
+
+                if (!shouldZoom && autoZoomToSelection == 1)
+                {
+                    // Get the current visible extent of the active map view.
+                    // This represents what the user can currently see on screen.
+                    Envelope viewExtent = view.Extent;
+
+                    // Get the extent of the selected features in the HLU layer.
+                    // QueryExtent(true) returns the envelope of the current selection only.
+                    Envelope selectionExtent = GetSelectionExtent(_hluLayer);
+
+                    // If either extent cannot be determined, default to zooming.
+                    // This mirrors the ArcMap behaviour of "better to zoom than do nothing".
+                    if (viewExtent == null || selectionExtent == null)
+                    {
+                        shouldZoom = true;
+                    }
+                    else
+                    {
+                        // Ensure both extents are in the map's spatial reference.
+                        // Geometry containment tests are unreliable if spatial references differ.
+                        SpatialReference mapSpatialReference = view.Map?.SpatialReference;
+
+                        if (mapSpatialReference != null)
+                        {
+                            if (viewExtent.SpatialReference == null ||
+                                !viewExtent.SpatialReference.IsEqual(mapSpatialReference))
+                            {
+                                viewExtent = (Envelope)GeometryEngine.Instance.Project(
+                                    viewExtent,
+                                    mapSpatialReference);
+                            }
+
+                            if (selectionExtent.SpatialReference == null ||
+                                !selectionExtent.SpatialReference.IsEqual(mapSpatialReference))
+                            {
+                                selectionExtent = (Envelope)GeometryEngine.Instance.Project(
+                                    selectionExtent,
+                                    mapSpatialReference);
+                            }
+                        }
+
+                        // Is the selection extent NOT fully contained
+                        // within the current visible map extent.
+                        shouldZoom = !IsEnvelopeContained(
+                            outer: viewExtent,
+                            inner: selectionExtent);
+                    }
+                }
+
+                // If the selection extent is NOT fully contained
+                // within the current visible map extent don't zoom.
+                if (!shouldZoom)
+                    return;
+
+                // Zoom to the selection in this layer.
+                await view.ZoomToAsync(_hluLayer, true).ConfigureAwait(false);
+
+                // Apply additional scale logic (ported from ApplyZoomToMapFrame):
+                // - If a ratio is provided, apply ratio or next scale up from validScales.
+                // - Otherwise, enforce minZoom as a minimum allowed zoom-in (legacy safeguard).
+                ApplyZoomToMapView(
+                    view,
+                    ratio,
+                    null,
+                    validScales);
+
+                if (minZoom > 0 && (validScales == null || validScales.Count < 2) && !ratio.HasValue)
+                {
+                    Camera camera = view.Camera;
+
+                    // Smaller scale = more zoomed-in. If we are closer than minZoom, zoom out to minZoom.
+                    if (camera.Scale < minZoom)
+                    {
+                        camera.Scale = minZoom;
+
+                        await view.ZoomToAsync(camera, duration: null).ConfigureAwait(false);
+                    }
+                }
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Gets the extent of the currently selected features in a feature layer
+        /// by iterating the selection and unioning each feature's shape extent.
+        /// </summary>
+        /// <remarks>
+        /// This avoids FeatureLayer.QueryExtent(true) which can return an unexpectedly
+        /// large extent for some layer/data-source types (e.g. query layers/joins).
+        /// Must be called on the MCT (i.e. from within QueuedTask.Run).
+        /// </remarks>
+        /// <param name="featureLayer">The feature layer whose selection extent is required.</param>
+        /// <returns>
+        /// The envelope of the selected features, or null if there is no selection
+        /// or feature shapes cannot be read.
+        /// </returns>
+        private static Envelope GetSelectionExtent(
+            FeatureLayer featureLayer)
+        {
+            if (featureLayer == null)
+                return null;
+
+            Selection selection = featureLayer.GetSelection();
+            if (selection == null || selection.GetCount() == 0)
+                return null;
+
+            EnvelopeBuilderEx builder = null;
+
+            // Search the selected rows only.
+            using RowCursor cursor = selection.Search();
+
+            while (cursor.MoveNext())
+            {
+                using Row row = cursor.Current;
+
+                // Selected rows from a FeatureLayer should be Feature rows.
+                if (row is not Feature feature)
+                    continue;
+
+                ArcGIS.Core.Geometry.Geometry shape = feature.GetShape();
+                if (shape == null)
+                    continue;
+
+                Envelope env = shape.Extent;
+                if (env == null)
+                    continue;
+
+                // Build up a unioned envelope across all selected features.
+                if (builder == null)
+                {
+                    builder = new EnvelopeBuilderEx(env);
+                }
+                else
+                {
+                    builder.Union(env);
+                }
+            }
+
+            return builder?.ToGeometry() as Envelope;
+        }
+
+        /// <summary>
+        /// Determines whether one envelope is fully contained within another,
+        /// using a small tolerance to avoid floating-point precision issues.
+        /// </summary>
+        /// <param name="outer">The envelope representing the visible map extent.</param>
+        /// <param name="inner">The envelope representing the selection extent.</param>
+        /// <returns>
+        /// True if <paramref name="inner"/> is completely inside <paramref name="outer"/>;
+        /// otherwise false.
+        /// </returns>
+        private static bool IsEnvelopeContained(
+            Envelope outer,
+            Envelope inner)
+        {
+            if (outer == null || inner == null)
+                return false;
+
+            // Tolerance helps prevent false negatives due to floating-point rounding.
+            double tolerance = Math.Max(outer.Width, outer.Height) * 1e-9;
+
+            return inner.XMin >= outer.XMin - tolerance &&
+                   inner.YMin >= outer.YMin - tolerance &&
+                   inner.XMax <= outer.XMax + tolerance &&
+                   inner.YMax <= outer.YMax + tolerance;
+        }
+
+        #endregion Zoom
+
+        #region OLD?
+
+        //TODO: Replace calls with ClearMapSelectionAsync
         /// <summary>
         /// Clears the currently selected map features.
         /// </summary>
@@ -760,7 +1478,7 @@ namespace HLU.GISApplication
             //IpcArcMap(["cs"]);
         }
 
-        //TODO: ArcGIS
+        //TODO: Replace calls with CountMapSelectionAsync
         /// <summary>
         /// Counts the currently selected map features.
         /// </summary>
@@ -773,6 +1491,7 @@ namespace HLU.GISApplication
             //    fragCount = 0;
         }
 
+        //TODO: Replace calls with SelectedRowsUniqueAsync
         /// <summary>
         /// Check if all selected rows have unique keys to avoid
         /// any potential data integrity problems.
@@ -791,6 +1510,136 @@ namespace HLU.GISApplication
             //catch { return true; }
             return false;
         }
+
+        #endregion Selection
+
+        #region Helpers
+
+        /// <summary>
+        /// Returns the next scale larger than the current scale from a list of valid scales.
+        /// </summary>
+        /// <param name="currentScale">
+        /// The current map scale (e.g. 5000).
+        /// </param>
+        /// <param name="scaleList">
+        /// A list of valid scales. Must contain at least two values.
+        /// </param>
+        /// <returns>
+        /// The next scale up (i.e. more zoomed-out). If the current scale exceeds
+        /// the largest value in the list, the method extrapolates using the last interval.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        /// Thrown if <paramref name="scaleList"/> contains fewer than two values.
+        /// </exception>
+        private static double GetNextScaleUp(
+            double currentScale,
+            List<int> scaleList)
+        {
+            if (scaleList == null || scaleList.Count < 2)
+                throw new ArgumentException("Scale list must contain at least two values.");
+
+            // Ensure the list is ordered from smallest (most zoomed-in)
+            // to largest (most zoomed-out).
+            scaleList.Sort();
+
+            // Find the first scale larger than the current scale.
+            foreach (int scale in scaleList)
+            {
+                if (scale > currentScale)
+                    return scale;
+            }
+
+            // If we reach here, the current scale is beyond the largest defined scale.
+            // Extrapolate using the difference between the last two values.
+            int count = scaleList.Count;
+            int last = scaleList[count - 1];
+            int secondLast = scaleList[count - 2];
+            int gap = last - secondLast;
+
+            double extrapolated = last;
+
+            while (extrapolated <= currentScale)
+            {
+                extrapolated += gap;
+            }
+
+            return extrapolated;
+        }
+
+        /// <summary>
+        /// Applies zoom logic to a map view by modifying its camera scale,
+        /// based on either a ratio, a fixed scale, or a list of valid scales.
+        /// </summary>
+        /// <remarks>
+        /// This is a MapView-based adaptation of ApplyZoomToMapFrame.
+        /// Camera changes are applied using ZoomToAsync rather than direct assignment.
+        /// </remarks>
+        /// <param name="mapView">
+        /// The active map view to apply the zoom to.
+        /// </param>
+        /// <param name="ratio">
+        /// Optional zoom ratio to apply (e.g. 1.5).
+        /// Ignored if <paramref name="scale"/> is provided.
+        /// </param>
+        /// <param name="scale">
+        /// Optional fixed scale to apply directly (e.g. 10000).
+        /// </param>
+        /// <param name="validScales">
+        /// Optional list of valid scales. If supplied and <paramref name="ratio"/> is set,
+        /// the next scale up from the list is chosen instead of applying the ratio directly.
+        /// </param>
+        private static void ApplyZoomToMapView(
+            MapView mapView,
+            double? ratio,
+            double? scale,
+            List<int> validScales = null)
+        {
+            if (mapView == null)
+                return;
+
+            try
+            {
+                Camera camera = mapView.Camera;
+
+                // Ratio-based zoom logic.
+                if (ratio.HasValue)
+                {
+                    // If a scale list is supplied, choose the next valid scale up.
+                    if (validScales != null && validScales.Count >= 2)
+                    {
+                        double currentScale = camera.Scale;
+                        double nextScale = GetNextScaleUp(currentScale, validScales);
+
+                        camera.Scale = nextScale;
+
+                        // Apply the updated camera.
+                        _ = mapView.ZoomToAsync(camera, duration: null);
+                    }
+                    else
+                    {
+                        // No scale list supplied: apply the ratio directly.
+                        camera.Scale *= ratio.Value;
+
+                        _ = mapView.ZoomToAsync(camera, duration: null);
+                    }
+                }
+                // Fixed-scale zoom logic.
+                else if (scale.HasValue && scale.Value > 0)
+                {
+                    camera.Scale = scale.Value;
+
+                    _ = mapView.ZoomToAsync(camera, duration: null);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Zoom errors should never be fatal to the calling workflow.
+                System.Diagnostics.Trace.WriteLine(
+                    $"ApplyZoomToMapView error: {ex.Message}");
+            }
+        }
+
+        #endregion Helpers
 
         public void FlashSelectedFeature(List<SqlFilterCondition> whereClause)
         {
@@ -1217,6 +2066,7 @@ namespace HLU.GISApplication
 
         #endregion Fields
 
+        //TODO: Replace calls with ZoomSelectedAsync
         public void ZoomSelected(int minZoom, string distUnits, bool alwaysZoom)
         {
             //// Enable auto zoom when selecting features on map.

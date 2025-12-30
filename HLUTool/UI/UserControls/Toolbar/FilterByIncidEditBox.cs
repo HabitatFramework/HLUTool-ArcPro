@@ -47,7 +47,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// Filter by the specified Incid. Called when the user presses
         /// Enter in the edit box or the control loses keyboard focus.
         /// </summary>
-        protected override void OnEnter()
+        protected override async void OnEnter()
         {
             if (_viewModel == null)
             {
@@ -64,7 +64,7 @@ namespace HLU.UI.UserControls.Toolbar
             }
 
             // Filter by the specified Incid.
-            _viewModel.FilterByIncid(incidText);
+            await _viewModel.FilterByIncidAsync(incidText);
 
             // Clear the edit box.
             Text = null;

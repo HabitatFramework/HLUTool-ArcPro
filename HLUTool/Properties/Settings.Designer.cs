@@ -360,12 +360,12 @@ namespace HLU.Properties {
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
         [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public string SqlPath {
+        public string SQLPath {
             get {
-                return ((string)(this["SqlPath"]));
+                return ((string)(this["SQLPath"]));
             }
             set {
-                this["SqlPath"] = value;
+                this["SQLPath"] = value;
             }
         }
         
@@ -453,12 +453,12 @@ namespace HLU.Properties {
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("1")]
         [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public int AutoZoomSelection {
+        public int AutoZoomToSelection {
             get {
-                return ((int)(this["AutoZoomSelection"]));
+                return ((int)(this["AutoZoomToSelection"]));
             }
             set {
-                this["AutoZoomSelection"] = value;
+                this["AutoZoomToSelection"] = value;
             }
         }
         
@@ -697,16 +697,6 @@ namespace HLU.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=NEO\\SQLSERVER2017;Initial Catalog=HLUData;Integrated Security=True")]
-        public string HLUData_v401ConnectionString_2017 {
-            get {
-                return ((string)(this["HLUData_v401ConnectionString_2017"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n<ArrayOfString xmlns:xsd=\"http://www.w3." +
             "org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\r\n  <s" +
             "tring>0</string>\r\n  <string>1</string>\r\n  <string>2</string>\r\n</ArrayOfString>")]
@@ -835,6 +825,42 @@ namespace HLU.Properties {
         public string HLUData_v401ConnectionString {
             get {
                 return ((string)(this["HLUData_v401ConnectionString"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=localhost;Initial Catalog=HLUData;Integrated Security=True")]
+        public string HLUData_v401ConnectionString_2017 {
+            get {
+                return ((string)(this["HLUData_v401ConnectionString_2017"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute(@"<?xml version=""1.0"" encoding=""utf-16""?>
+<ArrayOfString xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"">
+  <string>Off</string>
+  <string>When out of view</string>
+  <string>Always</string>
+</ArrayOfString>")]
+        public global::System.Collections.Specialized.StringCollection AutoZoomToSelectionOptions {
+            get {
+                return ((global::System.Collections.Specialized.StringCollection)(this["AutoZoomToSelectionOptions"]));
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string WorkingFileGDBPath {
+            get {
+                return ((string)(this["WorkingFileGDBPath"]));
+            }
+            set {
+                this["WorkingFileGDBPath"] = value;
             }
         }
     }

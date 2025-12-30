@@ -1310,7 +1310,7 @@ namespace HLU.GISApplication
                     mapFrame.SetCamera(extent);
 
                     // Apply zoom ratio or scale to map frame.
-                    ApplyZoomToMapFrame(mapFrame, ratio, scale, validScales);
+                    //ApplyZoomToMapFrame(mapFrame, ratio, scale, validScales);
 
                     return true;
                 }
@@ -1458,7 +1458,7 @@ namespace HLU.GISApplication
                     mapFrame.SetCamera(combinedExtent);
 
                     // Apply zoom logic using camera scale strategy.
-                    ApplyZoomToMapFrame(mapFrame, ratio, scale, validScales);
+                    //ApplyZoomToMapFrame(mapFrame, ratio, scale, validScales);
 
                     return true;
                 }
@@ -1560,7 +1560,7 @@ namespace HLU.GISApplication
                     mapFrame.SetCamera(extent);
 
                     // Apply zoom logic using camera scale strategy.
-                    ApplyZoomToMapFrame(mapFrame, ratio, scale, validScales);
+                    //ApplyZoomToMapFrame(mapFrame, ratio, scale, validScales);
 
                     return true;
                 }
@@ -1602,41 +1602,42 @@ namespace HLU.GISApplication
             });
         }
 
-        /// <summary>
-        /// Returns the next scale up (i.e. more zoomed out) from the list of valid scales,
-        /// or extrapolates using the final gap until the value exceeds the current scale.
-        /// </summary>
-        /// <param name="currentScale">The current map scale.</param>
-        /// <param name="scaleList">A list of valid scales in ascending order.</param>
-        /// <returns>The next scale up from the list or extrapolated value.</returns>
-        private double GetNextScaleUp(double currentScale, List<int> scaleList)
-        {
-            if (scaleList == null || scaleList.Count < 2)
-                throw new ArgumentException("Scale list must contain at least two values.");
+        //TODO: Remove
+        ///// <summary>
+        ///// Returns the next scale up (i.e. more zoomed out) from the list of valid scales,
+        ///// or extrapolates using the final gap until the value exceeds the current scale.
+        ///// </summary>
+        ///// <param name="currentScale">The current map scale.</param>
+        ///// <param name="scaleList">A list of valid scales in ascending order.</param>
+        ///// <returns>The next scale up from the list or extrapolated value.</returns>
+        //private double GetNextScaleUp(double currentScale, List<int> scaleList)
+        //{
+        //    if (scaleList == null || scaleList.Count < 2)
+        //        throw new ArgumentException("Scale list must contain at least two values.");
 
-            scaleList.Sort();
+        //    scaleList.Sort();
 
-            foreach (var s in scaleList)
-            {
-                if (s > currentScale)
-                    return s;
-            }
+        //    foreach (var s in scaleList)
+        //    {
+        //        if (s > currentScale)
+        //            return s;
+        //    }
 
-            // Extrapolate using the final gap until the value exceeds the current scale.
-            int count = scaleList.Count;
-            int last = scaleList[count - 1];
-            int secondLast = scaleList[count - 2];
-            int gap = last - secondLast;
+        //    // Extrapolate using the final gap until the value exceeds the current scale.
+        //    int count = scaleList.Count;
+        //    int last = scaleList[count - 1];
+        //    int secondLast = scaleList[count - 2];
+        //    int gap = last - secondLast;
 
-            double extrapolated = last;
+        //    double extrapolated = last;
 
-            while (extrapolated <= currentScale)
-            {
-                extrapolated += gap;
-            }
+        //    while (extrapolated <= currentScale)
+        //    {
+        //        extrapolated += gap;
+        //    }
 
-            return extrapolated;
-        }
+        //    return extrapolated;
+        //}
 
         /// <summary>
         /// Applies zoom to a map frame based on ratio, fixed scale, or the next available scale from a scale list.
@@ -1663,8 +1664,8 @@ namespace HLU.GISApplication
                     if (validScales != null && validScales.Count >= 2)
                     {
                         double currentScale = camera.Scale;
-                        double nextScale = GetNextScaleUp(currentScale, validScales);
-                        camera.Scale = nextScale;
+                        //double nextScale = GetNextScaleUp(currentScale, validScales);
+                        //camera.Scale = nextScale;
                         mapFrame.SetCamera(camera);
                     }
                     else
@@ -4238,7 +4239,7 @@ namespace HLU.GISApplication
 
                         _hluLayer = featureLayer;
                         _hluFieldMap = hluFieldMap;
-                        _hluFieldNames = hluFieldNames;
+                        _hluFieldNames = hluFieldNames; //TODO: Not set when tool first loaded? (only when layer changed)
                         _hluFeatureClass = featureClass;
                         _hluCurrentLayer = new(featureLayer.Name, isEditable);
                     }

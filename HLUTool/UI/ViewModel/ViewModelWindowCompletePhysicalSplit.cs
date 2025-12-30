@@ -24,7 +24,7 @@ using HLU.Data.Model;
 
 namespace HLU.UI.ViewModel
 {
-    class ViewModelCompletePhysicalSplit(string reason, string process,
+    class ViewModelWindowCompletePhysicalSplit(string reason, string process,
         HluDataSet.lut_reasonRow[] reasonCodes, HluDataSet.lut_processRow[] processCodes) : ViewModelBase, IDataErrorInfo
     {
         #region Fields

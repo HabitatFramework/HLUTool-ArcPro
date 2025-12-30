@@ -224,7 +224,7 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.RefillIncidTable = true;
 
                     // Get the GIS layer selection again
-                    await _viewModelMain.ReadMapSelectionAsync(true);
+                    await _viewModelMain.GetMapSelectionAsync(true);
                 }
             }
             //}
@@ -420,7 +420,7 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.RefillIncidTable = true;
 
                     // Get the GIS layer selection again
-                    await _viewModelMain.ReadMapSelectionAsync(true);
+                    await _viewModelMain.GetMapSelectionAsync(true);
                 }
             }
             return success;

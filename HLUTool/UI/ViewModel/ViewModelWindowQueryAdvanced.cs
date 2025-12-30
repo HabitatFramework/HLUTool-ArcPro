@@ -1187,7 +1187,7 @@ namespace HLU.UI.ViewModel
         public void LoadSQLQuery()
         {
             // Load the query dialog from file
-            string filePath = Settings.Default.SqlPath;
+            string filePath = Settings.Default.SQLPath;
             string fileName = null;
 
             try
@@ -1266,9 +1266,9 @@ namespace HLU.UI.ViewModel
 
                 // If the existing file path does not exist
                 // then save the new path in the settings
-                if (!Directory.Exists(Settings.Default.SqlPath) && filePath != null)
+                if (!Directory.Exists(Settings.Default.SQLPath) && filePath != null)
                 {
-                    Settings.Default.SqlPath = filePath;
+                    Settings.Default.SQLPath = filePath;
                     Settings.Default.Save();
                 }
             }
@@ -1320,7 +1320,7 @@ namespace HLU.UI.ViewModel
         public void SaveSQLQuery()
         {
             // Save the query dialog to file
-            string filePath = Settings.Default.SqlPath;
+            string filePath = Settings.Default.SQLPath;
             string fileName = null;
 
             try
@@ -1360,9 +1360,9 @@ namespace HLU.UI.ViewModel
 
                 // If the existing file path does not exist
                 // then save the new path in the settings
-                if (!Directory.Exists(Settings.Default.SqlPath) && filePath != null)
+                if (!Directory.Exists(Settings.Default.SQLPath) && filePath != null)
                 {
-                    Settings.Default.SqlPath = filePath;
+                    Settings.Default.SQLPath = filePath;
                     Settings.Default.Save();
                 }
             }

@@ -45,11 +45,24 @@ namespace HLU.UI.UserControls.Toolbar
         /// <summary>
         /// Initiate the logical merge process. Called when the button is clicked.
         /// </summary>
-        protected override void OnClick()
+        protected override async void OnClick()
         {
-            // Call the safe fire and forget helper to logically merge the features asynchronously.
-            AsyncHelpers.SafeFireAndForget(_viewModel.LogicalMergeAsync(),
-                Exception => System.Diagnostics.Debug.WriteLine(Exception.Message));
+            if (_viewModel == null)
+            {
+                Enabled = false;
+                DisabledTooltip = "HLU main window is not available.";
+                return;
+            }
+
+            // Logically merge the features.
+            try
+            {
+                await _viewModel.LogicalMergeAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+            }
         }
 
         /// <summary>

@@ -19,6 +19,15 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Desktop.Editing;
+using ArcGIS.Desktop.Framework;
+using HLU.Data;
+using HLU.Data.Model;
+using HLU.Data.Model.HluDataSetTableAdapters;
+using HLU.Date;
+using HLU.GISApplication;
+using HLU.Properties;
+using HLU.UI.View;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -27,18 +36,10 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using HLU.Data;
-using HLU.Data.Model;
-using HLU.Data.Model.HluDataSetTableAdapters;
-using HLU.GISApplication;
-using HLU.Properties;
-using HLU.UI.View;
-using HLU.Date;
-using System.Threading.Tasks;
-using ArcGIS.Desktop.Editing;
-using ArcGIS.Desktop.Framework;
+using System.Windows.Threading;
 using CommandType = System.Data.CommandType;
 
 namespace HLU.UI.ViewModel
@@ -49,7 +50,7 @@ namespace HLU.UI.ViewModel
 
         private ViewModelWindowMain _viewModelMain;
         private WindowBulkUpdate _windowBulkUpdate;
-        private ViewModelBulkUpdate _viewModelBulkUpdate;
+        private ViewModelWindowBulkUpdate _viewModelBulkUpdate;
 
         private AddInSettings _addInSettings;
 
@@ -165,7 +166,7 @@ namespace HLU.UI.ViewModel
 
             // Display the bulk update interface to prompt the user
             // to select the options they want to use.
-            _viewModelBulkUpdate = new ViewModelBulkUpdate(_viewModelMain, _osmmBulkUpdateMode,
+            _viewModelBulkUpdate = new ViewModelWindowBulkUpdate(_viewModelMain, _osmmBulkUpdateMode,
                 deleteOrphanBapHabitats, deletePotentialBapHabitats, deleteIHSCodes,
                 deleteSecondaryCodes, sourceCount, createHistory, determinationQuality,
                 interpretationQuality, primaryChanged);
@@ -177,7 +178,7 @@ namespace HLU.UI.ViewModel
 
             _viewModelBulkUpdate.RequestClose -= _viewModelBulkUpdate_RequestClose; // Safety: avoid double subscription.
             _viewModelBulkUpdate.RequestClose +=
-                new ViewModelBulkUpdate.RequestCloseEventHandler(_viewModelBulkUpdate_RequestClose);
+                new ViewModelWindowBulkUpdate.RequestCloseEventHandler(_viewModelBulkUpdate_RequestClose);
 
             // allow all controls in window to bind to ViewModel by setting DataContext
             _windowBulkUpdate.DataContext = _viewModelBulkUpdate;
@@ -227,6 +228,10 @@ namespace HLU.UI.ViewModel
         public async Task ApplyBulkUpdateAsync()
         {
             _viewModelMain.ChangeCursor(Cursors.Wait, "Bulk updating ...");
+
+            //TODO: Needed?
+            // Let WPF render the cursor/message before heavy work begins.
+            //await Dispatcher.Yield(DispatcherPriority.Background);
 
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
@@ -519,6 +524,10 @@ namespace HLU.UI.ViewModel
         {
             _viewModelMain.ChangeCursor(Cursors.Wait, "OSMM Bulk updating ...");
 
+            //TODO: Needed?
+            // Let WPF render the cursor/message before heavy work begins.
+            //await Dispatcher.Yield(DispatcherPriority.Background);
+
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
             try
@@ -809,24 +818,24 @@ namespace HLU.UI.ViewModel
             finally
             {
                 // Stop the bulk update mode and reset all the controls
-                await OSMMBulkUpdateResetControls();
+                await OSMMBulkUpdateResetControlsAsync();
             }
         }
 
         /// <summary>
         /// Cancels the osmm bulk update mode.
         /// </summary>
-        public async void CancelOSMMBulkUpdate()
+        public async Task CancelOSMMBulkUpdateAsync()
         {
             // Stop the osmm bulk update mode and reset all the controls
-            await OSMMBulkUpdateResetControls();
+            await OSMMBulkUpdateResetControlsAsync();
         }
 
         /// <summary>
         /// Stops the osmm bulk update mode and resets all
         /// the controls to normal.
         /// </summary>
-        private async Task OSMMBulkUpdateResetControls()
+        private async Task OSMMBulkUpdateResetControlsAsync()
         {
             // Force the Incid table to be refilled because it has been
             // updated directly in the database rather than via the

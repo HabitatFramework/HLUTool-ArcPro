@@ -47,12 +47,24 @@ namespace HLU.UI.UserControls.Toolbar
         /// Select all features associated with the currently filtered INCID
         /// records in the map. Called when the button is clicked.
         /// </summary>
-        protected override void OnClick()
+        protected override async void OnClick()
         {
-            // Call the safe fire and forget helper to select all incid features
-            // on the map asynchronously.
-            AsyncHelpers.SafeFireAndForget(_viewModel.SelectAllOnMapAsync(),
-                Exception => System.Diagnostics.Debug.WriteLine(Exception.Message));
+            if (_viewModel == null)
+            {
+                Enabled = false;
+                DisabledTooltip = "HLU main window is not available.";
+                return;
+            }
+
+            // Select all incid features on the map.
+            try
+            {
+                await _viewModel.SelectAllOnMapAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+            }
         }
 
         /// <summary>

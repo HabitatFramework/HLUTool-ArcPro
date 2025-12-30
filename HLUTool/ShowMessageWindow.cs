@@ -28,7 +28,7 @@ namespace HLU
     internal static class ShowMessageWindow
     {
         private static MessageWindow _messageWindow;
-        private static ViewModelMessageWindow _messageWindowViewModel;
+        private static ViewModelWindowMessage _messageWindowViewModel;
 
         internal static void ShowMessage(string messageText, string messageHeader)
         {

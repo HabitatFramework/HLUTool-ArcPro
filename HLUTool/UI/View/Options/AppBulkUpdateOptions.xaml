@@ -1,4 +1,5 @@
-﻿<UserControl x:Class="HLU.UI.View.AppBulkUpdateOptions"
+﻿<UserControl
+    x:Class="HLU.UI.View.AppBulkUpdateOptions"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
@@ -6,7 +7,7 @@
     xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
     xmlns:local="clr-namespace:HLU.UI.ViewModel"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    d:DataContext="{d:DesignInstance Type=local:ViewModelOptions}"
+    d:DataContext="{d:DesignInstance Type=local:ViewModelWindowOptions}"
     mc:Ignorable="d">
 
     <UserControl.Resources>
@@ -23,22 +24,20 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <StackPanel
-            Grid.Row="0"
-            Margin="4">
+        <StackPanel Grid.Row="0" Margin="4">
 
-            <Label Content="Set application options for bulk update"
+            <Label
                 HorizontalAlignment="Left"
+                Content="Set application options for bulk update"
                 FontSize="14"
                 FontWeight="Medium" />
 
-            <Expander Header="Bulk Update Defaults"
+            <Expander
                 Margin="6,10,0,0"
+                Header="Bulk Update Defaults"
                 IsExpanded="True">
 
-                <Grid
-                    Margin="12,4,4,2"
-                    HorizontalAlignment="Left">
+                <Grid Margin="12,4,4,2" HorizontalAlignment="Left">
 
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -67,16 +66,18 @@
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             IsChecked="{Binding BulkDeleteOrphanBapHabitats}" />
-                        <Label Content="Delete Orphan Priority Habitats"
+                        <Label
                             x:Name="LabelBulkDeleteOrphanBapHabitats"
                             Grid.Row="0"
                             Grid.Column="1"
                             HorizontalAlignment="Left"
-                            VerticalAlignment="Center" />
-                        <controls:InfoButton Header="Delete Orphan Priority Habitats"
+                            VerticalAlignment="Center"
+                            Content="Delete Orphan Priority Habitats" />
+                        <controls:InfoButton
                             Grid.Column="2"
                             Margin="0,0,0,0"
-                            Description="Select whether existing priority habitats that are orphaned (i.e. not associated with the new primary and secondary habitats) should be deleted following a change to the primary habitat during a bulk update.&#10;&#10;If checked, any existing priority habitats will be deleted, otherwise they are converted to potential priority habitats with the determination quality changed to 'Previous present, by may no longer exist'." />
+                            Description="Select whether existing priority habitats that are orphaned (i.e. not associated with the new primary and secondary habitats) should be deleted following a change to the primary habitat during a bulk update.&#10;&#10;If checked, any existing priority habitats will be deleted, otherwise they are converted to potential priority habitats with the determination quality changed to 'Previous present, by may no longer exist'."
+                            Header="Delete Orphan Priority Habitats" />
 
                     </Grid>
 
@@ -95,16 +96,18 @@
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             IsChecked="{Binding BulkDeletePotentialBapHabitats}" />
-                        <Label Content="Delete Potential Priority Habitats"
+                        <Label
                             x:Name="LabelBulkDeletePotentialBapHabitats"
                             Grid.Row="2"
                             Grid.Column="1"
                             HorizontalAlignment="Left"
-                            VerticalAlignment="Center" />
-                        <controls:InfoButton Header="Delete Potential Priority Habitats"
+                            VerticalAlignment="Center"
+                            Content="Delete Potential Priority Habitats" />
+                        <controls:InfoButton
                             Grid.Column="2"
                             Margin="0,0,0,0"
-                            Description="Select whether existing potential priority habitats (those added manually by a user) should be deleted following during a bulk update.&#10;&#10;If checked, any existing potential priority habitats will be will be deleted, otherwise they will be retained." />
+                            Description="Select whether existing potential priority habitats (those added manually by a user) should be deleted following during a bulk update.&#10;&#10;If checked, any existing potential priority habitats will be will be deleted, otherwise they will be retained."
+                            Header="Delete Potential Priority Habitats" />
 
                     </Grid>
 
@@ -123,16 +126,18 @@
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             IsChecked="{Binding BulkDeleteIHSCodes}" />
-                        <Label Content="Delete Existing IHS Codes"
+                        <Label
                             x:Name="LabelBulkDeleteIHSCodes"
                             Grid.Row="0"
                             Grid.Column="1"
                             HorizontalAlignment="Left"
-                            VerticalAlignment="Center" />
-                        <controls:InfoButton Header="Delete Existing IHS Codes"
+                            VerticalAlignment="Center"
+                            Content="Delete Existing IHS Codes" />
+                        <controls:InfoButton
                             Grid.Column="2"
                             Margin="0,0,0,0"
-                            Description="Select whether existing IHS habitat and multiplex (matrix, formation, management and complex) codes should be deleted following a bulk update.&#10;&#10;If checked, any existing multiplex codes will be deleted, otherwise they will be retained." />
+                            Description="Select whether existing IHS habitat and multiplex (matrix, formation, management and complex) codes should be deleted following a bulk update.&#10;&#10;If checked, any existing multiplex codes will be deleted, otherwise they will be retained."
+                            Header="Delete Existing IHS Codes" />
 
                     </Grid>
 
@@ -151,16 +156,18 @@
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             IsChecked="{Binding BulkDeleteSecondaryCodes}" />
-                        <Label Content="Delete Existing Secondary Codes"
+                        <Label
                             x:Name="LabelBulkDeleteSecondaryCodes"
                             Grid.Row="0"
                             Grid.Column="1"
                             HorizontalAlignment="Left"
-                            VerticalAlignment="Center" />
-                        <controls:InfoButton Header="Delete Existing Secondary Codes"
+                            VerticalAlignment="Center"
+                            Content="Delete Existing Secondary Codes" />
+                        <controls:InfoButton
                             Grid.Column="2"
                             Margin="0,0,0,0"
-                            Description="Select whether existing secondary codes should be deleted following a change to the primary habitat during a bulk update. If checked, any existing secondary codes will be deleted, otherwise they will be retained and may not be compatible with the new primary habitat." />
+                            Description="Select whether existing secondary codes should be deleted following a change to the primary habitat during a bulk update. If checked, any existing secondary codes will be deleted, otherwise they will be retained and may not be compatible with the new primary habitat."
+                            Header="Delete Existing Secondary Codes" />
 
                     </Grid>
 
@@ -179,35 +186,36 @@
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             IsChecked="{Binding BulkCreateHistoryRecords}" />
-                        <Label Content="Create History Records"
+                        <Label
                             x:Name="LabelBulkCreateHistoryRecords"
                             Grid.Row="0"
                             Grid.Column="1"
                             HorizontalAlignment="Left"
-                            VerticalAlignment="Center" />
-                        <controls:InfoButton Header="Create History Records"
+                            VerticalAlignment="Center"
+                            Content="Create History Records" />
+                        <controls:InfoButton
                             Grid.Column="2"
                             Margin="0,0,0,0"
-                            Description="Select whether history records will be created when a bulk update is applied." />
+                            Description="Select whether history records will be created when a bulk update is applied."
+                            Header="Create History Records" />
 
                     </Grid>
 
                 </Grid>
             </Expander>
 
-            <Expander Header="OSMM Bulk Update Defaults"
+            <Expander
                 Margin="6,10,0,0"
+                Header="OSMM Bulk Update Defaults"
                 IsExpanded="True">
 
-                <Grid
-                    Margin="12,4,4,2"
-                    HorizontalAlignment="Left">
+                <Grid Margin="12,4,4,2" HorizontalAlignment="Left">
 
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="0" />
+                        <RowDefinition Height="6" />
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="0" />
+                        <RowDefinition Height="6" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
@@ -221,24 +229,26 @@
                             <ColumnDefinition Width="Auto" MinWidth="350" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Label Content="Priority Determination Quality"
+                        <Label
                             x:Name="LabelDeterminationQuality"
                             Grid.Column="0"
                             HorizontalAlignment="Left"
-                            VerticalAlignment="Center" />
-                        <ComboBox ItemsSource="{Binding BulkDeterminationQualityCodes}"
+                            VerticalAlignment="Center"
+                            Content="Priority Determination Quality" />
+                        <ComboBox
                             x:Name="ComboBoxDeterminationQuality"
                             Grid.Column="1"
                             BorderThickness="1"
                             DisplayMemberPath="description"
-                            SelectedValue="{Binding BulkDeterminationQuality,
-                                                    ValidatesOnDataErrors=True}"
+                            ItemsSource="{Binding BulkDeterminationQualityCodes}"
+                            SelectedValue="{Binding BulkDeterminationQuality, ValidatesOnDataErrors=True}"
                             SelectedValuePath="code"
                             Tag="ErrorContent" />
-                        <controls:InfoButton Header="Priority Determination Quality"
+                        <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
-                            Description="Select which determination quality to apply to any new priority habitats (those automatically associated with the new primary habitat) following a change to the primary habitat during an OSMM bulk update." />
+                            Description="Select which determination quality to apply to any new priority habitats (those automatically associated with the new primary habitat) following a change to the primary habitat during an OSMM bulk update."
+                            Header="Priority Determination Quality" />
 
                     </Grid>
 
@@ -253,26 +263,28 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <Label Content="Priority Interpretation Quality"
+                        <Label
                             x:Name="LabelInterpretationQuality"
                             Grid.Row="2"
                             Grid.Column="0"
                             HorizontalAlignment="Left"
-                            VerticalAlignment="Center" />
-                        <ComboBox ItemsSource="{Binding BulkInterpretationQualityCodes}"
+                            VerticalAlignment="Center"
+                            Content="Priority Interpretation Quality" />
+                        <ComboBox
                             x:Name="ComboBoxInterpretationQuality"
                             Grid.Row="2"
                             Grid.Column="1"
                             BorderThickness="1"
                             DisplayMemberPath="description"
-                            SelectedValue="{Binding BulkInterpretationQuality,
-                                                    ValidatesOnDataErrors=True}"
+                            ItemsSource="{Binding BulkInterpretationQualityCodes}"
+                            SelectedValue="{Binding BulkInterpretationQuality, ValidatesOnDataErrors=True}"
                             SelectedValuePath="code"
                             Tag="ErrorContent" />
-                        <controls:InfoButton Header="Priority Interpretation Quality"
+                        <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
-                            Description="Select which interpretation quality to apply to any new priority habitats (those automatically associated with the new primary habitat) following a change to the primary habitat during an OSMM bulk update." />
+                            Description="Select which interpretation quality to apply to any new priority habitats (those automatically associated with the new primary habitat) following a change to the primary habitat during an OSMM bulk update."
+                            Header="Priority Interpretation Quality" />
 
                     </Grid>
 
@@ -287,26 +299,28 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <Label Content="OSMM Source Name"
+                        <Label
                             x:Name="LabelOSMMSource"
                             Grid.Row="2"
                             Grid.Column="0"
                             HorizontalAlignment="Left"
-                            VerticalAlignment="Center" />
-                        <ComboBox ItemsSource="{Binding SourceNames}"
+                            VerticalAlignment="Center"
+                            Content="OSMM Source Name" />
+                        <ComboBox
                             x:Name="ComboBoxOSMMSource"
                             Grid.Row="2"
                             Grid.Column="1"
                             BorderThickness="1"
                             DisplayMemberPath="source_name"
-                            SelectedValue="{Binding OSMMSourceId,
-                                                    ValidatesOnDataErrors=True}"
+                            ItemsSource="{Binding SourceNames}"
+                            SelectedValue="{Binding OSMMSourceId, ValidatesOnDataErrors=True}"
                             SelectedValuePath="source_id"
                             Tag="ErrorContent" />
-                        <controls:InfoButton Header="Priority Interpretation Quality"
+                        <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
-                            Description="Select which interpretation quality to apply to any new priority habitats (those automatically associated with the new primary habitat) following a change to the primary habitat during an OSMM bulk update." />
+                            Description="Select which interpretation quality to apply to any new priority habitats (those automatically associated with the new primary habitat) following a change to the primary habitat during an OSMM bulk update."
+                            Header="Priority Interpretation Quality" />
 
                     </Grid>
 
@@ -322,8 +336,7 @@
             FontWeight="Medium">
             <Hyperlink
                 Command="{Binding OpenHyperlink}"
-                CommandParameter="{Binding NavigateUri,
-                                           RelativeSource={RelativeSource Self}}"
+                CommandParameter="{Binding NavigateUri, RelativeSource={RelativeSource Self}}"
                 NavigateUri="{Binding Hyperlink_AppBulkUpdatesHelp}">
                 Learn more about application bulk update options
             </Hyperlink>

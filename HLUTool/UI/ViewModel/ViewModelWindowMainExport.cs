@@ -19,9 +19,20 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Desktop.Framework;
+using HLU.Data;
+using HLU.Data.Connection;
+using HLU.Data.Model;
+using HLU.Date;
+using HLU.GISApplication;
+using HLU.Properties;
+using HLU.UI.View;
+//DONE: using Microsoft.Office.Interop.Access.Dao
+using Microsoft.Office.Interop.Access.Dao;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -29,19 +40,8 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using System.Globalization;
-using HLU.Data.Connection;
-using HLU.Data.Model;
-using HLU.GISApplication;
-using HLU.Properties;
-using HLU.UI.View;
-using HLU.Data;
-using HLU.Date;
-using ArcGIS.Desktop.Framework;
+using System.Windows.Threading;
 using CommandType = System.Data.CommandType;
-
-//DONE: using Microsoft.Office.Interop.Access.Dao
-using Microsoft.Office.Interop.Access.Dao;
 
 namespace HLU.UI.ViewModel
 {
@@ -53,7 +53,7 @@ namespace HLU.UI.ViewModel
 
         ViewModelWindowMain _viewModelMain;
         private WindowExport _windowExport;
-        private ViewModelExport _viewModelExport;
+        private ViewModelWindowExport _viewModelExport;
 
         private string _lastTableName;
         private int _tableCount;
@@ -135,7 +135,7 @@ namespace HLU.UI.ViewModel
 
             // Subscribe to the export window request close event.
             _viewModelExport.RequestClose -= _viewModelExport_RequestClose; // Safety: avoid double subscription.
-            _viewModelExport.RequestClose += new ViewModelExport.RequestCloseEventHandler(_viewModelExport_RequestClose);
+            _viewModelExport.RequestClose += new ViewModelWindowExport.RequestCloseEventHandler(_viewModelExport_RequestClose);
 
             // Set the data context for the export window.
             _windowExport.DataContext = _viewModelExport;
@@ -192,8 +192,9 @@ namespace HLU.UI.ViewModel
             {
                 _viewModelMain.ChangeCursor(Cursors.Wait, "Creating export table ...");
 
+                //TODO: Needed?
                 // Let WPF render the cursor/message before heavy work begins.
-                await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
+                //await Dispatcher.Yield(DispatcherPriority.Background);
 
                 // Create a new unique table name to export to.
                 string tableAlias = GetTableAlias();
@@ -330,6 +331,10 @@ namespace HLU.UI.ViewModel
 
                 _viewModelMain.ChangeCursor(Cursors.Wait, "Exporting to temporary table ...");
 
+                //TODO: Needed?
+                // Let WPF render the cursor/message before heavy work begins.
+                //await Dispatcher.Yield(DispatcherPriority.Background);
+
                 // Export the attribute data to a temporary database.
                 int exportRowCount;
                 exportRowCount = ExportMdb(tempPath, targetList.ToString(), fromClause.ToString(), exportFilter,
@@ -342,6 +347,10 @@ namespace HLU.UI.ViewModel
                     return;
 
                 _viewModelMain.ChangeCursor(Cursors.Wait, "Exporting from GIS ...");
+
+                //TODO: Needed?
+                // Let WPF render the cursor/message before heavy work begins.
+                //await Dispatcher.Yield(DispatcherPriority.Background);
 
                 // Call the GIS application export method to join the
                 // temporary attribute data to the GIS feature layer

@@ -76,8 +76,6 @@
     <None Remove="Images\PhysicalMerge32.png" />
     <None Remove="Images\PhysicalSplit16.png" />
     <None Remove="Images\PhysicalSplit32.png" />
-    <None Remove="Images\ReadMapSelection16.png" />
-    <None Remove="Images\ReadMapSelection32.png" />
     <None Remove="Images\SelectAllOnMap16.png" />
     <None Remove="Images\SelectAllOnMap32.png" />
     <None Remove="Images\SelectOnMap16.png" />
@@ -234,10 +232,10 @@
 	<Resource Include="Images\PhysicalSplit32.png">
 	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	</Resource>
-	<Resource Include="Images\ReadMapSelection16.png">
+	<Resource Include="Images\GetMapSelection16.png">
 	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	</Resource>
-	<Resource Include="Images\ReadMapSelection32.png">
+	<Resource Include="Images\GetMapSelection32.png">
 	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	</Resource>
 	<Resource Include="Images\SelectAllOnMap16.png">

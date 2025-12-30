@@ -28,7 +28,7 @@ using HLU.GISApplication;
 
 namespace HLU.UI.ViewModel
 {
-    class ViewModelMergeFeatures<T, R> : ViewModelBase, IDataErrorInfo
+    class ViewModelWindowMergeFeatures<T, R> : ViewModelBase, IDataErrorInfo
         where T : DataTable
         where R : DataRow
     {
@@ -51,7 +51,7 @@ namespace HLU.UI.ViewModel
 
         #region Constructor
 
-        public ViewModelMergeFeatures(T selectedFeatures, int[] keyOrdinals, int incidOrdinal,
+        public ViewModelWindowMergeFeatures(T selectedFeatures, int[] keyOrdinals, int incidOrdinal,
             HluDataSet.incid_mm_polygonsRow[] childRows, ArcProApp gisApp)
         {
             _selectedFeatures = selectedFeatures;

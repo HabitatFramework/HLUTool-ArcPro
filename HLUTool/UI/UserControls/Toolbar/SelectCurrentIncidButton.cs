@@ -45,9 +45,24 @@ namespace HLU.UI.UserControls.Toolbar
         /// <summary>
         /// Select the current incid on the map. Called when the button is clicked.
         /// </summary>
-        protected override void OnClick()
+        protected override async void OnClick()
         {
-            _viewModel.SelectCurrentOnMap();
+            if (_viewModel == null)
+            {
+                Enabled = false;
+                DisabledTooltip = "HLU main window is not available.";
+                return;
+            }
+
+            // Select the current incid.
+            try
+            {
+                await _viewModel.SelectCurrentOnMapAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+            }
         }
 
         /// <summary>

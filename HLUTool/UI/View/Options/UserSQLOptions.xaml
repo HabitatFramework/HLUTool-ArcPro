@@ -7,7 +7,7 @@
     xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
     xmlns:local="clr-namespace:HLU.UI.ViewModel"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    d:DataContext="{d:DesignInstance Type=local:ViewModelOptions}"
+    d:DataContext="{d:DesignInstance Type=local:ViewModelWindowOptions}"
     mc:Ignorable="d">
 
     <UserControl.Resources>
@@ -42,9 +42,9 @@
 
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="4" />
+                        <RowDefinition Height="6" />
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="4" />
+                        <RowDefinition Height="6" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
@@ -104,7 +104,7 @@
                             Header="Warn Before GIS Select" />
                     </Grid>
 
-                    <Grid x:Name="GridSqlPath" Grid.Row="4">
+                    <Grid x:Name="GridSQLPath" Grid.Row="4">
 
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -119,7 +119,7 @@
                             </Grid.ColumnDefinitions>
 
                             <Label
-                                x:Name="LabelSqlPath"
+                                x:Name="LabelSQLPath"
                                 Grid.Row="0"
                                 Grid.Column="0"
                                 HorizontalAlignment="Left"
@@ -143,13 +143,13 @@
                             </Grid.ColumnDefinitions>
 
                             <TextBox
-                                x:Name="TextBoxSqlPath"
+                                x:Name="TextBoxSQLPath"
                                 Grid.Column="1"
                                 Height="24"
                                 BorderThickness="1"
                                 IsEnabled="False"
                                 Tag="ErrorContent"
-                                Text="{Binding SqlPath, ValidatesOnDataErrors=True}"
+                                Text="{Binding SQLPath, ValidatesOnDataErrors=True}"
                                 TextAlignment="Left"
                                 ToolTipService.ShowOnDisabled="True" />
                             <Button
@@ -162,7 +162,7 @@
                                 Margin="4,0,0,0"
                                 Background="Transparent"
                                 BorderThickness="0"
-                                Command="{Binding BrowseSqlPathCommand}"
+                                Command="{Binding BrowseSQLPathCommand}"
                                 Style="{DynamicResource Esri_SmallButton}"
                                 ToolTip="Select default SQL path"
                                 ToolTipService.ShowOnDisabled="True">

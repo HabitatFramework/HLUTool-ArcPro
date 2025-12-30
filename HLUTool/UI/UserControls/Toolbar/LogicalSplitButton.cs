@@ -45,11 +45,24 @@ namespace HLU.UI.UserControls.Toolbar
         /// <summary>
         /// Initiate the logical split process. Called when the button is clicked.
         /// </summary>
-        protected override void OnClick()
+        protected override async void OnClick()
         {
-            // Call the safe fire and forget helper to logcial split the features asynchronously.
-            AsyncHelpers.SafeFireAndForget(_viewModel.LogicalSplitAsync(),
-                Exception => System.Diagnostics.Debug.WriteLine(Exception.Message));
+            if (_viewModel == null)
+            {
+                Enabled = false;
+                DisabledTooltip = "HLU main window is not available.";
+                return;
+            }
+
+            // Logically split the features.
+            try
+            {
+                await _viewModel.LogicalSplitAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+            }
         }
 
         /// <summary>

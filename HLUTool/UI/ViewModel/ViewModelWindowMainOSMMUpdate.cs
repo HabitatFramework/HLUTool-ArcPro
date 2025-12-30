@@ -17,6 +17,11 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Data;
+using HLU.Data.Model;
+using HLU.Data.Model.HluDataSetTableAdapters;
+using HLU.GISApplication;
+using HLU.Properties;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -27,11 +32,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using HLU.Data;
-using HLU.Data.Model;
-using HLU.Data.Model.HluDataSetTableAdapters;
-using HLU.GISApplication;
-using HLU.Properties;
+using System.Windows.Threading;
 
 namespace HLU.UI.ViewModel
 {
@@ -98,6 +99,9 @@ namespace HLU.UI.ViewModel
             try
             {
                 _viewModelMain.ChangeCursor(Cursors.Wait, "Updating ...");
+
+                // Let WPF render the cursor/message before heavy work begins.
+                //await Dispatcher.Yield(DispatcherPriority.Background);
 
                 // Only update DateTime fields to whole seconds.
                 // Fractions of a second can cause rounding differences when
@@ -170,6 +174,10 @@ namespace HLU.UI.ViewModel
         internal async Task OSMMUpdateAllAsync(int updateStatus)
         {
             _viewModelMain.ChangeCursor(Cursors.Wait, "Updating all ...");
+
+            //TODO: Needed?
+            // Let WPF render the cursor/message before heavy work begins.
+            //await Dispatcher.Yield(DispatcherPriority.Background);
 
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 

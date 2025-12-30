@@ -43,8 +43,8 @@ namespace HLU.UI.ViewModel
 
         private ViewModelWindowMain _viewModelMain;
         private WindowMergeFeatures _mergeFeaturesWindow;
-        private ViewModelMergeFeatures<HluDataSet.incidDataTable, HluDataSet.incidRow> _mergeFeaturesViewModelLogical;
-        private ViewModelMergeFeatures<HluDataSet.incid_mm_polygonsDataTable, HluDataSet.incid_mm_polygonsRow>
+        private ViewModelWindowMergeFeatures<HluDataSet.incidDataTable, HluDataSet.incidRow> _mergeFeaturesViewModelLogical;
+        private ViewModelWindowMergeFeatures<HluDataSet.incid_mm_polygonsDataTable, HluDataSet.incid_mm_polygonsRow>
             _mergeFeaturesViewModelPhysical;
         private int _mergeResultFeatureIndex;
 
@@ -157,7 +157,7 @@ namespace HLU.UI.ViewModel
 
                 // Handle the RequestClose event to get the selected feature index
                 _mergeFeaturesViewModelLogical.RequestClose -= _mergeFeaturesViewModelLogical_RequestClose; // Safety: avoid double subscription.
-                _mergeFeaturesViewModelLogical.RequestClose += new ViewModelMergeFeatures<HluDataSet.incidDataTable,
+                _mergeFeaturesViewModelLogical.RequestClose += new ViewModelWindowMergeFeatures<HluDataSet.incidDataTable,
                         HluDataSet.incidRow>.RequestCloseEventHandler(_mergeFeaturesViewModelLogical_RequestClose);
 
                 // Set the DataContext for data binding
@@ -174,6 +174,10 @@ namespace HLU.UI.ViewModel
                     return false;
 
                 _viewModelMain.ChangeCursor(Cursors.Wait, "Merging ...");
+
+                //TODO: Needed?
+                // Let WPF render the cursor/message before heavy work begins.
+                //await Dispatcher.Yield(DispatcherPriority.Background);
 
                 _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
@@ -314,7 +318,7 @@ namespace HLU.UI.ViewModel
                         _viewModelMain.RefillIncidTable = true;
 
                         // Get the GIS layer selection again
-                        await _viewModelMain.ReadMapSelectionAsync(true);
+                        await _viewModelMain.GetMapSelectionAsync(true);
                     }
                 }
                 catch
@@ -439,7 +443,7 @@ namespace HLU.UI.ViewModel
 
                     // Handle the RequestClose event to get the selected feature index
                     _mergeFeaturesViewModelPhysical.RequestClose -= _mergeFeaturesViewModelPhysical_RequestClose; // Safety: avoid double subscription.
-                    _mergeFeaturesViewModelPhysical.RequestClose += new ViewModelMergeFeatures
+                    _mergeFeaturesViewModelPhysical.RequestClose += new ViewModelWindowMergeFeatures
                         <HluDataSet.incid_mm_polygonsDataTable, HluDataSet.incid_mm_polygonsRow>
                         .RequestCloseEventHandler(_mergeFeaturesViewModelPhysical_RequestClose);
 
@@ -457,6 +461,11 @@ namespace HLU.UI.ViewModel
                 if (_mergeResultFeatureIndex != -1)
                 {
                     _viewModelMain.ChangeCursor(Cursors.Wait, "Merging ...");
+
+                    //TODO: Needed?
+                    // Let WPF render the cursor/message before heavy work begins.
+                    //await Dispatcher.Yield(DispatcherPriority.Background);
+
                     bool startTransaction = _viewModelMain.DataBase.Transaction != null;
 
                     if (startTransaction)
@@ -540,7 +549,7 @@ namespace HLU.UI.ViewModel
                         _viewModelMain.RefillIncidTable = true;
 
                         // Get the GIS layer selection again
-                        await _viewModelMain.ReadMapSelectionAsync(true);
+                        await _viewModelMain.GetMapSelectionAsync(true);
                     }
                     catch
                     {

@@ -43,13 +43,26 @@ namespace HLU.UI.UserControls.Toolbar
         #endregion Constructor
 
         /// <summary>
-        /// Read the map selection. Called when the button is clicked.
+        /// Get the map selection. Called when the button is clicked.
         /// </summary>
-        protected override void OnClick()
+        protected override async void OnClick()
         {
-            // Call the safe fire and forget helper to read the map selection asynchronously.
-            AsyncHelpers.SafeFireAndForget(_viewModel.ReadMapSelectionAsync(true),
-                Exception => System.Diagnostics.Debug.WriteLine(Exception.Message));
+            if (_viewModel == null)
+            {
+                Enabled = false;
+                DisabledTooltip = "HLU main window is not available.";
+                return;
+            }
+
+            // Get the map selection.
+            try
+            {
+                await _viewModel.GetMapSelectionAsync(true);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+            }
         }
 
         /// <summary>
@@ -64,7 +77,7 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            bool canReadMapSelection = _viewModel.CanReadMapSelection;
+            bool canReadMapSelection = _viewModel.CanGetMapSelection;
 
             // Enable or disable the button based on CanReadMapSelection.
             Enabled = canReadMapSelection;

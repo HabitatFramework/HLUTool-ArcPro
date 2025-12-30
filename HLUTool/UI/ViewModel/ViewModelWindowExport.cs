@@ -25,7 +25,7 @@ using HLU.GISApplication;
 
 namespace HLU.UI.ViewModel
 {
-    class ViewModelExport : ViewModelBase, IDataErrorInfo
+    class ViewModelWindowExport : ViewModelBase, IDataErrorInfo
     {
         #region Fields
 
@@ -43,7 +43,7 @@ namespace HLU.UI.ViewModel
 
         #region Constructor
 
-        public ViewModelExport(int numberSelected, string layerName,
+        public ViewModelWindowExport(int numberSelected, string layerName,
             HluDataSet.exportsDataTable exportFormats)
         {
             _selectedNumber = numberSelected;

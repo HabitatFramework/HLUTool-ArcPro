@@ -7,7 +7,7 @@
     xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
     xmlns:local="clr-namespace:HLU.UI.ViewModel"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    d:DataContext="{d:DesignInstance Type=local:ViewModelOptions}"
+    d:DataContext="{d:DesignInstance Type=local:ViewModelWindowOptions}"
     mc:Ignorable="d">
 
     <UserControl.Resources>
@@ -55,7 +55,7 @@
                             Grid.Row="0"
                             Grid.Column="0"
                             HorizontalAlignment="Left"
-                            Content="Columns to Display" />
+                            Content="Columns To Display" />
                         <controls:InfoButton
                             Grid.Column="1"
                             Margin="0,0,0,0"
@@ -101,7 +101,7 @@
                     <Label
                         Grid.Column="0"
                         HorizontalAlignment="Right"
-                        Content="Rows to Display" />
+                        Content="Rows To Display" />
                     <TextBox
                         x:Name="TextBoxHistoryDisplayLastN"
                         Grid.Column="1"

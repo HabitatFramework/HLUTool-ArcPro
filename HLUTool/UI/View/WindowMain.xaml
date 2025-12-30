@@ -560,7 +560,7 @@
                                                 IsEnabled="{Binding PrimaryEnabled, Mode=OneWay}"
                                                 IsReadOnly="False"
                                                 ItemsSource="{Binding PrimaryCodes, Converter={StaticResource codeDescriptionBoolConverter}, UpdateSourceTrigger=PropertyChanged}"
-                                                SelectedValue="{Binding IncidPrimary, Converter={StaticResource codeDescriptionBoolConverter}, ValidatesOnDataErrors=True}"
+                                                SelectedValue="{Binding IncidPrimary, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
                                                 Tag="ErrorContent"
                                                 ToolTipService.ShowOnDisabled="True">
@@ -2998,15 +2998,15 @@
                     Padding="0,0,0,0"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
-                    Command="{Binding ReadMapSelectionCommand}"
-                    IsEnabled="{Binding CanReadMapSelection}"
+                    Command="{Binding GetMapSelectionCommand}"
+                    IsEnabled="{Binding CanGetMapSelection}"
                     Style="{DynamicResource Esri_Button}"
                     ToolTip="Get Map Selection"
                     ToolTipService.ShowOnDisabled="True">
                     <Image
                         Width="16"
                         Height="16"
-                        Source="{Binding Path=ButtonReadMapSelectionImg}" />
+                        Source="{Binding Path=ButtonGetMapSelectionImg}" />
                 </Button>
 
                 <!--  GridStatus  -->
