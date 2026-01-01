@@ -86,6 +86,7 @@
 					<button refID="HLUTool_btnSelectCurrentIncid" size="middle" />
 					<button refID="HLUTool_btnSelectFilteredIncids" size="middle" />
 					<button refID="esri_mapping_clearSelectionButton" size="middle" />
+					<button refID="HLUTool_btnAutoSelectOnGis" size="middle" />
 				</group>
 
 				<!-- Split/Merge group -->
@@ -101,7 +102,6 @@
 				<!-- Options group -->
 				<group id="HLUTool_Group8" caption="Options" keytip="G8">
 					<button refID="HLUTool_btnOptions" size="middle" />
-					<button refID="HLUTool_btnAutoSelectOnGis" size="middle" />
 					<button refID="HLUTool_btnExport" size="middle" />
 				</group>
 
@@ -403,17 +403,17 @@
 						keytip="Op"
 						smallImage="pack://application:,,,/HLUTool;component/Images/Options16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/Options32.png">
-					<tooltip heading="Tool options">
+					<tooltip heading="Tool Options">
 						View and update the application and user tool options.<disabledText />
 					</tooltip>
 				</button>
 
 				<checkBox id="HLUTool_btnAutoSelectOnGis"
-						caption="Auto Zoom"
+						caption="Auto Select"
 						className="HLU.UI.UserControls.Toolbar.AutoSelectOnGisButton"
 						loadOnClick="false"
-						keytip="AZ">
-					<tooltip heading="Auto zoom">
+						keytip="AS">
+					<tooltip heading="Auto Select">
 						Automatically select the features associated with the current INCID record in the active GIS layer.<disabledText />
 					</tooltip>
 				</checkBox>

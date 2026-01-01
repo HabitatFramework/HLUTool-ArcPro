@@ -236,7 +236,7 @@ namespace HLU.UI.ViewModel
         private IEnumerable<HluDataSet.lut_secondary_groupRow> _lutSecondaryGroup;
         private IEnumerable<HluDataSet.lut_sourcesRow> _lutSources;
 
-        private CodeDescriptionBool[] _primaryCodes;
+        private readonly ObservableCollection<CodeDescriptionBool> _primaryCodes = [];
         private HluDataSet.lut_sourcesRow[] _sourceNames;
         private HluDataSet.lut_habitat_classRow[] _sourceHabitatClassCodes;
         private HluDataSet.lut_importanceRow[] _sourceImportanceCodes;
@@ -749,7 +749,7 @@ namespace HLU.UI.ViewModel
                     // Force the ComboBox to reinitialise (if it is loaded).
                     _activeLayerComboBox?.Initialize();
 
-                    // Display an error message.
+                    // Display a warning message.
                     ShowMessage("Active map does not contain valid HLU layers.", MessageType.Warning);
 
                     // Hide the dockpane.
@@ -802,7 +802,7 @@ namespace HLU.UI.ViewModel
                 // Clear the status bar (or reset the cursor to an arrow)
                 ChangeCursor(Cursors.Arrow, null);
 
-                // Display an error message.
+                // Display a warning message.
                 ShowMessage("No active map.", MessageType.Warning);
 
                 // Hide the dockpane.
@@ -1771,14 +1771,19 @@ namespace HLU.UI.ViewModel
             get { return _clearIHSUpdateAction; }
         }
 
+        internal bool AutoSelectOnGis
+        {
+            get { return _autoSelectOnGis; }
+        }
+
         #endregion
 
-        #region Defaults
+                #region Defaults
 
-        /// <summary>
-        /// Get the BAP determination quality default descriptions
-        /// from the lookup table and update them in the settings.
-        /// </summary>
+                /// <summary>
+                /// Get the BAP determination quality default descriptions
+                /// from the lookup table and update them in the settings.
+                /// </summary>
         private void GetBapDefaults()
         {
             try
@@ -4323,7 +4328,7 @@ namespace HLU.UI.ViewModel
 
         #region View
 
-        public void AutoSelectOnGis(bool autoSelectOnGis)
+        public void SetAutoSelectOnGis(bool autoSelectOnGis)
         {
             // Update the auto select on GIS option.
             _autoSelectOnGis = !_autoSelectOnGis;
@@ -5878,7 +5883,10 @@ namespace HLU.UI.ViewModel
                 // Warn the user that no features were found in GIS.
                 if (_gisSelection == null || _gisSelection.Rows.Count == 0)
                 {
-                    MessageBox.Show("No features for incid found in active layer.", "HLU: Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+                    //MessageBox.Show("No features for incid found in active layer.", "HLU: Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+                    // Display a warning message.
+                    ShowMessage("No features for incid found in active layer.", MessageType.Warning);
+
                     return;
                 }
 
@@ -6023,13 +6031,19 @@ namespace HLU.UI.ViewModel
                 // Warn the user that no features were found in GIS.
                 if (_gisSelection == null || _gisSelection.Rows.Count == 0)
                 {
-                    MessageBox.Show("No features for incid found in active layer.", "HLU: Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+                    //MessageBox.Show("No features for incid found in active layer.", "HLU: Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+                    // Display a warning message.
+                    ShowMessage("No features for incid found in active layer.", MessageType.Warning);
                     return;
                 }
+                else
+                {
+                    ClearMessage();
+                }
 
-                //TODO: Remove minZoom if not needed
-                // Zoom to the GIS selection (if auto zoom configured).
-                await _gisApp.ZoomSelectedAsync(_minZoom, _autoZoomToSelection);
+                    //TODO: Remove minZoom if not needed
+                    // Zoom to the GIS selection (if auto zoom configured).
+                    await _gisApp.ZoomSelectedAsync(_minZoom, _autoZoomToSelection);
             }
             catch (Exception ex)
             {
@@ -6233,8 +6247,10 @@ namespace HLU.UI.ViewModel
 
                     ChangeCursor(Cursors.Arrow, null);
 
-                    if (showMessage) MessageBox.Show("No map features selected in active layer.", "HLU: Selection",
-                        MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    //if (showMessage) MessageBox.Show("No map features selected in active layer.", "HLU: Selection",
+                    //    MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    // Display a warning message.
+                    ShowMessage("No map features selected in active layer.", MessageType.Warning);
                 }
             }
             catch (Exception ex)
@@ -10098,10 +10114,16 @@ namespace HLU.UI.ViewModel
             set
             {
                 // Check if the habitat type has changed.
-                if (string.Equals(_habitatType, value, StringComparison.Ordinal))
+                if (string.Equals(_habitatType, value, StringComparison.Ordinal) && _primaryCodes != null && _primaryCodes.Count > 0)
                     return;
 
                 _habitatType = value;
+
+                // Preserve the current selection if it is still valid after refresh.
+                string previousIncidPrimary = _incidPrimary;
+
+                // Clear the current list without replacing the collection instance.
+                _primaryCodes.Clear();
 
                 //TODO: Use a default (all habitats) if no primary codes are found?
 
@@ -10113,14 +10135,15 @@ namespace HLU.UI.ViewModel
 
                     // Combine both primary and secondary-derived codes,
                     // but allow only one entry per code, preferring the one marked as preferred.
-                    _primaryCodes = (
+                    CodeDescriptionBool[] primaryCodes = (
                         // First query – directly matched primary codes.
                         from p in _lutPrimary
                         join pc in _lutPrimaryCategory on p.category equals pc.code // Needed to only include local categories.
                         from htp in _lutHabitatTypePrimary
                         where htp.code_habitat_type == _habitatType
                             && (p.code == htp.code_primary
-                                || (htp.code_primary.EndsWith('*') && Regex.IsMatch(p.code, @"\A" + htp.code_primary.TrimEnd('*') + @"")))
+                                || (htp.code_primary.EndsWith('*') &&
+                                    Regex.IsMatch(p.code, @"\A" + htp.code_primary.TrimEnd('*') + @"")))
                         select new CodeDescriptionBool
                         {
                             code = p.code,
@@ -10146,53 +10169,40 @@ namespace HLU.UI.ViewModel
                             nvc_codes = p.nvc_codes,
                             preferred = false
                         })
-                    .DistinctBy(x => new { x.code, x.preferred }) // Remove exact duplicates only
-                    .OrderByDescending(x => x.preferred) // Prefer 'true' if present
+                    .DistinctBy(x => new { x.code, x.preferred }) // Remove exact duplicates only.
+                    .OrderByDescending(x => x.preferred) // Prefer 'true' if present.
                     .ThenBy(x => x.code)
                     .ToArray();
 
-                    //_primaryCodes = new ObservableCollection<CodeDescriptionBool>(
-                    //    (from p in _lutPrimary
-                    //     join pc in _lutPrimaryCategory on p.category equals pc.code // Needed to only include local categories.
-                    //     from htp in _lutHabitatTypePrimary
-                    //     where htp.code_habitat_type == _habitatType
-                    //     && (p.code == htp.code_primary
-                    //     || (htp.code_primary.EndsWith('*') && Regex.IsMatch(p.code, @"\A" + htp.code_primary.TrimEnd('*') + @"")))
-                    //     select new
-                    //     {
-                    //         p.code,
-                    //         p.description,
-                    //         p.nvc_codes,
-                    //         htp.preferred
-                    //     })
-                    //    .GroupBy(x => x.code)
-                    //    .Select(g => g.OrderByDescending(x => x.preferred).First()) // Prioritise those that are preferred.
-                    //    .Select(x => new CodeDescriptionBool
-                    //    {
-                    //        code = x.code,
-                    //        description = x.description,
-                    //        nvc_codes = x.nvc_codes,
-                    //        preferred = x.preferred
-                    //    }).ToList());
+                    foreach (CodeDescriptionBool item in primaryCodes)
+                        _primaryCodes.Add(item);
 
                     // Load all secondary habitat codes where the habitat type
                     // has one of more optional codes.
-                    IEnumerable<HluDataSet.lut_secondaryRow> secondaryCodesOptional = (from hts in _lutHabitatTypeSecondary
-                                                join s in _lutSecondary on hts.code_secondary equals s.code
-                                                where hts.code_habitat_type == _habitatType
-                                                && hts.mandatory == 0
-                                                select s).OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
+                    IEnumerable<HluDataSet.lut_secondaryRow> secondaryCodesOptional =
+                        (from hts in _lutHabitatTypeSecondary
+                         join s in _lutSecondary on hts.code_secondary equals s.code
+                         where hts.code_habitat_type == _habitatType
+                             && hts.mandatory == 0
+                         select s)
+                        .OrderBy(r => r.sort_order)
+                        .ThenBy(r => r.description)
+                        .ToArray();
 
                     // Store the list of optional secondary codes.
                     _secondaryCodesOptional = secondaryCodesOptional.Select(hts => hts.code);
 
                     // Load all secondary habitat codes where the habitat type
                     // has one of more mandatory codes.
-                    IEnumerable<HluDataSet.lut_secondaryRow> secondaryCodesMandatory = (from hts in _lutHabitatTypeSecondary
-                                                                                        join s in _lutSecondary on hts.code_secondary equals s.code
-                                                                                        where hts.code_habitat_type == _habitatType
-                                                                                        && hts.mandatory == 1
-                                                                                        select s).OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
+                    IEnumerable<HluDataSet.lut_secondaryRow> secondaryCodesMandatory =
+                        (from hts in _lutHabitatTypeSecondary
+                         join s in _lutSecondary on hts.code_secondary equals s.code
+                         where hts.code_habitat_type == _habitatType
+                             && hts.mandatory == 1
+                         select s)
+                        .OrderBy(r => r.sort_order)
+                        .ThenBy(r => r.description)
+                        .ToArray();
 
                     // Store the list of mandatory secondary codes.
                     _secondaryCodesMandatory = secondaryCodesMandatory.Select(hts => hts.code);
@@ -10201,29 +10211,47 @@ namespace HLU.UI.ViewModel
                 {
                     // Load all primary habitat codes where the primary habitat code
                     // and primary habitat category are both flagged as local.
-                    _primaryCodes = (
-                         from p in _lutPrimary
-                                    join pc in _lutPrimaryCategory on p.category equals pc.code
-                         select new CodeDescriptionBool
-                         {
-                             code = p.code,
-                             description = p.description,
-                             nvc_codes = p.nvc_codes,
-                             preferred = false
-                         }).ToArray();
+                    CodeDescriptionBool[] allPrimaryCodes = (
+                        from p in _lutPrimary
+                        join pc in _lutPrimaryCategory on p.category equals pc.code
+                        select new CodeDescriptionBool
+                        {
+                            code = p.code,
+                            description = p.description,
+                            nvc_codes = p.nvc_codes,
+                            preferred = false
+                        })
+                        .ToArray();
+
+                    foreach (CodeDescriptionBool item in allPrimaryCodes)
+                        _primaryCodes.Add(item);
 
                     // Clear the list of optional and mandatory secondary codes.
                     _secondaryCodesOptional = [];
                     _secondaryCodesMandatory = [];
                 }
 
-                // Refresh the mandatory habitat secondaries and tips
+                // If the previous selection is still valid, keep it.
+                if (!string.IsNullOrEmpty(previousIncidPrimary) &&
+                    _primaryCodes.Any(p => p.code == previousIncidPrimary))
+                {
+                    _incidPrimary = previousIncidPrimary;
+                }
+                else
+                {
+                    _incidPrimary = null;
+                }
+
+                // Refresh the mandatory habitat secondaries and tips.
                 OnPropertyChanged(nameof(HabitatSecondariesMandatory));
                 OnPropertyChanged(nameof(HabitatSecondariesSuggested));
 
-                //OnPropertyChanged(nameof(PrimaryCodes)); //TODO: No longer needed as it's an ObservableCollection.
+                // Refresh selection + dependent UI.
+                OnPropertyChanged(nameof(IncidPrimary));
                 OnPropertyChanged(nameof(PrimaryEnabled));
-                //OnPropertyChanged(nameof(NvcCodes));
+
+                // IMPORTANT: no OnPropertyChanged(nameof(PrimaryCodes)) needed here anymore
+                // because the ItemsSource collection instance did not change.
             }
         }
 
@@ -10369,40 +10397,9 @@ namespace HLU.UI.ViewModel
         /// <value>
         /// The primary codes.
         /// </value>
-        public IEnumerable<CodeDescriptionBool> PrimaryCodes
+        public ObservableCollection<CodeDescriptionBool> PrimaryCodes
         {
-            get
-            {
-                // Return the primary codes if already set, otherwise get the
-                // current primary code.
-                if (_primaryCodes != null)
-                {
-                    return _primaryCodes;
-                }
-                else if (!String.IsNullOrEmpty(IncidPrimary))
-                {
-                    // Load the primary habitat code (where the primary habitat code
-                    // and primary habitat category are both flagged as local). There
-                    // should be only one.
-                    _primaryCodes = (
-                         from p in _lutPrimary
-                         join pc in _lutPrimaryCategory on p.category equals pc.code
-                         where p.code == IncidPrimary
-                         select new CodeDescriptionBool
-                         {
-                             code = p.code,
-                             description = p.description,
-                             nvc_codes = p.nvc_codes,
-                             preferred = false
-                         }).ToArray();
-
-                    return _primaryCodes;
-                }
-                else
-                {
-                    return null;
-                }
-            }
+            get { return _primaryCodes; }
         }
 
         public string IncidPrimary
@@ -11116,6 +11113,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        //TODO: Handle very large number of values.
         /// <summary>
         /// Looks up the legacy habitat codes and descriptions from
         /// the database table 'lut_legacy_habitat'.

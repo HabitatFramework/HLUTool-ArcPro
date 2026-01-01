@@ -16,13 +16,15 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Core.Data.DDL;
+using ArcGIS.Desktop.Internal.KnowledgeGraph;
+using HLU.Data.Model;
+using HLU.Properties;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
-using HLU.Data.Model;
-using HLU.Properties;
 
 namespace HLU.Data
 {

@@ -41,6 +41,11 @@ namespace HLU.UI.UserControls
             }
         }
 
+        public string display
+        {
+            get { return $"{code} : {description}"; }
+        }
+
         public string nvc_codes
         {
             get => _nvc_codes;

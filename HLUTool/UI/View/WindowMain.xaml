@@ -493,7 +493,8 @@
                                                 DisplayMemberPath="description"
                                                 IsEditable="True"
                                                 IsReadOnly="False"
-                                                ItemsSource="{Binding HabitatClassCodes, UpdateSourceTrigger=PropertyChanged}"
+                                                IsTextSearchEnabled="True"
+                                                ItemsSource="{Binding HabitatClassCodes}"
                                                 SelectedValue="{Binding HabitatClass}"
                                                 SelectedValuePath="code"
                                                 ToolTipService.ShowOnDisabled="True" />
@@ -515,8 +516,9 @@
                                                 DisplayMemberPath="description"
                                                 IsEditable="True"
                                                 IsReadOnly="False"
-                                                ItemsSource="{Binding HabitatTypeCodes, ConverterParameter=code^name^description^sort_order, Converter={StaticResource codeNameDescriptionConverter}, UpdateSourceTrigger=PropertyChanged}"
-                                                SelectedValue="{Binding HabitatType, ConverterParameter=code^name^description^sort_order, Converter={StaticResource codeNameDescriptionConverter}, ValidatesOnDataErrors=True}"
+                                                IsTextSearchEnabled="True"
+                                                ItemsSource="{Binding HabitatTypeCodes, ConverterParameter=code^name^description^sort_order, Converter={StaticResource codeNameDescriptionConverter}}"
+                                                SelectedValue="{Binding HabitatType, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
                                                 Tag="ErrorContent"
                                                 ToolTipService.ShowOnDisabled="True" />
@@ -559,14 +561,16 @@
                                                 IsEditable="True"
                                                 IsEnabled="{Binding PrimaryEnabled, Mode=OneWay}"
                                                 IsReadOnly="False"
-                                                ItemsSource="{Binding PrimaryCodes, Converter={StaticResource codeDescriptionBoolConverter}, UpdateSourceTrigger=PropertyChanged}"
+                                                IsTextSearchEnabled="True"
+                                                ItemsSource="{Binding PrimaryCodes}"
                                                 SelectedValue="{Binding IncidPrimary, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
                                                 Tag="ErrorContent"
-                                                ToolTipService.ShowOnDisabled="True">
+                                                Text="{Binding SelectedPrimaryDisplay, Mode=OneWay}"
+                                                TextSearch.TextPath="display">
                                                 <ComboBox.ItemTemplate>
                                                     <DataTemplate>
-                                                        <TextBlock Text="{Binding description}">
+                                                        <TextBlock Text="{Binding display}">
                                                             <TextBlock.Style>
                                                                 <Style TargetType="TextBlock">
                                                                     <!--  Default to ArcGIS Pro theme color  -->
@@ -740,8 +744,9 @@
                                                     IsEditable="True"
                                                     IsEnabled="{Binding SecondaryHabitatEnabled}"
                                                     IsReadOnly="False"
-                                                    ItemsSource="{Binding SecondaryHabitatCodes, ConverterParameter=code^description^sort_order, Converter={StaticResource codeDescriptionConverter}, UpdateSourceTrigger=PropertyChanged}"
-                                                    SelectedValue="{Binding SecondaryHabitatCode, ConverterParameter=code^description^sort_order, Converter={StaticResource codeDescriptionConverter}, ValidatesOnDataErrors=True}"
+                                                    IsTextSearchEnabled="True"
+                                                    ItemsSource="{Binding SecondaryHabitatCodes, ConverterParameter=code^description^sort_order, Converter={StaticResource codeDescriptionConverter}}"
+                                                    SelectedValue="{Binding SecondaryHabitatCode, ValidatesOnDataErrors=True}"
                                                     SelectedValuePath="code"
                                                     Tag="ErrorContent"
                                                     ToolTip="{Binding Path=SelectedItem.description, RelativeSource={RelativeSource Self}}"
@@ -975,7 +980,8 @@
                                                 DisplayMemberPath="description"
                                                 IsEditable="True"
                                                 IsReadOnly="False"
-                                                ItemsSource="{Binding LegacyHabitatCodes, UpdateSourceTrigger=PropertyChanged}"
+                                                IsTextSearchEnabled="True"
+                                                ItemsSource="{Binding LegacyHabitatCodes}"
                                                 SelectedValue="{Binding IncidLegacyHabitat, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
                                                 Tag="ErrorContent"
@@ -1020,12 +1026,12 @@
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <Grid x:Name="GridTabItemIHS">
                                     <Grid.RowDefinitions>
-                                        <RowDefinition Height="1.2*" MinHeight="4" />
-                                        <RowDefinition Height="2.7*" MinHeight="11" />
-                                        <RowDefinition Height="2*" MinHeight="8" />
-                                        <RowDefinition Height="2*" MinHeight="8" />
-                                        <RowDefinition Height="2*" MinHeight="8" />
-                                        <RowDefinition Height="1.2*" MinHeight="4" />
+                                        <RowDefinition Height="Auto" MinHeight="48" />
+                                        <RowDefinition Height="Auto" MinHeight="98" />
+                                        <RowDefinition Height="Auto" MinHeight="72" />
+                                        <RowDefinition Height="Auto" MinHeight="72" />
+                                        <RowDefinition Height="Auto" MinHeight="72" />
+                                        <RowDefinition Height="Auto" MinHeight="48" />
                                     </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
@@ -1036,7 +1042,6 @@
                                         x:Name="GroupBoxIhsHabitat"
                                         Grid.Row="0"
                                         Grid.Column="0"
-                                        VerticalAlignment="Stretch"
                                         Header="{Binding IhsHabitatHeader}"
                                         IsEnabled="{Binding TabIhsControlsEnabled}">
 
@@ -1051,7 +1056,7 @@
 
                                             <Label
                                                 x:Name="LabelIhsHabitat"
-                                                Grid.Row="2"
+                                                Grid.Row="0"
                                                 Grid.Column="0"
                                                 Margin="0,2,0,4"
                                                 HorizontalAlignment="Right"
@@ -1059,9 +1064,9 @@
                                                 Content="Habitat" />
                                             <TextBox
                                                 x:Name="TextBoxIhsHabitat"
-                                                Grid.Row="2"
+                                                Grid.Row="0"
                                                 Grid.Column="1"
-                                                Margin="0,2,2,4"
+                                                Margin="4,2,0,4"
                                                 VerticalAlignment="Center"
                                                 IsEnabled="False"
                                                 IsReadOnly="True"
@@ -1077,6 +1082,7 @@
                                         Grid.Column="0"
                                         Header="{Binding IhsMatrixHeader}"
                                         IsEnabled="{Binding TabIhsControlsEnabled}">
+
                                         <Grid x:Name="GridIhsMatrix" Margin="0,2,0,0">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition />
@@ -1887,7 +1893,7 @@
                                                 DisplayMemberPath="description"
                                                 IsEditable="False"
                                                 IsReadOnly="False"
-                                                ItemsSource="{Binding BoundaryMapCodes, UpdateSourceTrigger=PropertyChanged}"
+                                                ItemsSource="{Binding BoundaryMapCodes}"
                                                 SelectedValue="{Binding IncidBoundaryBaseMap, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
                                                 Tag="ErrorContent"
@@ -1915,7 +1921,7 @@
                                                 DisplayMemberPath="description"
                                                 IsEditable="False"
                                                 IsReadOnly="False"
-                                                ItemsSource="{Binding BoundaryMapCodes, UpdateSourceTrigger=PropertyChanged}"
+                                                ItemsSource="{Binding BoundaryMapCodes}"
                                                 SelectedValue="{Binding IncidDigitisationBaseMap, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
                                                 Tag="ErrorContent"
@@ -2042,7 +2048,7 @@
                                                 DisplayMemberPath="description"
                                                 IsEditable="False"
                                                 IsReadOnly="False"
-                                                ItemsSource="{Binding ConditionCodes, UpdateSourceTrigger=PropertyChanged}"
+                                                ItemsSource="{Binding ConditionCodes}"
                                                 SelectedValue="{Binding IncidCondition, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
                                                 Tag="ErrorContent"
@@ -2072,7 +2078,7 @@
                                                 IsEditable="False"
                                                 IsEnabled="{Binding IncidConditionEnabled, Mode=OneWay}"
                                                 IsReadOnly="False"
-                                                ItemsSource="{Binding ConditionQualifierCodes, UpdateSourceTrigger=PropertyChanged}"
+                                                ItemsSource="{Binding ConditionQualifierCodes}"
                                                 SelectedValue="{Binding IncidConditionQualifier, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
                                                 Tag="ErrorContent"
@@ -2151,7 +2157,7 @@
                                                 DisplayMemberPath="description"
                                                 IsEditable="False"
                                                 IsReadOnly="False"
-                                                ItemsSource="{Binding QualityDeterminationCodes, UpdateSourceTrigger=PropertyChanged}"
+                                                ItemsSource="{Binding QualityDeterminationCodes}"
                                                 SelectedValue="{Binding IncidQualityDetermination, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
                                                 Tag="ErrorContent"
@@ -2179,7 +2185,7 @@
                                                 DisplayMemberPath="description"
                                                 IsEditable="False"
                                                 IsReadOnly="False"
-                                                ItemsSource="{Binding QualityInterpretationCodes, UpdateSourceTrigger=PropertyChanged}"
+                                                ItemsSource="{Binding QualityInterpretationCodes}"
                                                 SelectedValue="{Binding IncidQualityInterpretation, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
                                                 Tag="ErrorContent"
@@ -2306,7 +2312,8 @@
                                                 DisplayMemberPath="source_name"
                                                 IsEditable="True"
                                                 IsReadOnly="False"
-                                                ItemsSource="{Binding Source1Names, UpdateSourceTrigger=PropertyChanged}"
+                                                IsTextSearchEnabled="True"
+                                                ItemsSource="{Binding Source1Names}"
                                                 SelectedValue="{Binding IncidSource1Id, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="source_id"
                                                 Tag="ErrorContent"
@@ -2362,7 +2369,8 @@
                                                 IsEditable="True"
                                                 IsEnabled="{Binding IncidSource1Enabled, Mode=OneWay}"
                                                 IsReadOnly="False"
-                                                ItemsSource="{Binding SourceHabitatClassCodes, UpdateSourceTrigger=PropertyChanged}"
+                                                IsTextSearchEnabled="True"
+                                                ItemsSource="{Binding SourceHabitatClassCodes}"
                                                 SelectedValue="{Binding IncidSource1HabitatClass, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
                                                 Tag="ErrorContent"
@@ -2393,8 +2401,9 @@
                                                 IsEditable="True"
                                                 IsEnabled="{Binding IncidSource1Enabled, Mode=OneWay}"
                                                 IsReadOnly="False"
-                                                ItemsSource="{Binding Source1HabitatTypeCodes, ConverterParameter=code^name^description^sort_order, Converter={StaticResource codeNameDescriptionConverter}, UpdateSourceTrigger=PropertyChanged}"
-                                                SelectedValue="{Binding IncidSource1HabitatType, ConverterParameter=code^name^description^sort_order, Converter={StaticResource codeNameDescriptionConverter}, ValidatesOnDataErrors=True}"
+                                                IsTextSearchEnabled="True"
+                                                ItemsSource="{Binding Source1HabitatTypeCodes, ConverterParameter=code^name^description^sort_order, Converter={StaticResource codeNameDescriptionConverter}}"
+                                                SelectedValue="{Binding IncidSource1HabitatType, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
                                                 Tag="ErrorContent"
                                                 ToolTipService.ShowOnDisabled="True" />
@@ -2435,7 +2444,8 @@
                                                     IsEditable="True"
                                                     IsEnabled="{Binding IncidSource1Enabled, Mode=OneWay}"
                                                     IsReadOnly="False"
-                                                    ItemsSource="{Binding SourceImportanceCodes, UpdateSourceTrigger=PropertyChanged}"
+                                                    IsTextSearchEnabled="True"
+                                                    ItemsSource="{Binding SourceImportanceCodes}"
                                                     SelectedValue="{Binding IncidSource1BoundaryImportance, ValidatesOnDataErrors=True}"
                                                     SelectedValuePath="code"
                                                     Tag="ErrorContent"
@@ -2463,7 +2473,8 @@
                                                     IsEditable="True"
                                                     IsEnabled="{Binding IncidSource1Enabled, Mode=OneWay}"
                                                     IsReadOnly="False"
-                                                    ItemsSource="{Binding SourceImportanceCodes, UpdateSourceTrigger=PropertyChanged}"
+                                                    IsTextSearchEnabled="True"
+                                                    ItemsSource="{Binding SourceImportanceCodes}"
                                                     SelectedValue="{Binding IncidSource1HabitatImportance, ValidatesOnDataErrors=True}"
                                                     SelectedValuePath="code"
                                                     Tag="ErrorContent"
@@ -2528,7 +2539,8 @@
                                                 DisplayMemberPath="source_name"
                                                 IsEditable="True"
                                                 IsReadOnly="False"
-                                                ItemsSource="{Binding Source2Names, UpdateSourceTrigger=PropertyChanged}"
+                                                IsTextSearchEnabled="True"
+                                                ItemsSource="{Binding Source2Names}"
                                                 SelectedValue="{Binding IncidSource2Id, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="source_id"
                                                 Tag="ErrorContent"
@@ -2584,7 +2596,8 @@
                                                 IsEditable="True"
                                                 IsEnabled="{Binding IncidSource2Enabled, Mode=OneWay}"
                                                 IsReadOnly="False"
-                                                ItemsSource="{Binding SourceHabitatClassCodes, UpdateSourceTrigger=PropertyChanged}"
+                                                IsTextSearchEnabled="True"
+                                                ItemsSource="{Binding SourceHabitatClassCodes}"
                                                 SelectedValue="{Binding IncidSource2HabitatClass, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
                                                 Tag="ErrorContent"
@@ -2615,8 +2628,9 @@
                                                 IsEditable="True"
                                                 IsEnabled="{Binding IncidSource2Enabled, Mode=OneWay}"
                                                 IsReadOnly="False"
-                                                ItemsSource="{Binding Source2HabitatTypeCodes, ConverterParameter=code^name^description^sort_order, Converter={StaticResource codeNameDescriptionConverter}, UpdateSourceTrigger=PropertyChanged}"
-                                                SelectedValue="{Binding IncidSource2HabitatType, ConverterParameter=code^name^description^sort_order, Converter={StaticResource codeNameDescriptionConverter}, ValidatesOnDataErrors=True}"
+                                                IsTextSearchEnabled="True"
+                                                ItemsSource="{Binding Source2HabitatTypeCodes, ConverterParameter=code^name^description^sort_order, Converter={StaticResource codeNameDescriptionConverter}}"
+                                                SelectedValue="{Binding IncidSource2HabitatType, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
                                                 Tag="ErrorContent"
                                                 ToolTipService.ShowOnDisabled="True" />
@@ -2657,7 +2671,8 @@
                                                     IsEditable="True"
                                                     IsEnabled="{Binding IncidSource2Enabled, Mode=OneWay}"
                                                     IsReadOnly="False"
-                                                    ItemsSource="{Binding SourceImportanceCodes, UpdateSourceTrigger=PropertyChanged}"
+                                                    IsTextSearchEnabled="True"
+                                                    ItemsSource="{Binding SourceImportanceCodes}"
                                                     SelectedValue="{Binding IncidSource2BoundaryImportance, ValidatesOnDataErrors=True}"
                                                     SelectedValuePath="code"
                                                     Tag="ErrorContent"
@@ -2685,7 +2700,8 @@
                                                     IsEditable="True"
                                                     IsEnabled="{Binding IncidSource2Enabled, Mode=OneWay}"
                                                     IsReadOnly="False"
-                                                    ItemsSource="{Binding SourceImportanceCodes, UpdateSourceTrigger=PropertyChanged}"
+                                                    IsTextSearchEnabled="True"
+                                                    ItemsSource="{Binding SourceImportanceCodes}"
                                                     SelectedValue="{Binding IncidSource2HabitatImportance, ValidatesOnDataErrors=True}"
                                                     SelectedValuePath="code"
                                                     Tag="ErrorContent"
@@ -2750,7 +2766,8 @@
                                                 DisplayMemberPath="source_name"
                                                 IsEditable="True"
                                                 IsReadOnly="False"
-                                                ItemsSource="{Binding Source3Names, UpdateSourceTrigger=PropertyChanged}"
+                                                IsTextSearchEnabled="True"
+                                                ItemsSource="{Binding Source3Names}"
                                                 SelectedValue="{Binding IncidSource3Id, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="source_id"
                                                 Tag="ErrorContent"
@@ -2806,7 +2823,8 @@
                                                 IsEditable="True"
                                                 IsEnabled="{Binding IncidSource3Enabled, Mode=OneWay}"
                                                 IsReadOnly="False"
-                                                ItemsSource="{Binding SourceHabitatClassCodes, UpdateSourceTrigger=PropertyChanged}"
+                                                IsTextSearchEnabled="True"
+                                                ItemsSource="{Binding SourceHabitatClassCodes}"
                                                 SelectedValue="{Binding IncidSource3HabitatClass, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
                                                 Tag="ErrorContent"
@@ -2837,8 +2855,9 @@
                                                 IsEditable="True"
                                                 IsEnabled="{Binding IncidSource3Enabled, Mode=OneWay}"
                                                 IsReadOnly="False"
-                                                ItemsSource="{Binding Source3HabitatTypeCodes, ConverterParameter=code^name^description^sort_order, Converter={StaticResource codeNameDescriptionConverter}, UpdateSourceTrigger=PropertyChanged}"
-                                                SelectedValue="{Binding IncidSource3HabitatType, ConverterParameter=code^name^description^sort_order, Converter={StaticResource codeNameDescriptionConverter}, ValidatesOnDataErrors=True}"
+                                                IsTextSearchEnabled="True"
+                                                ItemsSource="{Binding Source3HabitatTypeCodes, ConverterParameter=code^name^description^sort_order, Converter={StaticResource codeNameDescriptionConverter}}"
+                                                SelectedValue="{Binding IncidSource3HabitatType, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
                                                 Tag="ErrorContent"
                                                 ToolTipService.ShowOnDisabled="True" />
@@ -2879,7 +2898,8 @@
                                                     IsEditable="True"
                                                     IsEnabled="{Binding IncidSource3Enabled, Mode=OneWay}"
                                                     IsReadOnly="False"
-                                                    ItemsSource="{Binding SourceImportanceCodes, UpdateSourceTrigger=PropertyChanged}"
+                                                    IsTextSearchEnabled="True"
+                                                    ItemsSource="{Binding SourceImportanceCodes}"
                                                     SelectedValue="{Binding IncidSource3BoundaryImportance, ValidatesOnDataErrors=True}"
                                                     SelectedValuePath="code"
                                                     Tag="ErrorContent"
@@ -2908,7 +2928,8 @@
                                                     IsEditable="True"
                                                     IsEnabled="{Binding IncidSource3Enabled, Mode=OneWay}"
                                                     IsReadOnly="False"
-                                                    ItemsSource="{Binding SourceImportanceCodes, UpdateSourceTrigger=PropertyChanged}"
+                                                    IsTextSearchEnabled="True"
+                                                    ItemsSource="{Binding SourceImportanceCodes}"
                                                     SelectedValue="{Binding IncidSource3HabitatImportance, ValidatesOnDataErrors=True}"
                                                     SelectedValuePath="code"
                                                     Tag="ErrorContent"
@@ -2971,7 +2992,7 @@
                                             MinHeight="280"
                                             Margin="0,0,0,0"
                                             BorderThickness="2"
-                                            ItemsSource="{Binding IncidHistory, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
+                                            ItemsSource="{Binding IncidHistory}">
                                             <!-- <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
                                                 <hlu:UniformGrid2 Orientation="Horizontal" Columns="1" />

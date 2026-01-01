@@ -38,6 +38,10 @@ namespace HLU.UI.UserControls.Toolbar
 
             // Get the ViewModel by casting the dockpane.
             _viewModel = pane as ViewModelWindowMain;
+
+            // Set the checkbox value and state.
+            AutoSelectOnGisEnabled = _viewModel.AutoSelectOnGis;
+            IsChecked = AutoSelectOnGisEnabled;
         }
 
         #endregion Constructor
@@ -70,7 +74,7 @@ namespace HLU.UI.UserControls.Toolbar
             IsChecked = AutoSelectOnGisEnabled;
 
             // Update the main window state.
-            _viewModel.AutoSelectOnGis(AutoSelectOnGisEnabled);
+            _viewModel.SetAutoSelectOnGis(AutoSelectOnGisEnabled);
         }
     }
 }

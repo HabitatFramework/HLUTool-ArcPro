@@ -598,7 +598,7 @@ namespace HLU.UI.ViewModel
                 // Hide the dockpane.
                 DockpaneVisibility = Visibility.Hidden;
 
-                // Display an error message.
+                // Display a warning message.
                 ShowMessage("No active map.", MessageType.Warning);
             }
             else
@@ -782,8 +782,8 @@ namespace HLU.UI.ViewModel
             get
             {
                 if (_dockPane == null
-                || _dockPane.ProcessStatus != null
                 || string.IsNullOrEmpty(_message))
+                //|| _dockPane.ProcessStatus != null
                     return Visibility.Collapsed;
                 else
                     return Visibility.Visible;
