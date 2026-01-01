@@ -36,25 +36,13 @@
 
         <Grid x:Name="Panel">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-
-            <controls:MessageLabel
-                Grid.Row="0"
-                Height="24"
-                Margin="0,8,0,0"
-                CanClose="False"
-                Content="{Binding Path=Message}"
-                MessageType="{Binding Path=MessageLevel}"
-                Severity="High"
-                ShowHelp="False"
-                ToolTip="{Binding Path=Message}"
-                Visibility="{Binding Path=HasMessage}" />
 
             <Grid
                 x:Name="GridMain"
-                Grid.Row="1"
+                Grid.Row="0"
                 Visibility="{Binding DockpaneVisibility}">
 
                 <Grid.RowDefinitions>
@@ -3378,6 +3366,18 @@
                         Text="{Binding ProgressText}" />
                 </Grid>
             </Grid>
+
+            <controls:MessageLabel Grid.Row="1"
+                                   Height="24"
+                                   Margin="0,8,0,0"
+                                   CanClose="False"
+                                   Content="{Binding Path=Message}"
+                                   MessageType="{Binding Path=MessageLevel}"
+                                   Severity="High"
+                                   ShowHelp="False"
+                                   ToolTip="{Binding Path=Message}"
+                                   Visibility="{Binding Path=HasMessage}" />
+
 
         </Grid>
     </DockPanel>

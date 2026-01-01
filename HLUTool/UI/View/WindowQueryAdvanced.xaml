@@ -38,44 +38,37 @@
 
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="4" />
+                <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <GroupBox
                 Name="GroupBoxQueryAdvanced"
-                Height="Auto"
+                Grid.Row="0"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch">
 
                 <Grid VerticalAlignment="Stretch">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Grid Name="GridOptions" Grid.Row="0">
+
+                    <Grid Name="GridOptions">
                         <Grid.RowDefinitions>
-                            <RowDefinition />
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="4" />
-                            <RowDefinition />
-                            <RowDefinition Height="4" />
-                            <RowDefinition />
-                            <RowDefinition Height="4" />
-                            <RowDefinition />
+                            <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
 
                         <Grid
                             Name="GridDatabase"
-                            Grid.Row="2"
+                            Grid.Row="0"
                             Margin="2,0,2,2">
                             <Grid.RowDefinitions>
-                                <RowDefinition />
-                                <RowDefinition />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                                 <RowDefinition Height="4" />
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition />
-                                <RowDefinition />
+                                <RowDefinition Height="4" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                                 <RowDefinition Height="4" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
@@ -155,7 +148,7 @@
 
                             <Label
                                 Name="LabelComparisonOperator"
-                                Grid.Row="4"
+                                Grid.Row="5"
                                 Grid.Column="0"
                                 Margin="0,4,8,0"
                                 HorizontalAlignment="Left"
@@ -164,7 +157,7 @@
                             </Label>
                             <ComboBox
                                 Name="ComboBoxComparisonOperator"
-                                Grid.Row="5"
+                                Grid.Row="6"
                                 Grid.Column="0"
                                 Height="24"
                                 Margin="4,0,8,0"
@@ -174,7 +167,7 @@
                                 SelectedValue="{Binding Path=ComparisonOperator, ValidatesOnDataErrors=True}" />
                             <Button
                                 Name="ButtonAddOperator"
-                                Grid.Row="7"
+                                Grid.Row="8"
                                 Grid.Column="0"
                                 Width="40"
                                 Margin="4,0,0,0"
@@ -188,7 +181,7 @@
 
                             <Label
                                 Name="LabelValue"
-                                Grid.Row="4"
+                                Grid.Row="5"
                                 Grid.Column="1"
                                 Margin="0,4,4,0"
                                 HorizontalAlignment="Left"
@@ -197,7 +190,7 @@
                             </Label>
                             <ComboBox
                                 Name="ComboBoxQueryValue"
-                                Grid.Row="5"
+                                Grid.Row="6"
                                 Grid.Column="1"
                                 Height="24"
                                 Margin="4,0,4,0"
@@ -211,7 +204,7 @@
                             </ComboBox>
                             <Button
                                 Name="ButtonAddValue"
-                                Grid.Row="7"
+                                Grid.Row="8"
                                 Grid.Column="1"
                                 Width="40"
                                 Margin="4,0,0,0"
@@ -224,7 +217,7 @@
                             </Button>
                             <Button
                                 Name="ButtonGetValues"
-                                Grid.Row="7"
+                                Grid.Row="8"
                                 Grid.Column="1"
                                 Width="Auto"
                                 Margin="0,0,4,0"
@@ -232,7 +225,7 @@
                                 Command="{Binding Path=GetValuesCommand}"
                                 Focusable="False"
                                 IsDefault="False"
-                                IsEnabled="{Binding Path=GetValuesIsEnabled}"
+                                IsEnabled="{Binding Path=CanGetValues}"
                                 Style="{DynamicResource Esri_Button}"
                                 ToolTip="{Binding Path=GetValuesToolTip}">
                                 Get Values
@@ -242,15 +235,15 @@
 
                         <Grid
                             Name="GridSQL"
-                            Grid.Row="4"
+                            Grid.Row="2"
                             Margin="2,8,2,2"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Stretch">
                             <Grid.RowDefinitions>
-                                <RowDefinition />
-                                <RowDefinition />
-                                <RowDefinition />
-                                <RowDefinition />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
 
                             <Label
@@ -289,8 +282,9 @@
                                 Name="TextBoxWhereClause"
                                 Grid.Row="3"
                                 MinHeight="110"
-                                MaxHeight="220"
                                 Margin="4,0,4,4"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch"
                                 BorderThickness="1"
                                 IsEnabled="True"
                                 Tag="ErrorContent"
@@ -307,7 +301,7 @@
 
             <Grid
                 x:Name="GridButtons"
-                Grid.Row="2"
+                Grid.Row="1"
                 Margin="4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />

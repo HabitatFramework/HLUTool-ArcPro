@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU
 {
@@ -45,12 +46,12 @@ namespace HLU
             {
                 System.Windows.Application.Current.Dispatcher.Invoke(() =>
                 {
-                    ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show(
+                    MessageBox.Show(
                         $"{message}{Environment.NewLine}{Environment.NewLine}{ex.Message}",
                         title);
                 });
 
-                System.Diagnostics.Debug.WriteLine(ex);
+                Debug.WriteLine(ex);
             }
         }
     }

@@ -2606,7 +2606,7 @@ namespace HLU.UI.ViewModel
 
         #endregion
 
-        #region Split & Merge
+        #region Logical Split
 
         /// <summary>
         /// LogicalSplitCommand event handler.
@@ -2640,6 +2640,32 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
+        /// At least one feature in selection that share the same incid, but *not* toid and toidfragid
+        /// </summary>
+        public bool CanLogicallySplit
+        {
+            get
+            {
+                return (BulkUpdateMode == false && OSMMUpdateMode == false) &&
+                    EditMode && !String.IsNullOrEmpty(Reason) && !String.IsNullOrEmpty(Process) &&
+                    (_gisSelection != null) && (_incidsSelectedMapCount == 1) &&
+                    ((_gisSelection.Rows.Count > 0) && ((_toidsSelectedMapCount > 1) || (_fragsSelectedMapCount > 0)) ||
+                    (_gisSelection.Rows.Count == 1)) &&
+                    // Only enable split/merge after select from map
+                    (_filterByMap == true) &&
+
+                    // Only enable logical split menu/button if a subset of all the
+                    // features for the current incid have been selected.
+                    ((_toidsIncidGisCount < _toidsIncidDbCount) ||
+                    (_fragsIncidGisCount < _fragsIncidDbCount));
+            }
+        }
+
+        #endregion Logical Split
+
+        #region Physical Split
+
+        /// <summary>
         /// Performs a physical split operation on the selected GIS layer.
         /// </summary>
         /// <remarks>This method temporarily disables automatic splitting, retrieves the current map
@@ -2664,28 +2690,6 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// At least one feature in selection that share the same incid, but *not* toid and toidfragid
-        /// </summary>
-        public bool CanLogicallySplit
-        {
-            get
-            {
-                return (BulkUpdateMode == false && OSMMUpdateMode == false) &&
-                    EditMode && !String.IsNullOrEmpty(Reason) && !String.IsNullOrEmpty(Process) &&
-                    (_gisSelection != null) && (_incidsSelectedMapCount == 1) &&
-                    ((_gisSelection.Rows.Count > 0) && ((_toidsSelectedMapCount > 1) || (_fragsSelectedMapCount > 0)) ||
-                    (_gisSelection.Rows.Count == 1)) &&
-                    // Only enable split/merge after select from map
-                    (_filterByMap == true) &&
-
-                    // Only enable logical split menu/button if a subset of all the
-                    // features for the current incid have been selected.
-                    ((_toidsIncidGisCount < _toidsIncidDbCount) ||
-                    (_fragsIncidGisCount < _fragsIncidDbCount));
-            }
-        }
-
-        /// <summary>
         /// At least two features in selection that share the same incid, toid and toidfragid
         /// </summary>
         public bool CanPhysicallySplit
@@ -2700,6 +2704,61 @@ namespace HLU.UI.ViewModel
                     (_incidsSelectedMapCount == 1) && (_toidsSelectedMapCount == 1) && (_fragsSelectedMapCount == 1);
             }
         }
+
+        internal async Task<bool> TriggerPhysicalSplitAsync()
+        {
+            if (IsAuthorisedUser)
+            {
+                if (!CanPhysicallySplit)
+                {
+                    // Create complete physical split reason/process window.
+                    _windowCompSplit = new()
+                    {
+                        // Set ArcGIS Pro as the parent
+                        Owner = FrameworkApplication.Current.MainWindow,
+                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                        Topmost = true
+                    };
+
+                    // Create ViewModel to which main window binds
+                    _vmCompSplit = new ViewModelWindowCompletePhysicalSplit(_reason, _process, _reasonCodes, _processCodes);
+
+                    // When ViewModel asks to be closed, close window
+                    _vmCompSplit.RequestClose -= vmCompSplit_RequestClose; // Safety: avoid double subscription.
+                    _vmCompSplit.RequestClose += new ViewModelWindowCompletePhysicalSplit.RequestCloseEventHandler(vmCompSplit_RequestClose);
+
+                    // Allow all controls in window to bind to ViewModel by setting DataContext
+                    _windowCompSplit.DataContext = _vmCompSplit;
+
+                    // Show window
+                    _windowCompSplit.ShowDialog();
+                }
+                if (CanPhysicallySplit)
+                {
+                    ViewModelWindowMainSplit vmSplit = new(this);
+
+                    if (await vmSplit.PhysicalSplitAsync())
+                        NotifySplitMerge("Physical split completed.");
+                }
+                else
+                {
+                    MessageBox.Show("Could not complete physical split.\nPlease invoke the Split command before altering the map selection.",
+                        "HLU: Physical Split", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Could not complete physical split because you are not an authorized user.\n" +
+                    "Please undo your map changes to prevent map and database going out of sync.",
+                    "HLU: Physical Split", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+            }
+
+            return true;
+        }
+
+        #endregion Physical Split
+
+        #region Logical Merge
 
         /// <summary>
         /// LogicalMergeCommand event handler.
@@ -2729,6 +2788,26 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
+        /// At least one feature in selection that do not share the same incid or toidfragid
+        /// </summary>
+        public bool CanLogicallyMerge
+        {
+            get
+            {
+                return (BulkUpdateMode == false && OSMMUpdateMode == false) &&
+                    EditMode && !String.IsNullOrEmpty(Reason) && !String.IsNullOrEmpty(Process) &&
+                    _gisSelection != null && _gisSelection.Rows.Count > 1 &&
+                    // Only enable split/merge after select from map
+                    (_filterByMap == true) &&
+                    (_incidsSelectedMapCount > 1) && (_fragsSelectedMapCount > 1);
+            }
+        }
+
+        #endregion Logical Merge
+
+        #region Physical Merge
+
+        /// <summary>
         /// PhysicalMergeCommand event handler.
         /// </summary>
         /// <param name="param"></param>
@@ -2756,22 +2835,6 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// At least one feature in selection that do not share the same incid or toidfragid
-        /// </summary>
-        public bool CanLogicallyMerge
-        {
-            get
-            {
-                return (BulkUpdateMode == false && OSMMUpdateMode == false) &&
-                    EditMode && !String.IsNullOrEmpty(Reason) && !String.IsNullOrEmpty(Process) &&
-                    _gisSelection != null && _gisSelection.Rows.Count > 1 &&
-                    // Only enable split/merge after select from map
-                    (_filterByMap == true) &&
-                    (_incidsSelectedMapCount > 1) && (_fragsSelectedMapCount > 1);
-            }
-        }
-
-        /// <summary>
         /// At least one feature in selection that share the same incid and toid but *not* the same toidfragid
         /// </summary>
         public bool CanPhysicallyMerge
@@ -2787,7 +2850,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion Split & Merge
+        #endregion Physical Merge
 
         #region Notify SplitMerge
 
@@ -6151,12 +6214,12 @@ namespace HLU.UI.ViewModel
                 // Store the number of incids found in the database
                 _incidsSelectedDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
 
-                // Indicate the selection came from the map.
+                // If any GIS features were found.
                 if ((_gisSelection != null) && (_gisSelection.Rows.Count > 0))
+                {
+                    // Indicate the selection came from the map.
                     _filterByMap = true;
 
-                if (_gisSelection.Rows.Count > 0)
-                {
                     // Prevent OSMM updates being actioned too quickly.
                     if (OSMMBulkUpdateMode == false && OSMMUpdateMode == true)
                     {
@@ -6180,51 +6243,8 @@ namespace HLU.UI.ViewModel
                     if (_autoSplit && (_gisSelection != null) && (_gisSelection.Rows.Count > 1) && (_incidsSelectedMapCount == 1) &&
                         (_toidsSelectedMapCount == 1) && (_fragsSelectedMapCount == 1))
                     {
-                        if (IsAuthorisedUser)
-                        {
-                            if (!CanPhysicallySplit)
-                            {
-                                // Create complete physical split reason/process window.
-                                _windowCompSplit = new()
-                                {
-                                    // Set ArcGIS Pro as the parent
-                                    Owner = FrameworkApplication.Current.MainWindow,
-                                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                                    Topmost = true
-                                };
-
-                                // Create ViewModel to which main window binds
-                                _vmCompSplit = new ViewModelWindowCompletePhysicalSplit(_reason, _process, _reasonCodes, _processCodes);
-
-                                // When ViewModel asks to be closed, close window
-                                _vmCompSplit.RequestClose -= vmCompSplit_RequestClose; // Safety: avoid double subscription.
-                                _vmCompSplit.RequestClose += new ViewModelWindowCompletePhysicalSplit.RequestCloseEventHandler(vmCompSplit_RequestClose);
-
-                                // Allow all controls in window to bind to ViewModel by setting DataContext
-                                _windowCompSplit.DataContext = _vmCompSplit;
-
-                                // Show window
-                                _windowCompSplit.ShowDialog();
-                            }
-                            if (CanPhysicallySplit)
-                            {
-                                ViewModelWindowMainSplit vmSplit = new(this);
-
-                                if (await vmSplit.PhysicalSplitAsync())
-                                    NotifySplitMerge("Physical split completed.");
-                            }
-                            else
-                            {
-                                MessageBox.Show("Could not complete physical split.\nPlease invoke the Split command before altering the map selection.",
-                                    "HLU: Physical Split", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                            }
-                        }
-                        else
-                        {
-                            MessageBox.Show("Could not complete physical split because you are not an authorized user.\n" +
-                                "Please undo your map changes to prevent map and database going out of sync.",
-                                "HLU: Physical Split", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                        }
+                        // Trigger the physical split.
+                        await TriggerPhysicalSplitAsync();
                     }
                     else
                     {
@@ -6233,6 +6253,9 @@ namespace HLU.UI.ViewModel
                         // Check if the GIS and database are in sync.
                         CheckInSync("Selection", "Map");
                     }
+
+                    // Clear any messages.
+                    ClearMessage();
                 }
                 else
                 {

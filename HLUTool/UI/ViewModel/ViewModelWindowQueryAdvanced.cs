@@ -37,6 +37,7 @@ using HLU.UI.ViewModel;
 using HLU.GISApplication;
 using HLU.Properties;
 using HLU.UI.UserControls;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
 {
