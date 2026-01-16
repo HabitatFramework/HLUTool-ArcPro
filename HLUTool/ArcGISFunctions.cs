@@ -2436,7 +2436,7 @@ namespace HLU.GISApplication
                 return false;
 
             // Split the field names into a list.
-            string[] fieldNameArray = fieldNames.Split(new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] fieldNameArray = fieldNames.Split([',', ';'], StringSplitOptions.RemoveEmptyEntries);
             foreach (string fieldName in fieldNameArray)
             {
                 if (!FieldExists(fields, fieldName.Trim()))

@@ -24,6 +24,8 @@ using System.Data.Common;
 using System.Data.OleDb;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace HLU.Data.Connection
@@ -649,6 +651,13 @@ namespace HLU.Data.Connection
             finally { if (previousConnectionState == ConnectionState.Closed) _connection.Close(); }
         }
 
+        /// <summary>
+        /// Executes the query and returns the first column of the first row
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="commandTimeout"></param>
+        /// <param name="commandType"></param>
+        /// <returns></returns>
         public override object ExecuteScalar(string sql, int commandTimeout, CommandType commandType)
         {
             _errorMessage = String.Empty;
@@ -671,6 +680,50 @@ namespace HLU.Data.Connection
                 return null;
             }
             finally { if (previousConnectionState == ConnectionState.Closed) _connection.Close(); }
+        }
+
+        /// <summary>
+        /// Executes the query and returns the first column of the first row
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="commandTimeout"></param>
+        /// <param name="commandType"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public override async Task<object> ExecuteScalarAsync(string sql, int commandTimeout, CommandType commandType, CancellationToken cancellationToken = default)
+        {
+            _errorMessage = String.Empty;
+
+            if (String.IsNullOrEmpty(sql)) return null;
+
+            ConnectionState previousConnectionState = _connection.State;
+
+            try
+            {
+                _command.CommandType = commandType;
+                _command.CommandTimeout = commandTimeout;
+                _command.CommandText = sql;
+
+                if (_transaction != null)
+                    _command.Transaction = _transaction;
+
+                _commandBuilder.RefreshSchema();
+
+                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                    await _connection.OpenAsync(cancellationToken);
+
+                return await _command.ExecuteScalarAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _errorMessage = ex.Message;
+                return null;
+            }
+            finally
+            {
+                if (previousConnectionState == ConnectionState.Closed)
+                    _connection.Close();
+            }
         }
 
         /// <summary>

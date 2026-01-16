@@ -21,6 +21,7 @@
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.UtilityNetwork.Trace;
 using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
@@ -50,12 +51,14 @@ using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing.Printing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -608,12 +611,15 @@ namespace HLU.UI.ViewModel
                 // Load all of the lookup tables
                 LoadLookupTables();
 
-                //TODO: Don't do this until the active map has been checked.
-                // Move to first row
-                await MoveIncidCurrentRowIndexAsync(1);
+                // Check for any pending OSMM updates.
+                await RefreshAnyOSMMUpdatesAsync();
 
                 // Check the active map is valid (don't check result at this stage)
                 await CheckActiveMapAsync();
+
+                //TODO: Now done after the active map has been checked. Is this okay?
+                // Move to first row
+                await MoveIncidCurrentRowIndexAsync(1);
 
                 // Initialise the main update view model
                 _viewModelUpd = new ViewModelWindowMainUpdate(this);
@@ -2948,7 +2954,7 @@ namespace HLU.UI.ViewModel
                             MessageBoxButton.YesNoCancel, MessageBoxImage.Question) == MessageBoxResult.Yes)
                 {
                     // Set the status to processing and the cursor to wait.
-                    ChangeCursor(Cursors.Wait, "Selecting ...");
+                    ChangeCursor(Cursors.Wait, "Selecting in GIS ...");
 
                     //TODO: Needed?
                     // Let WPF render the cursor/message before heavy work begins.
@@ -4210,20 +4216,38 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_anyOSMMUpdates == null)
-                {
-                    // Check if there are incid OSMM updates in the database
-                    int incidOSMMUpdatesRowCount = (int)_db.ExecuteScalar(String.Format(
-                        "SELECT COUNT(*) FROM {0}", _db.QualifyTableName(_hluDS.incid_osmm_updates.TableName)),
-                        _db.Connection.ConnectionTimeout, CommandType.Text);
-
-                    if (incidOSMMUpdatesRowCount > 0)
-                        _anyOSMMUpdates = true;
-                    else
-                        _anyOSMMUpdates = false;
-                }
-                return (bool)_anyOSMMUpdates;
+                return _anyOSMMUpdates ?? false;
             }
+        }
+
+        /// <summary>
+        /// Queries the database and updates <see cref="AnyOSMMUpdates"/>.
+        /// </summary>
+        internal async Task RefreshAnyOSMMUpdatesAsync(CancellationToken cancellationToken = default)
+        {
+            int rowCount = await CountOSMMUpdatesAsync(cancellationToken).ConfigureAwait(false);
+
+            _anyOSMMUpdates = rowCount > 0;
+
+            // If you're in a ViewModel, raise PropertyChanged here.
+            OnPropertyChanged(nameof(AnyOSMMUpdates));
+        }
+
+        /// <summary>
+        /// Counts incid OSMM updates in the database
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        internal async Task<int> CountOSMMUpdatesAsync(CancellationToken cancellationToken = default)
+        {
+            object result = await _db.ExecuteScalarAsync(String.Format(
+                "SELECT COUNT(*) FROM {0}", _db.QualifyTableName(_hluDS.incid_osmm_updates.TableName)),
+                _db.Connection.ConnectionTimeout,
+                CommandType.Text,
+                cancellationToken);
+
+            // COUNT(*) can come back as int or long depending on provider.
+            return Convert.ToInt32(result, CultureInfo.InvariantCulture);
         }
 
         /// <summary>
@@ -4767,137 +4791,117 @@ namespace HLU.UI.ViewModel
         /// <param name="sqlWhereClause">The where clause to apply in the query.</param>
         protected async void _viewModelWinQueryAdvanced_RequestClose(string sqlFromTables, string sqlWhereClause)
         {
+            // Remove the event handler and close the window.
             _viewModelWinQueryAdvanced.RequestClose -= _viewModelWinQueryAdvanced_RequestClose;
             _windowQueryAdvanced.Close();
 
-            if ((sqlFromTables != null) && (sqlWhereClause != null))
+            // If no query was specified, exit (this should not happen).
+            if ((sqlFromTables == null) && (sqlWhereClause == null))
+                return;
+
+            try
             {
-                try
+                ChangeCursor(Cursors.Wait, "Validating ...");
+
+                //TODO: Needed?
+                // Let WPF render the cursor/message before heavy work begins.
+                //await Dispatcher.Yield(DispatcherPriority.Background);
+
+                // Get a list of all the possible query tables.
+                List<DataTable> tables = [];
+                if ((ViewModelWindowQueryAdvanced.HluDatasetStatic != null))
                 {
-                    ChangeCursor(Cursors.Wait, "Validating ...");
+                    tables = ViewModelWindowQueryAdvanced.HluDatasetStatic.incid.ChildRelations
+                        .Cast<DataRelation>().Select(r => r.ChildTable).ToList();
+                    tables.Add(ViewModelWindowQueryAdvanced.HluDatasetStatic.incid);
+                }
 
-                    //TODO: Needed?
-                    // Let WPF render the cursor/message before heavy work begins.
-                    //await Dispatcher.Yield(DispatcherPriority.Background);
+                // Split the string of query table names created by the
+                // user in the form into an array.
+                string[] fromTables = sqlFromTables.Split(',').Select(s => s.Trim(' ')).Distinct().ToArray();
 
-                    // Get a list of all the possible query tables.
-                    List<DataTable> tables = [];
-                    if ((ViewModelWindowQueryAdvanced.HluDatasetStatic != null))
+                // Select only the database tables that are in the query array.
+                List<DataTable> whereTables = tables.Where(t => fromTables.Contains(t.TableName)).ToList();
+
+                // Replace any connection type specific qualifiers and delimiters.
+                string newWhereClause = null;
+                if (sqlWhereClause != null)
+                    newWhereClause = ReplaceStringQualifiers(sqlWhereClause);
+
+                // Backup the current selection (filter).
+                DataTable incidSelectionBackup = _incidSelection;
+
+                // Clear the selection of incids.
+                _incidSelection = null;
+
+                // Clear the previous where clause (set when performing the
+                // original query builder or when reading the map selection)
+                // because otherwise it might be used in error later.
+                _incidSelectionWhereClause = null;
+
+                // Create a selection DataTable of PK values of IncidTable
+                if (whereTables.Count > 0)
+                {
+                    // Create a selection DataTable of PK values of IncidTable.
+                    _incidSelection = _db.SqlSelect(true, IncidTable.PrimaryKey, whereTables, newWhereClause);
+
+                    // Get a list of all the incids in the selection.
+                    _incidsSelectedMap = _incidSelection.AsEnumerable()
+                        .GroupBy(r => r.Field<string>(_incidSelection.Columns[0].ColumnName)).Select(g => g.Key).OrderBy(s => s);
+
+                    // Retrospectively set the where clause to match the list
+                    // of selected incids (for possible use later).
+                    _incidSelectionWhereClause = ViewModelWindowMainHelpers.IncidSelectionToWhereClause(
+                        IncidPageSize, IncidTable.incidColumn.Ordinal, IncidTable, _incidsSelectedMap);
+                }
+
+                // If there are any records in the selection (and the tool is
+                // not currently in bulk update mode).
+                if (IsFiltered)
+                {
+                    // Find the expected number of features to be selected in GIS.
+                    _toidsSelectedDBCount = 0;
+                    _fragsSelectedDBCount = 0;
+                    //ExpectedSelectionFeatures(whereTables, sqlWhereClause, ref _toidsSelectedDBCount, ref _fragsSelectedDBCount);
+                    ExpectedSelectionFeatures(whereTables, newWhereClause, ref _toidsSelectedDBCount, ref _fragsSelectedDBCount);
+
+                    // Store the number of incids found in the database
+                    _incidsSelectedDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
+
+                    ChangeCursor(Cursors.Wait, "Filtering ...");
+
+                    // Select the required incid(s) in GIS.
+                    if (await PerformGisSelectionAsync(true, _fragsSelectedDBCount, _incidsSelectedDBCount))
                     {
-                        tables = ViewModelWindowQueryAdvanced.HluDatasetStatic.incid.ChildRelations
-                            .Cast<DataRelation>().Select(r => r.ChildTable).ToList();
-                        tables.Add(ViewModelWindowQueryAdvanced.HluDatasetStatic.incid);
-                    }
+                        // Analyse the results, set the filter and reset the cursor AFTER
+                        // returning from performing the GIS selection so that other calls
+                        // to the PerformGisSelection method can control if/when these things
+                        // are done.
+                        //
+                        // Analyse the results of the GIS selection by counting the number of
+                        // incids, toids and fragments selected.
+                        //TODO: Done. Set updateIncidSelection to false as selection already set.
+                        AnalyzeGisSelectionSet(false);
 
-                    // Split the string of query table names created by the
-                    // user in the form into an array.
-                    string[] fromTables = sqlFromTables.Split(',').Select(s => s.Trim(' ')).Distinct().ToArray();
+                        // Indicate the selection didn't come from the map.
+                        _filterByMap = false;
 
-                    // Select only the database tables that are in the query array.
-                    List<DataTable> whereTables = tables.Where(t => fromTables.Contains(t.TableName)).ToList();
+                        // Set the filter back to the first incid.
+                        await SetFilterAsync();
 
-                    // Backup the current selection (filter).
-                    DataTable incidSelectionBackup = _incidSelection;
+                        // Reset the cursor back to normal.
+                        ChangeCursor(Cursors.Arrow, null);
 
-                    // Replace any connection type specific qualifiers and delimiters.
-                    string newWhereClause = null;
-                    if (sqlWhereClause != null)
-                        newWhereClause = ReplaceStringQualifiers(sqlWhereClause);
-
-                    // create a selection DataTable of PK values of IncidTable
-                    if (whereTables.Count > 0)
-                    {
-                        // Create a selection DataTable of PK values of IncidTable.
-                        _incidSelection = _db.SqlSelect(true, IncidTable.PrimaryKey, whereTables, newWhereClause);
-
-                        // Get a list of all the incids in the selection.
-                        _incidsSelectedMap = _incidSelection.AsEnumerable()
-                            .GroupBy(r => r.Field<string>(_incidSelection.Columns[0].ColumnName)).Select(g => g.Key).OrderBy(s => s);
-
-                        // Retrospectively set the where clause to match the list
-                        // of selected incids (for possible use later).
-                        _incidSelectionWhereClause = ViewModelWindowMainHelpers.IncidSelectionToWhereClause(
-                            IncidPageSize, IncidTable.incidColumn.Ordinal, IncidTable, _incidsSelectedMap);
-                    }
-                    else
-                    {
-                        // Clear the selection of incids.
-                        _incidSelection = null;
-
-                        // Clear the previous where clause (set when performing the
-                        // original query builder or when reading the map selection)
-                        // because otherwise it might be used in error later.
-                        _incidSelectionWhereClause = null;
-                    }
-
-                    // If there are any records in the selection (and the tool is
-                    // not currently in bulk update mode).
-                    if (IsFiltered)
-                    {
-                        // Find the expected number of features to be selected in GIS.
-                        _toidsSelectedDBCount = 0;
-                        _fragsSelectedDBCount = 0;
-                        //ExpectedSelectionFeatures(whereTables, sqlWhereClause, ref _toidsSelectedDBCount, ref _fragsSelectedDBCount);
-                        ExpectedSelectionFeatures(whereTables, newWhereClause, ref _toidsSelectedDBCount, ref _fragsSelectedDBCount);
-
-                        // Store the number of incids found in the database
-                        _incidsSelectedDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
-
-                        ChangeCursor(Cursors.Wait, "Filtering ...");
-
-                        // Select the required incid(s) in GIS.
-                        if (await PerformGisSelectionAsync(true, _fragsSelectedDBCount, _incidsSelectedDBCount))
+                        // Check if the GIS and database are in sync.
+                        if (CheckInSync("Selection", "Selected", "Not all selected"))
                         {
-                            // Analyse the results, set the filter and reset the cursor AFTER
-                            // returning from performing the GIS selection so that other calls
-                            // to the PerformGisSelection method can control if/when these things
-                            // are done.
-                            //
-                            // Analyse the results of the GIS selection by counting the number of
-                            // incids, toids and fragments selected.
-                            AnalyzeGisSelectionSet(true);
-
-                            // Indicate the selection didn't come from the map.
-                            _filterByMap = false;
-
-                            // Set the filter back to the first incid.
-                            await SetFilterAsync();
-
-                            // Reset the cursor back to normal.
-                            ChangeCursor(Cursors.Arrow, null);
-
-                            // Check if the GIS and database are in sync.
-                            if (CheckInSync("Selection", "Selected", "Not all selected"))
+                            // Check if the counts returned are less than those expected.
+                            if ((_toidsIncidGisCount < _toidsSelectedDBCount) ||
+                                    (_fragsIncidGisCount < _fragsSelectedDBCount))
                             {
-                                // Check if the counts returned are less than those expected.
-                                if ((_toidsIncidGisCount < _toidsSelectedDBCount) ||
-                                        (_fragsIncidGisCount < _fragsSelectedDBCount))
-                                {
-                                    MessageBox.Show("Not all selected features found in active layer.", "HLU: Selection",
-                                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                                }
+                                MessageBox.Show("Not all selected features found in active layer.", "HLU: Selection",
+                                MessageBoxButton.OK, MessageBoxImage.Warning);
                             }
-                        }
-                        else
-                        {
-                            // Restore the previous selection (filter).
-                            //_incidSelection = incidSelectionBackup;
-
-                            // Clear the selection (filter).
-                            _incidSelection = null;
-
-                            // Indicate the selection didn't come from the map.
-                            _filterByMap = false;
-
-                            // Set the filter back to the first incid.
-                            await SetFilterAsync();
-
-                            // Reset the cursor back to normal.
-                            ChangeCursor(Cursors.Arrow, null);
-
-                            // Warn the user that no records were found.
-                            MessageBox.Show("No map features found in active layer.", "HLU: Apply Query",
-                                MessageBoxButton.OK, MessageBoxImage.Information);
                         }
                     }
                     else
@@ -4914,25 +4918,47 @@ namespace HLU.UI.ViewModel
                         // Set the filter back to the first incid.
                         await SetFilterAsync();
 
-                        // Reset the cursor back to normal
+                        // Reset the cursor back to normal.
                         ChangeCursor(Cursors.Arrow, null);
 
-                        // Warn the user that no records were found
-                        MessageBox.Show("No records found in database.", "HLU: Apply Query",
+                        // Warn the user that no records were found.
+                        MessageBox.Show("No map features found in active layer.", "HLU: Apply Query",
                             MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                 }
-                catch (Exception ex)
+                else
                 {
+                    // Restore the previous selection (filter).
+                    //_incidSelection = incidSelectionBackup;
+
+                    // Clear the selection (filter).
                     _incidSelection = null;
+
+                    // Indicate the selection didn't come from the map.
+                    _filterByMap = false;
+
+                    // Set the filter back to the first incid.
+                    await SetFilterAsync();
+
+                    // Reset the cursor back to normal
                     ChangeCursor(Cursors.Arrow, null);
-                    MessageBox.Show(ex.Message, "HLU: Apply Query",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+
+                    // Warn the user that no records were found
+                    MessageBox.Show("No records found in database.", "HLU: Apply Query",
+                        MessageBoxButton.OK, MessageBoxImage.Information);
                 }
-                finally { RefreshStatus(); }
             }
+            catch (Exception ex)
+            {
+                _incidSelection = null;
+                ChangeCursor(Cursors.Arrow, null);
+                MessageBox.Show(ex.Message, "HLU: Apply Query",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally { RefreshStatus(); }
         }
 
+        //TODO: Remove selectByJoin and replace with 'warn when record count > nnn'?
         /// <summary>
         /// Opens the warning on gis selection window to prompt the user
         /// for confirmation before proceeding.
@@ -5927,13 +5953,22 @@ namespace HLU.UI.ViewModel
             try
             {
                 // Set the status to processing and the cursor to wait.
-                ChangeCursor(Cursors.Wait, "Selecting ...");
+                ChangeCursor(Cursors.Wait, "Selecting in GIS ...");
+
+                // Select the current incid on the map.
+                if (!await _gisApp.SelectIncidOnMapAsync(_incidCurrentRow.incid))
+                {
+                    // Display a warning message.
+                    ShowMessage("Error selecting current incid in GIS.", MessageType.Warning);
+
+                    return;
+                }
 
                 // Initialise the GIS selection table schema.
                 _gisSelection = NewGisSelectionTable();
 
-                // Select and read selection back from the map.
-                _gisSelection = await _gisApp.SelectCurrentOnMapAsync(_incidCurrentRow.incid, _gisSelection);
+                // Read selection back into the passed table schema.
+                _gisSelection = await _gisApp.ReadMapSelectionAsync(_gisSelection).ConfigureAwait(false);
 
                 // Analyse the results of the GIS selection by counting the number of
                 // incids, toids and fragments selected. Do not overwrite DB filter selection.
@@ -5980,7 +6015,7 @@ namespace HLU.UI.ViewModel
 
         //TODO: Add waits?
         /// <summary>
-        /// Select the current DB record on the map.
+        /// Select the current incid record on the map.
         /// </summary>
         /// <param name="updateIncidSelection">Should the incid selection be updated afterwards?</param>
         public async Task SelectOnMapAsync(bool updateIncidSelection)
@@ -5996,9 +6031,6 @@ namespace HLU.UI.ViewModel
                 DataTable prevIncidSelection = NewIncidSelectionTable();
                 DataTable prevGISSelection = NewGisSelectionTable();
 
-                // Determine if a filter with more than one incid is currently active.
-                bool multiIncidFilter = (IsFiltered && _incidSelection.Rows.Count > 1);
-
                 // Save the current table of selected incids.
                 prevIncidSelection = _incidSelection;
 
@@ -6007,6 +6039,9 @@ namespace HLU.UI.ViewModel
 
                 // Reset the table of selected incids.
                 _incidSelection = NewIncidSelectionTable();
+
+                // Determine if a filter with more than one incid is currently active.
+                bool multiIncidFilter = (IsFiltered && _incidSelection.Rows.Count > 1);
 
                 // Set the table of selected incids to the current incid.
                 DataRow selRow = _incidSelection.NewRow();
@@ -6104,9 +6139,9 @@ namespace HLU.UI.ViewModel
                     ClearMessage();
                 }
 
-                    //TODO: Remove minZoom if not needed
-                    // Zoom to the GIS selection (if auto zoom configured).
-                    await _gisApp.ZoomSelectedAsync(_minZoom, _autoZoomToSelection);
+                //TODO: Remove minZoom if not needed
+                // Zoom to the GIS selection (if auto zoom configured).
+                await _gisApp.ZoomSelectedAsync(_minZoom, _autoZoomToSelection);
             }
             catch (Exception ex)
             {
@@ -6184,7 +6219,7 @@ namespace HLU.UI.ViewModel
                         return;
                 }
 
-                ChangeCursor(Cursors.Wait, "Filtering ...");
+                ChangeCursor(Cursors.Wait, "Getting map selection ...");
 
                 // Initialise the GIS selection table.
                 _gisSelection = NewGisSelectionTable();
@@ -6209,7 +6244,7 @@ namespace HLU.UI.ViewModel
                 // Update the number of features found in the database.
                 _toidsSelectedDBCount = 0;
                 _fragsSelectedDBCount = 0;
-                ExpectedSelectionFeatures(_incidSelectionWhereClause, ref _toidsSelectedDBCount, ref _fragsSelectedDBCount);
+                (_toidsSelectedDBCount, _fragsSelectedDBCount) = await ExpectedSelectionFeatures(_incidSelectionWhereClause);
 
                 // Store the number of incids found in the database
                 _incidsSelectedDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -6741,7 +6776,7 @@ namespace HLU.UI.ViewModel
             try
             {
                 // Set the status to processing and the cursor to wait.
-                ChangeCursor(Cursors.Wait, "Selecting ...");
+                ChangeCursor(Cursors.Wait, "Selecting in GIS ...");
 
                 //TODO: Needed?
                 // Let WPF render the cursor/message before heavy work begins.
@@ -6759,7 +6794,7 @@ namespace HLU.UI.ViewModel
                 // (by querying the database).
                 int expectedNumToids = -1;
                 int expectedNumFeatures = -1;
-                ExpectedSelectionFeatures(whereClause, ref expectedNumToids, ref expectedNumFeatures);
+                (expectedNumToids, expectedNumFeatures) = await ExpectedSelectionFeatures(whereClause);
 
                 // Find the expected number of incids to be selected in GIS.
                 int expectedNumIncids = _incidSelection.Rows.Count;
@@ -6914,12 +6949,13 @@ namespace HLU.UI.ViewModel
             _incidsSelectedMapCount = 0;
             _toidsSelectedMapCount = 0;
             _fragsSelectedMapCount = 0;
+
             if ((_gisSelection != null) && (_gisSelection.Rows.Count > 0))
             {
                 switch (_gisSelection.Columns.Count)
                 {
                     case 3:
-                        // Count the number of fragments selected in GIS.
+                        // Get the fragments selected in GIS.
                         _fragsSelectedMap = from r in _gisSelection.AsEnumerable()
                                             group r by new
                                             {
@@ -6929,17 +6965,21 @@ namespace HLU.UI.ViewModel
                                             }
                                                 into g
                                                 select g.Key.fragment;
+
+                        // Count the number of fragments selected in GIS.
                         _fragsSelectedMapCount = _fragsSelectedMap.Count();
                         goto case 2;
                     case 2:
-                        // Count the number of toids selected in GIS.
+                        // Get the toids selected in GIS.
                         _toidsSelectedMap = _gisSelection.AsEnumerable()
                             .GroupBy(r => r.Field<string>(_gisIDColumns[1].ColumnName)).Select(g => g.Key);
+
+                        // Count the number of toids selected in GIS.
                         _toidsSelectedMapCount = _toidsSelectedMap.Count();
                         goto case 1;
                     case 1:
-                        // Order the incids selected in the GIS so that the filter
-                        // is sorted in incid order.
+                        // Get the incids selected in GIS (ordered so that the filter
+                        // is sorted in incid order).
                         _incidsSelectedMap = _gisSelection.AsEnumerable()
                             .GroupBy(r => r.Field<string>(_gisIDColumns[0].ColumnName)).Select(g => g.Key).OrderBy(s => s);
 
@@ -6963,6 +7003,7 @@ namespace HLU.UI.ViewModel
             }
             else
             {
+                // Clear the sekection.
                 if (updateIncidSelection)
                 {
                     _incidSelection = null;
@@ -7012,8 +7053,11 @@ namespace HLU.UI.ViewModel
         /// <param name="numToids">The number of toids expected.</param>
         /// <param name="numFragments">The number of fragments expected.</param>
         /// <returns>An integer of the number of GIS features to be selected.</returns>
-        private void ExpectedSelectionFeatures(List<List<SqlFilterCondition>> whereClause, ref int numToids, ref int numFragments)
+        private async Task<(int NumToids, int NumFragments)> ExpectedSelectionFeatures(List<List<SqlFilterCondition>> whereClause)
         {
+            int numToids = 0;
+            int numFragments = 0;
+
             if ((_incidSelection != null) && (_incidSelection.Rows.Count > 0) &&
                 (whereClause != null) && (whereClause.Count > 0))
             {
@@ -7048,8 +7092,6 @@ namespace HLU.UI.ViewModel
                         catch { }
                     }
 
-                    numToids = 0;
-                    numFragments = 0;
                     for (int i = 0; i < whereClause.Count; i++)
                     {
                         // If the where conditions are going to be appended
@@ -7071,12 +7113,14 @@ namespace HLU.UI.ViewModel
                             cond.CloseParentheses = "))";
                         }
 
-                        numToids += _db.SqlCount(selTables, String.Format("Distinct {0}", _hluDS.incid_mm_polygons.toidColumn.ColumnName), joinCond.Concat(whereClause[i]).ToList());
-                        numFragments += _db.SqlCount(selTables, "*", joinCond.Concat(whereClause[i]).ToList());
+                        numToids += await _db.SqlCount(selTables, String.Format("Distinct {0}", _hluDS.incid_mm_polygons.toidColumn.ColumnName), joinCond.Concat(whereClause[i]).ToList());
+                        numFragments += await _db.SqlCount(selTables, "*", joinCond.Concat(whereClause[i]).ToList());
                     }
                 }
                 catch { }
             }
+
+            return (numToids, numFragments);
         }
 
         /// <summary>
@@ -7229,6 +7273,7 @@ namespace HLU.UI.ViewModel
             // so the dialog should be treated as a general "large selection" warning.
             if (confirmSelect)
             {
+                //TODO: Remove selectbyJoin parameter
                 // selectByJoin is now always false in Pro, but keep the meaning:
                 // we are not doing a join-based selection anymore.
                 bool proceed = ConfirmGISSelect(
@@ -7240,19 +7285,33 @@ namespace HLU.UI.ViewModel
                     return false;
             }
 
+            // Select all INCIDs in _incidSelection on the active layer
+            if (!await _gisApp.SelectIncidsOnMapAsync(_incidSelection))
+            {
+                // Display a warning message.
+                ShowMessage("Error selecting current incid in GIS.", MessageType.Warning);
+
+                return false;
+            }
+
             // Ensure the output selection table has the right schema before filling it.
             _gisSelection = NewGisSelectionTable();
 
-            // Pro-native: select all INCIDs in _incidSelection on the active HLU layer and read them back.
-            // This is the replacement for _gisApp.SqlSelect(...) + scratch/join logic.
-            _gisSelection = await _gisApp.SelectAllOnMapAsync(
-                incidSelection: _incidSelection,
-                resultTable: _gisSelection);
+            // Read the current GIS selection back into the output selection table.
+            _gisSelection = await _gisApp.ReadMapSelectionAsync(_gisSelection).ConfigureAwait(false);
 
             // Return true only if we actually got selected rows back.
             return (_gisSelection != null) && (_gisSelection.Rows.Count > 0);
         }
 
+        /// <summary>
+        /// Updates the current filter state and moves the selection to the appropriate incid row
+        /// based on the current filtering and splitting conditions.
+        /// </summary>
+        /// <remarks>This method should be called when the filter state changes or when a new incid is
+        /// created during a split operation. The method determines the correct incid row to select
+        /// based on whether filtering is enabled and whether a split is in progress.</remarks>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         private async Task SetFilterAsync()
         {
             try
@@ -7286,6 +7345,14 @@ namespace HLU.UI.ViewModel
 
         #region Switch GIS Layer
 
+        /// <summary>
+        /// Updates the enabled state of the active layer combo box based on the application mode and
+        /// the number of available map layers.
+        /// </summary>
+        /// <remarks>The combo box is enabled only when neither bulk update nor OSMM update modes are
+        /// active, and there is more than one map layer available. Otherwise, the combo box is disabled.
+        /// This method should be called whenever the application mode or the set of available map layers
+        /// changes to ensure the UI reflects the current state.</remarks>
         private void UpdateActiveLayerComboBoxEnabledState()
         {
             if (BulkUpdateMode == false && OSMMUpdateMode == false)
@@ -7774,12 +7841,28 @@ namespace HLU.UI.ViewModel
                         break;
                     }
 
-                    // Set the new current row index
-                    if (BulkUpdateMode != false || ((value > 0) &&
-                        (IsFiltered && ((_incidSelection == null) || (value <= _incidSelection.Rows.Count))) ||
-                        (!IsFiltered && ((_incidSelection == null) || (value <= _incidRowCount)))))
+                    // If in bulk update mode.
+                    if (BulkUpdateMode == true)
                     {
+                        // Set the new current row index.
                         _incidCurrentRowIndex = value;
+                    }
+                    else
+                    {
+                        // If the record number is valid.
+                        if ((value > 0) &&
+                        (IsFiltered && ((_incidSelection == null) || (value <= _incidSelection.Rows.Count))) ||
+                        (!IsFiltered && ((_incidSelection == null) || (value <= _incidRowCount))))
+                        {
+                            // Set the new current row index.
+                            _incidCurrentRowIndex = value;
+                        }
+                        else
+                        {
+                            // Warn the user that record is not found.
+                            MessageBox.Show("Record not found in filtered records.", "HLU: OSMM Updates",
+                                MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
                     }
 
                     // Move to the new incid
@@ -7985,10 +8068,10 @@ namespace HLU.UI.ViewModel
                     _incidOSMMUpdatesStatus = null;
                 }
 
-                // Enable auto select of features on change of incid.
-                if (_gisApp != null && _autoSelectOnGis && BulkUpdateMode == false && !_filterByMap)
+                // If auto select of features on change of incid is enabled.
+                if (_autoSelectOnGis && _gisApp != null && BulkUpdateMode == false && !_filterByMap)
                 {
-                    // Select the current DB record on the Map.
+                    // Select the current incid record on the Map.
                     await SelectOnMapAsync(false);
                 }
 

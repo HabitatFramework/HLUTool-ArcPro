@@ -17,6 +17,8 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -25,8 +27,9 @@ using System.Data.Odbc;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
-using ArcGIS.Desktop.Framework;
 using CommandType = System.Data.CommandType;
 
 namespace HLU.Data.Connection
@@ -365,7 +368,7 @@ namespace HLU.Data.Connection
         /// <param name="targetColumns">The target database columns.</param>
         /// <param name="whereConds">The list of where conds.</param>
         /// <returns>An integer of the number of rows matching the SQL.</returns>
-        public int SqlCount(DataColumn[] targetColumns, List<SqlFilterCondition> whereConds)
+        public async Task<int> SqlCount(DataColumn[] targetColumns, List<SqlFilterCondition> whereConds)
         {
             if ((targetColumns == null) || (targetColumns.Length == 0)) return 0;
 
@@ -378,7 +381,7 @@ namespace HLU.Data.Connection
                 sbCommandText.Append(fromList);
                 sbCommandText.Append(WhereClause(true, true, qualifyColumns, whereConds));
 
-                object result = ExecuteScalar(sbCommandText.ToString(), 0, CommandType.Text);
+                object result = await ExecuteScalarAsync(sbCommandText.ToString(), 0, CommandType.Text);
 
                 int numRows = 0;
                 if (result != null) numRows = Convert.ToInt32(result);
@@ -400,7 +403,7 @@ namespace HLU.Data.Connection
         /// <param name="countColumns">The columns to count unique values for.</param>
         /// <param name="whereConds">The list of where conds.</param>
         /// <returns>An integer of the number of rows matching the SQL.</returns>
-        public int SqlCount(DataTable[] targetTables, string countColumns, List<SqlFilterCondition> whereConds)
+        public async Task<int> SqlCount(DataTable[] targetTables, string countColumns, List<SqlFilterCondition> whereConds)
         {
             if ((targetTables == null) || (targetTables.Length == 0) ||
                 (targetTables[0].Columns.Count == 0)) return 0;
@@ -414,7 +417,7 @@ namespace HLU.Data.Connection
                 sbCommandText.Append(fromList);
                 sbCommandText.Append(WhereClause(true, true, qualifyColumns, whereConds));
 
-                object result = ExecuteScalar(sbCommandText.ToString(), 0, CommandType.Text);
+                object result = await ExecuteScalarAsync(sbCommandText.ToString(), 0, CommandType.Text);
 
                 int numRows = 0;
                 if (result != null) numRows = Convert.ToInt32(result);
@@ -1274,6 +1277,8 @@ namespace HLU.Data.Connection
         public abstract int ExecuteNonQuery(string sql, int commandTimeout, CommandType commandType);
 
         public abstract object ExecuteScalar(string sql, int commandTimeout, CommandType commandType);
+
+        public abstract Task<object> ExecuteScalarAsync(string sql, int commandTimeout, CommandType commandType, CancellationToken cancellationToken = default);
 
         public abstract bool ValidateQuery(string sql, int commandTimeout, CommandType commandType);
 

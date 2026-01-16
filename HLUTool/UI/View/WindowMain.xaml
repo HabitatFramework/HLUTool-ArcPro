@@ -3033,7 +3033,7 @@
                     <Grid
                         x:Name="GridBulkUpdate"
                         Grid.Column="0"
-                        Height="23"
+                        Height="Auto"
                         VerticalAlignment="Bottom"
                         Visibility="{Binding Path=ShowInBulkUpdateMode}">
                         <Grid.ColumnDefinitions>
@@ -3053,7 +3053,7 @@
                     <Grid
                         x:Name="GridNavigation"
                         Grid.Column="0"
-                        Height="23"
+                        Height="Auto"
                         VerticalAlignment="Bottom"
                         Visibility="{Binding Path=HideInBulkUpdateMode}">
                         <Grid.ColumnDefinitions>
@@ -3124,7 +3124,7 @@
                     <Grid
                         x:Name="GridLabelStatusIncid"
                         Grid.Column="1"
-                        Height="23"
+                        Height="Auto"
                         VerticalAlignment="Bottom">
                         <Label
                             x:Name="LabelStatusIncid"
@@ -3141,19 +3141,20 @@
                     <Grid
                         x:Name="GridCommandButtons"
                         Grid.Column="2"
-                        Height="23"
+                        Height="Auto"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Bottom">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="50" />
-                            <ColumnDefinition Width="50" />
+                            <ColumnDefinition Width="80" />
+                            <ColumnDefinition Width="80" />
                         </Grid.ColumnDefinitions>
 
                         <Button
                             x:Name="ButtonCancelBulkUpdate"
                             Grid.Column="1"
-                            Margin="0,0,2,0"
+                                MinWidth="0"
+                                Margin="0,0,2,0"
                             HorizontalAlignment="Center"
                             Command="{Binding Path=CancelBulkUpdateCommand}"
                             IsEnabled="{Binding CanCancelBulkUpdate}"
@@ -3164,7 +3165,8 @@
                         <Button
                             x:Name="ButtonUpdate"
                             Grid.Column="2"
-                            Margin="2,0,6,0"
+                                MinWidth="0"
+                                Margin="2,0,0,0"
                             HorizontalAlignment="Center"
                             Background="Red"
                             Command="{Binding UpdateCommand}"
@@ -3191,7 +3193,7 @@
                     <Grid
                         x:Name="GridOSMMNavigation"
                         Grid.Column="0"
-                        Height="23"
+                        Height="Auto"
                         VerticalAlignment="Bottom"
                         Visibility="{Binding HideInBulkUpdateMode}">
                         <Grid.ColumnDefinitions>
@@ -3218,7 +3220,7 @@
                     <Grid
                         x:Name="GridOSMMLabelStatusIncid"
                         Grid.Column="1"
-                        Height="23"
+                        Height="Auto"
                         VerticalAlignment="Bottom">
                         <Label
                             x:Name="LabelOSMMStatusIncid"
@@ -3235,7 +3237,7 @@
                     <Grid
                         x:Name="GridOSMMCommandButtons"
                         Grid.Column="2"
-                        Height="23"
+                        Height="Auto"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Bottom">
                         <Grid.ColumnDefinitions>
@@ -3352,7 +3354,7 @@
                     <ProgressBar
                         x:Name="ProgressBar"
                         Grid.Column="0"
-                        Height="22"
+                        Height="Auto"
                         Margin="0,0,6,0"
                         HorizontalAlignment="Stretch"
                         Maximum="{Binding Path=MaxProgressValue, Mode=OneWay}"
@@ -3367,16 +3369,17 @@
                 </Grid>
             </Grid>
 
-            <controls:MessageLabel Grid.Row="1"
-                                   Height="24"
-                                   Margin="0,8,0,0"
-                                   CanClose="False"
-                                   Content="{Binding Path=Message}"
-                                   MessageType="{Binding Path=MessageLevel}"
-                                   Severity="High"
-                                   ShowHelp="False"
-                                   ToolTip="{Binding Path=Message}"
-                                   Visibility="{Binding Path=HasMessage}" />
+            <controls:MessageLabel
+                Grid.Row="1"
+                Height="Auto"
+                Margin="0,8,0,0"
+                CanClose="False"
+                Content="{Binding Path=Message}"
+                MessageType="{Binding Path=MessageLevel}"
+                Severity="High"
+                ShowHelp="False"
+                ToolTip="{Binding Path=Message}"
+                Visibility="{Binding Path=HasMessage}" />
 
 
         </Grid>

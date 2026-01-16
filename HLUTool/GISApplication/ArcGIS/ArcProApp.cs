@@ -29,7 +29,6 @@ using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Internal.GeoProcessing.ModelBuilder;
 using ArcGIS.Desktop.Layouts;
-//using ArcGIS.Desktop.Internal.Framework.Controls;
 using ArcGIS.Desktop.Mapping;
 using HLU.Data;
 using HLU.Data.Model;
@@ -789,7 +788,9 @@ namespace HLU.GISApplication
         /// <summary>
         /// Asynchronous method to read the map selection and populate the DataTable.
         /// </summary>
-        /// <param name="resultTable"></param>
+        /// <param name="resultTable">
+        /// A DataTable defining the schema of the rows to be returned from GIS.
+        /// </param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
         public async Task<DataTable> ReadMapSelectionAsync(DataTable resultTable)
@@ -886,12 +887,10 @@ namespace HLU.GISApplication
         /// </param>
         /// <returns>The populated selection table.</returns>
         /// <exception cref="GisSelectionException">Thrown if no active HLU layer is set.</exception>
-        public async Task<DataTable> SelectCurrentOnMapAsync(
-            string incid,
-            DataTable resultTable)
+        public async Task<bool> SelectIncidOnMapAsync(string incid)
         {
             if (string.IsNullOrWhiteSpace(incid))
-                return resultTable;
+                return false;
 
             if (_hluLayer == null)
                 throw new GisSelectionException("No active HLU layer is set.");
@@ -907,8 +906,7 @@ namespace HLU.GISApplication
 
             await SelectByWhereClauseAsync(whereClause, SelectionCombinationMethod.New).ConfigureAwait(false);
 
-            // Read selection back into the passed table schema.
-            return await ReadMapSelectionAsync(resultTable).ConfigureAwait(false);
+            return true;
         }
 
         /// <summary>
@@ -918,23 +916,14 @@ namespace HLU.GISApplication
         /// <param name="incidSelection">
         /// A DataTable containing the INCID values that should be selected in GIS.
         /// </param>
-        /// <param name="resultTable">
-        /// A DataTable defining the schema of the rows to be returned from GIS.
-        /// </param>
         /// <returns>
         /// The populated result table containing the selected GIS features.
         /// </returns>
-        public async Task<DataTable> SelectAllOnMapAsync(
-            DataTable incidSelection,
-            DataTable resultTable)
+        public async Task<bool> SelectIncidsOnMapAsync(DataTable incidSelection)
         {
-            // Defensive programming: the caller must supply a result table schema.
-            if (resultTable == null)
-                throw new ArgumentNullException(nameof(resultTable));
-
-            // Nothing to select – return an empty table with the correct schema.
+            // Nothing to select – return false.
             if (incidSelection == null || incidSelection.Rows.Count == 0)
-                return resultTable;
+                return false;
 
             // The active HLU layer must already be known (as with SelectCurrentOnMapAsync).
             if (_hluLayer == null)
@@ -965,7 +954,7 @@ namespace HLU.GISApplication
 
             // If no valid INCIDs were found, there is nothing to select.
             if (incids.Count == 0)
-                return resultTable;
+                return false;
 
             // Build one or more WHERE clauses of the form:
             //   <incidField> IN ('A','B','C',...)
@@ -992,8 +981,7 @@ namespace HLU.GISApplication
                 first = false;
             }
 
-            // Read the current GIS selection back into the supplied result table.
-            return await ReadMapSelectionAsync(resultTable).ConfigureAwait(false);
+            return true;
         }
 
         /// <summary>

@@ -50,6 +50,7 @@ namespace HLU.GISApplication
             get { return _scratchSelTable; }
         }
 
+        //TODO: Replace with File GDB
         public static bool CreateScratchMdb(HluDataSet.incidDataTable incidTable,
             HluDataSet.incid_mm_polygonsDataTable incidMMTable, int dbConnectionTimeout)
         {
@@ -182,11 +183,16 @@ namespace HLU.GISApplication
 
             // Split the table of selected Incids into chunks of continuous Incids so
             // that each chunk contains a continuous series of one or more Incids.
-            var query = incidSelection.AsEnumerable().Select((r, index) => new
-            {
-                RowIndex = RecordIds.IncidNumber(r.Field<string>(0)) - index,
-                Incid = r.Field<string>(0)
-            }).ChunkBy(r => r.RowIndex);
+            var query = incidSelection
+                .AsEnumerable()
+                .Where(r => !string.IsNullOrWhiteSpace(r.Field<string>(0)))
+                .Select((r, index) => new
+                {
+                    RowIndex = RecordIds.IncidNumber(r.Field<string>(0)) - index,
+                    Incid = r.Field<string>(0)
+                })
+                .ChunkBy(r => r.RowIndex);
+
 
             // Create a temporary list for storing some of the Incids.
             List<string> inList = [];
