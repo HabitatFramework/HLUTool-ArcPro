@@ -144,7 +144,7 @@ namespace HLU.UI.ViewModel
 
     /// <summary>
     /// Represents the current operational state(s) of the HLU tool.
-    /// 
+    ///
     /// This enum uses the [Flags] attribute, meaning each value corresponds
     /// to a single bit in a binary number. Because of that, multiple values
     /// can be combined using bitwise OR (e.g. Edit | Bulk).

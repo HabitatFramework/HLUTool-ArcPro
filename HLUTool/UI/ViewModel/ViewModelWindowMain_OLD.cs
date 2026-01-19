@@ -588,7 +588,7 @@ namespace HLU.UI.ViewModel
                     return false;
 
                 // Wire up event handler for copy switches
-                _copySwitches.PropertyChanged += new PropertyChangedEventHandler(_copySwitches_PropertyChanged);
+                _copySwitches.PropertyChanged += new PropertyChangedEventHandler(copySwitches_PropertyChanged);
 
                 int result;
                 // Columns that identify map polygons and are returned by GIS
@@ -2303,7 +2303,7 @@ namespace HLU.UI.ViewModel
         /// cref="CanPaste"/> property otherwise.</remarks>
         /// <param name="sender">The source of the event, typically the object whose property changed.</param>
         /// <param name="e">The event data containing the name of the property that changed.</param>
-        void _copySwitches_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        internal void copySwitches_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName.StartsWith("Copy"))
                 OnPropertyChanged(nameof(CanCopy));
@@ -2762,6 +2762,26 @@ namespace HLU.UI.ViewModel
             return true;
         }
 
+        //TODO: Remove window and stop split from happening without reason/process set.
+        private void vmCompSplit_RequestClose(string reason, string process)
+        {
+            // Remove the event handler and close the window.
+            _vmCompSplit.RequestClose -= vmCompSplit_RequestClose;
+            _windowCompSplit.Close();
+
+            // Set the reason and process values if supplied.
+            if (!String.IsNullOrEmpty(reason))
+            {
+                _reason = reason;
+                OnPropertyChanged(nameof(Reason));
+            }
+            if (!String.IsNullOrEmpty(process))
+            {
+                _process = process;
+                OnPropertyChanged(nameof(Process));
+            }
+        }
+
         #endregion Physical Split
 
         #region Logical Merge
@@ -2883,9 +2903,9 @@ namespace HLU.UI.ViewModel
                 _viewModelWinWarnSplitMerge = new ViewModelWindowNotifyOnSplitMerge(msgText);
 
                 // when ViewModel asks to be closed, close window
-                _viewModelWinWarnSplitMerge.RequestClose -= _viewModelWinWarnSplitMerge_RequestClose; // Safety: avoid double subscription.
+                _viewModelWinWarnSplitMerge.RequestClose -= viewModelWinWarnSplitMerge_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinWarnSplitMerge.RequestClose +=
-                    new ViewModelWindowNotifyOnSplitMerge.RequestCloseEventHandler(_viewModelWinWarnSplitMerge_RequestClose);
+                    new ViewModelWindowNotifyOnSplitMerge.RequestCloseEventHandler(viewModelWinWarnSplitMerge_RequestClose);
 
                 // allow all controls in window to bind to ViewModel by setting DataContext
                 _windowWarnSplitMerge.DataContext = _viewModelWinWarnSplitMerge;
@@ -2898,9 +2918,10 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Update the user settings when the split merge request window is closed.
         /// </summary>
-        void _viewModelWinWarnSplitMerge_RequestClose()
+        private void viewModelWinWarnSplitMerge_RequestClose()
         {
-            _viewModelWinWarnSplitMerge.RequestClose -= _viewModelWinWarnSplitMerge_RequestClose;
+            // Remove the event handler and close the window.
+            _viewModelWinWarnSplitMerge.RequestClose -= viewModelWinWarnSplitMerge_RequestClose;
             _windowWarnSplitMerge.Close();
 
             // Update the user notify setting
@@ -3264,9 +3285,9 @@ namespace HLU.UI.ViewModel
                     _fragsIncidGisCount, _fragsIncidDbCount, _gisLayerType);
 
                 // when ViewModel asks to be closed, close window
-                _viewModelWinWarnSubsetUpdate.RequestClose -= _viewModelWinWarnSubsetUpdate_RequestClose; // Safety: avoid double subscription.
+                _viewModelWinWarnSubsetUpdate.RequestClose -= viewModelWinWarnSubsetUpdate_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinWarnSubsetUpdate.RequestClose +=
-                    new ViewModelWindowWarnOnSubsetUpdate.RequestCloseEventHandler(_viewModelWinWarnSubsetUpdate_RequestClose);
+                    new ViewModelWindowWarnOnSubsetUpdate.RequestCloseEventHandler(viewModelWinWarnSubsetUpdate_RequestClose);
 
                 // allow all controls in window to bind to ViewModel by setting DataContext
                 _windowWarnSubsetUpdate.DataContext = _viewModelWinWarnSubsetUpdate;
@@ -3284,9 +3305,10 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="proceed">if set to <c>true</c> [proceed].</param>
         /// <param name="split">if set to <c>true</c> [split].</param>
-        void _viewModelWinWarnSubsetUpdate_RequestClose(bool proceed, bool split, int? subsetUpdateAction)
+        private void viewModelWinWarnSubsetUpdate_RequestClose(bool proceed, bool split, int? subsetUpdateAction)
         {
-            _viewModelWinWarnSubsetUpdate.RequestClose -= _viewModelWinWarnSubsetUpdate_RequestClose;
+            // Remove the event handler and close the window.
+            _viewModelWinWarnSubsetUpdate.RequestClose -= viewModelWinWarnSubsetUpdate_RequestClose;
             _windowWarnSubsetUpdate.Close();
 
             // If the user has set a default action for updating subsets of features
@@ -3455,7 +3477,7 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Indicates whether the Bulk Update workflow is active.
-        /// 
+        ///
         /// This is a thin wrapper over WorkMode that toggles the HluEditMode.Bulk
         /// flag while leaving other flags unchanged.
         /// </summary>
@@ -3920,7 +3942,7 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Indicates whether the OSMM step-through review workflow is active.
-        /// 
+        ///
         /// This toggles the HluEditMode.OsmmReview flag while leaving other flags
         /// (Edit, Bulk, OsmmBulk) unchanged.
         /// </summary>
@@ -4286,7 +4308,7 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Indicates whether the OSMM bulk apply workflow is active.
-        /// 
+        ///
         /// This toggles the HluEditMode.OsmmBulk flag and, if required by your
         /// rules, also ensures that Bulk mode is active whenever OSMM bulk mode
         /// is enabled.
@@ -4624,8 +4646,8 @@ namespace HLU.UI.ViewModel
             };
 
             // When ViewModel asks to be closed, close window
-            _viewModelAbout.RequestClose -= _viewModelAbout_RequestClose; // Safety: avoid double subscription.
-            _viewModelAbout.RequestClose += new ViewModelWindowAbout.RequestCloseEventHandler(_viewModelAbout_RequestClose);
+            _viewModelAbout.RequestClose -= viewModelAbout_RequestClose; // Safety: avoid double subscription.
+            _viewModelAbout.RequestClose += new ViewModelWindowAbout.RequestCloseEventHandler(viewModelAbout_RequestClose);
 
             // Allow all controls in window to bind to ViewModel by setting DataContext
             _windowAbout.DataContext = _viewModelAbout;
@@ -4640,9 +4662,10 @@ namespace HLU.UI.ViewModel
         /// <param name="sender"></param>
         /// <param name="e"></param>
         /// <remarks></remarks>
-        internal void _viewModelAbout_RequestClose()
+        private void viewModelAbout_RequestClose()
         {
-            _viewModelAbout.RequestClose -= _viewModelAbout_RequestClose;
+            // Remove the event handler and close the window.
+            _viewModelAbout.RequestClose -= viewModelAbout_RequestClose;
             _windowAbout.Close();
         }
 
@@ -4766,9 +4789,9 @@ namespace HLU.UI.ViewModel
                 };
 
                 // when ViewModel asks to be closed, close window
-                _viewModelWinQueryAdvanced.RequestClose -= _viewModelWinQueryAdvanced_RequestClose; // Safety: avoid double subscription.
+                _viewModelWinQueryAdvanced.RequestClose -= viewModelWinQueryAdvanced_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinQueryAdvanced.RequestClose +=
-                    new ViewModelWindowQueryAdvanced.RequestCloseEventHandler(_viewModelWinQueryAdvanced_RequestClose);
+                    new ViewModelWindowQueryAdvanced.RequestCloseEventHandler(viewModelWinQueryAdvanced_RequestClose);
 
                 // allow all controls in window to bind to ViewModel by setting DataContext
                 _windowQueryAdvanced.DataContext = _viewModelWinQueryAdvanced;
@@ -4789,10 +4812,10 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="sqlFromTables">The tables to query.</param>
         /// <param name="sqlWhereClause">The where clause to apply in the query.</param>
-        protected async void _viewModelWinQueryAdvanced_RequestClose(string sqlFromTables, string sqlWhereClause)
+        private async void viewModelWinQueryAdvanced_RequestClose(string sqlFromTables, string sqlWhereClause)
         {
             // Remove the event handler and close the window.
-            _viewModelWinQueryAdvanced.RequestClose -= _viewModelWinQueryAdvanced_RequestClose;
+            _viewModelWinQueryAdvanced.RequestClose -= viewModelWinQueryAdvanced_RequestClose;
             _windowQueryAdvanced.Close();
 
             // If no query was specified, exit (this should not happen).
@@ -4859,29 +4882,26 @@ namespace HLU.UI.ViewModel
                 // not currently in bulk update mode).
                 if (IsFiltered)
                 {
-                    // Find the expected number of features to be selected in GIS.
+                    ChangeCursor(Cursors.Wait, "Counting ...");
+
+                    // Find the expected number of features to be selected from the database.
                     _toidsSelectedDBCount = 0;
                     _fragsSelectedDBCount = 0;
-                    //ExpectedSelectionFeatures(whereTables, sqlWhereClause, ref _toidsSelectedDBCount, ref _fragsSelectedDBCount);
-                    ExpectedSelectionFeatures(whereTables, newWhereClause, ref _toidsSelectedDBCount, ref _fragsSelectedDBCount);
+                    ExpectedSelectionDBFeatures(whereTables, newWhereClause, ref _toidsSelectedDBCount, ref _fragsSelectedDBCount);
 
                     // Store the number of incids found in the database
                     _incidsSelectedDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
 
-                    ChangeCursor(Cursors.Wait, "Filtering ...");
+                    // Find the expected number of features to be selected from GIS.
+                    (int _incidsSelectedMapCount, int _toidsSelectedMapCount, int _fragsSelectedMapCount) = await _gisApp.ExpectedSelectionGISFeaturesAsync(_incidSelection);
 
-                    // Select the required incid(s) in GIS.
-                    if (await PerformGisSelectionAsync(true, _fragsSelectedDBCount, _incidsSelectedDBCount))
+                    //TODO: Needed?
+                    // Indicate the selection didn't come from the map.
+                    _filterByMap = false;
+
+                    if (_incidsSelectedMapCount > 0)
                     {
-                        // Analyse the results, set the filter and reset the cursor AFTER
-                        // returning from performing the GIS selection so that other calls
-                        // to the PerformGisSelection method can control if/when these things
-                        // are done.
-                        //
-                        // Analyse the results of the GIS selection by counting the number of
-                        // incids, toids and fragments selected.
-                        //TODO: Done. Set updateIncidSelection to false as selection already set.
-                        AnalyzeGisSelectionSet(false);
+                        ChangeCursor(Cursors.Wait, "Filtering ...");
 
                         // Indicate the selection didn't come from the map.
                         _filterByMap = false;
@@ -4893,13 +4913,13 @@ namespace HLU.UI.ViewModel
                         ChangeCursor(Cursors.Arrow, null);
 
                         // Check if the GIS and database are in sync.
-                        if (CheckInSync("Selection", "Selected", "Not all selected"))
+                        if (CheckInSync("Selection", "Expected", "Not all expected"))
                         {
                             // Check if the counts returned are less than those expected.
                             if ((_toidsIncidGisCount < _toidsSelectedDBCount) ||
                                     (_fragsIncidGisCount < _fragsSelectedDBCount))
                             {
-                                MessageBox.Show("Not all selected features found in active layer.", "HLU: Selection",
+                                MessageBox.Show("Not all expected features found in active layer.", "HLU: Selection",
                                 MessageBoxButton.OK, MessageBoxImage.Warning);
                             }
                         }
@@ -4925,6 +4945,64 @@ namespace HLU.UI.ViewModel
                         MessageBox.Show("No map features found in active layer.", "HLU: Apply Query",
                             MessageBoxButton.OK, MessageBoxImage.Information);
                     }
+
+                    //ChangeCursor(Cursors.Wait, "Filtering ...");
+
+                    //// Select the required incid(s) in GIS.
+                    //if (await PerformGisSelectionAsync(true, _fragsSelectedDBCount, _incidsSelectedDBCount))
+                    //{
+                    //    // Analyse the results, set the filter and reset the cursor AFTER
+                    //    // returning from performing the GIS selection so that other calls
+                    //    // to the PerformGisSelection method can control if/when these things
+                    //    // are done.
+                    //    //
+                    //    // Analyse the results of the GIS selection by counting the number of
+                    //    // incids, toids and fragments selected.
+                    //    //TODO: Done. Set updateIncidSelection to false as selection already set.
+                    //    AnalyzeGisSelectionSet(false);
+
+                    //    // Indicate the selection didn't come from the map.
+                    //    _filterByMap = false;
+
+                    //    // Set the filter back to the first incid.
+                    //    await SetFilterAsync();
+
+                    //    // Reset the cursor back to normal.
+                    //    ChangeCursor(Cursors.Arrow, null);
+
+                    //    // Check if the GIS and database are in sync.
+                    //    if (CheckInSync("Selection", "Selected", "Not all selected"))
+                    //    {
+                    //        // Check if the counts returned are less than those expected.
+                    //        if ((_toidsIncidGisCount < _toidsSelectedDBCount) ||
+                    //                (_fragsIncidGisCount < _fragsSelectedDBCount))
+                    //        {
+                    //            MessageBox.Show("Not all selected features found in active layer.", "HLU: Selection",
+                    //            MessageBoxButton.OK, MessageBoxImage.Warning);
+                    //        }
+                    //    }
+                    //}
+                    //else
+                    //{
+                    //    // Restore the previous selection (filter).
+                    //    //_incidSelection = incidSelectionBackup;
+
+                    //    // Clear the selection (filter).
+                    //    _incidSelection = null;
+
+                    //    // Indicate the selection didn't come from the map.
+                    //    _filterByMap = false;
+
+                    //    // Set the filter back to the first incid.
+                    //    await SetFilterAsync();
+
+                    //    // Reset the cursor back to normal.
+                    //    ChangeCursor(Cursors.Arrow, null);
+
+                    //    // Warn the user that no records were found.
+                    //    MessageBox.Show("No map features found in active layer.", "HLU: Apply Query",
+                    //        MessageBoxButton.OK, MessageBoxImage.Information);
+                    //}
                 }
                 else
                 {
@@ -4990,9 +5068,9 @@ namespace HLU.UI.ViewModel
                     expectedNumFeatures, expectedNumIncids, expectedNumFeatures > -1 ? _gisLayerType : GeometryTypes.Unknown, selectByjoin);
 
                 // When ViewModel asks to be closed, close window
-                _viewModelWinWarnGISSelect.RequestClose -= _viewModelWinWarnGISSelect_RequestClose; // Safety: avoid double subscription.
+                _viewModelWinWarnGISSelect.RequestClose -= viewModelWinWarnGISSelect_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinWarnGISSelect.RequestClose +=
-                    new ViewModelWindowWarnOnGISSelect.RequestCloseEventHandler(_viewModelWinWarnGISSelect_RequestClose);
+                    new ViewModelWindowWarnOnGISSelect.RequestCloseEventHandler(viewModelWinWarnGISSelect_RequestClose);
 
                 // Allow all controls in window to bind to ViewModel by setting DataContext
                 _windowWarnGISSelect.DataContext = _viewModelWinWarnGISSelect;
@@ -5013,9 +5091,10 @@ namespace HLU.UI.ViewModel
         /// Closes the warning gis on selection window.
         /// </summary>
         /// <param name="proceed">if set to <c>true</c> [proceed].</param>
-        void _viewModelWinWarnGISSelect_RequestClose(bool proceed)
+        private void viewModelWinWarnGISSelect_RequestClose(bool proceed)
         {
-            _viewModelWinWarnGISSelect.RequestClose -= _viewModelWinWarnGISSelect_RequestClose;
+            // Remove the event handler and close the window.
+            _viewModelWinWarnGISSelect.RequestClose -= viewModelWinWarnGISSelect_RequestClose;
             _windowWarnGISSelect.Close();
 
             // Update the user warning variable
@@ -5101,7 +5180,7 @@ namespace HLU.UI.ViewModel
                     _toidsSelectedDBCount = 0;
                     _fragsSelectedDBCount = 0;
                     //ExpectedSelectionFeatures(whereTables, sqlWhereClause, ref _toidsSelectedDBCount, ref _fragsSelectedDBCount);
-                    ExpectedSelectionFeatures(whereTables, newWhereClause, ref _toidsSelectedDBCount, ref _fragsSelectedDBCount);
+                    ExpectedSelectionDBFeatures(whereTables, newWhereClause, ref _toidsSelectedDBCount, ref _fragsSelectedDBCount);
 
                     // Store the number of incids found in the database
                     _incidsSelectedDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -5255,9 +5334,9 @@ namespace HLU.UI.ViewModel
                 };
 
                 // when ViewModel asks to be closed, close window
-                _viewModelWinQueryOSMM.RequestClose -= _viewModelWinQueryOSMM_RequestClose; // Safety: avoid double subscription.
+                _viewModelWinQueryOSMM.RequestClose -= viewModelWinQueryOSMM_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinQueryOSMM.RequestClose +=
-                    new ViewModelWindowQueryOSMM.RequestCloseEventHandler(_viewModelWinQueryOSMM_RequestClose);
+                    new ViewModelWindowQueryOSMM.RequestCloseEventHandler(viewModelWinQueryOSMM_RequestClose);
 
                 // allow all controls in window to bind to ViewModel by setting DataContext
                 _windowQueryOSMM.DataContext = _viewModelWinQueryOSMM;
@@ -5280,15 +5359,16 @@ namespace HLU.UI.ViewModel
         /// <param name="changeFlag">The change flag value.</param>
         /// <param name="status">The OSMM status value.</param>
         /// <param name="apply">Whether to apply (or cancel) the query.</param>
-        protected async void _viewModelWinQueryOSMM_RequestClose(string processFlag, string spatialFlag, string changeFlag, string status, bool apply)
+        private async void viewModelWinQueryOSMM_RequestClose(string processFlag, string spatialFlag, string changeFlag, string status, bool apply)
         {
-            // Close the window
-            _viewModelWinQueryOSMM.RequestClose -= _viewModelWinQueryOSMM_RequestClose;
+            // Remove the event handler and close the window.
+            _viewModelWinQueryOSMM.RequestClose -= viewModelWinQueryOSMM_RequestClose;
             _windowQueryOSMM.Close();
 
+            // If applying the query
             if (apply == true)
             {
-
+                // If in OSMM Bulk Update mode then set the default source details
                 if (OSMMBulkUpdateMode == true)
                 {
                     // Set the default source details
@@ -5365,9 +5445,9 @@ namespace HLU.UI.ViewModel
                 };
 
                 // when ViewModel asks to be closed, close window
-                _viewModelWinQueryAdvanced.RequestClose -= _viewModelWinQueryOSMMAdvanced_RequestClose; // Safety: avoid double subscription.
+                _viewModelWinQueryAdvanced.RequestClose -= viewModelWinQueryOSMMAdvanced_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinQueryAdvanced.RequestClose +=
-                    new ViewModelWindowQueryAdvanced.RequestCloseEventHandler(_viewModelWinQueryOSMMAdvanced_RequestClose);
+                    new ViewModelWindowQueryAdvanced.RequestCloseEventHandler(viewModelWinQueryOSMMAdvanced_RequestClose);
 
                 // allow all controls in window to bind to ViewModel by setting DataContext
                 _windowQueryAdvanced.DataContext = _viewModelWinQueryAdvanced;
@@ -5388,189 +5468,153 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="sqlFromTables">The tables to query.</param>
         /// <param name="sqlWhereClause">The where clause to apply in the query.</param>
-        protected async void _viewModelWinQueryOSMMAdvanced_RequestClose(string sqlFromTables, string sqlWhereClause)
+        private async void viewModelWinQueryOSMMAdvanced_RequestClose(string sqlFromTables, string sqlWhereClause)
         {
-            _viewModelWinQueryAdvanced.RequestClose -= _viewModelWinQueryOSMMAdvanced_RequestClose;
+            // Remove the event handler and close the window.
+            _viewModelWinQueryAdvanced.RequestClose -= viewModelWinQueryOSMMAdvanced_RequestClose;
             _windowQueryAdvanced.Close();
 
-            if ((sqlFromTables != null) && (sqlWhereClause != null))
+            // If no query was specified, exit (this should not happen).
+            if ((sqlFromTables == null) || (sqlWhereClause == null))
+                return;
+
+            //if (OSMMBulkUpdateMode == true)
+            //{
+            //    // Set the default source details
+            //    IncidSourcesRows[0].source_id = Settings.Default.BulkOSMMSourceId;
+            //    IncidSourcesRows[0].source_habitat_class = "N/A";
+            //    //_viewModelMain.IncidSourcesRows[0].source_habitat_type = "N/A";
+            //    //Date.VagueDateInstance defaultSourceDate = DefaultSourceDate(null, Settings.Default.BulkOSMMSourceId);
+            //    Date.VagueDateInstance defaultSourceDate = new Date.VagueDateInstance();
+            //    IncidSourcesRows[0].source_date_start = defaultSourceDate.StartDate;
+            //    IncidSourcesRows[0].source_date_end = defaultSourceDate.EndDate;
+            //    IncidSourcesRows[0].source_date_type = defaultSourceDate.DateType;
+            //    IncidSourcesRows[0].source_boundary_importance = Settings.Default.SourceImportanceApply1;
+            //    IncidSourcesRows[0].source_habitat_importance = Settings.Default.SourceImportanceApply1;
+            //}
+
+            try
             {
+                ChangeCursor(Cursors.Wait, "Validating ...");
 
-                //if (OSMMBulkUpdateMode == true)
-                //{
-                //    // Set the default source details
-                //    IncidSourcesRows[0].source_id = Settings.Default.BulkOSMMSourceId;
-                //    IncidSourcesRows[0].source_habitat_class = "N/A";
-                //    //_viewModelMain.IncidSourcesRows[0].source_habitat_type = "N/A";
-                //    //Date.VagueDateInstance defaultSourceDate = DefaultSourceDate(null, Settings.Default.BulkOSMMSourceId);
-                //    Date.VagueDateInstance defaultSourceDate = new Date.VagueDateInstance();
-                //    IncidSourcesRows[0].source_date_start = defaultSourceDate.StartDate;
-                //    IncidSourcesRows[0].source_date_end = defaultSourceDate.EndDate;
-                //    IncidSourcesRows[0].source_date_type = defaultSourceDate.DateType;
-                //    IncidSourcesRows[0].source_boundary_importance = Settings.Default.SourceImportanceApply1;
-                //    IncidSourcesRows[0].source_habitat_importance = Settings.Default.SourceImportanceApply1;
-                //}
+                //TODO: Needed?
+                // Let WPF render the cursor/message before heavy work begins.
+                //await Dispatcher.Yield(DispatcherPriority.Background);
 
-                try
+                // Get a list of all the possible query tables.
+                List<DataTable> tables = [];
+                if ((ViewModelWindowQueryAdvanced.HluDatasetStatic != null))
                 {
-                    ChangeCursor(Cursors.Wait, "Validating ...");
+                    tables = ViewModelWindowQueryAdvanced.HluDatasetStatic.incid.ChildRelations
+                        .Cast<DataRelation>().Select(r => r.ChildTable).ToList();
+                    tables.Add(ViewModelWindowQueryAdvanced.HluDatasetStatic.incid);
+                }
 
-                    //TODO: Needed?
-                    // Let WPF render the cursor/message before heavy work begins.
-                    //await Dispatcher.Yield(DispatcherPriority.Background);
+                // Split the string of query table names created by the
+                // user in the form into an array.
+                string[] fromTables = sqlFromTables.Split(',').Select(s => s.Trim(' ')).Distinct().ToArray();
 
-                    // Get a list of all the possible query tables.
-                    List<DataTable> tables = [];
-                    if ((ViewModelWindowQueryAdvanced.HluDatasetStatic != null))
+                // Include the incid_osmm_updates table to use in the query.
+                if (fromTables.Contains(IncidOSMMUpdatesTable.TableName) == false)
+                    fromTables = fromTables.Concat([IncidOSMMUpdatesTable.TableName]).ToArray();
+
+                // Select only the database tables that are in the query array.
+                List<DataTable> whereTables = tables.Where(t => fromTables.Contains(t.TableName)).ToList();
+
+                // If a status is included in the SQL then also filter out pending
+                // and applied updates, otherwise filter out everything
+                // except proposed updates.
+                if (sqlWhereClause.Contains("[incid_osmm_updates].status") == true)
+                    sqlWhereClause = String.Format("{0} AND [incid_osmm_updates].status <> 0 AND [incid_osmm_updates].status <> -1", sqlWhereClause);
+                else
+                    sqlWhereClause = String.Format("{0} AND [incid_osmm_updates].status > 0", sqlWhereClause);
+
+                // create a selection DataTable of PK values of IncidTable
+                if (whereTables.Count != 0)
+                {
+
+                    // Replace any connection type specific qualifiers and delimiters.
+                    string newWhereClause = null;
+                    if (sqlWhereClause != null)
+                        newWhereClause = ReplaceStringQualifiers(sqlWhereClause);
+
+                    // Store the where clause for updating the OSMM updates later.
+                    _osmmUpdateWhereClause = null;
+
+                    // Create a selection DataTable of PK values of IncidTable.
+                    _incidSelection = _db.SqlSelect(true, IncidTable.PrimaryKey, whereTables, newWhereClause);
+
+                    // Get a list of all the incids in the selection.
+                    _incidsSelectedMap = _incidSelection.AsEnumerable()
+                        .GroupBy(r => r.Field<string>(_incidSelection.Columns[0].ColumnName)).Select(g => g.Key).OrderBy(s => s);
+
+                    // Retrospectively set the where clause to match the list
+                    // of selected incids (for possible use later).
+                    _incidSelectionWhereClause = ViewModelWindowMainHelpers.IncidSelectionToWhereClause(
+                        IncidPageSize, IncidTable.incidColumn.Ordinal, IncidTable, _incidsSelectedMap);
+
+                    // Backup the current selection (filter).
+                    DataTable incidSelectionBackup = _incidSelection;
+
+                    // If there are any records in the selection (and the tool is
+                    // not currently in bulk update mode).
+                    if (IsFiltered)
                     {
-                        tables = ViewModelWindowQueryAdvanced.HluDatasetStatic.incid.ChildRelations
-                            .Cast<DataRelation>().Select(r => r.ChildTable).ToList();
-                        tables.Add(ViewModelWindowQueryAdvanced.HluDatasetStatic.incid);
-                    }
+                        // Find the expected number of features to be selected in GIS.
+                        _toidsSelectedDBCount = 0;
+                        _fragsSelectedDBCount = 0;
+                        //ExpectedSelectionFeatures(whereTables, sqlWhereClause, ref _toidsSelectedDBCount, ref _fragsSelectedDBCount);
+                        ExpectedSelectionDBFeatures(whereTables, newWhereClause, ref _toidsSelectedDBCount, ref _fragsSelectedDBCount);
 
-                    // Split the string of query table names created by the
-                    // user in the form into an array.
-                    string[] fromTables = sqlFromTables.Split(',').Select(s => s.Trim(' ')).Distinct().ToArray();
+                        // Store the number of incids found in the database
+                        _incidsSelectedDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
 
-                    // Include the incid_osmm_updates table to use in the query.
-                    if (fromTables.Contains(IncidOSMMUpdatesTable.TableName) == false)
-                        fromTables = fromTables.Concat([IncidOSMMUpdatesTable.TableName]).ToArray();
+                        ChangeCursor(Cursors.Wait, "Filtering ...");
 
-                    // Select only the database tables that are in the query array.
-                    List<DataTable> whereTables = tables.Where(t => fromTables.Contains(t.TableName)).ToList();
-
-                    // If a status is included in the SQL then also filter out pending
-                    // and applied updates, otherwise filter out everything
-                    // except proposed updates.
-                    if (sqlWhereClause.Contains("[incid_osmm_updates].status") == true)
-                        sqlWhereClause = String.Format("{0} AND [incid_osmm_updates].status <> 0 AND [incid_osmm_updates].status <> -1", sqlWhereClause);
-                    else
-                        sqlWhereClause = String.Format("{0} AND [incid_osmm_updates].status > 0", sqlWhereClause);
-
-                    // create a selection DataTable of PK values of IncidTable
-                    if (whereTables.Count != 0)
-                    {
-
-                        // Replace any connection type specific qualifiers and delimiters.
-                        string newWhereClause = null;
-                        if (sqlWhereClause != null)
-                            newWhereClause = ReplaceStringQualifiers(sqlWhereClause);
-
-                        // Store the where clause for updating the OSMM updates later.
-                        _osmmUpdateWhereClause = null;
-
-                        // Create a selection DataTable of PK values of IncidTable.
-                        _incidSelection = _db.SqlSelect(true, IncidTable.PrimaryKey, whereTables, newWhereClause);
-
-                        // Get a list of all the incids in the selection.
-                        _incidsSelectedMap = _incidSelection.AsEnumerable()
-                            .GroupBy(r => r.Field<string>(_incidSelection.Columns[0].ColumnName)).Select(g => g.Key).OrderBy(s => s);
-
-                        // Retrospectively set the where clause to match the list
-                        // of selected incids (for possible use later).
-                        _incidSelectionWhereClause = ViewModelWindowMainHelpers.IncidSelectionToWhereClause(
-                            IncidPageSize, IncidTable.incidColumn.Ordinal, IncidTable, _incidsSelectedMap);
-
-                        // Backup the current selection (filter).
-                        DataTable incidSelectionBackup = _incidSelection;
-
-                        // If there are any records in the selection (and the tool is
-                        // not currently in bulk update mode).
-                        if (IsFiltered)
+                        // Select the required incid(s) in GIS.
+                        if (await PerformGisSelectionAsync(true, _fragsSelectedDBCount, _incidsSelectedDBCount))
                         {
-                            // Find the expected number of features to be selected in GIS.
-                            _toidsSelectedDBCount = 0;
-                            _fragsSelectedDBCount = 0;
-                            //ExpectedSelectionFeatures(whereTables, sqlWhereClause, ref _toidsSelectedDBCount, ref _fragsSelectedDBCount);
-                            ExpectedSelectionFeatures(whereTables, newWhereClause, ref _toidsSelectedDBCount, ref _fragsSelectedDBCount);
+                            // Analyse the results, set the filter and reset the cursor AFTER
+                            // returning from performing the GIS selection so that other calls
+                            // to the PerformGisSelection method can control if/when these things
+                            // are done.
+                            //
+                            // Analyse the results of the GIS selection by counting the number of
+                            // incids, toids and fragments selected.
+                            AnalyzeGisSelectionSet(true);
 
-                            // Store the number of incids found in the database
-                            _incidsSelectedDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
+                            // Indicate the selection didn't come from the map.
+                            _filterByMap = false;
 
-                            ChangeCursor(Cursors.Wait, "Filtering ...");
-
-                            // Select the required incid(s) in GIS.
-                            if (await PerformGisSelectionAsync(true, _fragsSelectedDBCount, _incidsSelectedDBCount))
+                            if (OSMMBulkUpdateMode == false)
                             {
-                                // Analyse the results, set the filter and reset the cursor AFTER
-                                // returning from performing the GIS selection so that other calls
-                                // to the PerformGisSelection method can control if/when these things
-                                // are done.
-                                //
-                                // Analyse the results of the GIS selection by counting the number of
-                                // incids, toids and fragments selected.
-                                AnalyzeGisSelectionSet(true);
+                                // Indicate there are more OSMM updates to review.
+                                _osmmUpdatesEmpty = false;
 
-                                // Indicate the selection didn't come from the map.
-                                _filterByMap = false;
+                                OnPropertyChanged(nameof(CanOSMMAccept));
+                                OnPropertyChanged(nameof(CanOSMMSkip));
 
-                                if (OSMMBulkUpdateMode == false)
+                                // Set the filter to the first incid.
+                                await SetFilterAsync();
+
+                                // Check if the GIS and database are in sync.
+                                if (CheckInSync("Selection", "Selected", "Not all selected"))
                                 {
-                                    // Indicate there are more OSMM updates to review.
-                                    _osmmUpdatesEmpty = false;
-
-                                    OnPropertyChanged(nameof(CanOSMMAccept));
-                                    OnPropertyChanged(nameof(CanOSMMSkip));
-
-                                    // Set the filter to the first incid.
-                                    await SetFilterAsync();
-
-                                    // Check if the GIS and database are in sync.
-                                    if (CheckInSync("Selection", "Selected", "Not all selected"))
+                                    // Check if the counts returned are less than those expected.
+                                    if ((_toidsIncidGisCount < _toidsSelectedDBCount) ||
+                                            (_fragsIncidGisCount < _fragsSelectedDBCount))
                                     {
-                                        // Check if the counts returned are less than those expected.
-                                        if ((_toidsIncidGisCount < _toidsSelectedDBCount) ||
-                                                (_fragsIncidGisCount < _fragsSelectedDBCount))
-                                        {
-                                            MessageBox.Show("Not all selected features found in active layer.", "HLU: Selection",
-                                            MessageBoxButton.OK, MessageBoxImage.Warning);
-                                        }
+                                        MessageBox.Show("Not all selected features found in active layer.", "HLU: Selection",
+                                        MessageBoxButton.OK, MessageBoxImage.Warning);
                                     }
                                 }
-
-                                // Refresh all the controls
-                                RefreshAll();
-
-                                // Reset the cursor back to normal.
-                                ChangeCursor(Cursors.Arrow, null);
                             }
-                            else
-                            {
-                                if (OSMMBulkUpdateMode == false)
-                                {
-                                    // Clear the selection (filter).
-                                    _incidSelection = null;
 
-                                    // Indicate the selection didn't come from the map.
-                                    _filterByMap = false;
+                            // Refresh all the controls
+                            RefreshAll();
 
-                                    // Indicate there are no more OSMM updates to review.
-                                    if (OSMMBulkUpdateMode == false)
-                                        _osmmUpdatesEmpty = true;
-
-                                    // Clear all the form fields (except the habitat class
-                                    // and habitat type).
-                                    ClearForm();
-
-                                    // Clear the map selection.
-                                    _gisApp.ClearMapSelection();
-
-                                    // Reset the map counters
-                                    _incidsSelectedMapCount = 0;
-                                    _toidsSelectedMapCount = 0;
-                                    _fragsSelectedMapCount = 0;
-
-                                    // Refresh all the controls
-                                    RefreshAll();
-                                }
-
-                                // Reset the cursor back to normal.
-                                ChangeCursor(Cursors.Arrow, null);
-
-                                // Warn the user that no records were found.
-                                MessageBox.Show("No map features found in active layer.", "HLU: Selection",
-                                    MessageBoxButton.OK, MessageBoxImage.Information);
-                            }
+                            // Reset the cursor back to normal.
+                            ChangeCursor(Cursors.Arrow, null);
                         }
                         else
                         {
@@ -5583,7 +5627,8 @@ namespace HLU.UI.ViewModel
                                 _filterByMap = false;
 
                                 // Indicate there are no more OSMM updates to review.
-                                _osmmUpdatesEmpty = true;
+                                if (OSMMBulkUpdateMode == false)
+                                    _osmmUpdatesEmpty = true;
 
                                 // Clear all the form fields (except the habitat class
                                 // and habitat type).
@@ -5600,30 +5645,66 @@ namespace HLU.UI.ViewModel
                                 // Refresh all the controls
                                 RefreshAll();
                             }
-                            else
-                            {
-                                // Restore the previous selection (filter).
-                                _incidSelection = incidSelectionBackup;
-                            }
 
                             // Reset the cursor back to normal.
                             ChangeCursor(Cursors.Arrow, null);
 
                             // Warn the user that no records were found.
-                            MessageBox.Show("No records found in database.", "HLU: Selection",
+                            MessageBox.Show("No map features found in active layer.", "HLU: Selection",
                                 MessageBoxButton.OK, MessageBoxImage.Information);
                         }
                     }
+                    else
+                    {
+                        if (OSMMBulkUpdateMode == false)
+                        {
+                            // Clear the selection (filter).
+                            _incidSelection = null;
+
+                            // Indicate the selection didn't come from the map.
+                            _filterByMap = false;
+
+                            // Indicate there are no more OSMM updates to review.
+                            _osmmUpdatesEmpty = true;
+
+                            // Clear all the form fields (except the habitat class
+                            // and habitat type).
+                            ClearForm();
+
+                            // Clear the map selection.
+                            _gisApp.ClearMapSelection();
+
+                            // Reset the map counters
+                            _incidsSelectedMapCount = 0;
+                            _toidsSelectedMapCount = 0;
+                            _fragsSelectedMapCount = 0;
+
+                            // Refresh all the controls
+                            RefreshAll();
+                        }
+                        else
+                        {
+                            // Restore the previous selection (filter).
+                            _incidSelection = incidSelectionBackup;
+                        }
+
+                        // Reset the cursor back to normal.
+                        ChangeCursor(Cursors.Arrow, null);
+
+                        // Warn the user that no records were found.
+                        MessageBox.Show("No records found in database.", "HLU: Selection",
+                            MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
                 }
-                catch (Exception ex)
-                {
-                    _incidSelection = null;
-                    ChangeCursor(Cursors.Arrow, null);
+            }
+            catch (Exception ex)
+            {
+                _incidSelection = null;
+                ChangeCursor(Cursors.Arrow, null);
                 MessageBox.Show(ex.Message, "HLU: Apply Query",
                         MessageBoxButton.OK, MessageBoxImage.Error);
-                }
-                finally { RefreshStatus(); }
             }
+            finally { RefreshStatus(); }
         }
 
         //TODO: Add wait calls.
@@ -5714,7 +5795,7 @@ namespace HLU.UI.ViewModel
                     _toidsSelectedDBCount = 0;
                     _fragsSelectedDBCount = 0;
                     //ExpectedSelectionFeatures(whereTables, sqlWhereClause, ref _toidsSelectedDBCount, ref _fragsSelectedDBCount);
-                    ExpectedSelectionFeatures(whereTables, newWhereClause, ref _toidsSelectedDBCount, ref _fragsSelectedDBCount);
+                    ExpectedSelectionDBFeatures(whereTables, newWhereClause, ref _toidsSelectedDBCount, ref _fragsSelectedDBCount);
 
                     // Store the number of incids found in the database
                     _incidsSelectedDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -6173,7 +6254,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets the map selection. Called when the command is invoked. 
+        /// Gets the map selection. Called when the command is invoked.
         /// </summary>
         /// <param name="param"></param>
         internal async void GetMapSelectionClicked(object param)
@@ -6321,23 +6402,6 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        //TODO: Remove window and stop split from happening without reason/process set.
-        void vmCompSplit_RequestClose(string reason, string process)
-        {
-            _vmCompSplit.RequestClose -= vmCompSplit_RequestClose;
-            _windowCompSplit.Close();
-            if (!String.IsNullOrEmpty(reason))
-            {
-                _reason = reason;
-                OnPropertyChanged(nameof(Reason));
-            }
-            if (!String.IsNullOrEmpty(process))
-            {
-                _process = process;
-                OnPropertyChanged(nameof(Process));
-            }
-        }
-
         #endregion Get Map Selection
 
         #region Priority Habitats Command
@@ -6394,11 +6458,17 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        protected void _viewModelWinEditPriorityHabitats_RequestClose(ObservableCollection<BapEnvironment> incidBapHabitatsAuto)
+        /// <summary>
+        /// Handle the RequestClose event from the Edit Priority Habitats window.
+        /// </summary>
+        /// <param name="incidBapHabitatsAuto"></param>
+        private void _viewModelWinEditPriorityHabitats_RequestClose(ObservableCollection<BapEnvironment> incidBapHabitatsAuto)
         {
+            // Remove the event handler and close the window.
             _viewModelWinEditPriorityHabitats.RequestClose -= _viewModelWinEditPriorityHabitats_RequestClose;
             _windowEditPriorityHabitats.Close();
 
+            // If any habitats were returned then update the main window.
             if (incidBapHabitatsAuto != null)
             {
                 IncidBapHabitatsAuto = incidBapHabitatsAuto;
@@ -6481,11 +6551,17 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        protected void _viewModelWinEditPotentialHabitats_RequestClose(ObservableCollection<BapEnvironment> incidBapHabitatsUser)
+        /// <summary>
+        /// Handle the RequestClose event from the Edit Potential Priority Habitats window.
+        /// </summary>
+        /// <param name="incidBapHabitatsUser"></param>
+        private void _viewModelWinEditPotentialHabitats_RequestClose(ObservableCollection<BapEnvironment> incidBapHabitatsUser)
         {
+            // Remove the event handler and close the window.
             _viewModelWinEditPotentialHabitats.RequestClose -= _viewModelWinEditPotentialHabitats_RequestClose;
             _windowEditPotentialHabitats.Close();
 
+            // If any habitats were returned then update the main window.
             if (incidBapHabitatsUser != null)
             {
                 IncidBapHabitatsUser = incidBapHabitatsUser;
@@ -6662,100 +6738,102 @@ namespace HLU.UI.ViewModel
         /// secondary habitats to the tble.
         /// </summary>
         /// <param name="querySecondaries">The list of secondaries to add.</param>
-        protected void _viewModelWinQuerySecondaries_RequestClose(String querySecondaries)
+        private void _viewModelWinQuerySecondaries_RequestClose(String querySecondaries)
         {
+            // Remove the event handler and close the window.
             _viewModelWinQuerySecondaries.RequestClose -= _viewModelWinQuerySecondaries_RequestClose;
             _windowQuerySecondaries.Close();
 
-            if (!String.IsNullOrEmpty(querySecondaries))
+            // If no secondaries were entered then just exit.
+            if (String.IsNullOrEmpty(querySecondaries))
+                return;
+
+            try
             {
-                try
+                bool addedCodes = false;
+                List<string> errorCodes = [];
+
+                // Split the list by spaces, commas or points
+                string pattern = @"\s|\.|\,";
+                Regex rgx = new(pattern);
+
+                // Process each secondary habitat code
+                string[] secondaryHabitats = rgx.Split(querySecondaries);
+                for (int i = 0; i < secondaryHabitats.Length; i++)
                 {
-                    bool addedCodes = false;
-                    List<string> errorCodes = [];
-
-                    // Split the list by spaces, commas or points
-                    string pattern = @"\s|\.|\,";
-                    Regex rgx = new(pattern);
-
-                    // Process each secondary habitat code
-                    string[] secondaryHabitats = rgx.Split(querySecondaries);
-                    for (int i = 0; i < secondaryHabitats.Length; i++)
+                    string secondaryHabitat = secondaryHabitats[i];
+                    if (secondaryHabitat != null)
                     {
-                        string secondaryHabitat = secondaryHabitats[i];
-                        if (secondaryHabitat != null)
+                        // Lookup the secondary group for the secondary code
+                        IEnumerable<string> q = null;
+                        q = (from s in SecondaryHabitatCodesAll
+                             where s.code == secondaryHabitat
+                             select s.code_group);
+
+                        // If the secondary group has been found
+                        string secondaryGroup = null;
+                        if ((q != null) && (q.Any()))
                         {
-                            // Lookup the secondary group for the secondary code
-                            IEnumerable<string> q = null;
-                            q = (from s in SecondaryHabitatCodesAll
-                                    where s.code == secondaryHabitat
-                                    select s.code_group);
+                            secondaryGroup = q.First();
 
-                            // If the secondary group has been found
-                            string secondaryGroup = null;
-                            if ((q != null) && (q.Any()))
+                            // Add secondary habitat if it isn't already in the table
+                            if (SecondaryHabitat.SecondaryHabitatList == null ||
+                                !SecondaryHabitat.SecondaryHabitatList.Any(sh => sh.secondary_habitat == secondaryHabitat))
                             {
-                                secondaryGroup = q.First();
-
-                                // Add secondary habitat if it isn't already in the table
-                                if (SecondaryHabitat.SecondaryHabitatList == null ||
-                                    !SecondaryHabitat.SecondaryHabitatList.Any(sh => sh.secondary_habitat == secondaryHabitat))
-                                {
-                                    // Add secondary habitat to table if it isn't already in the table
-                                    bool err;
-                                    err = AddSecondaryHabitat(false, -1, Incid, secondaryHabitat, secondaryGroup);
-                                    if (err == true)
-                                        errorCodes.Add(secondaryHabitat);
-
-                                    addedCodes = true;
-                                }
-                                else
+                                // Add secondary habitat to table if it isn't already in the table
+                                bool err;
+                                err = AddSecondaryHabitat(false, -1, Incid, secondaryHabitat, secondaryGroup);
+                                if (err == true)
                                     errorCodes.Add(secondaryHabitat);
+
+                                addedCodes = true;
                             }
                             else
                                 errorCodes.Add(secondaryHabitat);
                         }
+                        else
+                            errorCodes.Add(secondaryHabitat);
+                    }
 
-                        // If any valid codes were entered and were added to the table
-                        if (addedCodes == true)
-                        {
-                            // Refresh secondary table and summary.
-                            RefreshSecondaryHabitats();
-                            OnPropertyChanged(nameof(IncidSecondarySummary));
+                    // If any valid codes were entered and were added to the table
+                    if (addedCodes == true)
+                    {
+                        // Refresh secondary table and summary.
+                        RefreshSecondaryHabitats();
+                        OnPropertyChanged(nameof(IncidSecondarySummary));
 
-                            // Refresh the BAP habitat environments (in case secondary codes
-                            // are, or should be, reflected).
-                            GetBapEnvironments();
-                            OnPropertyChanged(nameof(IncidBapHabitatsAuto));
-                            OnPropertyChanged(nameof(IncidBapHabitatsUser));
-                            OnPropertyChanged(nameof(BapHabitatsAutoEnabled));
-                            OnPropertyChanged(nameof(BapHabitatsUserEnabled));
-                        }
+                        // Refresh the BAP habitat environments (in case secondary codes
+                        // are, or should be, reflected).
+                        GetBapEnvironments();
+                        OnPropertyChanged(nameof(IncidBapHabitatsAuto));
+                        OnPropertyChanged(nameof(IncidBapHabitatsUser));
+                        OnPropertyChanged(nameof(BapHabitatsAutoEnabled));
+                        OnPropertyChanged(nameof(BapHabitatsUserEnabled));
+                    }
 
-                        // If any codes were invalid then tell the user
-                        if (errorCodes != null && errorCodes.Count > 0)
-                        {
-                            // Sort the distinct secondary codes in error numerically
-                            errorCodes = errorCodes.Distinct().OrderBy(e => e.PadLeft(5, '0')).ToList();
-                            // Message the user, depending on if there is one or more
-                            if (errorCodes.Count == 1)
-                                MessageBox.Show("Code '" +
-                                    errorCodes.FirstOrDefault() + "' is a duplicate or unknown and has not been added.",
-                                    "HLU: Add Secondary Habitats",
-                                    MessageBoxButton.OK, MessageBoxImage.Information);
-                            else
-                                MessageBox.Show("Codes '" +
-                                    String.Join(", ", errorCodes.Take(errorCodes.Count - 1)) + " and " + errorCodes.Last() + "' are duplicates or unknown and have not been added.",
-                                    "HLU: Add Secondary Habitats",
-                                    MessageBoxButton.OK, MessageBoxImage.Information);
-                        }
+                    // If any codes were invalid then tell the user
+                    if (errorCodes != null && errorCodes.Count > 0)
+                    {
+                        // Sort the distinct secondary codes in error numerically
+                        errorCodes = errorCodes.Distinct().OrderBy(e => e.PadLeft(5, '0')).ToList();
+                        // Message the user, depending on if there is one or more
+                        if (errorCodes.Count == 1)
+                            MessageBox.Show("Code '" +
+                                errorCodes.FirstOrDefault() + "' is a duplicate or unknown and has not been added.",
+                                "HLU: Add Secondary Habitats",
+                                MessageBoxButton.OK, MessageBoxImage.Information);
+                        else
+                            MessageBox.Show("Codes '" +
+                                String.Join(", ", errorCodes.Take(errorCodes.Count - 1)) + " and " + errorCodes.Last() + "' are duplicates or unknown and have not been added.",
+                                "HLU: Add Secondary Habitats",
+                                MessageBoxButton.OK, MessageBoxImage.Information);
                     }
                 }
-                catch (Exception ex)
-                {
-                    ChangeCursor(Cursors.Arrow, null);
-                    MessageBox.Show(ex.Message, "HLU: Add Secondary Habitats", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+            }
+            catch (Exception ex)
+            {
+                ChangeCursor(Cursors.Arrow, null);
+                MessageBox.Show(ex.Message, "HLU: Add Secondary Habitats", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -7125,13 +7203,13 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Calculates the expected number of GIS features to be selected
-        /// by the sql query based upon a list of data tables and a sql
-        /// where clause.
+        /// by the sql query, based upon a list of data tables and a sql
+        /// where clause, in the database.
         /// </summary>
         /// <param name="sqlFromTables">The list of data tables.</param>
         /// <param name="sqlWhereClause">The where clause string.</param>
-        /// <returns>An integer of the number of GIS features to be selected.</returns>
-        private void ExpectedSelectionFeatures(List<DataTable> sqlFromTables, string sqlWhereClause, ref int numToids, ref int numFragments)
+        /// <returns>An integer of the number of GIS features expected to be selected.</returns>
+        private void ExpectedSelectionDBFeatures(List<DataTable> sqlFromTables, string sqlWhereClause, ref int numToids, ref int numFragments)
         {
             if ((_incidSelection != null) && (_incidSelection.Rows.Count > 0) &&
                 sqlFromTables.Count != 0)
@@ -7156,10 +7234,11 @@ namespace HLU.UI.ViewModel
 
                     // Create a selection DataTable of PK values of IncidMMPolygons.
                     _incidMMPolygonSelection = _db.SqlSelect(true, false, _hluDS.incid_mm_polygons.PrimaryKey, whereTables.ToList(), joinCond.ToList(), sqlWhereClause);
-                    //_incidMMPolygonSelection = _db.SqlSelect(true, false, IncidMMPolygonsTable.PrimaryKey, sqlFromTables, joinCond.ToList(), sqlWhereClause);
+
+                    // Count the number of fragments from the selection table.
                     numFragments = _incidMMPolygonSelection.Rows.Count;
 
-                    //// Change "*" to distinct concatenation of incid, toid and toid fragments
+                    //TODO: Change "*" to distinct concatenation of incid, toid and toid fragments?
                     //numFragments = _db.SqlCount(whereTables, String.Format("Distinct Convert(varchar, {0}.{1}) + Convert(varchar, {0}.{2}) + Convert(varchar, {0}.{3})",
                     //    _db.QuoteIdentifier(_hluDS.incid_mm_polygons.TableName),
                     //    _db.QuoteIdentifier(_hluDS.incid_mm_polygons.incidColumn.ColumnName),
@@ -12547,7 +12626,7 @@ namespace HLU.UI.ViewModel
                 else
                     DelErrorList(ref _priorityErrors, "BapUser");
 
-                // Check if there are any duplicates between the primary and 
+                // Check if there are any duplicates between the primary and
                 // secondary BAP records.
                 if (_incidBapRowsAuto != null && _incidBapRowsAuto.Count > 0)
                 {
@@ -12688,7 +12767,7 @@ namespace HLU.UI.ViewModel
                 else
                     DelErrorList(ref _priorityErrors, "BapUser");
 
-                // Check if there are any duplicates between the primary and 
+                // Check if there are any duplicates between the primary and
                 // secondary BAP records.
                 if (_incidBapRowsAuto != null && _incidBapRowsAuto.Count > 0)
                 {
@@ -12926,7 +13005,7 @@ namespace HLU.UI.ViewModel
         #endregion
 
         #region Condition
-        
+
         /// <summary>
         /// Gets the details condition group header.
         /// </summary>
@@ -13058,7 +13137,7 @@ namespace HLU.UI.ViewModel
                 }
             }
         }
-        
+
         /// <summary>
         /// Gets the list of condition qualifier codes.
         /// </summary>
@@ -13079,7 +13158,7 @@ namespace HLU.UI.ViewModel
                 return _conditionQualifierCodes;
             }
         }
-        
+
         /// <summary>
         /// Gets or sets the incid condition qualifier.
         /// </summary>
@@ -13258,7 +13337,7 @@ namespace HLU.UI.ViewModel
                     return null;
             }
         }
-        
+
         /// <summary>
         /// Gets the list of quality determination codes.
         /// </summary>
@@ -13332,7 +13411,7 @@ namespace HLU.UI.ViewModel
                 }
             }
         }
-        
+
         /// <summary>
         /// Gets the list of quality interpretation codes.
         /// </summary>
@@ -13498,7 +13577,7 @@ namespace HLU.UI.ViewModel
 
             return currentDate;
         }
-        
+
         /// <summary>
         /// Updates the incid sources row.
         /// </summary>
@@ -13605,7 +13684,7 @@ namespace HLU.UI.ViewModel
             }
             catch { }
         }
-        
+
         /// <summary>
         /// Gets the list of source names.
         /// </summary>
@@ -13625,7 +13704,7 @@ namespace HLU.UI.ViewModel
                 return _sourceNames;
             }
         }
-        
+
         /// <summary>
         /// Gets the list of source habitat class codes.
         /// </summary>
@@ -13646,7 +13725,7 @@ namespace HLU.UI.ViewModel
                 return _sourceHabitatClassCodes;
             }
         }
-        
+
         /// <summary>
         /// Gets the list of source importance codes.
         /// </summary>
@@ -13670,7 +13749,7 @@ namespace HLU.UI.ViewModel
         #endregion
 
         #region Source1
-        
+
         public string Source1Header
         {
             get
@@ -14826,7 +14905,7 @@ namespace HLU.UI.ViewModel
                 else
                 {
                     ValidateSourceDuplicates(@"IncidSource\d+BoundaryImportance", @"\d+", "2", skipVal, errors);
-                    
+
                     // Validates the source importances by ensuring that boundary and habitat importance
                     // values are applied in order (as specified in the settings).
                     ValidateSourceImportances(@"IncidSource\d+BoundaryImportance", @"\d+", "2", errors);

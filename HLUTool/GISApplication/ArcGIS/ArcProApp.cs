@@ -985,101 +985,6 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Calculates the expected number of TOIDs and features for a given INCID selection
-        /// by querying the active HLU layer directly.
-        /// </summary>
-        /// <param name="incidSelection">
-        /// A DataTable containing INCID values to test.
-        /// </param>
-        /// <returns>
-        /// A tuple containing:
-        ///  - the expected number of distinct TOIDs,
-        ///  - the expected number of feature rows.
-        /// </returns>
-        public async Task<(int ExpectedNumToids, int ExpectedNumFeatures)>
-            ExpectedSelectionFeaturesAsync(DataTable incidSelection)
-        {
-            // No selection supplied – nothing expected.
-            if (incidSelection == null || incidSelection.Rows.Count == 0)
-                return (0, 0);
-
-            // The active HLU layer must already be known.
-            if (_hluLayer == null)
-                throw new GisSelectionException("No active HLU layer is set.");
-
-            // Resolve column ordinals from the layer structure.
-            int incidOrdinal = _hluLayerStructure.incidColumn.Ordinal;
-            int toidOrdinal = _hluLayerStructure.toidColumn.Ordinal;
-
-            // Resolve GIS field names.
-            string incidFieldName = GetFieldName(incidOrdinal);
-            string toidFieldName = GetFieldName(toidOrdinal);
-
-            if (string.IsNullOrWhiteSpace(incidFieldName))
-                throw new GisSelectionException(
-                    "Could not resolve the incid field name for the active HLU layer.");
-
-            if (string.IsNullOrWhiteSpace(toidFieldName))
-                throw new GisSelectionException(
-                    "Could not resolve the toid field name for the active HLU layer.");
-
-            // Extract distinct INCIDs from the selection table.
-            var incids = incidSelection.Rows
-                .Cast<DataRow>()
-                .Select(r => r[incidOrdinal]?.ToString())
-                .Where(s => !string.IsNullOrWhiteSpace(s))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
-            if (incids.Count == 0)
-                return (0, 0);
-
-            // Build chunked WHERE clauses for querying the layer.
-            IEnumerable<string> whereClauses = BuildInWhereClauses(
-                QuoteIdentifier(incidFieldName),
-                incids,
-                maxClauseLength: 8000);
-
-            // Run the counting logic on the MCT.
-            return await QueuedTask.Run(() =>
-            {
-                int featureCount = 0;
-
-                // Track unique TOIDs explicitly.
-                var distinctToids =
-                    new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-                foreach (string whereClause in whereClauses)
-                {
-                    // Limit returned fields for performance.
-                    QueryFilter qf = new()
-                    {
-                        WhereClause = whereClause,
-                        SubFields = QuoteIdentifier(toidFieldName)
-                    };
-
-                    using RowCursor cursor = _hluLayer.Search(qf);
-                    while (cursor.MoveNext())
-                    {
-                        using Row row = cursor.Current;
-
-                        // Every row corresponds to a GIS feature.
-                        featureCount++;
-
-                        // Collect unique TOIDs.
-                        object toidObj = row[toidFieldName];
-                        string toid = toidObj?.ToString();
-
-                        if (!string.IsNullOrWhiteSpace(toid))
-                            distinctToids.Add(toid);
-                    }
-                }
-
-                return (distinctToids.Count, featureCount);
-            }).ConfigureAwait(false);
-        }
-
-        /// <summary>
         /// Builds a series of SQL "field IN (...)" clauses, chunked to stay under an approximate maximum length.
         /// </summary>
         /// <param name="fieldExpression">The (already quoted) field name or expression.</param>
@@ -1234,6 +1139,202 @@ namespace HLU.GISApplication
         }
 
         #endregion Selection
+
+        #region Expected Count
+
+        /// <summary>
+        /// Counts how many INCIDs, TOIDs and feature rows (fragments) would be returned from GIS
+        /// for the supplied INCID selection, without applying a map selection.
+        /// </summary>
+        /// <param name="incidSelection">
+        /// A DataTable containing INCID values that should be tested in GIS.
+        /// </param>
+        /// <returns>
+        /// A tuple containing (Incids, Toids, Fragments).
+        /// </returns>
+        public async Task<(int Incids, int Toids, int Fragments)> ExpectedSelectionGISFeaturesAsync(
+            DataTable incidSelection)
+        {
+            // No selection supplied – nothing expected.
+            if (incidSelection == null || incidSelection.Rows.Count == 0)
+                return (0, 0, 0);
+
+            // The active HLU layer must already be known.
+            if (_hluLayer == null)
+                throw new GisSelectionException("No active HLU layer is set.");
+
+            // Get column ordinals from the layer structure.
+            int incidOrdinal = _hluLayerStructure.incidColumn.Ordinal;
+            int toidOrdinal = _hluLayerStructure.toidColumn.Ordinal;
+
+            // Get the GIS field names.
+            string incidFieldName = GetFieldName(incidOrdinal);
+            string toidFieldName = GetFieldName(toidOrdinal);
+
+            // Check the field names were resolved.
+            if (string.IsNullOrWhiteSpace(incidFieldName))
+                throw new GisSelectionException("Could not resolve the incid field name for the active HLU layer.");
+
+            if (string.IsNullOrWhiteSpace(toidFieldName))
+                throw new GisSelectionException("Could not resolve the toid field name for the active HLU layer.");
+
+            // Extract distinct INCIDs from the selection table.
+            var incids = incidSelection.Rows
+                .Cast<DataRow>()
+                .Select(r => r[incidOrdinal]?.ToString())
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            // If no valid INCIDs were found, nothing is expected.
+            if (incids.Count == 0)
+                return (0, 0, 0);
+
+            // Build chunked WHERE clauses for querying the layer.
+            IEnumerable<string> whereClauses = BuildInWhereClauses(
+                QuoteIdentifier(incidFieldName),
+                incids,
+                maxClauseLength: 8000);
+
+            // Run the counting logic on the MCT.
+            return await QueuedTask.Run(() =>
+            {
+                int fragmentCount = 0;
+
+                var distinctIncids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var distinctToids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                // Query the layer for each chunked WHERE clause.
+                foreach (string whereClause in whereClauses)
+                {
+                    QueryFilter qf = new()
+                    {
+                        WhereClause = whereClause,
+                        SubFields =
+                            $"{QuoteIdentifier(incidFieldName)},{QuoteIdentifier(toidFieldName)}"
+                    };
+
+                    // Loop through the returned rows.
+                    using RowCursor cursor = _hluLayer.Search(qf);
+                    while (cursor.MoveNext())
+                    {
+                        using Row row = cursor.Current;
+
+                        // Increment the fragment count for every returned row.
+                        fragmentCount++;
+
+                        // Collect unique INCIDs and TOIDs.
+                        string incid = Convert.ToString(row[incidFieldName]);
+                        if (!string.IsNullOrWhiteSpace(incid))
+                            distinctIncids.Add(incid);
+
+                        string toid = Convert.ToString(row[toidFieldName]);
+                        if (!string.IsNullOrWhiteSpace(toid))
+                            distinctToids.Add(toid);
+                    }
+                }
+
+                // Return the counts.
+                return (distinctIncids.Count, distinctToids.Count, fragmentCount);
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Calculates the expected number of TOIDs and features for a given INCID selection
+        /// by querying the active HLU layer directly.
+        /// </summary>
+        /// <param name="incidSelection">
+        /// A DataTable containing INCID values to test.
+        /// </param>
+        /// <returns>
+        /// A tuple containing:
+        ///  - the expected number of distinct TOIDs,
+        ///  - the expected number of feature rows.
+        /// </returns>
+        public async Task<(int ExpectedNumToids, int ExpectedNumFeatures)>
+            ExpectedSelectionFeaturesAsync(DataTable incidSelection)
+        {
+            // No selection supplied – nothing expected.
+            if (incidSelection == null || incidSelection.Rows.Count == 0)
+                return (0, 0);
+
+            // The active HLU layer must already be known.
+            if (_hluLayer == null)
+                throw new GisSelectionException("No active HLU layer is set.");
+
+            // Resolve column ordinals from the layer structure.
+            int incidOrdinal = _hluLayerStructure.incidColumn.Ordinal;
+            int toidOrdinal = _hluLayerStructure.toidColumn.Ordinal;
+
+            // Resolve GIS field names.
+            string incidFieldName = GetFieldName(incidOrdinal);
+            string toidFieldName = GetFieldName(toidOrdinal);
+
+            if (string.IsNullOrWhiteSpace(incidFieldName))
+                throw new GisSelectionException(
+                    "Could not resolve the incid field name for the active HLU layer.");
+
+            if (string.IsNullOrWhiteSpace(toidFieldName))
+                throw new GisSelectionException(
+                    "Could not resolve the toid field name for the active HLU layer.");
+
+            // Extract distinct INCIDs from the selection table.
+            var incids = incidSelection.Rows
+                .Cast<DataRow>()
+                .Select(r => r[incidOrdinal]?.ToString())
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (incids.Count == 0)
+                return (0, 0);
+
+            // Build chunked WHERE clauses for querying the layer.
+            IEnumerable<string> whereClauses = BuildInWhereClauses(
+                QuoteIdentifier(incidFieldName),
+                incids,
+                maxClauseLength: 8000);
+
+            // Run the counting logic on the MCT.
+            return await QueuedTask.Run(() =>
+            {
+                int featureCount = 0;
+
+                // Track unique TOIDs explicitly.
+                var distinctToids =
+                    new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                foreach (string whereClause in whereClauses)
+                {
+                    // Limit returned fields for performance.
+                    QueryFilter qf = new()
+                    {
+                        WhereClause = whereClause,
+                        SubFields = QuoteIdentifier(toidFieldName)
+                    };
+
+                    using RowCursor cursor = _hluLayer.Search(qf);
+                    while (cursor.MoveNext())
+                    {
+                        using Row row = cursor.Current;
+
+                        // Every row corresponds to a GIS feature.
+                        featureCount++;
+
+                        // Collect unique TOIDs.
+                        object toidObj = row[toidFieldName];
+                        string toid = toidObj?.ToString();
+
+                        if (!string.IsNullOrWhiteSpace(toid))
+                            distinctToids.Add(toid);
+                    }
+                }
+
+                return (distinctToids.Count, featureCount);
+            }).ConfigureAwait(false);
+        }
+
+        #endregion Expected Count
 
         #region Zoom
 
