@@ -77,9 +77,8 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            bool canReadMapSelection = _viewModel.CanGetMapSelection;
-
-            // Enable or disable the button based on CanReadMapSelection.
+            // Enable or disable the button based on CanReadMapSelection and main grid visibility.
+            bool canReadMapSelection = _viewModel.CanGetMapSelection && _viewModel.GridMainVisibility == Visibility.Visible;
             Enabled = canReadMapSelection;
         }
     }

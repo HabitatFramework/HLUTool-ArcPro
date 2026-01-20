@@ -121,12 +121,10 @@ namespace HLU.GISApplication
         ///// </summary>
         //private IFeatureWorkspace _hluWS;
 
-        //TODO: ArcPro
         /// <summary>
         /// The HLU map layer.
         /// </summary>
         private FeatureLayer _hluLayer;
-
 
         /// <summary>
         /// The name of the feature class.
@@ -139,9 +137,9 @@ namespace HLU.GISApplication
         private List<string> _hluLayerNamesList;
 
         /// <summary>
-        /// The current valid HLU map layer in the document.
+        /// The active valid HLU map layer in the document.
         /// </summary>
-        private HLULayer _hluCurrentLayer;
+        private HLULayer _hluActiveLayer;
 
         //TODO: ArcGIS
         ///// <summary>
@@ -631,7 +629,7 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="selectDistinct"></param>
         /// <param name="targetTables"></param>
@@ -799,7 +797,7 @@ namespace HLU.GISApplication
             if (resultTable == null)
                 return resultTable;
 
-            // Capture the current layer once (prevents confusing mid-call changes)
+            // Capture the active layer once (prevents confusing mid-call changes)
             FeatureLayer hluLayer = _hluLayer;
 
             // Return if the active layer hasn't been set yet.
@@ -2563,26 +2561,26 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// The properties of the current hlu layer.
+        /// The properties of the active hlu layer.
         /// </summary>
-        public HLULayer CurrentHluLayer
+        public HLULayer ActiveHluLayer
         {
-            get { return _hluCurrentLayer; }
+            get { return _hluActiveLayer; }
         }
 
         //TODO: Is _hluFeatureClass Needed?
         /// <summary>
-        /// Checks whether the current document contains an HLU layer. Also initializes the fields
+        /// Checks whether the current map contains an HLU layer. Also initializes the fields
         /// _hluView, _hluCurrentLayer, _hluLayer, _hluFeatureClass and _hluWS, and indirectly
         /// (by calling CreateFieldMap()), _hluFieldMap and _hluFieldNames.
         /// </summary>
-        /// <returns>True if the current document contains a valid HLU layer, otherwise false.</returns>
-        public async Task<bool> IsHluWorkspaceAsync(string currentLayerName)
+        /// <returns>True if the current map contains a valid HLU layer, otherwise false.</returns>
+        public async Task<bool> IsHluMapAsync(string activeLayerName)
         {
-            // Backup current layer variables.
+            // Backup active layer variables.
             FeatureLayer hluLayerBak = _hluLayer;
             string hluTableNameBak = _hluTableName;
-            HLULayer hluCurrentLayerBak = _hluCurrentLayer;
+            HLULayer hluActiveLayerBak = _hluActiveLayer;
 
             // Initialise or clear the list of valid layers.
             if (_hluLayerNamesList == null)
@@ -2590,10 +2588,9 @@ namespace HLU.GISApplication
             else
                 _hluLayerNamesList.Clear();
 
-            if (string.IsNullOrEmpty(currentLayerName))
+            if (string.IsNullOrEmpty(activeLayerName))
                 _hluLayer = null;
 
-            //TODO: ArcGIS
             try
             {
                 //TODO: Check whether QueuedTask is needed here
@@ -2637,33 +2634,39 @@ namespace HLU.GISApplication
                             _hluTableName = layer.Name;
                             //TODO: Needed?
                             //_hluFeatureClass = _hluLayer.GetFeatureClass();
-                            _hluCurrentLayer = new(layerName);
-                        }
 
-                        //break;
+                            // Set the active HLU layer.
+                            _hluActiveLayer = new(layerName);
+                        }
                     }
                 }
             }
             catch { }
 
-            // If the currentLayer is still found in the workspace
+            // If the active layer is still found in the map
             // then restore the variables.
-            if (!string.IsNullOrEmpty(currentLayerName) && _hluLayerNamesList.Contains(currentLayerName))
+            if (!string.IsNullOrEmpty(activeLayerName)
+                && _hluLayerNamesList.Contains(activeLayerName)
+                && hluLayerBak != null)
             {
                 _hluLayer = hluLayerBak;
                 _hluTableName = hluTableNameBak;
-                _hluCurrentLayer = hluCurrentLayerBak;
+                _hluActiveLayer = hluActiveLayerBak;
+            }
+            // Otherwise, clear the layer.
+            else
+            {
+                //TODO: Needed?
+                //_hluLayer = null;
             }
 
-            if (_hluLayer != null)
-            {
-                return true;
-            }
-            else
+            if (_hluLayer == null)
             {
                 DestroyHluLayer();
                 return false;
             }
+
+            return true;
         }
 
         /// <summary>
@@ -2746,15 +2749,24 @@ namespace HLU.GISApplication
             //_hluFieldNames = pipeReturnList.Where((s, index) => index > limit).ToArray();
         }
 
+        /// <summary>
+        /// Releases all resources associated with the HLU layer and resets related fields to their default state.
+        /// </summary>
+        /// <remarks>Call this method to clean up the HLU layer and its associated data when it is no
+        /// longer needed. After calling this method, the HLU layer and related objects will be set to null and should
+        /// not be accessed until reinitialized.</remarks>
         private void DestroyHluLayer()
         {
+            _hluLayer = null;
+            _hluTableName = null;
+            _hluActiveLayer = null;
+
             _hluFieldMap = null;
             _hluFieldNames = null;
 
             //TODO: Needed?
             //_hluFeatureClass = null;
 
-            _hluLayer = null;
             _hluView = null;
         }
 
@@ -3191,7 +3203,7 @@ namespace HLU.GISApplication
         //        switch ((SE_DBMS)dbms_id)
         //        {
         //            case SE_DBMS.SE_DBMS_IS_INFORMIX:
-        //                // Datefield = 'yyyy-mm-dd hh:mm:ss' // hh:mm:ss part cannot be omitted even if it's equal to 00:00:00. 
+        //                // Datefield = 'yyyy-mm-dd hh:mm:ss' // hh:mm:ss part cannot be omitted even if it's equal to 00:00:00.
         //                _dateLiteralPrefix = "'";
         //                _dateLiteralSuffix = "'";
         //                _dateFormatString = "yyyy-MM-dd HH:mm:ss";
@@ -3206,7 +3218,7 @@ namespace HLU.GISApplication
         //                _dateFormatString = "yyyy-MM-dd HH:mm:ss";
         //                break;
         //            case SE_DBMS.SE_DBMS_IS_SQLSERVER:
-        //                // Datefield = 'yyyy-mm-dd hh:mm:ss' // hh:mm:ss part can be omitted when the time is not set in the records. 
+        //                // Datefield = 'yyyy-mm-dd hh:mm:ss' // hh:mm:ss part can be omitted when the time is not set in the records.
         //                // Datefield = 'mm/dd/yyyy'
         //                _dateLiteralPrefix = "'";
         //                _dateLiteralSuffix = "'";
@@ -3214,7 +3226,7 @@ namespace HLU.GISApplication
         //                break;
         //            case SE_DBMS.SE_DBMS_IS_DB2:
         //            case SE_DBMS.SE_DBMS_IS_DB2_EXT:
-        //                // Datefield = TO_DATE('yyyy-mm-dd hh:mm:ss','YYYY-MM-DD HH24:MI:SS') // hh:mm:ss part cannot be omitted even if the time is equal to 00:00:00. 
+        //                // Datefield = TO_DATE('yyyy-mm-dd hh:mm:ss','YYYY-MM-DD HH24:MI:SS') // hh:mm:ss part cannot be omitted even if the time is equal to 00:00:00.
         //                _dateLiteralPrefix = " TO_DATE('";
         //                _dateLiteralSuffix = "','YYYY-MM-DD HH24:MI:SS')"; // assumes 24h format, use CultureInfo ??
         //                _dateFormatString = "yyyy-MM-dd HH:mm:ss";

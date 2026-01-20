@@ -63,9 +63,8 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            bool canFilterByAttributes = _viewModel.CanFilterByAttributes;
-
-            // Enable or disable the button based on CanFilterByAttributes.
+            // Enable or disable the button based on CanFilterByAttributes and main grid visibility.
+            bool canFilterByAttributes = _viewModel.CanFilterByAttributes && _viewModel.GridMainVisibility == Visibility.Visible;
             Enabled = canFilterByAttributes;
         }
     }

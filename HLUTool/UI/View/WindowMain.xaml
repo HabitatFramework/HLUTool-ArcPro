@@ -43,7 +43,7 @@
             <Grid
                 x:Name="GridMain"
                 Grid.Row="0"
-                Visibility="{Binding DockpaneVisibility}">
+                Visibility="{Binding GridMainVisibility}">
 
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -3153,8 +3153,8 @@
                         <Button
                             x:Name="ButtonCancelBulkUpdate"
                             Grid.Column="1"
-                                MinWidth="0"
-                                Margin="0,0,2,0"
+                            MinWidth="0"
+                            Margin="0,0,2,0"
                             HorizontalAlignment="Center"
                             Command="{Binding Path=CancelBulkUpdateCommand}"
                             IsEnabled="{Binding CanCancelBulkUpdate}"
@@ -3165,8 +3165,8 @@
                         <Button
                             x:Name="ButtonUpdate"
                             Grid.Column="2"
-                                MinWidth="0"
-                                Margin="2,0,0,0"
+                            MinWidth="0"
+                            Margin="2,0,0,0"
                             HorizontalAlignment="Center"
                             Background="Red"
                             Command="{Binding UpdateCommand}"
@@ -3374,11 +3374,11 @@
                 Height="Auto"
                 Margin="0,8,0,0"
                 CanClose="False"
-                Content="{Binding Path=Message}"
+                Content="{Binding Path=StatusMessage}"
                 MessageType="{Binding Path=MessageLevel}"
                 Severity="High"
                 ShowHelp="False"
-                ToolTip="{Binding Path=Message}"
+                ToolTip="{Binding Path=StatusMessage}"
                 Visibility="{Binding Path=HasMessage}" />
 
 

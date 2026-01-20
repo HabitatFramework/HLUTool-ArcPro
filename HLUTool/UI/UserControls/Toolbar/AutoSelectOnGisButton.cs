@@ -76,5 +76,22 @@ namespace HLU.UI.UserControls.Toolbar
             // Update the main window state.
             _viewModel.SetAutoSelectOnGis(AutoSelectOnGisEnabled);
         }
+
+        /// <summary>
+        /// Called periodically by the framework to update checkbox state.
+        /// </summary>
+        protected override void OnUpdate()
+        {
+            if (_viewModel == null)
+            {
+                Enabled = false;
+                DisabledTooltip = "HLU main window is not available.";
+                return;
+            }
+
+            // Enable or disable the button based on the main grid visibility.
+            bool isEnabled = _viewModel.GridMainVisibility == Visibility.Visible;
+            Enabled = isEnabled;
+        }
     }
 }

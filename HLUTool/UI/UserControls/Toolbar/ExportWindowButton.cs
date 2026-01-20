@@ -66,9 +66,8 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            bool canExport = _viewModel.CanExport;
-
-            // Enable or disable the button based on CanExport.
+            // Enable or disable the button based on CanExport and main grid visibility.
+            bool canExport = _viewModel.CanExport && _viewModel.GridMainVisibility == Visibility.Visible;
             Enabled = canExport;
         }
     }

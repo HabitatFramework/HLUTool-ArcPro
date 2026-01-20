@@ -63,9 +63,8 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            bool canCopy = _viewModel.CanCopy;
-
-            // Enable or disable the button based on CanCopy.
+            // Enable or disable the button based on CanCopy and main grid visibility.
+            bool canCopy = _viewModel.CanCopy && _viewModel.GridMainVisibility == Visibility.Visible;
             Enabled = canCopy;
         }
     }

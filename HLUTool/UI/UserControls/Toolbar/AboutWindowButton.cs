@@ -57,5 +57,22 @@ namespace HLU.UI.UserControls.Toolbar
             // Show the about window.
             _viewModel.ShowAbout();
         }
+
+        /// <summary>
+        /// Called periodically by the framework to update button state.
+        /// </summary>
+        protected override void OnUpdate()
+        {
+            if (_viewModel == null)
+            {
+                Enabled = false;
+                DisabledTooltip = "HLU main window is not available.";
+                return;
+            }
+
+            // Enable or disable the button based on the main grid visibility.
+            bool isEnabled = _viewModel.GridMainVisibility == Visibility.Visible;
+            Enabled = isEnabled;
+        }
     }
 }

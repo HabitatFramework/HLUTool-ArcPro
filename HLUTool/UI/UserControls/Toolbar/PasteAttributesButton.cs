@@ -63,9 +63,8 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            bool canPaste = _viewModel.CanPaste;
-
-            // Enable or disable the button based on CanPaste.
+            // Enable or disable the button based on CanPaste and main grid visibility.
+            bool canPaste = _viewModel.CanPaste && _viewModel.GridMainVisibility == Visibility.Visible;
             Enabled = canPaste;
         }
     }

@@ -22,8 +22,14 @@
 	</dependencies>
 
 	<conditions>
+		<!-- Enable/disable the toolbar. -->
 		<insertCondition id="HLUTool_Tab1_condition" caption="Toggle HLUTool_Tab1">
 			<state id="HLUTool_tab_state" />
+		</insertCondition>
+
+		<!-- Enable/disable Split & Merge menus. -->
+		<insertCondition id="HLUTool_MainGrid_condition" caption="Toggle HLUTool_MainGrid">
+			<state id="HLUTool_maingrid_state" />
 		</insertCondition>
 	</conditions>
 
@@ -91,8 +97,8 @@
 
 				<!-- Split/Merge group -->
 				<group id="HLUTool_Group6" caption="Split/Merge" keytip="G6">
-					<menu refID="HLUTool_SplitMenu" size="large" />
-					<menu refID="HLUTool_MergeMenu" size="large" />
+					<dynamicMenu refID="HLUTool_SplitMenu" size="large" />
+					<dynamicMenu refID="HLUTool_MergeMenu" size="large" />
 				</group>
 
 				<!-- OSMM Updates group -->
@@ -127,7 +133,7 @@
 
 			<menus>
 				<!-- Split dropdown: Physical + Logical -->
-				<menu id="HLUTool_SplitMenu"
+				<menu id="HLUTool_SplitMenu_OLD"
 					  caption="Split"
 					  smallImage="Images\Split16.png"
 					  largeImage="Images\Split32.png">
@@ -139,7 +145,7 @@
 				</menu>
 
 				<!-- Merge dropdown: Physical + Logical -->
-				<menu id="HLUTool_MergeMenu"
+				<menu id="HLUTool_MergeMenu_OLD"
 					  caption="Merge"
 					  smallImage="Images\Merge16.png"
 					  largeImage="Images\Merge32.png">
@@ -152,6 +158,30 @@
 			</menus>
 
 			<controls>
+				<!-- Split dropdown: Physical + Logical -->
+				<dynamicMenu id="HLUTool_SplitMenu"
+							 caption="Split"
+							 className="HLU.UI.UserControls.Toolbar.SplitDynamicMenu"
+							 smallImage="Images\Split16.png"
+							 largeImage="Images\Split32.png"
+							 loadOnClick="false">
+					<tooltip heading="Split options">
+						Split features physically or logically<disabledText />
+					</tooltip>
+				</dynamicMenu>
+
+				<!-- Merge dropdown: Physical + Logical -->
+				<dynamicMenu id="HLUTool_MergeMenu"
+							 caption="Merge"
+							 className="HLU.UI.UserControls.Toolbar.MergeDynamicMenu"
+							 smallImage="Images\Merge16.png"
+							 largeImage="Images\Merge32.png"
+							 loadOnClick="false">
+					<tooltip heading="Merge options">
+						Merge features physically or logically<disabledText />
+					</tooltip>
+				</dynamicMenu>
+
 				<comboBox id="HLUTool_cmbActiveLayer"
 						  caption=" Active Layer:"
 						  extendedCaption="Select Active Layer"

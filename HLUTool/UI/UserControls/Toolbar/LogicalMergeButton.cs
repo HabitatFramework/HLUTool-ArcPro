@@ -77,9 +77,8 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            bool canLogicallyMerge = _viewModel.CanLogicallyMerge;
-
-            // Enable or disable the button based on CanLogicallyMerge.
+            // Enable or disable the button based on CanLogicallyMerge and main grid visibility.
+            bool canLogicallyMerge = _viewModel.CanLogicallyMerge && _viewModel.GridMainVisibility == Visibility.Visible;
             Enabled = canLogicallyMerge;
         }
     }

@@ -63,9 +63,8 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            bool canBulkUpdate = _viewModel.CanBulkUpdate;
-
-            // Enable or disable the button based on CanBulkUpdate.
+            // Enable or disable the button based on CanBulkUpdate and main grid visibility.
+            bool canBulkUpdate = _viewModel.CanBulkUpdate && _viewModel.GridMainVisibility == Visibility.Visible;
             Enabled = canBulkUpdate;
         }
     }

@@ -441,7 +441,6 @@ namespace HLU.UI.ViewModel
                         if (validity == "1")
                         {
                             // Warn the user that the SQL is invalid.
-                            //TODO: App.GetActiveWindow removed as window owner
                             MessageBox.Show("SQL is valid.", "HLU Query",
                                 MessageBoxButton.OK, MessageBoxImage.Information);
                         }
@@ -449,7 +448,6 @@ namespace HLU.UI.ViewModel
                         else if (validity == "0")
                         {
                             // Warn the user that no rows were returned.
-                            //TODO: App.GetActiveWindow removed as window owner
                             MessageBox.Show("SQL is valid but no records were returned.", "HLU Query",
                                 MessageBoxButton.OK, MessageBoxImage.Warning);
                         }
@@ -457,7 +455,6 @@ namespace HLU.UI.ViewModel
                         else if (validity != null)
                         {
                             // Warn the user that the SQL is invalid.
-                            //TODO: App.GetActiveWindow removed as window owner
                             MessageBox.Show(String.Format("{0}.", validity), "HLU Query",
                                 MessageBoxButton.OK, MessageBoxImage.Error);
                         }
@@ -468,7 +465,6 @@ namespace HLU.UI.ViewModel
                         ChangeCursor(Cursors.Arrow);
 
                         // Warn the user that the no valid tables were found.
-                        //TODO: App.GetActiveWindow removed as window owner
                         MessageBox.Show("No valid tables were found.", "HLU Query",
                             MessageBoxButton.OK, MessageBoxImage.Warning);
                     }
@@ -478,7 +474,7 @@ namespace HLU.UI.ViewModel
                     // Reset the cursor back to normal.
                     ChangeCursor(Cursors.Arrow);
 
-                    //TODO: App.GetActiveWindow removed as window owner
+                    // Warn the user that the SQL is invalid.
                     MessageBox.Show(ex.Message, "HLU Query",
                         MessageBoxButton.OK, MessageBoxImage.Error);
                 }
@@ -1258,7 +1254,7 @@ namespace HLU.UI.ViewModel
 
             catch (Exception ex)
             {
-                //TODO: App.GetActiveWindow removed as window owner
+                // Warn the user that the load failed.
                 MessageBox.Show(ex.Message, "HLU Query",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
@@ -1352,7 +1348,7 @@ namespace HLU.UI.ViewModel
 
             catch (Exception ex)
             {
-                //TODO: App.GetActiveWindow removed as window owner
+                // Warn the user that the save failed.
                 MessageBox.Show(ex.Message, "HLU Query",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }

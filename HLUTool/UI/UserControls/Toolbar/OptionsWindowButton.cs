@@ -89,6 +89,23 @@ namespace HLU.UI.UserControls.Toolbar
         }
 
         /// <summary>
+        /// Called periodically by the framework to update button state.
+        /// </summary>
+        protected override void OnUpdate()
+        {
+            if (_viewModel == null)
+            {
+                Enabled = false;
+                DisabledTooltip = "HLU main window is not available.";
+                return;
+            }
+
+            // Enable or disable the button based on the main grid visibility.
+            bool isEnabled = _viewModel.GridMainVisibility == Visibility.Visible;
+            Enabled = isEnabled;
+        }
+
+        /// <summary>
         /// Save the options settings when the options window is closed.
         /// </summary>
         /// <param name="applySettings">if set to <c>true</c> [save settings].</param>

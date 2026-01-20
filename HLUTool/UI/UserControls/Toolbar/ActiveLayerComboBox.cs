@@ -1,15 +1,17 @@
-﻿using HLU.Data;
+﻿using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Framework.Contracts;
+using HLU.Data;
+using HLU.UI.ViewModel;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Contracts;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using ComboBox = ArcGIS.Desktop.Framework.Contracts.ComboBox;
-using System.Runtime.CompilerServices;
-using HLU.UI.ViewModel;
 
 namespace HLU.UI.UserControls.Toolbar
 {
@@ -70,12 +72,12 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override void OnUpdate()
         {
-            //if (_viewModel == null)
-            //{
-            //    Enabled = false;
-            //    DisabledTooltip = "HLU main window is not available.";
-            //    return;
-            //}
+            if (_viewModel == null)
+            {
+                Enabled = false;
+                DisabledTooltip = "HLU main window is not available.";
+                return;
+            }
 
             // Initialize the ComboBox if it's not already.
             if (!_isInitialized)
@@ -92,8 +94,9 @@ namespace HLU.UI.UserControls.Toolbar
             bool canSwitchGISLayer = _viewModel.CanSwitchGISLayer;
             canSwitchGISLayer = true;
 
-            // Enable or disable the combobox based on CanSwitchGISLayer.
+            // Enable or disable the combobox based on CanSwitchGISLayer and main grid visibility.
             Enabled = canSwitchGISLayer;
+            //Enabled = canSwitchGISLayer && _viewModel.GridMainVisibility == Visibility.Visible;
 
             // Optional: explain why it is disabled.
             if (!canSwitchGISLayer)
@@ -130,7 +133,7 @@ namespace HLU.UI.UserControls.Toolbar
 
             // Clear the selected item.
             SelectedItem = null;
-            OnSelectionChange(null);
+            OnSelectionChange(SelectedItem);
 
             _isEnabled = false;
 
@@ -184,8 +187,17 @@ namespace HLU.UI.UserControls.Toolbar
             // Check if the ItemCollection is not null and has items.
             if (ItemCollection?.Any() == true)
             {
-                // Find and set the selected item if found.
-                SelectedItem = ItemCollection.FirstOrDefault(item => item.ToString() == value);
+                // If a selected item is required.
+                if (!string.IsNullOrEmpty(value))
+                    // Find and set the selected item if found.
+                    SelectedItem = ItemCollection.FirstOrDefault(item => item.ToString() == value);
+                else
+                    // Selected the first item.
+                    SelectedItem = ItemCollection.First();
+            }
+            else
+            {
+                SelectedItem = null;
             }
         }
 

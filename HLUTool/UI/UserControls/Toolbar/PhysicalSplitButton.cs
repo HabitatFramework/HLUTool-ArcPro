@@ -77,9 +77,8 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            bool canPhysicallySplit = _viewModel.CanPhysicallySplit;
-
-            // Enable or disable the button based on CanPhysicallySplit.
+            // Enable or disable the button based on CanPhysicallySplit and main grid visibility.
+            bool canPhysicallySplit = _viewModel.CanPhysicallySplit && _viewModel.GridMainVisibility == Visibility.Visible;
             Enabled = canPhysicallySplit;
         }
     }

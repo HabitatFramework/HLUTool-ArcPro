@@ -49,10 +49,12 @@ namespace HLU.UI.View
         {
             InitializeComponent();
 
+            //TODO: Unwire for now?
             DataContextChanged += OnDataContextChanged;
 
+            //TODO: Following code disabled for now
             // Initialise the ViewModel for the WindowMain (just to load the combo box sources).
-            _viewModel = new ViewModelWindowMain(true);
+            //_viewModel = new ViewModelWindowMain(true);
 
             // Set the DataContext for the WindowMain.
             //this.DataContext = _viewModel;
@@ -77,20 +79,15 @@ namespace HLU.UI.View
         /// </summary>
         private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            if (_initialiseStarted)
-                return;
-
+            //TODO: Uncommented for debugging.
             if (e.NewValue is not ViewModelWindowMain vm)
                 return;
 
-            _initialiseStarted = true;
-
+            //TODO: Needed?
             AsyncHelpers.ObserveTask(
-                vm.EnsureInitializedAsync()
-                    .ContinueWith(_ => vm.CheckActiveMapAsync(), TaskScheduler.Default)
-                    .Unwrap(),
+                vm.InitializeAndCheckAsync(),
                 "HLU Tool",
-                "The HLU Tool encountered an error initialising or checking the active map.");
+                "The HLU Tool encountered an error initialising.");
         }
 
         ///// <summary>
@@ -126,22 +123,26 @@ namespace HLU.UI.View
         /// <param name="e"></param>
         private void DataGridSecondaryHabitats_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            // Set the view model if not already set.
-            if (_viewModel == null)
+            // Get the view model if needed.
+            if (DataContext is not ViewModelWindowMain viewModel)
             {
-                // Get the dockpane DAML id.
-                DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
-                if (pane == null)
-                    return;
+                DockPane pane =
+                    FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
 
-                // Get the real ViewModel by casting the dockpane.
-                _viewModel = pane as ViewModelWindowMain;
+                viewModel = pane as ViewModelWindowMain;
             }
 
+            // If no view model, exit.
+            if (viewModel == null)
+                return;
+
+            // Handle delete key to remove selected secondary habitats.
             if (e.Key == Key.Delete)
             {
                 var grid = sender as DataGrid;
                 var selectedItems = grid.SelectedItems.Cast<SecondaryHabitat>().ToList();
+
+                // Remove the selected items from the view model collection.
                 foreach (var item in selectedItems)
                 {
                     _viewModel.IncidSecondaryHabitats.Remove(item);

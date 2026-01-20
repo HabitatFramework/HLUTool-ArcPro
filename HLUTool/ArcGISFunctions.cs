@@ -67,15 +67,6 @@ namespace HLU.GISApplication
         /// </summary>
         public ArcProApp()
         {
-            // Get the active map view (if there is one).
-            _activeMapView = GetActiveMapView();
-
-            // Set the map currently displayed in the active map view.
-            if (_activeMapView != null)
-                _activeMap = _activeMapView.Map;
-            else
-                _activeMap = null;
-
             // Get the HLU featureLayer structure from the database.
             if (_hluLayerStructure == null)
                 _hluLayerStructure = new HluGISLayer.incid_mm_polygonsDataTable();
@@ -126,13 +117,19 @@ namespace HLU.GISApplication
         /// <returns>
         /// The active <see cref="MapView"/> instance, or <c>null</c> if no map view is active.
         /// </returns>
-        internal static MapView GetActiveMapView()
+        public MapView GetActiveMapView()
         {
             // Get the active map view from the ArcGIS Pro application.
-            MapView mapView = MapView.Active;
+            _activeMapView = MapView.Active;
+
+            // Set the map currently displayed in the active map view.
+            if (_activeMapView != null)
+                _activeMap = _activeMapView.Map;
+            else
+                _activeMap = null;
 
             // Return the map view if available; otherwise, return null.
-            return mapView;
+            return _activeMapView;
         }
 
         /// <summary>
@@ -4234,14 +4231,17 @@ namespace HLU.GISApplication
                     // Should we activate the featureLayer.
                     if (activate)
                     {
-                        // Check if the featureLayer is editable.
-                        bool isEditable = await IsLayerEditableAsync(featureLayer.Name);
-
                         _hluLayer = featureLayer;
+                        _hluTableName = featureLayer.Name;
                         _hluFieldMap = hluFieldMap;
                         _hluFieldNames = hluFieldNames; //TODO: Not set when tool first loaded? (only when layer changed)
                         _hluFeatureClass = featureClass;
-                        _hluCurrentLayer = new(featureLayer.Name, isEditable);
+
+                        // Check if the featureLayer is editable.
+                        bool isEditable = await IsLayerEditableAsync(featureLayer.Name);
+
+                        // Set the active HLU layer.
+                        _hluActiveLayer = new(featureLayer.Name, isEditable);
                     }
 
                     isHlu = true;

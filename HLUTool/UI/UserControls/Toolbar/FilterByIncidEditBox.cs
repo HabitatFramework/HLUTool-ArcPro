@@ -82,9 +82,8 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            bool canFilterByIncid = _viewModel.CanFilterByIncid;
-
-            // Enable or disable the button based on CanFilterByIncid.
+            // Enable or disable the button based on CanFilterByIncid and main grid visibility.
+            bool canFilterByIncid = _viewModel.CanFilterByIncid && _viewModel.GridMainVisibility == Visibility.Visible;
             Enabled = canFilterByIncid;
         }
     }

@@ -26,6 +26,7 @@ using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Controls;
+using ArcGIS.Desktop.Internal.Catalog.PropertyPages.NetworkDataset;
 using ArcGIS.Desktop.Internal.Framework.Controls;
 using ArcGIS.Desktop.Internal.Mapping.Locate;
 using ArcGIS.Desktop.Mapping;
@@ -533,7 +534,7 @@ namespace HLU.UI.ViewModel
                     }
                 }
 
-                ChangeCursor(Cursors.Wait, "Initiating ...");
+                ChangeCursor(Cursors.Wait, "Initialising ...");
 
                 //TODO: Needed?
                 // Let WPF render the cursor/message before heavy work begins.
@@ -645,6 +646,7 @@ namespace HLU.UI.ViewModel
                 if (ex.Message != "cancelled")
                     MessageBox.Show(ex.Message, "HLU: Initialise Application",
                         MessageBoxButton.OK, MessageBoxImage.Error);
+
                 //TODO: App.Current.Shutdown
                 //App.Current.Shutdown();
                 return false;
@@ -713,6 +715,7 @@ namespace HLU.UI.ViewModel
                 if (ex.Message != "cancelled")
                     MessageBox.Show(ex.Message, "HLU: Initialise Application",
                         MessageBoxButton.OK, MessageBoxImage.Error);
+
                 //TODO: App.Current.Shutdown
                 //App.Current.Shutdown();
                 return false;
@@ -720,90 +723,34 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Check that there is an active map and that it contains a valid HLU workspace.
+        /// Check that there is an active map and that it contains a valid HLU map.
         /// </summary>
         /// <returns></returns>
         internal async Task<bool> CheckActiveMapAsync()
         {
-            // Check the GIS workspace
-            ChangeCursor(Cursors.Wait, "Checking GIS workspace ...");
+            // Check the GIS map
+            ChangeCursor(Cursors.Wait, "Checking GIS map ...");
 
-            // Create a new GIS functions object if necessary.
-            if (_gisApp == null || _gisApp.MapName == null || MapView.Active is null || MapView.Active.Map.Name != _gisApp.MapName)
+            // Create a new GIS functions instance if necessary.
+            if (_gisApp == null || _gisApp.MapName == null)
                 _gisApp = new();
+
+            // Get the new active map view (if there is one).
+            if (MapView.Active is null || MapView.Active.Map.Name != _gisApp.MapName)
+            {
+                _activeMapView = _gisApp.GetActiveMapView();
+
+                // Clear the active layer name (to force a refresh).
+                ActiveLayerName = String.Empty;
+                OnPropertyChanged(nameof(ActiveLayerName));
+            }
 
             // Get the instance of the active layer ComboBox in the ribbon.
             if (_activeLayerComboBox == null)
                 _activeLayerComboBox = ActiveLayerComboBox.GetInstance();
 
-            // Check if there is an active map.
-            if (_gisApp.MapName != null)
-            {
-                //DONE: ArcGIS
-                // Check if the GIS workspace is valid
-                if (!await _gisApp.IsHluWorkspaceAsync(ActiveLayerName))
-                {
-                    // Clear the status bar (or reset the cursor to an arrow)
-                    ChangeCursor(Cursors.Arrow, null);
-
-                    // Clear the list of valid HLU layer names.
-                    AvailableHLULayerNames = [];
-
-                    // Clear the list of layer names in ComboBox in the ribbon.
-                    //ActiveLayerComboBox.UpdateLayerNames(null);
-
-                    // Force the ComboBox to reinitialise (if it is loaded).
-                    _activeLayerComboBox?.Initialize();
-
-                    // Display a warning message.
-                    ShowMessage("Active map does not contain valid HLU layers.", MessageType.Warning);
-
-                    // Hide the dockpane.
-                    DockpaneVisibility = Visibility.Hidden;
-
-                    return false;
-                }
-
-                // Set the list of valid HLU layer names.
-                AvailableHLULayerNames = new ObservableCollection<string>(_gisApp.ValidHluLayerNames);
-
-                // Update the list of layer names in the ComboBox in the ribbon.
-                //ActiveLayerComboBox.UpdateLayerNames(AvailableHLULayerNames);
-
-                // Update the active layer name for the ComboBox in the ribbon.
-                //ActiveLayerComboBox.UpdateActiveLayer(ActiveLayerName);
-
-                // If the ComboBox has still not been initialised.
-                if (_activeLayerComboBox == null)
-                {
-                    // Switch the GIS layer.
-                    if (await _gisApp.IsHluLayerAsync(ActiveLayerName, true))
-                    {
-                        // Refresh the layer name
-                        OnPropertyChanged(nameof(ActiveLayerName));
-
-                        // Get the GIS layer selection and warn the user if no
-                        // features are found
-                        await GetMapSelectionAsync(true);
-                    }
-                }
-                // Otherwise (re)initialise the ComboBox, select the active
-                // layer and let that switch the GIS layer.
-                else
-                {
-                    // Force the ComboBox to reinitialise (if it is loaded).
-                    _activeLayerComboBox.Initialize();
-
-                    // Update the selection in the ComboBox (if it is loaded)
-                    // to match the current active layer.
-                    _activeLayerComboBox.SetSelectedItem(ActiveLayerName);
-                }
-
-                //DONE: No needed as triggered by above when setting active layer?
-                // Get the selected features from the map
-                //await GetMapSelectionAsync(false);
-            }
-            else
+            // Check if there is no active map.
+            if (_gisApp.MapName == null)
             {
                 // Clear the status bar (or reset the cursor to an arrow)
                 ChangeCursor(Cursors.Arrow, null);
@@ -811,11 +758,82 @@ namespace HLU.UI.ViewModel
                 // Display a warning message.
                 ShowMessage("No active map.", MessageType.Warning);
 
-                // Hide the dockpane.
-                DockpaneVisibility = Visibility.Hidden;
+                // Clear the active map view.
+                _activeMapView = null;
+
+                // Clear the active layer name (to force a refresh).
+                ActiveLayerName = String.Empty;
+                OnPropertyChanged(nameof(ActiveLayerName));
 
                 return false;
             }
+
+            // Check if the GIS map is valid
+            if (!await _gisApp.IsHluMapAsync(ActiveLayerName))
+            {
+                // Clear the status bar (or reset the cursor to an arrow)
+                ChangeCursor(Cursors.Arrow, null);
+
+                // Clear the list of valid HLU layer names.
+                AvailableHLULayerNames = [];
+
+                // Clear the list of layer names in ComboBox in the ribbon.
+                //ActiveLayerComboBox.UpdateLayerNames(null);
+
+                // Force the ComboBox to reinitialise (if it is loaded).
+                _activeLayerComboBox?.Initialize();
+
+                // Update the selection in the ComboBox (if it is loaded)
+                // to match the current active layer.
+                _activeLayerComboBox.SetSelectedItem(ActiveLayerName);
+
+                // Display a warning message.
+                ShowMessage("Active map does not contain valid HLU layers.", MessageType.Warning);
+
+                return false;
+            }
+
+            // Set the list of valid HLU layer names.
+            AvailableHLULayerNames = new ObservableCollection<string>(_gisApp.ValidHluLayerNames);
+
+            // Update the list of layer names in the ComboBox in the ribbon.
+            //ActiveLayerComboBox.UpdateLayerNames(AvailableHLULayerNames);
+
+            // Update the active layer name for the ComboBox in the ribbon.
+            //ActiveLayerComboBox.UpdateActiveLayer(ActiveLayerName);
+
+            // If the ComboBox has still not been initialised.
+            if (_activeLayerComboBox == null)
+            {
+                // Switch the GIS layer.
+                if (await _gisApp.IsHluLayerAsync(ActiveLayerName, true))
+                {
+                    // Refresh the layer name
+                    OnPropertyChanged(nameof(ActiveLayerName));
+
+                    // Get the GIS layer selection and warn the user if no
+                    // features are found
+                    await GetMapSelectionAsync(true);
+                }
+            }
+            // Otherwise (re)initialise the ComboBox, select the active
+            // layer and let that switch the GIS layer.
+            else
+            {
+                // Force the ComboBox to reinitialise (if it is loaded).
+                _activeLayerComboBox.Initialize();
+
+                // Reset the current HLU layer.
+                //_gisApp.CurrentHluLayer = null;
+
+                // Update the selection in the ComboBox (if it is loaded)
+                // to match the current active layer.
+                _activeLayerComboBox.SetSelectedItem(ActiveLayerName);
+            }
+
+            //DONE: Not needed as triggered by above when setting active layer?
+            // Get the selected features from the map
+            //await GetMapSelectionAsync(false);
 
             // Clear the status bar (or reset the cursor to an arrow)
             ChangeCursor(Cursors.Arrow, null);
@@ -2201,9 +2219,9 @@ namespace HLU.UI.ViewModel
 
         #region Close Command
 
+        //TODO: Set description
         /// <summary>
-        /// Returns the command that, when invoked, attempts
-        /// to remove this workspace from the user interface.
+        ///
         /// </summary>
         public ICommand CloseCommand
         {
@@ -2611,6 +2629,12 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion
+
+        #region Split Menu
+
+
+
+        #endregion Split Menu
 
         #region Logical Split
 
@@ -3212,12 +3236,12 @@ namespace HLU.UI.ViewModel
             get
             {
                 //TODO: Why is _gisApp null here sometimes?
-                // Return false if the current layer hasn't been set yet.
-                if (_gisApp == null || _gisApp.CurrentHluLayer == null)
+                // Return false if the active layer hasn't been set yet.
+                if (_gisApp == null || _gisApp.ActiveHluLayer == null)
                     return false;
 
                 // Check if the user is authorised and the HLU layer is editable.
-                bool editMode = IsAuthorisedUser && _gisApp.CurrentHluLayer.IsEditable;
+                bool editMode = IsAuthorisedUser && _gisApp.ActiveHluLayer.IsEditable;
 
                 // If the edit mode has changed then update the window properties.
                 if (_editMode != editMode)
@@ -4247,11 +4271,11 @@ namespace HLU.UI.ViewModel
         /// </summary>
         internal async Task RefreshAnyOSMMUpdatesAsync(CancellationToken cancellationToken = default)
         {
+            // Count the number of OSMM updates.
             int rowCount = await CountOSMMUpdatesAsync(cancellationToken).ConfigureAwait(false);
 
+            // Set the property to true if there are any, and false otherwise.
             _anyOSMMUpdates = rowCount > 0;
-
-            // If you're in a ViewModel, raise PropertyChanged here.
             OnPropertyChanged(nameof(AnyOSMMUpdates));
         }
 
@@ -4502,9 +4526,10 @@ namespace HLU.UI.ViewModel
             SecondaryGroup = _preferredSecondaryGroup;
             OnPropertyChanged(nameof(SecondaryGroup));
 
-            OnPropertyChanged(nameof(SecondaryHabitatCodes));
+            // Refresh secondary table to re-trigger the validation.
             RefreshSecondaryHabitats();
-            OnPropertyChanged(nameof(HabitatTabLabel));
+
+            //OnPropertyChanged(nameof(HabitatTabLabel)); //TODO: No need to refresh?
             OnPropertyChanged(nameof(IncidSecondarySummary));
 
             OnPropertyChanged(nameof(IncidCondition));
@@ -6094,7 +6119,7 @@ namespace HLU.UI.ViewModel
             get { return BulkUpdateMode == false && OSMMUpdateMode == false && IncidCurrentRow != null; }
         }
 
-        //TODO: Add waits?
+        //TODO: Add wait calls
         /// <summary>
         /// Select the current incid record on the map.
         /// </summary>
@@ -7454,25 +7479,40 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        string _activeLayerName;
+
         /// <summary>
-        /// Gets the name of the active layer to display in the status bar.
+        /// Gets or sets the name of the active layer to display in the status bar.
         /// </summary>
         /// <value>
-        /// The name of the layer.
+        /// The name of the active layer.
         /// </value>
         public string ActiveLayerName
         {
             get
             {
-                // If no HLU layer has been identified yet (GIS is still loading) then
-                // don't return the layer name
-                if (_gisApp.CurrentHluLayer == null)
-                    return String.Empty;
-                else
+                if (_activeLayerName == null)
                 {
-                    // Return the layer name.
-                    return _gisApp.CurrentHluLayer.LayerName;
+                    // If no HLU layer has been identified yet (GIS is still loading) then
+                    // don't return the layer name
+                    if (_gisApp == null || _gisApp.ActiveHluLayer == null)
+                        return String.Empty;
+                    else
+                    {
+                        // Get the active HLU layer name from GIS.
+                        _activeLayerName = _gisApp.ActiveHluLayer.LayerName;
+                    }
                 }
+
+                // Return the active layer name.
+                return _activeLayerName ?? string.Empty;
+
+            }
+
+            set
+            {
+                // Set the active layer name.
+                _activeLayerName = value;
             }
         }
 
@@ -7480,6 +7520,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                // Enable switching only when not in bulk update mode or OSMM update mode.
                 if (BulkUpdateMode == false && OSMMUpdateMode == false)
                 {
                     // Get the total number of map layers
@@ -7501,7 +7542,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                //TODO: Is this every true?
+                //TODO: Is this ever true?
                 // Load the data table if not already loaded.
                 if (HluDataset.incid.IsInitialized && (HluDataset.incid.Rows.Count == 0))
                 {
@@ -8175,6 +8216,8 @@ namespace HLU.UI.ViewModel
                 RefreshSource3();
                 RefreshHistory();
             }
+
+            // Update the editing control state
             CheckEditingControlState();
         }
 
@@ -9268,6 +9311,8 @@ namespace HLU.UI.ViewModel
             RefreshDetailsTab();
             RefreshSources();
             RefreshHistory();
+
+            // Update the editing control state
             CheckEditingControlState();
         }
 
@@ -9563,6 +9608,8 @@ namespace HLU.UI.ViewModel
         {
             _reasonProcessEnabled = enable;
             _tabControlDataEnabled = enable;
+
+            // Update the editing control state
             CheckEditingControlState();
         }
 
@@ -9573,7 +9620,9 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if ((BulkUpdateMode == false && OSMMUpdateMode == false) && IncidCurrentRow == null) _reasonProcessEnabled = false;
+                if ((BulkUpdateMode == false && OSMMUpdateMode == false) && IncidCurrentRow == null)
+                    _reasonProcessEnabled = false;
+
                 return _reasonProcessEnabled;
             }
             set { _reasonProcessEnabled = value; }
@@ -9583,7 +9632,9 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if ((BulkUpdateMode == false) && IncidCurrentRow == null) _tabControlDataEnabled = false;
+                if ((BulkUpdateMode == false) && IncidCurrentRow == null)
+                    return false;
+
                 return _windowEnabled && _tabControlDataEnabled;
             }
             set { _tabControlDataEnabled = value; }
@@ -10186,6 +10237,9 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                if (_lutHabitatClass == null || _lutHabitatClass.Count() == 0)
+                    return null;
+
                 // Get the list of values from the lookup table.
                 if (_habitatClassCodes == null)
                 {
@@ -10719,12 +10773,9 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(NvcCodes));
 
             OnPropertyChanged(nameof(SecondaryGroupCodes));
-            _secondaryGroup = _preferredSecondaryGroup;
-            OnPropertyChanged(nameof(SecondaryGroup));
-            OnPropertyChanged(nameof(SecondaryHabitatCodes));
-
             OnPropertyChanged(nameof(SecondaryGroupEnabled));
-            OnPropertyChanged(nameof(SecondaryHabitatEnabled));
+            SecondaryGroup = _preferredSecondaryGroup;
+            OnPropertyChanged(nameof(SecondaryGroup));
 
             OnPropertyChanged(nameof(CanAddSecondaryHabitat));
             OnPropertyChanged(nameof(CanAddSecondaryHabitatList));
@@ -10817,6 +10868,9 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                if (HluDataset == null)
+                    return null;
+
                 // Define the <ALL> group row
                 HluDataSet.lut_secondary_groupRow allRow = HluDataset.lut_secondary_group.Newlut_secondary_groupRow();
                 allRow.code = "<All>";
@@ -11067,11 +11121,17 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                // If there are no secondary habitats return null.
+                if (_incidSecondaryHabitats == null || _incidSecondaryHabitats.Count == 0)
+                    return null;
+
+                // Create the concatenated secondary habitats summary.
                 _incidSecondarySummary = String.Join(_secondaryCodeDelimiter, _incidSecondaryHabitats
                     .OrderBy(s => s.secondary_habitat_int)
                     .ThenBy(s => s.secondary_habitat)
                     .Select(s => s.secondary_habitat)
                     .Distinct().ToList());
+
                 return _incidSecondarySummary == String.Empty ? null : _incidSecondarySummary;
             }
         }
@@ -11310,6 +11370,9 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                if (_lutLegacyHabitat == null || _lutLegacyHabitat.Count() == 0)
+                    return null;
+
                 // Get the list of values from the lookup table.
                 if (_legacyHabitatCodes == null)
                 {
@@ -11622,6 +11685,8 @@ namespace HLU.UI.ViewModel
         /// <returns></returns>
         private bool CheckIhsMatrix()
         {
+            if (_hluDS == null) return false;
+
             if (BulkUpdateMode == true) return true;
 
             if (_incidIhsMatrixRows == null)
@@ -11766,6 +11831,8 @@ namespace HLU.UI.ViewModel
         /// <returns></returns>
         private bool CheckIhsFormation()
         {
+            if (_hluDS == null) return false;
+
             if (BulkUpdateMode == true) return true;
 
             if (_incidIhsFormationRows == null)
@@ -11908,6 +11975,8 @@ namespace HLU.UI.ViewModel
         /// <returns></returns>
         private bool CheckIhsManagement()
         {
+            if (_hluDS == null) return false;
+
             if (BulkUpdateMode == true) return true;
 
             if (_incidIhsManagementRows == null)
@@ -12051,6 +12120,8 @@ namespace HLU.UI.ViewModel
         /// <returns></returns>
         private bool CheckIhsComplex()
         {
+            if (_hluDS == null) return false;
+
             if (BulkUpdateMode == true) return true;
 
             if (_incidIhsComplexRows == null)
@@ -12878,6 +12949,9 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                if (_lutBoundaryMap == null || _lutBoundaryMap.Count() == 0)
+                    return null;
+
                 if (_boundaryMapCodes == null)
                 {
                     // Get the list of values from the lookup table.
@@ -13029,6 +13103,8 @@ namespace HLU.UI.ViewModel
         /// <returns></returns>
         private bool CheckCondition()
         {
+            if (_hluDS == null) return false;
+
             if (BulkUpdateMode == true) return true;
 
             if (_incidConditionRows == null)
@@ -13051,18 +13127,22 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                // If there are no condition rows then return an empty list.
+                if (_lutCondition == null || _lutCondition.Count() == 0)
+                    return [];
+
+                // Load the condition codes if not already done.
                 if (_conditionCodes == null)
                 {
                     // Get the list of values from the lookup table.
                     _conditionCodes = _lutCondition.OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
-
                 }
 
                 // Return the list of condition codes, with the clear row if applicable.
-                if (_incidConditionRows.Length >= 1 &&
+                if (_incidConditionRows != null &&
+                    _incidConditionRows.Length >= 1 &&
                     _incidConditionRows[0] != null &&
                     !_incidConditionRows[0].IsNull(HluDataset.incid_condition.conditionColumn))
-
                 {
                     // Define the <Clear> row
                     HluDataSet.lut_conditionRow clearRow = HluDataset.lut_condition.Newlut_conditionRow();
@@ -13148,6 +13228,9 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                if (_lutConditionQualifier == null || _lutConditionQualifier.Count() == 0)
+                    return null;
+
                 if (_conditionQualifierCodes == null)
                 {
                     // Get the list of values from the lookup table.
@@ -13348,6 +13431,9 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                if (_lutQualityDetermination == null || _lutQualityDetermination.Count() == 0)
+                    return null;
+
                 if (_qualityDeterminationCodes == null)
                 {
                     // Get the list of values from the lookup table.
@@ -13422,6 +13508,9 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                if (_lutQualityInterpretation == null || _lutQualityInterpretation.Count() == 0)
+                    return null;
+
                 if (_qualityInterpretationCodes == null)
                 {
                     // Get the list of values from the lookup table.
@@ -13541,6 +13630,8 @@ namespace HLU.UI.ViewModel
         /// <returns></returns>
         private bool CheckSources()
         {
+            if (_hluDS == null) return false;
+
             if (BulkUpdateMode == true) return true;
 
             if (_incidSourcesRows == null)
@@ -13695,6 +13786,9 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                if (_lutSources == null || _lutSources.Count() == 0)
+                    return null;
+
                 // Get the list of values from the lookup table.
                 if (_sourceNames == null)
                 {
@@ -13715,6 +13809,9 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                if (_lutHabitatClass == null || _lutHabitatClass.Count() == 0)
+                    return null;
+
                 // Get the list of values from the lookup table.
                 if (_sourceHabitatClassCodes == null)
                 {
@@ -13736,6 +13833,9 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                if (_lutImportance == null || _lutImportance.Count() == 0)
+                    return null;
+
                 // Get the list of values from the lookup table.
                 if (_sourceImportanceCodes == null)
                 {
@@ -13776,6 +13876,9 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                if (HluDataset == null)
+                    return null;
+
                 // Load the lookup table if not already loaded.
                 if (HluDataset.lut_sources.IsInitialized &&
                     HluDataset.lut_sources.Count == 0)

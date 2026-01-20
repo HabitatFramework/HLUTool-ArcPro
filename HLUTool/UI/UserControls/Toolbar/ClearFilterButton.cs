@@ -77,9 +77,8 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            bool canClearFilter = _viewModel.CanClearFilter;
-
-            // Enable or disable the button based on CanClearFilter.
+            // Enable or disable the button based on CanClearFilter and main grid visibility.
+            bool canClearFilter = _viewModel.CanClearFilter && _viewModel.GridMainVisibility == Visibility.Visible;
             Enabled = canClearFilter;
         }
     }

@@ -1,15 +1,16 @@
-﻿using HLU.Data;
+﻿using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Framework.Contracts;
+using HLU.Data;
+using HLU.UI.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Contracts;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using ComboBox = ArcGIS.Desktop.Framework.Contracts.ComboBox;
-using System.Runtime.CompilerServices;
-using HLU.UI.ViewModel;
 
 namespace HLU.UI.UserControls.Toolbar
 {
@@ -88,9 +89,8 @@ namespace HLU.UI.UserControls.Toolbar
             //    return;
             //}
 
-            bool reasonProcessEnabled = _viewModel.ReasonProcessEnabled;
-
-            // Enable or disable the ComboBox based on ReasonProcessEnabled.
+            // Enable or disable the ComboBox based on ReasonProcessEnabled and main grid visibility.
+            bool reasonProcessEnabled = _viewModel.ReasonProcessEnabled && _viewModel.GridMainVisibility == Visibility.Visible;
             Enabled = reasonProcessEnabled;
         }
 

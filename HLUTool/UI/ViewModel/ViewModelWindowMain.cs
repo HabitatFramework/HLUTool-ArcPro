@@ -187,9 +187,8 @@ namespace HLU.UI.ViewModel
 
         private ViewModelWindowMain _dockPane;
 
-        private readonly object _initializationLock = new();
-
         private Task _initializationTask;
+        private Exception _initializationException;
 
         private bool _mapEventsSubscribed;
         private bool _projectClosedEventsSubscribed;
@@ -234,7 +233,6 @@ namespace HLU.UI.ViewModel
         /// </summary>
         internal ViewModelWindowMain()
         {
-            ViewModelWindowMain temp = this;
             // Initialise the DockPane components (don't wait for it to complete).
             //_ = EnsureInitializedAsync();
         }
@@ -253,29 +251,26 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Show the DockPane.
         /// </summary>
-        internal static async Task ShowDockPane()
+        internal static Task ShowDockPane()
         {
             // Get the dockpane DAML id.
             DockPane pane = FrameworkApplication.DockPaneManager.Find(DockPaneID);
             if (pane == null)
-                return;
-
-            // Get the ViewModel by casting the dockpane.
-            ViewModelWindowMain vm = pane as ViewModelWindowMain;
-
-            // If the ViewModel is uninitialised then initialise it.
-            if (!vm.Initialised)
-                await vm.EnsureInitializedAsync();
-
-            // If the ViewModel is in error then don't show the dockpane.
-            if (vm.InError)
-            {
-                pane = null;
-                return;
-            }
+                return Task.CompletedTask;
 
             // Active the dockpane.
             pane.Activate();
+
+            //// Get the ViewModel by casting the dockpane.
+            //if (pane is ViewModelWindowMain vm)
+            //{
+            //    AsyncHelpers.ObserveTask(
+            //        vm.InitializeAndCheckAsync(),
+            //        "HLU Tool",
+            //        "The HLU Tool encountered an error initialising.");
+            //}
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -284,9 +279,9 @@ namespace HLU.UI.ViewModel
         /// <param name="isVisible"></param>
         protected override void OnShow(bool isVisible)
         {
-            // Hide the dockpane if there is no active map.
+            // Make the UI controls hidden if there is no active map.
             if (MapView.Active == null)
-                DockpaneVisibility = Visibility.Hidden;
+                GridMainVisibility = Visibility.Hidden;
 
             // Is the dockpane visible (or is the window not showing the map).
             if (isVisible)
@@ -319,31 +314,17 @@ namespace HLU.UI.ViewModel
                     LayersRemovedEvent.Subscribe(OnLayersRemoved);
                 }
 
-                // Build a single task then check.
-                Task checkTask;
-
                 // Ensure the dockpane is initialised when Pro restores it on startup.
-                if (!Initialised && !InError)
+                if (!InError)
                 {
-                    checkTask = EnsureInitializedAsync()
-                        .ContinueWith(_ => CheckActiveMapAsync(), TaskScheduler.Default)
-                        .Unwrap();
-                }
-                else if (Initialised && !InError)
-                {
-                    checkTask = CheckActiveMapAsync();
-                }
-                else
-                {
-                    // In error: do nothing.
-                    checkTask = Task.CompletedTask;
-                }
+                    Task checkTask = InitializeAndCheckAsync();
 
-                // Trap and report any exceptions to the user.
-                AsyncHelpers.ObserveTask(
-                    checkTask,
-                    "HLU Tool",
-                    "The HLU Tool encountered an error initialising or checking the active map.");
+                    // Trap and report any exceptions to the user.
+                    AsyncHelpers.ObserveTask(
+                        checkTask,
+                        "HLU Tool",
+                        "The HLU Tool encountered an error initialising or checking the active map.");
+                }
             }
             else
             {
@@ -375,10 +356,21 @@ namespace HLU.UI.ViewModel
                 }
             }
 
-            base.OnShow(isVisible);
+            // If the dockpane is visible.
+            if (isVisible == true)
+            {
+                //TODO: Needed?
+                //base.OnShow(isVisible);
 
-            // Toggle the tab state to visible.
-            ToggleState("HLUTool_tab_state", true);
+                // Toggle the tab state to visible.
+                ToggleState("HLUTool_tab_state", true);
+
+                // Clear any messages.
+                ClearMessage();
+
+                // Make the UI controls visible.
+                GridMainVisibility = Visibility.Visible;
+            }
         }
 
         #endregion ViewModelBase Members
@@ -386,25 +378,32 @@ namespace HLU.UI.ViewModel
         #region Initialisation
 
         /// <summary>
+        /// Ensures the tool is initialised, then checks that the active map/layers are suitable.
+        /// </summary>
+        internal async Task InitializeAndCheckAsync()
+        {
+            // Ensure the DockPane is initialised.
+            await EnsureInitializedAsync();
+
+            //TODO: Needed? Done during initialisation above.
+            // Check that there is an active map and that it contains a valid HLU map.
+            //await CheckActiveMapAsync();
+        }
+
+        /// <summary>
         /// Ensures the DockPane is initialised exactly once and returns the in-flight task.
         /// </summary>
         /// <returns>A task that completes when initialisation completes.</returns>
-        public Task EnsureInitializedAsync()
+        internal Task EnsureInitializedAsync()
         {
-            // Fast path.
-            if (_initialised)
-                return Task.CompletedTask;
-
-            lock (_initializationLock)
-            {
-                // If initialisation is already running, return the in-flight task.
-                if (_initializationTask != null)
-                    return _initializationTask;
-
-                // Start initialisation once and cache the task.
-                _initializationTask = InitializeOnceAsync();
+            // If initialisation has already started, always return the same task
+            if (_initializationTask != null)
                 return _initializationTask;
-            }
+
+            // Start initialisation once
+            _initializationTask = InitializeOnceAsync();
+
+            return _initializationTask;
         }
 
         /// <summary>
@@ -437,28 +436,26 @@ namespace HLU.UI.ViewModel
                 UpgradeUserSettings();
 
                 // Initialise the main view (start the tool).
-                bool initialized = await InitializeToolPaneAsync();
-                if (!initialized)
-                    throw new HLUToolException("DockPane initialisation failed in InitializeToolPaneAsync.");
+                await InitializeToolPaneAsync();
 
-                _initialised = true;
+                // Flag the initialisation as complete.
+                Initialised = true;
+
+                // Refresh the tab control enabled state.
+                OnPropertyChanged(nameof(TabControlDataEnabled));
+
+                // Clear any messages.
+                ClearMessage();
+
+                // Make the UI controls visible.
+                GridMainVisibility = Visibility.Visible;
             }
             catch (Exception ex)
             {
-                _inError = true;
+                InError = true;
                 _initializationException = ex;
 
-                // Allow a retry if the failure was transient.
-                lock (_initializationLock)
-                {
-                    _initializationTask = null;
-                }
-
-                // Wrap unknown exceptions in a meaningful type.
-                if (ex is HLUToolException)
-                    throw;
-
-                throw new HLUToolException("DockPane initialisation failed.", ex);
+                throw;
             }
         }
 
@@ -531,7 +528,6 @@ namespace HLU.UI.ViewModel
         }
 
         private bool _initialised = false;
-        private Exception _initializationException;
 
         /// <summary>
         /// Has the DockPane been initialised?
@@ -593,41 +589,48 @@ namespace HLU.UI.ViewModel
 
         private async void OnActiveMapViewChanged(ActiveMapViewChangedEventArgs obj)
         {
+            // If there is no active map view.
             if (MapView.Active == null)
             {
-                // Hide the dockpane.
-                DockpaneVisibility = Visibility.Hidden;
+                // Reset the active map view.
+                _activeMapView = null;
+
+                // Make the UI controls hidden.
+                GridMainVisibility = Visibility.Hidden;
 
                 // Display a warning message.
                 ShowMessage("No active map.", MessageType.Warning);
+
+                return;
             }
-            else
+
+            // If there is an active map view and it has changed, check it is valid.
+            if (MapView.Active != _activeMapView)
             {
-                //TODO: UI
-                // Check the active map is valid.
-                if (MapView.Active != _activeMapView)
+                // Check that there is an active map and that it contains a valid HLU map.
+                if (!await CheckActiveMapAsync())
                 {
-                    // Check that there is an active map and that it contains a valid HLU workspace.
-                    if (!await CheckActiveMapAsync())
-                    {
-                        _activeMapView = null;
-                        return;
-                    }
+                    //TODO: Is this needed?
+                    // Clear the active map view.
+                    //_activeMapView = null;
+
+                    // Make the UI controls hidden.
+                    GridMainVisibility = Visibility.Hidden;
+
+                    return;
                 }
-
-                // Clear any messages.
-                ClearMessage();
-
-                DockpaneVisibility = Visibility.Visible;
-
-                // Save the active map view.
-                _activeMapView = MapView.Active;
             }
+
+            // Clear any messages.
+            ClearMessage();
+
+            // Make the UI controls visible.
+            GridMainVisibility = Visibility.Visible;
         }
 
         private async void OnLayersAdded(LayerEventsArgs args)
         {
-            // Check that there is an active map and that it contains a valid HLU workspace.
+            // Check that there is an active map and that it contains a valid HLU map.
             if (!await CheckActiveMapAsync())
             {
                 _activeMapView = null;
@@ -646,7 +649,7 @@ namespace HLU.UI.ViewModel
                     _gisApp = null;
             }
 
-            // Check that there is an active map and that it contains a valid HLU workspace.
+            // Check that there is an active map and that it contains a valid HLU map.
             if (!await CheckActiveMapAsync())
             {
                 _activeMapView = null;
@@ -661,10 +664,8 @@ namespace HLU.UI.ViewModel
         {
             if (MapView.Active == null)
             {
-                DockpaneVisibility = Visibility.Hidden;
-
-                //TODO: UI
-                // Do something when the active map view closes
+                // Make the UI controls hidden.
+                GridMainVisibility = Visibility.Hidden;
             }
 
             _projectClosedEventsSubscribed = false;
@@ -672,21 +673,27 @@ namespace HLU.UI.ViewModel
             ProjectClosedEvent.Unsubscribe(OnProjectClosed);
         }
 
-        private Visibility _dockpaneVisibility = Visibility.Visible;
+        private Visibility _gridmainVisibility = Visibility.Visible;
 
-        public Visibility DockpaneVisibility
+        public Visibility GridMainVisibility
         {
             get
             {
                 if (!Initialised || InError)
                     return Visibility.Hidden;
                 else
-                    return _dockpaneVisibility;
+                    return _gridmainVisibility;
             }
             set
             {
-                _dockpaneVisibility = value;
-                OnPropertyChanged(nameof(DockpaneVisibility));
+                _gridmainVisibility = value;
+                OnPropertyChanged(nameof(GridMainVisibility));
+
+                // Toggle the maingrid state to enabled or disabled.
+                if (_gridmainVisibility == Visibility.Visible)
+                    ToggleState("HLUTool_maingrid_state", true);
+                else
+                    ToggleState("HLUTool_maingrid_state", false);
             }
         }
 
@@ -735,24 +742,24 @@ namespace HLU.UI.ViewModel
 
         #endregion Active Map View
 
-        #region Message
+        #region StatusMessage
 
-        private string _message;
+        private string _statusMessage;
 
         /// <summary>
         /// The message to display on the form.
         /// </summary>
-        public string Message
+        public string StatusMessage
         {
             get
             {
-                return _message;
+                return _statusMessage;
             }
             set
             {
-                _message = value;
+                _statusMessage = value;
                 OnPropertyChanged(nameof(HasMessage));
-                OnPropertyChanged(nameof(Message));
+                OnPropertyChanged(nameof(StatusMessage));
             }
         }
 
@@ -782,7 +789,7 @@ namespace HLU.UI.ViewModel
             get
             {
                 if (_dockPane == null
-                || string.IsNullOrEmpty(_message))
+                || string.IsNullOrEmpty(_statusMessage))
                 //|| _dockPane.ProcessStatus != null
                     return Visibility.Collapsed;
                 else
@@ -798,7 +805,7 @@ namespace HLU.UI.ViewModel
         public void ShowMessage(string msg, MessageType messageLevel)
         {
             MessageLevel = messageLevel;
-            Message = msg;
+            StatusMessage = msg;
         }
 
         /// <summary>
@@ -806,10 +813,10 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public void ClearMessage()
         {
-            Message = "";
+            StatusMessage = "";
         }
 
-        #endregion Message
+        #endregion StatusMessage
 
         #region Ribbon Controls
 
@@ -838,9 +845,13 @@ namespace HLU.UI.ViewModel
             // Check if the layer name has actually changed.
             if (selectedValue != ActiveLayerName)
             {
-                // Create a new GIS functions object if necessary.
-                if (_gisApp == null || _gisApp.MapName == null || MapView.Active is null || MapView.Active.Map.Name != _gisApp.MapName)
+                // Create a new GIS functions instance if necessary.
+                if (_gisApp == null || _gisApp.MapName == null)
                     _gisApp = new();
+
+                // Get the new active map view (if there is one).
+                if (MapView.Active is null || MapView.Active.Map.Name != _gisApp.MapName)
+                    _activeMapView = _gisApp.GetActiveMapView();
 
                 // Switch the GIS layer.
                 if (await _gisApp.IsHluLayerAsync(selectedValue, true))
