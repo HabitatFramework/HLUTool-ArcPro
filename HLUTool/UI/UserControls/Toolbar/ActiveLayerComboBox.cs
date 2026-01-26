@@ -27,6 +27,7 @@ namespace HLU.UI.UserControls.Toolbar
 
         private bool _isInitialized;
         private bool _isEnabled;
+        private bool _suppressSelectionChange;
 
         #endregion Fields
 
@@ -172,9 +173,20 @@ namespace HLU.UI.UserControls.Toolbar
         /// <param name="item"></param>
         protected override async void OnSelectionChange(ComboBoxItem item)
         {
-            // Switch the active layer (if different).
-            if (item != null)
+            // If suppressing selection change, exit.
+            if (_suppressSelectionChange)
+                return;
+
+            // If the ComboBox is not enabled, exit.
+            if (item == null)
                 await _viewModel?.SwitchGISLayerAsync(item.Text);
+
+            // If the selected item is the same as the active layer, exit.
+            if (string.Equals(_viewModel?.ActiveLayerName, item.Text, StringComparison.Ordinal))
+                return;
+
+            // Switch the GIS layer in the ViewModel.
+            await _viewModel.SwitchGISLayerAsync(item.Text);
         }
 
         /// <summary>
@@ -197,6 +209,29 @@ namespace HLU.UI.UserControls.Toolbar
             else
             {
                 SelectedItem = null;
+            }
+        }
+
+        /// <summary>
+        /// Sets the selected item to the specified value without triggering selection change events.
+        /// </summary>
+        /// <remarks>Use this method when you need to programmatically change the selection without
+        /// invoking any event handlers or logic that normally respond to selection changes. This is useful for
+        /// scenarios where you want to update the selection silently, such as during initialization or batch
+        /// updates.</remarks>
+        /// <param name="value">The value to select. This value is passed to the selection logic to update the current selection.</param>
+        public void SetSelectedItemWithoutSwitch(string value)
+        {
+            try
+            {
+                // Suppress selection change events.
+                _suppressSelectionChange = true;
+                SetSelectedItem(value);
+            }
+            finally
+            {
+                // Re-enable selection change events.
+                _suppressSelectionChange = false;
             }
         }
 

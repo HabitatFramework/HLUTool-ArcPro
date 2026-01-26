@@ -783,7 +783,7 @@ namespace HLU.UI.ViewModel
 
                 // Update the selection in the ComboBox (if it is loaded)
                 // to match the current active layer.
-                _activeLayerComboBox?.SetSelectedItem(ActiveLayerName);
+                _activeLayerComboBox?.SetSelectedItemWithoutSwitch(ActiveLayerName);
 
                 // Display a warning message.
                 ShowMessage("Active map does not contain valid HLU layers.", MessageType.Warning);
@@ -819,7 +819,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 // This should *only* select; it should not be relied on to activate/switch the layer.
-                _activeLayerComboBox.SetSelectedItem(ActiveLayerName);
+                _activeLayerComboBox.SetSelectedItemWithoutSwitch(ActiveLayerName);
             }
 
             // Clear the status bar (or reset the cursor to an arrow)

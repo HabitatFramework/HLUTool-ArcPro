@@ -2638,7 +2638,12 @@ namespace HLU.GISApplication
                     }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Trace.WriteLine($"IsHluMapAsync failed: {ex}.");
+                DestroyHluLayer();
+                return false;
+            }
 
             // If the active layer is still found in the map
             // then restore the variables.
