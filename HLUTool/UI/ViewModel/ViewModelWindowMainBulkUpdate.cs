@@ -452,7 +452,7 @@ namespace HLU.UI.ViewModel
             _viewModelMain.TabItemHistoryEnabled = true;
 
             // Refresh all the controls
-            _viewModelMain.RefreshAll();
+            //_viewModelMain.RefreshAll(); // Now done when setting mode.
 
             // Reset the cursor
             _viewModelMain.ChangeCursor(Cursors.Arrow, String.Empty);
@@ -863,7 +863,7 @@ namespace HLU.UI.ViewModel
             _viewModelMain.TabItemSelected = 0;
 
             // Refresh all the controls
-            _viewModelMain.RefreshAll();
+            //_viewModelMain.RefreshAll(); // Now done when setting mode.
 
             // Reset the cursor
             _viewModelMain.ChangeCursor(Cursors.Arrow, String.Empty);

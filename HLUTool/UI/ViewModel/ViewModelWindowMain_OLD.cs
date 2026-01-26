@@ -735,19 +735,20 @@ namespace HLU.UI.ViewModel
             if (_gisApp == null || _gisApp.MapName == null)
                 _gisApp = new();
 
-            // Get the new active map view (if there is one).
+            bool mapChanged = false;
+
+            // If the active map view is null or the map name has changed
             if (MapView.Active is null || MapView.Active.Map.Name != _gisApp.MapName)
             {
+                // Flag that the map has changed.
+                mapChanged = true;
+
+                // Get the active map view.
                 _activeMapView = _gisApp.GetActiveMapView();
 
-                // Clear the active layer name (to force a refresh).
-                ActiveLayerName = String.Empty;
-                OnPropertyChanged(nameof(ActiveLayerName));
+                // Clear the active layer name.
+                ActiveLayerName = null;
             }
-
-            // Get the instance of the active layer ComboBox in the ribbon.
-            if (_activeLayerComboBox == null)
-                _activeLayerComboBox = ActiveLayerComboBox.GetInstance();
 
             // Check if there is no active map.
             if (_gisApp.MapName == null)
@@ -759,14 +760,14 @@ namespace HLU.UI.ViewModel
                 ShowMessage("No active map.", MessageType.Warning);
 
                 // Clear the active map view.
-                _activeMapView = null;
-
-                // Clear the active layer name (to force a refresh).
-                ActiveLayerName = String.Empty;
-                OnPropertyChanged(nameof(ActiveLayerName));
+                ActiveLayerName = null;
 
                 return false;
             }
+
+            // Get the instance of the active layer ComboBox in the ribbon.
+            if (_activeLayerComboBox == null)
+                _activeLayerComboBox = ActiveLayerComboBox.GetInstance();
 
             // Check if the GIS map is valid
             if (!await _gisApp.IsHluMapAsync(ActiveLayerName))
@@ -777,15 +778,12 @@ namespace HLU.UI.ViewModel
                 // Clear the list of valid HLU layer names.
                 AvailableHLULayerNames = [];
 
-                // Clear the list of layer names in ComboBox in the ribbon.
-                //ActiveLayerComboBox.UpdateLayerNames(null);
-
                 // Force the ComboBox to reinitialise (if it is loaded).
                 _activeLayerComboBox?.Initialize();
 
                 // Update the selection in the ComboBox (if it is loaded)
                 // to match the current active layer.
-                _activeLayerComboBox.SetSelectedItem(ActiveLayerName);
+                _activeLayerComboBox?.SetSelectedItem(ActiveLayerName);
 
                 // Display a warning message.
                 ShowMessage("Active map does not contain valid HLU layers.", MessageType.Warning);
@@ -796,44 +794,33 @@ namespace HLU.UI.ViewModel
             // Set the list of valid HLU layer names.
             AvailableHLULayerNames = new ObservableCollection<string>(_gisApp.ValidHluLayerNames);
 
-            // Update the list of layer names in the ComboBox in the ribbon.
-            //ActiveLayerComboBox.UpdateLayerNames(AvailableHLULayerNames);
+            // Set the active HLU layer name.
+            ActiveLayerName = _gisApp.ActiveHluLayer?.LayerName ?? string.Empty;
 
-            // Update the active layer name for the ComboBox in the ribbon.
-            //ActiveLayerComboBox.UpdateActiveLayer(ActiveLayerName);
+            // Activate the current active HLU layer so GIS internals are set.
+            var isActiveHluLayer = !string.IsNullOrEmpty(ActiveLayerName) &&
+                await _gisApp.IsHluLayerAsync(ActiveLayerName, true);
 
-            // If the ComboBox has still not been initialised.
-            if (_activeLayerComboBox == null)
+            // If the active HLU layer is valid, refresh the map selection.
+            if (isActiveHluLayer)
             {
-                // Switch the GIS layer.
-                if (await _gisApp.IsHluLayerAsync(ActiveLayerName, true))
-                {
-                    // Refresh the layer name
-                    OnPropertyChanged(nameof(ActiveLayerName));
-
-                    // Get the GIS layer selection and warn the user if no
-                    // features are found
-                    await GetMapSelectionAsync(true);
-                }
+                // Refresh selection stats.
+                await GetMapSelectionAsync(true);
             }
-            // Otherwise (re)initialise the ComboBox, select the active
-            // layer and let that switch the GIS layer.
-            else
+
+            // Sync the ribbon ComboBox display (if it exists).
+            if (_activeLayerComboBox != null)
             {
-                // Force the ComboBox to reinitialise (if it is loaded).
-                _activeLayerComboBox.Initialize();
+                // If the map has changed, reinitialize the ComboBox.
+                if (mapChanged)
+                {
+                    // Only keep Initialize() if you need to rebuild items on map change.
+                    _activeLayerComboBox.Initialize();
+                }
 
-                // Reset the current HLU layer.
-                //_gisApp.CurrentHluLayer = null;
-
-                // Update the selection in the ComboBox (if it is loaded)
-                // to match the current active layer.
+                // This should *only* select; it should not be relied on to activate/switch the layer.
                 _activeLayerComboBox.SetSelectedItem(ActiveLayerName);
             }
-
-            //DONE: Not needed as triggered by above when setting active layer?
-            // Get the selected features from the map
-            //await GetMapSelectionAsync(false);
 
             // Clear the status bar (or reset the cursor to an arrow)
             ChangeCursor(Cursors.Arrow, null);
@@ -2130,7 +2117,7 @@ namespace HLU.UI.ViewModel
                 _osmmUpdateMode     = _workMode.HasFlag(HluWorkMode.OSMMReview);
                 _osmmBulkUpdateMode = _workMode.HasFlag(HluWorkMode.OSMMBulk);
 
-                // Refreshh all properties.
+                // Refresh all properties.
                 OnPropertyChanged(nameof(RefreshAll));
 
                 // Refresh the state of the active layer combo box.
@@ -2630,11 +2617,142 @@ namespace HLU.UI.ViewModel
 
         #endregion
 
-        #region Split Menu
+        #region Can Split/Merge
 
+        private bool _canPhysicallySplit;
+        private bool _canLogicallySplit;
+        private bool _canPhysicallyMerge;
+        private bool _canLogicallyMerge;
 
+        public bool CanPhysicallySplit => _canPhysicallySplit;
 
-        #endregion Split Menu
+        public bool CanLogicallySplit => _canLogicallySplit;
+
+        public bool CanPhysicallyMerge => _canPhysicallyMerge;
+
+        public bool CanLogicallyMerge => _canLogicallyMerge;
+
+        public bool CanSplit => _canPhysicallySplit || _canLogicallySplit;
+
+        public bool CanMerge => _canPhysicallyMerge || _canLogicallyMerge;
+
+        /// <summary>
+        /// Computes whether a logical split operation can be performed based on the current state.
+        /// At least one feature in selection that share the same incid, but *not* toid and toidfragid
+        /// </summary>
+        private bool ComputeCanLogicallySplit()
+        {
+            return (BulkUpdateMode == false && OSMMUpdateMode == false) &&
+                EditMode && !String.IsNullOrEmpty(Reason) && !String.IsNullOrEmpty(Process) &&
+                (_gisSelection != null) && (_incidsSelectedMapCount == 1) &&
+                ((_gisSelection.Rows.Count > 0) && ((_toidsSelectedMapCount > 1) || (_fragsSelectedMapCount > 0)) ||
+                (_gisSelection.Rows.Count == 1)) &&
+                (_filterByMap == true) &&
+                ((_toidsIncidGisCount < _toidsIncidDbCount) ||
+                (_fragsIncidGisCount < _fragsIncidDbCount));
+        }
+
+        /// <summary>
+        /// Computes whether a logical merge operation can be performed based on the current state.
+        /// At least one feature in selection that do not share the same incid or toidfragid
+        /// </summary>
+        private bool ComputeCanLogicallyMerge()
+        {
+            return (BulkUpdateMode == false && OSMMUpdateMode == false) &&
+                EditMode && !String.IsNullOrEmpty(Reason) && !String.IsNullOrEmpty(Process) &&
+                _gisSelection != null && _gisSelection.Rows.Count > 1 &&
+                (_filterByMap == true) &&
+                (_incidsSelectedMapCount > 1) && (_fragsSelectedMapCount > 1);
+        }
+
+        /// <summary>
+        /// Computes whether a physical split operation can be performed based on the current state.
+        /// At least two features in selection that share the same incid, toid and toidfragid
+        /// </summary>
+        public bool ComputeCanPhysicallySplit()
+        {
+            return (BulkUpdateMode == false && OSMMUpdateMode == false) &&
+                EditMode && !String.IsNullOrEmpty(Reason) && !String.IsNullOrEmpty(Process) &&
+                (_gisSelection != null) && (_gisSelection.Rows.Count > 1) &&
+                // Only enable split/merge after select from map
+                (_filterByMap == true) &&
+                (_incidsSelectedMapCount == 1) && (_toidsSelectedMapCount == 1) && (_fragsSelectedMapCount == 1);
+        }
+
+        /// <summary>
+        /// Computes whether a physical merge operation can be performed based on the current state.
+        /// At least one feature in selection that share the same incid and toid but *not* the same toidfragid
+        /// </summary>
+        public bool ComputeCanPhysicallyMerge()
+        {
+            return (BulkUpdateMode == false && OSMMUpdateMode == false) &&
+                EditMode && !String.IsNullOrEmpty(Reason) && !String.IsNullOrEmpty(Process) &&
+                _gisSelection != null && _gisSelection.Rows.Count > 1 &&
+                // Only enable split/merge after select from map
+                (_filterByMap == true) &&
+                (_incidsSelectedMapCount == 1) && (_toidsSelectedMapCount == 1) && (_fragsSelectedMapCount > 1);
+        }
+
+        /// <summary>
+        /// Refreshes cached split enablement values and pushes CanSplit to the module.
+        /// </summary>
+        private void RefreshSplitEnablement()
+        {
+            bool canPhysSplit = ComputeCanPhysicallySplit();
+            bool canLogSplit = ComputeCanLogicallySplit();
+
+            bool changed =
+                (_canPhysicallySplit != canPhysSplit) ||
+                (_canLogicallySplit != canLogSplit);
+
+            _canPhysicallySplit = canPhysSplit;
+            _canLogicallySplit = canLogSplit;
+
+            if (!changed)
+                return;
+
+            OnPropertyChanged(nameof(CanPhysicallySplit));
+            OnPropertyChanged(nameof(CanLogicallySplit));
+            OnPropertyChanged(nameof(CanSplit));
+
+            HLU.HLUToolModule.CanSplit = CanSplit;
+        }
+
+        /// <summary>
+        /// Refreshes cached merge enablement values and pushes CanMerge to the module.
+        /// </summary>
+        private void RefreshMergeEnablement()
+        {
+            bool canPhysMerge = ComputeCanPhysicallyMerge();
+            bool canLogMerge = ComputeCanLogicallyMerge();
+
+            bool changed =
+                (_canPhysicallyMerge != canPhysMerge) ||
+                (_canLogicallyMerge != canLogMerge);
+
+            _canPhysicallyMerge = canPhysMerge;
+            _canLogicallyMerge = canLogMerge;
+
+            if (!changed)
+                return;
+
+            OnPropertyChanged(nameof(CanPhysicallyMerge));
+            OnPropertyChanged(nameof(CanLogicallyMerge));
+            OnPropertyChanged(nameof(CanMerge));
+
+            HLU.HLUToolModule.CanMerge = CanMerge;
+        }
+
+        /// <summary>
+        /// Convenience method to refresh both.
+        /// </summary>
+        private void RefreshSplitMergeEnablement()
+        {
+            RefreshSplitEnablement();
+            RefreshMergeEnablement();
+        }
+
+        #endregion Can Split/Merge
 
         #region Logical Split
 
@@ -2672,7 +2790,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// At least one feature in selection that share the same incid, but *not* toid and toidfragid
         /// </summary>
-        public bool CanLogicallySplit
+        public bool CanLogicallySplit_OLD
         {
             get
             {
@@ -2722,7 +2840,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// At least two features in selection that share the same incid, toid and toidfragid
         /// </summary>
-        public bool CanPhysicallySplit
+        public bool CanPhysicallySplit_OLD
         {
             get
             {
@@ -2804,6 +2922,10 @@ namespace HLU.UI.ViewModel
                 _process = process;
                 OnPropertyChanged(nameof(Process));
             }
+
+            //TODO: Move to combobox in toolbar?
+            // Refreshes the status-related properties and notifies listeners of property changes.
+            RefreshStatus();
         }
 
         #endregion Physical Split
@@ -2840,7 +2962,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// At least one feature in selection that do not share the same incid or toidfragid
         /// </summary>
-        public bool CanLogicallyMerge
+        public bool CanLogicallyMerge_OLD
         {
             get
             {
@@ -2887,7 +3009,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// At least one feature in selection that share the same incid and toid but *not* the same toidfragid
         /// </summary>
-        public bool CanPhysicallyMerge
+        public bool CanPhysicallyMerge_OLD
         {
             get
             {
@@ -2950,7 +3072,6 @@ namespace HLU.UI.ViewModel
 
             // Update the user notify setting
             _notifyOnSplitMerge = Settings.Default.NotifyOnSplitMerge;
-
         }
 
         #endregion
@@ -3486,6 +3607,9 @@ namespace HLU.UI.ViewModel
                 else
                     // Cancels the bulk update mode
                     await _viewModelBulkUpdate.CancelBulkUpdateAsync();
+
+                // Refreshes the status-related properties and notifies listeners of property changes.
+                RefreshStatus();
 
                 _viewModelBulkUpdate = null;
             }
@@ -5298,7 +5422,11 @@ namespace HLU.UI.ViewModel
                 MessageBox.Show(ex.Message, "HLU: Apply Query",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally { RefreshStatus(); }
+            finally
+            {
+                // Refreshes the status-related properties and notifies listeners of property changes.
+                RefreshStatus();
+            }
         }
 
         #endregion
@@ -5729,7 +5857,11 @@ namespace HLU.UI.ViewModel
                 MessageBox.Show(ex.Message, "HLU: Apply Query",
                         MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally { RefreshStatus(); }
+            finally
+            {
+                // Refreshes the status-related properties and notifies listeners of property changes.
+                RefreshStatus();
+            }
         }
 
         //TODO: Add wait calls.
@@ -5949,7 +6081,11 @@ namespace HLU.UI.ViewModel
                 MessageBox.Show(ex.Message, "HLU: Apply Query",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally { RefreshStatus(); }
+            finally
+            {
+                // Refreshes the status-related properties and notifies listeners of property changes.
+                RefreshStatus();
+            }
         }
 
         /// <summary>
@@ -6111,6 +6247,9 @@ namespace HLU.UI.ViewModel
             {
                 // Reset the cursor back to normal
                 ChangeCursor(Cursors.Arrow, null);
+
+                // Refreshes the status-related properties and notifies listeners of property changes.
+                RefreshStatus();
             }
         }
 
@@ -6255,6 +6394,8 @@ namespace HLU.UI.ViewModel
             }
             finally
             {
+                // Refreshes the status-related properties and notifies listeners of property changes.
+                RefreshStatus();
             }
         }
 
@@ -6423,7 +6564,11 @@ namespace HLU.UI.ViewModel
             }
             finally
             {
+                // Reset the cursor back to normal
                 ChangeCursor(Cursors.Arrow, null);
+
+                // Refreshes the status-related properties and notifies listeners of property changes.
+                RefreshStatus();
             }
         }
 
@@ -6957,6 +7102,9 @@ namespace HLU.UI.ViewModel
             {
                 // Reset the cursor back to normal
                 ChangeCursor(Cursors.Arrow, null);
+
+                // Refreshes the status-related properties and notifies listeners of property changes.
+                RefreshStatus();
             }
         }
 
@@ -6987,57 +7135,66 @@ namespace HLU.UI.ViewModel
         {
             // Reset the OSMM Updates filter when in OSMM Update mode.
             if (OSMMUpdateMode == true)
-                await ApplyOSMMUpdatesFilterAsync(null, null, null, null);
-            else if (OSMMBulkUpdateMode == true)
-                await ApplyOSMMUpdatesFilterAsync(null, null, null, "Pending");
-            else
             {
-                _incidSelection = null;
-                _incidSelectionWhereClause = null;
-                _gisSelection = null;
-                _incidsSelectedDBCount = 0;
-                _toidsSelectedDBCount = 0;
-                _fragsSelectedDBCount = 0;
-                _incidsSelectedMapCount = 0;
-                _toidsSelectedMapCount = 0;
-                _fragsSelectedMapCount = 0;
-                _incidPageRowNoMax = -1;
-
-                // Only move to the first incid in the index if required, to save
-                // changing the index here and then again immediately after from
-                // the calling method.
-                if (resetRowIndex)
-                {
-                    // Show the wait cursor and processing message in the status area
-                    // whilst moving to the new Incid.
-                    //ChangeCursor(Cursors.Wait, "Processing ...");
-
-                    _incidCurrentRowIndex = 1;
-                    //IncidCurrentRowIndex = 1;
-
-                    //ChangeCursor(Cursors.Arrow, null);
-                }
-
-                // Suggest the selection came from the map so that
-                // the map doesn't auto zoom to the first incid.
-                _filterByMap = true;
-
-                // Re-retrieve the current record (which includes counting the number of
-                // toids and fragments for the current incid selected in the GIS and
-                // in the database).
-                if (resetRowIndex)
-                    await MoveIncidCurrentRowIndexAsync(_incidCurrentRowIndex);
-                else
-                    // Count the number of toids and fragments for the current incid
-                    // selected in the GIS and in the database.
-                    CountToidFrags();
-
-                // Refresh all the status type fields.
-                RefreshStatus();
-
-                // Indicate the selection didn't come from the map.
-                _filterByMap = false;
+                await ApplyOSMMUpdatesFilterAsync(null, null, null, null);
+                return;
             }
+            else if (OSMMBulkUpdateMode == true)
+            {
+                await ApplyOSMMUpdatesFilterAsync(null, null, null, "Pending");
+                return;
+            }
+
+            ChangeCursor(Cursors.Wait, "Clearing filter ...");
+
+            _incidSelection = null;
+            _incidSelectionWhereClause = null;
+            _gisSelection = null;
+            _incidsSelectedDBCount = 0;
+            _toidsSelectedDBCount = 0;
+            _fragsSelectedDBCount = 0;
+            _incidsSelectedMapCount = 0;
+            _toidsSelectedMapCount = 0;
+            _fragsSelectedMapCount = 0;
+            _incidPageRowNoMax = -1;
+
+            // Only move to the first incid in the index if required, to save
+            // changing the index here and then again immediately after from
+            // the calling method.
+            if (resetRowIndex)
+            {
+                // Show the wait cursor and processing message in the status area
+                // whilst moving to the new Incid.
+                //ChangeCursor(Cursors.Wait, "Processing ...");
+
+                _incidCurrentRowIndex = 1;
+                //IncidCurrentRowIndex = 1;
+
+                //ChangeCursor(Cursors.Arrow, null);
+            }
+
+            // Suggest the selection came from the map so that
+            // the map doesn't auto zoom to the first incid.
+            _filterByMap = true;
+
+            // Re-retrieve the current record (which includes counting the number of
+            // toids and fragments for the current incid selected in the GIS and
+            // in the database).
+            if (resetRowIndex)
+                await MoveIncidCurrentRowIndexAsync(_incidCurrentRowIndex);
+            else
+                // Count the number of toids and fragments for the current incid
+                // selected in the GIS and in the database.
+                CountToidFrags();
+
+            // Indicate the selection didn't come from the map.
+            _filterByMap = false;
+
+            // Refresh all the status type fields.
+            RefreshStatus();
+
+            // Reset the cursor back to normal.
+            ChangeCursor(Cursors.Arrow, null);
         }
 
         #endregion
@@ -7491,18 +7648,20 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_activeLayerName == null)
-                {
-                    // If no HLU layer has been identified yet (GIS is still loading) then
-                    // don't return the layer name
-                    if (_gisApp == null || _gisApp.ActiveHluLayer == null)
-                        return String.Empty;
-                    else
-                    {
-                        // Get the active HLU layer name from GIS.
-                        _activeLayerName = _gisApp.ActiveHluLayer.LayerName;
-                    }
-                }
+                ////TODO: This isn't working when setting the active layer name.
+                ////if (_activeLayerName == null)
+                //if (_activeLayerName != "")
+                //{
+                //    // If no HLU layer has been identified yet (GIS is still loading) then
+                //    // don't return the layer name
+                //    if (_gisApp == null || _gisApp.ActiveHluLayer == null)
+                //        return String.Empty;
+                //    else
+                //    {
+                //        // Get the active HLU layer name from GIS.
+                //        _activeLayerName = _gisApp.ActiveHluLayer.LayerName;
+                //    }
+                //}
 
                 // Return the active layer name.
                 return _activeLayerName ?? string.Empty;
@@ -7511,8 +7670,13 @@ namespace HLU.UI.ViewModel
 
             set
             {
+                // If the active layer name hasn't changed do nothing.
+                if (string.Equals(_activeLayerName, value, StringComparison.Ordinal))
+                    return;
+
                 // Set the active layer name.
                 _activeLayerName = value;
+                OnPropertyChanged(nameof(ActiveLayerName));
             }
         }
 
@@ -7749,6 +7913,8 @@ namespace HLU.UI.ViewModel
                     _incidRowCount = (int)_db.ExecuteScalar(String.Format(
                         "SELECT COUNT(*) FROM {0}", _db.QualifyTableName(_hluDS.incid.TableName)),
                         _db.Connection.ConnectionTimeout, CommandType.Text);
+
+                    // Refresh the status fields
                     RefreshStatus();
                 }
                 catch { return -1; }
@@ -8203,7 +8369,7 @@ namespace HLU.UI.ViewModel
                 OnPropertyChanged(nameof(OSMMIncidCurrentRowIndex));
                 OnPropertyChanged(nameof(IncidCurrentRow));
 
-                // Refresh all statuses, headers adnd fields
+                // Refresh all statuses, headers and fields
                 RefreshStatus();
                 RefreshHeader();
                 RefreshOSMMUpdate();
@@ -9292,6 +9458,13 @@ namespace HLU.UI.ViewModel
 
         #region Refresh
 
+        /// <summary>
+        /// Refreshes the state of all UI controls and related properties to reflect the current application data and
+        /// context.
+        /// </summary>
+        /// <remarks>Call this method to ensure that all toolbar buttons, menu commands, and tab controls
+        /// are updated to match the latest state. This is typically used after changes to the underlying data or
+        /// selection to keep the user interface in sync.</remarks>
         internal void RefreshAll()
         {
             // Update toolbar and menu command states.
@@ -9311,11 +9484,15 @@ namespace HLU.UI.ViewModel
             RefreshDetailsTab();
             RefreshSources();
             RefreshHistory();
-
-            // Update the editing control state
-            CheckEditingControlState();
         }
 
+        /// <summary>
+        /// Refreshes the state of properties related to bulk update controls, ensuring that any bound user interface
+        /// elements reflect the current data and mode.
+        /// </summary>
+        /// <remarks>Call this method after changes that may affect the visibility, headers, or enabled
+        /// state of bulk update controls. This method raises property change notifications for multiple properties,
+        /// which can trigger UI updates in data-bound scenarios.</remarks>
         private void RefreshBulkUpdateControls()
         {
             OnPropertyChanged(nameof(ShowInBulkUpdateMode));
@@ -9337,6 +9514,12 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(BapHabitatsUserEnabled));
         }
 
+        /// <summary>
+        /// Notifies the UI that properties related to OSMM update controls have changed.
+        /// </summary>
+        /// <remarks>Call this method to refresh the state of UI elements that depend on OSMM update mode
+        /// properties. This ensures that any bindings to these properties are updated to reflect the current
+        /// state.</remarks>
         private void RefreshOSMMUpdateControls()
         {
             OnPropertyChanged(nameof(ShowInOSMMUpdateMode));
@@ -9346,7 +9529,13 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(ShowReasonProcessGroup));
         }
 
-        private void RefreshStatus()
+        /// <summary>
+        /// Refreshes the status-related properties and notifies listeners of property changes.
+        /// </summary>
+        /// <remarks>Call this method to update all dependent status properties and ensure that any data
+        /// bindings or observers are notified of the latest values. This is typically used after changes that may
+        /// affect the state or availability of UI elements bound to these properties.</remarks>
+        public void RefreshStatus()
         {
             OnPropertyChanged(nameof(EditMode));
             OnPropertyChanged(nameof(IncidCurrentRowIndex));
@@ -9354,6 +9543,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(StatusIncid));
             OnPropertyChanged(nameof(StatusIncidToolTip));
             OnPropertyChanged(nameof(StatusBar));
+            OnPropertyChanged(nameof(ActiveLayerName));
             OnPropertyChanged(nameof(CanZoomToSelection));
             //OnPropertyChanged(nameof(CanUserBulkUpdate)); // Not needed as this is cached.
             OnPropertyChanged(nameof(CanUpdate));
@@ -9366,14 +9556,38 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(CanFilterByAttributes));
             OnPropertyChanged(nameof(CanClearFilter));
             OnPropertyChanged(nameof(CanExport));
+
+            // Update the editing control state
+            CheckEditingControlState();
+
+            // Update split/merge enablement
+            RefreshSplitMergeEnablement();
         }
 
+        /// <summary>
+        /// Raises property change notifications for reason and process-related properties to update data bindings.
+        /// </summary>
+        /// <remarks>Call this method to ensure that UI elements or other listeners are notified when
+        /// header properties have changed. This is typically used in data-binding scenarios to refresh displayed values
+        /// after underlying data is modified.</remarks>e
+        public void RefreshReasonProcess()
+        {
+            //TODO: Not needded?
+            //OnPropertyChanged(nameof(ReasonCodes));
+            //OnPropertyChanged(nameof(ProcessCodes));
+
+            OnPropertyChanged(nameof(Reason));
+            OnPropertyChanged(nameof(Process));
+        }
+
+        /// <summary>
+        /// Raises property change notifications for header-related properties to update data bindings.
+        /// </summary>
+        /// <remarks>Call this method to ensure that UI elements or other listeners are notified when
+        /// header properties have changed. This is typically used in data-binding scenarios to refresh displayed values
+        /// after underlying data is modified.</remarks>
         private void RefreshHeader()
         {
-            OnPropertyChanged(nameof(ReasonCodes));
-            OnPropertyChanged(nameof(Reason));
-            OnPropertyChanged(nameof(ProcessCodes));
-            OnPropertyChanged(nameof(Process));
             OnPropertyChanged(nameof(Incid));
             OnPropertyChanged(nameof(IncidArea));
             OnPropertyChanged(nameof(IncidLength));
@@ -9383,6 +9597,13 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(IncidLastModifiedUser));
         }
 
+        /// <summary>
+        /// Raises property change notifications for all group header properties to ensure that their values are updated
+        /// in the user interface.
+        /// </summary>
+        /// <remarks>Call this method after making changes that affect any of the group header properties
+        /// to refresh their displayed values. This method is typically used to synchronize the UI with the current
+        /// state of the underlying data.</remarks>
         private void RefreshGroupHeaders()
         {
             OnPropertyChanged(nameof(TopControlsGroupHeader));
@@ -9412,6 +9633,12 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(ShowSourceNumbers));
         }
 
+        /// <summary>
+        /// Notifies listeners that OSMM-related properties have changed and updates their bindings.
+        /// </summary>
+        /// <remarks>Call this method to refresh the UI or other observers when OSMM update-related
+        /// properties may have changed. This ensures that any data bindings or listeners are notified of the latest
+        /// property values.</remarks>
         private void RefreshOSMMUpdate()
         {
             OnPropertyChanged(nameof(ShowIncidOSMMPendingGroup));
@@ -9424,6 +9651,12 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(IncidOSMMXRefID));
         }
 
+        /// <summary>
+        /// Refreshes all properties related to the habitat tab, notifying listeners of any changes.
+        /// </summary>
+        /// <remarks>Call this method to update data bindings and UI elements that depend on
+        /// habitat-related properties. This is typically used after changes to underlying habitat data to ensure the
+        /// user interface reflects the current state.</remarks>
         private void RefreshHabitatTab()
         {
             OnPropertyChanged(nameof(TabItemHabitatEnabled));
@@ -9445,6 +9678,13 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(IncidLegacyHabitat));
         }
 
+        /// <summary>
+        /// Refreshes the state and displayed values of the IHS tab, ensuring that all related properties and controls
+        /// reflect the current data.
+        /// </summary>
+        /// <remarks>Call this method after making changes that affect the IHS tab's data or enabled state
+        /// to update the UI accordingly. This method triggers property change notifications for relevant properties and
+        /// updates multiplexed values as needed.</remarks>
         private void RefreshIHSTab()
         {
             OnPropertyChanged(nameof(TabItemIHSEnabled));
@@ -9454,6 +9694,12 @@ namespace HLU.UI.ViewModel
             RefreshIhsMultiplexValues();
         }
 
+        /// <summary>
+        /// Refreshes all IHS multiplex-related property values and notifies listeners of property changes.
+        /// </summary>
+        /// <remarks>Call this method to ensure that all dependent IHS multiplex properties are updated
+        /// and that any data bindings or observers are notified of their new values. This is typically used after
+        /// changes to underlying data that affect these properties.</remarks>
         private void RefreshIhsMultiplexValues()
         {
             OnPropertyChanged(nameof(IncidIhsHabitatText));
@@ -9469,6 +9715,13 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(IncidIhsSummary));
         }
 
+        /// <summary>
+        /// Refreshes the state of properties related to the priority tab, ensuring that any bound UI elements are
+        /// updated to reflect the current values.
+        /// </summary>
+        /// <remarks>Call this method after making changes that affect the priority tab's properties to
+        /// ensure the user interface remains in sync with the underlying data. This method raises property change
+        /// notifications for all relevant properties associated with the priority tab.</remarks>
         private void RefreshPriorityTab()
         {
             OnPropertyChanged(nameof(TabItemPriorityEnabled));
@@ -9481,6 +9734,12 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(CanEditPriorityHabitats));
         }
 
+        /// <summary>
+        /// Refreshes the state of all properties related to the details tab, notifying listeners of any changes.
+        /// </summary>
+        /// <remarks>Call this method to ensure that all UI elements and data bindings associated with the
+        /// details tab are updated to reflect the current state of the underlying data. This is typically used after
+        /// changes that may affect multiple properties displayed in the details tab.</remarks>
         private void RefreshDetailsTab()
         {
             OnPropertyChanged(nameof(TabItemDetailsEnabled));
@@ -9509,6 +9768,13 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(IncidQualityComments));
         }
 
+        /// <summary>
+        /// Refreshes the state of all source-related properties and controls.
+        /// </summary>
+        /// <remarks>Call this method to update the UI and internal state after changes to the underlying
+        /// sources. This method raises property change notifications for related properties and refreshes each source
+        /// individually. Intended for internal use within the class to ensure consistency between the sources and their
+        /// associated UI elements.</remarks>
         private void RefreshSources()
         {
             OnPropertyChanged(nameof(TabItemSourcesEnabled));
@@ -9519,6 +9785,10 @@ namespace HLU.UI.ViewModel
             RefreshSource3();
         }
 
+        /// <summary>
+        /// Refreshes all properties related to Source 1 and notifies listeners of property changes.
+        /// </summary>
+        /// <remarks>Call this method to ensure that all dependent Source 1 properties are updated.</remarks>
         private void RefreshSource1()
         {
             OnPropertyChanged(nameof(IncidSource1Id));
@@ -9542,6 +9812,10 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(IncidSource1Enabled));
         }
 
+        /// <summary>
+        /// Refreshes all properties related to Source 2 and notifies listeners of property changes.
+        /// </summary>
+        /// <remarks>Call this method to ensure that all dependent Source 2 properties are updated.</remarks>
         private void RefreshSource2()
         {
             OnPropertyChanged(nameof(IncidSource2Id));
@@ -9565,6 +9839,10 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(IncidSource2Enabled));
         }
 
+        /// <summary>
+        /// Refreshes all properties related to Source 3 and notifies listeners of property changes.
+        /// </summary>
+        /// <remarks>Call this method to ensure that all dependent Source 3 properties are updated.</remarks>
         private void RefreshSource3()
         {
             OnPropertyChanged(nameof(IncidSource3Id));
@@ -9588,6 +9866,11 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(IncidSource3Enabled));
         }
 
+        /// <summary>
+        /// Refreshes all properties related to the history tab and notifies listeners of property changes.
+        /// </summary>
+        /// <remarks>Call this method to ensure that all UI elements and data bindings associated with the
+        /// history tab are updated to reflect the current state of the underlying data.</
         private void RefreshHistory()
         {
             OnPropertyChanged(nameof(TabItemHistoryEnabled));
@@ -9598,12 +9881,22 @@ namespace HLU.UI.ViewModel
 
         #region Lock Editing Controls
 
+        /// <summary>
+        /// Checks and updates the state of editing-related controls by raising property change notifications.
+        /// </summary>
+        /// <remarks>Call this method to ensure that UI elements bound to the ReasonProcessEnabled and
+        /// TabControlDataEnabled properties reflect the current state. This is typically used after changes that may
+        /// affect whether editing controls should be enabled or disabled.</remarks>
         private void CheckEditingControlState()
         {
             OnPropertyChanged(nameof(ReasonProcessEnabled));
             OnPropertyChanged(nameof(TabControlDataEnabled));
         }
 
+        /// <summary>
+        /// Enables or disables the editing controls based on the specified value.
+        /// </summary>
+        /// <param name="enable">true to enable the editing controls; false to disable them.</param>
         public void ChangeEditingControlState(bool enable)
         {
             _reasonProcessEnabled = enable;
@@ -10237,7 +10530,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_lutHabitatClass == null || _lutHabitatClass.Count() == 0)
+                if (_lutHabitatClass == null || !_lutHabitatClass.Any())
                     return null;
 
                 // Get the list of values from the lookup table.
@@ -11370,7 +11663,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_lutLegacyHabitat == null || _lutLegacyHabitat.Count() == 0)
+                if (_lutLegacyHabitat == null || !_lutLegacyHabitat.Any())
                     return null;
 
                 // Get the list of values from the lookup table.
@@ -12949,7 +13242,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_lutBoundaryMap == null || _lutBoundaryMap.Count() == 0)
+                if (_lutBoundaryMap == null || !_lutBoundaryMap.Any())
                     return null;
 
                 if (_boundaryMapCodes == null)
@@ -13128,7 +13421,7 @@ namespace HLU.UI.ViewModel
             get
             {
                 // If there are no condition rows then return an empty list.
-                if (_lutCondition == null || _lutCondition.Count() == 0)
+                if (_lutCondition == null || !_lutCondition.Any())
                     return [];
 
                 // Load the condition codes if not already done.
@@ -13228,7 +13521,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_lutConditionQualifier == null || _lutConditionQualifier.Count() == 0)
+                if (_lutConditionQualifier == null || !_lutConditionQualifier.Any())
                     return null;
 
                 if (_conditionQualifierCodes == null)
@@ -13431,7 +13724,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_lutQualityDetermination == null || _lutQualityDetermination.Count() == 0)
+                if (_lutQualityDetermination == null || !_lutQualityDetermination.Any())
                     return null;
 
                 if (_qualityDeterminationCodes == null)
@@ -13508,7 +13801,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_lutQualityInterpretation == null || _lutQualityInterpretation.Count() == 0)
+                if (_lutQualityInterpretation == null || !_lutQualityInterpretation.Any())
                     return null;
 
                 if (_qualityInterpretationCodes == null)
@@ -13786,7 +14079,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_lutSources == null || _lutSources.Count() == 0)
+                if (_lutSources == null || !_lutSources.Any())
                     return null;
 
                 // Get the list of values from the lookup table.
@@ -13809,7 +14102,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_lutHabitatClass == null || _lutHabitatClass.Count() == 0)
+                if (_lutHabitatClass == null || !_lutHabitatClass.Any())
                     return null;
 
                 // Get the list of values from the lookup table.
@@ -13833,7 +14126,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_lutImportance == null || _lutImportance.Count() == 0)
+                if (_lutImportance == null || !_lutImportance.Any())
                     return null;
 
                 // Get the list of values from the lookup table.

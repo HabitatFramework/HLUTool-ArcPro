@@ -11,9 +11,9 @@ using System.Windows;
 namespace HLU.UI.UserControls.Toolbar
 {
     /// <summary>
-    /// Split menu populated at runtime so it can be enabled/disabled in OnUpdate.
+    /// Merge menu populated at runtime so it can be enabled/disabled in OnUpdate.
     /// </summary>
-    internal sealed class SplitDynamicMenu : DynamicMenu
+    internal sealed class MergeDynamicMenu : DynamicMenu
     {
         #region Fields
 
@@ -26,7 +26,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// <summary>
         /// Constructor.
         /// </summary>
-        public SplitDynamicMenu()
+        public MergeDynamicMenu()
         {
             // Get the dockpane DAML id.
             DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
@@ -49,14 +49,14 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            // Enable or disable the button based on CanSplit and main grid visibility.
-            bool canSplit = (HLU.HLUToolModule.CanSplit && _viewModel.GridMainVisibility == Visibility.Visible);
-            Enabled = canSplit;
+            // Enable or disable the button based on CanMerge and main grid visibility.
+            bool CanMerge = (HLU.HLUToolModule.CanMerge && _viewModel.GridMainVisibility == Visibility.Visible);
+            Enabled = CanMerge;
 
             // Optional: explain why it is disabled.
-            if (!canSplit)
+            if (!CanMerge)
             {
-                DisabledTooltip = "Available only when physical or logical split are possible.";
+                DisabledTooltip = "Available only when physical or logical merge are possible.";
             }
             else
             {
@@ -67,8 +67,8 @@ namespace HLU.UI.UserControls.Toolbar
         /// <inheritdoc />
         protected override void OnPopup()
         {
-            AddReference("HLUTool_btnPhysicalSplit");
-            AddReference("HLUTool_btnLogicalSplit");
+            AddReference("HLUTool_btnPhysicalMerge");
+            AddReference("HLUTool_btnLogicalMerge");
         }
     }
 }

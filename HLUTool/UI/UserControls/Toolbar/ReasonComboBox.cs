@@ -159,31 +159,15 @@ namespace HLU.UI.UserControls.Toolbar
             get { return SelectedItem?.ToString(); }
         }
 
-
-        ///// <summary>
-        ///// Called when the selection changes.
-        ///// </summary>
-        ///// <param name="item"></param>
-        //protected override void OnSelectionChange(ComboBoxItem item)
-        //{
-        //    // Switch the active layer (if different).
-        //    if (item != null)
-        //        _viewModel?.SwitchGISLayer(item.Text);
-        //}
-
-        ///// <summary>
-        ///// Sets the selected item in the ComboBox.
-        ///// </summary>
-        ///// <param name="value"></param>
-        //public void SetSelectedItem(string value)
-        //{
-        //    // Check if the ItemCollection is not null and has items.
-        //    if (this.ItemCollection?.Any() == true)
-        //    {
-        //        // Find and set the selected item if found.
-        //        this.SelectedItem = this.ItemCollection.FirstOrDefault(item => item.ToString() == value);
-        //    }
-        //}
+        /// <summary>
+        /// Called when the selection changes.
+        /// </summary>
+        /// <param name="item"></param>
+        protected override void OnSelectionChange(ComboBoxItem item)
+        {
+            // Notify the ViewModel of the selection change.
+            _viewModel?.RefreshReasonProcess();
+        }
 
         #endregion Methods
 

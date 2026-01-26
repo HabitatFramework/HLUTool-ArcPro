@@ -95,8 +95,7 @@ namespace HLU.UI.UserControls.Toolbar
             canSwitchGISLayer = true;
 
             // Enable or disable the combobox based on CanSwitchGISLayer and main grid visibility.
-            Enabled = canSwitchGISLayer;
-            //Enabled = canSwitchGISLayer && _viewModel.GridMainVisibility == Visibility.Visible;
+            Enabled = canSwitchGISLayer && _viewModel.GridMainVisibility == Visibility.Visible;
 
             // Optional: explain why it is disabled.
             if (!canSwitchGISLayer)

@@ -2568,11 +2568,8 @@ namespace HLU.GISApplication
             get { return _hluActiveLayer; }
         }
 
-        //TODO: Is _hluFeatureClass Needed?
         /// <summary>
-        /// Checks whether the current map contains an HLU layer. Also initializes the fields
-        /// _hluView, _hluCurrentLayer, _hluLayer, _hluFeatureClass and _hluWS, and indirectly
-        /// (by calling CreateFieldMap()), _hluFieldMap and _hluFieldNames.
+        /// Determines whether the current map contains a valid HLU layer.
         /// </summary>
         /// <returns>True if the current map contains a valid HLU layer, otherwise false.</returns>
         public async Task<bool> IsHluMapAsync(string activeLayerName)
@@ -2652,12 +2649,6 @@ namespace HLU.GISApplication
                 _hluLayer = hluLayerBak;
                 _hluTableName = hluTableNameBak;
                 _hluActiveLayer = hluActiveLayerBak;
-            }
-            // Otherwise, clear the layer.
-            else
-            {
-                //TODO: Needed?
-                //_hluLayer = null;
             }
 
             if (_hluLayer == null)

@@ -856,6 +856,9 @@ namespace HLU.UI.ViewModel
                 // Switch the GIS layer.
                 if (await _gisApp.IsHluLayerAsync(selectedValue, true))
                 {
+                    // Set the active HLU layer name.
+                    ActiveLayerName = selectedValue;
+
                     // Refresh the layer name
                     OnPropertyChanged(nameof(ActiveLayerName));
 
