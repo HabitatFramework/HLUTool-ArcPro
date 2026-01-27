@@ -2440,6 +2440,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Can the user navigate backward?
+        /// </summary>
         public bool CanNavigateBackward
         {
             get { return IncidCurrentRowIndex > 1; }
@@ -2483,6 +2486,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Can the user navigate forward?
+        /// </summary>
         public bool CanNavigateForward
         {
             get
@@ -2574,10 +2580,15 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Can the user navigate to the specified record?
+        /// </summary>
         private bool CanNavigateIncid
         {
             get
             {
+                // Is the requested record less than the total number of records
+                // if filtered, or the total row count if not filtered?
                 return (IncidCurrentRowIndex > 1) ||
                     ((IsFiltered && (IncidCurrentRowIndex < _incidSelection.Rows.Count)) ||
                     (!IsFiltered && (IncidCurrentRowIndex < _incidRowCount)));
@@ -2593,16 +2604,34 @@ namespace HLU.UI.ViewModel
         private bool _canPhysicallyMerge;
         private bool _canLogicallyMerge;
 
+        /// <summary>
+        /// Can a physical split operation be performed?
+        /// </summary>
         public bool CanPhysicallySplit => _canPhysicallySplit;
 
+        /// <summary>
+        /// Can a logical split operation be performed?
+        /// </summary>
         public bool CanLogicallySplit => _canLogicallySplit;
 
+        /// <summary>
+        /// Can a physical merge operation be performed?
+        /// </summary>
         public bool CanPhysicallyMerge => _canPhysicallyMerge;
 
+        /// <summary>
+        /// Can a logical merge operation be performed?
+        /// </summary>
         public bool CanLogicallyMerge => _canLogicallyMerge;
 
+        /// <summary>
+        ///  Can a split operation (physical or logical) be performed?
+        /// </summary>
         public bool CanSplit => _canPhysicallySplit || _canLogicallySplit;
 
+        /// <summary>
+        ///  Can a merge operation (physical or logical) be performed?
+        /// </summary>
         public bool CanMerge => _canPhysicallyMerge || _canLogicallyMerge;
 
         /// <summary>
@@ -2762,28 +2791,6 @@ namespace HLU.UI.ViewModel
                 NotifySplitMerge("Logical split completed.");
         }
 
-        /// <summary>
-        /// At least one feature in selection that share the same incid, but *not* toid and toidfragid
-        /// </summary>
-        public bool CanLogicallySplit_OLD
-        {
-            get
-            {
-                return (BulkUpdateMode == false && OSMMUpdateMode == false) &&
-                    EditMode && !String.IsNullOrEmpty(Reason) && !String.IsNullOrEmpty(Process) &&
-                    (_gisSelection != null) && (_incidsSelectedMapCount == 1) &&
-                    ((_gisSelection.Rows.Count > 0) && ((_toidsSelectedMapCount > 1) || (_fragsSelectedMapCount > 0)) ||
-                    (_gisSelection.Rows.Count == 1)) &&
-                    // Only enable split/merge after select from map
-                    (_filterByMap == true) &&
-
-                    // Only enable logical split menu/button if a subset of all the
-                    // features for the current incid have been selected.
-                    ((_toidsIncidGisCount < _toidsIncidDbCount) ||
-                    (_fragsIncidGisCount < _fragsIncidDbCount));
-            }
-        }
-
         #endregion Logical Split
 
         #region Physical Split
@@ -2810,22 +2817,6 @@ namespace HLU.UI.ViewModel
             // Notify the user following the completion of the split.
             if (await vmSplit.PhysicalSplitAsync())
                 NotifySplitMerge("Physical split completed.");
-        }
-
-        /// <summary>
-        /// At least two features in selection that share the same incid, toid and toidfragid
-        /// </summary>
-        public bool CanPhysicallySplit_OLD
-        {
-            get
-            {
-                return (BulkUpdateMode == false && OSMMUpdateMode == false) &&
-                    EditMode && !String.IsNullOrEmpty(Reason) && !String.IsNullOrEmpty(Process) &&
-                    (_gisSelection != null) && (_gisSelection.Rows.Count > 1) &&
-                    // Only enable split/merge after select from map
-                    (_filterByMap == true) &&
-                    (_incidsSelectedMapCount == 1) && (_toidsSelectedMapCount == 1) && (_fragsSelectedMapCount == 1);
-            }
         }
 
         internal async Task<bool> TriggerPhysicalSplitAsync()
@@ -2934,22 +2925,6 @@ namespace HLU.UI.ViewModel
                 NotifySplitMerge("Logical merge completed.");
         }
 
-        /// <summary>
-        /// At least one feature in selection that do not share the same incid or toidfragid
-        /// </summary>
-        public bool CanLogicallyMerge_OLD
-        {
-            get
-            {
-                return (BulkUpdateMode == false && OSMMUpdateMode == false) &&
-                    EditMode && !String.IsNullOrEmpty(Reason) && !String.IsNullOrEmpty(Process) &&
-                    _gisSelection != null && _gisSelection.Rows.Count > 1 &&
-                    // Only enable split/merge after select from map
-                    (_filterByMap == true) &&
-                    (_incidsSelectedMapCount > 1) && (_fragsSelectedMapCount > 1);
-            }
-        }
-
         #endregion Logical Merge
 
         #region Physical Merge
@@ -2979,22 +2954,6 @@ namespace HLU.UI.ViewModel
             // Notify the user following the completion of the split.
             if (await vmMerge.PhysicalMergeAsync())
                 NotifySplitMerge("Physical merge completed.");
-        }
-
-        /// <summary>
-        /// At least one feature in selection that share the same incid and toid but *not* the same toidfragid
-        /// </summary>
-        public bool CanPhysicallyMerge_OLD
-        {
-            get
-            {
-                return (BulkUpdateMode == false && OSMMUpdateMode == false) &&
-                    EditMode && !String.IsNullOrEmpty(Reason) && !String.IsNullOrEmpty(Process) &&
-                    _gisSelection != null && _gisSelection.Rows.Count > 1 &&
-                    // Only enable split/merge after select from map
-                    (_filterByMap == true) &&
-                    (_incidsSelectedMapCount == 1) && (_toidsSelectedMapCount == 1) && (_fragsSelectedMapCount > 1);
-            }
         }
 
         #endregion Physical Merge
@@ -3591,7 +3550,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Cancel the bulk update be cancelled.
+        /// Can the bulk update be cancelled.
         /// </summary>
         /// <value>
         ///   <c>true</c> if this instance can cancel bulk update; otherwise, <c>false</c>.
@@ -3697,6 +3656,7 @@ namespace HLU.UI.ViewModel
 
         #region OSMM Update
 
+        //TODO: Change or get this working
         /// <summary>
         /// Gets or sets the OSMM Accept button tag (which controls
         /// the text on the button (and whether the <Ctrl> button is
@@ -3716,6 +3676,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        //TODO: Change or get this working
         /// <summary>
         /// Gets or sets the OSMM Reject button tag (which controls
         /// the text on the button (and whether the <Ctrl> button is
@@ -3833,6 +3794,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Can the OSMM Update be cancelled.
+        /// </summary>
         public bool CanCancelOSMMUpdate { get { return OSMMUpdateMode == true; } }
 
         /// <summary>
@@ -4428,6 +4392,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Can the OSMM Bulk Update be cancelled.
+        /// </summary>
         public bool CanCancelOSMMBulkUpdate { get { return OSMMBulkUpdateMode == true; } }
 
         /// <summary>
@@ -4572,6 +4539,9 @@ namespace HLU.UI.ViewModel
 
         }
 
+        /// <summary>
+        /// Can the map be zoomed to the current selection?
+        /// </summary>
         public bool CanZoomToSelection { get { return _gisSelection != null; } }
 
         #endregion
@@ -4798,6 +4768,9 @@ namespace HLU.UI.ViewModel
 
         #region Export
 
+        /// <summary>
+        /// Can an export be performed?
+        /// </summary>
         public bool CanExport { get { return BulkUpdateMode == false && OSMMUpdateMode == false && _hluDS != null; } }
 
         #endregion
@@ -6229,6 +6202,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Can the current incid be selected on the map.
+        /// </summary>
         public bool CanSelectOnMap
         {
             get { return BulkUpdateMode == false && OSMMUpdateMode == false && IncidCurrentRow != null; }
@@ -6635,6 +6611,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Can the priority habitats be edited.
+        /// </summary>
         public bool CanEditPriorityHabitats
         {
             get { return BulkUpdateMode == false && OSMMUpdateMode == false && BapHabitatsAutoEnabled; }
@@ -6728,6 +6707,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        ///  Can the potential priority habitats be edited.
+        /// </summary>
         public bool CanEditPotentialHabitats
         {
             get { return BulkUpdateMode == false && OSMMUpdateMode == false && BapHabitatsUserEnabled; }
@@ -6753,6 +6735,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Can a secondary habitat be added.
+        /// </summary>
         public bool CanAddSecondaryHabitat
         {
             get
@@ -6827,6 +6812,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Can a list of secondary habitats be added.
+        /// </summary>
         public bool CanAddSecondaryHabitatList
         {
             get
@@ -7658,6 +7646,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Can the GIS layer be switched?
+        /// </summary>
         public bool CanSwitchGISLayer
         {
             get
@@ -7963,11 +7954,6 @@ namespace HLU.UI.ViewModel
                 }
             }
         }
-
-        /// <summary>
-        /// Get the status tool tip for the current Incid selection.
-        /// </summary>
-        public string StatusIncidToolTip { get { return IsFiltered ? "Double click to clear filter" : null; } }
 
         public string StatusBar
         {
@@ -9521,7 +9507,6 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(IncidCurrentRowIndex));
             OnPropertyChanged(nameof(OSMMIncidCurrentRowIndex));
             OnPropertyChanged(nameof(StatusIncid));
-            OnPropertyChanged(nameof(StatusIncidToolTip));
             OnPropertyChanged(nameof(StatusBar));
             OnPropertyChanged(nameof(ActiveLayerName));
             OnPropertyChanged(nameof(CanZoomToSelection));

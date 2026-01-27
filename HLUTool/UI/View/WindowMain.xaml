@@ -710,7 +710,7 @@
                                                     IsEditable="True"
                                                     IsEnabled="{Binding SecondaryGroupEnabled}"
                                                     IsReadOnly="False"
-                                                    ItemsSource="{Binding SecondaryGroupCodes, UpdateSourceTrigger=PropertyChanged}"
+                                                    ItemsSource="{Binding SecondaryGroupCodes}"
                                                     SelectedValue="{Binding SecondaryGroup}"
                                                     SelectedValuePath="code"
                                                     ToolTipService.ShowOnDisabled="True" />
@@ -755,7 +755,6 @@
                                                 HorizontalAlignment="Right"
                                                 VerticalAlignment="Top"
                                                 Command="{Binding AddSecondaryHabitatCommand}"
-                                                IsEnabled="{Binding CanAddSecondaryHabitat}"
                                                 Style="{DynamicResource Esri_Button}"
                                                 ToolTip="Add Secondary Habitat"
                                                 ToolTipService.ShowOnDisabled="True">
@@ -872,7 +871,6 @@
                                                 HorizontalAlignment="Right"
                                                 VerticalAlignment="Top"
                                                 Command="{Binding AddSecondaryHabitatListCommand}"
-                                                IsEnabled="{Binding CanAddSecondaryHabitatList}"
                                                 Style="{DynamicResource Esri_Button}"
                                                 ToolTip="Add Secondary Habitats from List"
                                                 ToolTipService.ShowOnDisabled="True">
@@ -1567,7 +1565,6 @@
                                                 HorizontalAlignment="Right"
                                                 VerticalAlignment="Top"
                                                 Command="{Binding EditPriorityHabitatsCommand}"
-                                                IsEnabled="{Binding CanEditPriorityHabitats}"
                                                 Style="{DynamicResource Esri_Button}"
                                                 ToolTip="Priority Habitats"
                                                 ToolTipService.ShowOnDisabled="True">
@@ -1747,7 +1744,6 @@
                                                 HorizontalAlignment="Right"
                                                 VerticalAlignment="Top"
                                                 Command="{Binding EditPotentialHabitatsCommand}"
-                                                IsEnabled="{Binding CanEditPotentialHabitats}"
                                                 Style="{DynamicResource Esri_Button}"
                                                 ToolTip="Potential Priority Habitats"
                                                 ToolTipService.ShowOnDisabled="True">
@@ -3008,7 +3004,6 @@
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
                     Command="{Binding GetMapSelectionCommand}"
-                    IsEnabled="{Binding CanGetMapSelection}"
                     Style="{DynamicResource Esri_Button}"
                     ToolTip="Get Map Selection"
                     ToolTipService.ShowOnDisabled="True">
@@ -3133,10 +3128,7 @@
                             Margin="0,0,4,0"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center"
-                            Content="{Binding StatusIncid, UpdateSourceTrigger=PropertyChanged}"
-                            ToolTip="{Binding StatusIncidToolTip, UpdateSourceTrigger=PropertyChanged}" />
-                        <!--  MouseDoubleClick="LabelStatusIncid_MouseDoubleClick"  -->
-                        <!--  Style="{DynamicResource LabelReverseStyle}"  -->
+                            Content="{Binding StatusIncid}" />
                     </Grid>
 
                     <Grid
@@ -3158,7 +3150,6 @@
                             Margin="0,0,2,0"
                             HorizontalAlignment="Center"
                             Command="{Binding Path=CancelBulkUpdateCommand}"
-                            IsEnabled="{Binding CanCancelBulkUpdate}"
                             Style="{DynamicResource Esri_Button}"
                             Visibility="{Binding Path=ShowInBulkUpdateMode}">
                             _Cancel
@@ -3173,7 +3164,6 @@
                             Command="{Binding UpdateCommand}"
                             Content="Appl_y"
                             Foreground="White"
-                            IsEnabled="{Binding CanUpdate}"
                             Style="{DynamicResource Esri_Button}"
                             ToolTip="Apply updates" />
                     </Grid>
@@ -3229,10 +3219,7 @@
                             Margin="8,0,4,0"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center"
-                            Content="{Binding StatusIncid, UpdateSourceTrigger=PropertyChanged}"
-                            ToolTip="{Binding StatusIncidToolTip, UpdateSourceTrigger=PropertyChanged}" />
-                        <!--  MouseDoubleClick="LabelStatusIncid_MouseDoubleClick"  -->
-                        <!--  Style="{DynamicResource LabelReverseStyle}"  -->
+                            Content="{Binding StatusIncid}" />
                     </Grid>
 
                     <Grid
@@ -3253,8 +3240,7 @@
                             Background="#FF939393"
                             Command="{Binding OSMMSkipCommand}"
                             Content="_Skip"
-                            Foreground="White"
-                            IsEnabled="{Binding CanOSMMSkip, UpdateSourceTrigger=PropertyChanged}" />
+                            Foreground="White" />
                         <Button
                             x:Name="ButtonOSMMReject"
                             Grid.Column="1"
@@ -3263,7 +3249,6 @@
                             Command="{Binding OSMMRejectCommand}"
                             Content="{Binding OSMMRejectText}"
                             Foreground="White"
-                            IsEnabled="{Binding CanOSMMAccept}"
                             Tag="{Binding OSMMRejectTag, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                             ToolTip="Hold down 'Ctrl' key to reject all remaining records in filter"
                             ToolTipService.ShowOnDisabled="True" />
@@ -3275,7 +3260,6 @@
                             Command="{Binding OSMMAcceptCommand}"
                             Content="{Binding OSMMAcceptText}"
                             Foreground="White"
-                            IsEnabled="{Binding CanOSMMAccept}"
                             Tag="{Binding OSMMAcceptTag, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                             ToolTip="Hold down 'Ctrl' key to accept all remaining records in filter"
                             ToolTipService.ShowOnDisabled="True" />
