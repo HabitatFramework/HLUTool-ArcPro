@@ -77,9 +77,9 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            // Enable or disable the button based on CanReadMapSelection and main grid visibility.
-            bool canReadMapSelection = _viewModel.CanGetMapSelection && _viewModel.GridMainVisibility == Visibility.Visible;
-            Enabled = canReadMapSelection;
+            // Enable or disable the button based on CanGetMapSelection and main grid visibility.
+            bool canGetMapSelection = _viewModel.CanGetMapSelection && _viewModel.GridMainVisibility == Visibility.Visible;
+            Enabled = canGetMapSelection;
         }
     }
 }

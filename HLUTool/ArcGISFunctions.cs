@@ -58,6 +58,19 @@ namespace HLU.GISApplication
         private Map _activeMap;
         private MapView _activeMapView;
 
+        private readonly Dictionary<Type, FieldType> _typeMapSystemToFieldType =
+            new()
+            {
+        { typeof(string), FieldType.String },
+        { typeof(int), FieldType.Integer },
+        { typeof(long), FieldType.BigInteger },
+        { typeof(short), FieldType.SmallInteger },
+        { typeof(double), FieldType.Double },
+        { typeof(float), FieldType.Single },
+        { typeof(DateTime), FieldType.Date },
+        { typeof(bool), FieldType.Integer } // if stored as 0/1
+            };
+
         #endregion Fields
 
         #region Constructor
@@ -4088,19 +4101,6 @@ namespace HLU.GISApplication
 
         #region HLULayers
 
-        public async Task<bool> IsHluLayerAsync(string layerName, bool activate)
-        {
-            // Check there is an input GIS featureLayer.
-            if (layerName == null)
-                return false;
-
-            // Get the feature featureLayer for the new GIS featureLayer.
-            FeatureLayer featurelayer = await FindLayerAsync(layerName);
-
-            // Check if the feature layer a valid HLU layer.
-            return await IsHluLayerAsync(featurelayer, activate);
-        }
-
         /// <summary>
         /// Determines whether the specified new gis featureLayer is a valid HLU featureLayer
         /// and if it is sets the current featureLayer (_hluLayer, etc) properies
@@ -4159,63 +4159,86 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Is the featureLayer a valid HLU featureLayer.
+        /// Determines asynchronously whether the specified layer is a valid HLU layer.
         /// </summary>
-        /// <param name="featureLayer"></param>
-        /// <param name="activate"></param>
-        /// <returns></returns>
+        /// <param name="layerName">The name of the GIS feature layer to check. Cannot be null.</param>
+        /// <param name="activate">A value indicating whether to activate the layer if it is a valid HLU layer.</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains <see langword="true"/> if the
+        /// specified layer is a valid HLU layer; otherwise, <see langword="false"/>.
+        /// </returns>
+        public async Task<bool> IsHluLayerAsync(string layerName, bool activate)
+        {
+            // Check there is an input GIS featureLayer.
+            if (string.IsNullOrEmpty(layerName))
+                return false;
+
+            // Get the feature featureLayer for the new GIS featureLayer.
+            FeatureLayer featureLayer = await FindLayerAsync(layerName);
+
+            // Check if the feature layer a valid HLU layer.
+            return await IsHluLayerAsync(featureLayer, activate);
+        }
+
+        /// <summary>
+        /// Determines asynchronously whether the specified feature layer is a valid HLU layer.
+        /// </summary>
+        /// <param name="featureLayer">The feature layer to check.</param>
+        /// <param name="activate">A value indicating whether to activate the layer if it is a valid HLU layer.</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains <see langword="true"/> if the
+        /// specified layer is a valid HLU layer; otherwise, <see langword="false"/>.
+        /// </returns>
         public async Task<bool> IsHluLayerAsync(FeatureLayer featureLayer, bool activate)
         {
-            int[] hluFieldMap = [];
-            string[] hluFieldNames = [];
-
-            bool isHlu = false;
+            // Check there is an input GIS featureLayer.
+            if (featureLayer == null)
+                return false;
 
             try
             {
-                await QueuedTask.Run(async () =>
+                // Do all ArcGIS Pro CIM/Geodatabase object access on the MCT.
+                var result = await QueuedTask.Run(() =>
                 {
                     // Check the feature featureLayer is valid.
-                    if ((featureLayer == null) || ((featureLayer.GetFeatureClass().GetDefinition() == null)))
-                        return;
-
-                    // Get the featureLayer feature class.
                     FeatureClass featureClass = featureLayer.GetFeatureClass();
+                    if (featureClass == null)
+                        return HluLayerCheckResult.Invalid();
+
+                    using FeatureClassDefinition definition = featureClass.GetDefinition();
+                    if (definition == null)
+                        return HluLayerCheckResult.Invalid();
 
                     // Check the featureLayer is a polygon feature featureLayer.
                     //BasicFeatureLayer basicFeatureLayer = featureLayer as BasicFeatureLayer;
                     if (featureLayer.ShapeType != esriGeometryType.esriGeometryPolygon)
-                        throw (new Exception("Invalid geometry type."));
+                        return HluLayerCheckResult.Invalid();
 
-                    hluFieldMap = new int[_hluLayerStructure.Columns.Count];
-                    hluFieldNames = new string[_hluLayerStructure.Columns.Count];
-
-                    int i = 0;
+                    int[] hluFieldMap = new int[_hluLayerStructure.Columns.Count];
+                    string[] hluFieldNames = new string[_hluLayerStructure.Columns.Count];
 
                     // Loop through the columns in the HLU GIS featureLayer structure.
+                    int i = 0;
                     foreach (DataColumn col in _hluLayerStructure.Columns)
                     {
                         // Get the column name.
                         string colName = col.ColumnName;
 
-                        // Get the data type.
-                        int fieldType;
-                        if (!_typeMapSystemToSQL.TryGetValue(col.DataType, out fieldType))
-                            throw (new Exception("Invalid field type."));
-
-                        // Get the esri field type.
-                        esriFieldType esriColType = (esriFieldType)fieldType;
+                        // Get the expected data type.
+                        if (!_typeMapSystemToFieldType.TryGetValue(col.DataType, out FieldType expectedFieldType))
+                            return HluLayerCheckResult.Invalid();
 
                         // Get the maximum text length.
                         int colMaxLength = 0;
-                        if ((col.MaxLength != -1) && (esriColType == esriFieldType.esriFieldTypeString))
+                        if ((col.MaxLength != -1 && expectedFieldType == FieldType.String))
                             colMaxLength = col.MaxLength;
 
-                        int ordinal = await GetFieldOrdinalAsync(featureLayer, colName, esriColType, colMaxLength);
+                        // Find the field ordinal in the feature class definition.
+                        int ordinal = GetFieldOrdinal(definition, colName, expectedFieldType, colMaxLength);
 
                         //TODO: ArcGIS
                         if (ordinal == -1)
-                            throw (new Exception(String.Format("Field {0} not found in HLU GIS featureLayer.", colName)));
+                            return HluLayerCheckResult.Invalid();
 
                         //if (fcField.Type != fixedField.Type)
                         //    throw (new Exception("Field type does not match the HLU GIS featureLayer structure."));
@@ -4228,32 +4251,94 @@ namespace HLU.GISApplication
                         i += 1;
                     }
 
-                    // Should we activate the featureLayer.
-                    if (activate)
-                    {
-                        _hluLayer = featureLayer;
-                        _hluTableName = featureLayer.Name;
-                        _hluFieldMap = hluFieldMap;
-                        _hluFieldNames = hluFieldNames; //TODO: Not set when tool first loaded? (only when layer changed)
-                        _hluFeatureClass = featureClass;
-
-                        // Check if the featureLayer is editable.
-                        bool isEditable = await IsLayerEditableAsync(featureLayer.Name);
-
-                        // Set the active HLU layer.
-                        _hluActiveLayer = new(featureLayer.Name, isEditable);
-                    }
-
-                    isHlu = true;
+                    return HluLayerCheckResult.Valid(
+                        featureLayer,
+                        featureClass,
+                        hluFieldMap,
+                        hluFieldNames);
                 });
+
+                if (!result.IsHlu)
+                    return false;
+
+                // Should we activate the featureLayer.
+                if (activate)
+                {
+                    // Check if the featureLayer is editable.
+                    bool isEditable = await IsLayerEditableAsync(result.FeatureLayer.Name);
+
+                    _hluLayer = result.FeatureLayer;
+                    _hluTableName = result.FeatureLayer.Name;
+                    _hluFieldMap = result.HluFieldMap;
+                    _hluFieldNames = result.HluFieldNames; //TODO: Not set when tool first loaded? (only when layer changed)
+                    _hluFeatureClass = result.FeatureClass;
+
+                    // Set the active HLU layer.
+                    _hluActiveLayer = new(result.FeatureLayer.Name, isEditable);
+                }
+
+                return true;
             }
-            catch
+            catch (Exception ex)
             {
-                // Handle Exception.
+                Trace.WriteLine($"IsHluLayerAsync failed: {ex}.");
                 return false;
             }
+        }
 
-            return isHlu;
+        /// <summary>
+        /// Immutable result of an HLU layer validity check.
+        /// </summary>
+        private readonly struct HluLayerCheckResult
+        {
+            public bool IsHlu
+            {
+                get;
+            }
+
+            public FeatureLayer FeatureLayer
+            {
+                get;
+            }
+
+            public FeatureClass FeatureClass
+            {
+                get;
+            }
+
+            public int[] HluFieldMap
+            {
+                get;
+            }
+
+            public string[] HluFieldNames
+            {
+                get;
+            }
+
+            private HluLayerCheckResult(
+                bool isHlu,
+                FeatureLayer featureLayer,
+                FeatureClass featureClass,
+                int[] hluFieldMap,
+                string[] hluFieldNames)
+            {
+                IsHlu = isHlu;
+                FeatureLayer = featureLayer;
+                FeatureClass = featureClass;
+                HluFieldMap = hluFieldMap;
+                HluFieldNames = hluFieldNames;
+            }
+
+            public static HluLayerCheckResult Invalid()
+                => new(false, null, null, null, null);
+
+            public static HluLayerCheckResult Valid(
+                FeatureLayer featureLayer,
+                FeatureClass featureClass,
+                int[] hluFieldMap,
+                string[] hluFieldNames)
+                => new(true, featureLayer, featureClass, hluFieldMap, hluFieldNames);
         }
 
         #endregion HLULayers

@@ -304,7 +304,7 @@
 						 keytip="FI"
 						 sizeString="123456789012">
 					<tooltip heading="Find Incid">
-						Filter the records for a single Incid.
+						Filter the records for a single Incid by entering an INCID in the format 'nnnn:nnnnnnn'.
 						<disabledText>Available only when not in a bulk or OSMM update mode.</disabledText>
 					</tooltip>
 				</editBox>
@@ -353,8 +353,8 @@
 						className="HLU.UI.UserControls.Toolbar.GetMapSelectionButton"
 						loadOnClick="false"
 						keytip="GM"
-						smallImage="pack://application:,,,/HLUTool;component/Images/ReadMapSelection16.png"
-						largeImage="pack://application:,,,/HLUTool;component/Images/ReadMapSelection32.png">
+						smallImage="pack://application:,,,/HLUTool;component/Images/GetMapSelection16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/GetMapSelection32.png">
 					<tooltip heading="Get Map Selection">
 						Filter the Incid records associated with the selected features in the active GIS layer.
 						<disabledText>Available only when not in bulk update mode.</disabledText>

@@ -2569,72 +2569,48 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Determines whether the current map contains a valid HLU layer.
+        /// Determines whether the current map contains any valid HLU layers.
+        /// This method only discovers valid layers and chooses a candidate active layer name.
+        /// It does not activate a layer and does not set _hluLayer or _hluTableName.
         /// </summary>
-        /// <returns>True if the current map contains a valid HLU layer, otherwise false.</returns>
+        /// <param name="activeLayerName">
+        /// The preferred active layer name to keep, if it exists and is valid in the current map.
+        /// </param>
+        /// <returns>
+        /// True if the current map contains at least one valid HLU layer, otherwise false.
+        /// </returns>
         public async Task<bool> IsHluMapAsync(string activeLayerName)
         {
-            // Backup active layer variables.
-            FeatureLayer hluLayerBak = _hluLayer;
-            string hluTableNameBak = _hluTableName;
-            HLULayer hluActiveLayerBak = _hluActiveLayer;
-
             // Initialise or clear the list of valid layers.
             if (_hluLayerNamesList == null)
                 _hluLayerNamesList = [];
             else
                 _hluLayerNamesList.Clear();
 
-            if (string.IsNullOrEmpty(activeLayerName))
-                _hluLayer = null;
+            // Clear the first valid layer name.
+            string firstValidLayerName = null;
 
             try
             {
-                //TODO: Check whether QueuedTask is needed here
                 // Get all of the feature layers in the active map view.
-                //IEnumerable<FeatureLayer> featureLayers = GetFeatureLayers();
                 IEnumerable<FeatureLayer> featureLayers = await QueuedTask.Run(() =>
                 {
                     return GetFeatureLayers()?.ToList() ?? [];
                 });
 
                 // Loop through all of the feature layers.
-                foreach(FeatureLayer layer in featureLayers)
+                foreach (FeatureLayer layer in featureLayers)
                 {
-                    // Check if the feature layer a valid HLU layer.
+                    // Check if the feature layer is a valid HLU layer (without activating it).
                     if (await IsHluLayerAsync(layer, false))
                     {
                         // Add the layer to the list of valid layers.
                         string layerName = layer.Name;
                         _hluLayerNamesList.Add(layerName);
 
-                        // Store the details of the first valid layer found
-                        // if none already stored or there is no current
-                        // layer.
-                        if (_hluLayer == null)
-                        {
-                            //TODO: HLU variables
-                            //_hluUidFieldOrdinals = hluUidFieldOrdinals;
-                            //_hluFieldSysTypeNames = hluFieldSysTypeNames;
-                            //_hluSqlSyntax = hluSqlSyntax;
-                            //_quotePrefix = quotePrefix;
-                            //_quoteSuffix = quoteSuffix;
-
-                            //TODO: Workspace variables?
-                            //_hluWS = (IFeatureWorkspace)((IDataset)_hluFeatureClass).Workspace;
-
-                            //TODO: ArcGIS
-                            //// Map the fields in the layer to the fields in the HLU layer structure.
-                            //CreateFieldMap(7, 5, 3, retList);
-
-                            _hluLayer = layer;
-                            _hluTableName = layer.Name;
-                            //TODO: Needed?
-                            //_hluFeatureClass = _hluLayer.GetFeatureClass();
-
-                            // Set the active HLU layer.
-                            _hluActiveLayer = new(layerName);
-                        }
+                        // Store the first valid layer name.
+                        if (firstValidLayerName == null)
+                            firstValidLayerName = layerName;
                     }
                 }
             }
@@ -2645,22 +2621,24 @@ namespace HLU.GISApplication
                 return false;
             }
 
-            // If the active layer is still found in the map
-            // then restore the variables.
-            if (!string.IsNullOrEmpty(activeLayerName)
-                && _hluLayerNamesList.Contains(activeLayerName)
-                && hluLayerBak != null)
-            {
-                _hluLayer = hluLayerBak;
-                _hluTableName = hluTableNameBak;
-                _hluActiveLayer = hluActiveLayerBak;
-            }
-
-            if (_hluLayer == null)
+            // If no valid layers were found, clear HLU state.
+            if (_hluLayerNamesList.Count == 0)
             {
                 DestroyHluLayer();
                 return false;
             }
+
+            // Choose the candidate active layer name.
+            string candidateLayerName = null;
+
+            // If the preferred active layer name exists and is in the list, use it.
+            if (!string.IsNullOrEmpty(activeLayerName) && _hluLayerNamesList.Contains(activeLayerName))
+                candidateLayerName = activeLayerName;
+            else
+                candidateLayerName = firstValidLayerName;
+
+            // Set the candidate active layer name.
+            _hluActiveLayer = new(candidateLayerName);
 
             return true;
         }
@@ -2857,6 +2835,51 @@ namespace HLU.GISApplication
             }
             else
                 return null;
+        }
+
+        /// <summary>
+        /// Gets the ordinal for a field matching the expected name, type and (if applicable) maximum length.
+        /// Returns -1 if no match is found.
+        /// </summary>
+        /// <param name="definition">The feature class definition.</param>
+        /// <param name="fieldName">The expected field name.</param>
+        /// <param name="expectedType">The expected Esri field type.</param>
+        /// <param name="expectedMaxLength">The expected maximum length for string fields (0 to ignore).</param>
+        /// <returns>The field ordinal, or -1 if not found.</returns>
+        private static int GetFieldOrdinal(FeatureClassDefinition definition, string fieldName, FieldType expectedType, int expectedMaxLength)
+        {
+            // Note: ArcGIS Pro field name matching is typically case-insensitive, but we keep it ordinal-ignore-case here.
+            IReadOnlyList<Field> fields = definition.GetFields();
+
+            // Loop through all fields looking for a name match.
+            for (int idx = 0; idx < fields.Count; idx++)
+            {
+                // Get the field.
+                Field field = fields[idx];
+
+                // Check for name match.
+                if (!string.Equals(field.Name, fieldName, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                // Check for type match.
+                if (field.FieldType != expectedType)
+                    return -1;
+
+                // Check for length match if string type.
+                if (expectedType == FieldType.String && expectedMaxLength > 0)
+                {
+                    // If the field length exceeds the expected maximum length, return -1.
+                    if (field.Length > expectedMaxLength)
+                        return -1;
+                }
+
+
+                // All checks passed, return the field index.
+                return idx;
+            }
+
+            // No match found.
+            return -1;
         }
 
         /// <summary>

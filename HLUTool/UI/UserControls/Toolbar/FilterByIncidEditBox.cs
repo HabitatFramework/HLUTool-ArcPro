@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Desktop.Framework;
+using System.Text.RegularExpressions;
 using ArcGIS.Desktop.Framework.Contracts;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,7 +18,7 @@ namespace HLU.UI.UserControls.Toolbar
     /// <summary>
     /// Edit box implementation used to filter features by INCID.
     /// </summary>
-    internal class FilterByIncidEditBox : EditBox
+    internal partial class FilterByIncidEditBox : EditBox
     {
         #region Fields
 
@@ -63,6 +64,13 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
+            // Validate format nnnn:nnnnnnn.
+            if (!IncidRegex().IsMatch(incidText))
+            {
+                MessageBox.Show("Incid must be in the format 'nnnn:nnnnnnn'.", "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
             // Filter by the specified Incid.
             await _viewModel.FilterByIncidAsync(incidText);
 
@@ -86,5 +94,12 @@ namespace HLU.UI.UserControls.Toolbar
             bool canFilterByIncid = _viewModel.CanFilterByIncid && _viewModel.GridMainVisibility == Visibility.Visible;
             Enabled = canFilterByIncid;
         }
+
+        #region Regex
+
+        [GeneratedRegex(@"^\d{4}:\d{7}$")]
+        private static partial Regex IncidRegex();
+
+        #endregion Regex
     }
 }

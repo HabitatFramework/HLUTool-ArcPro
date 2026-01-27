@@ -50,7 +50,7 @@ namespace HLU.UI.UserControls.Toolbar
             }
 
             // Enable or disable the button based on CanMerge and main grid visibility.
-            bool CanMerge = (HLU.HLUToolModule.CanMerge && _viewModel.GridMainVisibility == Visibility.Visible);
+            bool CanMerge = (_viewModel.CanMerge && _viewModel.GridMainVisibility == Visibility.Visible);
             Enabled = CanMerge;
 
             // Optional: explain why it is disabled.

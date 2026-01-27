@@ -536,37 +536,6 @@ namespace HLU.UI.ViewModel
 
                 ChangeCursor(Cursors.Wait, "Initialising ...");
 
-                //TODO: Needed?
-                // Let WPF render the cursor/message before heavy work begins.
-                //await Dispatcher.Yield(DispatcherPriority.Background);
-
-                //// Let WPF render cursor/message before heavy work begins.
-                //try
-                //{
-                //    var dispatcher = ArcGIS.Desktop.Framework.FrameworkApplication.Current?.Dispatcher
-                //        ?? System.Windows.Application.Current?.Dispatcher;
-
-                //    if (dispatcher != null)
-                //        await dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Background);
-                //}
-                //catch (Exception ex)
-                //{
-                //    System.Diagnostics.Debug.WriteLine(ex);
-
-                //    // If you really want a UI warning, marshal it onto the UI thread.
-                //    var dispatcher = ArcGIS.Desktop.Framework.FrameworkApplication.Current?.Dispatcher
-                //        ?? System.Windows.Application.Current?.Dispatcher;
-
-                //    if (dispatcher != null)
-                //    {
-                //        await dispatcher.InvokeAsync(() =>
-                //        {
-                //            MessageBox.Show(ex.Message, "HLU: Initialise Application",
-                //                MessageBoxButton.OK, MessageBoxImage.Warning);
-                //        });
-                //    }
-                //}
-
                 // Create table adapter manager for the dataset and connection
                 _hluTableAdapterMgr = new TableAdapterManager(_db, TableAdapterManager.Scope.AllButMMPolygonsHistory);
 
@@ -613,14 +582,14 @@ namespace HLU.UI.ViewModel
                 LoadLookupTables();
 
                 // Check for any pending OSMM updates.
-                await RefreshAnyOSMMUpdatesAsync();
+                await CheckAnyOSMMUpdatesAsync();
 
-                // Check the active map is valid (don't check result at this stage)
-                await CheckActiveMapAsync();
-
-                //TODO: Now done after the active map has been checked. Is this okay?
-                // Move to first row
-                await MoveIncidCurrentRowIndexAsync(1);
+                // Check the active map is valid
+                if (await CheckActiveMapAsync())
+                {
+                    // If it is valid move to first row
+                    await MoveIncidCurrentRowIndexAsync(1);
+                }
 
                 // Initialise the main update view model
                 _viewModelUpd = new ViewModelWindowMainUpdate(this);
@@ -783,7 +752,7 @@ namespace HLU.UI.ViewModel
 
                 // Update the selection in the ComboBox (if it is loaded)
                 // to match the current active layer.
-                _activeLayerComboBox?.SetSelectedItemWithoutSwitch(ActiveLayerName);
+                _activeLayerComboBox?.SetSelectedItem(ActiveLayerName, true);
 
                 // Display a warning message.
                 ShowMessage("Active map does not contain valid HLU layers.", MessageType.Warning);
@@ -818,8 +787,8 @@ namespace HLU.UI.ViewModel
                     _activeLayerComboBox.Initialize();
                 }
 
-                // This should *only* select; it should not be relied on to activate/switch the layer.
-                _activeLayerComboBox.SetSelectedItemWithoutSwitch(ActiveLayerName);
+                // This should *only* select, not to activate/switch the layer.
+                _activeLayerComboBox.SetSelectedItem(ActiveLayerName, true);
             }
 
             // Clear the status bar (or reset the cursor to an arrow)
@@ -2694,53 +2663,59 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Refreshes cached split enablement values and pushes CanSplit to the module.
+        /// Refreshes cached split enablement values.
         /// </summary>
         private void RefreshSplitEnablement()
         {
+            // Compute the new values.
             bool canPhysSplit = ComputeCanPhysicallySplit();
             bool canLogSplit = ComputeCanLogicallySplit();
 
+            // Check if any values have changed.
             bool changed =
                 (_canPhysicallySplit != canPhysSplit) ||
                 (_canLogicallySplit != canLogSplit);
 
+            // Update the cached values.
             _canPhysicallySplit = canPhysSplit;
             _canLogicallySplit = canLogSplit;
 
+            // If nothing changed, exit.
             if (!changed)
                 return;
 
+            // Notify property changes.
             OnPropertyChanged(nameof(CanPhysicallySplit));
             OnPropertyChanged(nameof(CanLogicallySplit));
             OnPropertyChanged(nameof(CanSplit));
-
-            HLU.HLUToolModule.CanSplit = CanSplit;
         }
 
         /// <summary>
-        /// Refreshes cached merge enablement values and pushes CanMerge to the module.
+        /// Refreshes cached merge enablement values.
         /// </summary>
         private void RefreshMergeEnablement()
         {
+            // Compute the new values.
             bool canPhysMerge = ComputeCanPhysicallyMerge();
             bool canLogMerge = ComputeCanLogicallyMerge();
 
+            // Check if any values have changed.
             bool changed =
                 (_canPhysicallyMerge != canPhysMerge) ||
                 (_canLogicallyMerge != canLogMerge);
 
+            // Update the cached values.
             _canPhysicallyMerge = canPhysMerge;
             _canLogicallyMerge = canLogMerge;
 
+            // If nothing changed, exit.
             if (!changed)
                 return;
 
+            // Notify property changes.
             OnPropertyChanged(nameof(CanPhysicallyMerge));
             OnPropertyChanged(nameof(CanLogicallyMerge));
             OnPropertyChanged(nameof(CanMerge));
-
-            HLU.HLUToolModule.CanMerge = CanMerge;
         }
 
         /// <summary>
@@ -4391,9 +4366,10 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Queries the database and updates <see cref="AnyOSMMUpdates"/>.
+        /// Queries the database OSMM updates <see cref="AnyOSMMUpdates"/>.
+        /// <paramref name="cancellationToken"/>
         /// </summary>
-        internal async Task RefreshAnyOSMMUpdatesAsync(CancellationToken cancellationToken = default)
+        internal async Task CheckAnyOSMMUpdatesAsync(CancellationToken cancellationToken = default)
         {
             // Count the number of OSMM updates.
             int rowCount = await CountOSMMUpdatesAsync(cancellationToken).ConfigureAwait(false);
@@ -7077,6 +7053,8 @@ namespace HLU.UI.ViewModel
                     // Check if the GIS and database are in sync.
                     if (CheckInSync("Selection", "Incid", "Not all incid"))
                     {
+                        //TODO: Not comparing correct things. _toidsIncidGisCount and _fragsIncidGisCount
+                        // are only for the current incid not all incids.
                         // Check if the counts returned are less than those expected.
                         if ((_toidsIncidGisCount < expectedNumToids) ||
                                 (_fragsIncidGisCount < expectedNumFeatures))
@@ -9471,8 +9449,10 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(CanCopy));
             OnPropertyChanged(nameof(CanPaste));
 
+            // Update tab control states.
             OnPropertyChanged(nameof(TabItemSelected));
 
+            // Update all other controls.
             RefreshBulkUpdateControls();
             RefreshOSMMUpdateControls();
             RefreshStatus();

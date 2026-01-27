@@ -50,7 +50,7 @@ namespace HLU.UI.UserControls.Toolbar
             }
 
             // Enable or disable the button based on CanSplit and main grid visibility.
-            bool canSplit = (HLU.HLUToolModule.CanSplit && _viewModel.GridMainVisibility == Visibility.Visible);
+            bool canSplit = (_viewModel.CanSplit && _viewModel.GridMainVisibility == Visibility.Visible);
             Enabled = canSplit;
 
             // Optional: explain why it is disabled.

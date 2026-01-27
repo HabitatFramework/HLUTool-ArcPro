@@ -213,24 +213,21 @@ namespace HLU.UI.UserControls.Toolbar
         }
 
         /// <summary>
-        /// Sets the selected item to the specified value without triggering selection change events.
+        /// Sets the selected item in the ComboBox.
         /// </summary>
-        /// <remarks>Use this method when you need to programmatically change the selection without
-        /// invoking any event handlers or logic that normally respond to selection changes. This is useful for
-        /// scenarios where you want to update the selection silently, such as during initialization or batch
-        /// updates.</remarks>
-        /// <param name="value">The value to select. This value is passed to the selection logic to update the current selection.</param>
-        public void SetSelectedItemWithoutSwitch(string value)
+        /// <param name="value">The layer name to select.</param>
+        /// <param name="suppressSwitch">Suppress switching the active GIS layer.</param>
+        /// If true, suppresses OnSelectionChange from switching the active GIS layer.
+        /// </param>
+        public void SetSelectedItem(string value, bool suppressSwitch = false)
         {
             try
             {
-                // Suppress selection change events.
-                _suppressSelectionChange = true;
+                _suppressSelectionChange = suppressSwitch;
                 SetSelectedItem(value);
             }
             finally
             {
-                // Re-enable selection change events.
                 _suppressSelectionChange = false;
             }
         }
