@@ -45,6 +45,9 @@ using CommandType = System.Data.CommandType;
 
 namespace HLU.UI.ViewModel
 {
+    /// <summary>
+    /// Contains the view model for the main window export functionality.
+    /// </summary>
     partial class ViewModelWindowMainExport
     {
         #region Fields
@@ -742,7 +745,7 @@ namespace HLU.UI.ViewModel
                 if ((f.FieldsCount == 0) && ((f.TableName == _viewModelMain.HluDataset.incid.TableName) &&
                     (f.ColumnName == _viewModelMain.HluDataset.incid.incidColumn.ColumnName)))
                 {
-                    // Store the input field position for use later 
+                    // Store the input field position for use later
                     // when exporting the data.
                     _incidOrdinal = f.FieldOrdinal;
 
@@ -750,7 +753,7 @@ namespace HLU.UI.ViewModel
                     // that will be used to sort the input records.
                     sortFields.Add(f.FieldOrdinal + 1);
 
-                    // Store the output field position for use later 
+                    // Store the output field position for use later
                     // as the primary index field ordinal.
                     primaryKeyOrdinal = fieldTotal;
                 }
@@ -2289,7 +2292,7 @@ namespace HLU.UI.ViewModel
 
             for (int i = 0; i < rel.ParentColumns.Length; i++)
             {
-                joinClausePart.Append(String.Format(" AND {0}.{2} = {1}.{3}", parentTableAlias, 
+                joinClausePart.Append(String.Format(" AND {0}.{2} = {1}.{3}", parentTableAlias,
                     currTable, _viewModelMain.DataBase.QuoteIdentifier(rel.ParentColumns[i].ColumnName),
                     _viewModelMain.DataBase.QuoteIdentifier(rel.ChildColumns[i].ColumnName)));
             }

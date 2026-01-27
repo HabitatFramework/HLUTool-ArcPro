@@ -80,11 +80,11 @@ namespace HLU.UI.View
         /// </summary>
         private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            //TODO: Uncommented for debugging.
+            //TODO: Needed?
             if (e.NewValue is not ViewModelWindowMain vm)
                 return;
 
-            //TODO: Needed?
+            // Ensure the tool is initialised.
             AsyncHelpers.ObserveTask(
                 vm.InitializeAndCheckAsync(),
                 "HLU Tool",

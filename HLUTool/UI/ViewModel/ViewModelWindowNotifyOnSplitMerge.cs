@@ -23,6 +23,9 @@ using HLU.Properties;
 
 namespace HLU.UI.ViewModel
 {
+    /// <summary>
+    /// Contains the ViewModel for the Notify On Split/Merge window.
+    /// </summary>
     class ViewModelWindowNotifyOnSplitMerge : ViewModelBase
     {
         #region Fields

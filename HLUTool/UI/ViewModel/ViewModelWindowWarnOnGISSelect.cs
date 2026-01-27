@@ -26,6 +26,9 @@ using HLU.Data;
 
 namespace HLU.UI.ViewModel
 {
+    /// <summary>
+    /// Contains the view model for the GIS selection warning dialog.
+    /// </summary>
     class ViewModelWindowWarnOnGISSelect : ViewModelBase
     {
         #region Fields

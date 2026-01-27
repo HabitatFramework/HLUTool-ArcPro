@@ -28,6 +28,9 @@ using HLU.Data.Model;
 
 namespace HLU.UI.ViewModel
 {
+    /// <summary>
+    /// Contains the ViewModel for the Query Secondaries window.
+    /// </summary>
     class ViewModelWindowQuerySecondaries : ViewModelBase, IDataErrorInfo
     {
         #region Fields

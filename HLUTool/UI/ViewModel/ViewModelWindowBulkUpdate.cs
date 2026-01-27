@@ -29,6 +29,20 @@ using HLU.Properties;
 
 namespace HLU.UI.ViewModel
 {
+    /// <summary>
+    /// Contains the data and commands for the Bulk Update window.
+    /// </summary>
+    /// <param name="viewModelMain"></param>
+    /// <param name="osmmBulkUpdateMode"></param>
+    /// <param name="deleteOrphanBapHabitats"></param>
+    /// <param name="deletePotentialBapHabitats"></param>
+    /// <param name="deleteIHSCodes"></param>
+    /// <param name="deleteSecondaryCodes"></param>
+    /// <param name="sourceCount"></param>
+    /// <param name="createHistory"></param>
+    /// <param name="determinationQuality"></param>
+    /// <param name="interpretationQuality"></param>
+    /// <param name="primaryHabitatChanged"></param>
     class ViewModelWindowBulkUpdate(ViewModelWindowMain viewModelMain,
         bool osmmBulkUpdateMode,
         bool deleteOrphanBapHabitats,

@@ -237,6 +237,7 @@ namespace HLU.UI.ViewModel
             //_ = EnsureInitializedAsync();
         }
 
+        //TODO: Needed?
         /// <summary>
         /// Set the global variables for just the combo box sources.
         /// </summary>
@@ -314,9 +315,10 @@ namespace HLU.UI.ViewModel
                     LayersRemovedEvent.Subscribe(OnLayersRemoved);
                 }
 
-                // Ensure the dockpane is initialised when Pro restores it on startup.
+                // If there are no errors in the dockpane.
                 if (!InError)
                 {
+                    // Ensure the tool is initialised.
                     Task checkTask = InitializeAndCheckAsync();
 
                     // Trap and report any exceptions to the user.

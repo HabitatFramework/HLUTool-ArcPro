@@ -21,6 +21,9 @@ using System.Windows.Input;
 
 namespace HLU.UI.ViewModel
 {
+    /// <summary>
+    /// Contains the data and commands for the About window.
+    /// </summary>
     class ViewModelWindowAbout : ViewModelBase
     {
         #region Fields

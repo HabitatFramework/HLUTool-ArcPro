@@ -34,6 +34,9 @@ using System.Threading.Tasks;
 
 namespace HLU.UI.ViewModel
 {
+    /// <summary>
+    /// Contains methods for performing logical and physical splits of GIS features.
+    /// </summary>
     class ViewModelWindowMainSplit
     {
         #region Fields
@@ -60,31 +63,34 @@ namespace HLU.UI.ViewModel
         /// <returns></returns>
         internal async Task<bool> LogicalSplitAsync()
         {
+            // Check there is a selection.
             if ((_viewModelMain.GisSelection == null) || (_viewModelMain.GisSelection.Rows.Count == 0))
             {
                 MessageBox.Show("Cannot logically split: Nothing is selected on the map.", "HLU: Logical Split",
                     MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 return false;
             }
-            else if (!_viewModelMain.CountSelectedToidFrags(false))
+
+            // Check all selected features exist in the database.
+            if (!_viewModelMain.CountSelectedToidFrags(false))
             {
                 MessageBox.Show("Cannot logically split: One or more selected map features missing from database.",
                     "HLU: Logical Split", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 return false;
             }
+
+            // Check the selection meets the criteria for a logical split.
             if ((_viewModelMain.IncidsSelectedMapCount == 1) &&
                 ((_viewModelMain.GisSelection.Rows.Count > 1) && ((_viewModelMain.ToidsSelectedMapCount > 1) || (_viewModelMain.FragsSelectedMapCount > 1))) ||
                 (_viewModelMain.GisSelection.Rows.Count == 1))
             {
-                // all features in selection share same incid, but *not* toid and toidfragid
+                // All features in selection share same incid, but *not* toid and toidfragid.
                 return await PerformLogicalSplitAsync();
             }
-            else
-            {
-                MessageBox.Show("Cannot logically split: Map selection set contains features belonging to more than one INCID.",
-                    "HLU: Logical Split", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                return false;
-            }
+
+            MessageBox.Show("Cannot logically split: Map selection set contains features belonging to more than one INCID.",
+                "HLU: Logical Split", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+            return false;
         }
 
         /// <summary>
@@ -93,7 +99,7 @@ namespace HLU.UI.ViewModel
         /// <remarks>This method attempts to split the selected feature into two logical entities by
         /// creating a new  identifier (INCID) and updating the GIS layer and its associated database records
         /// accordingly.  The operation ensures that the selected feature is not the only one associated with the
-        /// current  INCID before proceeding. If the operation is successful, the GIS layer and database are updated, 
+        /// current  INCID before proceeding. If the operation is successful, the GIS layer and database are updated,
         /// and the application state is synchronized with the changes.  The method handles database transactions to
         /// ensure atomicity and rolls back changes in case of  an error. It also updates history records to reflect the
         /// changes made during the split.</remarks>
@@ -104,14 +110,18 @@ namespace HLU.UI.ViewModel
             // Check if selected feature is the only one pertaining to its incid
             if (_viewModelMain.GisSelection.Rows.Count == 1)
             {
+                // Create a count query to determine how many features exist for the current incid.
                 String cntSQL = String.Format(
                     "SELECT COUNT(*) FROM {0} WHERE {1} = {2}",
                     _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
                     _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.incidColumn.ColumnName),
                     _viewModelMain.DataBase.QuoteValue(_viewModelMain.Incid));
 
+                // Execute the count query.
                 int featCount = (int)_viewModelMain.DataBase.ExecuteScalar(cntSQL,
                     _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text);
+
+                // If only one feature exists for the current incid then abort the split.
                 if (featCount < 2)
                 {
                     MessageBox.Show(String.Format("Cannot logically split: Feature selected in map is the only" +
@@ -121,6 +131,7 @@ namespace HLU.UI.ViewModel
                 }
             }
 
+            // Begin the logical split transaction.
             bool success = true;
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
@@ -140,14 +151,16 @@ namespace HLU.UI.ViewModel
                 if (!CloneCurrentIncid(false, out msg)) throw new Exception(msg);
                 string newIncid = _viewModelMain.RecIDs.CurrentIncid;
 
-                // Update the GIS layer
-                DataTable historyTable = _viewModelMain.GISApplication.SplitFeaturesLogically(_viewModelMain.Incid, newIncid,
-                    _viewModelMain.HistoryColumns.Concat([ new(
-                            _viewModelMain.HluDataset.history.modified_toidfragidColumn.ColumnName.Replace(
-                            _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.ColumnName, String.Empty) +
-                            ArcProApp.HistoryAdditionalFieldsDelimiter +
-                            _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.ColumnName,
-                            _viewModelMain.HluDataset.history.modified_toidfragidColumn.DataType)]).ToArray());
+                // Prepare the history columns for the split operation.
+                DataColumn[] historyColumns = _viewModelMain.HistoryColumns.Concat([ new(
+                        _viewModelMain.HluDataset.history.modified_toidfragidColumn.ColumnName.Replace(
+                        _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.ColumnName, String.Empty) +
+                        ArcProApp.HistoryAdditionalFieldsDelimiter +
+                        _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.ColumnName,
+                        _viewModelMain.HluDataset.history.modified_toidfragidColumn.DataType)]).ToArray();
+
+                // Update the GIS layer and retrieve the history of changes made.
+                DataTable historyTable = await _viewModelMain.GISApplication.SplitFeaturesLogicallyAsync(_viewModelMain.Incid, newIncid, historyColumns);
 
                 // If an error occurred when updating the GIS layer or
                 // if no history row were collected then throw an exception.
@@ -195,6 +208,7 @@ namespace HLU.UI.ViewModel
                 ViewModelWindowMainHistory vmHist = new(_viewModelMain);
                 vmHist.HistoryWrite(fixedValues, historyTable, Operations.LogicalSplit, nowDtTm);
 
+                // Commit the transaction.
                 _viewModelMain.DataBase.CommitTransaction();
                 _viewModelMain.HluDataset.AcceptChanges();
 
@@ -241,22 +255,26 @@ namespace HLU.UI.ViewModel
         /// <returns></returns>
         internal async Task<bool> PhysicalSplitAsync()
         {
+            // Check there is a selection.
             if ((_viewModelMain.GisSelection == null) || (_viewModelMain.GisSelection.Rows.Count == 0))
             {
                 MessageBox.Show("Cannot physically split: Nothing is selected on the map.", "HLU: Physical Split",
                     MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 return false;
             }
+            // Check all selected features exist in the database.
             else if (!_viewModelMain.CountSelectedToidFrags(true))
             {
                 MessageBox.Show("Cannot physically split: One or more selected map features missing from database.",
                     "HLU: Physical Split", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 return false;
             }
+
+            // Check the selection meets the criteria for a physical split.
             if ((_viewModelMain.GisSelection.Rows.Count > 1) && (_viewModelMain.IncidsSelectedMapCount == 1) &&
                 (_viewModelMain.ToidsSelectedMapCount == 1) && (_viewModelMain.FragsSelectedMapCount == 1))
             {
-                // all features in selection share same incid, toid and toidfragid
+                // All features in selection share same incid, toid and toidfragid.
                 return await PerformPhysicalSplitAsync();
             }
             else
@@ -279,6 +297,7 @@ namespace HLU.UI.ViewModel
         /// langword="false"/>.</returns>
         private async Task<bool> PerformPhysicalSplitAsync()
         {
+            // Begin the physical split transaction.
             bool success = true;
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
@@ -307,12 +326,14 @@ namespace HLU.UI.ViewModel
                 string currentToidFragmentID = _viewModelMain.FragsSelectedMap.ElementAt(0);
 
                 // update records in GIS and collect new features resulting from split
-                DataTable newFeatures = _viewModelMain.GISApplication.SplitFeature(currentToidFragmentID,
+                DataTable newFeatures = _viewModelMain.GISApplication.SplitFeaturePhysically(currentToidFragmentID,
                     lastToidFragmentID, featuresFilter[0],
                     _viewModelMain.HluDataset.incid_mm_polygons.Columns.Cast<DataColumn>().Where(c =>
                         c.ColumnName != _viewModelMain.HluDataset.incid_mm_polygons.shape_lengthColumn.ColumnName &&
                         c.ColumnName != _viewModelMain.HluDataset.incid_mm_polygons.shape_areaColumn.ColumnName).ToArray());
 
+                // If an error occurred when updating the GIS layer or
+                // if less than two new features were returned then throw an exception.
                 if ((newFeatures == null) || (newFeatures.Rows.Count < 2))
                     throw new Exception("Failed to update GIS layer.");
 
@@ -334,6 +355,7 @@ namespace HLU.UI.ViewModel
                 HluDataSet.incid_mm_polygonsDataTable updTable = new();
                 _viewModelMain.GetIncidMMPolygonRows(originalFeatureWhereClause, ref updTable);
 
+                // If an error occurred when fetching the original split feature then throw an exception.
                 if ((updTable == null) || (updTable.Rows.Count != 1))
                     throw new Exception("Failed to fetch incid_mm_polygon rows.");
 
@@ -347,6 +369,7 @@ namespace HLU.UI.ViewModel
                 foreach (DataColumn c in delCols)
                     history.Columns.Remove(c);
 
+                // Write history for original split feature.
                 vmHist.HistoryWrite(null, history, Operations.PhysicalSplit, nowDtTm);
 
                 // update the original row
@@ -390,13 +413,17 @@ namespace HLU.UI.ViewModel
                         throw new Exception("Failed to insert new rows into database copy of GIS layer.");
                 }
 
+                // Update the incid modified columns (i.e. last modified user and date).
                 _viewModelMain.ViewModelUpdate.UpdateIncidModifiedColumns(_viewModelMain.IncidsSelectedMap.ElementAt(0), nowDtTm);
 
+
+                // Commit the transaction.
                 _viewModelMain.DataBase.CommitTransaction();
                 _viewModelMain.HluDataset.AcceptChanges();
             }
             catch (Exception ex)
             {
+                // Rollback the transaction.
                 _viewModelMain.DataBase.RollbackTransaction();
                 success = false;
                 MessageBox.Show("Split operation failed. The error message returned was:\n\n" +
@@ -453,6 +480,7 @@ namespace HLU.UI.ViewModel
         {
             errorMessage = null;
 
+            // If requested, start a database transaction.
             if (startTransaction && !_viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted))
                 throw new Exception("Failed to start a database transaction.");
 
@@ -1028,7 +1056,7 @@ namespace HLU.UI.ViewModel
                         throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid_osmm_updates.TableName));
                 }
 
-                // Commit the changes
+                // Commit the transaction if one was started.
                 if (startTransaction) _viewModelMain.DataBase.CommitTransaction();
 
                 return true;
@@ -1036,6 +1064,8 @@ namespace HLU.UI.ViewModel
             catch (Exception ex)
             {
                 errorMessage = ex.Message;
+
+                // If a transaction was started, roll it back.
                 if (startTransaction)
                 {
                     _viewModelMain.DataBase.RollbackTransaction();
@@ -1046,6 +1076,15 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Clones a DataRow of type R from a DataTable of type T, replacing the value in the specified column.
+        /// </summary>
+        /// <typeparam name="R"></typeparam>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="row"></param>
+        /// <param name="incidColumnOrdinal"></param>
+        /// <param name="incid"></param>
+        /// <returns></returns>
         private R CloneRow<R, T>(R row, int incidColumnOrdinal, string incid)
             where R : DataRow
             where T : DataTable
@@ -1079,7 +1118,10 @@ namespace HLU.UI.ViewModel
         /// <returns>Updated incid_bap row, or null if no corresponding row was found.</returns>
         private HluDataSet.incid_bapRow UpdateIncidBapRow(BapEnvironment be)
         {
+            // Find the corresponding incid_bap row.
             var q = _viewModelMain.IncidBapRows.Where(r => r.RowState != DataRowState.Deleted && r.bap_id == be.bap_id);
+
+            // If exactly one row was found, update it with the values from the BapEnvironment object.
             if (q.Count() == 1)
             {
                 if (!be.IsValid()) return null;

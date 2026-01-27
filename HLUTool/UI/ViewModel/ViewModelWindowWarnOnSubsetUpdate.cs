@@ -24,6 +24,9 @@ using HLU.Data;
 
 namespace HLU.UI.ViewModel
 {
+    /// <summary>
+    /// Cotnains the ViewModel for the WarnOnSubsetUpdate window.
+    /// </summary>
     class ViewModelWindowWarnOnSubsetUpdate : ViewModelBase
     {
         #region Fields

@@ -122,8 +122,6 @@ namespace HLU.UI.ViewModel
         private WindowNotifyOnSplitMerge _windowWarnSplitMerge;
         private ViewModelWindowNotifyOnSplitMerge _viewModelWinWarnSplitMerge;
         private WindowWarnOnSubsetUpdate _windowWarnSubsetUpdate;
-        private WindowCompletePhysicalSplit _windowCompSplit;
-        private ViewModelWindowCompletePhysicalSplit _vmCompSplit;
         private ViewModelWindowWarnOnSubsetUpdate _viewModelWinWarnSubsetUpdate;
         private ViewModelWindowMainBulkUpdate _viewModelBulkUpdate;
         private ViewModelWindowMainOSMMUpdate _viewModelOSMMUpdate;
@@ -427,7 +425,7 @@ namespace HLU.UI.ViewModel
 
         #endregion Static fields
 
-        #endregion
+        #endregion Fields
 
         #region Constructor
 
@@ -891,7 +889,7 @@ namespace HLU.UI.ViewModel
             return true;
         }
 
-        #endregion
+        #endregion Constructor
 
         #region Load Lookup Tables
 
@@ -1406,7 +1404,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Load Lookup Tables
 
         #region Internal properties
 
@@ -1758,12 +1756,12 @@ namespace HLU.UI.ViewModel
 
         #endregion
 
-                #region Defaults
+        #region Defaults
 
-                /// <summary>
-                /// Get the BAP determination quality default descriptions
-                /// from the lookup table and update them in the settings.
-                /// </summary>
+        /// <summary>
+        /// Get the BAP determination quality default descriptions
+        /// from the lookup table and update them in the settings.
+        /// </summary>
         private void GetBapDefaults()
         {
             try
@@ -1797,7 +1795,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Defaults
 
         #region Cursor
 
@@ -1828,7 +1826,7 @@ namespace HLU.UI.ViewModel
             //    DispatcherHelper.DoEvents();
         }
 
-        #endregion
+        #endregion Cursor
 
         #region Button Images
 
@@ -2171,7 +2169,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion User ID
 
         #region Close Command
 
@@ -2258,7 +2256,7 @@ namespace HLU.UI.ViewModel
             get { return _closing; }
         }
 
-        #endregion
+        #endregion Close Command
 
         #region Copy and Paste
 
@@ -2332,7 +2330,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Copy and Paste
 
         #region Checks
 
@@ -2595,7 +2593,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Navigation Commands
 
         #region Can Split/Merge
 
@@ -2748,7 +2746,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Convenience method to refresh both.
+        /// Refreshes both the cached split and merge enablement values.
         /// </summary>
         private void RefreshSplitMergeEnablement()
         {
@@ -2761,20 +2759,23 @@ namespace HLU.UI.ViewModel
         #region Logical Split
 
         /// <summary>
-        /// LogicalSplitCommand event handler.
+        /// Performs a logical split operation on the selected GIS layer.
         /// </summary>
-        /// <param name="param"></param>
+        /// <remarks>This method temporarily disables automatic splitting, retrieves the current map
+        /// selection,  and then re-enables automatic splitting before initiating the logical split operation.  Upon
+        /// successful completion, a notification is displayed to the user.</remarks>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task LogicalSplitAsync()
         {
             _autoSplit = false;
 
-            // Get the GIS layer selection again (just in case)
+            // Get the GIS layer selection again (just in case).
             await GetMapSelectionAsync(false);
 
             _autoSplit = true;
 
             // Check the selected rows are unique before attempting to split them.
-            if (!_gisApp.SelectedRowsUnique())
+            if (!await _gisApp.SelectedRowsUniqueAsync())
             {
                 MessageBox.Show("The map selection contains one or more features where a physical split has not been completed.\n\n" +
                     "Please select the features and invoke the Split command to prevent the map and database going out of sync.",
@@ -2783,6 +2784,7 @@ namespace HLU.UI.ViewModel
                 return;
             }
 
+            // Create ViewModel for split class.
             ViewModelWindowMainSplit vmSplit = new(this);
 
             // Execute the logical split and wait for the result.
@@ -2806,11 +2808,12 @@ namespace HLU.UI.ViewModel
         {
             _autoSplit = false;
 
-            // Get the GIS layer selection again (just in case)
+            // Get the GIS layer selection again (just in case).
             await GetMapSelectionAsync(false);
 
             _autoSplit = true;
 
+            // Create ViewModel for split class.
             ViewModelWindowMainSplit vmSplit = new(this);
 
             // Execute the physical split and wait for the result.
@@ -2819,96 +2822,22 @@ namespace HLU.UI.ViewModel
                 NotifySplitMerge("Physical split completed.");
         }
 
-        internal async Task<bool> TriggerPhysicalSplitAsync()
-        {
-            if (IsAuthorisedUser)
-            {
-                if (!CanPhysicallySplit)
-                {
-                    // Create complete physical split reason/process window.
-                    _windowCompSplit = new()
-                    {
-                        // Set ArcGIS Pro as the parent
-                        Owner = FrameworkApplication.Current.MainWindow,
-                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                        Topmost = true
-                    };
-
-                    // Create ViewModel to which main window binds
-                    _vmCompSplit = new ViewModelWindowCompletePhysicalSplit(_reason, _process, _reasonCodes, _processCodes);
-
-                    // When ViewModel asks to be closed, close window
-                    _vmCompSplit.RequestClose -= vmCompSplit_RequestClose; // Safety: avoid double subscription.
-                    _vmCompSplit.RequestClose += new ViewModelWindowCompletePhysicalSplit.RequestCloseEventHandler(vmCompSplit_RequestClose);
-
-                    // Allow all controls in window to bind to ViewModel by setting DataContext
-                    _windowCompSplit.DataContext = _vmCompSplit;
-
-                    // Show window
-                    _windowCompSplit.ShowDialog();
-                }
-                if (CanPhysicallySplit)
-                {
-                    ViewModelWindowMainSplit vmSplit = new(this);
-
-                    if (await vmSplit.PhysicalSplitAsync())
-                        NotifySplitMerge("Physical split completed.");
-                }
-                else
-                {
-                    MessageBox.Show("Could not complete physical split.\nPlease invoke the Split command before altering the map selection.",
-                        "HLU: Physical Split", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                }
-            }
-            else
-            {
-                MessageBox.Show("Could not complete physical split because you are not an authorized user.\n" +
-                    "Please undo your map changes to prevent map and database going out of sync.",
-                    "HLU: Physical Split", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-            }
-
-            return true;
-        }
-
-        //TODO: Remove window and stop split from happening without reason/process set.
-        private void vmCompSplit_RequestClose(string reason, string process)
-        {
-            // Remove the event handler and close the window.
-            _vmCompSplit.RequestClose -= vmCompSplit_RequestClose;
-            _windowCompSplit.Close();
-
-            // Set the reason and process values if supplied.
-            if (!String.IsNullOrEmpty(reason))
-            {
-                _reason = reason;
-                OnPropertyChanged(nameof(Reason));
-            }
-            if (!String.IsNullOrEmpty(process))
-            {
-                _process = process;
-                OnPropertyChanged(nameof(Process));
-            }
-
-            //TODO: Move to combobox in toolbar?
-            // Refreshes the status-related properties and notifies listeners of property changes.
-            RefreshStatus();
-        }
-
         #endregion Physical Split
 
         #region Logical Merge
 
         /// <summary>
-        /// LogicalMergeCommand event handler.
+        /// Performs a logical merge operation on the selected GIS layer.
         /// </summary>
-        /// <param name="param"></param>
+        /// <remarks>This method retrieves the current map selection and then initiates the logical merge operation.
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task LogicalMergeAsync()
         {
-            // Get the GIS layer selection again (just in case)
+            // Get the GIS layer selection again (just in case).
             await GetMapSelectionAsync(false);
 
             // Check the selected rows are unique before attempting to merge them.
-            if (!_gisApp.SelectedRowsUnique())
+            if (!await _gisApp.SelectedRowsUniqueAsync())
             {
                 MessageBox.Show("The map selection contains one or more features where a physical split has not been completed.\n\n" +
                     "Please select the features and invoke the Split command to prevent the map and database going out of sync.",
@@ -2917,6 +2846,7 @@ namespace HLU.UI.ViewModel
                 return;
             }
 
+            // Create ViewModel for merge class.
             ViewModelWindowMainMerge vmMerge = new(this);
 
             // Execute the logical merge and wait for the result.
@@ -2930,16 +2860,17 @@ namespace HLU.UI.ViewModel
         #region Physical Merge
 
         /// <summary>
-        /// PhysicalMergeCommand event handler.
+        /// Performs a physical merge operation on the selected GIS layer.
         /// </summary>
-        /// <param name="param"></param>
+        /// <remarks>This method retrieves the current map selection and then initiates the physical merge operation.
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task PhysicalMergeAsync()
         {
-            // Get the GIS layer selection again (just in case)
+            // Get the GIS layer selection again (just in case).
             await GetMapSelectionAsync(false);
 
             // Check the selected rows are unique before attempting to merge them.
-            if (!_gisApp.SelectedRowsUnique())
+            if (!await _gisApp.SelectedRowsUniqueAsync())
             {
                 MessageBox.Show("The map selection contains one or more features where a physical split has not been completed.\n\n" +
                     "Please select the features and invoke the Split command to prevent the map and database going out of sync.",
@@ -2948,6 +2879,7 @@ namespace HLU.UI.ViewModel
                 return;
             }
 
+            // Create ViewModel for merge class.
             ViewModelWindowMainMerge vmMerge = new(this);
 
             // Execute the physical merge and wait for the result.
@@ -2961,7 +2893,7 @@ namespace HLU.UI.ViewModel
         #region Notify SplitMerge
 
         /// <summary>
-        /// Notify the user following the completion of a split of merge
+        /// Notify the user following the completion of a split or merge
         /// if the options specify they want to be notified.
         /// </summary>
         private void NotifySplitMerge(string msgText)
@@ -3008,7 +2940,7 @@ namespace HLU.UI.ViewModel
             _notifyOnSplitMerge = Settings.Default.NotifyOnSplitMerge;
         }
 
-        #endregion
+        #endregion Notify SplitMerge
 
         #region Update
 
@@ -3134,7 +3066,7 @@ namespace HLU.UI.ViewModel
                     _savingAttempted = false;
 
                     //TODO: Catch exceptions?
-                    await _viewModelUpd.UpdateAsync();
+                    await _viewModelUpd.PerformUpdateAsync();
                 }
                 return;
             }
@@ -3184,7 +3116,7 @@ namespace HLU.UI.ViewModel
                 _savingAttempted = false;
 
                 //TODO: Catch exceptions?
-                await _viewModelUpd.UpdateAsync();
+                await _viewModelUpd.PerformUpdateAsync();
             }
             else
             {
@@ -3199,8 +3131,10 @@ namespace HLU.UI.ViewModel
                         // Set the status to processing and the cursor to wait.
                         ChangeCursor(Cursors.Wait, "Splitting ...");
 
-                        // Logically split the features for the current incid into a new incid.
+                        // Create ViewModel for split class.
                         ViewModelWindowMainSplit vmSplit = new(this);
+
+                        // Logically split the features for the current incid into a new incid.
                         _splitting = true;
                         if (!await vmSplit.LogicalSplitAsync())
                         {
@@ -3226,7 +3160,7 @@ namespace HLU.UI.ViewModel
                     _savingAttempted = false;
 
                     //TODO: Catch exceptions?
-                    await _viewModelUpd.UpdateAsync();
+                    await _viewModelUpd.PerformUpdateAsync();
 
                     // Recount the number of toids and fragments for the current incid
                     // selected in the GIS and in the database.
@@ -3419,7 +3353,7 @@ namespace HLU.UI.ViewModel
             ChangeCursor(Cursors.Arrow, null);
         }
 
-        #endregion
+        #endregion Update
 
         #region Bulk Update
 
@@ -3652,7 +3586,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Bulk Update
 
         #region OSMM Update
 
@@ -4174,7 +4108,7 @@ namespace HLU.UI.ViewModel
             get { return _osmmUpdatesEmpty ? 0 : _incidCurrentRowIndex; }
         }
 
-        #endregion
+        #endregion OSMM Update
 
         #region OSMM Update Edits
 
@@ -4281,7 +4215,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion OSMM Update Edits
 
         #region OSMM Bulk Update
 
@@ -4524,7 +4458,7 @@ namespace HLU.UI.ViewModel
             await OSMMUpdateRejectClickedAsync();
         }
 
-        #endregion
+        #endregion OSMM Bulk Update
 
         #region View
 
@@ -4544,7 +4478,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public bool CanZoomToSelection { get { return _gisSelection != null; } }
 
-        #endregion
+        #endregion View
 
         #region Options
 
@@ -4670,7 +4604,7 @@ namespace HLU.UI.ViewModel
             _warnBeforeGISSelect = Settings.Default.WarnBeforeGISSelect;
         }
 
-        #endregion
+        #endregion Options
 
         #region About
 
@@ -4764,7 +4698,7 @@ namespace HLU.UI.ViewModel
             _windowAbout.Close();
         }
 
-        #endregion
+        #endregion About
 
         #region Export
 
@@ -5208,7 +5142,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Filter by Attributes Command
 
         #region Filter by Incid Command
 
@@ -5378,7 +5312,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Filter by Incid Command
 
         #region Filter by OSMM Updates Command
 
@@ -5737,7 +5671,7 @@ namespace HLU.UI.ViewModel
                                 ClearForm();
 
                                 // Clear the map selection.
-                                _gisApp.ClearMapSelection();
+                                await _gisApp.ClearMapSelectionAsync();
 
                                 // Reset the map counters
                                 _incidsSelectedMapCount = 0;
@@ -5774,7 +5708,7 @@ namespace HLU.UI.ViewModel
                             ClearForm();
 
                             // Clear the map selection.
-                            _gisApp.ClearMapSelection();
+                            await _gisApp.ClearMapSelectionAsync();
 
                             // Reset the map counters
                             _incidsSelectedMapCount = 0;
@@ -5960,7 +5894,7 @@ namespace HLU.UI.ViewModel
                             ClearForm();
 
                             // Clear the map selection.
-                            _gisApp.ClearMapSelection();
+                            await _gisApp.ClearMapSelectionAsync();
 
                             // Reset the map counters
                             _incidsSelectedMapCount = 0;
@@ -5997,7 +5931,7 @@ namespace HLU.UI.ViewModel
                         ClearForm();
 
                         // Clear the map selection.
-                        _gisApp.ClearMapSelection();
+                        await _gisApp.ClearMapSelectionAsync();
 
                         // Reset the map counters
                         _incidsSelectedMapCount = 0;
@@ -6120,7 +6054,7 @@ namespace HLU.UI.ViewModel
             _incidOSMMUpdatesStatus = null;
         }
 
-        #endregion
+        #endregion Filter by OSMM Updates Command
 
         #region Select On Map Command
 
@@ -6351,7 +6285,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Select On Map Command
 
         #region Get Map Selection
 
@@ -6473,20 +6407,10 @@ namespace HLU.UI.ViewModel
                     // Reset the flag again.
                     _readingMap = false;
 
-                    // Perform physical split if the conditions are met.
-                    if (_autoSplit && (_gisSelection != null) && (_gisSelection.Rows.Count > 1) && (_incidsSelectedMapCount == 1) &&
-                        (_toidsSelectedMapCount == 1) && (_fragsSelectedMapCount == 1))
-                    {
-                        // Trigger the physical split.
-                        await TriggerPhysicalSplitAsync();
-                    }
-                    else
-                    {
-                        ChangeCursor(Cursors.Arrow, null);
+                    ChangeCursor(Cursors.Arrow, null);
 
-                        // Check if the GIS and database are in sync.
-                        CheckInSync("Selection", "Map");
-                    }
+                    // Check if the GIS and database are in sync.
+                    CheckInSync("Selection", "Map");
 
                     // Clear any messages.
                     ClearMessage();
@@ -6619,7 +6543,7 @@ namespace HLU.UI.ViewModel
             get { return BulkUpdateMode == false && OSMMUpdateMode == false && BapHabitatsAutoEnabled; }
         }
 
-        #endregion
+        #endregion Priority Habitats Command
 
         #region Potential Priority Habitats Command
 
@@ -6715,7 +6639,7 @@ namespace HLU.UI.ViewModel
             get { return BulkUpdateMode == false && OSMMUpdateMode == false && BapHabitatsUserEnabled; }
         }
 
-        #endregion
+        #endregion Potential Priority Habitats Command
 
         #region Add Secondary Habitat Command
 
@@ -6971,7 +6895,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Add Secondary Habitat Command
 
         #region Select All On Map Command
 
@@ -7074,7 +6998,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Select All On Map Command
 
         #region Clear Filter Command
 
@@ -7163,7 +7087,7 @@ namespace HLU.UI.ViewModel
             ChangeCursor(Cursors.Arrow, null);
         }
 
-        #endregion
+        #endregion Clear Filter Command
 
         #region Select Helpers
 
@@ -7568,7 +7492,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Select Helpers
 
         #region Switch GIS Layer
 
@@ -7667,7 +7591,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Switch GIS Layer
 
         #region Data Tables
 
@@ -7850,7 +7774,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Data Tables
 
         #region Data Rows
 
@@ -8071,7 +7995,7 @@ namespace HLU.UI.ViewModel
                         ClearForm();
 
                         // Clear the map selection.
-                        _gisApp.ClearMapSelection();
+                        await _gisApp.ClearMapSelectionAsync();
 
                         // Reset the map counters
                         _incidsSelectedMapCount = 0;
@@ -8227,7 +8151,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Data Rows
 
         #region Data Row Helpers
 
@@ -9418,7 +9342,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Data Row Helpers
 
         #region Refresh
 
@@ -9543,6 +9467,9 @@ namespace HLU.UI.ViewModel
 
             OnPropertyChanged(nameof(Reason));
             OnPropertyChanged(nameof(Process));
+
+            // Refresh both the cached split and merge enablement values.
+            RefreshSplitMergeEnablement();
         }
 
         /// <summary>
@@ -9842,7 +9769,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(IncidHistory));
         }
 
-        #endregion
+        #endregion Refresh
 
         #region Lock Editing Controls
 
@@ -9973,7 +9900,7 @@ namespace HLU.UI.ViewModel
             set { _tabSourcesControlsEnabled = value; }
         }
 
-        #endregion
+        #endregion Lock Editing Controls
 
         #region Header Fields
 
@@ -10130,7 +10057,7 @@ namespace HLU.UI.ViewModel
             set { if ((IncidCurrentRow != null) && (value != null)) _incidLastModifiedUser = value; }
         }
 
-        #endregion
+        #endregion Header Fields
 
         #region OSMM Updates
 
@@ -10361,7 +10288,7 @@ namespace HLU.UI.ViewModel
             set { _resetOSMMUpdatesStatus = value; }
         }
 
-        #endregion
+        #endregion OSMM Updates
 
         #region Reason and Process
 
@@ -10458,7 +10385,7 @@ namespace HLU.UI.ViewModel
             set { _process = value; }
         }
 
-        #endregion
+        #endregion Reason and Process
 
         #region Habitat Tab
 
@@ -10470,6 +10397,8 @@ namespace HLU.UI.ViewModel
         {
             get { return "Habitats"; }
         }
+
+        #endregion Habitat Tab
 
         #region Habitat Class
 
@@ -10865,7 +10794,7 @@ namespace HLU.UI.ViewModel
             set { }
         }
 
-        #endregion
+        #endregion Habitat Class
 
         #region Primary Habitat
 
@@ -11083,7 +11012,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Primary Habitat
 
         #region Secondary Habitats
 
@@ -11601,7 +11530,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(HabitatTabLabel));
         }
 
-        #endregion
+        #endregion Secondary Habitats
 
         #region Legacy
 
@@ -11698,9 +11627,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
-
-        #endregion
+        #endregion Legacy
 
         #region IHS Tab
 
@@ -11786,7 +11713,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion IHS Habitat
 
         #region IHS Matrix
 
@@ -11975,7 +11902,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion IHS Matrix
 
         #region IHS Formation
 
@@ -12119,7 +12046,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion IHS Formation
 
         #region IHS Management
 
@@ -12264,7 +12191,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion IHS Management
 
         #region IHS Complex
 
@@ -12409,7 +12336,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion IHS Complex
 
         #region IHS Summary
 
@@ -12457,7 +12384,7 @@ namespace HLU.UI.ViewModel
 
         #endregion
 
-        #endregion
+        #endregion IHS Tab
 
         #region Priority Tab
 
@@ -13133,9 +13060,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Priority Habitat
 
-        #endregion
+        #endregion Priority Tab
 
         #region Details Tab
 
@@ -13182,7 +13109,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion General Comments
 
         #region Maps
 
@@ -13274,7 +13201,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Maps
 
         #region Site
 
@@ -13334,7 +13261,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Site
 
         #region Condition
 
@@ -13658,7 +13585,7 @@ namespace HLU.UI.ViewModel
             get { return (IncidCondition != null); }
         }
 
-        #endregion
+        #endregion Condition
 
         #region Quality
 
@@ -13863,9 +13790,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Quality
 
-        #endregion
+        #endregion Details Tab
 
         #region Sources Tab
 
@@ -14104,7 +14031,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Sources
 
         #region Source1
 
@@ -14374,7 +14301,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Source1
 
         #region Source2
 
@@ -14618,7 +14545,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Source2
 
         #region Source3
 
@@ -14862,11 +14789,11 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Source 3
 
-        #endregion
+        #endregion Sources
 
-        # region History Tab
+        #region History Tab
 
         /// <summary>
         /// Gets the incid history and formats it ready for display in the form.
@@ -14953,7 +14880,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Histore Tab
 
         #region Record IDs
 
@@ -14977,7 +14904,7 @@ namespace HLU.UI.ViewModel
 
         private int NextIncidConditionId { get { return _recIDs.NextIncidConditionId; } }
 
-        #endregion
+        #endregion Record IDs
 
         #region SQLUpdater
 
@@ -15111,7 +15038,7 @@ namespace HLU.UI.ViewModel
             return sqlcmd;
         }
 
-        #endregion
+        #endregion SQLUpdater
 
         #region Validation
 
@@ -15492,7 +15419,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Validation
 
         #region IDataErrorInfo Members
 

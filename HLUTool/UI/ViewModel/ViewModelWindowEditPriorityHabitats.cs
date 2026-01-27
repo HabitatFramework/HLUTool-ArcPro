@@ -31,6 +31,9 @@ using HLU.UI.View;
 
 namespace HLU.UI.ViewModel
 {
+    /// <summary>
+    /// Contains the ViewModel for the Edit Priority Habitats window.
+    /// </summary>
     class ViewModelWindowEditPriorityHabitats : ViewModelBase, IDataErrorInfo
     {
         public static HluDataSet HluDatasetStatic = null;

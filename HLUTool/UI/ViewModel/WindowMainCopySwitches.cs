@@ -29,6 +29,9 @@ using HLU.Data;
 
 namespace HLU.UI.ViewModel
 {
+    /// <summary>
+    /// Contains the copy switches and values for copying/pasting between incid records.
+    /// </summary>
     public class WindowMainCopySwitches : INotifyPropertyChanged
     {
         #region Fields

@@ -21,6 +21,9 @@ using System.Windows.Input;
 
 namespace HLU.UI.ViewModel
 {
+    /// <summary>
+    /// Contains the view model for a message window.
+    /// </summary>
     class ViewModelWindowMessage : ViewModelBase
     {
         #region Private Members

@@ -66,7 +66,8 @@ namespace HLU.UI.ViewModel
         /// Writes changes made to current incid back to database and GIS layer.
         /// Also synchronizes shadow copy of GIS layer in DB and writes history.
         /// </summary>
-        internal async Task<bool> UpdateAsync()
+        /// <returns>True if update successful, false if not.</returns>
+        internal async Task<bool> PerformUpdateAsync()
         {
             // Start database transaction
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);

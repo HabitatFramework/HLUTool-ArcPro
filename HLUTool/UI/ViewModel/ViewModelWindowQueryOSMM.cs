@@ -40,6 +40,9 @@ using HLU.UI.UserControls;
 
 namespace HLU.UI.ViewModel
 {
+    /// <summary>
+    /// Contains the view model for the OSMM Updates Query window.
+    /// </summary>
     public class OSMMUpdates
     {
         #region Fields

@@ -4251,6 +4251,7 @@ namespace HLU.GISApplication
                         i += 1;
                     }
 
+                    // Return a valid HLU layer result from the CIM/Geodatabase check.
                     return HluLayerCheckResult.Valid(
                         featureLayer,
                         featureClass,
@@ -4258,6 +4259,7 @@ namespace HLU.GISApplication
                         hluFieldNames);
                 });
 
+                // If not a valid HLU layer return false.
                 if (!result.IsHlu)
                     return false;
 

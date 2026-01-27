@@ -44,6 +44,9 @@ using CommandType = System.Data.CommandType;
 
 namespace HLU.UI.ViewModel
 {
+    /// <summary>
+    /// Contains the view model for the main window bulk update functionality.
+    /// </summary>
     class ViewModelWindowMainBulkUpdate
     {
         #region Fields
@@ -1715,9 +1718,9 @@ namespace HLU.UI.ViewModel
             }
 
             // Add any other history columns to be updated
-            var addCols = _viewModelMain.HistoryColumns.Where(h => 
+            var addCols = _viewModelMain.HistoryColumns.Where(h =>
                 _viewModelMain.HluDataset.incid_mm_polygons.Columns.Contains(h.ColumnName) &&
-                _viewModelMain.IncidCurrentRow.Table.Columns.Contains(h.ColumnName) && 
+                _viewModelMain.IncidCurrentRow.Table.Columns.Contains(h.ColumnName) &&
                 !_viewModelMain.IncidCurrentRow.IsNull(h.ColumnName));
 
             if (addCols.Any())

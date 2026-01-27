@@ -28,6 +28,11 @@ using HLU.GISApplication;
 
 namespace HLU.UI.ViewModel
 {
+    /// <summary>
+    /// Contains the view model for the Merge Features window.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="R"></typeparam>
     class ViewModelWindowMergeFeatures<T, R> : ViewModelBase, IDataErrorInfo
         where T : DataTable
         where R : DataRow

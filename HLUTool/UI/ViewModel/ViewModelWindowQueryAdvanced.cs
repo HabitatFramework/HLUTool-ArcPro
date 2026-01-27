@@ -41,6 +41,9 @@ using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
 {
+    /// <summary>
+    /// Contains the view model for the Advanced Query Builder window.
+    /// </summary>
     class ViewModelWindowQueryAdvanced : ViewModelBase, IDataErrorInfo
     {
         public static HluDataSet HluDatasetStatic = null;
@@ -725,7 +728,7 @@ namespace HLU.UI.ViewModel
         {
             get { return _column; }
             set
-            { 
+            {
                 DataColumn column;
                 column = value;
 
@@ -767,7 +770,7 @@ namespace HLU.UI.ViewModel
         /// </value>
         public string[] ComparisonOperators
         {
-            get 
+            get
             {
                 if (_comparisonOperators == null)
                 {
@@ -986,8 +989,8 @@ namespace HLU.UI.ViewModel
         /// <returns></returns>
         /// <remarks></remarks>
         private bool CanAddTable
-        { 
-            get { return (Table != null); } 
+        {
+            get { return (Table != null); }
         }
 
         #endregion
@@ -1036,8 +1039,8 @@ namespace HLU.UI.ViewModel
         /// <returns></returns>
         /// <remarks></remarks>
         private bool CanAddColumn
-        { 
-            get { return Column != null; } 
+        {
+            get { return Column != null; }
         }
 
         #endregion
@@ -1087,7 +1090,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private bool CanAddOperator
         {
-            get { return (ComparisonOperator != null); } 
+            get { return (ComparisonOperator != null); }
         }
 
         #endregion
@@ -1258,7 +1261,7 @@ namespace HLU.UI.ViewModel
                 MessageBox.Show(ex.Message, "HLU Query",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally 
+            finally
             {
 
                 // If the existing file path does not exist
@@ -1710,7 +1713,7 @@ namespace HLU.UI.ViewModel
 
         public string Error
         {
-            get 
+            get
             {
                 StringBuilder error = new();
 
@@ -1723,12 +1726,12 @@ namespace HLU.UI.ViewModel
 
         public string this[string columnName]
         {
-            get 
+            get
             {
                 string error = null;
 
                 CommandManager.InvalidateRequerySuggested();
-                
+
                 return error;
             }
         }

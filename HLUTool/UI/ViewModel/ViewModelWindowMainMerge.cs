@@ -37,6 +37,9 @@ using CommandType = System.Data.CommandType;
 
 namespace HLU.UI.ViewModel
 {
+    /// <summary>
+    /// Contains methods to perform logical and physical merges of selected GIS features.
+    /// </summary>
     class ViewModelWindowMainMerge
     {
         #region Fields
@@ -62,41 +65,52 @@ namespace HLU.UI.ViewModel
         #region Logical Merge
 
         /// <summary>
-        /// There must be at least two selected features that either share the same toid but not the same incid,
-        /// or they do not share the same incid.
+        /// Attempts to perform a logical merge operation on the currently selected map features.
         /// </summary>
+        /// <remarks>The logical merge can only be performed if more than one feature is selected on the
+        /// map and all selected features exist in the database. If these conditions are not met, the method displays an
+        /// informational message to the user and returns <see langword="false"/>.</remarks>
+        /// <returns>A task that represents the asynchronous operation. The task result is <see langword="true"/> if the logical
+        /// merge was successful; otherwise, <see langword="false"/>.</returns>
         internal async Task<bool> LogicalMergeAsync()
         {
+            // Check one or more features are selected.
             if ((_viewModelMain.GisSelection == null) || (_viewModelMain.GisSelection.Rows.Count == 0))
             {
                 MessageBox.Show("Cannot logically merge: Nothing is selected on the map.", "HLU: Logical Merge",
                     MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 return false;
             }
-            else if (_viewModelMain.GisSelection.Rows.Count <= 1)
+
+            // Check more than one feature is selected.
+            if (_viewModelMain.GisSelection.Rows.Count <= 1)
             {
                 MessageBox.Show("Cannot logically merge: Map selection must contain more than one feature for a merge.",
                     "HLU: Logical Merge", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 return false;
             }
-            else if (!_viewModelMain.CountSelectedToidFrags(false))
+
+            // Check all selected features are in the database.
+            if (!_viewModelMain.CountSelectedToidFrags(false))
             {
                 MessageBox.Show("Cannot logically merge: One or more selected map features missing from database.",
                     "HLU: Logical Merge", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 return false;
             }
-            else if ((_viewModelMain.ToidsSelectedMapCount == 1) && (_viewModelMain.IncidsSelectedMapCount > 1))
+
+            // Check if selected features share same toid but not incid.
+            if ((_viewModelMain.ToidsSelectedMapCount == 1) && (_viewModelMain.IncidsSelectedMapCount > 1))
             {
                 // selected features share same toid but not incid
                 return await PerformLogicalMergeAsync(true);
             }
-            else if (_viewModelMain.IncidsSelectedMapCount > 1)
-            {
-                // selected features do not share same incid
-                return await PerformLogicalMergeAsync(false);
-            }
-            else
+
+            // Check if selected features do not share same incid.
+            if (_viewModelMain.IncidsSelectedMapCount <= 1)
                 return false;
+
+            // Perform the logical merge.
+            return await PerformLogicalMergeAsync(false);
         }
 
         /// <summary>
@@ -127,8 +141,6 @@ namespace HLU.UI.ViewModel
                 if (_viewModelMain.IncidsSelectedMapCount <= 0)
                     return false;
 
-                // Prompt the user to choose which incid to keep
-
                 // Create the merge features window
                 _mergeFeaturesWindow = new WindowMergeFeatures
                 {
@@ -148,6 +160,7 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals,
                     ViewModelWindowMain.IncidPageSize, polygons), ref polygons);
 
+                // Prompt the user to choose which incid to keep
                 _mergeFeaturesViewModelLogical = new(selectTable, _viewModelMain.GisIDColumnOrdinals,
                     _viewModelMain.IncidTable.incidColumn.Ordinal, polygons.Select(r => r).ToArray(),
                     _viewModelMain.GISApplication)
@@ -179,10 +192,12 @@ namespace HLU.UI.ViewModel
                 // Let WPF render the cursor/message before heavy work begins.
                 //await Dispatcher.Yield(DispatcherPriority.Background);
 
+                // Begin a database transaction.
                 _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
                 try
                 {
+                    // Get the incid to keep.
                     string keepIncid = selectTable[_mergeResultFeatureIndex].incid;
 
                     // Fractions of a second can cause rounding differences when
@@ -194,6 +209,7 @@ namespace HLU.UI.ViewModel
                     DataTable historyTable = _viewModelMain.GISApplication.MergeFeaturesLogically(
                         keepIncid, _viewModelMain.HistoryColumns);
 
+                    // If the merge failed, throw an exception.
                     if ((historyTable == null) || (historyTable.Rows.Count == 0))
                         throw new Exception("Failed to update GIS layer.");
 
@@ -225,6 +241,7 @@ namespace HLU.UI.ViewModel
                             r[updateFields[i].Key] = updateFields[i].Value;
                     }
 
+                    // Commit the updates to the database.
                     if (_viewModelMain.HluTableAdapterManager.incid_mm_polygonsTableAdapter.Update(polygons) == -1)
                         throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid_mm_polygons.TableName));
 
@@ -233,10 +250,12 @@ namespace HLU.UI.ViewModel
                     {
                         { _viewModelMain.HluDataset.history.incidColumn.Ordinal, keepIncid }
                     };
+
+                    // Write the history records.
                     ViewModelWindowMainHistory vmHist = new(_viewModelMain);
                     vmHist.HistoryWrite(fixedValues, historyTable, Operations.LogicalMerge, nowDtTm);
 
-                    // Count incid records no longer in use
+                    // Create a SQL query to find any incid records no longer in use.
                     //DONE: Aggregate
                     string sqlCount = new(String.Format("SELECT {0}.{1} FROM {0} LEFT JOIN {2} ON {2}.{3} = {0}.{1} WHERE {0}.{1} IN ({4}) GROUP BY {0}.{1} HAVING COUNT({2}.{3}) = 0",
                         _viewModelMain.DataBase.QualifyTableName(_viewModelMain.IncidTable.TableName),
@@ -254,9 +273,11 @@ namespace HLU.UI.ViewModel
                     //    selectTable.Where(r => r.incid != keepIncid).Aggregate(new(), (sb, r) => sb.Append("," +
                     //        _viewModelMain.DataBase.QuoteValue(r.incid))).Remove(0, 1))).ToString();
 
+                    // Execute the count query.
                     IDataReader delReader = _viewModelMain.DataBase.ExecuteReader(sqlCount,
                         _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text);
 
+                    // Check the reader was created successfully.
                     if (delReader == null) throw new Exception("Error counting incid and incid_mm_polygons database records.");
 
                     // Build a list of the incids to delete
@@ -265,25 +286,28 @@ namespace HLU.UI.ViewModel
                         deleteIncids.Add(delReader.GetString(0));
                     delReader.Close();
 
+                    // If there are any incids to delete, build and execute the delete statement.
                     if (deleteIncids.Count > 0)
                     {
-                        // Delete any incid records no longer in use
+                        // Create a SQL delete statement to remove the unused incid records.
                         string deleteStatement = String.Format(
                             "DELETE FROM {0} WHERE {1} IN ({2})",
                             _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid.TableName),
                             _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.incidColumn.ColumnName),
                             String.Join(",", deleteIncids.Select(i => _viewModelMain.DataBase.QuoteValue(i)).ToArray()));
 
+                        // Execute the delete statement.
                         int numAffected = _viewModelMain.DataBase.ExecuteNonQuery(deleteStatement,
                             _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text);
 
-                        // Refresh the total incid count
+                        // If any rows were affected, refresh the total incid count.
                         if (numAffected > 0) _viewModelMain.IncidRowCount(true);
                     }
 
                     // Update the last modified details of the kept incid
                     _viewModelMain.ViewModelUpdate.UpdateIncidModifiedColumns(keepIncid, nowDtTm);
 
+                    // Prompt the user to perform a physical merge as well.
                     if (physicallyMerge && (MessageBox.Show("Perform physical merge as well?", "HLU: Physical Merge",
                         MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes))
                     {
@@ -297,10 +321,12 @@ namespace HLU.UI.ViewModel
                             _viewModelMain.GisSelection.Rows.Add(newRow);
                         }
 
+                        // Perform the physical merge.
                         await PerformPhysicalMergeAsync();
                     }
                     else
                     {
+                        // Commit the transaction.
                         _viewModelMain.DataBase.CommitTransaction();
                         _viewModelMain.HluDataset.AcceptChanges();
 
@@ -323,6 +349,7 @@ namespace HLU.UI.ViewModel
                 }
                 catch
                 {
+                    // Rollback the transaction on error.
                     _viewModelMain.DataBase.RollbackTransaction();
                     throw;
                 }
@@ -343,9 +370,11 @@ namespace HLU.UI.ViewModel
         /// <param name="selectedIndex">The index of the selected feature to be used after the merge operation.</param>
         private void _mergeFeaturesViewModelLogical_RequestClose(int selectedIndex)
         {
+            // Unsubscribe from the event to prevent memory leaks.
             _mergeFeaturesViewModelLogical.RequestClose -= _mergeFeaturesViewModelLogical_RequestClose;
             _mergeFeaturesWindow.Close();
 
+            // Set the result selected feature index.
             _mergeResultFeatureIndex = selectedIndex;
         }
 
@@ -353,36 +382,45 @@ namespace HLU.UI.ViewModel
 
         #region Physical Merge
 
+
         /// <summary>
-        /// There must be at least two selected features that share the same incid and toid.
+        /// Attempts to perform a physical merge operation on the currently selected map features.
         /// </summary>
+        /// <remarks>The physical merge can only be performed if more than one feature is selected on the map and all
+        /// selected features share the same incid and toid.</remarks>
+        /// <returns></returns>
         internal async Task<bool> PhysicalMergeAsync()
         {
+            // Check one or more features are selected.
             if ((_viewModelMain.GisSelection == null) || (_viewModelMain.GisSelection.Rows.Count == 0))
             {
                 MessageBox.Show("Cannot physically merge: Nothing is selected on the map.", "HLU: Physical Merge",
                     MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 return false;
             }
-            else if (_viewModelMain.GisSelection.Rows.Count <= 1)
+
+            // Check more than one feature is selected.
+            if (_viewModelMain.GisSelection.Rows.Count <= 1)
             {
                 MessageBox.Show("Cannot physically merge: Map selection must contain more than one feature for a merge.",
                     "HLU: Physical Merge", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 return false;
             }
-            else if (!_viewModelMain.CountSelectedToidFrags(false))
+
+            // Check all selected features are in the database.
+            if (!_viewModelMain.CountSelectedToidFrags(false))
             {
                 MessageBox.Show("Cannot physically merge: One or more selected map features missing from database.",
                     "HLU: Logical Merge", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 return false;
             }
-            else if ((_viewModelMain.IncidsSelectedMapCount == 1) && (_viewModelMain.ToidsSelectedMapCount == 1))
-            {
-                // selected features share same incid and toid
-                return await PerformPhysicalMergeAsync();
-            }
-            else
+
+            // Check if selected features share same incid and toid.
+            if ((_viewModelMain.IncidsSelectedMapCount != 1) || (_viewModelMain.ToidsSelectedMapCount != 1))
                 return false;
+
+            // Perform the physical merge.
+            return await PerformPhysicalMergeAsync();
         }
 
         /// <summary>
@@ -466,8 +504,10 @@ namespace HLU.UI.ViewModel
                     // Let WPF render the cursor/message before heavy work begins.
                     //await Dispatcher.Yield(DispatcherPriority.Background);
 
+                    // Check if a transaction is already started.
                     bool startTransaction = _viewModelMain.DataBase.Transaction != null;
 
+                    // Begin a transaction if not already started.
                     if (startTransaction)
                         _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
@@ -500,7 +540,7 @@ namespace HLU.UI.ViewModel
                         // and last row with data of result feature (remaining in GIS, lowest toidfragid of merged features)
                         // this last row must be removed before writing history
                         // but is needed to update geometry fields in incid_mm_polygons
-                        DataTable historyTable = _viewModelMain.GISApplication.MergeFeatures(newToidFragmentID,
+                        DataTable historyTable = _viewModelMain.GISApplication.MergeFeaturesPhysically(newToidFragmentID,
                             resultFeatureWhereClause[0].Select(c => c.Clone()).ToList(), _viewModelMain.HistoryColumns);
                         if (historyTable == null)
                             throw new Exception("GIS merge operation failed.");
@@ -525,10 +565,12 @@ namespace HLU.UI.ViewModel
                             { _viewModelMain.HluDataset.history.toidColumn.Ordinal, selectTable[0].toid },
                             { _viewModelMain.HluDataset.history.toidfragidColumn.Ordinal, newToidFragmentID }
                         };
+
+                        // Write the history records.
                         ViewModelWindowMainHistory vmHist = new(_viewModelMain);
                         vmHist.HistoryWrite(fixedValues, historyTable, Operations.PhysicalMerge, nowDtTm);
 
-                        // Commit the changes
+                        // Commit the transaction if started here.
                         if (startTransaction)
                         {
                             _viewModelMain.DataBase.CommitTransaction();
@@ -553,6 +595,7 @@ namespace HLU.UI.ViewModel
                     }
                     catch
                     {
+                        // Rollback the transaction on error.
                         if (startTransaction) _viewModelMain.DataBase.RollbackTransaction();
                         throw;
                     }
@@ -574,9 +617,11 @@ namespace HLU.UI.ViewModel
         /// <param name="selectedIndex">The index of the selected feature to be set after the view model is closed.</param>
         private void _mergeFeaturesViewModelPhysical_RequestClose(int selectedIndex)
         {
+            // Unsubscribe from the event to prevent memory leaks.
             _mergeFeaturesViewModelPhysical.RequestClose -= _mergeFeaturesViewModelPhysical_RequestClose;
             _mergeFeaturesWindow.Close();
 
+            // Set the result selected feature index.
             _mergeResultFeatureIndex = selectedIndex;
         }
 
@@ -644,9 +689,12 @@ namespace HLU.UI.ViewModel
                     break;
             }
 
+            // Check if a transaction is already started.
             bool startTransaction = _viewModelMain.DataBase.Transaction == null;
 
+            // Start a transaction if not already started.
             if (startTransaction) _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
+
             try
             {
                 // delete merged polygons from shadow table in DB
@@ -669,10 +717,12 @@ namespace HLU.UI.ViewModel
                     throw new Exception(String.Format("Failed to update table {0}.",
                         _viewModelMain.HluDataset.incid_mm_polygons.TableName));
 
+                // Commit the transaction if started here.
                 if (startTransaction) _viewModelMain.DataBase.CommitTransaction();
             }
             catch
             {
+                // Rollback the transaction on error.
                 if (startTransaction) _viewModelMain.DataBase.RollbackTransaction();
                 throw;
             }

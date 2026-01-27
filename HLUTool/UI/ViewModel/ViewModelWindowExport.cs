@@ -25,6 +25,9 @@ using HLU.GISApplication;
 
 namespace HLU.UI.ViewModel
 {
+    /// <summary>
+    /// Contains the data and commands for the Export window.
+    /// </summary>
     class ViewModelWindowExport : ViewModelBase, IDataErrorInfo
     {
         #region Fields
