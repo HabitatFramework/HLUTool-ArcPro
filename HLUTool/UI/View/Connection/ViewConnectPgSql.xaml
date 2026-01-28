@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
     xmlns:hlu="clr-namespace:HLU.UI.UserControls;assembly="
-    Title="{Binding Path=WindowTitle}"
+    Title="{Binding WindowTitle}"
     Width="392"
     Height="512"
     ResizeMode="NoResize"
@@ -60,7 +60,7 @@
                 IsEditable="True"
                 IsReadOnly="False"
                 ItemsSource="{Binding Path=SslModes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                SelectedValue="{Binding Path=SslMode}" />
+                SelectedValue="{Binding SslMode}" />
         </GroupBox>
 
         <GroupBox
@@ -74,7 +74,7 @@
                 IsEditable="True"
                 IsReadOnly="False"
                 ItemsSource="{Binding Path=Encodings, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                SelectedValue="{Binding Path=Encoding}" />
+                SelectedValue="{Binding Encoding}" />
         </GroupBox>
 
         <GroupBox
@@ -114,7 +114,7 @@
                 IsEditable="True"
                 IsReadOnly="False"
                 ItemsSource="{Binding Path=Databases, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                SelectedItem="{Binding Path=Database}"
+                SelectedItem="{Binding Database}"
                 Tag="ErrorContent"
                 Text="{Binding Path=Database, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" />
         </GroupBox>
@@ -131,7 +131,7 @@
                 IsEditable="True"
                 IsReadOnly="False"
                 ItemsSource="{Binding Path=Schemata, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                SelectedItem="{Binding Path=SearchPath}"
+                SelectedItem="{Binding SearchPath}"
                 Tag="ErrorContent"
                 Text="{Binding Path=SearchPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" />
         </GroupBox>
@@ -150,7 +150,7 @@
                 Name="ButtonOk"
                 Grid.Column="1"
                 Margin="0,0,2,0"
-                Command="{Binding Path=OkCommand}"
+                Command="{Binding OkCommand}"
                 ForceCursor="False"
                 IsDefault="True">
                 _OK
@@ -159,7 +159,7 @@
                 Name="ButtonCancel"
                 Grid.Column="2"
                 Margin="2,0,0,0"
-                Command="{Binding Path=CancelCommand}"
+                Command="{Binding CancelCommand}"
                 IsCancel="True">
                 _Cancel
             </Button>

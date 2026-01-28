@@ -7,12 +7,12 @@
     xmlns:hlu="clr-namespace:HLU.UI.UserControls"
     xmlns:local="clr-namespace:HLU.UI.ViewModel"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Title="{Binding Path=WindowTitle}"
+    Title="{Binding WindowTitle}"
     MinWidth="300"
     MinHeight="160"
     d:DataContext="{d:DesignInstance Type=local:ViewModelWindowNotifyOnSplitMerge}"
     Icon="..\..\Images\HLUTool16.png"
-    ResizeMode="CanResize"
+    ResizeMode="CanResizeWithGrip"
     ShowInTaskbar="False"
     SizeToContent="WidthAndHeight"
     Style="{DynamicResource ProWindowStyle}"
@@ -30,7 +30,7 @@
                 <RowDefinition Height="4" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <GroupBox Name="GroupNotifyOnSplitMerge" Header="{Binding Path=GroupBoxNotifyOnSplitMergeHeader}">
+            <GroupBox Name="GroupNotifyOnSplitMerge" Header="{Binding GroupBoxNotifyOnSplitMergeHeader}">
                 <Grid Name="GridNotifyOnSplitMerge" Margin="2,2,2,2">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -50,7 +50,7 @@
                         VerticalAlignment="Center">
                         <TextBlock
                             Name="TextBlockMessage"
-                            Text="{Binding Path=LabelMessage}"
+                            Text="{Binding LabelMessage}"
                             TextWrapping="Wrap" />
                     </Label>
                     <Border
@@ -93,7 +93,7 @@
                     Name="ButtonOk"
                     Grid.Column="2"
                     Margin="0,0,0,0"
-                    Command="{Binding Path=OkCommand}"
+                    Command="{Binding OkCommand}"
                     IsDefault="True"
                     Style="{DynamicResource Esri_Button}">
                     _Ok

@@ -1252,10 +1252,12 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
 
         internal TableAdapterManager(DbBase db, Scope createAdapters)
         {
-            if ((db == null) || (db.Connection == null)) throw new ArgumentNullException(nameof(db));
+            // Check parameters.
+            ArgumentNullException.ThrowIfNull(db);
+            ArgumentNullException.ThrowIfNull(db.Connection);
 
             string errorMessage;
-            if (!IsHluDataSet(db, out errorMessage)) throw new ArgumentException("db", errorMessage);
+            if (!IsHluDataSet(db, out errorMessage)) throw new ArgumentException(errorMessage, nameof(db));
 
             _db = db;
 
@@ -1439,7 +1441,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
 
         public void Fill(HluDataSet hluDS, Scope fillTables, bool clearBeforeFill)
         {
-            if (hluDS == null) throw new ArgumentException("hluDS");
+            if (hluDS == null) throw new ArgumentException(null, nameof(hluDS));
 
             try
             {

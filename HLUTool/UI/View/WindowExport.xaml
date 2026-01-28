@@ -6,7 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:HLU.UI.ViewModel"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Title="{Binding Path=WindowTitle}"
+    Title="{Binding WindowTitle}"
     MinWidth="330"
     MinHeight="210"
     d:DataContext="{d:DesignInstance Type=local:ViewModelWindowExport}"
@@ -69,7 +69,7 @@
                         Grid.Column="1"
                         Margin="8,0,8,8"
                         IsEnabled="False"
-                        Text="{Binding Path=LayerName}" />
+                        Text="{Binding LayerName}" />
                     <Label
                         Name="LabelFormat"
                         Grid.Row="1"
@@ -98,7 +98,7 @@
                         Margin="0,0,0,8"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center"
-                        IsEnabled="{Binding Path=HaveSelection}">
+                        IsEnabled="{Binding HaveSelection}">
                         Selected Only
                     </Label>
                     <Grid
@@ -115,16 +115,16 @@
                             Margin="8,0,8,8"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
-                            IsChecked="{Binding Path=SelectedOnly}"
-                            IsEnabled="{Binding Path=HaveSelection}" />
+                            IsChecked="{Binding SelectedOnly}"
+                            IsEnabled="{Binding HaveSelection}" />
                         <Label
                             Name="LabelSelectedNumber"
                             Grid.Column="1"
                             Margin="0,0,8,8"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center"
-                            Content="{Binding Path=SelectedNumber}"
-                            IsEnabled="{Binding Path=HaveSelection}" />
+                            Content="{Binding SelectedNumber}"
+                            IsEnabled="{Binding HaveSelection}" />
                     </Grid>
                 </Grid>
             </GroupBox>
@@ -142,7 +142,7 @@
                     Name="ButtonOk"
                     Grid.Column="1"
                     Margin="0,0,2,0"
-                    Command="{Binding Path=OkCommand}"
+                    Command="{Binding OkCommand}"
                     IsDefault="True"
                     Style="{DynamicResource Esri_Button}">
                     _OK
@@ -151,7 +151,7 @@
                     Name="ButtonCancel"
                     Grid.Column="2"
                     Margin="2,0,0,0"
-                    Command="{Binding Path=CancelCommand}"
+                    Command="{Binding CancelCommand}"
                     IsCancel="True"
                     Style="{DynamicResource Esri_Button}">
                     _Cancel

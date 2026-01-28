@@ -60,8 +60,8 @@
                     x:Name="GroupBoxTopControlsBulkUpdate"
                     Grid.Row="0"
                     Grid.Column="0"
-                    Header="{Binding Path=TopControlsBulkUpdateGroupHeader}"
-                    Visibility="{Binding Path=ShowInBulkUpdateMode}">
+                    Header="{Binding TopControlsBulkUpdateGroupHeader}"
+                    Visibility="{Binding ShowInBulkUpdateMode}">
                     <Grid
                         x:Name="GridTopControlsBulkUpdate"
                         Grid.Row="0"
@@ -219,8 +219,8 @@
                     Grid.Row="0"
                     Grid.Column="0"
                     Margin="2,0,2,0"
-                    Header="{Binding Path=TopControlsGroupHeader}"
-                    Visibility="{Binding Path=HideInBulkUpdateMode}">
+                    Header="{Binding TopControlsGroupHeader}"
+                    Visibility="{Binding HideInBulkUpdateMode}">
 
                     <Grid
                         x:Name="GridTopControls"
@@ -258,6 +258,7 @@
                                 Grid.Column="1"
                                 Margin="0,0,0,4"
                                 VerticalAlignment="Center"
+                                IsEnabled="{Binding TabControlDataEnabled}"
                                 IsReadOnly="True"
                                 Text="{Binding Path=Incid, Mode=OneWay, ValidatesOnDataErrors=False}" />
                             <Label
@@ -452,7 +453,7 @@
                                         VerticalAlignment="Stretch"
                                         Header="{Binding HabitatHeader}"
                                         IsEnabled="{Binding TabHabitatControlsEnabled}"
-                                        Visibility="{Binding Path=ShowSourceHabitatGroup}">
+                                        Visibility="{Binding ShowSourceHabitatGroup}">
                                         <Grid x:Name="GridCategories">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition />
@@ -599,7 +600,7 @@
                                                 HorizontalAlignment="Right"
                                                 VerticalAlignment="Center"
                                                 Content="NVC Codes"
-                                                Visibility="{Binding Path=ShowNVCCodes}" />
+                                                Visibility="{Binding ShowNVCCodes}" />
                                             <TextBox
                                                 x:Name="TextBoxNvcCodes"
                                                 Grid.Row="1"
@@ -613,7 +614,7 @@
                                                 Text="{Binding NvcCodes, Mode=OneWay}"
                                                 ToolTip="{Binding NvcCodes}"
                                                 ToolTipService.ShowOnDisabled="True"
-                                                Visibility="{Binding Path=ShowNVCCodes}" />
+                                                Visibility="{Binding ShowNVCCodes}" />
                                         </Grid>
                                     </GroupBox>
 
@@ -669,7 +670,7 @@
                                                 HorizontalAlignment="Right"
                                                 VerticalAlignment="Center"
                                                 Content="Suggested"
-                                                Visibility="{Binding Path=ShowHabitatSecondariesSuggested}" />
+                                                Visibility="{Binding ShowHabitatSecondariesSuggested}" />
                                             <TextBox
                                                 x:Name="TextBoxHabitatSecondariesSuggested"
                                                 Grid.Row="1"
@@ -681,7 +682,7 @@
                                                 Text="{Binding HabitatSecondariesSuggested, Mode=OneWay}"
                                                 ToolTip="{Binding HabitatTips}"
                                                 ToolTipService.ShowOnDisabled="True"
-                                                Visibility="{Binding Path=ShowHabitatSecondariesSuggested}" />
+                                                Visibility="{Binding ShowHabitatSecondariesSuggested}" />
 
                                             <Grid
                                                 x:Name="GridAddSecondaryHabitat"
@@ -761,7 +762,7 @@
                                                 <Image
                                                     Width="16"
                                                     Height="16"
-                                                    Source="{Binding Path=ButtonAddSecondaryHabitatImg}" />
+                                                    Source="{Binding ButtonAddSecondaryHabitatImg}" />
                                             </Button>
 
                                             <!-- <ScrollViewer VerticalScrollBarVisibility="Auto"> -->
@@ -877,7 +878,7 @@
                                                 <Image
                                                     Width="16"
                                                     Height="16"
-                                                    Source="{Binding Path=ButtonAddSecondaryHabitatListImg}" />
+                                                    Source="{Binding ButtonAddSecondaryHabitatListImg}" />
                                             </Button>
 
                                             <CheckBox
@@ -901,7 +902,7 @@
                                         VerticalAlignment="Stretch"
                                         Header="{Binding HabitatSummaryHeader}"
                                         IsEnabled="{Binding TabHabitatControlsEnabled}"
-                                        Visibility="{Binding Path=ShowHabitatSummary}">
+                                        Visibility="{Binding ShowHabitatSummary}">
                                         <Grid x:Name="GridSecondaries" Margin="0,0,0,0">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition />
@@ -1571,7 +1572,7 @@
                                                 <Image
                                                     Width="16"
                                                     Height="16"
-                                                    Source="{Binding Path=ButtonEditPriorityHabitatsImg}" />
+                                                    Source="{Binding ButtonEditPriorityHabitatsImg}" />
                                             </Button>
 
                                         </Grid>
@@ -1750,7 +1751,7 @@
                                                 <Image
                                                     Width="16"
                                                     Height="16"
-                                                    Source="{Binding Path=ButtonEditPotentialHabitatsImg}" />
+                                                    Source="{Binding ButtonEditPotentialHabitatsImg}" />
                                             </Button>
 
                                             <CheckBox
@@ -3010,7 +3011,7 @@
                     <Image
                         Width="16"
                         Height="16"
-                        Source="{Binding Path=ButtonGetMapSelectionImg}" />
+                        Source="{Binding ButtonGetMapSelectionImg}" />
                 </Button>
 
                 <!--  GridStatus  -->
@@ -3018,7 +3019,7 @@
                     x:Name="GridStatus"
                     Grid.Row="2"
                     Margin="0,4,0,4"
-                    Visibility="{Binding Path=HideInOSMMUpdateMode}">
+                    Visibility="{Binding HideInOSMMUpdateMode}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
@@ -3030,7 +3031,7 @@
                         Grid.Column="0"
                         Height="Auto"
                         VerticalAlignment="Bottom"
-                        Visibility="{Binding Path=ShowInBulkUpdateMode}">
+                        Visibility="{Binding ShowInBulkUpdateMode}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
@@ -3050,7 +3051,7 @@
                         Grid.Column="0"
                         Height="Auto"
                         VerticalAlignment="Bottom"
-                        Visibility="{Binding Path=HideInBulkUpdateMode}">
+                        Visibility="{Binding HideInBulkUpdateMode}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
@@ -3074,7 +3075,6 @@
                             Command="{Binding NavigateFirstCommand}"
                             Style="{DynamicResource Esri_ButtonUpSmall}"
                             ToolTip="First record">
-                            <!--  IsEnabled="{Binding CanNavigateBackward}"  -->
                         </Button>
                         <Button
                             Name="ButtonPreviousRecord"
@@ -3106,7 +3106,6 @@
                             Command="{Binding NavigateNextCommand}"
                             Style="{DynamicResource Esri_ButtonForwardSmall}"
                             ToolTip="Next record">
-                            <!--  IsEnabled="{Binding CanNavigateForward}"  -->
                         </Button>
                         <Button
                             Name="ButtonLastRecord"
@@ -3149,9 +3148,9 @@
                             MinWidth="0"
                             Margin="0,0,2,0"
                             HorizontalAlignment="Center"
-                            Command="{Binding Path=CancelBulkUpdateCommand}"
+                            Command="{Binding CancelBulkUpdateCommand}"
                             Style="{DynamicResource Esri_Button}"
-                            Visibility="{Binding Path=ShowInBulkUpdateMode}">
+                            Visibility="{Binding ShowInBulkUpdateMode}">
                             _Cancel
                         </Button>
                         <Button
@@ -3174,7 +3173,7 @@
                     x:Name="GridStatusOSMM"
                     Grid.Row="2"
                     Margin="0,4,0,4"
-                    Visibility="{Binding Path=ShowInOSMMUpdateMode}">
+                    Visibility="{Binding ShowInOSMMUpdateMode}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="100" />
                         <ColumnDefinition Width="Auto" />
@@ -3270,7 +3269,8 @@
                     x:Name="GridActiveLayer"
                     Grid.Row="3"
                     Margin="0,0,0,0"
-                    VerticalAlignment="Top">
+                    VerticalAlignment="Top"
+                    Visibility="Collapsed">
                     <Grid x:Name="GridStatusBar">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
@@ -3359,12 +3359,12 @@
                 Height="Auto"
                 Margin="0,8,0,0"
                 CanClose="False"
-                Content="{Binding Path=StatusMessage}"
-                MessageType="{Binding Path=MessageLevel}"
+                Content="{Binding StatusMessage}"
+                MessageType="{Binding MessageLevel}"
                 Severity="High"
                 ShowHelp="False"
-                ToolTip="{Binding Path=StatusMessage}"
-                Visibility="{Binding Path=HasMessage}" />
+                ToolTip="{Binding StatusMessage}"
+                Visibility="{Binding HasMessage}" />
 
 
         </Grid>

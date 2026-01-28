@@ -33,7 +33,7 @@
             HorizontalScrollBarVisibility="Auto"
             IsEnabled="True"
             Tag="ErrorContent"
-            Text="{Binding Path=MessageText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+            Text="{Binding MessageText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
             VerticalScrollBarVisibility="Auto" />
         <Grid
             Name="GridButtons"
@@ -48,7 +48,7 @@
             <Button
                 Name="ButtonOk"
                 Grid.Column="2"
-                Command="{Binding Path=OkCommand}"
+                Command="{Binding OkCommand}"
                 ForceCursor="False"
                 IsDefault="True"
                 Style="{DynamicResource Esri_Button}">

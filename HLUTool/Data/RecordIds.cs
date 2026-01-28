@@ -46,13 +46,23 @@ namespace HLU.Data
 
         #region ctor
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RecordIds"/> class.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="hluDataset"></param>
+        /// <param name="hluTableAdapterMgr"></param>
+        /// <param name="gisLayerType"></param>
+        /// <exception cref="ArgumentException"></exception>
         public RecordIds(DbBase db, HluDataSet hluDataset,
             TableAdapterManager hluTableAdapterMgr, GeometryTypes gisLayerType)
         {
+            // Check parameters.
             _db = db ?? throw new ArgumentException("db is null", nameof(db));
             _hluDataset = hluDataset ?? throw new ArgumentException("hluDataset is null", nameof(hluDataset));
             _hluTableAdapterMgr = hluTableAdapterMgr ?? throw new ArgumentException("hluTableAdapterMgr is null", nameof(hluTableAdapterMgr));
 
+            // Set GIS layer type.
             _gisLayerType = gisLayerType;
             if (_hluDataset.lut_last_incid.IsInitialized && _hluDataset.lut_last_incid.Count == 0)
             {
@@ -62,10 +72,17 @@ namespace HLU.Data
                 _hluTableAdapterMgr.Fill(_hluDataset,
                     [typeof(HluDataSet.lut_last_incidDataTable)], false);
             }
+
+            // Initialize current INCID number.
             _incidCurrentNumber = CurrentMaxIncidNumber(false);
+
+            // Initialize INCID child record IDs.
             InitializeIncidChildRecordIds();
         }
 
+        /// <summary>
+        /// Initializes the next IDs for INCID child records from the database.
+        /// </summary>
         public void InitializeIncidChildRecordIds()
         {
             object retVal;
@@ -99,6 +116,9 @@ namespace HLU.Data
 
         #region Public Properties
 
+        /// <summary>
+        /// Gets the habitat version from lut_version table.
+        /// </summary>
         public string HabitatVersion
         {
             get
@@ -114,6 +134,9 @@ namespace HLU.Data
             }
         }
 
+        /// <summary>
+        /// Gets the SiteID from lut_site_id table based on GIS layer type.
+        /// </summary>
         public string SiteID
         {
             get
@@ -156,12 +179,18 @@ namespace HLU.Data
                 return IncidString(_incidCurrentNumber);
             }
         }
-
+        
+        /// <summary>
+        /// Gets the current INCID string.
+        /// </summary>
         public string CurrentIncid
         {
             get { return SiteID + ":" + _incidCurrentNumber.ToString("D7"); }
         }
-
+        
+        /// <summary>
+        /// Gets the current INCID Bap ID.
+        /// </summary>
         public int CurrentIncidBapId
         {
             get
@@ -170,7 +199,10 @@ namespace HLU.Data
                     _hluDataset.incid_bap.bap_idColumn.Ordinal) - 1;
             }
         }
-
+        
+        /// <summary>
+        /// Gets the next available INCID Secondary ID.
+        /// </summary>
         public int NextIncidSecondaryId
         {
             get
@@ -180,7 +212,10 @@ namespace HLU.Data
                 return _nextIncidSecondaryId;
             }
         }
-
+        
+        /// <summary>
+        /// Gets the next available INCID Condition ID.
+        /// </summary>
         public int NextIncidConditionId
         {
             get
@@ -190,7 +225,10 @@ namespace HLU.Data
                 return _nextIncidConditionId;
             }
         }
-
+        
+        /// <summary>
+        /// Gets the next available INCID Bap ID.
+        /// </summary>
         public int NextIncidBapId
         {
             get
@@ -200,7 +238,10 @@ namespace HLU.Data
                 return _nextIncidBapId;
             }
         }
-
+        
+        /// <summary>
+        /// Gets the next available INCID Sources ID.
+        /// </summary>
         public int NextIncidSourcesId
         {
             get
@@ -210,7 +251,10 @@ namespace HLU.Data
                 return _nextIncidSourcesId;
             }
         }
-
+        
+        /// <summary>
+        /// Gets the maximum INCID number.
+        /// </summary>
         public int MaxIncidNumber
         {
             get { return (int)Math.Pow((double)10, (double)(IncidString(1).Length - SiteID.Length - 1)) - 1; }
@@ -220,10 +264,16 @@ namespace HLU.Data
 
         #region Public methods
 
+        /// <summary>
+        /// Parses the INCID number from an INCID string.
+        /// </summary>
+        /// <param name="incidString"></param>
+        /// <returns></returns>
         public static int IncidNumber(string incidString)
         {
             try
             {
+                // Split on colon and parse the second part.
                 int i;
                 if (Int32.TryParse(incidString.Split(':')[1], out i))
                     return i;
@@ -233,36 +283,49 @@ namespace HLU.Data
             catch { return -1; }
         }
 
+        /// <summary>
+        /// Formats an INCID string from an INCID number.
+        /// </summary>
+        /// <param name="incidNumber"></param>
+        /// <returns></returns>
         public string IncidString(int incidNumber)
         {
+            // Concatenate SiteID and INCID number with leading zeros.
             return SiteID + ":" + incidNumber.ToString("D7");
         }
 
+        /// <summary>
+        /// Gets the maximum toid fragment ID for a given TOID.
+        /// </summary>
+        /// <param name="toid"></param>
+        /// <returns></returns>
         public string MaxToidFragmentId(string toid)
         {
-            if (!String.IsNullOrEmpty(toid))
-            {
-                try
-                {
-                    object retVal = _db.ExecuteScalar(String.Format("SELECT MAX({0}) FROM {1} WHERE {2} = {3}",
-                        _db.QuoteIdentifier(_hluDataset.incid_mm_polygons.toidfragidColumn.ColumnName),
-                        _db.QualifyTableName(_hluDataset.incid_mm_polygons.TableName),
-                        _db.QuoteIdentifier(_hluDataset.incid_mm_polygons.toidColumn.ColumnName),
-                        _db.QuoteValue(toid)), _db.Connection.ConnectionTimeout, CommandType.Text);
-                    return retVal.ToString() ?? "00000";
-                }
-                catch { return null; }
-            }
-            else
-            {
+            // Check parameter.
+            if (String.IsNullOrEmpty(toid))
                 return null;
+
+            try
+            {
+                object retVal = _db.ExecuteScalar(String.Format("SELECT MAX({0}) FROM {1} WHERE {2} = {3}",
+                    _db.QuoteIdentifier(_hluDataset.incid_mm_polygons.toidfragidColumn.ColumnName),
+                    _db.QualifyTableName(_hluDataset.incid_mm_polygons.TableName),
+                    _db.QuoteIdentifier(_hluDataset.incid_mm_polygons.toidColumn.ColumnName),
+                    _db.QuoteValue(toid)), _db.Connection.ConnectionTimeout, CommandType.Text);
+                return retVal.ToString() ?? "00000";
             }
+            catch { return null; }
         }
 
         #endregion
 
         #region Private
 
+        /// <summary>
+        /// Gets the current maximum INCID number from in-memory table, lut_last_incid table and DB incid table.
+        /// </summary>
+        /// <param name="increment"></param>
+        /// <returns></returns>
         private int CurrentMaxIncidNumber(bool increment)
         {
             try
@@ -309,6 +372,14 @@ namespace HLU.Data
             catch { return -1; }
         }
 
+        /// <summary>
+        /// Gets the next ID for a given table and ID column ordinal.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="nextID"></param>
+        /// <param name="table"></param>
+        /// <param name="idColumnOrdinal"></param>
+        /// <returns></returns>
         public int NextID<T>(int nextID, T table, int idColumnOrdinal)
             where T : DataTable
         {

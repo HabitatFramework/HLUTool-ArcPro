@@ -7,12 +7,12 @@
     xmlns:local="clr-namespace:HLU.UI.ViewModel"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tkit="http://schemas.microsoft.com/wpf/2008/toolkit"
-    Title="{Binding Path=WindowTitle}"
+    Title="{Binding WindowTitle}"
     MinWidth="800"
     MinHeight="250"
     d:DataContext="{d:DesignInstance Type=local:ViewModelWindowEditPotentialHabitats}"
     Icon="..\..\Images\HLUTool16.png"
-    ResizeMode="CanResize"
+    ResizeMode="CanResizeWithGrip"
     ShowInTaskbar="False"
     SizeToContent="WidthAndHeight"
     Style="{DynamicResource ProWindowStyle}"
@@ -62,12 +62,12 @@
         </Grid.RowDefinitions>
 
         <GroupBox
-            Name="GroupBoxFeatures"
+            Name="GroupBoxPotentialPriorityHabitats"
             Grid.Row="0"
             Grid.Column="0"
             Header="Potential Priority Habitats">
             <DataGrid
-                x:Name="DataGridUserBapHabitats"
+                x:Name="DataGridPotentialPriorityHabitats"
                 Grid.Row="0"
                 Grid.Column="0"
                 Grid.ColumnSpan="2"
@@ -85,7 +85,6 @@
                 IsEnabled="{Binding BapHabitatsUserEnabled}"
                 IsReadOnly="False"
                 ItemsSource="{Binding IncidBapHabitatsUser}"
-                MinRowHeight="24"
                 RowDetailsVisibilityMode="Visible"
                 RowHeaderWidth="20"
                 RowHeight="24"
@@ -214,9 +213,8 @@
                 Grid.Row="0"
                 Grid.Column="2"
                 Margin="0,0,2,0"
-                Command="{Binding Path=OkCommand}"
+                Command="{Binding OkCommand}"
                 IsDefault="True"
-                IsEnabled="{Binding Path=CanOk}"
                 Style="{DynamicResource Esri_Button}">
                 _OK
             </Button>
@@ -225,7 +223,7 @@
                 Grid.Row="0"
                 Grid.Column="3"
                 Margin="2,0,0,0"
-                Command="{Binding Path=CancelCommand}"
+                Command="{Binding CancelCommand}"
                 IsCancel="True"
                 Style="{DynamicResource Esri_Button}">
                 _Cancel

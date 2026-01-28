@@ -7,7 +7,7 @@
     xmlns:hlu="clr-namespace:HLU.UI.UserControls"
     xmlns:local="clr-namespace:HLU.UI.ViewModel"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Title="{Binding Path=WindowTitle}"
+    Title="{Binding WindowTitle}"
     MinWidth="450"
     MinHeight="550"
     MaxWidth="600"
@@ -83,7 +83,7 @@
                         Margin="8,2,2,2"
                         IsReadOnly="True"
                         IsTabStop="False"
-                        Text="{Binding Path=AppVersion}" />
+                        Text="{Binding AppVersion}" />
                     <Label
                         Name="LabelDbVersion"
                         Grid.Row="0"
@@ -100,7 +100,7 @@
                         Margin="8,2,2,2"
                         IsReadOnly="True"
                         IsTabStop="False"
-                        Text="{Binding Path=DbVersion}" />
+                        Text="{Binding DbVersion}" />
                     <Label
                         Name="LabelDataVersion"
                         Grid.Row="0"
@@ -117,7 +117,7 @@
                         Margin="8,2,2,2"
                         IsReadOnly="True"
                         IsTabStop="False"
-                        Text="{Binding Path=DataVersion}" />
+                        Text="{Binding DataVersion}" />
                 </Grid>
 
             </GroupBox>
@@ -152,7 +152,7 @@
                         Margin="8,2,2,2"
                         IsReadOnly="True"
                         IsTabStop="False"
-                        Text="{Binding Path=ConnectionType}" />
+                        Text="{Binding ConnectionType}" />
                     <Label
                         Name="LabelConnectionSettings"
                         Grid.Row="1"
@@ -169,7 +169,7 @@
                         Margin="8,2,2,2"
                         IsReadOnly="True"
                         IsTabStop="False"
-                        Text="{Binding Path=ConnectionSettings}" />
+                        Text="{Binding ConnectionSettings}" />
                 </Grid>
 
             </GroupBox>
@@ -204,7 +204,7 @@
                         Margin="8,2,2,2"
                         IsReadOnly="True"
                         IsTabStop="False"
-                        Text="{Binding Path=UserId}" />
+                        Text="{Binding UserId}" />
                     <Label
                         Name="LabelUserName"
                         Grid.Row="1"
@@ -221,7 +221,7 @@
                         Margin="8,2,2,2"
                         IsReadOnly="True"
                         IsTabStop="False"
-                        Text="{Binding Path=UserName}" />
+                        Text="{Binding UserName}" />
                 </Grid>
 
             </GroupBox>
@@ -255,7 +255,7 @@
                         Margin="8,2,2,2"
                         IsReadOnly="True"
                         IsTabStop="False"
-                        Text="{Binding Path=AssemblyCopyright}"
+                        Text="{Binding AssemblyCopyright}"
                         TextWrapping="Wrap" />
                 </Grid>
 
@@ -291,7 +291,7 @@
                         Margin="8,0,8,8"
                         VerticalAlignment="Center">
                         <Hyperlink NavigateUri="{Binding Path=UserGuideURL}" RequestNavigate="Hyperlink_RequestNavigate">
-                            <TextBlock Text="{Binding Path=UserGuideText}" />
+                            <TextBlock Text="{Binding UserGuideText}" />
                         </Hyperlink>
                     </TextBlock>
                     <Label
@@ -310,7 +310,7 @@
                         Margin="8,0,8,4"
                         VerticalAlignment="Center">
                         <Hyperlink NavigateUri="{Binding Path=TechnicalGuideURL}" RequestNavigate="Hyperlink_RequestNavigate">
-                            <TextBlock Text="{Binding Path=TechnicalGuideText}" />
+                            <TextBlock Text="{Binding TechnicalGuideText}" />
                         </Hyperlink>
                     </TextBlock>
                 </Grid>
@@ -326,7 +326,7 @@
                 <Button
                     Name="ButtonOk"
                     Grid.Column="2"
-                    Command="{Binding Path=OkCommand}"
+                    Command="{Binding OkCommand}"
                     ForceCursor="False"
                     IsDefault="True"
                     Style="{DynamicResource Esri_Button}">

@@ -261,6 +261,7 @@ namespace HLU
         /// </summary>
         public static IEnumerable<List<T>> ChunkClause<T>(this IEnumerable<T> source, int chunksize)
         {
+            // Check for invalid chunk size
             if (chunksize <= 0) throw new ArgumentException("Chunk size must be greater than zero.", nameof(chunksize));
             while (source.Any())
             {

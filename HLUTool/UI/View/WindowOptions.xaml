@@ -8,7 +8,7 @@
     xmlns:local="clr-namespace:HLU.UI.ViewModel"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:viewModel="clr-namespace:HLU.UI.ViewModel"
-    Title="{Binding Path=WindowTitle}"
+    Title="{Binding WindowTitle}"
     MinWidth="750"
     MinHeight="500"
     MaxWidth="1000"
@@ -73,7 +73,7 @@
                                         Background="DarkGray"
                                         FontSize="14"
                                         FontWeight="Medium"
-                                        Text="{Binding Path=Name}" />
+                                        Text="{Binding Name}" />
                                 </DataTemplate>
                             </GroupStyle.HeaderTemplate>
                         </GroupStyle>

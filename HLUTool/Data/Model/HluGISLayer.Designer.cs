@@ -685,7 +685,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_mm_polygons.habprimaryColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'habprimary\' in table \'incid_mm_polygons\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'habprimary\' in table \'incid_mm_polygons\' is DBNull.", e);
                     }
                 }
                 set {
@@ -701,7 +701,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_mm_polygons.habsecondColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'habsecond\' in table \'incid_mm_polygons\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'habsecond\' in table \'incid_mm_polygons\' is DBNull.", e);
                     }
                 }
                 set {
@@ -717,7 +717,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_mm_polygons.determqtyColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'determqty\' in table \'incid_mm_polygons\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'determqty\' in table \'incid_mm_polygons\' is DBNull.", e);
                     }
                 }
                 set {
@@ -733,7 +733,7 @@ namespace HLU.Data.Model {
                         return ((string)(this[this.tableincid_mm_polygons.interpqtyColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The _dataTableTypes for column \'interpqty\' in table \'incid_mm_polygons\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'interpqty\' in table \'incid_mm_polygons\' is DBNull.", e);
                     }
                 }
                 set {

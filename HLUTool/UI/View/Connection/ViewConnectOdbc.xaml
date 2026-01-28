@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
     xmlns:hlu="clr-namespace:HLU.UI.UserControls;assembly="
-    Title="{Binding Path=WindowTitle}"
+    Title="{Binding WindowTitle}"
     Width="392"
     Height="202"
     ResizeMode="NoResize"
@@ -64,7 +64,7 @@
                         IsEditable="True"
                         IsReadOnly="False"
                         ItemsSource="{Binding Path=DsnList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        SelectedValue="{Binding Path=Dsn}"
+                        SelectedValue="{Binding Dsn}"
                         Tag="ErrorContent"
                         Text="{Binding Path=Dsn, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" />
                     <Button
@@ -74,7 +74,7 @@
                         Height="23"
                         Margin="6,0,0,0"
                         VerticalAlignment="Center"
-                        Command="{Binding Path=ManageDsnCommand}">
+                        Command="{Binding ManageDsnCommand}">
                         _Manage...
                     </Button>
                     <Grid
@@ -90,7 +90,7 @@
                             Grid.Column="0"
                             Margin="6,4,0,0"
                             GroupName="DsnType"
-                            IsChecked="{Binding Path=UserDsn}">
+                            IsChecked="{Binding UserDsn}">
                             _User DSN
                         </RadioButton>
                         <RadioButton
@@ -98,7 +98,7 @@
                             Grid.Column="1"
                             Margin="0,4,0,0"
                             GroupName="DsnType"
-                            IsChecked="{Binding Path=SystemDsn}">
+                            IsChecked="{Binding SystemDsn}">
                             _System DSN
                         </RadioButton>
                     </Grid>
@@ -112,7 +112,7 @@
                 Margin="0,4,0,0"
                 Padding="0"
                 Header="Default Schema"
-                IsEnabled="{Binding Path=SupportsSchemata}">
+                IsEnabled="{Binding SupportsSchemata}">
                 <ComboBox
                     Name="ComboBoxDefaultSchema"
                     Margin="0,4,0,0"
@@ -120,7 +120,7 @@
                     IsEditable="True"
                     IsReadOnly="False"
                     ItemsSource="{Binding Path=Schemata, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                    SelectedItem="{Binding Path=DefaultSchema}"
+                    SelectedItem="{Binding DefaultSchema}"
                     Tag="ErrorContent"
                     Text="{Binding Path=DefaultSchema, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" />
             </GroupBox>
@@ -132,7 +132,7 @@
                 Height="23"
                 Margin="0,0,2,0"
                 VerticalAlignment="Center"
-                Command="{Binding Path=OkCommand}"
+                Command="{Binding OkCommand}"
                 ForceCursor="False"
                 IsDefault="True">
                 _OK
@@ -144,7 +144,7 @@
                 Height="23"
                 Margin="2,0,0,0"
                 VerticalAlignment="Center"
-                Command="{Binding Path=CancelCommand}"
+                Command="{Binding CancelCommand}"
                 IsCancel="True">
                 _Cancel
             </Button>

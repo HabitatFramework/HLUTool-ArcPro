@@ -5,7 +5,7 @@
     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
     xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
     xmlns:hlu="clr-namespace:HLU.UI.UserControls;assembly="
-    Title="{Binding Path=WindowTitle}"
+    Title="{Binding WindowTitle}"
     Width="392"
     Height="325"
     ResizeMode="NoResize"
@@ -39,27 +39,27 @@
                     IsEditable="True"
                     IsReadOnly="False"
                     ItemsSource="{Binding Path=Servers, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                    SelectedValue="{Binding Path=Server}"
+                    SelectedValue="{Binding Server}"
                     Tag="ErrorContent"
                     Text="{Binding Path=Server, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" />
                 <RadioButton
                     Name="RadioButtonWindowsAuthentication"
                     Margin="0,4,0,0"
                     GroupName="AuthenticationMode"
-                    IsChecked="{Binding Path=WindowsAuthentication}">
+                    IsChecked="{Binding WindowsAuthentication}">
                     Use _Windows authentication
                 </RadioButton>
                 <RadioButton
                     Name="RadioButtonSQLAuthentication"
                     Margin="0,4,0,0"
                     GroupName="AuthenticationMode"
-                    IsChecked="{Binding Path=SQLServerAuthentication}">
+                    IsChecked="{Binding SQLServerAuthentication}">
                     Use _SQL Server authentication
                 </RadioButton>
                 <Grid
                     Name="GridSQLAuthentication"
                     Margin="16,4,0,0"
-                    IsEnabled="{Binding Path=SQLServerAuthentication}">
+                    IsEnabled="{Binding SQLServerAuthentication}">
                     <Grid.RowDefinitions>
                         <RowDefinition />
                         <RowDefinition />
@@ -137,7 +137,7 @@
                 Name="ButtonOk"
                 Grid.Column="1"
                 Margin="0,0,2,0"
-                Command="{Binding Path=OkCommand}"
+                Command="{Binding OkCommand}"
                 ForceCursor="False"
                 IsDefault="True">
                 _OK
@@ -146,7 +146,7 @@
                 Name="ButtonCancel"
                 Grid.Column="2"
                 Margin="2,0,0,0"
-                Command="{Binding Path=CancelCommand}"
+                Command="{Binding CancelCommand}"
                 IsCancel="True">
                 _Cancel
             </Button>

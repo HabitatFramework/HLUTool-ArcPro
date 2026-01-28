@@ -32,6 +32,7 @@ namespace HLU.UI.View
             InitializeComponent();
         }
 
+        // Execute the Flash Feature command when the mouse button is released over the DataGrid.
         private void DataGridQueryBuilder_MouseUp(object sender, MouseButtonEventArgs e)
         {
             if (this.ButtonFlashFeature.Command.CanExecute(null))

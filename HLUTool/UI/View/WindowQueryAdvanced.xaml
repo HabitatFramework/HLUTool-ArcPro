@@ -104,7 +104,7 @@
                                 Width="40"
                                 Margin="4,0,0,0"
                                 HorizontalAlignment="Left"
-                                Command="{Binding Path=AddTableCommand}"
+                                Command="{Binding AddTableCommand}"
                                 Focusable="False"
                                 IsDefault="False"
                                 Style="{DynamicResource Esri_Button}">
@@ -128,7 +128,7 @@
                                 Margin="4,0,4,0"
                                 BorderThickness="1"
                                 DisplayMemberPath="Key"
-                                IsEnabled="{Binding Path=ColumnIsEnabled}"
+                                IsEnabled="{Binding ColumnIsEnabled}"
                                 ItemsSource="{Binding Path=Columns, UpdateSourceTrigger=PropertyChanged}"
                                 SelectedValue="{Binding Path=Column, ValidatesOnDataErrors=True}"
                                 SelectedValuePath="Value" />
@@ -139,7 +139,7 @@
                                 Width="40"
                                 Margin="4,0,0,0"
                                 HorizontalAlignment="Left"
-                                Command="{Binding Path=AddColumnCommand}"
+                                Command="{Binding AddColumnCommand}"
                                 Focusable="False"
                                 IsDefault="False"
                                 Style="{DynamicResource Esri_Button}">
@@ -162,7 +162,7 @@
                                 Height="24"
                                 Margin="4,0,8,0"
                                 BorderThickness="1"
-                                IsReadOnly="{Binding Path=ComparisonOperatorIsEnabled}"
+                                IsReadOnly="{Binding ComparisonOperatorIsEnabled}"
                                 ItemsSource="{Binding Path=ComparisonOperators, UpdateSourceTrigger=PropertyChanged}"
                                 SelectedValue="{Binding Path=ComparisonOperator, ValidatesOnDataErrors=True}" />
                             <Button
@@ -172,7 +172,7 @@
                                 Width="40"
                                 Margin="4,0,0,0"
                                 HorizontalAlignment="Left"
-                                Command="{Binding Path=AddOperatorCommand}"
+                                Command="{Binding AddOperatorCommand}"
                                 Focusable="False"
                                 IsDefault="False"
                                 Style="{DynamicResource Esri_Button}">
@@ -196,8 +196,8 @@
                                 Margin="4,0,4,0"
                                 BorderThickness="1"
                                 DisplayMemberPath="Key"
-                                IsEnabled="{Binding Path=QueryValueIsEnabled}"
-                                ItemsSource="{Binding Path=QueryValues}"
+                                IsEnabled="{Binding QueryValueIsEnabled}"
+                                ItemsSource="{Binding QueryValues}"
                                 SelectedValue="{Binding Path=QueryValue, ValidatesOnDataErrors=True}"
                                 SelectedValuePath="Value">
                                 <!--  ItemContainerStyle="{DynamicResource ComboBoxItemStyle}"  -->
@@ -209,7 +209,7 @@
                                 Width="40"
                                 Margin="4,0,0,0"
                                 HorizontalAlignment="Left"
-                                Command="{Binding Path=AddValueCommand}"
+                                Command="{Binding AddValueCommand}"
                                 Focusable="False"
                                 IsDefault="False"
                                 Style="{DynamicResource Esri_Button}">
@@ -222,12 +222,11 @@
                                 Width="Auto"
                                 Margin="0,0,4,0"
                                 HorizontalAlignment="Right"
-                                Command="{Binding Path=GetValuesCommand}"
+                                Command="{Binding GetValuesCommand}"
                                 Focusable="False"
                                 IsDefault="False"
-                                IsEnabled="{Binding Path=CanGetValues}"
                                 Style="{DynamicResource Esri_Button}"
-                                ToolTip="{Binding Path=GetValuesToolTip}">
+                                ToolTip="{Binding GetValuesToolTip}">
                                 Get Values
                             </Button>
 

@@ -25,6 +25,7 @@ using System.Linq;
 using System.Windows.Input;
 using HLU.Data.Model;
 using HLU.GISApplication;
+using HLU.UI.View;
 
 namespace HLU.UI.ViewModel
 {
@@ -66,7 +67,7 @@ namespace HLU.UI.ViewModel
             _gisApp = gisApp;
         }
 
-        #endregion
+        #endregion Constructor
 
         #region ViewModelBase Members
 
@@ -78,7 +79,7 @@ namespace HLU.UI.ViewModel
 
         public override string WindowTitle { get { return DisplayName; } }
 
-        #endregion
+        #endregion ViewModelBase Members
 
         #region RequestClose
 
@@ -86,12 +87,12 @@ namespace HLU.UI.ViewModel
 
         public event RequestCloseEventHandler RequestClose;
 
-        #endregion
+        #endregion RequestClose
 
         #region Ok Command
 
         /// <summary>
-        /// Create Ok button command
+        /// Create Ok button command.
         /// </summary>
         /// <value></value>
         /// <returns></returns>
@@ -120,14 +121,17 @@ namespace HLU.UI.ViewModel
             RequestClose?.Invoke(_selectedIndex);
         }
 
+        /// <summary>
+        /// Whether we can click the Ok button.
+        /// </summary>
         private bool CanOk { get { return String.IsNullOrEmpty(this.Error); } }
 
-        #endregion
+        #endregion Ok Command
 
         #region Cancel Command
 
         /// <summary>
-        /// Create Cancel button command
+        /// Create Cancel button command.
         /// </summary>
         /// <value></value>
         /// <returns></returns>
@@ -156,10 +160,13 @@ namespace HLU.UI.ViewModel
             RequestClose?.Invoke(-1);
         }
 
-        #endregion
+        #endregion Cancel Command
 
         #region Flash Feature Command
 
+        /// <summary>
+        /// Create Flash Feature command.
+        /// </summary>
         public ICommand FlashFeatureCommand
         {
             get
@@ -174,21 +181,35 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Determines whether we can flash the selected feature(s) on the map.
+        /// </summary>
         private bool CanFlashFeature
         {
             get
             {
+                // Check that we have a result feature.
                 return _resultFeature != null && (_resultFeature is HluDataSet.incid_mm_polygonsRow ||
                     ((_currChildRows != null) && (_currChildRows.Length > 0)));
             }
         }
 
+        /// <summary>
+        /// Flashes the selected feature(s) on the map.
+        /// </summary>
+        /// <param name="param"></param>
         private void FlashFeature(object param)
         {
+            // Check that we have a GIS application instance.
+            if (_gisApp == null) return;
+
+            // Check that we have a result feature.
             if (_resultFeature == null) return;
 
+            // If the result feature is a polygon feature then flash it alone.
             if (_resultFeature is HluDataSet.incid_mm_polygonsRow)
             {
+                // Build the where clause for the selected feature.
                 List<List<SqlFilterCondition>> whereClause =
                     ViewModelWindowMainHelpers.GisSelectionToWhereClause([_resultFeature],
                     _keyOrdinals, 10, _selectedFeatures);
@@ -196,10 +217,14 @@ namespace HLU.UI.ViewModel
                 // Flash all the features relating to the where clause together.
                 if (whereClause.Count == 1)
                     _gisApp.FlashSelectedFeature(whereClause[0]);
+
+                return;
             }
-            else if ((_currChildRows != null) && (_currChildRows.Length > 0))
+
+            // If we have child rows then flash them.
+            if ((_currChildRows != null) && (_currChildRows.Length > 0))
             {
-                // Get the where clauses for the selected rows.
+                // Build the where clauses for the selected rows.
                 List<List<SqlFilterCondition>> whereClauses =
                     ViewModelWindowMainHelpers.GisSelectionToWhereClause(_currChildRows,
                     _keyOrdinals, 100, _selectedFeatures);
@@ -214,15 +239,21 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Flash Feature Command
 
         #region Merge Features
 
+        /// <summary>
+        /// Gets the features that are to be merged.
+        /// </summary>
         public T MergeFeatures
         {
             get { return _selectedFeatures; }
         }
 
+        /// <summary>
+        /// Gets or sets the feature that is currently selected.
+        /// </summary>
         public int SelectedIndex
         {
             get { return _selectedIndex; }
@@ -238,10 +269,13 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Merge Features
 
         #region IDataErrorInfo Members
 
+        /// <summary>
+        /// Gets the error message for the object.
+        /// </summary>
         public string Error
         {
             get
@@ -255,6 +289,11 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets the error message for the property with the given name.
+        /// </summary>
+        /// <param name="columnName"></param>
+        /// <returns></returns>
         public string this[string columnName]
         {
             get
@@ -280,6 +319,6 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion IDataErrorInfo Members
     }
 }

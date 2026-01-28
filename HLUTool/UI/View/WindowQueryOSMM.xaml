@@ -13,7 +13,7 @@
     Height="450"
     d:DataContext="{d:DesignInstance Type=local:ViewModelWindowQueryOSMM}"
     Icon="..\..\Images\HLUTool16.png"
-    ResizeMode="CanResize"
+    ResizeMode="CanResizeWithGrip"
     ShowInTaskbar="False"
     Style="{DynamicResource ProWindowStyle}"
     WindowStartupLocation="CenterOwner"
@@ -449,7 +449,6 @@
                     Margin="0,0,2,0"
                     Command="{Binding ApplyOSMMFilterCommand}"
                     Content="_Ok"
-                    IsEnabled="{Binding CanApplyOSMMFilter}"
                     Style="{DynamicResource Esri_Button}" />
                 <!--
                     Background="Orange"
@@ -459,15 +458,14 @@
                     x:Name="ButtonResetOSMMUpdatesFilter"
                     Grid.Column="2"
                     Margin="2,0,2,0"
-                    Command="{Binding Path=ResetOSMMFilterCommand}"
+                    Command="{Binding ResetOSMMFilterCommand}"
                     Content="_Reset"
-                    IsEnabled="{Binding CanResetOSMMUpdatesFilter}"
                     Style="{DynamicResource Esri_Button}" />
                 <Button
                     x:Name="ButtonCancelOSMMUpdatesFilter"
                     Grid.Column="3"
                     Margin="2,0,0,0"
-                    Command="{Binding Path=CancelOSMMFilterCommand}"
+                    Command="{Binding CancelOSMMFilterCommand}"
                     Content="_Cancel"
                     IsEnabled="True"
                     Style="{DynamicResource Esri_Button}" />

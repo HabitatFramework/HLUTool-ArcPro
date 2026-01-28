@@ -9,55 +9,55 @@
       </DataSource>
     </xs:appinfo>
   </xs:annotation>
-  <xs:element name="HluGISLayer" msdata:IsDataSet="true" msdata:UseCurrentLocale="true" msprop:EnableTableAdapterManager="true" msprop:Generator_DataSetName="HluGISLayer" msprop:Generator_UserDSName="HluGISLayer">
+  <xs:element name="HluGISLayer" msdata:IsDataSet="true" msdata:UseCurrentLocale="true" msprop:Generator_UserDSName="HluGISLayer" msprop:EnableTableAdapterManager="true" msprop:Generator_DataSetName="HluGISLayer">
     <xs:complexType>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
-        <xs:element name="incid_mm_polygons" msprop:Generator_UserTableName="incid_mm_polygons" msprop:Generator_RowEvArgName="incid_mm_polygonsRowChangeEvent" msprop:Generator_TableVarName="tableincid_mm_polygons" msprop:Generator_TablePropName="incid_mm_polygons" msprop:Generator_RowDeletingName="incid_mm_polygonsRowDeleting" msprop:Generator_RowChangingName="incid_mm_polygonsRowChanging" msprop:Generator_RowDeletedName="incid_mm_polygonsRowDeleted" msprop:Generator_RowEvHandlerName="incid_mm_polygonsRowChangeEventHandler" msprop:Generator_TableClassName="incid_mm_polygonsDataTable" msprop:Generator_RowChangedName="incid_mm_polygonsRowChanged" msprop:Generator_RowClassName="incid_mm_polygonsRow">
+        <xs:element name="incid_mm_polygons" msprop:Generator_RowEvHandlerName="incid_mm_polygonsRowChangeEventHandler" msprop:Generator_RowDeletedName="incid_mm_polygonsRowDeleted" msprop:Generator_RowDeletingName="incid_mm_polygonsRowDeleting" msprop:Generator_RowEvArgName="incid_mm_polygonsRowChangeEvent" msprop:Generator_TablePropName="incid_mm_polygons" msprop:Generator_RowChangedName="incid_mm_polygonsRowChanged" msprop:Generator_UserTableName="incid_mm_polygons" msprop:Generator_RowChangingName="incid_mm_polygonsRowChanging" msprop:Generator_RowClassName="incid_mm_polygonsRow" msprop:Generator_TableClassName="incid_mm_polygonsDataTable" msprop:Generator_TableVarName="tableincid_mm_polygons">
           <xs:complexType>
             <xs:sequence>
-              <xs:element name="incid" msprop:Generator_ColumnVarNameInTable="columnincid" msprop:Generator_ColumnPropNameInRow="incid" msprop:Generator_ColumnPropNameInTable="incidColumn" msprop:Generator_UserColumnName="incid">
+              <xs:element name="incid" msprop:Generator_UserColumnName="incid" msprop:Generator_ColumnPropNameInTable="incidColumn" msprop:Generator_ColumnPropNameInRow="incid" msprop:Generator_ColumnVarNameInTable="columnincid">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:maxLength value="12" />
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
-              <xs:element name="toid" msprop:Generator_ColumnVarNameInTable="columntoid" msprop:Generator_ColumnPropNameInRow="toid" msprop:Generator_ColumnPropNameInTable="toidColumn" msprop:Generator_UserColumnName="toid">
+              <xs:element name="toid" msprop:Generator_UserColumnName="toid" msprop:Generator_ColumnPropNameInTable="toidColumn" msprop:Generator_ColumnPropNameInRow="toid" msprop:Generator_ColumnVarNameInTable="columntoid">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:maxLength value="20" />
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
-              <xs:element name="toidfragid" msprop:Generator_ColumnVarNameInTable="columntoidfragid" msprop:Generator_ColumnPropNameInRow="toidfragid" msprop:Generator_ColumnPropNameInTable="toidfragidColumn" msprop:Generator_UserColumnName="toidfragid">
+              <xs:element name="toidfragid" msprop:Generator_UserColumnName="toidfragid" msprop:Generator_ColumnPropNameInTable="toidfragidColumn" msprop:Generator_ColumnPropNameInRow="toidfragid" msprop:Generator_ColumnVarNameInTable="columntoidfragid">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:maxLength value="5" />
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
-              <xs:element name="habprimary" msprop:Generator_ColumnVarNameInTable="columnhabprimary" msprop:Generator_ColumnPropNameInRow="habprimary" msprop:Generator_ColumnPropNameInTable="habprimaryColumn" msprop:Generator_UserColumnName="habprimary" minOccurs="0">
+              <xs:element name="habprimary" msprop:Generator_UserColumnName="habprimary" msprop:Generator_ColumnPropNameInTable="habprimaryColumn" msprop:Generator_ColumnPropNameInRow="habprimary" msprop:Generator_ColumnVarNameInTable="columnhabprimary" minOccurs="0">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:maxLength value="8" />
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
-              <xs:element name="habsecond" msprop:Generator_ColumnVarNameInTable="columnhabsecond" msprop:Generator_ColumnPropNameInRow="habsecond" msprop:Generator_ColumnPropNameInTable="habsecondColumn" msprop:Generator_UserColumnName="habsecond" minOccurs="0">
+              <xs:element name="habsecond" msprop:Generator_UserColumnName="habsecond" msprop:Generator_ColumnPropNameInTable="habsecondColumn" msprop:Generator_ColumnPropNameInRow="habsecond" msprop:Generator_ColumnVarNameInTable="columnhabsecond" minOccurs="0">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:maxLength value="80" />
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
-              <xs:element name="determqty" msprop:Generator_ColumnVarNameInTable="columndetermqty" msprop:Generator_ColumnPropNameInRow="determqty" msprop:Generator_ColumnPropNameInTable="determqtyColumn" msprop:Generator_UserColumnName="determqty" minOccurs="0">
+              <xs:element name="determqty" msprop:Generator_UserColumnName="determqty" msprop:Generator_ColumnPropNameInTable="determqtyColumn" msprop:Generator_ColumnPropNameInRow="determqty" msprop:Generator_ColumnVarNameInTable="columndetermqty" minOccurs="0">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:maxLength value="2" />
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
-              <xs:element name="interpqty" msprop:Generator_ColumnVarNameInTable="columninterpqty" msprop:Generator_ColumnPropNameInRow="interpqty" msprop:Generator_ColumnPropNameInTable="interpqtyColumn" msprop:Generator_UserColumnName="interpqty" minOccurs="0">
+              <xs:element name="interpqty" msprop:Generator_UserColumnName="interpqty" msprop:Generator_ColumnPropNameInTable="interpqtyColumn" msprop:Generator_ColumnPropNameInRow="interpqty" msprop:Generator_ColumnVarNameInTable="columninterpqty" minOccurs="0">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:maxLength value="2" />

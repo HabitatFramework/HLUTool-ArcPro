@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
     xmlns:hlu="clr-namespace:HLU.UI.UserControls;assembly="
-    Title="{Binding Path=WindowTitle}"
+    Title="{Binding WindowTitle}"
     Width="392"
     Height="287"
     ResizeMode="NoResize"
@@ -37,7 +37,7 @@
                 IsEditable="True"
                 IsReadOnly="False"
                 ItemsSource="{Binding Path=DataSources, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                SelectedItem="{Binding Path=DataSource}"
+                SelectedItem="{Binding DataSource}"
                 Tag="ErrorContent"
                 Text="{Binding Path=DataSource, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" />
         </GroupBox>
@@ -86,7 +86,7 @@
                     IsEditable="False"
                     IsReadOnly="False"
                     ItemsSource="{Binding Path=DBAPrivilegeOptions, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                    SelectedItem="{Binding Path=DBAPrivilegeOption}" />
+                    SelectedItem="{Binding DBAPrivilegeOption}" />
                 <Label
                     Name="LabelPassword"
                     Grid.Row="2"
@@ -117,7 +117,7 @@
                 IsEditable="True"
                 IsReadOnly="False"
                 ItemsSource="{Binding Path=Schemata, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                SelectedItem="{Binding Path=DefaultSchema}"
+                SelectedItem="{Binding DefaultSchema}"
                 Text="{Binding Path=DefaultSchema, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" />
         </GroupBox>
 
@@ -135,7 +135,7 @@
                 Name="ButtonOk"
                 Grid.Column="1"
                 Margin="0,0,2,0"
-                Command="{Binding Path=OkCommand}"
+                Command="{Binding OkCommand}"
                 ForceCursor="False"
                 IsDefault="True">
                 _OK
@@ -144,7 +144,7 @@
                 Name="ButtonCancel"
                 Grid.Column="2"
                 Margin="2,0,0,0"
-                Command="{Binding Path=CancelCommand}"
+                Command="{Binding CancelCommand}"
                 IsCancel="True">
                 _Cancel
             </Button>
