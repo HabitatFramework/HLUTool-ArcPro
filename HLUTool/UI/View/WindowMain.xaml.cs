@@ -146,7 +146,7 @@ namespace HLU.UI.View
                 // Remove the selected items from the view model collection.
                 foreach (var item in selectedItems)
                 {
-                    _viewModel.IncidSecondaryHabitats.Remove(item);
+                    viewModel.IncidSecondaryHabitats.Remove(item);
                 }
             }
         }
