@@ -272,6 +272,8 @@ namespace HLU.UI.ViewModel
 
         #region Variables
 
+        private const string _dockPaneBaseCaption = "HLU Tool";
+
         private bool _showingReasonProcessGroup = false;
         private bool _showingOSMMPendingGroup = false;
 
@@ -2767,11 +2769,13 @@ namespace HLU.UI.ViewModel
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task LogicalSplitAsync()
         {
+            //TODO: Needed?
             _autoSplit = false;
 
             // Get the GIS layer selection again (just in case).
             await GetMapSelectionAsync(false);
 
+            //TODO: Needed?
             _autoSplit = true;
 
             // Check the selected rows are unique before attempting to split them.
@@ -2806,11 +2810,13 @@ namespace HLU.UI.ViewModel
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task PhysicalSplitAsync()
         {
+            //TODO: Needed?
             _autoSplit = false;
 
             // Get the GIS layer selection again (just in case).
             await GetMapSelectionAsync(false);
 
+            //TODO: Needed?
             _autoSplit = true;
 
             // Create ViewModel for split class.
@@ -6428,8 +6434,6 @@ namespace HLU.UI.ViewModel
 
                     ChangeCursor(Cursors.Arrow, null);
 
-                    //if (showMessage) MessageBox.Show("No map features selected in active layer.", "HLU: Selection",
-                    //    MessageBoxButton.OK, MessageBoxImage.Exclamation);
                     // Display a warning message.
                     ShowMessage("No map features selected in active layer.", MessageType.Warning);
                 }
@@ -7467,29 +7471,23 @@ namespace HLU.UI.ViewModel
         {
             try
             {
+                // If filtered, and there are selected incids in the map or not connected to GIS
+                // or in OSMM Update mode.
                 if (IsFiltered && (((_incidsSelectedMapCount > 0) || (_gisApp == null)) || OSMMUpdateMode == true))
                     // If currently splitting a feature then go to the last incid
                     // in the filter (which will be the new incid).
                     if (_splitting)
                     {
+                        // Move to the last incid in the selection.
                         await MoveIncidCurrentRowIndexAsync(IsFiltered ? _incidSelection.Rows.Count : _incidRowCount);
                     }
                     else
                     {
+                        // Move to the first incid in the selection.
                         await MoveIncidCurrentRowIndexAsync(1);
                     }
             }
-            finally
-            {
-                // Not needed as counted after moving incid
-                // Count the number of toids and fragments for the current incid
-                // selected in the GIS and in the database.
-                //CountToidFrags();
-
-                // Not needed as refreshed after moving incid
-                // Refresh all the status type fields.
-                //RefreshStatus();
-            }
+            catch { }
         }
 
         #endregion Select Helpers
@@ -7538,24 +7536,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                ////TODO: This isn't working when setting the active layer name.
-                ////if (_activeLayerName == null)
-                //if (_activeLayerName != "")
-                //{
-                //    // If no HLU layer has been identified yet (GIS is still loading) then
-                //    // don't return the layer name
-                //    if (_gisApp == null || _gisApp.ActiveHluLayer == null)
-                //        return String.Empty;
-                //    else
-                //    {
-                //        // Get the active HLU layer name from GIS.
-                //        _activeLayerName = _gisApp.ActiveHluLayer.LayerName;
-                //    }
-                //}
-
                 // Return the active layer name.
                 return _activeLayerName ?? string.Empty;
-
             }
 
             set
@@ -7567,7 +7549,27 @@ namespace HLU.UI.ViewModel
                 // Set the active layer name.
                 _activeLayerName = value;
                 OnPropertyChanged(nameof(ActiveLayerName));
+
+                // Update the dock pane caption.
+                UpdateDockPaneCaption();
             }
+        }
+
+        /// <summary>
+        /// Updates the dock pane caption to include the active GIS layer name.
+        /// </summary>
+        private void UpdateDockPaneCaption()
+        {
+            // Keep the dockpane title useful but not ridiculous in length.
+            string layerPart = string.IsNullOrWhiteSpace(_activeLayerName)
+                ? string.Empty
+                : $" : [{_activeLayerName}]";
+
+            Caption = _dockPaneBaseCaption + layerPart;
+            OnPropertyChanged(nameof(Caption));
+
+            // Only show the title when the pane is tabbed with other panes.
+            TabText = _dockPaneBaseCaption;
         }
 
         /// <summary>
