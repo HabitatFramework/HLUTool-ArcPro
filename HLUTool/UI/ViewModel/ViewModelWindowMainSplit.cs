@@ -20,17 +20,18 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Desktop.Editing;
+using HLU.Data;
+using HLU.Data.Model;
+using HLU.GISApplication;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
-using System.Windows;
-using HLU.Data;
-using HLU.Data.Model;
-using HLU.GISApplication;
-using System.Windows.Threading;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Threading;
 
 namespace HLU.UI.ViewModel
 {
@@ -98,16 +99,16 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <remarks>This method attempts to split the selected feature into two logical entities by
         /// creating a new  identifier (INCID) and updating the GIS layer and its associated database records
-        /// accordingly.  The operation ensures that the selected feature is not the only one associated with the
-        /// current  INCID before proceeding. If the operation is successful, the GIS layer and database are updated,
-        /// and the application state is synchronized with the changes.  The method handles database transactions to
-        /// ensure atomicity and rolls back changes in case of  an error. It also updates history records to reflect the
+        /// accordingly. The operation ensures that the selected feature is not the only one associated with the
+        /// current INCID before proceeding. If the operation is successful, the GIS layer and database are updated,
+        /// and the application state is synchronized with the changes. The method handles database transactions to
+        /// ensure atomicity and rolls back changes in case of an error. It also updates history records to reflect the
         /// changes made during the split.</remarks>
         /// <returns><see langword="true"/> if the logical split operation completes successfully; otherwise, <see
         /// langword="false"/>.</returns>
         private async Task<bool> PerformLogicalSplitAsync()
         {
-            // Check if selected feature is the only one pertaining to its incid
+            // Check if selected feature is the only one pertaining to its incid.
             if (_viewModelMain.GisSelection.Rows.Count == 1)
             {
                 // Create a count query to determine how many features exist for the current incid.
@@ -118,8 +119,10 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.DataBase.QuoteValue(_viewModelMain.Incid));
 
                 // Execute the count query.
-                int featCount = (int)_viewModelMain.DataBase.ExecuteScalar(cntSQL,
-                    _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text);
+                int featCount = (int)_viewModelMain.DataBase.ExecuteScalar(
+                    cntSQL,
+                    _viewModelMain.DataBase.Connection.ConnectionTimeout,
+                    CommandType.Text);
 
                 // If only one feature exists for the current incid then abort the split.
                 if (featCount < 2)
@@ -133,45 +136,79 @@ namespace HLU.UI.ViewModel
 
             // Begin the logical split transaction.
             bool success = true;
+
+            // Start database transaction.
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
+
+            // Start a GIS edit operation.
+            EditOperation editOperation = new()
+            {
+                Name = "Logical Split GIS Features"
+            };
 
             try
             {
                 // Fractions of a second can cause rounding differences when
                 // comparing DateTime fields later in some databases.
                 DateTime currDtTm = DateTime.Now;
-                DateTime nowDtTm = new(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
+                DateTime nowDtTm = new(
+                    currDtTm.Year,
+                    currDtTm.Month,
+                    currDtTm.Day,
+                    currDtTm.Hour,
+                    currDtTm.Minute,
+                    currDtTm.Second,
+                    DateTimeKind.Local);
 
                 // The incid modified columns (i.e. last modified user and date)
-                // should be updated for the active incid
+                // should be updated for the active incid.
                 _viewModelMain.ViewModelUpdate.UpdateIncidModifiedColumns(_viewModelMain.Incid, nowDtTm);
 
-                // create new incid by cloning the current one
+                // Create new incid by cloning the current one.
                 string msg;
-                if (!CloneCurrentIncid(false, out msg)) throw new Exception(msg);
+                if (!CloneCurrentIncid(false, out msg))
+                    throw new Exception(msg);
+
                 string newIncid = _viewModelMain.RecIDs.CurrentIncid;
 
                 // Prepare the history columns for the split operation.
-                DataColumn[] historyColumns = _viewModelMain.HistoryColumns.Concat([ new(
+                // This adds an additional history request column that maps "modified_toidfragid"
+                // to the source GIS field "toidfragid" using the delimiter mechanism.
+                DataColumn[] historyColumns =
+                    _viewModelMain.HistoryColumns.Concat(
+                        [
+                            new(
                         _viewModelMain.HluDataset.history.modified_toidfragidColumn.ColumnName.Replace(
-                        _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.ColumnName, String.Empty) +
+                            _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.ColumnName,
+                            String.Empty) +
                         ArcProApp.HistoryAdditionalFieldsDelimiter +
                         _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.ColumnName,
-                        _viewModelMain.HluDataset.history.modified_toidfragidColumn.DataType)]).ToArray();
+                        _viewModelMain.HluDataset.history.modified_toidfragidColumn.DataType)
+                        ]).ToArray();
 
                 // Update the GIS layer and retrieve the history of changes made.
-                DataTable historyTable = await _viewModelMain.GISApplication.SplitFeaturesLogicallyAsync(_viewModelMain.Incid, newIncid, historyColumns);
+                // This queues the GIS edits into the provided EditOperation but does not execute it.
+                DataTable historyTable = await _viewModelMain.GISApplication.SplitFeaturesLogicallyAsync(
+                    _viewModelMain.Incid,
+                    newIncid,
+                    historyColumns,
+                    editOperation);
 
-                // If an error occurred when updating the GIS layer or
-                // if no history row were collected then throw an exception.
+                // If an error occurred when collecting history or
+                // if no history rows were collected then throw an exception.
                 if ((historyTable == null) || (historyTable.Rows.Count == 0))
                     throw new Exception("Failed to update GIS layer.");
 
-                // update DB shadow copy of GIS layer
+                // Update DB shadow copy of GIS layer.
                 HluDataSet.incid_mm_polygonsDataTable polygons = new();
-                _viewModelMain.GetIncidMMPolygonRows(ViewModelWindowMainHelpers.GisSelectionToWhereClause(
-                    _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals,
-                    ViewModelWindowMain.IncidPageSize, polygons), ref polygons);
+
+                _viewModelMain.GetIncidMMPolygonRows(
+                    ViewModelWindowMainHelpers.GisSelectionToWhereClause(
+                        _viewModelMain.GisSelection.Select(),
+                        _viewModelMain.GisIDColumnOrdinals,
+                        ViewModelWindowMain.IncidPageSize,
+                        polygons),
+                    ref polygons);
 
                 historyTable.PrimaryKey = historyTable.Columns.Cast<DataColumn>()
                     .Where(c => _viewModelMain.GisIDColumnOrdinals.Contains(c.Ordinal)).ToArray();
@@ -184,39 +221,52 @@ namespace HLU.UI.ViewModel
                     {
                         DataRow historyRow = historyTable.Rows.Find(r.ItemArray.Where((i, index) =>
                             _viewModelMain.GisIDColumnOrdinals.Contains(index)).ToArray());
+
                         r.toidfragid = historyRow.Field<string>(
                             _viewModelMain.HluDataset.history.modified_toidfragidColumn.ColumnName);
+
                         r.incid = newIncid;
                     }
                 }
+
                 if (_viewModelMain.HluTableAdapterManager.incid_mm_polygonsTableAdapter.Update(polygons) == -1)
                     throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid_mm_polygons.TableName));
 
-                // The incid modified columns (i.e. last modified user and date)
-                // have already been update above for the current incid.
-                //
-                //_viewModelMain.ViewModelUpdate.UpdateIncidModifiedColumns(
-                //    historyTable.Rows[0][_viewModelMain.HluDataset.history.incidColumn.ColumnName].ToString());
-
-                // write history
+                // Write history.
                 Dictionary<int, string> fixedValues = new()
                 {
                     { _viewModelMain.HluDataset.history.incidColumn.Ordinal, newIncid }
                 };
+
                 historyTable.Columns[_viewModelMain.HluDataset.history.incidColumn.ColumnName].ColumnName =
                     _viewModelMain.HluDataset.history.modified_incidColumn.ColumnName;
+
                 ViewModelWindowMainHistory vmHist = new(_viewModelMain);
                 vmHist.HistoryWrite(fixedValues, historyTable, Operations.LogicalSplit, nowDtTm);
+
+                // Commit updates to the GIS layer.
+                if (!await editOperation.ExecuteAsync())
+                    throw new HLUToolException("Failed to update GIS layer.");
 
                 // Commit the transaction.
                 _viewModelMain.DataBase.CommitTransaction();
                 _viewModelMain.HluDataset.AcceptChanges();
-
             }
             catch (Exception ex)
             {
                 _viewModelMain.DataBase.RollbackTransaction();
                 success = false;
+
+                try
+                {
+                    // Abort the GIS updates.
+                    editOperation.Abort();
+                }
+                catch
+                {
+                    // Ignore abort exceptions.
+                }
+
                 MessageBox.Show("Split operation failed. The error message returned was:\n\n" +
                     ex.Message, "HLU Split Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
@@ -237,11 +287,11 @@ namespace HLU.UI.ViewModel
                     // local copy.
                     _viewModelMain.RefillIncidTable = true;
 
-                    // Get the GIS layer selection again
+                    // Get the GIS layer selection again.
                     await _viewModelMain.GetMapSelectionAsync(true);
                 }
             }
-            //}
+
             return success;
         }
 

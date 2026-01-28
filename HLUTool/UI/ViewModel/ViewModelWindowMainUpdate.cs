@@ -215,24 +215,9 @@ namespace HLU.UI.ViewModel
                 ViewModelWindowMainHistory vmHist = new(_viewModelMain);
                 vmHist.HistoryWrite(fixedValues, historyTable, Operations.AttributeUpdate, nowDtTm);
 
-                // Commit updates to the GIS layer
-                await QueuedTask.Run(async () =>
-                {
-                    try
-                    {
-                        // Commit GIS EditOperation
-                        if (!await editOperation.ExecuteAsync())
-                        {
-                            // Preserve stack trace and wrap in a meaningful type
-                            throw new HLUToolException("Failed to update GIS layer.");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        // Preserve stack trace and wrap in a meaningful type
-                        throw new HLUToolException("Error updating GIS features: " + ex.Message, ex);
-                    }
-                });
+                // Execute the edit operation.
+                if (!await editOperation.ExecuteAsync())
+                    throw new HLUToolException("Failed to update GIS layer.");
 
                 // Commit the transation and accept the changes
                 _viewModelMain.DataBase.CommitTransaction();

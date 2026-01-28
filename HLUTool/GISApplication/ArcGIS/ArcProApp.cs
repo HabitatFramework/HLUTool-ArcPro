@@ -51,12 +51,13 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
+using static HLU.GISApplication.HistoryFieldBindingHelper;
 using Envelope = ArcGIS.Core.Geometry.Envelope;
 using Field = ArcGIS.Core.Data.Field;
+using Geometry = ArcGIS.Core.Geometry.Geometry;
 using LinearUnit = ArcGIS.Core.Geometry.LinearUnit;
 using QueryFilter = ArcGIS.Core.Data.QueryFilter;
 using SpatialReference = ArcGIS.Core.Geometry.SpatialReference;
-using Geometry = ArcGIS.Core.Geometry.Geometry;
 //using ArcGIS.Core.Internal.CIM;
 
 namespace HLU.GISApplication
@@ -1712,19 +1713,198 @@ namespace HLU.GISApplication
 
         #region Flash
 
+        /// <summary>
+        /// Flashes the features matching the supplied where clause (built from SqlFilterCondition list).
+        /// Flashes all matched features at the same time, twice.
+        /// </summary>
         public void FlashSelectedFeature(List<SqlFilterCondition> whereClause)
         {
-            //List<string> resultList = IpcArcMap([ "fl",
-            //    WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, whereClause)) ]);
+            _ = FlashSelectedFeatureAsync(whereClause);
         }
 
+        /// <summary>
+        /// Flashes the features matching the supplied where clauses (built from SqlFilterCondition lists).
+        /// Flashes all matched features at the same time, twice.
+        /// </summary>
         public void FlashSelectedFeatures(List<List<SqlFilterCondition>> whereClauses)
         {
-            //foreach (List<SqlFilterCondition> whereClause in whereClauses)
+            _ = FlashSelectedFeaturesAsync(whereClauses);
+        }
+
+        /// <summary>
+        /// Asynchronously flashes the features matching the supplied where clause.
+        /// </summary>
+        private async Task FlashSelectedFeatureAsync(List<SqlFilterCondition> whereClause)
+        {
+            // Check the where clause is not empty.
+            if (whereClause == null || whereClause.Count == 0)
+                return;
+
+            // Build the where clause string.
+            string wc =
+                WhereClause(
+                    false,
+                    false,
+                    false,
+                    MapWhereClauseFields(_hluLayerStructure, whereClause));
+
+            // Flash the features matching the where clause string.
+            await FlashWhereClausesAsync([wc]).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Asynchronously flashes the features matching the supplied where clauses.
+        /// </summary>
+        private async Task FlashSelectedFeaturesAsync(List<List<SqlFilterCondition>> whereClauses)
+        {
+            // Check the where clauses are not empty.
+            if (whereClauses == null || whereClauses.Count == 0)
+                return;
+
+            // Build the where clause strings.
+            List<string> wcs = [];
+            foreach (List<SqlFilterCondition> wcList in whereClauses)
+            {
+                if (wcList == null || wcList.Count == 0)
+                    continue;
+
+                string wc =
+                    WhereClause(
+                        false,
+                        false,
+                        false,
+                        MapWhereClauseFields(_hluLayerStructure, wcList));
+
+                if (!string.IsNullOrWhiteSpace(wc))
+                    wcs.Add(wc);
+            }
+
+            if (wcs.Count == 0)
+                return;
+
+            // Flash the features matching the where clause strings.
+            await FlashWhereClausesAsync(wcs).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Flashes all features matching any of the supplied where clauses, twice, at the same time.
+        /// </summary>
+        private async Task FlashWhereClausesAsync(IEnumerable<string> whereClauses)
+        {
+            // Check prerequisites.
+            if (_hluLayer == null)
+                return;
+
+            if (_hluFeatureClass == null)
+                return;
+
+            if (MapView.Active == null)
+                return;
+
+            // Collect OIDs for all where clauses (unioned), on the MCT.
+            List<long> oids = await QueuedTask.Run(() =>
+            {
+                HashSet<long> oidSet = [];
+
+                // Query each where clause in turn.
+                foreach (string wc in whereClauses.Where(s => !string.IsNullOrWhiteSpace(s)))
+                {
+                    // Build a query filter for the where clause.
+                    QueryFilter qf = new()
+                    {
+                        WhereClause = wc
+                    };
+
+                    // Search the feature class for matching features.
+                    using RowCursor cursor = _hluFeatureClass.Search(qf, false);
+
+                    // Collect OIDs from the result set.
+                    while (cursor.MoveNext())
+                    {
+                        using Row row = cursor.Current;
+
+                        long oid = TryGetObjectId(row);
+
+                        if (oid >= 0)
+                            oidSet.Add(oid);
+                    }
+                }
+
+                return oidSet.Count == 0 ? [] : oidSet.ToList();
+            }).ConfigureAwait(false);
+
+            // If no OIDs were found, nothing to flash.
+            if (oids.Count == 0)
+                return;
+
+            // Build a SelectionSet for “flash all at once”.
+            // SelectionSet.FromDictionary expects MapMember → List<long>.
+            Dictionary<MapMember, List<long>> selectionDictionary = new()
+            {
+                { _hluLayer, oids }
+            };
+
+            // Flash twice with a short gap so it’s really obvious.
+            await QueuedTask.Run(() =>
+            {
+                SelectionSet selectionSet = SelectionSet.FromDictionary(selectionDictionary);
+                MapView.Active.FlashFeature(selectionSet);
+            }).ConfigureAwait(false);
+
+            //await Task.Delay(50).ConfigureAwait(false);
+
+            //await QueuedTask.Run(() =>
             //{
-            //    List<string> resultList = IpcArcMap([ "fl",
-            //        WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, whereClause)) ]);
-            //}
+            //    SelectionSet selectionSet = SelectionSet.FromDictionary(selectionDictionary);
+            //    MapView.Active.FlashFeature(selectionSet);
+            //}).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Attempts to read the ObjectID from a Row in a version-tolerant way.
+        /// Returns -1 if it cannot be read.
+        /// </summary>
+        private static long TryGetObjectId(Row row)
+        {
+            if (row == null)
+                return -1;
+
+            try
+            {
+                // [Guess] Row.GetObjectID() exists in your references.
+                return row.GetObjectID();
+            }
+            catch
+            {
+                // Fallback: many datasets expose OBJECTID/OID as a field value.
+                // This is intentionally defensive.
+                try
+                {
+                    object v = row["OBJECTID"];
+                    if (v == null || v == DBNull.Value)
+                        v = row["OID"];
+
+                    if (v == null || v == DBNull.Value)
+                        return -1;
+
+                    return Convert.ToInt64(v, CultureInfo.InvariantCulture);
+                }
+                catch
+                {
+                    return -1;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Runs an action on the UI dispatcher.
+        /// </summary>
+        private static Task RunOnUiAsync(Action action)
+        {
+            if (action == null)
+                return Task.CompletedTask;
+
+            return FrameworkApplication.Current.Dispatcher.InvokeAsync(action).Task;
         }
 
         #endregion Flash
@@ -1741,7 +1921,7 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Split features logically by changing their incid number.
+        /// Splits selected features logically by changing their incid number.
         /// Pass the old incid number together with the new incid number
         /// so that only features belonging to the old incid are
         /// updated.
@@ -1749,150 +1929,187 @@ namespace HLU.GISApplication
         /// <param name="oldIncid"></param>
         /// <param name="newIncid"></param>
         /// <param name="historyColumns"></param>
+        /// <param name="editOperation"></param>
         /// <returns></returns>
-        public DataTable SplitFeaturesLogically(string oldIncid, string newIncid, DataColumn[] historyColumns)
-        {
-            //TODO:
-            //try
-            //{
-            //    string[] sendList =
-            //    [
-            //        "sl",
-            //        oldIncid,
-            //        newIncid,
-            //        //DONE: Aggregate
-            //        //historyColumns.Aggregate(new(), (sb, c) =>
-            //        //    sb.Append("," + c.ColumnName)).Remove(0, 1).ToString(),
-            //        string.Join(",", historyColumns.Select(c => c.ColumnName)),
-            //    ];
-            //    return ResultTableFromList(IpcArcMap(sendList));
-            //}
-            //catch { throw; }
-            return null;
-        }
-
-        /// <summary>
-        /// Splits selected features logically by moving only features with <paramref name="oldIncid"/> to
-        /// <paramref name="newIncid"/>, and returns a history table containing the pre-update values.
-        /// Supports the "additional history field" mechanism using <see cref="HistoryAdditionalFieldsDelimiter"/>.
-        /// </summary>
-        /// <param name="oldIncid">The INCID to split from.</param>
-        /// <param name="newIncid">The INCID to split to.</param>
-        /// <param name="historyColumns">
-        /// History column definitions. Column names may include <see cref="HistoryAdditionalFieldsDelimiter"/> to
-        /// request values from a source GIS field while naming the output history column with a prefix.
-        /// Example: "modified_" + delimiter + "toidfragid" outputs "modified_toidfragid" sourced from "toidfragid".
-        /// </param>
-        /// <returns>A history <see cref="DataTable"/> for the updated features.</returns>
         public async Task<DataTable> SplitFeaturesLogicallyAsync(
             string oldIncid,
             string newIncid,
-            DataColumn[] historyColumns)
+            DataColumn[] historyColumns,
+            EditOperation editOperation)
         {
             // Check parameters.
-            if (string.IsNullOrWhiteSpace(oldIncid))
-                throw new ArgumentException("Old INCID is required.", nameof(oldIncid));
+            if (String.IsNullOrEmpty(oldIncid))
+                throw new ArgumentException("Old incid is required.", nameof(oldIncid));
 
-            if (string.IsNullOrWhiteSpace(newIncid))
-                throw new ArgumentException("New INCID is required.", nameof(newIncid));
-
-            if (_hluLayer == null)
-                throw new InvalidOperationException("HLU layer is not set.");
-
-            if (_hluLayerStructure == null)
-                throw new InvalidOperationException("HLU layer structure is not set.");
+            if (String.IsNullOrEmpty(newIncid))
+                throw new ArgumentException("New incid is required.", nameof(newIncid));
 
             if (historyColumns == null || historyColumns.Length == 0)
                 throw new ArgumentException("History columns are required.", nameof(historyColumns));
 
-            // Build a field plan from the requested history columns.
-            List<HistoryFieldSpec> historyFieldSpecs = BuildHistoryFieldSpecs(historyColumns.Select(c => c.ColumnName).ToArray());
+            ArgumentNullException.ThrowIfNull(editOperation);
 
-            // Create the output history table up-front.
-            DataTable historyTable = CreateHistoryDataTable(historyFieldSpecs);
+            if (_hluLayer == null)
+                throw new HLUToolException("HLU layer is not set.");
 
-            // Resolve required field ordinals using existing map logic.
-            int incidFieldIndex = ResolveRequiredFieldIndex(_hluLayerStructure.incidColumn.ColumnName);
+            if (_hluFeatureClass == null)
+                throw new HLUToolException("HLU feature class is not set.");
+
+            if (_hluLayerStructure == null)
+                throw new HLUToolException("HLU layer structure is not set.");
+
+            // Build history field bindings using existing map logic.
+            // This supports additional fields using the delimiter mechanism.
+            List<HistoryFieldBindingHelper.HistoryFieldBinding> historyBindings =
+                HistoryFieldBindingHelper.BuildHistoryFieldBindings(
+                    historyColumns,
+                    HistoryAdditionalFieldsDelimiter,
+                    MapField,
+                    FuzzyFieldOrdinal);
+
+            // Create the history table (columns only) up front.
+            DataTable historyTable = new();
+
+            foreach (var b in historyBindings)
+            {
+                if (!historyTable.Columns.Contains(b.OutputColumnName))
+                    historyTable.Columns.Add(new DataColumn(b.OutputColumnName, b.OutputType));
+            }
+
+            // Add geometry history columns to match ArcMap behaviour and future point/polyline support.
+            if (!historyTable.Columns.Contains(ViewModelWindowMain.HistoryGeometry1ColumnName))
+                historyTable.Columns.Add(new DataColumn(ViewModelWindowMain.HistoryGeometry1ColumnName, typeof(double)));
+
+            if (!historyTable.Columns.Contains(ViewModelWindowMain.HistoryGeometry2ColumnName))
+                historyTable.Columns.Add(new DataColumn(ViewModelWindowMain.HistoryGeometry2ColumnName, typeof(double)));
+
+            // Resolve the field index for incid using existing map logic.
+            int incidFieldIndex = MapField(_hluLayerStructure.incidColumn.ColumnName);
+            if (incidFieldIndex == -1)
+                incidFieldIndex = FuzzyFieldOrdinal(_hluLayerStructure.incidColumn.ColumnName);
+
+            if (incidFieldIndex == -1)
+                throw new HLUToolException("Failed to resolve incid field index for the active HLU layer.");
 
             // Get selected ObjectIDs.
-            IReadOnlyList<long> objectIds = await QueuedTask.Run(() =>
+            IReadOnlyList<long> selectedObjectIds = await QueuedTask.Run(() =>
             {
                 Selection selection = _hluLayer.GetSelection();
-                return selection?.GetObjectIDs() ?? Array.Empty<long>();
+                return selection?.GetObjectIDs() ?? [];
             });
 
-            // If no selected features, return empty history table.
-            if (objectIds.Count == 0)
+            // If nothing is selected, return an empty history table.
+            if (selectedObjectIds.Count == 0)
                 return historyTable;
+
+            // Collect history immediately and determine which OIDs will actually be updated.
+            // Do not put history capture inside the EditOperation callback, because it won't execute
+            // until the operation is committed.
+            List<long> updateObjectIds = [];
 
             await QueuedTask.Run(() =>
             {
-                // Cast the feature class as a Table
-                Table hluTable = _hluFeatureClass as Table;
-
-                EditOperation editOperation = new()
+                QueryFilter queryFilter = new()
                 {
-                    Name = "HLU Logical Split"
+                    ObjectIDs = selectedObjectIds
                 };
+
+                using RowCursor rowCursor = _hluFeatureClass.Search(queryFilter, false);
+
+                while (rowCursor.MoveNext())
+                {
+                    using Feature feature = rowCursor.Current as Feature;
+                    if (feature == null)
+                        continue;
+
+                    object incidObj = feature[incidFieldIndex];
+                    string incidVal = incidObj?.ToString();
+
+                    // Only update features belonging to the old incid.
+                    if (!String.Equals(incidVal, oldIncid, StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    // Collect history BEFORE updating incid.
+                    DataRow historyRow = historyTable.NewRow();
+
+                    foreach (var b in historyBindings)
+                    {
+                        object value = feature[b.SourceFieldIndex];
+                        historyRow[b.OutputColumnName] = value ?? DBNull.Value;
+                    }
+
+                    // Collect geometry props (length/area or X/Y).
+                    Geometry geom = feature.GetShape();
+                    (double geom1, double geom2) = GetGeometryHistoryValues(geom);
+
+                    historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = geom1;
+                    historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = geom2;
+
+                    historyTable.Rows.Add(historyRow);
+
+                    // Capture OID for update.
+                    updateObjectIds.Add(feature.GetObjectID());
+                }
+
+                // Queue the edit operation for only those OIDs that matched oldIncid.
+                // This keeps the queued edit set consistent with the history rows returned.
+                if (updateObjectIds.Count == 0)
+                    return;
+
+                Table hluTable = _hluFeatureClass as Table;
 
                 editOperation.Callback(context =>
                 {
-                    // Query selected rows by ObjectID.
-                    QueryFilter qf = new()
+                    QueryFilter updateFilter = new()
                     {
-                        ObjectIDs = objectIds
+                        ObjectIDs = updateObjectIds
                     };
 
-                    using RowCursor cursor = _hluFeatureClass.Search(qf, false);
-                    while (cursor.MoveNext())
+                    using RowCursor updateCursor = _hluFeatureClass.Search(updateFilter, false);
+
+                    while (updateCursor.MoveNext())
                     {
-                        using Feature feature = cursor.Current as Feature;
-                        if (feature == null)
-                            continue;
+                        using Row row = updateCursor.Current;
 
-                        object incidObj = feature[incidFieldIndex];
-                        string incidVal = incidObj?.ToString();
+                        // Update the incid value.
+                        row[incidFieldIndex] = newIncid;
 
-                        // Only update features belonging to the old incid.
-                        if (!string.Equals(incidVal, oldIncid, StringComparison.OrdinalIgnoreCase))
-                            continue;
+                        // Store the row.
+                        row.Store();
 
-                        // Capture history BEFORE update.
-                        DataRow histRow = historyTable.NewRow();
-
-                        foreach (HistoryFieldSpec spec in historyFieldSpecs)
-                        {
-                            object value = null;
-
-                            if (spec.SourceFieldIndex >= 0)
-                                value = feature[spec.SourceFieldIndex];
-
-                            histRow[spec.OutputColumnName] = value ?? DBNull.Value;
-                        }
-
-                        // Geometry props (length/area or X/Y) like the old History() payload intended.
-                        Geometry geom = feature.GetShape();
-                        (double geom1, double geom2) = GetGeometryHistoryValues(geom);
-
-                        histRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = geom1;
-                        histRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = geom2;
-
-                        historyTable.Rows.Add(histRow);
-
-                        // Apply the logical split (update incid).
-                        feature[incidFieldIndex] = newIncid;
-
-                        feature.Store();
-                        context.Invalidate(feature);
+                        // Invalidate for redraw.
+                        context.Invalidate(row);
                     }
                 }, hluTable);
-
-                bool ok = editOperation.Execute();
-                if (!ok)
-                    throw new HLUToolException($"Logical split edit operation failed: {editOperation.ErrorMessage}");
             });
 
             return historyTable;
+        }
+
+        /// <summary>
+        /// Computes the two geometry history values.
+        /// Polygons: (length, area). Polylines: (length, -1). Points: (X, Y).
+        /// </summary>
+        private static (double Geom1, double Geom2) GetGeometryHistoryValues(Geometry geometry)
+        {
+            if (geometry == null)
+                return (-1, -1);
+
+            switch (geometry.GeometryType)
+            {
+                case GeometryType.Polygon:
+                    return (GeometryEngine.Instance.Length(geometry), GeometryEngine.Instance.Area(geometry));
+
+                case GeometryType.Polyline:
+                    return (GeometryEngine.Instance.Length(geometry), -1);
+
+                case GeometryType.Point:
+                    MapPoint p = (MapPoint)geometry;
+                    return (p.X, p.Y);
+
+                default:
+                    return (-1, -1);
+            }
         }
 
         /// <summary>
@@ -1918,12 +2135,40 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
+        /// Builds the history field bindings using the existing HLU field mapping logic.
+        /// Supports additional fields using <see cref="HistoryAdditionalFieldsDelimiter"/>.
+        /// </summary>
+        /// <param name="historyColumns">The requested history columns.</param>
+        /// <returns>A list of history field bindings.</returns>
+        private List<HistoryFieldBinding> BuildHistoryFieldBindings(DataColumn[] historyColumns)
+        {
+            // Check parameters.
+            ArgumentNullException.ThrowIfNull(historyColumns);
+
+            int ix;
+
+            // Map each requested history column to a GIS field ordinal (feature class field index).
+            // Output column name removes the delimiter so "modified_|toidfragid" becomes "modified_toidfragid".
+            var bindings =
+                from c in historyColumns
+                let requestedName = c.ColumnName
+                let fieldIndex = (ix = MapField(requestedName)) != -1 ? ix : FuzzyFieldOrdinal(requestedName)
+                where fieldIndex != -1
+                select new HistoryFieldBinding(
+                    requestedName.Replace(HistoryAdditionalFieldsDelimiter, String.Empty),
+                    fieldIndex,
+                    c.DataType);
+
+            return bindings.ToList();
+        }
+
+        /// <summary>
         /// Builds a list of history field specs from requested column names.
         /// Supports delimiter-based "additional fields" (prefix + delimiter + sourceFieldName).
         /// </summary>
         private List<HistoryFieldSpec> BuildHistoryFieldSpecs(string[] historyColumnNames)
         {
-            List<HistoryFieldSpec> specs = new();
+            List<HistoryFieldSpec> specs = [];
 
             foreach (string raw in historyColumnNames.Select(n => n?.Trim()).Where(n => !string.IsNullOrEmpty(n)))
             {
@@ -1960,25 +2205,34 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Creates a history data table for the requested history fields plus the geometry columns.
+        /// Creates a history <see cref="DataTable"/> with columns matching the requested history bindings.
         /// </summary>
-        private static DataTable CreateHistoryDataTable(IEnumerable<HistoryFieldSpec> specs)
+        /// <param name="historyBindings">The history bindings.</param>
+        /// <returns>A history <see cref="DataTable"/> with the required columns.</returns>
+        internal static DataTable CreateHistoryDataTable(
+            List<HistoryFieldBinding> historyBindings)
         {
-            DataTable dt = new();
+            // Check parameters.
+            ArgumentNullException.ThrowIfNull(historyBindings);
 
-            foreach (HistoryFieldSpec spec in specs)
+            DataTable table = new();
+
+            foreach (HistoryFieldBinding b in historyBindings)
             {
-                if (!dt.Columns.Contains(spec.OutputColumnName))
-                    dt.Columns.Add(new DataColumn(spec.OutputColumnName, spec.DataType));
+                // Use object to avoid fragile type-mapping issues between GIS field types and ADO.NET types.
+                // The HistoryWrite method already handles DBNull safely.
+                if (table.Columns.Contains(b.OutputColumnName) == false)
+                    table.Columns.Add(new DataColumn(b.OutputColumnName, typeof(object)));
             }
 
-            if (!dt.Columns.Contains(ViewModelWindowMain.HistoryGeometry1ColumnName))
-                dt.Columns.Add(new DataColumn(ViewModelWindowMain.HistoryGeometry1ColumnName, typeof(double)));
+            // Ensure geometry history columns exist (these are filled in by the caller).
+            if (table.Columns.Contains(ViewModelWindowMain.HistoryGeometry1ColumnName) == false)
+                table.Columns.Add(new DataColumn(ViewModelWindowMain.HistoryGeometry1ColumnName, typeof(double)));
 
-            if (!dt.Columns.Contains(ViewModelWindowMain.HistoryGeometry2ColumnName))
-                dt.Columns.Add(new DataColumn(ViewModelWindowMain.HistoryGeometry2ColumnName, typeof(double)));
+            if (table.Columns.Contains(ViewModelWindowMain.HistoryGeometry2ColumnName) == false)
+                table.Columns.Add(new DataColumn(ViewModelWindowMain.HistoryGeometry2ColumnName, typeof(double)));
 
-            return dt;
+            return table;
         }
 
         /// <summary>
@@ -2003,32 +2257,6 @@ namespace HLU.GISApplication
             return FieldOrdinal(fieldName);
         }
 
-        /// <summary>
-        /// Computes the two geometry history values.
-        /// Polygons: (length, area). Polylines: (length, -1). Points: (X, Y).
-        /// </summary>
-        private static (double Geom1, double Geom2) GetGeometryHistoryValues(Geometry geometry)
-        {
-            if (geometry == null)
-                return (-1, -1);
-
-            switch (geometry.GeometryType)
-            {
-                case GeometryType.Polygon:
-                    return (GeometryEngine.Instance.Length(geometry), GeometryEngine.Instance.Area(geometry));
-
-                case GeometryType.Polyline:
-                    return (GeometryEngine.Instance.Length(geometry), -1);
-
-                case GeometryType.Point:
-                    MapPoint p = (MapPoint)geometry;
-                    return (p.X, p.Y);
-
-                default:
-                    return (-1, -1);
-            }
-        }
-
         #endregion Split
 
         #region Merge
@@ -2042,16 +2270,243 @@ namespace HLU.GISApplication
             return null;
         }
 
-        public DataTable MergeFeaturesLogically(string keepIncid, DataColumn[] historyColumns)
+        /// <summary>
+        /// Logically merges the currently selected features by updating their incid to <paramref name="keepIncid"/>
+        /// and copying the non-key attributes from the kept feature onto the merged features.
+        /// </summary>
+        /// <remarks>
+        /// This replaces the legacy ArcMap named-pipe implementation ("ml") and performs edits using an
+        /// <see cref="EditOperation"/> so it works for all supported ArcGIS Pro data sources.
+        ///
+        /// Only selected features whose incid is NOT <paramref name="keepIncid"/> are updated. The feature to keep is
+        /// taken from the current selection where incid equals <paramref name="keepIncid"/>. If none is found, an
+        /// exception is thrown.
+        ///
+        /// A history table is returned containing the requested history fields plus the geometry columns, for the
+        /// features that were updated (i.e. the features that were merged into <paramref name="keepIncid"/>).
+        /// </remarks>
+        /// <param name="keepIncid">The incid to keep.</param>
+        /// <param name="historyColumns">The history columns requested by the view model.</param>
+        /// <param name="editOperation">The edit operation to queue edits onto.</param>
+        /// <returns>A history table for the updated features.</returns>
+        public async Task<DataTable> MergeFeaturesLogicallyAsync(
+            string keepIncid,
+            DataColumn[] historyColumns,
+            EditOperation editOperation)
         {
-            //string[] sendList =
-            //[
-            //    "ml",
-            //    keepIncid,
-            //    String.Join(",", historyColumns.Select(c => c.ColumnName).ToArray()),
-            //];
-            //return ResultTableFromList(IpcArcMap(sendList));
-            return null;
+            // Check parameters.
+            if (String.IsNullOrEmpty(keepIncid))
+                throw new ArgumentException("Keep incid is required.", nameof(keepIncid));
+
+            if (historyColumns == null || historyColumns.Length == 0)
+                throw new ArgumentException("History columns are required.", nameof(historyColumns));
+
+            ArgumentNullException.ThrowIfNull(editOperation);
+
+            if (_hluLayer == null)
+                throw new HLUToolException("HLU layer is not set.");
+
+            if (_hluFeatureClass == null)
+                throw new HLUToolException("HLU feature class is not set.");
+
+            if (_hluLayerStructure == null)
+                throw new HLUToolException("HLU layer structure is not set.");
+
+            // Build history field bindings using existing map logic.
+            List<HistoryFieldBindingHelper.HistoryFieldBinding> historyBindings =
+                HistoryFieldBindingHelper.BuildHistoryFieldBindings(
+                    historyColumns,
+                    HistoryAdditionalFieldsDelimiter,
+                    MapField,
+                    FuzzyFieldOrdinal);
+
+            // Create the history table (columns only) up front.
+            DataTable historyTable = CreateHistoryDataTable(historyBindings);
+
+            // Resolve required field indices.
+            int incidFieldIndex = ResolveRequiredFieldIndex(_hluLayerStructure.incidColumn.ColumnName);
+
+            // Get the selected object IDs.
+            IReadOnlyList<long> selectedObjectIds = await QueuedTask.Run(() =>
+            {
+                Selection selection = _hluLayer.GetSelection();
+                return selection?.GetObjectIDs() ?? [];
+            });
+
+            // If nothing is selected, return an empty history table.
+            if (selectedObjectIds.Count == 0)
+                return historyTable;
+
+            // Prepare attribute copy field mapping (from kept feature to merged features).
+            // Copy everything in the layer structure except keys and geometry-related/system fields.
+            HashSet<string> excludedColumns = new(StringComparer.OrdinalIgnoreCase)
+            {
+                // Specific HLU key fields.
+                _hluLayerStructure.incidColumn.ColumnName,
+                _hluLayerStructure.toidColumn.ColumnName,
+                _hluLayerStructure.toidfragidColumn.ColumnName,
+                // Common GIS/system fields (don’t rely on typed dataset columns).
+                "FID",
+                "OBJECTID",
+                "Shape",
+                "SHAPE",
+                "Shape_Length",
+                "SHAPE_Length",
+                "Shape_Area",
+                "SHAPE_Area",
+                "GlobalID",
+                "GLOBALID"
+            };
+
+            // Build the list of fields to copy.
+            List<(string ColumnName, int FieldIndex)> copyFields = [];
+            foreach (DataColumn c in _hluLayerStructure.Columns)
+            {
+                // Skip excluded columns.
+                if (excludedColumns.Contains(c.ColumnName))
+                    continue;
+
+                int ix = MapField(c.ColumnName);
+                if (ix == -1)
+                    ix = FuzzyFieldOrdinal(c.ColumnName);
+
+                // Some DB shadow columns won't exist in the GIS layer (or may be non-editable).
+                // Skip anything we cannot resolve on the layer.
+                if (ix >= 0)
+                    copyFields.Add((c.ColumnName, ix));
+            }
+
+            // Capture keep values + build the list of features to update + build history.
+            List<long> objectIdsToUpdate = [];
+            Dictionary<int, object> keepValuesByFieldIndex = [];
+
+            await QueuedTask.Run(() =>
+            {
+                try
+                {
+                    // Cast the feature class to a table for the edit operation.
+                    if (_hluFeatureClass is not Table hluTable)
+                        throw new HLUToolException("HLU feature class is not a valid table.");
+
+                    // Find the "keep" feature in the selection.
+                    long? keepOid = null;
+                    foreach (long oid in selectedObjectIds)
+                    {
+                        bool found = GisRowHelpers.WithRowByObjectId(_hluFeatureClass, oid, row =>
+                        {
+                            string rowIncid = Convert.ToString(row[incidFieldIndex]) ?? String.Empty;
+
+                            if (String.Equals(rowIncid, keepIncid, StringComparison.OrdinalIgnoreCase))
+                                keepOid = oid;
+                        });
+
+                        // Stop if we found the keep feature.
+                        if (found && keepOid.HasValue)
+                            break;
+                    }
+
+                    // Ensure we found a keep feature.
+                    if (!keepOid.HasValue)
+                        throw new HLUToolException($"Cannot logically merge: No selected feature has incid '{keepIncid}'.");
+
+                    // Read keep attribute values.
+                    bool keepFound = GisRowHelpers.WithRowByObjectId(_hluFeatureClass, keepOid.Value, keepRow =>
+                    {
+                        // Extract values for the copy fields.
+                        foreach ((string columnName, int fieldIndex) in copyFields)
+                        {
+                            keepValuesByFieldIndex[fieldIndex] =
+                                keepRow[fieldIndex] ?? DBNull.Value;
+                        }
+                    });
+
+                    // Ensure we could read the keep feature.
+                    if (keepFound == false)
+                        throw new HLUToolException($"Cannot logically merge: Keep feature OID {keepOid.Value} was not found.");
+
+                    // Build history rows and determine which features to update.
+                    foreach (long oid in selectedObjectIds)
+                    {
+                        // Read each selected feature.
+                        bool found = GisRowHelpers.WithRowByObjectId(_hluFeatureClass, oid, row =>
+                        {
+                            // Get the incid value.
+                            string rowIncid = Convert.ToString(row[incidFieldIndex]) ?? String.Empty;
+
+                            // Skip the keep feature.
+                            if (String.Equals(rowIncid, keepIncid, StringComparison.OrdinalIgnoreCase))
+                                return;
+
+                            // Add the OID to the update list.
+                            objectIdsToUpdate.Add(oid);
+
+                            // Create a history row.
+                            DataRow historyRow = historyTable.NewRow();
+
+                            // Populate the history fields.
+                            foreach (HistoryFieldBindingHelper.HistoryFieldBinding b in historyBindings)
+                            {
+                                historyRow[b.OutputColumnName] = row[b.SourceFieldIndex] ?? DBNull.Value;
+                            }
+
+                            // Populate the geometry history values.
+                            if (row is Feature feature)
+                            {
+                                (double? g1, double? g2) = GetGeometryHistoryValues(feature.GetShape());
+                                historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] =
+                                    g1.HasValue ? g1.Value : DBNull.Value;
+                                historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] =
+                                    g2.HasValue ? g2.Value : DBNull.Value;
+                            }
+                            else
+                            {
+                                historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = DBNull.Value;
+                                historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = DBNull.Value;
+                            }
+
+                            // Add the history row.
+                            historyTable.Rows.Add(historyRow);
+                        });
+
+                        // Skip if the row could not be read (e.g. selection changed).
+                        if (found == false)
+                            continue;
+                    }
+
+                    // Ensure there is something to update (there should be).
+                    if (objectIdsToUpdate.Count == 0)
+                        throw new HLUToolException("No selected features require logical merge.");
+
+                    // Queue the GIS edits.
+                    editOperation.Callback(context =>
+                    {
+                        // Update each feature to set the new incid and copy attributes from the keep feature.
+                        foreach (long oid in objectIdsToUpdate)
+                        {
+                            // Update the feature.
+                            GisRowHelpers.WithRowByObjectId(_hluFeatureClass, oid, row =>
+                            {
+                                row[incidFieldIndex] = keepIncid;
+
+                                foreach (KeyValuePair<int, object> kvp in keepValuesByFieldIndex)
+                                {
+                                    row[kvp.Key] = kvp.Value;
+                                }
+
+                                row.Store();
+                                context.Invalidate(row);
+                            });
+                        }
+                    }, hluTable);
+                }
+                catch (Exception ex)
+                {
+                    // Preserve stack trace and wrap in a meaningful type.
+                    throw new HLUToolException("Error logically merging GIS features: " + ex.Message, ex);
+                }
+            });
+
+            return historyTable;
         }
 
         #endregion Merge
@@ -2188,7 +2643,7 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Updates selected features with new values and returns their history.
+        /// Updates selected features with new values and captures history.
         /// </summary>
         /// <param name="updateColumns"></param>
         /// <param name="updateValues"></param>
@@ -2197,46 +2652,61 @@ namespace HLU.GISApplication
         /// <param name="editOperation"></param>
         /// <returns></returns>
         /// <exception cref="HLUToolException"></exception>
-        public async Task UpdateFeaturesAsync(DataColumn[] updateColumns, object[] updateValues,
-            DataColumn[] historyColumns, List<SqlFilterCondition> selectionWhereClause, EditOperation editOperation)
+        public async Task UpdateFeaturesAsync(
+            DataColumn[] updateColumns,
+            object[] updateValues,
+            DataColumn[] historyColumns,
+            List<SqlFilterCondition> selectionWhereClause,
+            EditOperation editOperation)
         {
             //TODO: Needed?
-            // Ensure selection event handlers do not interfere
+            // Ensure selection event handlers do not interfere.
             //_selectFieldOrdinals = null;
 
-            // Create a query filter for selecting features
+            // Create a query filter for selecting features.
             QueryFilter queryFilter = new()
             {
                 WhereClause = WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, selectionWhereClause))
             };
 
-            // Extract history column names
-            string[] historyColumnNames = historyColumns.Select(c => c.ColumnName).ToArray();
-
-            // Cast the feature class as a Table
+            // Cast the feature class as a Table.
             Table hluTable = _hluFeatureClass as Table;
 
-            // Perform updates and return history data
+            // Perform updates within an EditOperation to support different data sources.
             await QueuedTask.Run(() =>
             {
                 try
                 {
-                    // Get update field indexes
-                    List<int> updateFieldIndexes = updateColumns.Select(c => _hluFeatureClass.GetDefinition().FindField(c.ColumnName)).ToList();
+                    // Get update field indexes using the HLU schema mapping logic.
+                    List<int> updateFieldIndexes = [];
 
-                    // Execute within an EditOperation to support different data sources
+                    for (int i = 0; i < updateColumns.Length; i++)
+                    {
+                        DataColumn c = updateColumns[i];
+
+                        int ix = MapField(c.ColumnName);
+                        if (ix == -1)
+                            ix = FuzzyFieldOrdinal(c.ColumnName);
+
+                        if (ix == -1)
+                            throw new HLUToolException("Failed to resolve GIS field index for update column: " + c.ColumnName);
+
+                        updateFieldIndexes.Add(ix);
+                    }
+
+                    // Execute within an EditOperation to support different data sources.
                     editOperation.Callback(context =>
                     {
-                        // Use a RowCursor to iterate through the selected features
+                        // Use a RowCursor to iterate through the selected features.
                         using RowCursor rowCursor = _hluFeatureClass.Search(queryFilter, false);
 
-                        // Loop through the selected features until there are no more
+                        // Loop through the selected features until there are no more.
                         while (rowCursor.MoveNext())
                         {
-                            // Get the current feature
+                            // Get the current feature.
                             using Row row = rowCursor.Current;
 
-                            // Apply updates
+                            // Apply updates.
                             for (int i = 0; i < updateFieldIndexes.Count; i++)
                             {
                                 row[updateFieldIndexes[i]] = updateValues[i];
@@ -2244,12 +2714,15 @@ namespace HLU.GISApplication
 
                             // Store the row.
                             row.Store();
+
+                            // Invalidate for redraw.
+                            context.Invalidate(row);
                         }
                     }, hluTable);
                 }
                 catch (Exception ex)
                 {
-                    // Preserve stack trace and wrap in a meaningful type
+                    // Preserve stack trace and wrap in a meaningful type.
                     throw new HLUToolException("Error updating GIS features: " + ex.Message, ex);
                 }
             });

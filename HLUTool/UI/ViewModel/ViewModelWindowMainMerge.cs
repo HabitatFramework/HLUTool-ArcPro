@@ -32,6 +32,7 @@ using HLU.Properties;
 using HLU.UI.View;
 using System.Windows.Threading;
 using System.Threading.Tasks;
+using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework;
 using CommandType = System.Data.CommandType;
 
@@ -192,6 +193,12 @@ namespace HLU.UI.ViewModel
                 // Let WPF render the cursor/message before heavy work begins.
                 //await Dispatcher.Yield(DispatcherPriority.Background);
 
+                // Start a GIS edit operation.
+                EditOperation editOperation = new()
+                {
+                    Name = "Logical Merge GIS Features"
+                };
+
                 // Begin a database transaction.
                 _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
@@ -205,9 +212,11 @@ namespace HLU.UI.ViewModel
                     DateTime currDtTm = DateTime.Now;
                     DateTime nowDtTm = new(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
 
-                    // assign selected incid to selected features except keepIncid
-                    DataTable historyTable = _viewModelMain.GISApplication.MergeFeaturesLogically(
-                        keepIncid, _viewModelMain.HistoryColumns);
+                    // Update selected features except keepIncid
+                    DataTable historyTable = await _viewModelMain.GISApplication.MergeFeaturesLogicallyAsync(
+                        keepIncid,
+                        _viewModelMain.HistoryColumns,
+                        editOperation);
 
                     // If the merge failed, throw an exception.
                     if ((historyTable == null) || (historyTable.Rows.Count == 0))
@@ -255,6 +264,10 @@ namespace HLU.UI.ViewModel
                     ViewModelWindowMainHistory vmHist = new(_viewModelMain);
                     vmHist.HistoryWrite(fixedValues, historyTable, Operations.LogicalMerge, nowDtTm);
 
+                    // Execute the GIS edit operation.
+                    if (!await editOperation.ExecuteAsync())
+                        throw new HLUToolException("Failed to update GIS layer.");
+
                     // Create a SQL query to find any incid records no longer in use.
                     //DONE: Aggregate
                     string sqlCount = new(String.Format("SELECT {0}.{1} FROM {0} LEFT JOIN {2} ON {2}.{3} = {0}.{1} WHERE {0}.{1} IN ({4}) GROUP BY {0}.{1} HAVING COUNT({2}.{3}) = 0",
@@ -278,7 +291,8 @@ namespace HLU.UI.ViewModel
                         _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text);
 
                     // Check the reader was created successfully.
-                    if (delReader == null) throw new Exception("Error counting incid and incid_mm_polygons database records.");
+                    if (delReader == null)
+                        throw new Exception("Error counting incid and incid_mm_polygons database records.");
 
                     // Build a list of the incids to delete
                     List<string> deleteIncids = [];
@@ -351,6 +365,17 @@ namespace HLU.UI.ViewModel
                 {
                     // Rollback the transaction on error.
                     _viewModelMain.DataBase.RollbackTransaction();
+
+                    try
+                    {
+                        // Abort the GIS updates.
+                        editOperation.Abort();
+                    }
+                    catch
+                    {
+                        // Ignore abort failures.
+                    }
+
                     throw;
                 }
             }
