@@ -2261,13 +2261,272 @@ namespace HLU.GISApplication
 
         #region Merge
 
-        public DataTable MergeFeaturesPhysically(string newToidFragmentID,
-            List<SqlFilterCondition> resultWhereClause, DataColumn[] historyColumns)
+        /// <summary>
+        /// Physically merges the currently selected features by unioning their geometries into a single result feature,
+        /// deleting the other selected features, and setting the result feature's toidfragid to
+        /// <paramref name="newToidFragmentID"/>.
+        /// </summary>
+        /// <remarks>
+        /// This performs edits using an <see cref="EditOperation"/> so it works for all supported ArcGIS Pro data sources.
+        ///
+        /// The result feature is identified within the current selection using <paramref name="resultWhereClause"/>.
+        ///
+        /// A history table is returned containing the requested history fields plus the geometry columns:
+        /// <list type="bullet">
+        /// <item><description>One row per feature that was merged and deleted (captured before deletion).</description></item>
+        /// <item><description>A final row for the result feature after update (captured using the merged geometry).</description></item>
+        /// </list>
+        /// The view model removes the final row before writing history, but uses it to update the database geometry
+        /// fields (shape_length/shape_area etc.).
+        /// </remarks>
+        /// <param name="newToidFragmentID">The toidfragid value to assign to the remaining feature.</param>
+        /// <param name="resultWhereClause">Where clause conditions that identify the result feature within the selection.</param>
+        /// <param name="historyColumns">The history columns requested by the view model.</param>
+        /// <param name="editOperation">The edit operation to queue edits onto.</param>
+        /// <returns>A history table for the merged/deleted features plus the updated result feature.</returns>
+        public async Task<DataTable> MergeFeaturesPhysicallyAsync(
+            string newToidFragmentID,
+            List<SqlFilterCondition> resultWhereClause,
+            DataColumn[] historyColumns,
+            EditOperation editOperation)
         {
-            //return ResultTableFromList(IpcArcMap([ "mg",
-            //    WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, resultWhereClause)),
-            //    newToidFragmentID, String.Join(",", historyColumns.Select(c => c.ColumnName).ToArray())]));
-            return null;
+            // Check parameters.
+            if (String.IsNullOrEmpty(newToidFragmentID))
+                throw new ArgumentException("New toidfragid is required.", nameof(newToidFragmentID));
+
+            if (resultWhereClause == null || resultWhereClause.Count == 0)
+                throw new ArgumentException("Result where clause is required.", nameof(resultWhereClause));
+
+            if (historyColumns == null || historyColumns.Length == 0)
+                throw new ArgumentException("History columns are required.", nameof(historyColumns));
+
+            ArgumentNullException.ThrowIfNull(editOperation);
+
+            if (_hluLayer == null)
+                throw new HLUToolException("HLU layer is not set.");
+
+            if (_hluFeatureClass == null)
+                throw new HLUToolException("HLU feature class is not set.");
+
+            if (_hluLayerStructure == null)
+                throw new HLUToolException("HLU layer structure is not set.");
+
+            // Build history field bindings using existing map logic.
+            List<HistoryFieldBindingHelper.HistoryFieldBinding> historyBindings =
+                HistoryFieldBindingHelper.BuildHistoryFieldBindings(
+                    historyColumns,
+                    HistoryAdditionalFieldsDelimiter,
+                    MapField,
+                    FuzzyFieldOrdinal);
+
+            // Create the history table (columns only) up front.
+            DataTable historyTable = CreateHistoryDataTable(historyBindings);
+
+            // Resolve required/optional field indices.
+            int toidFragFieldIndex = ResolveRequiredFieldIndex(_hluLayerStructure.toidfragidColumn.ColumnName);
+
+            // These are only relevant for shapefile-based layers where length/area are stored in normal fields.
+            // On geodatabase feature classes, Shape_Length/Shape_Area are system-maintained and typically not editable.
+            int shapeLengthFieldIndex = ResolveOptionalFieldIndex("shape_leng");
+            int shapeAreaFieldIndex = ResolveOptionalFieldIndex("shape_area");
+
+            // Get the selected object IDs.
+            IReadOnlyList<long> selectedObjectIds = await QueuedTask.Run(() =>
+            {
+                Selection selection = _hluLayer.GetSelection();
+                return selection?.GetObjectIDs() ?? [];
+            });
+
+            // If nothing is selected, return an empty history table.
+            if (selectedObjectIds.Count == 0)
+                return historyTable;
+
+            if (selectedObjectIds.Count < 2)
+                throw new HLUToolException("Physical merge requires at least two selected features.");
+
+            // Build an ArcGIS SQL where clause that identifies the result feature.
+            string resultFeatureWhereClause =
+                WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, resultWhereClause));
+
+            List<long> mergeObjectIds = [];
+            long resultObjectId = -1;
+            Geometry mergedGeometry = null;
+
+            await QueuedTask.Run(() =>
+            {
+                try
+                {
+                    if (_hluFeatureClass is not Table hluTable)
+                        throw new HLUToolException("HLU feature class is not a valid table.");
+
+                    // Identify the result feature within the current selection.
+                    QueryFilter resultFilter = new()
+                    {
+                        WhereClause = resultFeatureWhereClause
+                    };
+
+                    using (RowCursor resultCursor = _hluFeatureClass.Search(resultFilter, false))
+                    {
+                        while (resultCursor.MoveNext())
+                        {
+                            using Row r = resultCursor.Current;
+
+                            long oid = Convert.ToInt64(r[hluTable.GetDefinition().GetObjectIDField()]);
+                            if (selectedObjectIds.Contains(oid))
+                            {
+                                resultObjectId = oid;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (resultObjectId < 0)
+                        throw new HLUToolException("Failed to identify the result feature in the current selection.");
+
+                    // Determine the features to merge (all selected except the result feature).
+                    mergeObjectIds = selectedObjectIds.Where(oid => oid != resultObjectId).ToList();
+
+                    // Collect geometries and history for the features that will be deleted.
+                    List<Geometry> geometriesToUnion = [];
+
+                    // Start union with the result feature geometry.
+                    GisRowHelpers.WithRowByObjectId(_hluFeatureClass, resultObjectId, row =>
+                    {
+                        if (row is Feature f)
+                            geometriesToUnion.Add(f.GetShape());
+                    });
+
+                    foreach (long oid in mergeObjectIds)
+                    {
+                        bool found = GisRowHelpers.WithRowByObjectId(_hluFeatureClass, oid, row =>
+                        {
+                            // Create history row (before delete).
+                            DataRow historyRow = historyTable.NewRow();
+
+                            foreach (HistoryFieldBindingHelper.HistoryFieldBinding b in historyBindings)
+                            {
+                                historyRow[b.OutputColumnName] = row[b.SourceFieldIndex] ?? DBNull.Value;
+                            }
+
+                            if (row is Feature feature)
+                            {
+                                Geometry geom = feature.GetShape();
+                                geometriesToUnion.Add(geom);
+
+                                (double g1, double g2) = GetGeometryHistoryValues(geom);
+                                historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = g1;
+                                historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = g2;
+                            }
+                            else
+                            {
+                                historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = DBNull.Value;
+                                historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = DBNull.Value;
+                            }
+
+                            historyTable.Rows.Add(historyRow);
+                        });
+
+                        if (found == false)
+                            throw new HLUToolException("Selection changed while preparing physical merge.");
+                    }
+
+                    // Union all geometries to create the merged result geometry.
+                    mergedGeometry = geometriesToUnion.Count switch
+                    {
+                        0 => null,
+                        1 => geometriesToUnion[0],
+                        _ => GeometryEngine.Instance.Union(geometriesToUnion)
+                    };
+
+                    if (mergedGeometry == null)
+                        throw new HLUToolException("Failed to union feature geometries during physical merge.");
+
+                    // Add the final history row for the result feature AFTER update (using merged geometry).
+                    GisRowHelpers.WithRowByObjectId(_hluFeatureClass, resultObjectId, row =>
+                    {
+                        DataRow resultHistoryRow = historyTable.NewRow();
+
+                        foreach (HistoryFieldBindingHelper.HistoryFieldBinding b in historyBindings)
+                        {
+                            object value = row[b.SourceFieldIndex];
+                            resultHistoryRow[b.OutputColumnName] = value ?? DBNull.Value;
+                        }
+
+                        // Override toidfragid because it is updated as part of the merge.
+                        resultHistoryRow[_hluLayerStructure.toidfragidColumn.ColumnName] = newToidFragmentID;
+
+                        // Override geometry props from the merged geometry.
+                        (double g1, double g2) = GetGeometryHistoryValues(mergedGeometry);
+                        resultHistoryRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = g1;
+                        resultHistoryRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = g2;
+
+                        historyTable.Rows.Add(resultHistoryRow);
+                    });
+
+                    // Queue the GIS edits.
+                    editOperation.Callback(context =>
+                    {
+                        // Delete merge features.
+                        foreach (long oid in mergeObjectIds)
+                        {
+                            GisRowHelpers.WithRowByObjectId(_hluFeatureClass, oid, row =>
+                            {
+                                row.Delete();
+                                context.Invalidate(row);
+                            });
+                        }
+
+                        // Update the result feature geometry and toidfragid.
+                        GisRowHelpers.WithRowByObjectId(_hluFeatureClass, resultObjectId, row =>
+                        {
+                            if (row is Feature feature)
+                                feature.SetShape(mergedGeometry);
+
+                            row[toidFragFieldIndex] = newToidFragmentID;
+
+                            // FIXED: KI106 (Shape area and length values).
+                            // Only update length/area fields if they exist and appear to be editable.
+                            TrySetRowValue(row, shapeLengthFieldIndex, GetGeometryHistoryValues(mergedGeometry).Geom1);
+                            TrySetRowValue(row, shapeAreaFieldIndex, GetGeometryHistoryValues(mergedGeometry).Geom2);
+
+                            row.Store();
+                            context.Invalidate(row);
+                        });
+                    }, hluTable);
+                }
+                catch (Exception ex)
+                {
+                    throw new HLUToolException("Error physically merging GIS features: " + ex.Message, ex);
+                }
+            });
+
+            return historyTable;
+        }
+
+        /// <summary>
+        /// Attempts to set a row value safely for optional fields.
+        /// </summary>
+        /// <param name="row">The row to update.</param>
+        /// <param name="fieldIndex">The field index or -1 if missing.</param>
+        /// <param name="value">The value to set.</param>
+        private static void TrySetRowValue(Row row, int fieldIndex, object value)
+        {
+            // Check parameters.
+            if (row == null)
+                return;
+
+            if (fieldIndex < 0)
+                return;
+
+            // Try to set the column value.
+            try
+            {
+                row[fieldIndex] = value ?? DBNull.Value;
+            }
+            catch
+            {
+                // Ignore failures for non-editable/system-managed fields.
+            }
         }
 
         /// <summary>

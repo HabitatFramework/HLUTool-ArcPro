@@ -65,6 +65,15 @@ namespace HLU.UI.ViewModel
             _childRows = childRows;
             _incidOrdinal = incidOrdinal;
             _gisApp = gisApp;
+
+            // Sort the view by INCID so the window shows a consistent order.
+            if ((_selectedFeatures != null) &&
+                (_incidOrdinal >= 0) &&
+                (_incidOrdinal < _selectedFeatures.Columns.Count))
+            {
+                string incidColumnName = _selectedFeatures.Columns[_incidOrdinal].ColumnName;
+                _selectedFeatures.DefaultView.Sort = String.Format("{0} ASC", incidColumnName);
+            }
         }
 
         #endregion Constructor
@@ -260,11 +269,31 @@ namespace HLU.UI.ViewModel
             set
             {
                 _selectedIndex = value;
-                _resultFeature = (R)_selectedFeatures.Rows[_selectedIndex];
 
+                // Guard against invalid selections.
+                if ((_selectedFeatures == null) ||
+                    (_selectedIndex < 0) ||
+                    (_selectedIndex >= _selectedFeatures.DefaultView.Count))
+                {
+                    _resultFeature = null;
+                    _currChildRows = null;
+                    return;
+                }
+
+                // IMPORTANT: resolve the selected row from the sorted view, not DataTable.Rows.
+                DataRowView rowView = _selectedFeatures.DefaultView[_selectedIndex];
+                _resultFeature = (R)rowView.Row;
+
+                // If we have child rows then get those that relate to the selected feature.
                 if ((_resultFeature is HluDataSet.incidRow) && (_childRows != null))
-                    _currChildRows = _childRows.Where(r => r.incid == _resultFeature.Field<string>(_incidOrdinal)).ToArray();
+                {
+                    string incid = _resultFeature.Field<string>(_incidOrdinal);
+                    _currChildRows = _childRows
+                        .Where(r => r.incid == incid)
+                        .ToArray();
+                }
 
+                // Flash the selected feature on the map.
                 FlashFeature(null);
             }
         }
@@ -282,7 +311,7 @@ namespace HLU.UI.ViewModel
             {
                 string error = String.Empty;
 
-                if ((_resultFeature == null) || (_selectedIndex < 0) || (_selectedIndex >= _selectedFeatures.Rows.Count))
+                if ((_resultFeature == null) || (_selectedIndex < 0) || (_selectedIndex >= _selectedFeatures.DefaultView.Count))
                     error = "Error: You must select the feature whose attributes will be retained.";
 
                 return error;
@@ -303,7 +332,7 @@ namespace HLU.UI.ViewModel
                 switch (columnName)
                 {
                     case "SelectedIndex":
-                        if ((_selectedIndex < 0) || (_selectedIndex >= _selectedFeatures.Rows.Count))
+                        if ((_selectedIndex < 0) || (_selectedIndex >= _selectedFeatures.DefaultView.Count))
                             error = "Error: You must select the feature whose attributes will be retained.";
                         break;
                     case "ResultFeature":

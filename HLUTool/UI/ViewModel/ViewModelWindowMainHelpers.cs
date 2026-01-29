@@ -144,6 +144,9 @@ namespace HLU.UI.ViewModel
             // If the incident list is null or empty, return null.
             if ((incidList == null) || (!incidList.Any())) return null;
 
+            // Sort incids to provide consistent UI ordering and stable paging.
+            IEnumerable<string> orderedIncids = incidList.OrderBy(i => i);
+
             // Group the incident identifiers into blocks of `incidPageSize` conditions.
             return (from b in incidList.Select((i, index) => new
             {
