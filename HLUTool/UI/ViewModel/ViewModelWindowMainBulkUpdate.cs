@@ -1512,7 +1512,7 @@ namespace HLU.UI.ViewModel
             if (updateRows.Count > 0)
             {
                 if (_viewModelMain.HluTableAdapterManager.incid_bapTableAdapter.Update(updateRows.ToArray()) == -1)
-                    throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid_bap.TableName));
+                    throw new Exception(String.Format("Failed to update [{0}] table.", _viewModelMain.HluDataset.incid_bap.TableName));
             }
 
             // Delete any previously secondary BAP environments from the database
@@ -1970,7 +1970,7 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.DataBase.QualifyTableName(dbRows.TableName), updateVals, whereConds),
                     _viewModelMain.DataBase.Connection.ConnectionTimeout,
                     CommandType.Text) == -1)
-                    throw new Exception(String.Format("Failed to update table '{0}'.", dbRows.TableName));
+                    throw new Exception(String.Format("Failed to update table [{0}].", dbRows.TableName));
 
                 //if (_viewModelMain.DataBase.ExecuteNonQuery(dbRows.Columns.Cast<DataColumn>()
                 //    .Where(c => !pk.Any(k => k.Ordinal == c.Ordinal) && !newRow.IsNull(c.Ordinal))
@@ -1983,7 +1983,7 @@ namespace HLU.UI.ViewModel
                 //            _viewModelMain.DataBase.QuoteValue(dbRow[c.Ordinal])))).Remove(0, 4)))
                 //            .Insert(0, updateCommand).ToString(), _viewModelMain.DataBase.Connection.ConnectionTimeout,
                 //            CommandType.Text) == -1)
-                //    throw new Exception(String.Format("Failed to update table '{0}'.", dbRows.TableName));
+                //    throw new Exception(String.Format("Failed to update table [{0}].", dbRows.TableName));
             }
 
             if (numRowsNew > numRowsDb) // user entered new values
@@ -2026,7 +2026,7 @@ namespace HLU.UI.ViewModel
 
                     if (_viewModelMain.DataBase.ExecuteNonQuery(String.Format(insertCommand, columnNames, columnValues),
                         _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text) == -1)
-                        throw new Exception(String.Format("Failed to insert into table {0}.", dbRows.TableName));
+                        throw new Exception(String.Format("Failed to insert into table [{0}].", dbRows.TableName));
                 }
             }
             else if ((deleteExistingRows) && (numRowsDb > numRowsNew))
@@ -2051,7 +2051,7 @@ namespace HLU.UI.ViewModel
 
                     if (_viewModelMain.DataBase.ExecuteNonQuery(deleteCommand.ToString(),
                         _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text) == -1)
-                        throw new Exception(String.Format("Failed to delete from table {0}.", dbRows.TableName));
+                        throw new Exception(String.Format("Failed to delete from table [{0}].", dbRows.TableName));
                 }
             }
 

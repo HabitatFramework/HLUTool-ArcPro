@@ -134,7 +134,7 @@ namespace HLU.UI.ViewModel
                 // Update the incid_osmm_updates table
                 if (_viewModelMain.HluTableAdapterManager.incid_osmm_updatesTableAdapter.Update(
                     (HluDataSet.incid_osmm_updatesDataTable)_viewModelMain.HluDataset.incid_osmm_updates.GetChanges()) == -1)
-                    throw new Exception(String.Format("Failed to update '{0}' table.",
+                    throw new Exception(String.Format("Failed to update table [{0}].",
                         _viewModelMain.HluDataset.incid_osmm_updates.TableName));
 
                 // Commit the changes

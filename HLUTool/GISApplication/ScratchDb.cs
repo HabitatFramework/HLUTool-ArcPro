@@ -129,7 +129,7 @@ namespace HLU.GISApplication
 
                 try
                 {
-                    _scratchDb.ExecuteNonQuery(String.Format("DROP TABLE {0}", _scratchSelTable), 
+                    _scratchDb.ExecuteNonQuery(String.Format("DROP TABLE {0}", _scratchSelTable),
                         _scratchDb.Connection.ConnectionTimeout, CommandType.Text);
                 }
                 catch { }
@@ -308,10 +308,10 @@ namespace HLU.GISApplication
             sql.Append(String.Format("SELECT {0} FROM {1}{2}", targetList, fromClause, db.WhereClause(true, true, true, IncidSelectionWhereClause)));
             if (sortOrdinals != null)
                 sql.Append(String.Format(" ORDER BY {0}", string.Join(", ", sortOrdinals.Select(x => x < 0 ? String.Format("{0} DESC", Math.Abs(x).ToString()) : x.ToString()).ToArray())));
-            
+
             return sql.ToString();
         }
-        
+
         public static void CleanUp()
         {
             if (File.Exists(_scratchMdbPath))

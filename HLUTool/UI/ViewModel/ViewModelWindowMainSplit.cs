@@ -199,9 +199,10 @@ namespace HLU.UI.ViewModel
                 if ((historyTable == null) || (historyTable.Rows.Count == 0))
                     throw new Exception("Failed to update GIS layer.");
 
-                // Update DB shadow copy of GIS layer.
+                // Create a shadow copy of the incid_mm_polygons rows.
                 HluDataSet.incid_mm_polygonsDataTable polygons = new();
 
+                // Get the incid_mm_polygons rows for the selected GIS features.
                 _viewModelMain.GetIncidMMPolygonRows(
                     ViewModelWindowMainHelpers.GisSelectionToWhereClause(
                         _viewModelMain.GisSelection.Select(),
@@ -210,9 +211,12 @@ namespace HLU.UI.ViewModel
                         polygons),
                     ref polygons);
 
+                // Get the primary key columns for the history table.
                 historyTable.PrimaryKey = historyTable.Columns.Cast<DataColumn>()
                     .Where(c => _viewModelMain.GisIDColumnOrdinals.Contains(c.Ordinal)).ToArray();
 
+                // Loop through the shadow copy of the incid_mm_polygons rows and update
+                // the toidfragid and incid where necessary.
                 foreach (HluDataSet.incid_mm_polygonsRow r in polygons)
                 {
                     // If the feature in GIS belongs to the current incid then update the
@@ -229,18 +233,21 @@ namespace HLU.UI.ViewModel
                     }
                 }
 
+                // Update the shadow copy of the incid_mm_polygons table.
                 if (_viewModelMain.HluTableAdapterManager.incid_mm_polygonsTableAdapter.Update(polygons) == -1)
-                    throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid_mm_polygons.TableName));
+                    throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_mm_polygons.TableName));
 
-                // Write history.
+                // Create the fixed values dictionary for history writing.
                 Dictionary<int, string> fixedValues = new()
                 {
                     { _viewModelMain.HluDataset.history.incidColumn.Ordinal, newIncid }
                 };
 
+                // Rename the incid column in the history table to modified_incid
                 historyTable.Columns[_viewModelMain.HluDataset.history.incidColumn.ColumnName].ColumnName =
                     _viewModelMain.HluDataset.history.modified_incidColumn.ColumnName;
 
+                // Write the history records for the split operation.
                 ViewModelWindowMainHistory vmHist = new(_viewModelMain);
                 vmHist.HistoryWrite(fixedValues, historyTable, Operations.LogicalSplit, nowDtTm);
 
@@ -573,7 +580,7 @@ namespace HLU.UI.ViewModel
 
                 // Update the table with the new row.
                 if (_viewModelMain.HluTableAdapterManager.incidTableAdapter.Update(_viewModelMain.HluDataset.incid) == -1)
-                    throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid.TableName));
+                    throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid.TableName));
 
                 // ---------------------------------------------------------------------
                 // Clone IncidIhsMatrix rows
@@ -628,7 +635,7 @@ namespace HLU.UI.ViewModel
 
                     // Update the table with the new rows.
                     if (_viewModelMain.HluTableAdapterManager.incid_ihs_matrixTableAdapter.Update(_viewModelMain.HluDataset.incid_ihs_matrix) == -1)
-                        throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid_ihs_matrix.TableName));
+                        throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_ihs_matrix.TableName));
                 }
 
                 // ---------------------------------------------------------------------
@@ -684,7 +691,7 @@ namespace HLU.UI.ViewModel
 
                     // Update the table with the new rows.
                     if (_viewModelMain.HluTableAdapterManager.incid_ihs_formationTableAdapter.Update(_viewModelMain.HluDataset.incid_ihs_formation) == -1)
-                        throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid_ihs_formation.TableName));
+                        throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_ihs_formation.TableName));
                 }
 
                 // ---------------------------------------------------------------------
@@ -740,7 +747,7 @@ namespace HLU.UI.ViewModel
 
                     // Update the table with the new rows.
                     if (_viewModelMain.HluTableAdapterManager.incid_ihs_managementTableAdapter.Update(_viewModelMain.HluDataset.incid_ihs_management) == -1)
-                        throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid_ihs_management.TableName));
+                        throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_ihs_management.TableName));
                 }
 
                 // ---------------------------------------------------------------------
@@ -796,7 +803,7 @@ namespace HLU.UI.ViewModel
 
                     // Update the table with the new rows.
                     if (_viewModelMain.HluTableAdapterManager.incid_ihs_complexTableAdapter.Update(_viewModelMain.HluDataset.incid_ihs_complex) == -1)
-                        throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid_ihs_complex.TableName));
+                        throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_ihs_complex.TableName));
                 }
 
                 // ---------------------------------------------------------------------
@@ -849,7 +856,7 @@ namespace HLU.UI.ViewModel
 
                     // Update the table with the new rows.
                     if (_viewModelMain.HluTableAdapterManager.incid_secondaryTableAdapter.Update(_viewModelMain.HluDataset.incid_secondary) == -1)
-                        throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid_secondary.TableName));
+                        throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_secondary.TableName));
                 }
 
                 // ---------------------------------------------------------------------
@@ -943,7 +950,7 @@ namespace HLU.UI.ViewModel
 
                     // Update the table with the new rows.
                     if (_viewModelMain.HluTableAdapterManager.incid_bapTableAdapter.Update(_viewModelMain.HluDataset.incid_bap) == -1)
-                        throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid_bap.TableName));
+                        throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_bap.TableName));
                 }
 
                 // ---------------------------------------------------------------------
@@ -996,7 +1003,7 @@ namespace HLU.UI.ViewModel
 
                     // Update the table with the new rows.
                     if (_viewModelMain.HluTableAdapterManager.incid_conditionTableAdapter.Update(_viewModelMain.HluDataset.incid_condition) == -1)
-                        throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid_condition.TableName));
+                        throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_condition.TableName));
                 }
 
                 // ---------------------------------------------------------------------
@@ -1049,7 +1056,7 @@ namespace HLU.UI.ViewModel
 
                     // Update the table with the new rows.
                     if (_viewModelMain.HluTableAdapterManager.incid_sourcesTableAdapter.Update(_viewModelMain.HluDataset.incid_sources) == -1)
-                        throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid_sources.TableName));
+                        throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_sources.TableName));
                 }
 
                 // ---------------------------------------------------------------------
@@ -1103,7 +1110,7 @@ namespace HLU.UI.ViewModel
 
                     // Update the table with the new rows.
                     if (_viewModelMain.HluTableAdapterManager.incid_osmm_updatesTableAdapter.Update(_viewModelMain.HluDataset.incid_osmm_updates) == -1)
-                        throw new Exception(String.Format("Failed to update {0} table.", _viewModelMain.HluDataset.incid_osmm_updates.TableName));
+                        throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_osmm_updates.TableName));
                 }
 
                 // Commit the transaction if one was started.
