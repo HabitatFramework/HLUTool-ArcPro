@@ -6407,6 +6407,9 @@ namespace HLU.UI.ViewModel
                     // any pending edits (again).
                     _readingMap = true;
 
+                    // Reset the moving flag in case something has gone wrong earlier.
+                    _moving = false;
+
                     // Set the filter to the first incid.
                     await SetFilterAsync();
 
