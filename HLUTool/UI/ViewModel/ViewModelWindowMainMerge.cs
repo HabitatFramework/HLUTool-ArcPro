@@ -99,19 +99,39 @@ namespace HLU.UI.ViewModel
                 return false;
             }
 
-            // Check if selected features share same toid but not incid.
-            if ((_viewModelMain.ToidsSelectedMapCount == 1) && (_viewModelMain.IncidsSelectedMapCount > 1))
-            {
-                // selected features share same toid but not incid
-                return await PerformLogicalMergeAsync(true);
-            }
-
-            // Check if selected features share same incid.
-            if (_viewModelMain.IncidsSelectedMapCount <= 1)
+            // Double check the selection count (this shouldn't be true).
+            if (_viewModelMain.IncidsSelectedMapCount <= 0)
                 return false;
 
             // Perform the logical merge.
-            return await PerformLogicalMergeAsync(false);
+            if (!await PerformLogicalMergeAsync())
+                return false;
+
+            // If the selected features share same incid.
+            if (_viewModelMain.IncidsSelectedMapCount <= 1)
+            {
+                // Prompt the user to perform a physical merge as well.
+                if (MessageBox.Show("Perform physical merge as well?", "HLU: Physical Merge",
+                MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes)
+                {
+                    //TODO: Needed?
+                    //// Restore the selection.
+                    //_viewModelMain.GisSelection.Clear();
+                    //foreach (HluDataSet.incid_mm_polygonsRow r in polygons)
+                    //{
+                    //    DataRow newRow = _viewModelMain.GisSelection.NewRow();
+                    //    for (int i = 0; i < _viewModelMain.GisIDColumnOrdinals.Length; i++)
+                    //        newRow[i] = r[_viewModelMain.GisIDColumnOrdinals[i]];
+                    //    _viewModelMain.GisSelection.Rows.Add(newRow);
+                    //}
+
+                    // Perform the physical merge.
+                    await PerformPhysicalMergeAsync();
+                }
+            }
+
+            return true;
+
         }
 
         /// <summary>
@@ -129,277 +149,265 @@ namespace HLU.UI.ViewModel
         /// opts for a physical merge, additional operations are performed to merge the features physically. - The
         /// database and application state are updated to reflect the changes.  Exceptions: - If an error occurs during
         /// the merge process, an error message is displayed to the user, and the operation is aborted.</remarks>
-        /// <param name="physicallyMerge">A boolean value indicating whether to prompt the user to perform a physical merge after the logical merge.
-        /// If <see langword="true"/>, the user will be prompted to confirm a physical merge.</param>
         /// <returns>A task that represents the asynchronous operation. The task result is <see langword="true"/> if the merge
         /// operation succeeds; otherwise, <see langword="false"/>.</returns>
-        private async Task<bool> PerformLogicalMergeAsync(bool physicallyMerge)
+        private async Task<bool> PerformLogicalMergeAsync()
         {
-            bool success = true;
-            try
+            // Get the incid rows to select from.
+            HluDataSet.incidDataTable incidTable = new();
+            _viewModelMain.HluTableAdapterManager.incidTableAdapter.Fill(incidTable,
+                ViewModelWindowMainHelpers.IncidSelectionToWhereClause(ViewModelWindowMain.IncidPageSize,
+                _viewModelMain.IncidTable.incidColumn.Ordinal, _viewModelMain.IncidTable, _viewModelMain.IncidsSelectedMap));
+
+            // Check there are incids to select from.
+            if (incidTable.Count == 0)
+                return false;
+
+            // Get the DB copy rows to update.
+            HluDataSet.incid_mm_polygonsDataTable selectTable = new();
+            _viewModelMain.GetIncidMMPolygonRows(ViewModelWindowMainHelpers.GisSelectionToWhereClause(
+                _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals,
+                ViewModelWindowMain.IncidPageSize, selectTable), ref selectTable);
+
+            // Check there are DB copy rows to update.
+            if (selectTable.Count == 0)
+                return false;
+
+            // Create the merge features window.
+            _mergeFeaturesWindow = new WindowMergeFeatures
             {
-                // Double check - this shouldn't be true
-                if (_viewModelMain.IncidsSelectedMapCount <= 0)
-                    return false;
+                // Set ArcGIS Pro as the parent.
+                Owner = FrameworkApplication.Current.MainWindow,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Topmost = true
+            };
 
-                // Create the merge features window
-                _mergeFeaturesWindow = new WindowMergeFeatures
-                {
-                    // Set ArcGIS Pro as the parent
-                    Owner = FrameworkApplication.Current.MainWindow,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                    Topmost = true
-                };
+            // Prompt the user to choose which incid to keep.
+            _mergeFeaturesViewModelLogical = new(incidTable, _viewModelMain.GisIDColumnOrdinals,
+                _viewModelMain.IncidTable.incidColumn.Ordinal, selectTable.Select(r => r).ToArray(),
+                _viewModelMain.GISApplication)
+            {
+                DisplayName = "Select INCID To Keep"
+            };
 
-                HluDataSet.incidDataTable selectTable = new();
-                _viewModelMain.HluTableAdapterManager.incidTableAdapter.Fill(selectTable,
-                    ViewModelWindowMainHelpers.IncidSelectionToWhereClause(ViewModelWindowMain.IncidPageSize,
-                    _viewModelMain.IncidTable.incidColumn.Ordinal, _viewModelMain.IncidTable, _viewModelMain.IncidsSelectedMap));
+            // Handle the RequestClose event to get the selected feature index.
+            _mergeFeaturesViewModelLogical.RequestClose -= _mergeFeaturesViewModelLogical_RequestClose; // Safety: avoid double subscription.
+            _mergeFeaturesViewModelLogical.RequestClose += new ViewModelWindowMergeFeatures<HluDataSet.incidDataTable,
+                    HluDataSet.incidRow>.RequestCloseEventHandler(_mergeFeaturesViewModelLogical_RequestClose);
 
-                HluDataSet.incid_mm_polygonsDataTable polygons = new();
-                _viewModelMain.GetIncidMMPolygonRows(ViewModelWindowMainHelpers.GisSelectionToWhereClause(
-                    _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals,
-                    ViewModelWindowMain.IncidPageSize, polygons), ref polygons);
+            // Set the DataContext for data binding.
+            _mergeFeaturesWindow.DataContext = _mergeFeaturesViewModelLogical;
 
-                // Prompt the user to choose which incid to keep
-                _mergeFeaturesViewModelLogical = new(selectTable, _viewModelMain.GisIDColumnOrdinals,
-                    _viewModelMain.IncidTable.incidColumn.Ordinal, polygons.Select(r => r).ToArray(),
-                    _viewModelMain.GISApplication)
-                {
-                    DisplayName = "Select INCID To Keep"
-                };
+            // Reset the result feature index.
+            _mergeResultFeatureIndex = -1;
 
-                // Handle the RequestClose event to get the selected feature index
-                _mergeFeaturesViewModelLogical.RequestClose -= _mergeFeaturesViewModelLogical_RequestClose; // Safety: avoid double subscription.
-                _mergeFeaturesViewModelLogical.RequestClose += new ViewModelWindowMergeFeatures<HluDataSet.incidDataTable,
-                        HluDataSet.incidRow>.RequestCloseEventHandler(_mergeFeaturesViewModelLogical_RequestClose);
+            // Show the window.
+            _mergeFeaturesWindow.ShowDialog();
 
-                // Set the DataContext for data binding
-                _mergeFeaturesWindow.DataContext = _mergeFeaturesViewModelLogical;
+            // Return false if the user didn't choose an incid.
+            if (_mergeResultFeatureIndex == -1)
+                return false;
 
-                // Reset the result feature index
-                _mergeResultFeatureIndex = -1;
+            _viewModelMain.ChangeCursor(Cursors.Wait, "Merging ...");
+            bool success = true;
 
-                // Show the window
-                _mergeFeaturesWindow.ShowDialog();
+            // Check if a transaction is already started.
+            bool startTransaction = _viewModelMain.DataBase.Transaction == null;
 
-                // Return false if the user didn't choose an incid
-                if (_mergeResultFeatureIndex == -1)
-                    return false;
-
-                _viewModelMain.ChangeCursor(Cursors.Wait, "Merging ...");
-
-                //TODO: Needed?
-                // Let WPF render the cursor/message before heavy work begins.
-                //await Dispatcher.Yield(DispatcherPriority.Background);
-
-                // Start a GIS edit operation.
-                EditOperation editOperation = new()
-                {
-                    Name = "Logical Merge GIS Features"
-                };
-
-                // Begin a database transaction.
+            // Begin a transaction if not already started.
+            if (startTransaction)
                 _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
-                try
+            // Start a GIS edit operation.
+            EditOperation editOperation = new()
+            {
+                Name = "Logical Merge GIS Features"
+            };
+
+            // Flag the GIS edit as not executed yet.
+            bool gisExecuted = false;
+
+            try
+            {
+                // Get the incid to keep.
+                string keepIncid = incidTable[_mergeResultFeatureIndex].incid;
+
+                // Identify polygon rows that will be moved to the kept incid.
+                List<HluDataSet.incid_mm_polygonsRow> polygonsToUpdate = selectTable
+                    .Where(r => !String.Equals(r.incid, keepIncid, StringComparison.Ordinal))
+                    .ToList();
+
+                // Update existing history rows only for polygons that are being moved.
+                List<(string Incid, string Toid, string ToidFragId)> losingPolygonKeys = polygonsToUpdate
+                    .Select(r => (r.incid, r.toid, r.toidfragid))
+                    .Where(k =>
+                        !String.IsNullOrWhiteSpace(k.incid) &&
+                        !String.IsNullOrWhiteSpace(k.toid) &&
+                        !String.IsNullOrWhiteSpace(k.toidfragid))
+                    .Distinct()
+                    .ToList();
+
+                //// Update the history for the losing polygons.
+                //UpdateHistoryForLogicalMerge(
+                //    losingPolygonKeys,
+                //    keepIncid);
+
+                // Fractions of a second can cause rounding differences when
+                // comparing DateTime fields later in some databases.
+                DateTime currDtTm = DateTime.Now;
+                DateTime nowDtTm = new(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
+
+                // Update selected features except keepIncid.
+                DataTable historyTable = await _viewModelMain.GISApplication.MergeFeaturesLogicallyAsync(
+                    keepIncid,
+                    _viewModelMain.HistoryColumns,
+                    editOperation);
+
+                // If the merge failed, throw an exception.
+                if ((historyTable == null) || (historyTable.Rows.Count == 0))
+                    throw new Exception("Failed to update GIS layer.");
+
+                // Build a list of the columns to update (not the key columns or the length/area).
+                List<KeyValuePair<int, object>> updateFields = [];
+                var keepPolygon = selectTable.FirstOrDefault(r => r.incid == keepIncid);
+                if (keepPolygon != null)
                 {
-                    // Get the incid to keep.
-                    string keepIncid = selectTable[_mergeResultFeatureIndex].incid;
+                    updateFields = (from c in selectTable.Columns.Cast<DataColumn>()
+                                    where (c.Ordinal != _viewModelMain.HluDataset.incid_mm_polygons.incidColumn.Ordinal) &&
+                                        (c.Ordinal != _viewModelMain.HluDataset.incid_mm_polygons.toidColumn.Ordinal) &&
+                                        (c.Ordinal != _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.Ordinal) &&
+                                        (c.Ordinal != _viewModelMain.HluDataset.incid_mm_polygons.shape_lengthColumn.Ordinal) &&
+                                        (c.Ordinal != _viewModelMain.HluDataset.incid_mm_polygons.shape_areaColumn.Ordinal)
+                                    select new KeyValuePair<int, object>(c.Ordinal, keepPolygon[c.Ordinal])).ToList();
+                }
 
-                    // Identify polygon rows that will be moved to the kept incid.
-                    List<HluDataSet.incid_mm_polygonsRow> polygonsToUpdate = polygons
-                        .Where(r => !String.Equals(r.incid, keepIncid, StringComparison.Ordinal))
-                        .ToList();
+                // Update the shadow DB copy of the GIS layer.
+                foreach (HluDataSet.incid_mm_polygonsRow r in polygonsToUpdate)
+                {
+                    r.incid = keepIncid;
+                    for (int i = 0; i < updateFields.Count; i++)
+                        r[updateFields[i].Key] = updateFields[i].Value;
+                }
 
-                    // Retarget existing history rows only for polygons that are being moved.
-                    List<(string Incid, string Toid, string ToidFragId)> losingPolygonKeys = polygonsToUpdate
-                        .Select(r => (r.incid, r.toid, r.toidfragid))
-                        .Where(k =>
-                            !String.IsNullOrWhiteSpace(k.incid) &&
-                            !String.IsNullOrWhiteSpace(k.toid) &&
-                            !String.IsNullOrWhiteSpace(k.toidfragid))
-                        .Distinct()
-                        .ToList();
+                // Commit the updates to the database.
+                if (_viewModelMain.HluTableAdapterManager.incid_mm_polygonsTableAdapter.Update(selectTable) == -1)
+                    throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_mm_polygons.TableName));
 
-                    // Update the history for the losing polygons.
-                    UpdateHistoryForLogicalMerge(
-                        losingPolygonKeys,
-                        keepIncid);
-
-                    // Fractions of a second can cause rounding differences when
-                    // comparing DateTime fields later in some databases.
-                    DateTime currDtTm = DateTime.Now;
-                    DateTime nowDtTm = new(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
-
-                    // Update selected features except keepIncid.
-                    DataTable historyTable = await _viewModelMain.GISApplication.MergeFeaturesLogicallyAsync(
-                        keepIncid,
-                        _viewModelMain.HistoryColumns,
-                        editOperation);
-
-                    // If the merge failed, throw an exception.
-                    if ((historyTable == null) || (historyTable.Rows.Count == 0))
-                        throw new Exception("Failed to update GIS layer.");
-
-                    // Build a list of the columns to update (not the key columns or the length/area).
-                    List<KeyValuePair<int, object>> updateFields = [];
-                    var keepPolygon = polygons.FirstOrDefault(r => r.incid == keepIncid);
-                    if (keepPolygon != null)
-                    {
-                        updateFields = (from c in polygons.Columns.Cast<DataColumn>()
-                                        where (c.Ordinal != _viewModelMain.HluDataset.incid_mm_polygons.incidColumn.Ordinal) &&
-                                            (c.Ordinal != _viewModelMain.HluDataset.incid_mm_polygons.toidColumn.Ordinal) &&
-                                            (c.Ordinal != _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.Ordinal) &&
-                                            (c.Ordinal != _viewModelMain.HluDataset.incid_mm_polygons.shape_lengthColumn.Ordinal) &&
-                                            (c.Ordinal != _viewModelMain.HluDataset.incid_mm_polygons.shape_areaColumn.Ordinal)
-                                        select new KeyValuePair<int, object>(c.Ordinal, keepPolygon[c.Ordinal])).ToList();
-                    }
-
-                    // Update the shadow DB copy of the GIS layer.
-                    foreach (HluDataSet.incid_mm_polygonsRow r in polygonsToUpdate)
-                    {
-                        r.incid = keepIncid;
-                        for (int i = 0; i < updateFields.Count; i++)
-                            r[updateFields[i].Key] = updateFields[i].Value;
-                    }
-
-                    // Commit the updates to the database.
-                    if (_viewModelMain.HluTableAdapterManager.incid_mm_polygonsTableAdapter.Update(polygons) == -1)
-                        throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_mm_polygons.TableName));
-
-                    // Insert history rows (fixed value keepIncid).
-                    Dictionary<int, string> fixedValues = new()
+                // Insert history rows (fixed value keepIncid).
+                Dictionary<int, string> fixedValues = new()
                     {
                         { _viewModelMain.HluDataset.history.incidColumn.Ordinal, keepIncid }
                     };
 
-                    // Write the history records.
-                    ViewModelWindowMainHistory vmHist = new(_viewModelMain);
-                    vmHist.HistoryWrite(fixedValues, historyTable, Operations.LogicalMerge, nowDtTm);
+                // Write the history records.
+                ViewModelWindowMainHistory vmHist = new(_viewModelMain);
+                vmHist.HistoryWrite(fixedValues, historyTable, Operations.LogicalMerge, nowDtTm);
 
-                    // Execute the GIS edit operation.
-                    if (!await editOperation.ExecuteAsync())
-                        throw new HLUToolException("Failed to update GIS layer.");
+                // Create a SQL query to find any incid records no longer in use.
+                string sqlCount = new(String.Format("SELECT {0}.{1} FROM {0} LEFT JOIN {2} ON {2}.{3} = {0}.{1} WHERE {0}.{1} IN ({4}) GROUP BY {0}.{1} HAVING COUNT({2}.{3}) = 0",
+                    _viewModelMain.DataBase.QualifyTableName(_viewModelMain.IncidTable.TableName),
+                    _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.incidColumn.ColumnName),
+                    _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
+                    _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.incidColumn.ColumnName),
+                    string.Join(",", incidTable.Where(r => r.incid != keepIncid).Select(r =>
+                        _viewModelMain.DataBase.QuoteValue(r.incid)))));
 
-                    // Create a SQL query to find any incid records no longer in use.
-                    //DONE: Aggregate
-                    string sqlCount = new(String.Format("SELECT {0}.{1} FROM {0} LEFT JOIN {2} ON {2}.{3} = {0}.{1} WHERE {0}.{1} IN ({4}) GROUP BY {0}.{1} HAVING COUNT({2}.{3}) = 0",
-                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.IncidTable.TableName),
-                        _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.incidColumn.ColumnName),
-                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
-                        _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.incidColumn.ColumnName),
-                        string.Join(",", selectTable.Where(r => r.incid != keepIncid).Select(r =>
-                            _viewModelMain.DataBase.QuoteValue(r.incid)))));
+                // Execute the count query.
+                IDataReader delReader = _viewModelMain.DataBase.ExecuteReader(sqlCount,
+                    _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text);
 
-                    //string sqlCount = new(String.Format("SELECT {0}.{1} FROM {0} LEFT JOIN {2} ON {2}.{3} = {0}.{1} WHERE {0}.{1} IN ({4}) GROUP BY {0}.{1} HAVING COUNT({2}.{3}) = 0",
-                    //    _viewModelMain.DataBase.QualifyTableName(_viewModelMain.IncidTable.TableName),
-                    //    _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.incidColumn.ColumnName),
-                    //    _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
-                    //    _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.incidColumn.ColumnName),
-                    //    selectTable.Where(r => r.incid != keepIncid).Aggregate(new(), (sb, r) => sb.Append("," +
-                    //        _viewModelMain.DataBase.QuoteValue(r.incid))).Remove(0, 1))).ToString();
+                // Check the reader was created successfully.
+                if (delReader == null)
+                    throw new Exception("Error counting incid and incid_mm_polygons database records.");
 
-                    // Execute the count query.
-                    IDataReader delReader = _viewModelMain.DataBase.ExecuteReader(sqlCount,
+                // Build a list of the incids to delete
+                List<string> deleteIncids = [];
+                while (delReader.Read())
+                    deleteIncids.Add(delReader.GetString(0));
+                delReader.Close();
+
+                // If there are any incids to delete, build and execute the delete statement.
+                if (deleteIncids.Count > 0)
+                {
+                    // Create a SQL delete statement to remove the unused incid records.
+                    string deleteStatement = String.Format(
+                        "DELETE FROM {0} WHERE {1} IN ({2})",
+                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid.TableName),
+                        _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.incidColumn.ColumnName),
+                        String.Join(",", deleteIncids.Select(i => _viewModelMain.DataBase.QuoteValue(i)).ToArray()));
+
+                    // Execute the delete statement.
+                    int numAffected = _viewModelMain.DataBase.ExecuteNonQuery(deleteStatement,
                         _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text);
 
-                    // Check the reader was created successfully.
-                    if (delReader == null)
-                        throw new Exception("Error counting incid and incid_mm_polygons database records.");
-
-                    // Build a list of the incids to delete
-                    List<string> deleteIncids = [];
-                    while (delReader.Read())
-                        deleteIncids.Add(delReader.GetString(0));
-                    delReader.Close();
-
-                    // If there are any incids to delete, build and execute the delete statement.
-                    if (deleteIncids.Count > 0)
-                    {
-                        // Create a SQL delete statement to remove the unused incid records.
-                        string deleteStatement = String.Format(
-                            "DELETE FROM {0} WHERE {1} IN ({2})",
-                            _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid.TableName),
-                            _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.incidColumn.ColumnName),
-                            String.Join(",", deleteIncids.Select(i => _viewModelMain.DataBase.QuoteValue(i)).ToArray()));
-
-                        // Execute the delete statement.
-                        int numAffected = _viewModelMain.DataBase.ExecuteNonQuery(deleteStatement,
-                            _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text);
-
-                        // If any rows were affected, refresh the total incid count.
-                        if (numAffected > 0) _viewModelMain.IncidRowCount(true);
-                    }
-
-                    // Update the last modified details of the kept incid
-                    _viewModelMain.ViewModelUpdate.UpdateIncidModifiedColumns(keepIncid, nowDtTm);
-
-                    // Prompt the user to perform a physical merge as well.
-                    if (physicallyMerge && (MessageBox.Show("Perform physical merge as well?", "HLU: Physical Merge",
-                        MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes))
-                    {
-                        // Restore the selection.
-                        _viewModelMain.GisSelection.Clear();
-                        foreach (HluDataSet.incid_mm_polygonsRow r in polygons)
-                        {
-                            DataRow newRow = _viewModelMain.GisSelection.NewRow();
-                            for (int i = 0; i < _viewModelMain.GisIDColumnOrdinals.Length; i++)
-                                newRow[i] = r[_viewModelMain.GisIDColumnOrdinals[i]];
-                            _viewModelMain.GisSelection.Rows.Add(newRow);
-                        }
-
-                        // Perform the physical merge.
-                        await PerformPhysicalMergeAsync();
-                    }
-                    else
-                    {
-                        // Commit the transaction.
-                        _viewModelMain.DataBase.CommitTransaction();
-                        _viewModelMain.HluDataset.AcceptChanges();
-
-                        // Re-count the incid records in the database.
-                        _viewModelMain.IncidRowCount(true);
-
-                        // Reset the incid and map selections but don't move
-                        // to the first incid in the database.
-                        await _viewModelMain.ClearFilterAsync(false);
-
-                        // Synch with the GIS selection.
-                        // Force the Incid table to be refilled because it has been
-                        // updated directly in the database rather than via the
-                        // local copy.
-                        _viewModelMain.RefillIncidTable = true;
-
-                        // Get the GIS layer selection again
-                        await _viewModelMain.GetMapSelectionAsync(true);
-                    }
+                    // If any rows were affected, refresh the total incid count.
+                    if (numAffected > 0) _viewModelMain.IncidRowCount(true);
                 }
-                catch
-                {
-                    // Rollback the transaction on error.
-                    _viewModelMain.DataBase.RollbackTransaction();
 
+                // Update the last modified details of the kept incid
+                _viewModelMain.ViewModelUpdate.UpdateIncidModifiedColumns(keepIncid, nowDtTm);
+
+                // Execute the GIS edit operation.
+                if (!await editOperation.ExecuteAsync())
+                    throw new HLUToolException("Failed to update GIS layer.");
+
+                // Flag the GIS edit as complete.
+                gisExecuted = true;
+
+                // Commit the transaction if started here.
+                if (startTransaction)
+                {
+                    _viewModelMain.DataBase.CommitTransaction();
+                    _viewModelMain.HluDataset.AcceptChanges();
+                }
+            }
+            catch (Exception ex)
+            {
+                // Rollback the transaction on error.
+                if (startTransaction) _viewModelMain.DataBase.RollbackTransaction();
+                success = false;
+
+                // Ensure any queued but unexecuted GIS edits are discarded.
+                if (!gisExecuted)
+                {
                     try
                     {
-                        // Abort the GIS updates.
                         editOperation.Abort();
                     }
                     catch
                     {
                         // Ignore abort failures.
                     }
-
-                    throw;
                 }
-            }
-            catch (Exception ex)
-            {
-                success = false;
+
                 MessageBox.Show("Merge operation failed. The error message returned was:\n\n" +
                     ex.Message, "HLU Merge Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                //throw;
             }
-            finally { _viewModelMain.ChangeCursor(Cursors.Arrow, null); }
+            finally
+            {
+                if (success)
+                {
+                    // Re-count the incid records in the database.
+                    _viewModelMain.IncidRowCount(true);
+
+                    // Reset the incid and map selections but don't move
+                    // to the first incid in the database.
+                    await _viewModelMain.ClearFilterAsync(false);
+
+                    // Synch with the GIS selection.
+                    // Force the Incid table to be refilled because it has been
+                    // updated directly in the database rather than via the
+                    // local copy.
+                    _viewModelMain.RefillIncidTable = true;
+
+                    // Get the GIS layer selection again.
+                    await _viewModelMain.GetMapSelectionAsync(true);
+                }
+
+                _viewModelMain.ChangeCursor(Cursors.Arrow, null);
+            }
+
             return success;
         }
 
@@ -422,11 +430,14 @@ namespace HLU.UI.ViewModel
         #region Physical Merge
 
         /// <summary>
-        /// Attempts to perform a physical merge operation on the currently selected map features.
+        /// Performs a physical merge operation on selected GIS features and updates the database to reflect the
+        /// changes.
         /// </summary>
-        /// <remarks>The physical merge can only be performed if more than one feature is selected on the map and all
-        /// selected features share the same incid and toid.</remarks>
-        /// <returns></returns>
+        /// <remarks>This method merges multiple GIS features into a single feature, updates the database
+        /// to synchronize with the GIS layer,  and records the history of the merge operation. The method ensures
+        /// that the GIS layer and database remain consistent after the merge.</remarks>
+        /// <returns><see langword="true"/> if the merge operation completes successfully; otherwise, <see langword="false"/>.</returns>
+        /// <exception cref="Exception">Thrown if the GIS merge operation fails, or if the database synchronization process encounters an error.</exception>
         internal async Task<bool> PhysicalMergeAsync()
         {
             // Check one or more features are selected.
@@ -472,229 +483,236 @@ namespace HLU.UI.ViewModel
         /// <exception cref="Exception">Thrown if the GIS merge operation fails, or if the database synchronization process encounters an error.</exception>
         private async Task<bool> PerformPhysicalMergeAsync()
         {
+            // Get the DB copy rows to update.
+            HluDataSet.incid_mm_polygonsDataTable selectTable = new();
+            _viewModelMain.GetIncidMMPolygonRows(ViewModelWindowMainHelpers.GisSelectionToWhereClause(
+                _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals,
+                ViewModelWindowMain.IncidPageSize, selectTable), ref selectTable);
+
+            // Check there are DB copy rows to update.
+            if (selectTable.Count == 0)
+                return false;
+
+            // Check the GIS layer and DB are in sync
+            if (selectTable.Count != _viewModelMain.GisSelection.Rows.Count)
+                throw new Exception(String.Format("GIS Layer and database are out of sync:\n{0} map polygons, {1} rows in table {2}.",
+                    _viewModelMain.FragsSelectedMapCount, selectTable.Count, _viewModelMain.HluDataset.incid_mm_polygons.TableName));
+
+            // Get the lowest toidfragid in selection to assign to the result feature.
+            string newToidFragmentID = selectTable.Min(r => r.toidfragid);
+
+            // Choose (or prompt user to select) which feature to keep
+            if (selectTable.GroupBy(r => r.incid).Count() == 1)
+            {
+                int minFragmID = Int32.Parse(newToidFragmentID);
+                _mergeResultFeatureIndex = selectTable.Select((r, index) =>
+                    Int32.Parse(r.toidfragid) == minFragmID ? index : -1).First(i => i != -1);
+            }
+            else
+            {
+                // Create the merge features window
+                _mergeFeaturesWindow = new WindowMergeFeatures
+                {
+                    // Set ArcGIS Pro as the parent
+                    Owner = FrameworkApplication.Current.MainWindow,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    Topmost = true
+                };
+
+                _mergeFeaturesViewModelPhysical = new(selectTable,
+                    _viewModelMain.GisIDColumnOrdinals, _viewModelMain.IncidTable.incidColumn.Ordinal,
+                    null, _viewModelMain.GISApplication)
+                {
+                    DisplayName = "Select Feature To Keep"
+                };
+
+                // Handle the RequestClose event to get the selected feature index
+                _mergeFeaturesViewModelPhysical.RequestClose -= _mergeFeaturesViewModelPhysical_RequestClose; // Safety: avoid double subscription.
+                _mergeFeaturesViewModelPhysical.RequestClose += new ViewModelWindowMergeFeatures
+                    <HluDataSet.incid_mm_polygonsDataTable, HluDataSet.incid_mm_polygonsRow>
+                    .RequestCloseEventHandler(_mergeFeaturesViewModelPhysical_RequestClose);
+
+                // Set the DataContext for data binding.
+                _mergeFeaturesWindow.DataContext = _mergeFeaturesViewModelPhysical;
+
+                // Reset the result feature index.
+                _mergeResultFeatureIndex = -1;
+
+                // Show the window.
+                _mergeFeaturesWindow.ShowDialog();
+            }
+
+            // Return false if the user didn't choose an incid.
+            if (_mergeResultFeatureIndex == -1)
+                return false;
+
+            _viewModelMain.ChangeCursor(Cursors.Wait, "Merging ...");
             bool success = true;
+
+            // Check if a transaction is already started.
+            bool startTransaction = _viewModelMain.DataBase.Transaction == null;
+
+            // Begin a transaction if not already started.
+            if (startTransaction)
+                _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
+
+            // Start a GIS edit operation.
+            EditOperation editOperation = new()
+            {
+                Name = "Physical Merge GIS Features"
+            };
+
+            // Flag the GIS edit as not executed yet.
+            bool gisExecuted = false;
+
             try
             {
-                // Get the DB copy rows to update
-                HluDataSet.incid_mm_polygonsDataTable selectTable = new();
-                _viewModelMain.GetIncidMMPolygonRows(ViewModelWindowMainHelpers.GisSelectionToWhereClause(
-                    _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals,
-                    ViewModelWindowMain.IncidPageSize, selectTable), ref selectTable);
+                // Fractions of a second can cause rounding differences when
+                // comparing DateTime fields later in some databases.
+                DateTime currDtTm = DateTime.Now;
+                DateTime nowDtTm = new(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
 
-                // Check there are DB copy rows to update.
-                if (selectTable.Count == 0)
-                    return false;
+                // Update the last modified details of the kept incid.
+                _viewModelMain.ViewModelUpdate.UpdateIncidModifiedColumns(selectTable[0].incid, nowDtTm);
 
-                // Check the GIS layer and DB are in sync
-                if (selectTable.Count != _viewModelMain.GisSelection.Rows.Count)
-                    throw new Exception(String.Format("GIS Layer and database are out of sync:\n{0} map polygons, {1} rows in table {2}.",
-                        _viewModelMain.FragsSelectedMapCount, selectTable.Count, _viewModelMain.HluDataset.incid_mm_polygons.TableName));
+                // Build a where clause of features to keep.
+                List<List<SqlFilterCondition>> resultFeatureWhereClause =
+                    ViewModelWindowMainHelpers.GisSelectionToWhereClause(
+                    [selectTable[_mergeResultFeatureIndex]],
+                        _viewModelMain.GisIDColumnOrdinals, ViewModelWindowMain.IncidPageSize, selectTable);
 
-                // lowest toidfragid in selection assigned to result feature
-                string newToidFragmentID = selectTable.Min(r => r.toidfragid);
+                if (resultFeatureWhereClause.Count != 1)
+                    throw new Exception("Error getting result feature from database.");
 
-                // Choose (or prompt user to select) which feature to keep
-                if (selectTable.GroupBy(r => r.incid).Count() == 1)
-                {
-                    int minFragmID = Int32.Parse(newToidFragmentID);
-                    _mergeResultFeatureIndex = selectTable.Select((r, index) =>
-                        Int32.Parse(r.toidfragid) == minFragmID ? index : -1).First(i => i != -1);
-                }
-                else
-                {
-                    // Create the merge features window
-                    _mergeFeaturesWindow = new WindowMergeFeatures
+                // Build a where clause of features to merge.
+                List<List<SqlFilterCondition>> mergeFeaturesWhereClause =
+                    ViewModelWindowMainHelpers.GisSelectionToWhereClause(
+                    selectTable.Where((r, index) => index != _mergeResultFeatureIndex).ToArray(),
+                        _viewModelMain.GisIDColumnOrdinals, ViewModelWindowMain.IncidPageSize, selectTable);
+
+                if (mergeFeaturesWhereClause.Count <= 0)
+                    throw new Exception("Error getting merge feature(s) from database.");
+
+                // HistoryTable contains rows of features merged into result feature (i.e. no longer existing)
+                // and last row with data of result feature (remaining in GIS, lowest toidfragid of merged features)
+                // this last row must be removed before writing history
+                // but is needed to update geometry fields in incid_mm_polygons.
+                DataTable historyTable = await _viewModelMain.GISApplication.MergeFeaturesPhysicallyAsync(
+                    newToidFragmentID,
+                    resultFeatureWhereClause[0].Select(c => c.Clone()).ToList(),
+                    _viewModelMain.HistoryColumns,
+                    editOperation);
+
+                // If the merge failed, throw an exception.
+                if ((historyTable == null) || (historyTable.Rows.Count == 0))
+                    throw new Exception("Failed to update GIS layer.");
+
+                // Update the history table to reflect there is now only one feature.
+                DataTable resultTable = historyTable.Clone();
+                DataRow resultRow = historyTable.AsEnumerable().FirstOrDefault(r =>
+                    r.Field<string>(_viewModelMain.HluDataset.history.toidfragidColumn.ColumnName) == newToidFragmentID);
+
+                if (resultRow == null)
+                    throw new Exception("Failed to obtain geometry data of result feature from GIS.");
+
+                // Load the result row and remove it from the history table.
+                resultTable.LoadDataRow(resultRow.ItemArray, true);
+                resultRow.Delete();
+                historyTable.AcceptChanges();
+
+                // Build a list of merged toidfragids (excluding the kept fragment).
+                List<string> mergedToidFragIds = selectTable
+                    .Where((r, index) => index != _mergeResultFeatureIndex)
+                    .Select(r => r.toidfragid)
+                    .Where(f => !String.IsNullOrWhiteSpace(f))
+                    .Distinct()
+                    .ToList();
+
+                // Update existing history rows for physically merged (deleted) fragments
+                // so history is preserved against the kept fragment.
+                UpdateHistoryForPhysicalMerge(
+                    selectTable[0].incid,
+                    selectTable[0].toid,
+                    mergedToidFragIds,
+                    newToidFragmentID);
+
+                // Synchronize the DB shadow copy of the GIS layer.
+                MergeSynchronizeIncidMMPolygons(selectTable, resultTable, newToidFragmentID,
+                    resultFeatureWhereClause[0], mergeFeaturesWhereClause);
+
+                // Create fixed values for history write.
+                Dictionary<int, string> fixedValues = new()
                     {
-                        // Set ArcGIS Pro as the parent
-                        Owner = FrameworkApplication.Current.MainWindow,
-                        WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                        Topmost = true
+                        { _viewModelMain.HluDataset.history.incidColumn.Ordinal, selectTable[0].incid },
+                        { _viewModelMain.HluDataset.history.toidColumn.Ordinal, selectTable[0].toid },
+                        { _viewModelMain.HluDataset.history.toidfragidColumn.Ordinal, newToidFragmentID }
                     };
 
-                    _mergeFeaturesViewModelPhysical = new(selectTable,
-                        _viewModelMain.GisIDColumnOrdinals, _viewModelMain.IncidTable.incidColumn.Ordinal,
-                        null, _viewModelMain.GISApplication)
-                    {
-                        DisplayName = "Select Feature To Keep"
-                    };
+                // Write the history records.
+                ViewModelWindowMainHistory vmHist = new(_viewModelMain);
+                vmHist.HistoryWrite(fixedValues, historyTable, Operations.PhysicalMerge, nowDtTm);
 
-                    // Handle the RequestClose event to get the selected feature index
-                    _mergeFeaturesViewModelPhysical.RequestClose -= _mergeFeaturesViewModelPhysical_RequestClose; // Safety: avoid double subscription.
-                    _mergeFeaturesViewModelPhysical.RequestClose += new ViewModelWindowMergeFeatures
-                        <HluDataSet.incid_mm_polygonsDataTable, HluDataSet.incid_mm_polygonsRow>
-                        .RequestCloseEventHandler(_mergeFeaturesViewModelPhysical_RequestClose);
+                // Execute the GIS edit operation.
+                if (!await editOperation.ExecuteAsync())
+                    throw new HLUToolException("Failed to update GIS layer.");
 
-                    // Set the DataContext for data binding
-                    _mergeFeaturesWindow.DataContext = _mergeFeaturesViewModelPhysical;
+                // Flag the GIS edit as complete.
+                gisExecuted = true;
 
-                    // Reset the result feature index
-                    _mergeResultFeatureIndex = -1;
-
-                    // Show the window
-                    _mergeFeaturesWindow.ShowDialog();
-                }
-
-                // Perform the merge if a feature has been selected
-                if (_mergeResultFeatureIndex != -1)
+                // Commit the transaction if started here.
+                if (startTransaction)
                 {
-                    _viewModelMain.ChangeCursor(Cursors.Wait, "Merging ...");
-
-                    //TODO: Needed?
-                    // Let WPF render the cursor/message before heavy work begins.
-                    //await Dispatcher.Yield(DispatcherPriority.Background);
-
-                    // Start a GIS edit operation.
-                    EditOperation editOperation = new()
-                    {
-                        Name = "Physical Merge GIS Features"
-                    };
-
-                    // Check if a transaction is already started.
-                    bool startTransaction = _viewModelMain.DataBase.Transaction == null;
-
-                    // Begin a transaction if not already started.
-                    if (startTransaction)
-                        _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
-
-                    try
-                    {
-                        // Fractions of a second can cause rounding differences when
-                        // comparing DateTime fields later in some databases.
-                        DateTime currDtTm = DateTime.Now;
-                        DateTime nowDtTm = new(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
-
-                        // Update the last modified details of the kept incid.
-                        _viewModelMain.ViewModelUpdate.UpdateIncidModifiedColumns(selectTable[0].incid, nowDtTm);
-
-                        // Build a where clause of features to keep.
-                        List<List<SqlFilterCondition>> resultFeatureWhereClause =
-                            ViewModelWindowMainHelpers.GisSelectionToWhereClause(
-                            [selectTable[_mergeResultFeatureIndex]],
-                                _viewModelMain.GisIDColumnOrdinals, ViewModelWindowMain.IncidPageSize, selectTable);
-
-                        if (resultFeatureWhereClause.Count != 1)
-                            throw new Exception("Error getting result feature from database.");
-
-                        // Build a where clause of features to merge.
-                        List<List<SqlFilterCondition>> mergeFeaturesWhereClause =
-                            ViewModelWindowMainHelpers.GisSelectionToWhereClause(
-                            selectTable.Where((r, index) => index != _mergeResultFeatureIndex).ToArray(),
-                                _viewModelMain.GisIDColumnOrdinals, ViewModelWindowMain.IncidPageSize, selectTable);
-
-                        if (mergeFeaturesWhereClause.Count <= 0)
-                            throw new Exception("Error getting merge feature(s) from database.");
-
-                        // HistoryTable contains rows of features merged into result feature (i.e. no longer existing)
-                        // and last row with data of result feature (remaining in GIS, lowest toidfragid of merged features)
-                        // this last row must be removed before writing history
-                        // but is needed to update geometry fields in incid_mm_polygons.
-                        DataTable historyTable = await _viewModelMain.GISApplication.MergeFeaturesPhysicallyAsync(
-                            newToidFragmentID,
-                            resultFeatureWhereClause[0].Select(c => c.Clone()).ToList(),
-                            _viewModelMain.HistoryColumns,
-                            editOperation);
-
-                        if (historyTable == null)
-                            throw new Exception("GIS merge operation failed.");
-
-                        // Update the history table to reflect there is now only one feature.
-                        DataTable resultTable = historyTable.Clone();
-                        DataRow resultRow = historyTable.AsEnumerable().FirstOrDefault(r =>
-                            r.Field<string>(_viewModelMain.HluDataset.history.toidfragidColumn.ColumnName) == newToidFragmentID);
-
-                        if (resultRow == null)
-                            throw new Exception("Failed to obtain geometry data of result feature from GIS.");
-
-                        // Load the result row and remove it from the history table.
-                        resultTable.LoadDataRow(resultRow.ItemArray, true);
-                        resultRow.Delete();
-                        historyTable.AcceptChanges();
-
-                        // Build a list of merged toidfragids (excluding the kept fragment).
-                        List<string> mergedToidFragIds = selectTable
-                            .Where((r, index) => index != _mergeResultFeatureIndex)
-                            .Select(r => r.toidfragid)
-                            .Where(f => !String.IsNullOrWhiteSpace(f))
-                            .Distinct()
-                            .ToList();
-
-                        // Update existing history rows for physically merged (deleted) fragments
-                        // so history is preserved against the kept fragment.
-                        UpdateHistoryForPhysicalMerge(
-                            selectTable[0].incid,
-                            selectTable[0].toid,
-                            mergedToidFragIds,
-                            newToidFragmentID);
-
-                        // Synchronize the DB shadow copy of the GIS layer.
-                        MergeSynchronizeIncidMMPolygons(selectTable, resultTable, newToidFragmentID,
-                            resultFeatureWhereClause[0], mergeFeaturesWhereClause);
-
-                        // Create fixed values for history write.
-                        Dictionary<int, string> fixedValues = new()
-                        {
-                            { _viewModelMain.HluDataset.history.incidColumn.Ordinal, selectTable[0].incid },
-                            { _viewModelMain.HluDataset.history.toidColumn.Ordinal, selectTable[0].toid },
-                            { _viewModelMain.HluDataset.history.toidfragidColumn.Ordinal, newToidFragmentID }
-                        };
-
-                        // Write the history records.
-                        ViewModelWindowMainHistory vmHist = new(_viewModelMain);
-                        vmHist.HistoryWrite(fixedValues, historyTable, Operations.PhysicalMerge, nowDtTm);
-
-                        // Execute the GIS edit operation.
-                        if (!await editOperation.ExecuteAsync())
-                            throw new HLUToolException("Failed to update GIS layer.");
-
-                        // Commit the transaction if started here.
-                        if (startTransaction)
-                        {
-                            _viewModelMain.DataBase.CommitTransaction();
-                            _viewModelMain.HluDataset.AcceptChanges();
-                        }
-
-                        // Re-count the incid records in the database.
-                        _viewModelMain.IncidRowCount(true);
-
-                        // Reset the incid and map selections but don't move
-                        // to the first incid in the database.
-                        await _viewModelMain.ClearFilterAsync(false);
-
-                        // Synch with the GIS selection.
-                        // Force the Incid table to be refilled because it has been
-                        // updated directly in the database rather than via the
-                        // local copy.
-                        _viewModelMain.RefillIncidTable = true;
-
-                        // Get the GIS layer selection again
-                        await _viewModelMain.GetMapSelectionAsync(true);
-                    }
-                    catch
-                    {
-                        // Rollback the transaction on error.
-                        if (startTransaction) _viewModelMain.DataBase.RollbackTransaction();
-
-                        try
-                        {
-                            // Abort the GIS updates.
-                            editOperation.Abort();
-                        }
-                        catch
-                        {
-                            // Ignore abort failures.
-                        }
-
-                        throw;
-                    }
+                    _viewModelMain.DataBase.CommitTransaction();
+                    _viewModelMain.HluDataset.AcceptChanges();
                 }
             }
             catch (Exception ex)
             {
+                // Rollback the transaction on error.
+                if (startTransaction) _viewModelMain.DataBase.RollbackTransaction();
                 success = false;
+
+                // Ensure any queued but unexecuted GIS edits are discarded.
+                if (!gisExecuted)
+                {
+                    try
+                    {
+                        editOperation.Abort();
+                    }
+                    catch
+                    {
+                        // Ignore abort failures.
+                    }
+                }
+
                 MessageBox.Show("Merge operation failed. The error message returned was:\n\n" +
                     ex.Message, "HLU Merge Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                //throw;
             }
-            finally { _viewModelMain.ChangeCursor(Cursors.Arrow, null); }
+            finally
+            {
+                if (success)
+                {
+                    // Re-count the incid records in the database.
+                    _viewModelMain.IncidRowCount(true);
+
+                    // Reset the incid and map selections but don't move
+                    // to the first incid in the database.
+                    await _viewModelMain.ClearFilterAsync(false);
+
+                    // Synch with the GIS selection.
+                    // Force the Incid table to be refilled because it has been
+                    // updated directly in the database rather than via the
+                    // local copy.
+                    _viewModelMain.RefillIncidTable = true;
+
+                    // Get the GIS layer selection again.
+                    await _viewModelMain.GetMapSelectionAsync(true);
+                }
+
+                _viewModelMain.ChangeCursor(Cursors.Arrow, null);
+            }
+
             return success;
         }
 

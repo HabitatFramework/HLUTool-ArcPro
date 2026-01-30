@@ -1911,25 +1911,238 @@ namespace HLU.GISApplication
 
         #region Split
 
-        public DataTable SplitFeaturePhysically(string currentToidFragmentID, string lastToidFragmentID,
-            List<SqlFilterCondition> selectionWhereClause, DataColumn[] historyColumns)
+        /// <summary>
+        /// Performs a physical split of the currently selected features by updating their toidfragid values
+        /// and tracking the changes in a history table.
+        /// </summary>
+        /// <remarks>
+        /// This performs edits using an <see cref="EditOperation"/> so it works for all supported ArcGIS Pro data sources
+        /// and supports undo/redo.
+        /// </remarks>
+        /// <param name="currentToidFragmentID">The current toidfragid value.</param>
+        /// <param name="lastToidFragmentID">The last used toidfragid value.</param>
+        /// <param name="selectionWhereClause">The selection where clause conditions.</param>
+        /// <param name="historyColumns">The history columns to be used for tracking changes.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="HLUToolException"></exception>
+        public async Task<DataTable> SplitFeaturesPhysicallyAsync(
+            string currentToidFragmentID,
+            string lastToidFragmentID,
+            List<SqlFilterCondition> selectionWhereClause,
+            DataColumn[] historyColumns,
+            EditOperation editOperation)
         {
-            //return ResultTableFromList(IpcArcMap([ "sp",
-            //    WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, selectionWhereClause)),
-            //    lastToidFragmentID, String.Join(",", historyColumns.Select(c => c.ColumnName).ToArray()) ]));
-            return null;
+            // Check parameters.
+            // Note: Uses the current map selection rather than rebuilding a QueryFilter from
+            // selectionWhereClause / currentToidFragmentID. The view model already ensures the selection is valid.
+            if (String.IsNullOrEmpty(currentToidFragmentID))
+                throw new ArgumentException("Current toidfragid is required.", nameof(currentToidFragmentID));
+
+            if (String.IsNullOrEmpty(lastToidFragmentID))
+                throw new ArgumentException("Last toidfragid is required.", nameof(lastToidFragmentID));
+
+            if (historyColumns == null || historyColumns.Length == 0)
+                throw new ArgumentException("History columns are required.", nameof(historyColumns));
+
+            ArgumentNullException.ThrowIfNull(editOperation);
+
+            if (_hluLayer == null)
+                throw new HLUToolException("HLU layer is not set.");
+
+            if (_hluFeatureClass == null)
+                throw new HLUToolException("HLU feature class is not set.");
+
+            if (_hluLayerStructure == null)
+                throw new HLUToolException("HLU layer structure is not set.");
+
+            // Build history field bindings using existing map logic.
+            // This supports additional fields using the delimiter mechanism.
+            List<HistoryFieldBindingHelper.HistoryFieldBinding> historyBindings =
+                HistoryFieldBindingHelper.BuildHistoryFieldBindings(
+                    historyColumns,
+                    HistoryAdditionalFieldsDelimiter,
+                    MapField,
+                    FuzzyFieldOrdinal);
+
+            // Create the history table (columns only) up front.
+            DataTable historyTable = new();
+
+            foreach (var b in historyBindings)
+            {
+                if (!historyTable.Columns.Contains(b.OutputColumnName))
+                    historyTable.Columns.Add(new DataColumn(b.OutputColumnName, b.OutputType));
+            }
+
+            // Add geometry history columns (length/area or X/Y) to match ArcMap behaviour.
+            if (!historyTable.Columns.Contains(ViewModelWindowMain.HistoryGeometry1ColumnName))
+                historyTable.Columns.Add(new DataColumn(ViewModelWindowMain.HistoryGeometry1ColumnName, typeof(double)));
+
+            if (!historyTable.Columns.Contains(ViewModelWindowMain.HistoryGeometry2ColumnName))
+                historyTable.Columns.Add(new DataColumn(ViewModelWindowMain.HistoryGeometry2ColumnName, typeof(double)));
+
+            // Resolve toidfragid field index.
+            int toidFragFieldIndex = MapField(_hluLayerStructure.toidfragidColumn.ColumnName);
+            if (toidFragFieldIndex == -1)
+                toidFragFieldIndex = FuzzyFieldOrdinal(_hluLayerStructure.toidfragidColumn.ColumnName);
+
+            if (toidFragFieldIndex == -1)
+                throw new HLUToolException("Failed to resolve toidfragid field index for the active HLU layer.");
+
+            // Parse the last used fragment id (e.g. "0007") and keep its width for formatting.
+            if (!Int32.TryParse(lastToidFragmentID, out int lastFragNum))
+                throw new HLUToolException("Last toidfragid could not be parsed as an integer: " + lastToidFragmentID);
+
+            string numFormat = String.Format("D{0}", lastToidFragmentID.Length);
+
+            // Determine the selection, build history rows (post-update values), and queue the update using an EditOperation.
+            await QueuedTask.Run(() =>
+            {
+                Selection selection = _hluLayer.GetSelection();
+                IReadOnlyList<long> selectedObjectIds = selection?.GetObjectIDs() ?? [];
+
+                // Must have at least two selected features (expected after a physical split).
+                if (selectedObjectIds.Count < 2)
+                    return;
+
+                List<long> orderedOids = selectedObjectIds.OrderBy(o => o).ToList();
+                long minOid = orderedOids[0];
+
+                // Resolve optional shape fields (mainly for shapefiles).
+                // In file geodatabases these are generally maintained automatically.
+                int shapeLengthFieldIndex = TryResolveFieldIndex(_hluFeatureClass, "shape_leng", "Shape_Leng", "Shape_Length", "shape_length");
+                int shapeAreaFieldIndex = TryResolveFieldIndex(_hluFeatureClass, "shape_area", "Shape_Area", "shapearea");
+
+                // Prepare the new toidfragid values for all but the first (min OID) feature.
+                Dictionary<long, string> newToidFragByOid = [];
+                int nextFragNum = lastFragNum;
+
+                foreach (long oid in orderedOids)
+                {
+                    if (oid == minOid)
+                        continue;
+
+                    nextFragNum++;
+                    newToidFragByOid[oid] = nextFragNum.ToString(numFormat);
+                }
+
+                // Build history rows in OID order, ensuring the "original" feature (min OID) is first.
+                QueryFilter qf = new()
+                {
+                    ObjectIDs = orderedOids
+                };
+
+                using RowCursor cursor = _hluFeatureClass.Search(qf, false);
+
+                // Because Search() doesn't guarantee order, buffer by OID.
+                Dictionary<long, Feature> featuresByOid = [];
+
+                while (cursor.MoveNext())
+                {
+                    if (cursor.Current is not Feature f)
+                        continue;
+
+                    long oid = f.GetObjectID();
+                    featuresByOid[oid] = f;
+                }
+
+                foreach (long oid in orderedOids)
+                {
+                    if (!featuresByOid.TryGetValue(oid, out Feature feature))
+                        continue;
+
+                    using (feature)
+                    {
+                        DataRow historyRow = historyTable.NewRow();
+
+                        foreach (var b in historyBindings)
+                        {
+                            // If this is the toidfragid field and it will be updated, return the new value.
+                            if ((b.SourceFieldIndex == toidFragFieldIndex) && newToidFragByOid.TryGetValue(oid, out string newFrag))
+                            {
+                                historyRow[b.OutputColumnName] = newFrag;
+                            }
+                            else
+                            {
+                                object value = feature[b.SourceFieldIndex];
+                                historyRow[b.OutputColumnName] = value ?? DBNull.Value;
+                            }
+                        }
+
+                        Geometry geom = feature.GetShape();
+                        (double geom1, double geom2) = GetGeometryHistoryValues(geom);
+
+                        historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = geom1;
+                        historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = geom2;
+
+                        historyTable.Rows.Add(historyRow);
+                    }
+                }
+
+                // Queue edits: update toidfragid for all but the min OID feature.
+                if (newToidFragByOid.Count == 0)
+                    return;
+
+                Table hluTable = _hluFeatureClass as Table;
+
+                editOperation.Callback(context =>
+                {
+                    QueryFilter updateFilter = new()
+                    {
+                        ObjectIDs = newToidFragByOid.Keys.ToList()
+                    };
+
+                    using RowCursor updateCursor = _hluFeatureClass.Search(updateFilter, false);
+
+                    while (updateCursor.MoveNext())
+                    {
+                        using Row row = updateCursor.Current;
+
+                        long oid = row.GetObjectID();
+                        if (!newToidFragByOid.TryGetValue(oid, out string newFrag))
+                            continue;
+
+                        // Update toidfragid.
+                        row[toidFragFieldIndex] = newFrag;
+
+                        // Update geometry fields if they exist (primarily shapefiles).
+                        if (row is Feature feature)
+                        {
+                            Geometry shape = feature.GetShape();
+
+                            if (shape != null)
+                            {
+                                if (shapeLengthFieldIndex != -1)
+                                    row[shapeLengthFieldIndex] = GeometryEngine.Instance.Length(shape);
+
+                                if (shapeAreaFieldIndex != -1)
+                                    row[shapeAreaFieldIndex] = GeometryEngine.Instance.Area(shape);
+                            }
+                        }
+
+                        row.Store();
+                        context.Invalidate(row);
+                    }
+                }, hluTable);
+            });
+
+            // If nothing queued, return what we have (typically empty).
+            return historyTable;
         }
 
         /// <summary>
         /// Splits selected features logically by changing their incid number.
         /// Pass the old incid number together with the new incid number
-        /// so that only features belonging to the old incid are
-        /// updated.
+        /// so that only features belonging to the old incid are updated.
         /// </summary>
-        /// <param name="oldIncid"></param>
-        /// <param name="newIncid"></param>
-        /// <param name="historyColumns"></param>
-        /// <param name="editOperation"></param>
+        /// <remarks>
+        /// This performs edits using an <see cref="EditOperation"/> so it works for all supported ArcGIS Pro data sources
+        /// and supports undo/redo.
+        /// </remarks>
+        /// <param name="oldIncid">The existing incid number.</param>
+        /// <param name="newIncid">The new incid number.</param>
+        /// <param name="historyColumns">The history columns to be used for tracking changes.</param>
+        /// <param name="editOperation">The edit operation to be used for the logical split.</param>
         /// <returns></returns>
         public async Task<DataTable> SplitFeaturesLogicallyAsync(
             string oldIncid,
@@ -2085,6 +2298,10 @@ namespace HLU.GISApplication
 
             return historyTable;
         }
+
+        #endregion Split
+
+        #region Split Helpers
 
         /// <summary>
         /// Computes the two geometry history values.
@@ -2257,7 +2474,32 @@ namespace HLU.GISApplication
             return FieldOrdinal(fieldName);
         }
 
-        #endregion Split
+        private static int TryResolveFieldIndex(
+            FeatureClass featureClass,
+            params string[] candidateNames)
+        {
+            if (featureClass == null || candidateNames == null || candidateNames.Length == 0)
+                return -1;
+
+            TableDefinition def = featureClass.GetDefinition();
+            IReadOnlyList<Field> fields = def.GetFields();
+
+            foreach (string candidate in candidateNames)
+            {
+                if (String.IsNullOrWhiteSpace(candidate))
+                    continue;
+
+                for (int i = 0; i < fields.Count; i++)
+                {
+                    if (String.Equals(fields[i].Name, candidate, StringComparison.OrdinalIgnoreCase))
+                        return i;
+                }
+            }
+
+            return -1;
+        }
+
+        #endregion Split Helpers
 
         #region Merge
 
@@ -2267,7 +2509,8 @@ namespace HLU.GISApplication
         /// <paramref name="newToidFragmentID"/>.
         /// </summary>
         /// <remarks>
-        /// This performs edits using an <see cref="EditOperation"/> so it works for all supported ArcGIS Pro data sources.
+        /// This performs edits using an <see cref="EditOperation"/> so it works for all supported ArcGIS Pro data sources
+        /// and supports undo/redo.
         ///
         /// The result feature is identified within the current selection using <paramref name="resultWhereClause"/>.
         ///
@@ -2504,38 +2747,12 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Attempts to set a row value safely for optional fields.
-        /// </summary>
-        /// <param name="row">The row to update.</param>
-        /// <param name="fieldIndex">The field index or -1 if missing.</param>
-        /// <param name="value">The value to set.</param>
-        private static void TrySetRowValue(Row row, int fieldIndex, object value)
-        {
-            // Check parameters.
-            if (row == null)
-                return;
-
-            if (fieldIndex < 0)
-                return;
-
-            // Try to set the column value.
-            try
-            {
-                row[fieldIndex] = value ?? DBNull.Value;
-            }
-            catch
-            {
-                // Ignore failures for non-editable/system-managed fields.
-            }
-        }
-
-        /// <summary>
         /// Logically merges the currently selected features by updating their incid to <paramref name="keepIncid"/>
         /// and copying the non-key attributes from the kept feature onto the merged features.
         /// </summary>
         /// <remarks>
-        /// This replaces the legacy ArcMap named-pipe implementation ("ml") and performs edits using an
-        /// <see cref="EditOperation"/> so it works for all supported ArcGIS Pro data sources.
+        /// This performs edits using an <see cref="EditOperation"/> so it works for all supported ArcGIS Pro data sources
+        /// and supports undo/redo.
         ///
         /// Only selected features whose incid is NOT <paramref name="keepIncid"/> are updated. The feature to keep is
         /// taken from the current selection where incid equals <paramref name="keepIncid"/>. If none is found, an
@@ -2770,6 +2987,36 @@ namespace HLU.GISApplication
 
         #endregion Merge
 
+        #region Merge Helpers
+
+        /// <summary>
+        /// Attempts to set a row value safely for optional fields.
+        /// </summary>
+        /// <param name="row">The row to update.</param>
+        /// <param name="fieldIndex">The field index or -1 if missing.</param>
+        /// <param name="value">The value to set.</param>
+        private static void TrySetRowValue(Row row, int fieldIndex, object value)
+        {
+            // Check parameters.
+            if (row == null)
+                return;
+
+            if (fieldIndex < 0)
+                return;
+
+            // Try to set the column value.
+            try
+            {
+                row[fieldIndex] = value ?? DBNull.Value;
+            }
+            catch
+            {
+                // Ignore failures for non-editable/system-managed fields.
+            }
+        }
+
+        #endregion Merge Helpers
+
         private DataTable ResultTableFromList(List<string> resultList)
         {
             //try
@@ -2904,11 +3151,15 @@ namespace HLU.GISApplication
         /// <summary>
         /// Updates selected features with new values and captures history.
         /// </summary>
-        /// <param name="updateColumns"></param>
-        /// <param name="updateValues"></param>
-        /// <param name="historyColumns"></param>
-        /// <param name="selectionWhereClause"></param>
-        /// <param name="editOperation"></param>
+        /// <remarks>
+        /// This performs edits using an <see cref="EditOperation"/> so it works for all supported ArcGIS Pro data sources
+        /// and supports undo/redo.
+        /// </remarks>
+        /// <param name="updateColumns">The columns to update.</param>
+        /// <param name="updateValues">The new values for the update columns.</param>
+        /// <param name="historyColumns">The columns to capture for history.</param>
+        /// <param name="selectionWhereClause">The selection criteria for features to update.</param>
+        /// <param name="editOperation">The edit operation to perform the updates.</param>
         /// <returns></returns>
         /// <exception cref="HLUToolException"></exception>
         public async Task UpdateFeaturesAsync(
@@ -2921,6 +3172,8 @@ namespace HLU.GISApplication
             //TODO: Needed?
             // Ensure selection event handlers do not interfere.
             //_selectFieldOrdinals = null;
+
+            ArgumentNullException.ThrowIfNull(editOperation);
 
             // Create a query filter for selecting features.
             QueryFilter queryFilter = new()

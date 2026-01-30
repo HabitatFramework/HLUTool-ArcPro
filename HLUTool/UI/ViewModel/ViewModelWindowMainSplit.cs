@@ -31,6 +31,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Threading;
 
 namespace HLU.UI.ViewModel
@@ -80,34 +81,22 @@ namespace HLU.UI.ViewModel
                 return false;
             }
 
-            // Check the selection meets the criteria for a logical split.
-            if ((_viewModelMain.IncidsSelectedMapCount == 1) &&
-                ((_viewModelMain.GisSelection.Rows.Count > 1) && ((_viewModelMain.ToidsSelectedMapCount > 1) || (_viewModelMain.FragsSelectedMapCount > 1))) ||
-                (_viewModelMain.GisSelection.Rows.Count == 1))
+            // Check the selection meets the criteria for a logical split (shouldn't be possible to reach here otherwise).
+            if (_viewModelMain.IncidsSelectedMapCount != 1)
             {
-                // All features in selection share same incid, but *not* toid and toidfragid.
-                return await PerformLogicalSplitAsync();
+                MessageBox.Show("Cannot logically split: Map selection set contains features belonging to more than one INCID.",
+                    "HLU: Logical Split", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                return false;
             }
 
-            MessageBox.Show("Cannot logically split: Map selection set contains features belonging to more than one INCID.",
-                "HLU: Logical Split", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-            return false;
-        }
+            if (((_viewModelMain.GisSelection.Rows.Count > 1) && ((_viewModelMain.ToidsSelectedMapCount <= 1) || (_viewModelMain.FragsSelectedMapCount <= 1))) ||
+                (_viewModelMain.GisSelection.Rows.Count != 1))
+            {
+                MessageBox.Show("Cannot logically split: Map selection contains invalid set of features.",
+                    "HLU: Logical Split", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                return false;
+            }
 
-        /// <summary>
-        /// Performs a logical split operation on the currently selected feature in the GIS layer.
-        /// </summary>
-        /// <remarks>This method attempts to split the selected feature into two logical entities by
-        /// creating a new  identifier (INCID) and updating the GIS layer and its associated database records
-        /// accordingly. The operation ensures that the selected feature is not the only one associated with the
-        /// current INCID before proceeding. If the operation is successful, the GIS layer and database are updated,
-        /// and the application state is synchronized with the changes. The method handles database transactions to
-        /// ensure atomicity and rolls back changes in case of an error. It also updates history records to reflect the
-        /// changes made during the split.</remarks>
-        /// <returns><see langword="true"/> if the logical split operation completes successfully; otherwise, <see
-        /// langword="false"/>.</returns>
-        private async Task<bool> PerformLogicalSplitAsync()
-        {
             // Check if selected feature is the only one pertaining to its incid.
             if (_viewModelMain.GisSelection.Rows.Count == 1)
             {
@@ -134,17 +123,42 @@ namespace HLU.UI.ViewModel
                 }
             }
 
-            // Begin the logical split transaction.
+            // All features in selection share same incid, but *not* toid and toidfragid.
+            return await PerformLogicalSplitAsync();
+        }
+
+        /// <summary>
+        /// Performs a logical split operation on the currently selected feature in the GIS layer.
+        /// </summary>
+        /// <remarks>This method attempts to split the selected feature into two logical entities by
+        /// creating a new  identifier (INCID) and updating the GIS layer and its associated database records
+        /// accordingly. The operation ensures that the selected feature is not the only one associated with the
+        /// current INCID before proceeding. If the operation is successful, the GIS layer and database are updated,
+        /// and the application state is synchronized with the changes. The method handles database transactions to
+        /// ensure atomicity and rolls back changes in case of an error. It also updates history records to reflect the
+        /// changes made during the split.</remarks>
+        /// <returns><see langword="true"/> if the logical split operation completes successfully; otherwise, <see
+        /// langword="false"/>.</returns>
+        private async Task<bool> PerformLogicalSplitAsync()
+        {
+            _viewModelMain.ChangeCursor(Cursors.Wait, "Splitting ...");
             bool success = true;
 
-            // Start database transaction.
-            _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
+            // Check if a transaction is already started.
+            bool startTransaction = _viewModelMain.DataBase.Transaction == null;
+
+            // Begin a transaction if not already started.
+            if (startTransaction)
+                _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
             // Start a GIS edit operation.
             EditOperation editOperation = new()
             {
                 Name = "Logical Split GIS Features"
             };
+
+            // Flag the GIS edit as not executed yet.
+            bool gisExecuted = false;
 
             try
             {
@@ -251,31 +265,42 @@ namespace HLU.UI.ViewModel
                 ViewModelWindowMainHistory vmHist = new(_viewModelMain);
                 vmHist.HistoryWrite(fixedValues, historyTable, Operations.LogicalSplit, nowDtTm);
 
-                // Commit updates to the GIS layer.
+                // Execute the GIS edit operation.
                 if (!await editOperation.ExecuteAsync())
                     throw new HLUToolException("Failed to update GIS layer.");
 
-                // Commit the transaction.
-                _viewModelMain.DataBase.CommitTransaction();
-                _viewModelMain.HluDataset.AcceptChanges();
+                // Flag the GIS edit as complete.
+                gisExecuted = true;
+
+                // Commit the transaction if started here.
+                if (startTransaction)
+                {
+                    _viewModelMain.DataBase.CommitTransaction();
+                    _viewModelMain.HluDataset.AcceptChanges();
+                }
             }
             catch (Exception ex)
             {
-                _viewModelMain.DataBase.RollbackTransaction();
+                // Rollback the transaction on error.
+                if (startTransaction) _viewModelMain.DataBase.RollbackTransaction();
                 success = false;
 
-                try
+                // Ensure any queued but unexecuted GIS edits are discarded.
+                if (!gisExecuted)
                 {
-                    // Abort the GIS updates.
-                    editOperation.Abort();
-                }
-                catch
-                {
-                    // Ignore abort exceptions.
+                    try
+                    {
+                        editOperation.Abort();
+                    }
+                    catch
+                    {
+                        // Ignore abort failures.
+                    }
                 }
 
                 MessageBox.Show("Split operation failed. The error message returned was:\n\n" +
                     ex.Message, "HLU Split Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                //throw;
             }
             finally
             {
@@ -297,6 +322,8 @@ namespace HLU.UI.ViewModel
                     // Get the GIS layer selection again.
                     await _viewModelMain.GetMapSelectionAsync(true);
                 }
+
+                _viewModelMain.ChangeCursor(Cursors.Arrow, null);
             }
 
             return success;
@@ -354,9 +381,24 @@ namespace HLU.UI.ViewModel
         /// langword="false"/>.</returns>
         private async Task<bool> PerformPhysicalSplitAsync()
         {
-            // Begin the physical split transaction.
+            _viewModelMain.ChangeCursor(Cursors.Wait, "Splitting ...");
             bool success = true;
-            _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
+
+            // Check if a transaction is already started.
+            bool startTransaction = _viewModelMain.DataBase.Transaction == null;
+
+            // Begin a transaction if not already started.
+            if (startTransaction)
+                _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
+
+            // Start a GIS edit operation.
+            EditOperation editOperation = new()
+            {
+                Name = "Physical Split GIS Features"
+            };
+
+            // Flag the GIS edit as not executed yet.
+            bool gisExecuted = false;
 
             try
             {
@@ -382,12 +424,14 @@ namespace HLU.UI.ViewModel
                 // Find the current toidfragid for the selected toid (there should be only one)
                 string currentToidFragmentID = _viewModelMain.FragsSelectedMap.ElementAt(0);
 
-                // update records in GIS and collect new features resulting from split
-                DataTable newFeatures = _viewModelMain.GISApplication.SplitFeaturePhysically(currentToidFragmentID,
+                // Update the GIS layer and collect new features resulting from split.
+                // This queues the GIS edits into the provided EditOperation but does not execute it.
+                DataTable newFeatures = await _viewModelMain.GISApplication.SplitFeaturesPhysicallyAsync(currentToidFragmentID,
                     lastToidFragmentID, featuresFilter[0],
                     _viewModelMain.HluDataset.incid_mm_polygons.Columns.Cast<DataColumn>().Where(c =>
                         c.ColumnName != _viewModelMain.HluDataset.incid_mm_polygons.shape_lengthColumn.ColumnName &&
-                        c.ColumnName != _viewModelMain.HluDataset.incid_mm_polygons.shape_areaColumn.ColumnName).ToArray());
+                        c.ColumnName != _viewModelMain.HluDataset.incid_mm_polygons.shape_areaColumn.ColumnName).ToArray(),
+                    editOperation);
 
                 // If an error occurred when updating the GIS layer or
                 // if less than two new features were returned then throw an exception.
@@ -416,7 +460,7 @@ namespace HLU.UI.ViewModel
                 if ((updTable == null) || (updTable.Rows.Count != 1))
                     throw new Exception("Failed to fetch incid_mm_polygon rows.");
 
-                // insert attributes of original split feature into history
+                // Insert attributes of original split feature into history
                 DataTable history = updTable.Copy();
                 history.Columns[updTable.shape_lengthColumn.ColumnName].ColumnName = ViewModelWindowMain.HistoryGeometry1ColumnName;
                 history.Columns[updTable.shape_areaColumn.ColumnName].ColumnName = ViewModelWindowMain.HistoryGeometry2ColumnName;
@@ -474,17 +518,42 @@ namespace HLU.UI.ViewModel
                 _viewModelMain.ViewModelUpdate.UpdateIncidModifiedColumns(_viewModelMain.IncidsSelectedMap.ElementAt(0), nowDtTm);
 
 
-                // Commit the transaction.
-                _viewModelMain.DataBase.CommitTransaction();
-                _viewModelMain.HluDataset.AcceptChanges();
+                // Execute the GIS edit operation.
+                if (!await editOperation.ExecuteAsync())
+                    throw new HLUToolException("Failed to update GIS layer.");
+
+                // Flag the GIS edit as complete.
+                gisExecuted = true;
+
+                // Commit the transaction if started here.
+                if (startTransaction)
+                {
+                    _viewModelMain.DataBase.CommitTransaction();
+                    _viewModelMain.HluDataset.AcceptChanges();
+                }
             }
             catch (Exception ex)
             {
-                // Rollback the transaction.
-                _viewModelMain.DataBase.RollbackTransaction();
+                // Rollback the transaction on error.
+                if (startTransaction) _viewModelMain.DataBase.RollbackTransaction();
                 success = false;
+
+                // Ensure any queued but unexecuted GIS edits are discarded.
+                if (!gisExecuted)
+                {
+                    try
+                    {
+                        editOperation.Abort();
+                    }
+                    catch
+                    {
+                        // Ignore abort failures.
+                    }
+                }
+
                 MessageBox.Show("Split operation failed. The error message returned was:\n\n" +
                     ex.Message, "HLU Split Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                //throw;
             }
             finally
             {
@@ -503,10 +572,13 @@ namespace HLU.UI.ViewModel
                     // local copy.
                     _viewModelMain.RefillIncidTable = true;
 
-                    // Get the GIS layer selection again
+                    // Get the GIS layer selection again.
                     await _viewModelMain.GetMapSelectionAsync(true);
                 }
+
+                _viewModelMain.ChangeCursor(Cursors.Arrow, null);
             }
+
             return success;
         }
 

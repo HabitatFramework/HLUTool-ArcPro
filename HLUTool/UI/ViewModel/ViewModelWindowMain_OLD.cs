@@ -2643,7 +2643,7 @@ namespace HLU.UI.ViewModel
             return (BulkUpdateMode == false && OSMMUpdateMode == false) &&
                 EditMode && !String.IsNullOrEmpty(Reason) && !String.IsNullOrEmpty(Process) &&
                 (_gisSelection != null) && (_incidsSelectedMapCount == 1) &&
-                ((_gisSelection.Rows.Count > 0) && ((_toidsSelectedMapCount > 1) || (_fragsSelectedMapCount > 0)) ||
+                ((_gisSelection.Rows.Count > 1) && ((_toidsSelectedMapCount > 1) || (_fragsSelectedMapCount > 0)) ||
                 (_gisSelection.Rows.Count == 1)) &&
                 (_filterByMap == true) &&
                 ((_toidsIncidGisCount < _toidsIncidDbCount) ||
