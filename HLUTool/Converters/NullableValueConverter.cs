@@ -37,7 +37,7 @@ namespace HLU.Converters
 
          public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
          {
-            if (value == null || string.IsNullOrEmpty(value.ToString()))
+            if (value == null || String.IsNullOrEmpty(value.ToString()))
                 return null;
 
              return value;

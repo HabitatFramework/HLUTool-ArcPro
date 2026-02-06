@@ -185,7 +185,7 @@ namespace HLU.GISApplication
             // that each chunk contains a continuous series of one or more Incids.
             var query = incidSelection
                 .AsEnumerable()
-                .Where(r => !string.IsNullOrWhiteSpace(r.Field<string>(0)))
+                .Where(r => !String.IsNullOrWhiteSpace(r.Field<string>(0)))
                 .Select((r, index) => new
                 {
                     RowIndex = RecordIds.IncidNumber(r.Field<string>(0)) - index,

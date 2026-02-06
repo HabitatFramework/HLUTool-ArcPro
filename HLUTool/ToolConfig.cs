@@ -190,7 +190,7 @@ namespace HLU
             try
             {
                 strRawText = xmlToolNode["DefaultProfile"].InnerText;
-                if (!string.IsNullOrEmpty(strRawText))
+                if (!String.IsNullOrEmpty(strRawText))
                     _defaultXML = strRawText; // If there is an entry; otherwise use the default.
             }
             catch

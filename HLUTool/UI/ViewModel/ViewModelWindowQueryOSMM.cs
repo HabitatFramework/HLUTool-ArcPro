@@ -699,7 +699,7 @@ namespace HLU.UI.ViewModel
                     dataReader = _db.ExecuteReader(sql,
                         _db.Connection.ConnectionTimeout, CommandType.Text);
 
-                    if (dataReader == null) throw new Exception(String.Format("Error reading values from {0}", _hluDataset.incid_osmm_updates.TableName));
+                    if (dataReader == null) throw new Exception($"Error reading values from {_hluDataset.incid_osmm_updates.TableName}");
 
                     string processFlag, lastProcessFlag = null;
                     string spatialFlag, lastSpatialFlag = null;

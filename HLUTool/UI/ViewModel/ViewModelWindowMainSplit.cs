@@ -22,6 +22,7 @@
 
 using ArcGIS.Desktop.Editing;
 using HLU.Data;
+using HLU.Data.Connection;
 using HLU.Data.Model;
 using HLU.GISApplication;
 using System;
@@ -65,6 +66,8 @@ namespace HLU.UI.ViewModel
         /// <returns></returns>
         internal async Task<bool> LogicalSplitAsync()
         {
+            // Check the selection meets the criteria for a logical split (shouldn't be possible to reach here otherwise).
+
             // Check there is a selection.
             if ((_viewModelMain.GisSelection == null) || (_viewModelMain.GisSelection.Rows.Count == 0))
             {
@@ -74,23 +77,23 @@ namespace HLU.UI.ViewModel
             }
 
             // Check all selected features exist in the database.
-            if (!_viewModelMain.CountSelectedToidFrags(false))
+            if (!_viewModelMain.CheckSelectedToidFrags(false))
             {
                 MessageBox.Show("Cannot logically split: One or more selected map features missing from database.",
                     "HLU: Logical Split", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 return false;
             }
 
-            // Check the selection meets the criteria for a logical split (shouldn't be possible to reach here otherwise).
-            if (_viewModelMain.IncidsSelectedMapCount != 1)
+            // Check there is only one incid selected.
+            if (_viewModelMain.SelectedIncidsInGISCount != 1)
             {
                 MessageBox.Show("Cannot logically split: Map selection set contains features belonging to more than one INCID.",
                     "HLU: Logical Split", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 return false;
             }
 
-            if (((_viewModelMain.GisSelection.Rows.Count > 1) && ((_viewModelMain.ToidsSelectedMapCount <= 1) || (_viewModelMain.FragsSelectedMapCount <= 1))) ||
-                (_viewModelMain.GisSelection.Rows.Count != 1))
+            // Check if there is more than one incid selected but for the same toid and fragment.
+            if ((_viewModelMain.GisSelection.Rows.Count > 1) && ((_viewModelMain.SelectedToidsInGISCount <= 1) && (_viewModelMain.SelectedFragsInGISCount <= 1)))
             {
                 MessageBox.Show("Cannot logically split: Map selection contains invalid set of features.",
                     "HLU: Logical Split", MessageBoxButton.OK, MessageBoxImage.Exclamation);
@@ -237,19 +240,33 @@ namespace HLU.UI.ViewModel
                     // toidfragid and incid.
                     if (r.incid == _viewModelMain.Incid)
                     {
-                        DataRow historyRow = historyTable.Rows.Find(r.ItemArray.Where((i, index) =>
-                            _viewModelMain.GisIDColumnOrdinals.Contains(index)).ToArray());
+                        // Get the key values in the same order as the history table primary key columns.
+                        object[] historyKeyValues = historyTable.PrimaryKey
+                            .Select(pkCol => r[pkCol.ColumnName])
+                            .ToArray();
 
+                        // Get the matching history row for the GIS feature.
+                        DataRow historyRow = historyTable.Rows.Find(historyKeyValues);
+
+                        // If the GIS feature cannot be matched to a history row then abort with a useful message.
+                        if (historyRow == null)
+                        {
+                            string keyText = string.Join(", ", historyTable.PrimaryKey.Select(c =>
+                                $"{c.ColumnName}={r[c.ColumnName]}"));
+
+                            throw new HLUToolException($"Failed to match GIS history row for split feature. Key: {keyText}");
+                        }
+
+                        // Update the toidfragid and incid from the history row.
                         r.toidfragid = historyRow.Field<string>(
                             _viewModelMain.HluDataset.history.modified_toidfragidColumn.ColumnName);
-
                         r.incid = newIncid;
                     }
                 }
 
                 // Update the shadow copy of the incid_mm_polygons table.
                 if (_viewModelMain.HluTableAdapterManager.incid_mm_polygonsTableAdapter.Update(polygons) == -1)
-                    throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_mm_polygons.TableName));
+                    throw new Exception($"Failed to update table [{_viewModelMain.HluDataset.incid_mm_polygons.TableName}].");
 
                 // Create the fixed values dictionary for history writing.
                 Dictionary<int, string> fixedValues = new()
@@ -266,8 +283,15 @@ namespace HLU.UI.ViewModel
                 vmHist.HistoryWrite(fixedValues, historyTable, Operations.LogicalSplit, nowDtTm);
 
                 // Execute the GIS edit operation.
-                if (!await editOperation.ExecuteAsync())
-                    throw new HLUToolException("Failed to update GIS layer.");
+                bool executed = await editOperation.ExecuteAsync();
+                if (!executed)
+                {
+                    string details = editOperation.ErrorMessage;
+                    if (String.IsNullOrWhiteSpace(details))
+                        details = "No additional details were provided by the edit operation.";
+
+                    throw new HLUToolException($"Failed to update GIS layer. {details}");
+                }
 
                 // Flag the GIS edit as complete.
                 gisExecuted = true;
@@ -298,9 +322,11 @@ namespace HLU.UI.ViewModel
                     }
                 }
 
+                // Get the SQL error message (if it is one) or the exception message.
+                string exMessage = DbBase.GetSqlErrorMessage(ex);
+
                 MessageBox.Show("Split operation failed. The error message returned was:\n\n" +
-                    ex.Message, "HLU Split Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                //throw;
+                    exMessage, "HLU Split Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -347,7 +373,7 @@ namespace HLU.UI.ViewModel
                 return false;
             }
             // Check all selected features exist in the database.
-            else if (!_viewModelMain.CountSelectedToidFrags(true))
+            else if (!_viewModelMain.CheckSelectedToidFrags(true))
             {
                 MessageBox.Show("Cannot physically split: One or more selected map features missing from database.",
                     "HLU: Physical Split", MessageBoxButton.OK, MessageBoxImage.Exclamation);
@@ -355,8 +381,8 @@ namespace HLU.UI.ViewModel
             }
 
             // Check the selection meets the criteria for a physical split.
-            if ((_viewModelMain.GisSelection.Rows.Count > 1) && (_viewModelMain.IncidsSelectedMapCount == 1) &&
-                (_viewModelMain.ToidsSelectedMapCount == 1) && (_viewModelMain.FragsSelectedMapCount == 1))
+            if ((_viewModelMain.GisSelection.Rows.Count > 1) && (_viewModelMain.SelectedIncidsInGISCount == 1) &&
+                (_viewModelMain.SelectedToidsInGISCount == 1) && (_viewModelMain.SelectedFragsInGISCount == 1))
             {
                 // All features in selection share same incid, toid and toidfragid.
                 return await PerformPhysicalSplitAsync();
@@ -487,9 +513,17 @@ namespace HLU.UI.ViewModel
                         _viewModelMain.DataBase.QuoteValue(a.value))).ToArray()),
                     _viewModelMain.DataBase.WhereClause(false, true, true, originalFeatureWhereClause[0]));
 
-                if (_viewModelMain.DataBase.ExecuteNonQuery(updateStatement,
-                    _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text) == -1)
-                    throw new Exception("Failed to update original row in database copy of GIS layer.");
+                try
+                {
+                    _viewModelMain.DataBase.ExecuteNonQuery(
+                        updateStatement,
+                        _viewModelMain.DataBase.Connection.ConnectionTimeout,
+                        CommandType.Text);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Failed to update original row in table [{_viewModelMain.HluDataset.incid_mm_polygons.TableName}].", ex);
+                }
 
                 // build an insert statement for DB shadow copy of GIS layer
                 string insertCommand = String.Format("INSERT INTO {0} ({1}) VALUES (",
@@ -509,18 +543,32 @@ namespace HLU.UI.ViewModel
                             updTable.toidfragidColumn.ColumnName ?
                             (toidFragID + i).ToString(numFormat) : String.IsNullOrEmpty(item.ToString()) ? null : item)).ToArray()));
 
-                    if (_viewModelMain.DataBase.ExecuteNonQuery(insertStatement,
-                        _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text) == -1)
-                        throw new Exception("Failed to insert new rows into database copy of GIS layer.");
+                    try
+                    {
+                        _viewModelMain.DataBase.ExecuteNonQuery(
+                            insertStatement,
+                            _viewModelMain.DataBase.Connection.ConnectionTimeout,
+                            CommandType.Text);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception($"Failed to insert new rows into table [{_viewModelMain.HluDataset.incid_mm_polygons.TableName}].", ex);
+                    }
                 }
 
                 // Update the incid modified columns (i.e. last modified user and date).
                 _viewModelMain.ViewModelUpdate.UpdateIncidModifiedColumns(_viewModelMain.IncidsSelectedMap.ElementAt(0), nowDtTm);
 
-
                 // Execute the GIS edit operation.
-                if (!await editOperation.ExecuteAsync())
-                    throw new HLUToolException("Failed to update GIS layer.");
+                bool executed = await editOperation.ExecuteAsync();
+                if (!executed)
+                {
+                    string details = editOperation.ErrorMessage;
+                    if (String.IsNullOrWhiteSpace(details))
+                        details = "No additional details were provided by the edit operation.";
+
+                    throw new HLUToolException($"Failed to update GIS layer. {details}");
+                }
 
                 // Flag the GIS edit as complete.
                 gisExecuted = true;
@@ -551,9 +599,11 @@ namespace HLU.UI.ViewModel
                     }
                 }
 
+                // Get the SQL error message (if it is one) or the exception message.
+                string exMessage = DbBase.GetSqlErrorMessage(ex);
+
                 MessageBox.Show("Split operation failed. The error message returned was:\n\n" +
-                    ex.Message, "HLU Split Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                //throw;
+                    exMessage, "HLU Split Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -652,7 +702,7 @@ namespace HLU.UI.ViewModel
 
                 // Update the table with the new row.
                 if (_viewModelMain.HluTableAdapterManager.incidTableAdapter.Update(_viewModelMain.HluDataset.incid) == -1)
-                    throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid.TableName));
+                    throw new Exception($"Failed to update table [{_viewModelMain.HluDataset.incid.TableName}].");
 
                 // ---------------------------------------------------------------------
                 // Clone IncidIhsMatrix rows
@@ -707,7 +757,7 @@ namespace HLU.UI.ViewModel
 
                     // Update the table with the new rows.
                     if (_viewModelMain.HluTableAdapterManager.incid_ihs_matrixTableAdapter.Update(_viewModelMain.HluDataset.incid_ihs_matrix) == -1)
-                        throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_ihs_matrix.TableName));
+                        throw new Exception($"Failed to update table [{_viewModelMain.HluDataset.incid_ihs_matrix.TableName}].");
                 }
 
                 // ---------------------------------------------------------------------
@@ -763,7 +813,7 @@ namespace HLU.UI.ViewModel
 
                     // Update the table with the new rows.
                     if (_viewModelMain.HluTableAdapterManager.incid_ihs_formationTableAdapter.Update(_viewModelMain.HluDataset.incid_ihs_formation) == -1)
-                        throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_ihs_formation.TableName));
+                        throw new Exception($"Failed to update table [{_viewModelMain.HluDataset.incid_ihs_formation.TableName}].");
                 }
 
                 // ---------------------------------------------------------------------
@@ -819,7 +869,7 @@ namespace HLU.UI.ViewModel
 
                     // Update the table with the new rows.
                     if (_viewModelMain.HluTableAdapterManager.incid_ihs_managementTableAdapter.Update(_viewModelMain.HluDataset.incid_ihs_management) == -1)
-                        throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_ihs_management.TableName));
+                        throw new Exception($"Failed to update table [{_viewModelMain.HluDataset.incid_ihs_management.TableName}].");
                 }
 
                 // ---------------------------------------------------------------------
@@ -875,7 +925,7 @@ namespace HLU.UI.ViewModel
 
                     // Update the table with the new rows.
                     if (_viewModelMain.HluTableAdapterManager.incid_ihs_complexTableAdapter.Update(_viewModelMain.HluDataset.incid_ihs_complex) == -1)
-                        throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_ihs_complex.TableName));
+                        throw new Exception($"Failed to update table [{_viewModelMain.HluDataset.incid_ihs_complex.TableName}].");
                 }
 
                 // ---------------------------------------------------------------------
@@ -928,7 +978,7 @@ namespace HLU.UI.ViewModel
 
                     // Update the table with the new rows.
                     if (_viewModelMain.HluTableAdapterManager.incid_secondaryTableAdapter.Update(_viewModelMain.HluDataset.incid_secondary) == -1)
-                        throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_secondary.TableName));
+                        throw new Exception($"Failed to update table [{_viewModelMain.HluDataset.incid_secondary.TableName}].");
                 }
 
                 // ---------------------------------------------------------------------
@@ -1022,7 +1072,7 @@ namespace HLU.UI.ViewModel
 
                     // Update the table with the new rows.
                     if (_viewModelMain.HluTableAdapterManager.incid_bapTableAdapter.Update(_viewModelMain.HluDataset.incid_bap) == -1)
-                        throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_bap.TableName));
+                        throw new Exception($"Failed to update table [{_viewModelMain.HluDataset.incid_bap.TableName}].");
                 }
 
                 // ---------------------------------------------------------------------
@@ -1075,7 +1125,7 @@ namespace HLU.UI.ViewModel
 
                     // Update the table with the new rows.
                     if (_viewModelMain.HluTableAdapterManager.incid_conditionTableAdapter.Update(_viewModelMain.HluDataset.incid_condition) == -1)
-                        throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_condition.TableName));
+                        throw new Exception($"Failed to update table [{_viewModelMain.HluDataset.incid_condition.TableName}].");
                 }
 
                 // ---------------------------------------------------------------------
@@ -1128,7 +1178,7 @@ namespace HLU.UI.ViewModel
 
                     // Update the table with the new rows.
                     if (_viewModelMain.HluTableAdapterManager.incid_sourcesTableAdapter.Update(_viewModelMain.HluDataset.incid_sources) == -1)
-                        throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_sources.TableName));
+                        throw new Exception($"Failed to update table [{_viewModelMain.HluDataset.incid_sources.TableName}].");
                 }
 
                 // ---------------------------------------------------------------------
@@ -1182,7 +1232,7 @@ namespace HLU.UI.ViewModel
 
                     // Update the table with the new rows.
                     if (_viewModelMain.HluTableAdapterManager.incid_osmm_updatesTableAdapter.Update(_viewModelMain.HluDataset.incid_osmm_updates) == -1)
-                        throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_osmm_updates.TableName));
+                        throw new Exception($"Failed to update table [{_viewModelMain.HluDataset.incid_osmm_updates.TableName}].");
                 }
 
                 // Commit the transaction if one was started.
@@ -1194,6 +1244,7 @@ namespace HLU.UI.ViewModel
             {
                 errorMessage = ex.Message;
 
+                //TODO: Move message box outside of if block.
                 // If a transaction was started, roll it back.
                 if (startTransaction)
                 {

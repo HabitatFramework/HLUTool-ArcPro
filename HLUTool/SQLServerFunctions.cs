@@ -719,19 +719,19 @@ namespace HLU
                     QueryFilter queryFilter = new();
 
                     // Apply where clause.
-                    if (!string.IsNullOrEmpty(whereClause))
+                    if (!String.IsNullOrEmpty(whereClause))
                         queryFilter.WhereClause = whereClause;
 
                     // Apply subfields clause.
-                    if (!string.IsNullOrEmpty(subfields))
+                    if (!String.IsNullOrEmpty(subfields))
                         queryFilter.SubFields = subfields;
 
                     // Apply prefix clause.
-                    if (!string.IsNullOrEmpty(prefixClause))
+                    if (!String.IsNullOrEmpty(prefixClause))
                         queryFilter.PrefixClause = prefixClause;
 
                     // Apply postfix clause.
-                    if (!string.IsNullOrEmpty(postfixClause))
+                    if (!String.IsNullOrEmpty(postfixClause))
                         queryFilter.PostfixClause = postfixClause;
 
                     // Count the rows in the feature class.
@@ -762,7 +762,7 @@ namespace HLU
                 return -1;
 
             // Check if there is a input key field.
-            if (string.IsNullOrEmpty(keyField))
+            if (String.IsNullOrEmpty(keyField))
                 return -1;
 
             // Open a connection to the geodatabase if not already open.
@@ -789,11 +789,11 @@ namespace HLU
                     QueryFilter queryFilter = new();
 
                     // Apply where clause.
-                    if (!string.IsNullOrEmpty(whereClause))
+                    if (!String.IsNullOrEmpty(whereClause))
                         queryFilter.WhereClause = whereClause;
 
                     // Apply subfields clause.
-                    if (!string.IsNullOrEmpty(keyField))
+                    if (!String.IsNullOrEmpty(keyField))
                         queryFilter.SubFields = keyField;
 
                     List<string> keys = [];

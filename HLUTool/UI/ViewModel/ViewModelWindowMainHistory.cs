@@ -95,8 +95,9 @@ namespace HLU.UI.ViewModel
                         fixedValueDict.Add(_viewModelMain.HluDataset.history.modified_reasonColumn.Ordinal,
                             reasonCode);
                     else
-                        throw new Exception(String.Format("Missing or indeterminate reason code for {0}.",
-                            operation.ToString()));
+                        // Missing reason/process/operation codes are a state/config problem.
+                        throw new InvalidOperationException(
+                            $"Missing or indeterminate reason code for {operation}.");
                 }
 
                 // Add the modified process.
@@ -107,8 +108,9 @@ namespace HLU.UI.ViewModel
                         fixedValueDict.Add(_viewModelMain.HluDataset.history.modified_processColumn.Ordinal,
                             processCode);
                     else
-                        throw new Exception(String.Format("Missing or indeterminate process code for {0}.",
-                            operation.ToString()));
+                        // Missing reason/process/operation codes are a state/config problem.
+                        throw new InvalidOperationException(
+                            $"Missing or indeterminate process code for {operation}.");
                 }
 
                 // Add the modified operation.
@@ -119,8 +121,9 @@ namespace HLU.UI.ViewModel
                         fixedValueDict.Add(_viewModelMain.HluDataset.history.modified_operationColumn.Ordinal,
                             operationCode);
                     else
-                        throw new Exception(String.Format("Missing or indeterminate operation code for {0}.",
-                            operation.ToString()));
+                        // Missing reason/process/operation codes are a state/config problem.
+                        throw new InvalidOperationException(
+                            $"Missing or indeterminate operation code for {operation}.");
                 }
 
                 // rename the generically named geom1 and geom2 fields according to layer type
@@ -190,12 +193,12 @@ namespace HLU.UI.ViewModel
                 // Commit the transaction if one was started.
                 if (startTransaction) _viewModelMain.DataBase.CommitTransaction();
             }
-            catch
+            catch (Exception ex)
             {
                 // Roll back the transaction if one was started.
                 if (startTransaction) _viewModelMain.DataBase.RollbackTransaction();
 
-                throw;
+                throw new HLUToolException("Failed to write history records.", ex);
             }
         }
 

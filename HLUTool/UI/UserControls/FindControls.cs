@@ -102,7 +102,7 @@ namespace HLU.UI.UserControls
                     {
                         foundChild = FindChild(child, childName, childType);
                     }
-                    else if (!string.IsNullOrEmpty(childName))
+                    else if (!String.IsNullOrEmpty(childName))
                     {
                         if (child is FrameworkElement frameworkElement && frameworkElement.Name == childName)
                         {

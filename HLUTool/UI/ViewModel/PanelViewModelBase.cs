@@ -79,7 +79,7 @@ namespace HLU.UI.ViewModel
                 string msg = "Invalid property name: " + propertyName;
 
                 if (this.ThrowOnInvalidPropertyName)
-                    throw new Exception(msg);
+                    throw new ArgumentException(msg);
                 else
                     Debug.Fail(msg);
             }

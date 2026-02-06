@@ -97,6 +97,7 @@
 
 				<!-- Split/Merge group -->
 				<group id="HLUTool_Group6" caption="Split/Merge" keytip="G6">
+					<button refID="esri_editing_SplitCommand" size ="large" />
 					<dynamicMenu refID="HLUTool_SplitMenu" size="large" />
 					<dynamicMenu refID="HLUTool_MergeMenu" size="large" />
 				</group>
@@ -131,39 +132,13 @@
 				</subgroup>
 			</subgroups>
 
-			<menus>
-				<!-- Split dropdown: Physical + Logical -->
-				<menu id="HLUTool_SplitMenu_OLD"
-					  caption="Split"
-					  smallImage="Images\Split16.png"
-					  largeImage="Images\Split32.png">
-					<tooltip heading="Split options">
-						Split features physically or logically<disabledText />
-					</tooltip>
-					<button refID="HLUTool_btnPhysicalSplit" />
-					<button refID="HLUTool_btnLogicalSplit" />
-				</menu>
-
-				<!-- Merge dropdown: Physical + Logical -->
-				<menu id="HLUTool_MergeMenu_OLD"
-					  caption="Merge"
-					  smallImage="Images\Merge16.png"
-					  largeImage="Images\Merge32.png">
-					<tooltip heading="Merge options">
-						Merge features physically or logically<disabledText />
-					</tooltip>
-					<button refID="HLUTool_btnPhysicalMerge" />
-					<button refID="HLUTool_btnLogicalMerge" />
-				</menu>
-			</menus>
-
 			<controls>
 				<!-- Split dropdown: Physical + Logical -->
 				<dynamicMenu id="HLUTool_SplitMenu"
 							 caption="Split"
 							 className="HLU.UI.UserControls.Toolbar.SplitDynamicMenu"
-							 smallImage="Images\Split16.png"
-							 largeImage="Images\Split32.png"
+							 smallImage="pack://application:,,,/HLUTool;component/Images/Split16.png"
+							 largeImage="pack://application:,,,/HLUTool;component/Images/Split32.png"
 							 loadOnClick="false">
 					<tooltip heading="Split options">
 						Split features physically or logically<disabledText />
@@ -174,8 +149,8 @@
 				<dynamicMenu id="HLUTool_MergeMenu"
 							 caption="Merge"
 							 className="HLU.UI.UserControls.Toolbar.MergeDynamicMenu"
-							 smallImage="Images\Merge16.png"
-							 largeImage="Images\Merge32.png"
+							 smallImage="pack://application:,,,/HLUTool;component/Images/Merge16.png"
+							 largeImage="pack://application:,,,/HLUTool;component/Images/Merge32.png"
 							 loadOnClick="false">
 					<tooltip heading="Merge options">
 						Merge features physically or logically<disabledText />

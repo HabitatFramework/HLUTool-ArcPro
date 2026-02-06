@@ -220,13 +220,13 @@ namespace HLU.GISApplication
         /// <returns>The quoted identifier.</returns>
         public override string QuoteIdentifier(string identifier)
         {
-            if (string.IsNullOrWhiteSpace(identifier))
+            if (String.IsNullOrWhiteSpace(identifier))
                 return identifier;
 
             var prefix = QuotePrefix;
             var suffix = QuoteSuffix;
 
-            if (string.IsNullOrEmpty(prefix) || string.IsNullOrEmpty(suffix))
+            if (String.IsNullOrEmpty(prefix) || String.IsNullOrEmpty(suffix))
                 return identifier;
 
             if (!identifier.StartsWith(prefix, StringComparison.Ordinal))
@@ -330,7 +330,7 @@ namespace HLU.GISApplication
         /// </summary>
         private static bool IsSqlServer(string connectionString)
         {
-            if (string.IsNullOrWhiteSpace(connectionString))
+            if (String.IsNullOrWhiteSpace(connectionString))
                 return false;
 
             // Common markers seen in Pro connection strings for SQL Server / SDE.
@@ -345,7 +345,7 @@ namespace HLU.GISApplication
         /// </summary>
         private static bool IsOracle(string connectionString)
         {
-            if (string.IsNullOrWhiteSpace(connectionString))
+            if (String.IsNullOrWhiteSpace(connectionString))
                 return false;
 
             return connectionString.Contains("Oracle", StringComparison.OrdinalIgnoreCase) ||
@@ -357,7 +357,7 @@ namespace HLU.GISApplication
         /// </summary>
         private static bool IsPostgreSql(string connectionString)
         {
-            if (string.IsNullOrWhiteSpace(connectionString))
+            if (String.IsNullOrWhiteSpace(connectionString))
                 return false;
 
             return connectionString.Contains("PostgreSQL", StringComparison.OrdinalIgnoreCase) ||
@@ -890,7 +890,7 @@ namespace HLU.GISApplication
         /// <exception cref="GisSelectionException">Thrown if no active HLU layer is set.</exception>
         public async Task<bool> SelectIncidOnMapAsync(string incid)
         {
-            if (string.IsNullOrWhiteSpace(incid))
+            if (String.IsNullOrWhiteSpace(incid))
                 return false;
 
             if (_hluLayer == null)
@@ -900,7 +900,7 @@ namespace HLU.GISApplication
             // Assumes incid is a text field in the layer, as per legacy behaviour.
             string incidFieldName = GetFieldName(_hluLayerStructure.incidColumn.Ordinal);
 
-            if (string.IsNullOrWhiteSpace(incidFieldName))
+            if (String.IsNullOrWhiteSpace(incidFieldName))
                 throw new GisSelectionException("Could not resolve the incid field name for the active HLU layer.");
 
             string whereClause = $"{QuoteIdentifier(incidFieldName)} = {QuoteStringLiteral(incid)}";
@@ -938,7 +938,7 @@ namespace HLU.GISApplication
             string incidFieldName = GetFieldName(incidOrdinal);
 
             // If we can't resolve the field name, we can't proceed.
-            if (string.IsNullOrWhiteSpace(incidFieldName))
+            if (String.IsNullOrWhiteSpace(incidFieldName))
                 throw new GisSelectionException(
                     "Could not resolve the incid field name for the active HLU layer.");
 
@@ -949,7 +949,7 @@ namespace HLU.GISApplication
             var incids = incidSelection.Rows
                 .Cast<DataRow>()
                 .Select(r => r[incidOrdinal]?.ToString())
-                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Where(s => !String.IsNullOrWhiteSpace(s))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
@@ -997,11 +997,11 @@ namespace HLU.GISApplication
             IEnumerable<string> values,
             int maxClauseLength)
         {
-            if (string.IsNullOrWhiteSpace(fieldExpression))
+            if (String.IsNullOrWhiteSpace(fieldExpression))
                 yield break;
 
             var quotedValues = values
-                .Where(v => !string.IsNullOrWhiteSpace(v))
+                .Where(v => !String.IsNullOrWhiteSpace(v))
                 .Select(QuoteStringLiteral)
                 .ToList();
 
@@ -1047,7 +1047,7 @@ namespace HLU.GISApplication
             if (_hluLayer == null)
                 throw new GisSelectionException("No active HLU layer is set.");
 
-            if (string.IsNullOrWhiteSpace(whereClause))
+            if (String.IsNullOrWhiteSpace(whereClause))
                 return;
 
             await QueuedTask.Run(() =>
@@ -1113,9 +1113,9 @@ namespace HLU.GISApplication
                 string toidField = GetFieldName(_hluLayerStructure.toidColumn.Ordinal);
                 string fragField = GetFieldName(_hluLayerStructure.toidfragidColumn.Ordinal);
 
-                if (string.IsNullOrWhiteSpace(incidField) ||
-                    string.IsNullOrWhiteSpace(toidField) ||
-                    string.IsNullOrWhiteSpace(fragField))
+                if (String.IsNullOrWhiteSpace(incidField) ||
+                    String.IsNullOrWhiteSpace(toidField) ||
+                    String.IsNullOrWhiteSpace(fragField))
                     return true;
 
                 HashSet<string> keys = new(StringComparer.Ordinal);
@@ -1173,17 +1173,17 @@ namespace HLU.GISApplication
             string toidFieldName = GetFieldName(toidOrdinal);
 
             // Check the field names were resolved.
-            if (string.IsNullOrWhiteSpace(incidFieldName))
+            if (String.IsNullOrWhiteSpace(incidFieldName))
                 throw new GisSelectionException("Could not resolve the incid field name for the active HLU layer.");
 
-            if (string.IsNullOrWhiteSpace(toidFieldName))
+            if (String.IsNullOrWhiteSpace(toidFieldName))
                 throw new GisSelectionException("Could not resolve the toid field name for the active HLU layer.");
 
             // Extract distinct INCIDs from the selection table.
             var incids = incidSelection.Rows
                 .Cast<DataRow>()
                 .Select(r => r[incidOrdinal]?.ToString())
-                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Where(s => !String.IsNullOrWhiteSpace(s))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
@@ -1226,11 +1226,11 @@ namespace HLU.GISApplication
 
                         // Collect unique INCIDs and TOIDs.
                         string incid = Convert.ToString(row[incidFieldName]);
-                        if (!string.IsNullOrWhiteSpace(incid))
+                        if (!String.IsNullOrWhiteSpace(incid))
                             distinctIncids.Add(incid);
 
                         string toid = Convert.ToString(row[toidFieldName]);
-                        if (!string.IsNullOrWhiteSpace(toid))
+                        if (!String.IsNullOrWhiteSpace(toid))
                             distinctToids.Add(toid);
                     }
                 }
@@ -1271,11 +1271,11 @@ namespace HLU.GISApplication
             string incidFieldName = GetFieldName(incidOrdinal);
             string toidFieldName = GetFieldName(toidOrdinal);
 
-            if (string.IsNullOrWhiteSpace(incidFieldName))
+            if (String.IsNullOrWhiteSpace(incidFieldName))
                 throw new GisSelectionException(
                     "Could not resolve the incid field name for the active HLU layer.");
 
-            if (string.IsNullOrWhiteSpace(toidFieldName))
+            if (String.IsNullOrWhiteSpace(toidFieldName))
                 throw new GisSelectionException(
                     "Could not resolve the toid field name for the active HLU layer.");
 
@@ -1283,7 +1283,7 @@ namespace HLU.GISApplication
             var incids = incidSelection.Rows
                 .Cast<DataRow>()
                 .Select(r => r[incidOrdinal]?.ToString())
-                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Where(s => !String.IsNullOrWhiteSpace(s))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
@@ -1326,7 +1326,7 @@ namespace HLU.GISApplication
                         object toidObj = row[toidFieldName];
                         string toid = toidObj?.ToString();
 
-                        if (!string.IsNullOrWhiteSpace(toid))
+                        if (!String.IsNullOrWhiteSpace(toid))
                             distinctToids.Add(toid);
                     }
                 }
@@ -1775,7 +1775,7 @@ namespace HLU.GISApplication
                         false,
                         MapWhereClauseFields(_hluLayerStructure, wcList));
 
-                if (!string.IsNullOrWhiteSpace(wc))
+                if (!String.IsNullOrWhiteSpace(wc))
                     wcs.Add(wc);
             }
 
@@ -1807,7 +1807,7 @@ namespace HLU.GISApplication
                 HashSet<long> oidSet = [];
 
                 // Query each where clause in turn.
-                foreach (string wc in whereClauses.Where(s => !string.IsNullOrWhiteSpace(s)))
+                foreach (string wc in whereClauses.Where(s => !String.IsNullOrWhiteSpace(s)))
                 {
                     // Build a query filter for the where clause.
                     QueryFilter qf = new()
@@ -2008,10 +2008,10 @@ namespace HLU.GISApplication
                 List<long> orderedOids = selectedObjectIds.OrderBy(o => o).ToList();
                 long minOid = orderedOids[0];
 
-                // Resolve optional shape fields (mainly for shapefiles).
-                // In file geodatabases these are generally maintained automatically.
-                int shapeLengthFieldIndex = TryResolveFieldIndex(_hluFeatureClass, "shape_leng", "Shape_Leng", "Shape_Length", "shape_length");
-                int shapeAreaFieldIndex = TryResolveFieldIndex(_hluFeatureClass, "shape_area", "Shape_Area", "shapearea");
+                // Resolve optional shape fields for shapefile-based layers where length/area are stored in normal fields.
+                // On geodatabase feature classes, Shape_Length/Shape_Area are system-maintained and typically not editable.
+                int shapeLengthFieldIndex = TryResolveEditableNumericFieldIndex(_hluFeatureClass, "shape_leng", "Shape_Leng", "SHAPE_LENG");
+                int shapeAreaFieldIndex = TryResolveEditableNumericFieldIndex(_hluFeatureClass, "shape_area", "Shape_Area", "SHAPE_AREA");
 
                 // Prepare the new toidfragid values for all but the first (min OID) feature.
                 Dictionary<long, string> newToidFragByOid = [];
@@ -2032,11 +2032,13 @@ namespace HLU.GISApplication
                     ObjectIDs = orderedOids
                 };
 
+                // Create a cursor for the selected features ordered by OID. Search() doesn't guarantee order.
                 using RowCursor cursor = _hluFeatureClass.Search(qf, false);
 
                 // Because Search() doesn't guarantee order, buffer by OID.
                 Dictionary<long, Feature> featuresByOid = [];
 
+                // Loop through the cursor and buffer features by OID for ordered processing.
                 while (cursor.MoveNext())
                 {
                     if (cursor.Current is not Feature f)
@@ -2046,15 +2048,20 @@ namespace HLU.GISApplication
                     featuresByOid[oid] = f;
                 }
 
+                // Loop through the ordered OIDs and build history rows using the buffered features, ensuring the "original" feature (min OID) is first in the history table.
                 foreach (long oid in orderedOids)
                 {
+                    // If the feature for this OID cannot be found (unexpected), skip it. This is defensive; all OIDs should be present.
                     if (!featuresByOid.TryGetValue(oid, out Feature feature))
                         continue;
 
+                    // Use the buffered feature to build the history row. This ensures correct OID order regardless of Search() behavior.
                     using (feature)
                     {
                         DataRow historyRow = historyTable.NewRow();
 
+                        // Loop through the history bindings to populate the history row with source field values,
+                        // applying any necessary transformations (e.g. for toidfragid).
                         foreach (var b in historyBindings)
                         {
                             // If this is the toidfragid field and it will be updated, return the new value.
@@ -2069,12 +2076,13 @@ namespace HLU.GISApplication
                             }
                         }
 
+                        // Get geometry history values (length/area or X/Y) and add to the history row.
                         Geometry geom = feature.GetShape();
                         (double geom1, double geom2) = GetGeometryHistoryValues(geom);
-
                         historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = geom1;
                         historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = geom2;
 
+                        // Add the history row to the history table.
                         historyTable.Rows.Add(historyRow);
                     }
                 }
@@ -2112,11 +2120,14 @@ namespace HLU.GISApplication
 
                             if (shape != null)
                             {
-                                if (shapeLengthFieldIndex != -1)
-                                    row[shapeLengthFieldIndex] = GeometryEngine.Instance.Length(shape);
+                                // Only tries for shapefile-style fields; failures are ignored.
+                                TrySetRowValue(row, shapeLengthFieldIndex, GeometryEngine.Instance.Length(shape));
+                                TrySetRowValue(row, shapeAreaFieldIndex, GeometryEngine.Instance.Area(shape));
 
-                                if (shapeAreaFieldIndex != -1)
-                                    row[shapeAreaFieldIndex] = GeometryEngine.Instance.Area(shape);
+                                //if (shapeLengthFieldIndex != -1)
+                                //    row[shapeLengthFieldIndex] = GeometryEngine.Instance.Length(shape);
+                                //if (shapeAreaFieldIndex != -1)
+                                //    row[shapeAreaFieldIndex] = GeometryEngine.Instance.Area(shape);
                             }
                         }
 
@@ -2222,15 +2233,19 @@ namespace HLU.GISApplication
 
             await QueuedTask.Run(() =>
             {
+                // Create a query filter for the selected OIDs.
                 QueryFilter queryFilter = new()
                 {
                     ObjectIDs = selectedObjectIds
                 };
 
+                // Search the feature class for the selected features.
                 using RowCursor rowCursor = _hluFeatureClass.Search(queryFilter, false);
 
+                // Loop through the selected features and build history rows for those that match the old incid value, while collecting OIDs to update.
                 while (rowCursor.MoveNext())
                 {
+                    // Check if the current row is a feature (it should be in a feature class, but this is defensive).
                     using Feature feature = rowCursor.Current as Feature;
                     if (feature == null)
                         continue;
@@ -2245,19 +2260,20 @@ namespace HLU.GISApplication
                     // Collect history BEFORE updating incid.
                     DataRow historyRow = historyTable.NewRow();
 
+                    // Loop through the history bindings to populate the history row with source field values,
                     foreach (var b in historyBindings)
                     {
                         object value = feature[b.SourceFieldIndex];
                         historyRow[b.OutputColumnName] = value ?? DBNull.Value;
                     }
 
-                    // Collect geometry props (length/area or X/Y).
+                    // Get geometry history values (length/area or X/Y) and add to the history row.
                     Geometry geom = feature.GetShape();
                     (double geom1, double geom2) = GetGeometryHistoryValues(geom);
-
                     historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = geom1;
                     historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = geom2;
 
+                    // Add the history row to the history table.
                     historyTable.Rows.Add(historyRow);
 
                     // Capture OID for update.
@@ -2387,7 +2403,7 @@ namespace HLU.GISApplication
         {
             List<HistoryFieldSpec> specs = [];
 
-            foreach (string raw in historyColumnNames.Select(n => n?.Trim()).Where(n => !string.IsNullOrEmpty(n)))
+            foreach (string raw in historyColumnNames.Select(n => n?.Trim()).Where(n => !String.IsNullOrEmpty(n)))
             {
                 string outputName;
                 string sourceFieldName;
@@ -2456,6 +2472,8 @@ namespace HLU.GISApplication
         /// Resolves a required field index; throws if missing.
         /// Uses existing HLU field mapping logic.
         /// </summary>
+        /// <param name="fieldName">The name of the field to resolve.</param>
+        /// <returns>Returns the index of the field.</returns>
         private int ResolveRequiredFieldIndex(string fieldName)
         {
             int ix = FieldOrdinal(fieldName);
@@ -2469,11 +2487,19 @@ namespace HLU.GISApplication
         /// Resolves an optional field index; returns -1 if missing.
         /// Uses existing HLU field mapping logic.
         /// </summary>
+        /// <param name="fieldName">The name of the field to resolve.</param>
+        /// <returns>Returns the index of the field.</returns>
         private int ResolveOptionalFieldIndex(string fieldName)
         {
             return FieldOrdinal(fieldName);
         }
 
+        /// <summary>
+        /// Attempts to resolve a field index from a list of candidate field names.
+        /// </summary>
+        /// <param name="featureClass"></param>
+        /// <param name="candidateNames"></param>
+        /// <returns>Returns the first match found, or -1 if no match is found.</returns>
         private static int TryResolveFieldIndex(
             FeatureClass featureClass,
             params string[] candidateNames)
@@ -2494,6 +2520,48 @@ namespace HLU.GISApplication
                     if (String.Equals(fields[i].Name, candidate, StringComparison.OrdinalIgnoreCase))
                         return i;
                 }
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Attempts to resolve an editable numeric field index from a list of possible names.
+        /// Returns -1 if no suitable field is found.
+        /// </summary>
+        private static int TryResolveEditableNumericFieldIndex(Table table, params string[] candidateNames)
+        {
+            if (table == null)
+                return -1;
+
+            TableDefinition definition = table.GetDefinition();
+            IReadOnlyList<Field> fields = definition.GetFields();
+
+            foreach (string name in candidateNames)
+            {
+                if (string.IsNullOrWhiteSpace(name))
+                    continue;
+
+                int idx = definition.FindField(name);
+                if (idx < 0)
+                    continue;
+
+                Field f = fields[idx];
+
+                // Skip non-editable fields to avoid system-maintained geometry props.
+                if (!f.IsEditable)
+                    continue;
+
+                // Accept numeric types only.
+                if (f.FieldType != FieldType.Double &&
+                    f.FieldType != FieldType.Single &&
+                    f.FieldType != FieldType.Integer &&
+                    f.FieldType != FieldType.SmallInteger)
+                {
+                    continue;
+                }
+
+                return idx;
             }
 
             return -1;
@@ -2565,42 +2633,40 @@ namespace HLU.GISApplication
             // Create the history table (columns only) up front.
             DataTable historyTable = CreateHistoryDataTable(historyBindings);
 
-            // Resolve required/optional field indices.
-            int toidFragFieldIndex = ResolveRequiredFieldIndex(_hluLayerStructure.toidfragidColumn.ColumnName);
-
-            // These are only relevant for shapefile-based layers where length/area are stored in normal fields.
-            // On geodatabase feature classes, Shape_Length/Shape_Area are system-maintained and typically not editable.
-            int shapeLengthFieldIndex = ResolveOptionalFieldIndex("shape_leng");
-            int shapeAreaFieldIndex = ResolveOptionalFieldIndex("shape_area");
-
-            // Get the selected object IDs.
-            IReadOnlyList<long> selectedObjectIds = await QueuedTask.Run(() =>
-            {
-                Selection selection = _hluLayer.GetSelection();
-                return selection?.GetObjectIDs() ?? [];
-            });
-
-            // If nothing is selected, return an empty history table.
-            if (selectedObjectIds.Count == 0)
-                return historyTable;
-
-            if (selectedObjectIds.Count < 2)
-                throw new HLUToolException("Physical merge requires at least two selected features.");
-
             // Build an ArcGIS SQL where clause that identifies the result feature.
             string resultFeatureWhereClause =
                 WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, resultWhereClause));
-
-            List<long> mergeObjectIds = [];
-            long resultObjectId = -1;
-            Geometry mergedGeometry = null;
 
             await QueuedTask.Run(() =>
             {
                 try
                 {
+                    // Get the selected object IDs.
+                    Selection selection = _hluLayer.GetSelection();
+                    IReadOnlyList<long> selectedObjectIds = selection?.GetObjectIDs() ?? [];
+
+                    // If nothing is selected, return an empty history table.
+                    if (selectedObjectIds.Count == 0)
+                        return;
+
+                    // Must have at least two selected features (expected for a physical merge).
+                    if (selectedObjectIds.Count < 2)
+                        throw new HLUToolException("Physical merge requires at least two selected features.");
+
                     if (_hluFeatureClass is not Table hluTable)
                         throw new HLUToolException("HLU feature class is not a valid table.");
+
+                    List<long> mergeObjectIds = [];
+                    long resultObjectId = -1;
+                    Geometry mergedGeometry = null;
+
+                    // Resolve required/optional field indices.
+                    int toidFragFieldIndex = ResolveRequiredFieldIndex(_hluLayerStructure.toidfragidColumn.ColumnName);
+
+                    // Resolve optional shape fields for shapefile-based layers where length/area are stored in normal fields.
+                    // On geodatabase feature classes, Shape_Length/Shape_Area are system-maintained and typically not editable.
+                    int shapeLengthFieldIndex = TryResolveEditableNumericFieldIndex(_hluFeatureClass, "shape_leng", "Shape_Leng", "SHAPE_LENG");
+                    int shapeAreaFieldIndex = TryResolveEditableNumericFieldIndex(_hluFeatureClass, "shape_area", "Shape_Area", "SHAPE_AREA");
 
                     // Identify the result feature within the current selection.
                     QueryFilter resultFilter = new()
@@ -2608,6 +2674,8 @@ namespace HLU.GISApplication
                         WhereClause = resultFeatureWhereClause
                     };
 
+                    // Loop through the features matching the result filter and find the first one that is in the current selection.
+                    // This is the feature that will remain after the merge and receive the new toidfragid.
                     using (RowCursor resultCursor = _hluFeatureClass.Search(resultFilter, false))
                     {
                         while (resultCursor.MoveNext())
@@ -2639,6 +2707,7 @@ namespace HLU.GISApplication
                             geometriesToUnion.Add(f.GetShape());
                     });
 
+                    // Loop through the features to merge, buffer by OID to ensure stable processing order, and collect geometries and history rows.
                     foreach (long oid in mergeObjectIds)
                     {
                         bool found = GisRowHelpers.WithRowByObjectId(_hluFeatureClass, oid, row =>
@@ -2656,16 +2725,19 @@ namespace HLU.GISApplication
                                 Geometry geom = feature.GetShape();
                                 geometriesToUnion.Add(geom);
 
-                                (double g1, double g2) = GetGeometryHistoryValues(geom);
-                                historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = g1;
-                                historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = g2;
+                                // Get geometry history values (length/area or X/Y) and add to the history row.
+                                (double geom1, double geom2) = GetGeometryHistoryValues(geom);
+                                historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = geom1;
+                                historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = geom2;
                             }
                             else
                             {
+                                // Set geometry history values to null.
                                 historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = DBNull.Value;
                                 historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = DBNull.Value;
                             }
 
+                            // Add the history row to the history table.
                             historyTable.Rows.Add(historyRow);
                         });
 
@@ -2689,6 +2761,7 @@ namespace HLU.GISApplication
                     {
                         DataRow resultHistoryRow = historyTable.NewRow();
 
+                        // Loop through the history bindings to populate the history row with source field values from the result feature.
                         foreach (HistoryFieldBindingHelper.HistoryFieldBinding b in historyBindings)
                         {
                             object value = row[b.SourceFieldIndex];
@@ -2698,11 +2771,12 @@ namespace HLU.GISApplication
                         // Override toidfragid because it is updated as part of the merge.
                         resultHistoryRow[_hluLayerStructure.toidfragidColumn.ColumnName] = newToidFragmentID;
 
-                        // Override geometry props from the merged geometry.
-                        (double g1, double g2) = GetGeometryHistoryValues(mergedGeometry);
-                        resultHistoryRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = g1;
-                        resultHistoryRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = g2;
+                        // Get geometry history values (length/area or X/Y) and add to the history row.
+                        (double geom1, double geom2) = GetGeometryHistoryValues(mergedGeometry);
+                        resultHistoryRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = geom1;
+                        resultHistoryRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = geom2;
 
+                        // Add the history row to the history table.
                         historyTable.Rows.Add(resultHistoryRow);
                     });
 
@@ -2722,16 +2796,20 @@ namespace HLU.GISApplication
                         // Update the result feature geometry and toidfragid.
                         GisRowHelpers.WithRowByObjectId(_hluFeatureClass, resultObjectId, row =>
                         {
+                            // Update the geometry to the merged geometry.
                             if (row is Feature feature)
                                 feature.SetShape(mergedGeometry);
 
+                            // Update toidfragid to the new value.
                             row[toidFragFieldIndex] = newToidFragmentID;
 
-                            // FIXED: KI106 (Shape area and length values).
-                            // Only update length/area fields if they exist and appear to be editable.
-                            TrySetRowValue(row, shapeLengthFieldIndex, GetGeometryHistoryValues(mergedGeometry).Geom1);
-                            TrySetRowValue(row, shapeAreaFieldIndex, GetGeometryHistoryValues(mergedGeometry).Geom2);
+                            // Get geometry history values (length/area or X/Y) and update the history fields if they exist.
+                            // This ensures that the final history row for the result feature contains the correct geometry values after the merge.
+                            (double geom1, double geom2) = GetGeometryHistoryValues(mergedGeometry);
+                            TrySetRowValue(row, shapeLengthFieldIndex, geom1);
+                            TrySetRowValue(row, shapeAreaFieldIndex, geom2);
 
+                            // Store the updated row.
                             row.Store();
                             context.Invalidate(row);
                         });
@@ -2928,14 +3006,14 @@ namespace HLU.GISApplication
                             // Populate the geometry history values.
                             if (row is Feature feature)
                             {
-                                (double? g1, double? g2) = GetGeometryHistoryValues(feature.GetShape());
-                                historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] =
-                                    g1.HasValue ? g1.Value : DBNull.Value;
-                                historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] =
-                                    g2.HasValue ? g2.Value : DBNull.Value;
+                                // Get geometry history values (length/area or X/Y) and add to the history row.
+                                (double geom1, double geom2) = GetGeometryHistoryValues(feature.GetShape());
+                                historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = geom1;
+                                historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = geom2;
                             }
                             else
                             {
+                                // Set geometry history values to null.
                                 historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = DBNull.Value;
                                 historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = DBNull.Value;
                             }
@@ -3339,6 +3417,11 @@ namespace HLU.GISApplication
 
         #region Fields
 
+        /// <summary>
+        /// Maps a given field name to the corresponding field index on the GIS layer, using the HLU layer structure and field mapping.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         private int MapField(string name)
         {
             name = name.Trim();
@@ -3354,6 +3437,11 @@ namespace HLU.GISApplication
             return -1;
         }
 
+        /// <summary>
+        /// Maps a given column ordinal to the corresponding field index on the GIS layer, using the HLU layer structure and field mapping.
+        /// </summary>
+        /// <param name="columnName"></param>
+        /// <returns></returns>
         private int FieldOrdinal(string columnName)
         {
             int ordinal = -1;
@@ -3365,6 +3453,11 @@ namespace HLU.GISApplication
                 return -1;
         }
 
+        /// <summary>
+        /// Maps a given column ordinal to the corresponding field index on the GIS layer, using the HLU field mapping.
+        /// </summary>
+        /// <param name="columnOrdinal"></param>
+        /// <returns></returns>
         private int FieldOrdinal(int columnOrdinal)
         {
             if ((_hluFieldMap != null) && (columnOrdinal > -1) && (columnOrdinal < _hluFieldMap.Length))
@@ -3373,6 +3466,11 @@ namespace HLU.GISApplication
                 return -1;
         }
 
+        /// <summary>
+        /// Maps a given field name to the corresponding column ordinal on the GIS layer, using the HLU layer structure.
+        /// </summary>
+        /// <param name="fieldName"></param>
+        /// <returns></returns>
         private int ColumnOrdinal(string fieldName)
         {
             if ((_hluFieldNames != null) && !String.IsNullOrEmpty((fieldName = fieldName.Trim())))
@@ -3381,11 +3479,21 @@ namespace HLU.GISApplication
                 return -1;
         }
 
+        /// <summary>
+        /// Maps a given field name to the corresponding field index on the GIS layer, using a fuzzy matching approach against the HLU layer structure.
+        /// </summary>
+        /// <param name="fieldName"></param>
+        /// <returns></returns>
         private int FuzzyFieldOrdinal(string fieldName)
         {
             return FieldOrdinal(FuzzyColumnOrdinal(fieldName));
         }
 
+        /// <summary>
+        /// Maps a given field name to the corresponding column ordinal on the GIS layer, using a fuzzy matching approach against the HLU layer structure.
+        /// </summary>
+        /// <param name="fieldName"></param>
+        /// <returns></returns>
         private int FuzzyColumnOrdinal(string fieldName)
         {
             if ((_hluFieldNames != null) && !String.IsNullOrEmpty((fieldName = fieldName.Trim())))
@@ -3400,16 +3508,6 @@ namespace HLU.GISApplication
         }
 
         #endregion Fields
-
-        //TODO: Replace calls with ZoomSelectedAsync
-        public void ZoomSelected(int minZoom, string distUnits, bool alwaysZoom)
-        {
-            //// Enable auto zoom when selecting features on map.
-            //if (alwaysZoom)
-            //    IpcArcMap(["zs", minZoom.ToString(), distUnits, "always"]);
-            //else
-            //    IpcArcMap(["zs", minZoom.ToString(), distUnits, "when"]);
-        }
 
         /// <summary>
         /// Prompts the user for the export layer name.
@@ -3880,7 +3978,7 @@ namespace HLU.GISApplication
             string candidateLayerName = null;
 
             // If the preferred active layer name exists and is in the list, use it.
-            if (!string.IsNullOrEmpty(activeLayerName) && _hluLayerNamesList.Contains(activeLayerName))
+            if (!String.IsNullOrEmpty(activeLayerName) && _hluLayerNamesList.Contains(activeLayerName))
                 candidateLayerName = activeLayerName;
             else
                 candidateLayerName = firstValidLayerName;

@@ -16,6 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.Windows.Controls;
@@ -36,7 +37,7 @@ namespace HLU.UI.UserControls
 
             // obtain any errors relating to this bound property
             string error = info[boundProperty];
-            if (!string.IsNullOrEmpty(error))
+            if (!String.IsNullOrEmpty(error))
             {
                 return new ValidationResult(false, error);
             }

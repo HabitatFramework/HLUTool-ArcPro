@@ -58,7 +58,7 @@ namespace HLU.UI.UserControls.Toolbar
             }
 
             string incidText = Text?.Trim();
-            if (string.IsNullOrEmpty(incidText))
+            if (String.IsNullOrEmpty(incidText))
             {
                 // Nothing to filter on.
                 return;

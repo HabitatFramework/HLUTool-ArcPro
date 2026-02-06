@@ -246,7 +246,7 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.DataBase.QuoteValue("{0}"));
 
                 // Build the SELECT statement based on the incid where clause
-                string selectCommandIncid = String.Format("SELECT {0} FROM {1}{2}",
+                string selectStatementIncid = String.Format("SELECT {0} FROM {1}{2}",
                     _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.habitat_primaryColumn.ColumnName),
                     _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid.TableName), incidWhereClause);
 
@@ -279,10 +279,10 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.DataBase.QuoteIdentifier(c.ColumnName),
                     _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidCurrentRow[c.Ordinal]))));
 
-                string updateCommandIncid = incidUpdateCols.Any() ? String.Empty :
+                string updateStatementIncid = incidUpdateCols.Any() ? String.Empty :
                     String.Format("UPDATE {0} SET {1}", _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid.TableName), updateVals);
 
-                //string updateCommandIncid = incidUpdateCols.Any() ? String.Empty :
+                //string updateStatementIncid = incidUpdateCols.Any() ? String.Empty :
                 //    String.Format("UPDATE {0} SET ",
                 //    _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid.TableName))
                 //    .Append(_viewModelMain.HluDataset.incid.Columns.Cast<DataColumn>()
@@ -298,8 +298,8 @@ namespace HLU.UI.ViewModel
                 if ((_bulkDeleteSecondaryCodes) && (_viewModelMain.IncidCurrentRow.habitat_secondaries == null))
                 {
                     //DONE: Append
-                    updateCommandIncid = String.Format("{0}, {1} = {2}",
-                        updateCommandIncid,
+                    updateStatementIncid = String.Format("{0}, {1} = {2}",
+                        updateStatementIncid,
                         _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.habitat_secondariesColumn.ColumnName),
                         _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidCurrentRow.habitat_secondaries));
                 }
@@ -310,14 +310,14 @@ namespace HLU.UI.ViewModel
                 {
                     _viewModelMain.IncidCurrentRow.ihs_habitat = null;
 
-                    updateCommandIncid = String.Format("{0}, {1} = {2}",
-                        updateCommandIncid,
+                    updateStatementIncid = String.Format("{0}, {1} = {2}",
+                        updateStatementIncid,
                         _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.ihs_habitatColumn.ColumnName),
                         _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidCurrentRow.ihs_habitat));
                 }
 
                 // Finally, add the where clause to the update command
-                updateCommandIncid = String.Concat(updateCommandIncid, incidWhereClause);
+                updateStatementIncid = String.Concat(updateStatementIncid, incidWhereClause);
 
                 // Build DELETE statements for all IHS multiplex rows
                 List<string> ihsMultiplexDeleteStatements = [];
@@ -390,10 +390,10 @@ namespace HLU.UI.ViewModel
 
                     // Perform the bulk updates on the data tables
                     if (Settings.Default.BulkUpdateUsesAdo)
-                        BulkUpdateAdo(currIncid, secondaryHabitats, selectCommandIncid, updateCommandIncid, null,
+                        BulkUpdateAdo(currIncid, secondaryHabitats, selectStatementIncid, updateStatementIncid, null,
                             ihsMultiplexDeleteStatements, secondaryDelStatement, _bulkDeleteOrphanBapHabitats, _bulkDeletePotentialBapHabitats);
                     else
-                        BulkUpdateDb(currIncid, selectCommandIncid, updateCommandIncid, null,
+                        BulkUpdateDb(currIncid, selectStatementIncid, updateStatementIncid, null,
                             ihsMultiplexDeleteStatements, secondaryDelStatement, _bulkDeleteOrphanBapHabitats, _bulkDeletePotentialBapHabitats);
                 }
 
@@ -512,9 +512,9 @@ namespace HLU.UI.ViewModel
             }
 
             // Reset the database counts
-            _viewModelMain.NumIncidSelectedDB = 0;
-            _viewModelMain.NumToidSelectedDB = 0;
-            _viewModelMain.NumFragmentsSelectedDB = 0;
+            _viewModelMain.SelectedIncidsInDBCount = 0;
+            _viewModelMain.SelectedToidsInDBCount = 0;
+            _viewModelMain.SelectedFragsInDBCount = 0;
 
             // Open the OSMM Update filter
             _viewModelMain.OpenWindowQueryOSMM(true);
@@ -541,7 +541,7 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.DataBase.QuoteValue("{0}"));
 
                 // Build the SELECT statement based on the incid where clause
-                string selectCommandIncid = String.Format("SELECT {0} FROM {1}{2}",
+                string selectStatementIncid = String.Format("SELECT {0} FROM {1}{2}",
                     _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.habitat_primaryColumn.ColumnName),
                     _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid.TableName), incidWhereClause);
 
@@ -617,7 +617,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Build an UPDATE statement for the incid_osmm_updates table
-                string updateCommandIncidOSMMUpdates = String.Format("UPDATE {0} SET {1} = -1, {2} = {3}, {4} = {5}",
+                string updateStatementIncidOSMMUpdates = String.Format("UPDATE {0} SET {1} = -1, {2} = {3}, {4} = {5}",
                     _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_osmm_updates.TableName),
                     _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_osmm_updates.statusColumn.ColumnName),
                     _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_osmm_updates.last_modified_dateColumn.ColumnName),
@@ -668,10 +668,10 @@ namespace HLU.UI.ViewModel
                             _viewModelMain.DataBase.QuoteIdentifier(c.ColumnName),
                             _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidCurrentRow[c.Ordinal]))));
 
-                        string updateCommandIncid = incidUpdateCols.Any() ? String.Empty :
+                        string updateStatementIncid = incidUpdateCols.Any() ? String.Empty :
                             String.Format("UPDATE {0} SET {1}", _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid.TableName), updateVals);
 
-                        //string updateCommandIncid = incidUpdateCols.Any() ? String.Empty :
+                        //string updateStatementIncid = incidUpdateCols.Any() ? String.Empty :
                         //    String.Format("UPDATE {0} SET ",
                         //    _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid.TableName))
                         //    .Append(_viewModelMain.HluDataset.incid.Columns.Cast<DataColumn>()
@@ -767,13 +767,13 @@ namespace HLU.UI.ViewModel
                         }
 
                         // Add the secondary habitat update to the update command
-                        updateCommandIncid = updateCommandIncid.Concat(updateHabitatSecondaries).ToString();
+                        updateStatementIncid = updateStatementIncid.Concat(updateHabitatSecondaries).ToString();
 
                         // Add the IHS habitat update string to the update command
-                        updateCommandIncid = updateCommandIncid.Concat(updateIHSHabitat).ToString();
+                        updateStatementIncid = updateStatementIncid.Concat(updateIHSHabitat).ToString();
 
                         // Finally, add the where clause to the update command
-                        updateCommandIncid = updateCommandIncid.Concat(incidWhereClause).ToString();
+                        updateStatementIncid = updateStatementIncid.Concat(incidWhereClause).ToString();
 
                         // Filter out any rows not set (because the maximum number of blank rows are
                         // created above so any not used need to be removed)
@@ -791,10 +791,10 @@ namespace HLU.UI.ViewModel
 
                         // Perform the bulk updates on the data tables
                         if (Settings.Default.BulkUpdateUsesAdo)
-                            BulkUpdateAdo(currIncid, secondaryHabitats, selectCommandIncid, updateCommandIncid, updateCommandIncidOSMMUpdates,
+                            BulkUpdateAdo(currIncid, secondaryHabitats, selectStatementIncid, updateStatementIncid, updateStatementIncidOSMMUpdates,
                                 ihsMultiplexDeleteStatements, secondaryDelStatement, _bulkDeleteOrphanBapHabitats, _bulkDeletePotentialBapHabitats);
                         else
-                            BulkUpdateDb(currIncid, selectCommandIncid, updateCommandIncid, updateCommandIncidOSMMUpdates,
+                            BulkUpdateDb(currIncid, selectStatementIncid, updateStatementIncid, updateStatementIncidOSMMUpdates,
                                 ihsMultiplexDeleteStatements, secondaryDelStatement, _bulkDeleteOrphanBapHabitats, _bulkDeletePotentialBapHabitats);
                     }
                 }
@@ -880,8 +880,8 @@ namespace HLU.UI.ViewModel
         /// Perform the bulk update on the database tables using an ADO connection.
         /// </summary>
         /// <param name="currIncid">The incid to update.</param>
-        /// <param name="selectCommandIncid">The SELECT command template.</param>
-        /// <param name="updateCommandIncid">The UPDATE command template.</param>
+        /// <param name="selectStatementIncid">The SELECT command template.</param>
+        /// <param name="updateStatementIncid">The UPDATE command template.</param>
         /// <param name="deleteExistingRows">if set to <c>1</c> [delete existing rows].</param>
         /// <param name="ihsMultiplexDeleteStatements">The ihs multiplex delete statements.</param>
         /// <exception cref="Exception">
@@ -893,9 +893,9 @@ namespace HLU.UI.ViewModel
         /// </exception>
         private void BulkUpdateAdo(string currIncid,
             ObservableCollection<SecondaryHabitat> secondaryHabitats,
-            string selectCommandIncid,
-            string updateCommandIncid,
-            string updateCommandIncidOSMMUpdates,
+            string selectStatementIncid,
+            string updateStatementIncid,
+            string updateStatementIncidOSMMUpdates,
             List<string> ihsMultiplexDeleteStatements,
             string secondaryDeleteStatement,
             bool bulkDeleteOrphanBapHabitats,
@@ -905,11 +905,19 @@ namespace HLU.UI.ViewModel
             // Update the incid table
             // ---------------------------------------------------------------------
             // Execute the UPDATE incid statement for the current row
-            if (!String.IsNullOrEmpty(updateCommandIncid))
+            if (!String.IsNullOrEmpty(updateStatementIncid))
             {
-                if (_viewModelMain.DataBase.ExecuteNonQuery(String.Format(updateCommandIncid, currIncid),
-                    _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text) == -1)
-                    throw new Exception("Failed to update incid table.");
+                try
+                {
+                    _viewModelMain.DataBase.ExecuteNonQuery(
+                        String.Format(updateStatementIncid, currIncid),
+                        _viewModelMain.DataBase.Connection.ConnectionTimeout,
+                        CommandType.Text);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Failed to update table [{_viewModelMain.HluDataset.incid.TableName}].", ex);
+                }
             }
 
             // ---------------------------------------------------------------------
@@ -918,9 +926,17 @@ namespace HLU.UI.ViewModel
             // Execute the DELETE secondary habitats statement for the current row
             if (!String.IsNullOrEmpty(secondaryDeleteStatement))
             {
-                if (_viewModelMain.DataBase.ExecuteNonQuery(String.Format(secondaryDeleteStatement, currIncid),
-                    _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text) == -1)
-                    throw new Exception("Failed to delete incid_secondary rows.");
+                try
+                {
+                    _viewModelMain.DataBase.ExecuteNonQuery(
+                        String.Format(secondaryDeleteStatement, currIncid),
+                        _viewModelMain.DataBase.Connection.ConnectionTimeout,
+                        CommandType.Text);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Failed to delete secondary habitat rows in table [{_viewModelMain.HluDataset.incid_secondary.TableName}].", ex);
+                }
             }
 
             // ---------------------------------------------------------------------
@@ -929,20 +945,36 @@ namespace HLU.UI.ViewModel
             if (ihsMultiplexDeleteStatements != null)
             {
                 foreach (string s in ihsMultiplexDeleteStatements)
-                    if (_viewModelMain.DataBase.ExecuteNonQuery(String.Format(s, currIncid),
-                        _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text) == -1)
-                        throw new Exception("Failed to delete IHS multiplex rows.");
+                    try
+                    {
+                        _viewModelMain.DataBase.ExecuteNonQuery(
+                            String.Format(s, currIncid),
+                            _viewModelMain.DataBase.Connection.ConnectionTimeout,
+                            CommandType.Text);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception($"Failed to delete IHS multiplex rows.", ex);
+                    }
             }
 
             // ---------------------------------------------------------------------
             // Update the incid_osmm_updates table
             // ---------------------------------------------------------------------
             // Execute the UPDATE incid_osmm_updates statement for the current row
-            if (!String.IsNullOrEmpty(updateCommandIncidOSMMUpdates))
+            if (!String.IsNullOrEmpty(updateStatementIncidOSMMUpdates))
             {
-                if (_viewModelMain.DataBase.ExecuteNonQuery(String.Format(updateCommandIncidOSMMUpdates, currIncid),
-                    _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text) == -1)
-                    throw new Exception("Failed to update incid_osmm_updates table.");
+                try
+                {
+                    _viewModelMain.DataBase.ExecuteNonQuery(
+                        String.Format(updateStatementIncidOSMMUpdates, currIncid),
+                        _viewModelMain.DataBase.Connection.ConnectionTimeout,
+                        CommandType.Text);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Failed to update OSMM update rows in table [{_viewModelMain.HluDataset.incid_osmm_updates.TableName}].", ex);
+                }
             }
 
             // Create an array of the value of the current incid
@@ -952,11 +984,11 @@ namespace HLU.UI.ViewModel
             // Retrieve the primary habitat
             // ---------------------------------------------------------------------
             // Execute the SELECT statement to get the primary habitat code
-            object retValue = _viewModelMain.DataBase.ExecuteScalar(String.Format(selectCommandIncid, currIncid),
+            object retValue = _viewModelMain.DataBase.ExecuteScalar(String.Format(selectStatementIncid, currIncid),
                 _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text);
 
             if (retValue == null)
-                throw new Exception(String.Format("No database row for incid '{0}'", currIncid));
+                throw new Exception($"No database row for incid '{currIncid}'");
 
             // Set the primary habitat code
             string primaryHabitat = retValue.ToString();
@@ -1033,10 +1065,13 @@ namespace HLU.UI.ViewModel
         /// Perform the bulk update on the database tables using a DB connection.
         /// </summary>
         /// <param name="currIncid">The incid to update.</param>
-        /// <param name="selectCommandIncid">The SELECT command template.</param>
-        /// <param name="updateCommandIncid">The UPDATE command template.</param>
-        /// <param name="deleteExistingRows">if set to <c>1</c> [delete existing rows].</param>
-        /// <param name="ihsMultiplexDelStatements">The ihs multiplex delete statements.</param>
+        /// <param name="selectStatementIncid">The SELECT command template.</param>
+        /// <param name="updateStatementIncid">The UPDATE command template.</param>
+        /// <param name="updateStatementIncidOSMMUpdates">The UPDATE OSMM updates command template.</param>
+        /// <param name="ihsMultiplexDeleteStatements">The ihs multiplex delete statements.</param>
+        /// <param name="secondaryDeleteStatement">The secondary delete statement.</param>
+        /// <param name="bulkDeleteOrphanBapHabitats">if set to <c>true</c> [bulk delete orphan bap habitats].</param>
+        /// <param name="bulkDeletePotentialBapHabitats">if set to <c>true</c> [bulk delete potential bap habitats].</param>
         /// <exception cref="Exception">
         /// Failed to delete IHS multiplex rows.
         /// or
@@ -1045,9 +1080,9 @@ namespace HLU.UI.ViewModel
         /// No database row for incid
         /// </exception>
         private void BulkUpdateDb(string currIncid,
-            string selectCommandIncid,
-            string updateCommandIncid,
-            string updateCommandIncidOSMMUpdates,
+            string selectStatementIncid,
+            string updateStatementIncid,
+            string updateStatementIncidOSMMUpdates,
             List<string> ihsMultiplexDeleteStatements,
             string secondaryDeleteStatement,
             bool bulkDeleteOrphanBapHabitats,
@@ -1057,11 +1092,19 @@ namespace HLU.UI.ViewModel
             // Update the incid table
             // ---------------------------------------------------------------------
             // Execute the UPDATE incid statement for the current row
-            if (!String.IsNullOrEmpty(updateCommandIncid))
+            if (!String.IsNullOrEmpty(updateStatementIncid))
             {
-                if (_viewModelMain.DataBase.ExecuteNonQuery(String.Format(updateCommandIncid, currIncid),
-                    _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text) == -1)
-                    throw new Exception("Failed to update incid table.");
+                try
+                {
+                    _viewModelMain.DataBase.ExecuteNonQuery(
+                        String.Format(updateStatementIncid, currIncid),
+                        _viewModelMain.DataBase.Connection.ConnectionTimeout,
+                        CommandType.Text);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Failed to update incid in table [{_viewModelMain.HluDataset.incid.TableName}].", ex);
+                }
             }
 
             // ---------------------------------------------------------------------
@@ -1070,9 +1113,17 @@ namespace HLU.UI.ViewModel
             // Execute the DELETE secondary habitats statement for the current row
             if (!String.IsNullOrEmpty(secondaryDeleteStatement))
             {
-                if (_viewModelMain.DataBase.ExecuteNonQuery(String.Format(secondaryDeleteStatement, currIncid),
-                    _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text) == -1)
-                    throw new Exception("Failed to delete incid_secondary rows.");
+                try
+                {
+                    _viewModelMain.DataBase.ExecuteNonQuery(
+                        String.Format(secondaryDeleteStatement, currIncid),
+                        _viewModelMain.DataBase.Connection.ConnectionTimeout,
+                        CommandType.Text);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Failed to delete secondary habitat rows from table [{_viewModelMain.HluDataset.incid_secondary.TableName}].", ex);
+                }
             }
 
             // ---------------------------------------------------------------------
@@ -1081,20 +1132,36 @@ namespace HLU.UI.ViewModel
             if (ihsMultiplexDeleteStatements != null)
             {
                 foreach (string s in ihsMultiplexDeleteStatements)
-                    if (_viewModelMain.DataBase.ExecuteNonQuery(String.Format(s, currIncid),
-                        _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text) == -1)
-                        throw new Exception("Failed to delete IHS multiplex rows.");
+                    try
+                    {
+                        _viewModelMain.DataBase.ExecuteNonQuery(
+                            String.Format(s, currIncid),
+                            _viewModelMain.DataBase.Connection.ConnectionTimeout,
+                            CommandType.Text);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception("Failed to delete IHS multiplex rows.", ex);
+                    }
             }
 
             // ---------------------------------------------------------------------
             // Update the incid_osmm_updates table
             // ---------------------------------------------------------------------
             // Execute the UPDATE incid_osmm_updates statement for the current row
-            if (!String.IsNullOrEmpty(updateCommandIncidOSMMUpdates))
+            if (!String.IsNullOrEmpty(updateStatementIncidOSMMUpdates))
             {
-                if (_viewModelMain.DataBase.ExecuteNonQuery(String.Format(updateCommandIncidOSMMUpdates, currIncid),
-                    _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text) == -1)
-                    throw new Exception("Failed to update incid_osmm_updates table.");
+                try
+                {
+                    _viewModelMain.DataBase.ExecuteNonQuery(
+                        String.Format(updateStatementIncidOSMMUpdates, currIncid),
+                        _viewModelMain.DataBase.Connection.ConnectionTimeout,
+                        CommandType.Text);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Failed to update OSMM update rows from table [{_viewModelMain.HluDataset.incid_osmm_updates.TableName}].", ex);
+                }
             }
 
             // Create an array of the value of the current incid
@@ -1104,11 +1171,11 @@ namespace HLU.UI.ViewModel
             // Retrieve the primary habitat
             // ---------------------------------------------------------------------
             // Execute the SELECT statement to get the primary habitat code
-            object retValue = _viewModelMain.DataBase.ExecuteScalar(String.Format(selectCommandIncid, currIncid),
+            object retValue = _viewModelMain.DataBase.ExecuteScalar(String.Format(selectStatementIncid, currIncid),
                 _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text);
 
             if (retValue == null)
-                throw new Exception(String.Format("No database row for incid '{0}'", currIncid));
+                throw new Exception($"No database row for incid '{currIncid}'");
 
             // Set the primary habitat code
             string primaryHabitat = retValue.ToString();
@@ -1512,7 +1579,7 @@ namespace HLU.UI.ViewModel
             if (updateRows.Count > 0)
             {
                 if (_viewModelMain.HluTableAdapterManager.incid_bapTableAdapter.Update(updateRows.ToArray()) == -1)
-                    throw new Exception(String.Format("Failed to update [{0}] table.", _viewModelMain.HluDataset.incid_bap.TableName));
+                    throw new Exception($"Failed to update [{_viewModelMain.HluDataset.incid_bap.TableName}] table.");
             }
 
             // Delete any previously secondary BAP environments from the database
@@ -1611,10 +1678,18 @@ namespace HLU.UI.ViewModel
                 // Execute the UPDATE statement for each incid in the DB shadow copy of GIS layer
                 foreach (List<SqlFilterCondition> whereClause in incidWhereClause)
                 {
-                    if (_viewModelMain.DataBase.ExecuteNonQuery(String.Format(incidMMPolygonsUpdateCmdTemplate,
-                        _viewModelMain.DataBase.WhereClause(false, true, true, whereClause)),
-                        _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text) == -1)
-                        throw new Exception("Failed to update GIS layer shadow copy");
+                    try
+                    {
+                        _viewModelMain.DataBase.ExecuteNonQuery(
+                            String.Format(incidMMPolygonsUpdateCmdTemplate,
+                                _viewModelMain.DataBase.WhereClause(false, true, true, whereClause)),
+                            _viewModelMain.DataBase.Connection.ConnectionTimeout,
+                            CommandType.Text);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception($"Failed to update GIS layer shadow copy in table [{_viewModelMain.HluDataset.incid_mm_polygons.TableName}].", ex);
+                    }
 
                     // Start a GIS edit operation
                     EditOperation editOperation = new()
@@ -1622,18 +1697,18 @@ namespace HLU.UI.ViewModel
                         Name = "Update GIS Features"
                     };
 
-                    //TODO: Catch exceptions
+                    //TODO: Catch exceptions?
                     // Get the current values from the GIS layer
                     DataTable historyTmp = await _viewModelMain.GISApplication.GetHistoryAsync(
                          _viewModelMain.HistoryColumns, whereClause);
 
-                    //TODO: Catch exceptions
+                    //TODO: Catch exceptions?
                     // Update GIS layer row by row; no need for a joined scratch table
                     await _viewModelMain.GISApplication.UpdateFeaturesAsync(updateColumns,
                         updateGISValues, _viewModelMain.HistoryColumns, whereClause, editOperation);
 
                     if (historyTmp == null)
-                        throw new Exception(String.Format("Failed to update GIS layer for incid '{0}'", whereClause[0].Value));
+                        throw new Exception($"Failed to update GIS layer for incid '{whereClause[0].Value}'");
 
                     // Append history rows to the history table
                     if (createHistory)
@@ -1966,24 +2041,19 @@ namespace HLU.UI.ViewModel
                             _viewModelMain.DataBase.QuoteValue(dbRow[c.Ordinal])))
                     );
 
-                if (_viewModelMain.DataBase.ExecuteNonQuery(String.Format("UPDATE {0} SET {1} WHERE {2}",
-                    _viewModelMain.DataBase.QualifyTableName(dbRows.TableName), updateVals, whereConds),
-                    _viewModelMain.DataBase.Connection.ConnectionTimeout,
-                    CommandType.Text) == -1)
-                    throw new Exception(String.Format("Failed to update table [{0}].", dbRows.TableName));
-
-                //if (_viewModelMain.DataBase.ExecuteNonQuery(dbRows.Columns.Cast<DataColumn>()
-                //    .Where(c => !pk.Any(k => k.Ordinal == c.Ordinal) && !newRow.IsNull(c.Ordinal))
-                //    .Aggregate(new(), (sb, c) => sb.Append(String.Format(", {0} = {1}",
-                //        _viewModelMain.DataBase.QuoteIdentifier(c.ColumnName),
-                //        _viewModelMain.DataBase.QuoteValue(newRow[c.Ordinal])))).Remove(0, 2)
-                //        .Append(String.Format(" WHERE {0} = {1}", dbRows.PrimaryKey.Aggregate(
-                //        new(), (sb, c) => sb.Append(String.Format("AND {0} = {1}",
-                //            _viewModelMain.DataBase.QuoteIdentifier(c.ColumnName),
-                //            _viewModelMain.DataBase.QuoteValue(dbRow[c.Ordinal])))).Remove(0, 4)))
-                //            .Insert(0, updateCommand).ToString(), _viewModelMain.DataBase.Connection.ConnectionTimeout,
-                //            CommandType.Text) == -1)
-                //    throw new Exception(String.Format("Failed to update table [{0}].", dbRows.TableName));
+                // Update the existing row
+                try
+                {
+                    _viewModelMain.DataBase.ExecuteNonQuery(
+                        String.Format("UPDATE {0} SET {1} WHERE {2}",
+                            _viewModelMain.DataBase.QualifyTableName(dbRows.TableName), updateVals, whereConds),
+                        _viewModelMain.DataBase.Connection.ConnectionTimeout,
+                        CommandType.Text);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Failed to update update table [{dbRows.TableName}].", ex);
+                }
             }
 
             if (numRowsNew > numRowsDb) // user entered new values
@@ -2024,14 +2094,23 @@ namespace HLU.UI.ViewModel
                         }
                     }
 
-                    if (_viewModelMain.DataBase.ExecuteNonQuery(String.Format(insertCommand, columnNames, columnValues),
-                        _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text) == -1)
-                        throw new Exception(String.Format("Failed to insert into table [{0}].", dbRows.TableName));
+                    // Insert the new row
+                    try
+                    {
+                        _viewModelMain.DataBase.ExecuteNonQuery(
+                            String.Format(insertCommand, columnNames, columnValues),
+                            _viewModelMain.DataBase.Connection.ConnectionTimeout,
+                            CommandType.Text);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception($"Failed to insert into table [{dbRows.TableName}].", ex);
+                    }
                 }
             }
             else if ((deleteExistingRows) && (numRowsDb > numRowsNew))
             {
-                StringBuilder deleteCommand = new(String.Format(
+                StringBuilder deleteStatement = new(String.Format(
                     "DELETE FROM {0} WHERE ", _viewModelMain.DataBase.QualifyTableName(dbRows.TableName)));
 
                 for (int i = numRowsNew; i < numRowsDb; i++)
@@ -2039,19 +2118,28 @@ namespace HLU.UI.ViewModel
                     R dbRow = (R)dbRows.Rows[i];
 
                     //DONE: Append
-                    deleteCommand.Append(String.Join("AND ", dbRows.PrimaryKey
+                    deleteStatement.Append(String.Join("AND ", dbRows.PrimaryKey
                         .Select(c => String.Format("{0} = {1}",
                             _viewModelMain.DataBase.QuoteIdentifier(c.ColumnName),
                             _viewModelMain.DataBase.QuoteValue(dbRow[c.Ordinal])))));
 
-                    //deleteCommand.Append(String.Format("{0} = {1}", dbRows.PrimaryKey.Aggregate(
+                    //deleteStatement.Append(String.Format("{0} = {1}", dbRows.PrimaryKey.Aggregate(
                     //    new(), (sb, c) => sb.Append(String.Format("AND {0} = {1}",
                     //        _viewModelMain.DataBase.QuoteIdentifier(c.ColumnName),
                     //        _viewModelMain.DataBase.QuoteValue(dbRow[c.Ordinal])))))).Remove(0, 4);
 
-                    if (_viewModelMain.DataBase.ExecuteNonQuery(deleteCommand.ToString(),
-                        _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text) == -1)
-                        throw new Exception(String.Format("Failed to delete from table [{0}].", dbRows.TableName));
+                    // Delete the existing row
+                    try
+                    {
+                        _viewModelMain.DataBase.ExecuteNonQuery(
+                            deleteStatement.ToString(),
+                            _viewModelMain.DataBase.Connection.ConnectionTimeout,
+                            CommandType.Text);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception($"Failed to delete from table [{dbRows.TableName}].", ex);
+                    }
                 }
             }
 

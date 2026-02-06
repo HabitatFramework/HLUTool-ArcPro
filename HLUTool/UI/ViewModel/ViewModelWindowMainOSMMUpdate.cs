@@ -134,8 +134,7 @@ namespace HLU.UI.ViewModel
                 // Update the incid_osmm_updates table
                 if (_viewModelMain.HluTableAdapterManager.incid_osmm_updatesTableAdapter.Update(
                     (HluDataSet.incid_osmm_updatesDataTable)_viewModelMain.HluDataset.incid_osmm_updates.GetChanges()) == -1)
-                    throw new Exception(String.Format("Failed to update table [{0}].",
-                        _viewModelMain.HluDataset.incid_osmm_updates.TableName));
+                    throw new Exception($"Failed to update table [{_viewModelMain.HluDataset.incid_osmm_updates.TableName}].");
 
                 // Commit the changes
                 _viewModelMain.DataBase.CommitTransaction();
@@ -254,7 +253,7 @@ namespace HLU.UI.ViewModel
             if (_viewModelMain.OSMMUpdateWhereClause != null)
             {
                 // Build an UPDATE statement for the osmm_incid_updates table
-                string updateCommand = String.Format("UPDATE {0} SET {1} = {2}, {3} = {4}, {5} = {6} WHERE {7} >= {8} AND {9}",
+                string updateStatement = String.Format("UPDATE {0} SET {1} = {2}, {3} = {4}, {5} = {6} WHERE {7} >= {8} AND {9}",
                     _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_osmm_updates.TableName),
                     _viewModelMain.DataBase.QuoteIdentifier(statusColumn),
                     updateStatus,
@@ -266,10 +265,18 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.DataBase.QuoteValue(fromIncid),
                     _viewModelMain.OSMMUpdateWhereClause);
 
-                // Update the incid for the current row
-                if (_viewModelMain.DataBase.ExecuteNonQuery(updateCommand,
-                    _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text) == -1)
-                    throw new Exception("Failed to update incid_osmm_updates table.");
+                // Execute the update statement within the caller's transaction.
+                try
+                {
+                    _viewModelMain.DataBase.ExecuteNonQuery(
+                        updateStatement,
+                        _viewModelMain.DataBase.Connection.ConnectionTimeout,
+                        CommandType.Text);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Failed to update OSMM updates in table [{_viewModelMain.HluDataset.incid_osmm_updates.TableName}].", ex);
+                }
             }
             else
             {
@@ -277,7 +284,7 @@ namespace HLU.UI.ViewModel
                 int fromIncidNum = RecordIds.IncidNumber(fromIncid);
 
                 // Build an UPDATE statement for the osmm_incid_updates table
-                string updateCommand = String.Format("UPDATE {0} SET {1} = {2}, {3} = {4}, {5} = {6} WHERE {7} = {8}",
+                string updateStatement = String.Format("UPDATE {0} SET {1} = {2}, {3} = {4}, {5} = {6} WHERE {7} = {8}",
                             _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_osmm_updates.TableName),
                             _viewModelMain.DataBase.QuoteIdentifier(statusColumn),
                             updateStatus,
@@ -300,10 +307,18 @@ namespace HLU.UI.ViewModel
                     // Check the incid is to be updated
                     if (currIncidNum >= fromIncidNum)
                     {
-                        // Update the incid for the current row
-                        if (_viewModelMain.DataBase.ExecuteNonQuery(String.Format(updateCommand, currIncid),
-                            _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text) == -1)
-                            throw new Exception("Failed to update incid_osmm_updates table.");
+                        // Execute the update statement within the caller's transaction.
+                        try
+                        {
+                            _viewModelMain.DataBase.ExecuteNonQuery(
+                                String.Format(updateStatement, currIncid),
+                                _viewModelMain.DataBase.Connection.ConnectionTimeout,
+                                CommandType.Text);
+                        }
+                        catch (Exception ex)
+                        {
+                            throw new Exception($"Failed to update OSMM updates in table [{_viewModelMain.HluDataset.incid_osmm_updates.TableName}].", ex);
+                        }
                     }
                 }
             }

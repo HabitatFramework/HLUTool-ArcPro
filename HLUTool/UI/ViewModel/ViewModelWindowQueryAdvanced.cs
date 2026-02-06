@@ -179,7 +179,7 @@ namespace HLU.UI.ViewModel
                         _db.QualifyTableName(Table.TableName)),
                         _db.Connection.ConnectionTimeout, CommandType.Text);
 
-                    if (dataReader == null) throw new Exception(String.Format("Error reading values from {0}.{1}", Table.TableName, Column.ColumnName));
+                    if (dataReader == null) throw new Exception($"Error reading values from {Table.TableName}.{Column.ColumnName}");
 
                     // Define a new dictionary to hold the column values.
                     Dictionary<string, object> q = [];
@@ -973,7 +973,7 @@ namespace HLU.UI.ViewModel
             // Only add the table if it's not already in the list
             if (SqlFromTables == null || SqlFromTables.Split(',').Contains(Table.TableName) == false)
             {
-                if (string.IsNullOrEmpty(SqlFromTables) || SqlFromTables.TrimEnd(' ').EndsWith(','))
+                if (String.IsNullOrEmpty(SqlFromTables) || SqlFromTables.TrimEnd(' ').EndsWith(','))
                     SqlFromTables += Table.TableName;
                 else
                     SqlFromTables += String.Concat(", ", Table.TableName);
@@ -1024,7 +1024,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void AddColumnCommandClick(object param)
         {
-            if (string.IsNullOrEmpty(SqlWhereClause) || SqlWhereClause.EndsWith(' '))
+            if (String.IsNullOrEmpty(SqlWhereClause) || SqlWhereClause.EndsWith(' '))
                 SqlWhereClause += QuoteIdentifier(Table.TableName) + "." + Column.ColumnName;
             else
                 SqlWhereClause += String.Concat(" ", QuoteIdentifier(Table.TableName), ".", Column.ColumnName);
@@ -1074,7 +1074,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void AddOperatorCommandClick(object param)
         {
-            if (string.IsNullOrEmpty(SqlWhereClause) || SqlWhereClause.EndsWith(' '))
+            if (String.IsNullOrEmpty(SqlWhereClause) || SqlWhereClause.EndsWith(' '))
                 SqlWhereClause += ComparisonOperator;
             else
                 SqlWhereClause += String.Concat(" ", ComparisonOperator);
@@ -1124,7 +1124,7 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void AddValueCommandClick(object param)
         {
-            if (string.IsNullOrEmpty(SqlWhereClause) || SqlWhereClause.EndsWith(' '))
+            if (String.IsNullOrEmpty(SqlWhereClause) || SqlWhereClause.EndsWith(' '))
                 SqlWhereClause += QuoteValue(QueryValue);
             else
                 SqlWhereClause += String.Concat(" ", QuoteValue(QueryValue));
@@ -1200,7 +1200,7 @@ namespace HLU.UI.ViewModel
                 {
                     if (!File.Exists(fileName))
                     {
-                        throw new Exception(String.Format("File {0} was not found!", fileName));
+                        throw new Exception($"File {fileName} was not found!");
                     }
 
                     // Read all the lines in the script into an array.
@@ -1213,7 +1213,7 @@ namespace HLU.UI.ViewModel
                         string sqlCmd = line.Trim();
 
                         // Skip the line if it is empty.
-                        if ((sqlCmd.Length == 0) || (string.IsNullOrEmpty(sqlCmd)))
+                        if ((sqlCmd.Length == 0) || (String.IsNullOrEmpty(sqlCmd)))
                             continue;
 
                         // Break the line command into words.
@@ -1344,7 +1344,7 @@ namespace HLU.UI.ViewModel
 
                     if (!File.Exists(fileName))
                     {
-                        throw new Exception(String.Format("File {0} was not created!", fileName));
+                        throw new Exception($"File {fileName} was not created!");
                     }
                 }
             }

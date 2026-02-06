@@ -791,7 +791,7 @@ namespace HLU.UI.ViewModel
             get
             {
                 if (_dockPane == null
-                || string.IsNullOrEmpty(_statusMessage))
+                || String.IsNullOrEmpty(_statusMessage))
                 //|| _dockPane.ProcessStatus != null
                     return Visibility.Collapsed;
                 else

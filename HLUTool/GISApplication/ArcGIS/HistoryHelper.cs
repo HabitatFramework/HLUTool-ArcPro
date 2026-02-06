@@ -89,7 +89,7 @@ namespace HLU.GISApplication
                     continue;
 
                 string requestedName = c.ColumnName;
-                if (string.IsNullOrWhiteSpace(requestedName))
+                if (String.IsNullOrWhiteSpace(requestedName))
                     continue;
 
                 // Additional-field encoding:

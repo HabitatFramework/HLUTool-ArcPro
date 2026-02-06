@@ -199,7 +199,7 @@ namespace HLU.UI.UserControls.Toolbar
             if (ItemCollection?.Any() == true)
             {
                 // If a selected item is required.
-                if (!string.IsNullOrEmpty(value))
+                if (!String.IsNullOrEmpty(value))
                     // Find and set the selected item if found.
                     SelectedItem = ItemCollection.FirstOrDefault(item => item.ToString() == value);
                 else

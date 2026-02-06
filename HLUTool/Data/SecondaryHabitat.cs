@@ -68,7 +68,7 @@ namespace HLU.Data
             _incid = dataRow.incid;
             _secondary_habitat = dataRow.IsNull(table.secondaryColumn) ? null : dataRow.secondary;
             int secondary_habitat_int;
-            if (int.TryParse(_secondary_habitat, out secondary_habitat_int))
+            if (Int32.TryParse(_secondary_habitat, out secondary_habitat_int))
                 _secondary_habitat_int = secondary_habitat_int;
             else
                 _secondary_habitat_int = 0;
@@ -84,7 +84,7 @@ namespace HLU.Data
             _incid = dataRow.incid;
             _secondary_habitat = dataRow.IsNull(table.secondaryColumn) ? null : dataRow.secondary;
             int secondary_habitat_int;
-            if (int.TryParse(_secondary_habitat, out secondary_habitat_int))
+            if (Int32.TryParse(_secondary_habitat, out secondary_habitat_int))
                 _secondary_habitat_int = secondary_habitat_int;
             else
                 _secondary_habitat_int = 0;
@@ -99,7 +99,7 @@ namespace HLU.Data
             _incid = itemArray[1].ToString();
             _secondary_habitat = itemArray[2].ToString();
             int secondary_habitat_int;
-            if (int.TryParse(_secondary_habitat, out secondary_habitat_int))
+            if (Int32.TryParse(_secondary_habitat, out secondary_habitat_int))
                 _secondary_habitat_int = secondary_habitat_int;
             else
                 _secondary_habitat_int = 0;
@@ -114,7 +114,7 @@ namespace HLU.Data
             _incid = incid;
             _secondary_habitat = secondary_habitat;
             int secondary_habitat_int;
-            if (int.TryParse(_secondary_habitat, out secondary_habitat_int))
+            if (Int32.TryParse(_secondary_habitat, out secondary_habitat_int))
                 _secondary_habitat_int = secondary_habitat_int;
             else
                 _secondary_habitat_int = 0;

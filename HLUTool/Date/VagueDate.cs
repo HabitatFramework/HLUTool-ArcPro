@@ -841,7 +841,7 @@ namespace HLU.Date
             if (String.IsNullOrEmpty(dateString)) return false;
 
             // Set a default delimiter if there isn't one (this shouldn't happen).
-            if (string.IsNullOrEmpty(Delimiter)) Delimiter = "-";
+            if (String.IsNullOrEmpty(Delimiter)) Delimiter = "-";
 
             // Try and split the date string.
             string[] a = Regex.Split(dateString, @"\s*" + Delimiter + @"\s*");

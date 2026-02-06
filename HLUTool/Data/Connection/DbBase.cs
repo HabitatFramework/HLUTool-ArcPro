@@ -19,6 +19,7 @@
 
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
+using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -206,6 +207,25 @@ namespace HLU.Data.Connection
                 return false;
             else
                 return connStringBuilder.ContainsKey("Password");
+        }
+
+        /// <summary>
+        /// Extracts the most relevant SQL Server error message from an exception chain.
+        /// </summary>
+        /// <param name="exception">The exception thrown during database execution.</param>
+        /// <returns>A user-readable database error message.</returns>
+        public static string GetSqlErrorMessage(Exception exception)
+        {
+            for (Exception current = exception; current != null; current = current.InnerException)
+            {
+                if (current is SqlException sqlException)
+                {
+                    return $"Database error {sqlException.Number}: {sqlException.Message}";
+                }
+            }
+
+            // Fallback if no SQL exception was found.
+            return exception.Message;
         }
 
         #endregion
@@ -470,7 +490,7 @@ namespace HLU.Data.Connection
                 sbCommandText.Append(fromClause);
 
                 // Append any additional where clauses passed.
-                if (string.IsNullOrEmpty(fromClause))
+                if (String.IsNullOrEmpty(fromClause))
                     sbCommandText.Append(" WHERE (").Append(sqlWhereClause).Append(')');
                 else
                     sbCommandText.Append(" AND (").Append(sqlWhereClause).Append(')');
@@ -1054,7 +1074,7 @@ namespace HLU.Data.Connection
                 sbCommandText.Append(fromClause);
 
                 // Append any additional where clauses passed.
-                if (string.IsNullOrEmpty(fromClause))
+                if (String.IsNullOrEmpty(fromClause))
                     sbCommandText.Append(" WHERE (").Append(sqlWhereClause).Append(')');
                 else
                     sbCommandText.Append(" AND (").Append(sqlWhereClause).Append(')');
@@ -1130,7 +1150,7 @@ namespace HLU.Data.Connection
                 sbCommandText.Append(fromClause);
 
                 // Append any additional where clauses passed.
-                if (string.IsNullOrEmpty(fromClause))
+                if (String.IsNullOrEmpty(fromClause))
                     sbCommandText.Append(" WHERE (").Append(sqlWhereClause).Append(')');
                 else
                     sbCommandText.Append(" AND (").Append(sqlWhereClause).Append(')');
@@ -1202,7 +1222,7 @@ namespace HLU.Data.Connection
                 sbCommandText.Append(fromClause);
 
                 // Append any additional where clauses passed.
-                if (string.IsNullOrEmpty(fromClause))
+                if (String.IsNullOrEmpty(fromClause))
                     sbCommandText.Append(" WHERE ").Append(sqlWhereClause);
                 else
                     sbCommandText.Append(" AND (").Append(sqlWhereClause).Append(')');

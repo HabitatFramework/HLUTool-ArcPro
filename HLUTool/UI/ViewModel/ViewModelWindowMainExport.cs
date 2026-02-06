@@ -217,13 +217,11 @@ namespace HLU.UI.ViewModel
                 // Exit if there are no export fields for this format
                 // (this should not be possible).
                 if (_viewModelMain.HluDataset.exports_fields.Count == 0)
-                    throw new Exception(String.Format("No export fields are defined for format '{0}'",
-                        _viewModelMain.HluDataset.exports.FindByexport_id(userExportId).export_name));
+                    throw new Exception($"No export fields are defined for format '{_viewModelMain.HluDataset.exports.FindByexport_id(userExportId).export_name}'");
 
                 // Exit if there is no incid field for this format.
                 if (!_viewModelMain.HluDataset.exports_fields.Any(f => f.column_name == _viewModelMain.IncidTable.incidColumn.ColumnName))
-                    throw new Exception(String.Format("The export format '{0}' does not contain the column 'incid'",
-                        _viewModelMain.HluDataset.exports.FindByexport_id(userExportId).export_name));
+                    throw new Exception($"The export format '{_viewModelMain.HluDataset.exports.FindByexport_id(userExportId).export_name}' does not contain the column 'incid'");
 
                 // Build a new export data table and also determine the
                 // number of output fields, a string of the output field
@@ -300,7 +298,7 @@ namespace HLU.UI.ViewModel
                 // Count the number of incids to be exported.
                 int rowCount = 0;
                 if (selectedOnly)
-                    rowCount = _viewModelMain.IncidsSelectedMapCount;
+                    rowCount = _viewModelMain.SelectedIncidsInGISCount;
                 else
                     rowCount = _viewModelMain.IncidRowCount(false);
 
@@ -860,7 +858,7 @@ namespace HLU.UI.ViewModel
                     // the input field ordinal for use later as the unique
                     // incid_source field ordinal.
                     if ((f.ColumnName == _viewModelMain.HluDataset.incid_sources.source_idColumn.ColumnName) &&
-                        ((string.IsNullOrEmpty(f.FieldFormat)) || (f.FieldFormat.Equals("code", StringComparison.CurrentCultureIgnoreCase))))
+                        ((String.IsNullOrEmpty(f.FieldFormat)) || (f.FieldFormat.Equals("code", StringComparison.CurrentCultureIgnoreCase))))
                         _sourceIdOrdinal = f.FieldOrdinal;
                     // If the field refers to the source_sort_order column then
                     // store the input field ordinal for use later.

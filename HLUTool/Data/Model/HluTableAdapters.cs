@@ -28,9 +28,20 @@ using System.Reflection;
 using System.Text;
 using HLU.Data.Connection;
 
-//TODO: Code refactoring required
 namespace HLU.Data.Model.HluDataSetTableAdapters
 {
+    /// <summary>
+    /// Provides a generic data adapter for performing fill, update, insert, and delete operations on a strongly typed
+    /// DataTable and its associated DataRow type.
+    /// </summary>
+    /// <remarks>This adapter enables data binding and CRUD operations for custom DataTable and DataRow types,
+    /// supporting advanced filtering and transactional updates. It is intended for use with strongly typed datasets and
+    /// provides integration with data-binding frameworks. The adapter manages command and connection objects internally
+    /// and supports batch operations. Thread safety is not guaranteed; use separate instances for concurrent
+    /// operations.</remarks>
+    /// <typeparam name="T">The type of DataTable to be managed by the adapter. Must be a subclass of DataTable with a parameterless
+    /// constructor.</typeparam>
+    /// <typeparam name="R">The type of DataRow contained in the DataTable. Must match the row type of T.</typeparam>
     public partial class HluTableAdapter<T, R> : Component
         where T : DataTable, new()
         where R : DataRow
@@ -63,6 +74,12 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
 
         #region Constructor
 
+        /// <summary>
+        /// Initializes a new instance of the HluTableAdapter class using the specified database connection.
+        /// </summary>
+        /// <remarks>The type parameter R must match the row type of T. If this condition is not met, an
+        /// ArgumentException is thrown during construction.</remarks>
+        /// <param name="db">The database connection to be used by the adapter. Cannot be null.</param>
         internal HluTableAdapter(DbBase db)
         {
             try
@@ -83,6 +100,9 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
 
         #endregion
 
+        /// <summary>
+        /// Gets the underlying data adapter used for database operations.
+        /// </summary>
         protected internal IDbDataAdapter Adapter
         {
             get
@@ -92,10 +112,19 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             }
         }
 
+        /// <summary>
+        /// Gets the database connection used by the adapter.
+        /// </summary>
         internal IDbConnection Connection { get { return _db.Connection; } }
 
+        /// <summary>
+        /// Gets the database transaction used by the adapter.
+        /// </summary>
         internal IDbTransaction Transaction { get { return _db.Transaction; } }
 
+        /// <summary>
+        /// Gets the collection of commands used by the adapter.
+        /// </summary>
         protected IDbCommand[] CommandCollection
         {
             get
@@ -105,28 +134,41 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             }
         }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether existing rows should be cleared before new data is loaded.
+        /// </summary>
+        /// <remarks>Set this property to <see langword="true"/> to remove all existing rows from the
+        /// target data table before filling it with new data. If set to <see langword="false"/>, new data will be
+        /// appended to the existing rows.</remarks>
         public bool ClearBeforeFill
         {
             get { return this._clearBeforeFill; }
             set { this._clearBeforeFill = value; }
         }
 
+        /// <summary>
+        /// Initializes the data adapter and its associated commands for the specified DataTable type.
+        /// </summary>
+        /// <exception cref="Exception"></exception>
         private void InitAdapter()
         {
+            // Initialize the strongly typed DataTable if it hasn't been created yet
             if (_hluTable == null)
             {
                 _hluTable = new T();
                 _columnCount = _hluTable.Columns.Count;
             }
 
+            // Create the data adapter for the specified DataTable
             IDbDataAdapter adapter = _db.CreateAdapter(_hluTable);
 
+            // Ensure the table has a primary key defined
             if (adapter == null)
-                throw new Exception(String.Format("Table '{0}' has no primary key.",
-                    _db.QuoteIdentifier(_hluTable.TableName)));
+                throw new KeyNotFoundException($"Table '{_hluTable.TableName}' has no primary key.");
             else
                 _adapter = adapter;
 
+            // Store original select command and parameter mappings for later use
             if (this.Adapter != null)
             {
                 _originalSelectCommand = adapter.SelectCommand.CommandText;
@@ -163,6 +205,12 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             }
         }
 
+        /// <summary>
+        /// Initializes the collection of database commands used by the data adapter.
+        /// </summary>
+        /// <remarks>This method prepares the command collection for executing database operations,
+        /// typically by configuring the primary select command. It should be called before attempting to access or
+        /// execute commands from the collection.</remarks>
         private void InitCommandCollection()
         {
             this._commandCollection = new IDbCommand[1];
@@ -173,6 +221,11 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             this._commandCollection[0].CommandType = CommandType.Text;
         }
 
+        /// <summary>
+        /// Fills the specified data table with data from the database.
+        /// </summary>
+        /// <param name="dataTable">The data table to fill. If null, a new instance will be created.</param>
+        /// <returns>The number of rows added to or refreshed in the data table.</returns>
         [DataObjectMethodAttribute(DataObjectMethodType.Fill, true)]
         public virtual int Fill(T dataTable)
         {
@@ -183,6 +236,12 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             return returnValue;
         }
 
+        /// <summary>
+        /// Fills the specified data table with data from the database using a custom WHERE clause.
+        /// </summary>
+        /// <param name="dataTable"></param>
+        /// <param name="whereClause"></param>
+        /// <returns></returns>
         public virtual int Fill(T dataTable, string whereClause)
         {
             if (!String.IsNullOrEmpty(whereClause))
@@ -195,6 +254,12 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             return -1;
         }
 
+        /// <summary>
+        /// Fills the specified data table with data from the database using a list of filter conditions for the WHERE clause.
+        /// </summary>
+        /// <param name="dataTable"></param>
+        /// <param name="whereClause"></param>
+        /// <returns></returns>
         public virtual int Fill(T dataTable, List<SqlFilterCondition> whereClause)
         {
             if ((whereClause == null) || (whereClause.Count == 0))
@@ -215,6 +280,12 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             catch { return -1; }
         }
 
+        /// <summary>
+        /// Fills the specified data table with data from the database using multiple sets of filter conditions for the WHERE clause.
+        /// </summary>
+        /// <param name="dataTable"></param>
+        /// <param name="whereClause"></param>
+        /// <returns></returns>
         public virtual int Fill(T dataTable, List<List<SqlFilterCondition>> whereClause)
         {
             if ((whereClause == null) || (whereClause.Count == 0))
@@ -244,6 +315,10 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             catch { return -1; }
         }
 
+        /// <summary>
+        /// Retrieves all data from the database into a new instance of the DataTable.
+        /// </summary>
+        /// <returns></returns>
         [DataObjectMethodAttribute(DataObjectMethodType.Select, true)]
         public virtual T GetData()
         {
@@ -252,26 +327,51 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             return _hluTable;
         }
 
+        /// <summary>
+        /// Updates the database with changes made to the specified data table.
+        /// </summary>
+        /// <param name="dataTable"></param>
+        /// <returns></returns>
         public virtual int Update(T dataTable)
         {
             return _db.Update<T>(dataTable);
         }
 
+        /// <summary>
+        /// Updates the database with changes made to the specified dataset.
+        /// </summary>
+        /// <param name="dataSet"></param>
+        /// <returns></returns>
         public virtual int Update(HluDataSet dataSet)
         {
             return this.Adapter.Update(dataSet);
         }
 
+        /// <summary>
+        /// Updates the database with changes made to the specified data row.
+        /// </summary>
+        /// <param name="dataRow"></param>
+        /// <returns></returns>
         public virtual int Update(R dataRow)
         {
             return _db.Update<T, R>([dataRow]);
         }
 
+        /// <summary>
+        /// Updates the database with changes made to the specified array of data rows.
+        /// </summary>
+        /// <param name="dataRows"></param>
+        /// <returns></returns>
         public virtual int Update(R[] dataRows)
         {
             return _db.Update<T, R>(dataRows);
         }
 
+        /// <summary>
+        /// Deletes the specified original data row from the database.
+        /// </summary>
+        /// <param name="originalRow"></param>
+        /// <returns></returns>
         [DataObjectMethodAttribute(DataObjectMethodType.Delete, true)]
         public virtual int Delete(R originalRow)
         {
@@ -306,6 +406,11 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             }
         }
 
+        /// <summary>
+        /// Inserts the specified data row into the database.
+        /// </summary>
+        /// <param name="row"></param>
+        /// <returns></returns>
         [DataObjectMethodAttribute(DataObjectMethodType.Insert, true)]
         public virtual int Insert(R row)
         {
@@ -333,6 +438,12 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             }
         }
 
+        /// <summary>
+        /// Updates the specified data row in the database using the original row for concurrency checks.
+        /// </summary>
+        /// <param name="newRow"></param>
+        /// <param name="originalRow"></param>
+        /// <returns></returns>
         [DataObjectMethodAttribute(DataObjectMethodType.Update, true)]
         public virtual int Update(R newRow, R originalRow)
         {
@@ -375,8 +486,6 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
     [ToolboxItem(true)]
     public partial class TableAdapterManager : Component
     {
-        #region Fields
-
         #region TableAdapters
 
         private HluTableAdapter<HluDataSet.exportsDataTable, HluDataSet.exportsRow> _exportsTableAdapter;
@@ -481,7 +590,9 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
 
         private HluTableAdapter<HluDataSet.lut_osmm_updates_changeDataTable, HluDataSet.lut_osmm_updates_changeRow> _lut_osmm_updates_changeTableAdapter;
 
-        #endregion
+        #endregion TableAdapters
+
+        #region Fields
 
         private UpdateOrderOption _updateOrder;
 
@@ -551,9 +662,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
 
         private static Type[] LookupTableTypes = value1;
 
-        #endregion
-
-        #region Properties
+        #endregion Fields
 
         #region Table Adapters
 
@@ -1120,6 +1229,8 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
 
         #endregion
 
+        #region Properties
+
         public UpdateOrderOption UpdateOrder
         {
             get { return this._updateOrder; }
@@ -1246,21 +1357,30 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             }
         }
 
-        #endregion
+        #endregion Properties
 
         #region Constructor
 
+        /// <summary>
+        /// Initializes a new instance of the TableAdapterManager class.
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="createAdapters"></param>
+        /// <exception cref="ArgumentException"></exception>
         internal TableAdapterManager(DbBase db, Scope createAdapters)
         {
             // Check parameters.
             ArgumentNullException.ThrowIfNull(db);
             ArgumentNullException.ThrowIfNull(db.Connection);
 
+            // Validate that the provided DbBase is for an HLU database.
             string errorMessage;
             if (!IsHluDataSet(db, out errorMessage)) throw new ArgumentException(errorMessage, nameof(db));
 
+            // Store reference to DbBase.
             _db = db;
 
+            // Create dictionary to match DataTable types to TableAdapter properties.
             _tableAdapterMatches = (from pt in typeof(HluDataSet).GetProperties()
                                     from pa in this.GetType().GetProperties().Where(pi => pi.PropertyType.GetGenericArguments().Length != 0)
                                     where pa.PropertyType.GetGenericArguments().Contains(pt.PropertyType)
@@ -1271,6 +1391,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                                     }
                                     ).ToDictionary(kv => kv.key, kv => kv.value);
 
+            // Create TableAdapter instances as specified.
             try
             {
                 switch (createAdapters)
@@ -1299,10 +1420,22 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             catch { throw; }
         }
 
+        /// <summary>
+        /// Determines whether the specified database connection points to a valid HLU data set.
+        /// </summary>
+        /// <remarks>If the method returns false, the error message provides details about missing or
+        /// mismatched tables and columns required for an HLU data set. The method does not throw exceptions for schema
+        /// mismatches; instead, it reports issues via the errorMessage parameter.</remarks>
+        /// <param name="db">The database connection to validate as an HLU data set. Must not be null and should be open and ready for
+        /// schema queries.</param>
+        /// <param name="errorMessage">When this method returns, contains an error message describing the schema issues if the database is not a
+        /// valid HLU data set; otherwise, null.</param>
+        /// <returns>true if the database schema matches the expected HLU data set structure; otherwise, false.</returns>
         internal static bool IsHluDataSet(DbBase db, out string errorMessage)
         {
             errorMessage = null;
 
+            // Get the schema information from the database.
             try
             {
                 DataTable schemaTable = db.GetSchema("Columns", db.RestrictionNameSchema, db.DefaultSchema,
@@ -1364,6 +1497,12 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             return false;
         }
 
+        /// <summary>
+        /// Initializes the data adapters required for database operations within the current context.
+        /// </summary>
+        /// <remarks>This method sets up multiple table adapters using the current database connection. It
+        /// should be called before performing any operations that depend on these adapters. This method is intended for
+        /// internal use and is not thread-safe.</remarks>
         private void CreateAdaptersData()
         {
             try
@@ -1383,11 +1522,17 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             catch { throw; }
         }
 
+        /// <summary>
+        /// Initializes the MM Polygons table adapter.
+        /// </summary>
         private void CreateAdapterMMPolygons()
         {
             _incid_mm_polygonsTableAdapter = new(_db);
         }
 
+        /// <summary>
+        /// Initializes the lookup table adapters required for database operations within the current context.
+        /// </summary>
         private void CreateAdaptersLut()
         {
             try
@@ -1435,10 +1580,17 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             catch { throw; }
         }
 
-        #endregion
+        #endregion Constructor
 
         #region Fill
 
+        /// <summary>
+        /// Fills the specified HluDataSet with data from the database based on the specified scope.
+        /// </summary>
+        /// <param name="hluDS"></param>
+        /// <param name="fillTables"></param>
+        /// <param name="clearBeforeFill"></param>
+        /// <exception cref="ArgumentException"></exception>
         public void Fill(HluDataSet hluDS, Scope fillTables, bool clearBeforeFill)
         {
             if (hluDS == null) throw new ArgumentException(null, nameof(hluDS));
@@ -1473,16 +1625,35 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             catch { throw; }
         }
 
+        /// <summary>
+        /// Fills one table in the specified HluDataSet.
+        /// </summary>
+        /// <param name="hluDS"></param>
+        /// <param name="tableType"></param>
+        /// <param name="clearBeforeFill"></param>
         public void Fill(HluDataSet hluDS, Type tableType, bool clearBeforeFill)
         {
             Fill(hluDS, [tableType], clearBeforeFill);
         }
 
+        /// <summary>
+        /// Fills one table in the specified HluDataSet with a where clause.
+        /// </summary>
+        /// <param name="hluDS"></param>
+        /// <param name="tableType"></param>
+        /// <param name="whereClause"></param>
+        /// <param name="clearBeforeFill"></param>
         public void Fill(HluDataSet hluDS, Type tableType, string whereClause, bool clearBeforeFill)
         {
             Fill(hluDS, [tableType], [whereClause], clearBeforeFill);
         }
 
+        /// <summary>
+        /// Fills the specified tables in the HluDataSet.
+        /// </summary>
+        /// <param name="hluDS"></param>
+        /// <param name="tableTypes"></param>
+        /// <param name="clearBeforeFill"></param>
         public void Fill(HluDataSet hluDS, Type[] tableTypes,  bool clearBeforeFill)
         {
             try
@@ -1513,6 +1684,13 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             catch { throw; }
         }
 
+        /// <summary>
+        /// Fills the specified tables in the HluDataSet with where clauses.
+        /// </summary>
+        /// <param name="hluDS"></param>
+        /// <param name="tableTypes"></param>
+        /// <param name="whereClauses"></param>
+        /// <param name="clearBeforeFill"></param>
         public void Fill(HluDataSet hluDS, Type[] tableTypes, string[] whereClauses, bool clearBeforeFill)
         {
             try
@@ -1545,6 +1723,16 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             catch { throw; }
         }
 
+        /// <summary>
+        /// Shared code for filling one table.
+        /// </summary>
+        /// <param name="hluDS"></param>
+        /// <param name="tableType"></param>
+        /// <param name="clearBeforeFill"></param>
+        /// <param name="adapterPropertyInfo"></param>
+        /// <param name="tablePropertyInfo"></param>
+        /// <param name="adapterProperty"></param>
+        /// <returns></returns>
         private bool FillShared(HluDataSet hluDS, Type tableType, bool clearBeforeFill,
             out PropertyInfo adapterPropertyInfo, out PropertyInfo tablePropertyInfo, out object adapterProperty)
         {
@@ -1572,6 +1760,14 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             }
         }
 
+        /// <summary>
+        /// Fills one table using the specified adapter.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="R"></typeparam>
+        /// <param name="adapter"></param>
+        /// <param name="table"></param>
+        /// <param name="clearBeforeFill"></param>
         private void FillOneTable<T, R>(HluTableAdapter<T, R> adapter, T table, bool clearBeforeFill)
             where T : DataTable, new()
             where R : DataRow
@@ -1592,7 +1788,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             }
         }
 
-        #endregion
+        #endregion Fill
 
         #region Update
 
@@ -2362,14 +2558,26 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             return result;
         }
 
-        #endregion
+        #endregion Update All
 
+        /// <summary>
+        /// Sort self-referenced table's rows.
+        /// </summary>
+        /// <typeparam name="R"></typeparam>
+        /// <param name="rows"></param>
+        /// <param name="relation"></param>
+        /// <param name="childFirst"></param>
         protected virtual void SortSelfReferenceRows<R>(R[] rows, DataRelation relation, bool childFirst)
             where R : DataRow
         {
             Array.Sort<R>(rows, new SelfReferenceComparer<R>(relation, childFirst));
         }
 
+        /// <summary>
+        /// Check if the input database matches the TableAdapter's connection
+        /// </summary>
+        /// <param name="inputDb"></param>
+        /// <returns></returns>
         private bool MatchTableAdapterConnection(DbBase inputDb)
         {
             if (inputDb == null)
@@ -2378,6 +2586,11 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                 return inputDb.Equals(_db);
         }
 
+        /// <summary>
+        /// Check if the input connection matches the TableAdapter's connection.
+        /// </summary>
+        /// <param name="inputConnection"></param>
+        /// <returns></returns>
         protected virtual bool MatchTableAdapterConnection(IDbConnection inputConnection)
         {
             if (inputConnection == null) // this.Connection is never null
@@ -2388,6 +2601,9 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                 return false;
         }
 
+        /// <summary>
+        /// Scope of updates.
+        /// </summary>
         public enum Scope
         {
             None = 0,
@@ -2399,7 +2615,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
         }
 
         /// <summary>
-        ///Update Order Option
+        ///Update Order Option.
         ///</summary>
         public enum UpdateOrderOption
         {
@@ -2408,7 +2624,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
         }
 
         /// <summary>
-        ///Used to sort self-referenced table's rows
+        /// Used to sort self-referenced table's rows.
         ///</summary>
         private class SelfReferenceComparer<R> : object, IComparer<R>
             where R : DataRow
@@ -2417,6 +2633,11 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
 
             private int _childFirst;
 
+            /// <summary>
+            /// Initializes a new instance of the SelfReferenceComparer class.
+            /// </summary>
+            /// <param name="relation"></param>
+            /// <param name="childFirst"></param>
             internal SelfReferenceComparer(DataRelation relation, bool childFirst)
             {
                 this._relation = relation;
@@ -2430,6 +2651,12 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                 }
             }
 
+            /// <summary>
+            /// Determines if one row is a child and the other is a parent in the self-referenced relation.
+            /// </summary>
+            /// <param name="child"></param>
+            /// <param name="parent"></param>
+            /// <returns></returns>
             private bool IsChildAndParent(R child, R parent)
             {
                 Debug.Assert((child != null));
@@ -2460,6 +2687,12 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                 return false;
             }
 
+            /// <summary>
+            /// Compares two rows.
+            /// </summary>
+            /// <param name="row1"></param>
+            /// <param name="row2"></param>
+            /// <returns></returns>
             public int Compare(R row1, R row2)
             {
                 if (object.ReferenceEquals(row1, row2))

@@ -177,7 +177,7 @@ namespace HLU
             int aCount = 0;
             foreach (char strTest in inputString)
             {
-                if (int.TryParse(strTest.ToString(), out int a) == true)
+                if (Int32.TryParse(strTest.ToString(), out int a) == true)
                 {
                     strOutputString += strTest.ToString();
                     aCount++;
@@ -268,7 +268,7 @@ namespace HLU
             {
                 strFormatted = strFormatted + strEntry.Trim() + ";";
             }
-            if (!string.IsNullOrEmpty(strFormatted))
+            if (!String.IsNullOrEmpty(strFormatted))
                 return strFormatted.Substring(0, strFormatted.Length - 1); // Remove the final semicolon.
             else
                 return "";
@@ -287,7 +287,7 @@ namespace HLU
             {
                 strFormatted = strFormatted + strEntry.Replace(";", " ") + ";";
             }
-            if (!string.IsNullOrEmpty(strFormatted))
+            if (!String.IsNullOrEmpty(strFormatted))
                 return strFormatted.Substring(0, strFormatted.Length - 1); // Remove the final comma.
             else
                 return "";
@@ -322,7 +322,7 @@ namespace HLU
                         if (!StatsColumns.Contains(strFieldNameTr, StringComparison.OrdinalIgnoreCase))
                         {
                             // It is in neither - add it.
-                            if (!string.IsNullOrEmpty(StatsColumns))
+                            if (!String.IsNullOrEmpty(StatsColumns))
                                 StatsColumns += ";";
                             StatsColumns = StatsColumns + strFieldNameTr + " FIRST";
                         }

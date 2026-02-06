@@ -21,6 +21,7 @@
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using HLU.Data;
+using HLU.Data.Connection;
 using HLU.Data.Model;
 using System;
 using System.Collections.Generic;
@@ -105,8 +106,7 @@ namespace HLU.UI.ViewModel
                 // Update the incid row
                 if (_viewModelMain.HluTableAdapterManager.incidTableAdapter.Update(
                     (HluDataSet.incidDataTable)_viewModelMain.HluDataset.incid.GetChanges()) == -1)
-                    throw new Exception(String.Format("Failed to update table [{0}].",
-                        _viewModelMain.HluDataset.incid.TableName));
+                    throw new Exception($"Failed to update table [{_viewModelMain.HluDataset.incid.TableName}].");
 
                 // Update IHS tables
                 UpdateIHSTables();
@@ -116,8 +116,7 @@ namespace HLU.UI.ViewModel
                 {
                     if (_viewModelMain.HluTableAdapterManager.incid_conditionTableAdapter.Update(
                         (HluDataSet.incid_conditionDataTable)_viewModelMain.HluDataset.incid_condition.GetChanges()) == -1)
-                        throw new Exception(String.Format("Failed to update table [{0}].",
-                            _viewModelMain.HluDataset.incid_condition.TableName));
+                        throw new Exception($"Failed to update table [{_viewModelMain.HluDataset.incid_condition.TableName}].");
                 }
 
                 // Update the secondary rows
@@ -137,8 +136,7 @@ namespace HLU.UI.ViewModel
 
                     if (_viewModelMain.HluTableAdapterManager.incid_sourcesTableAdapter.Update(
                         (HluDataSet.incid_sourcesDataTable)_viewModelMain.IncidSourcesTable.GetChanges()) == -1)
-                        throw new Exception(String.Format("Failed to update table [{0}].",
-                            _viewModelMain.HluDataset.incid_sources.TableName));
+                        throw new Exception($"Failed to update table [{_viewModelMain.HluDataset.incid_sources.TableName}].");
                 }
 
                 // If there are OSMM update rows for this incid, and
@@ -160,8 +158,7 @@ namespace HLU.UI.ViewModel
                 {
                     if (_viewModelMain.HluTableAdapterManager.incid_osmm_updatesTableAdapter.Update(
                         (HluDataSet.incid_osmm_updatesDataTable)_viewModelMain.HluDataset.incid_osmm_updates.GetChanges()) == -1)
-                        throw new Exception(String.Format("Failed to update table [{0}].",
-                            _viewModelMain.HluDataset.incid_osmm_updates.TableName));
+                        throw new Exception($"Failed to update table [{_viewModelMain.HluDataset.incid_osmm_updates.TableName}].");
                 }
 
                 // ---------------------------------------------------------------------
@@ -185,10 +182,7 @@ namespace HLU.UI.ViewModel
 
                 //TODO: GIS layer shadow copy update - Set length and area for each polygon (if possible)?
                 // Perform database shadow copy update
-                if (!UpdateGISShadowCopy(incidCond))
-                {
-                    throw new Exception("Failed to update database copy of GIS layer.");
-                }
+                UpdateGISShadowCopy(incidCond);
 
                 // Build a list of columns and values to update
                 DataColumn[] updateColumns = [
@@ -202,7 +196,7 @@ namespace HLU.UI.ViewModel
                         _viewModelMain.IncidQualityDetermination ?? "",
                         _viewModelMain.IncidQualityInterpretation ?? ""];
 
-                //TODO: Catch exceptions
+                //TODO: Catch exceptions?
                 // Queue updates to the GIS layer
                 await _viewModelMain.GISApplication.UpdateFeaturesAsync(updateColumns, updateValues,
                      _viewModelMain.HistoryColumns, incidCond, editOperation);
@@ -215,9 +209,16 @@ namespace HLU.UI.ViewModel
                 ViewModelWindowMainHistory vmHist = new(_viewModelMain);
                 vmHist.HistoryWrite(fixedValues, historyTable, Operations.AttributeUpdate, nowDtTm);
 
-                // Execute the edit operation.
-                if (!await editOperation.ExecuteAsync())
-                    throw new HLUToolException("Failed to update GIS layer.");
+                // Execute the GIS edit operation.
+                bool executed = await editOperation.ExecuteAsync();
+                if (!executed)
+                {
+                    string details = editOperation.ErrorMessage;
+                    if (String.IsNullOrWhiteSpace(details))
+                        details = "No additional details were provided by the edit operation.";
+
+                    throw new HLUToolException($"Failed to update GIS layer. {details}");
+                }
 
                 // Commit the transation and accept the changes
                 _viewModelMain.DataBase.CommitTransaction();
@@ -242,16 +243,19 @@ namespace HLU.UI.ViewModel
                     // Abort the GIS updates
                     editOperation.Abort();
                 }
-                catch (Exception ex2)
+                catch
                 {
-                    MessageBox.Show("Error" + ex2.Message);
+                    // Ignore abort failures.
                 }
 
                 // Flag the updates weren't saved
                 _viewModelMain.Saved = false;
 
+                // Get the SQL error message (if it is one) or the exception message.
+                string exMessage = DbBase.GetSqlErrorMessage(ex);
+
                 MessageBox.Show(string.Format("Your changes could not be saved. The error message returned was:\n\n{0}",
-                    ex.Message), "HLU: Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    exMessage), "HLU: Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
 
                 return false;
             }
@@ -304,7 +308,7 @@ namespace HLU.UI.ViewModel
             {
                 if (tableAdapter.Update((DataTable)datasetTable.GetChanges()) == -1)
                 {
-                    throw new Exception(string.Format("Failed to update table [{0}].", datasetTable.TableName));
+                    throw new Exception($"Failed to update table [{datasetTable.TableName}].");
                 }
             }
         }
@@ -312,9 +316,8 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Updates the GIS shadow copy (of the incid_mm_polygons table).
         /// </summary>
-        /// <param name="incidCond"></param>
-        /// <returns></returns>
-        private bool UpdateGISShadowCopy(List<SqlFilterCondition> incidCond)
+        /// <param name="incidCond">The conditions to filter the rows to be updated.</param>
+        private void UpdateGISShadowCopy(List<SqlFilterCondition> incidCond)
         {
             string updateStatement = string.Format(
                 "UPDATE {0} SET {1}={2}, {3}={4}, {5}={6}, {7}={8} WHERE {9}",
@@ -329,8 +332,18 @@ namespace HLU.UI.ViewModel
                 _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidQualityInterpretation),
                 _viewModelMain.DataBase.WhereClause(false, true, true, incidCond));
 
-            return _viewModelMain.DataBase.ExecuteNonQuery(updateStatement,
-                _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text) != -1;
+            // Update the DB copy of the GIS layer.
+            try
+            {
+                _viewModelMain.DataBase.ExecuteNonQuery(
+                    updateStatement,
+                    _viewModelMain.DataBase.Connection.ConnectionTimeout,
+                    CommandType.Text);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to update database copy of GIS layer in table [{_viewModelMain.HluDataset.incid_mm_polygons.TableName}].", ex);
+            }
         }
 
         /// <summary>
@@ -387,14 +400,14 @@ namespace HLU.UI.ViewModel
             // Update the table to remove the deleted rows.
             if (_viewModelMain.HluTableAdapterManager.incid_bapTableAdapter.Update(
                 _viewModelMain.IncidBapRows.Where(r => r.RowState == DataRowState.Deleted).ToArray()) == -1)
-                throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_bap.TableName));
+                throw new Exception($"Failed to update table [{_viewModelMain.HluDataset.incid_bap.TableName}].");
 
             // If there are any rows that have been updated.
             if (updateRows.Count > 0)
             {
                 // Update the table to update the updated rows.
                 if (_viewModelMain.HluTableAdapterManager.incid_bapTableAdapter.Update(updateRows.ToArray()) == -1)
-                    throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_bap.TableName));
+                    throw new Exception($"Failed to update table [{_viewModelMain.HluDataset.incid_bap.TableName}].");
             }
 
             // Insert the new rows into the table.
@@ -449,14 +462,14 @@ namespace HLU.UI.ViewModel
             // Update the table to remove the deleted rows.
             if (_viewModelMain.HluTableAdapterManager.incid_secondaryTableAdapter.Update(
                 _viewModelMain.IncidSecondaryRows.Where(r => r.RowState == DataRowState.Deleted).ToArray()) == -1)
-                throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_secondary.TableName));
+                throw new Exception($"Failed to update table [{_viewModelMain.HluDataset.incid_secondary.TableName}].");
 
             // If there are any rows that have been updated.
             if (updateRows.Count > 0)
             {
                 // Update the table to update the updated rows.
                 if (_viewModelMain.HluTableAdapterManager.incid_secondaryTableAdapter.Update(updateRows.ToArray()) == -1)
-                    throw new Exception(String.Format("Failed to update table [{0}].", _viewModelMain.HluDataset.incid_secondary.TableName));
+                    throw new Exception($"Failed to update table [{_viewModelMain.HluDataset.incid_secondary.TableName}].");
             }
 
             // Insert the new rows into the table.
@@ -601,9 +614,18 @@ namespace HLU.UI.ViewModel
                 _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.incidColumn.ColumnName),
                 _viewModelMain.DataBase.QuoteValue(incid));
 
-            if (_viewModelMain.DataBase.ExecuteNonQuery(updateStatement,
-                _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text) == -1)
-                throw new Exception("Failed to update incid table modified details.");
+            // Update the modified columns in the incid table.
+            try
+            {
+                _viewModelMain.DataBase.ExecuteNonQuery(
+                    updateStatement,
+                    _viewModelMain.DataBase.Connection.ConnectionTimeout,
+                    CommandType.Text);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to update modified details in table [{_viewModelMain.HluDataset.incid.TableName}].", ex);
+            }
         }
     }
 
