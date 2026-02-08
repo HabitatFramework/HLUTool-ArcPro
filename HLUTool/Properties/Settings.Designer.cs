@@ -243,14 +243,14 @@ namespace HLU.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1000")]
         [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public int WarnBeforeGISSelect {
+        public int MaxFeaturesGISSelect {
             get {
-                return ((int)(this["WarnBeforeGISSelect"]));
+                return ((int)(this["MaxFeaturesGISSelect"]));
             }
             set {
-                this["WarnBeforeGISSelect"] = value;
+                this["MaxFeaturesGISSelect"] = value;
             }
         }
         

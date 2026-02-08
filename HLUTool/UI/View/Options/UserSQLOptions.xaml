@@ -44,8 +44,6 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="6" />
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="6" />
-                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <Grid x:Name="GridSQLSelect" Grid.Row="0">
@@ -76,35 +74,7 @@
                             Header="Get Values Count" />
                     </Grid>
 
-                    <Grid x:Name="GridWarnBeforeGISSelect" Grid.Row="2">
-
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" MinWidth="140" />
-                            <ColumnDefinition Width="Auto" MinWidth="70" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-
-                        <Label
-                            x:Name="LabelWarnBeforeGISSelect"
-                            Grid.Column="0"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Center"
-                            Content="Warn Before GIS Select" />
-                        <ComboBox
-                            x:Name="ComboBoxWarnBeforeGISSelect"
-                            Grid.Column="1"
-                            BorderThickness="1"
-                            ItemsSource="{Binding WarnBeforeGISSelectOptions}"
-                            SelectedValue="{Binding WarnBeforeGISSelect, ValidatesOnDataErrors=True}"
-                            Tag="ErrorContent" />
-                        <controls:InfoButton
-                            Grid.Column="2"
-                            Margin="5,0,0,0"
-                            Description="Select if/when a pop-up warning message should be displayed prior to selecting features in GIS, e.g. when applying a filter or when selecting the features for all INCIDs in the active filter. The available options are:&#10;&#10;  * Prompt - Always prompt the user when attempting to update a subset of INCID features (see Attribute Updates for an example of the prompt dialog).&#10;  * Split - Always perform a logical split before applying the attribute updates.&#10;  * All - Always apply the attribute update to all features belonging to the INCID regardless of which features of the INCID are currently selected."
-                            Header="Warn Before GIS Select" />
-                    </Grid>
-
-                    <Grid x:Name="GridSQLPath" Grid.Row="4">
+                    <Grid x:Name="GridSQLPath" Grid.Row="2">
 
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />

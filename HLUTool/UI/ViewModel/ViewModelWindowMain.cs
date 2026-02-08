@@ -65,17 +65,6 @@ namespace HLU.UI.ViewModel
     };
 
     /// <summary>
-    /// An enumeration of the different options for when to warn
-    /// the user before performing a GIS selection.
-    /// </summary>
-    public enum WarnBeforeGISSelect
-    {
-        Always,
-        Joins,
-        Never
-    };
-
-    /// <summary>
     /// An enumeration of the different options for whether
     /// to auto zoom to the GIS selection.
     /// </summary>

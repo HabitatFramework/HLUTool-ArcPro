@@ -24,14 +24,36 @@ using System.Linq;
 
 namespace HLU
 {
+    /// <summary>
+    /// Provides extension methods for chunking sequences of items.
+    /// </summary>
     public static class ChunkIt
     {
+        #region Grouping extensions
+
+        /// <summary>
+        /// Groups contiguous elements in a sequence that share the same key, as defined by the keySelector function.
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <typeparam name="TKey"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="keySelector"></param>
+        /// <returns></returns>
         public static IEnumerable<IGrouping<TKey, TSource>> ChunkBy<TSource, TKey>(
             this IEnumerable<TSource> source, Func<TSource, TKey> keySelector)
         {
             return source.ChunkBy(keySelector, EqualityComparer<TKey>.Default);
         }
 
+        /// <summary>
+        /// Groups contiguous elements in a sequence that share the same key, as defined by the keySelector function and the provided equality comparer.
+        /// </summary>
+        /// <typeparam name="TSource"></typeparam>
+        /// <typeparam name="TKey"></typeparam>
+        /// <param name="source"></param>
+        /// <param name="keySelector"></param>
+        /// <param name="comparer"></param>
+        /// <returns></returns>
         public static IEnumerable<IGrouping<TKey, TSource>> ChunkBy<TSource, TKey>(
             this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer)
         {
@@ -76,6 +98,10 @@ namespace HLU
                 }
             }
         }
+
+        #endregion Grouping extensions
+
+        #region Chunk class
 
         /// <summary>
         /// A Chunk is a contiguous group of one or more source elements that have the same key.
@@ -217,6 +243,9 @@ namespace HLU
                 }
             }
 
+            /// <summary>
+            /// The key for this chunk. All elements in the chunk share this key.
+            /// </summary>
             public TKey Key { get { return key; } }
 
             /// <summary>
@@ -251,11 +280,19 @@ namespace HLU
                 }
             }
 
+            /// <summary>
+            /// Explicit non-generic enumerator implementation. It simply calls the generic version.
+            /// </summary>
+            /// <returns></returns>
             IEnumerator IEnumerable.GetEnumerator()
             {
                 return GetEnumerator();
             }
         }
+
+        #endregion Chunk class
+
+        #region List extensions
 
         /// Break a list of items into chunks of a specific size.
         /// </summary>
@@ -270,5 +307,111 @@ namespace HLU
             }
         }
 
+        /// <summary>
+        /// Chunks a SQL filter clause into sub-lists, but only splits at top-level boundaries.
+        /// </summary>
+        /// <remarks>
+        /// A split is only allowed when the current parenthesis depth is zero and the next condition's boolean operator is "OR".
+        /// This prevents splitting paired conditions such as "incid &gt;= 1" AND "incid &lt;= 4", and prevents splitting inside parentheses.
+        /// </remarks>
+        /// <param name="source">The source conditions in their existing order.</param>
+        /// <param name="chunkSize">
+        /// The preferred minimum chunk size. Chunks may exceed this size if no safe split point occurs exactly at the size boundary.
+        /// </param>
+        /// <param name="hardMaxChunkSize">
+        /// Optional hard maximum chunk size. If exceeded without encountering a safe split point, the method will split anyway.
+        /// Use this to protect against SQL Server parameter limits.
+        /// </param>
+        /// <returns>An enumerable of chunked condition lists.</returns>
+        public static IEnumerable<List<SqlFilterCondition>> ChunkClauseTopLevel(
+            this IEnumerable<SqlFilterCondition> source,
+            int chunkSize,
+            int? hardMaxChunkSize = null)
+        {
+            ArgumentNullException.ThrowIfNull(source);
+
+            if (chunkSize <= 0)
+                throw new ArgumentException("Chunk size must be greater than zero.", nameof(chunkSize));
+
+            List<SqlFilterCondition> all = source as List<SqlFilterCondition> ?? source.ToList();
+            if (all.Count == 0)
+                yield break;
+
+            List<SqlFilterCondition> chunk = [];
+            int parenDepth = 0;
+
+            for (int i = 0; i < all.Count; i++)
+            {
+                SqlFilterCondition cond = all[i];
+                chunk.Add(cond);
+
+                // Update parentheses depth after adding the current condition.
+                parenDepth += CountChar(cond.OpenParentheses, '(');
+                parenDepth -= CountChar(cond.CloseParentheses, ')');
+
+                if (parenDepth < 0)
+                {
+                    // Defensive: the clause is malformed (more closing than opening).
+                    // Reset to avoid cascading errors.
+                    parenDepth = 0;
+                }
+
+                bool isLast = i == all.Count - 1;
+                if (isLast)
+                    continue;
+
+                SqlFilterCondition next = all[i + 1];
+
+                // Safe boundary: about to start a new top-level OR term.
+                bool safeBoundary =
+                    (parenDepth == 0) &&
+                    next.BooleanOperator.Equals("OR", StringComparison.OrdinalIgnoreCase);
+
+                // Preferred split: reached target size and we are at a safe boundary.
+                if (safeBoundary && (chunk.Count >= chunkSize))
+                {
+                    yield return chunk;
+                    chunk = [];
+                    continue;
+                }
+
+                // Hard max protection: if requested, split even if not safe.
+                if (hardMaxChunkSize.HasValue && (chunk.Count >= hardMaxChunkSize.Value))
+                {
+                    yield return chunk;
+                    chunk = [];
+                    continue;
+                }
+            }
+
+            if (chunk.Count > 0)
+                yield return chunk;
+        }
+
+        #endregion List extensions
+
+        #region String extensions
+
+        /// <summary>
+        /// Counts the occurrences of a specific character in a string.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        private static int CountChar(string value, char c)
+        {
+            if (String.IsNullOrEmpty(value))
+                return 0;
+
+            int count = 0;
+            for (int i = 0; i < value.Length; i++)
+            {
+                if (value[i] == c)
+                    count++;
+            }
+            return count;
+        }
+
+        #endregion String extensions
     }
 }

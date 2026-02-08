@@ -98,15 +98,8 @@ namespace HLU.UI.UserControls.Toolbar
             // Enable or disable the combobox based on CanSwitchGISLayer and main grid visibility.
             Enabled = canSwitchGISLayer && _viewModel.GridMainVisibility == Visibility.Visible;
 
-            // Optional: explain why it is disabled.
-            if (!canSwitchGISLayer)
-            {
-                DisabledTooltip = "Available only when not in a bulk or OSMM update mode.";
-            }
-            else
-            {
-                DisabledTooltip = string.Empty;
-            }
+            // Set the disabled tool tip text (for when it is disabled).
+            DisabledTooltip = "Available only when not in a bulk or OSMM update mode.";
         }
 
         /// <summary>

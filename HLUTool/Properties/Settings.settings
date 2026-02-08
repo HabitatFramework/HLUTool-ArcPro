@@ -68,8 +68,8 @@
     <Setting Name="BulkUpdateUsesAdo" Type="System.Boolean" Scope="Application">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="WarnBeforeGISSelect" Roaming="true" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">0</Value>
+    <Setting Name="MaxFeaturesGISSelect" Roaming="true" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">1000</Value>
     </Setting>
     <Setting Name="HistoryAdditionalFieldsDelimiter" Type="System.String" Scope="Application">
       <Value Profile="(Default)">~~~</Value>

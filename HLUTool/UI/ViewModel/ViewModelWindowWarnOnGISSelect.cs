@@ -37,7 +37,7 @@ namespace HLU.UI.ViewModel
         private int _gisFeaturesNum;
         private int _gisIncidNum;
         private string _gisFeaturesType;
-        private bool _selectByjoin;
+        private int _maxFeaturesGISSelect;
         private ICommand _noCommand;
         private ICommand _yesCommand;
 
@@ -48,11 +48,11 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Stores details of the warning dialog to be displayed.
         /// </summary>
-        /// <param name="numFeatures"></param>
-        /// <param name="numIncids"></param>
-        /// <param name="typeFeatures"></param>
-        /// <param name="selectByjoin"></param>
-        public ViewModelWindowWarnOnGISSelect(int numFeatures, int numIncids, GeometryTypes typeFeatures, bool selectByjoin)
+        /// <param name="numFeatures">The expected number of features to be selected in GIS (or -1 if unknown).</param>
+        /// <param name="numIncids">The expected number of incids to be selected in GIS (or -1 if unknown).</param>
+        /// <param name="typeFeatures">The type of features expected to be selected in GIS.</param>
+        /// <param name="maxFeaturesGISSelect">The maximum number of features to be selected in GIS before a warning dialog is displayed, based on user settings.</param>
+        public ViewModelWindowWarnOnGISSelect(int numFeatures, int numIncids, GeometryTypes typeFeatures, int maxFeaturesGISSelect)
         {
             // Store the expected number of features to be selected in GIS.
             _gisFeaturesNum = numFeatures;
@@ -66,8 +66,8 @@ namespace HLU.UI.ViewModel
             else
                 _gisFeaturesType = "feature";
 
-            // Store if a GIS table join will be used to perform the selection.
-            _selectByjoin = selectByjoin;
+            // Store the maximum number of features expected to be selected in GIS before a warning dialog is displayed, based on user settings.
+            _maxFeaturesGISSelect = maxFeaturesGISSelect;
         }
 
         #endregion ctor
@@ -217,11 +217,6 @@ namespace HLU.UI.ViewModel
                         _gisIncidNum > 1 ? "s" : String.Empty));
                 }
 
-                // Advise the user that a GIS table join will be used to
-                // perform the selection.
-                if (_selectByjoin)
-                    labelMsg.Append("\n\nThe operation will be performed using a table join in GIS which make take some time.");
-
                 labelMsg.Append("\n\nWould you like to proceed?");
 
                 return labelMsg.ToString();
@@ -233,19 +228,19 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (Settings.Default.WarnBeforeGISSelect == 0)
+                // Only enable when the current maximum number of features to be selected in GIS before a warning
+                // dialog is displayed is 0 (i.e. the user doesn't want to be warned again in future).
+                if (Settings.Default.MaxFeaturesGISSelect > 0)
                     return false;
                 else
                     return true;
             }
             set
             {
-                // Only set the warning down a 'notch' based on the
-                // current warning level.
-                if (Settings.Default.WarnBeforeGISSelect == 0)
-                    Settings.Default.WarnBeforeGISSelect = 1;
-                else if ((_selectByjoin) & (Settings.Default.WarnBeforeGISSelect == 1))
-                    Settings.Default.WarnBeforeGISSelect = 2;
+                // Set the maximum number of features to be selected in GIS before a warning dialog is displayed
+                // to 0 if the user doesn't want to be warned again in future.
+                if (Settings.Default.MaxFeaturesGISSelect > 0)
+                    Settings.Default.MaxFeaturesGISSelect = 0;
             }
         }
 
@@ -253,8 +248,9 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Only enable when the current warning level is 'Always'.
-                if (Settings.Default.WarnBeforeGISSelect == 0)
+                // Only enable if the current maximum number of features to be selected in GIS before a warning dialog
+                // is displayed is greater than 0.
+                if (Settings.Default.MaxFeaturesGISSelect > 0)
                     return true;
                 else
                     return false;

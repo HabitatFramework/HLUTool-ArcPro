@@ -53,15 +53,8 @@ namespace HLU.UI.UserControls.Toolbar
             bool canSplit = (_viewModel.CanSplit && _viewModel.GridMainVisibility == Visibility.Visible);
             Enabled = canSplit;
 
-            // Optional: explain why it is disabled.
-            if (!canSplit)
-            {
-                DisabledTooltip = "Available only when physical or logical split are possible.";
-            }
-            else
-            {
-                DisabledTooltip = string.Empty;
-            }
+            // Set the disabled tool tip text (for when it is disabled).
+            DisabledTooltip = "Available only when a physical or logical split is possible.";
         }
 
         /// <inheritdoc />

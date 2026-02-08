@@ -460,7 +460,7 @@ namespace HLU.Data.Connection
         /// <param name="whereConds">The list of where conds.</param>
         /// <param name="sqlWhereClause">The string of where clauses.</param>
         /// <returns>An integer of the number of rows matching the SQL.</returns>
-        public int SqlCount(DataTable[] targetTables, string countColumns, List<SqlFilterCondition> whereConds, string sqlWhereClause)
+        public async Task<int> SqlCount(DataTable[] targetTables, string countColumns, List<SqlFilterCondition> whereConds, string sqlWhereClause)
         {
             if ((targetTables == null) || (targetTables.Length == 0)) return 0;
 
@@ -496,7 +496,7 @@ namespace HLU.Data.Connection
                     sbCommandText.Append(" AND (").Append(sqlWhereClause).Append(')');
 
                 // Execute the sql command to count the number of records.
-                object result = ExecuteScalar(sbCommandText.ToString(), 0, CommandType.Text);
+                object result = await ExecuteScalarAsync(sbCommandText.ToString(), 0, CommandType.Text);
 
                 int numRows = 0;
                 if (result != null) numRows = Convert.ToInt32(result);
@@ -973,7 +973,7 @@ namespace HLU.Data.Connection
                 sbCommandText.Append(WhereClause(true, true, qualifyColumns, whereConds));
 
                 // Append an order by clause based on the primary key columns.
-                sbCommandText.Append(" ORDER BY ").Append(String.Join(",", Array.ConvertAll(targetColumns, x => ColumnAlias(x))));
+                sbCommandText.Append(" ORDER BY ").Append(String.Join(",", Array.ConvertAll(targetColumns, x => x.ColumnName)));
 
                 FillTable<DataTable>(sbCommandText.ToString(), ref resultTable);
 

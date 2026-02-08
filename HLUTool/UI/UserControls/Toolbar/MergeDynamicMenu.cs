@@ -53,15 +53,8 @@ namespace HLU.UI.UserControls.Toolbar
             bool CanMerge = (_viewModel.CanMerge && _viewModel.GridMainVisibility == Visibility.Visible);
             Enabled = CanMerge;
 
-            // Optional: explain why it is disabled.
-            if (!CanMerge)
-            {
-                DisabledTooltip = "Available only when physical or logical merge are possible.";
-            }
-            else
-            {
-                DisabledTooltip = string.Empty;
-            }
+            // Set the disabled tool tip text (for when it is disabled).
+            DisabledTooltip = "Available only when a physical or logical merge is possible.";
         }
 
         /// <inheritdoc />

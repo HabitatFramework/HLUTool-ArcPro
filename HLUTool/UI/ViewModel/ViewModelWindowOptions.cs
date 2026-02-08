@@ -108,6 +108,7 @@ namespace HLU.UI.ViewModel
         private string _autoZoomToSelection;
         private int? _minAutoZoom;
         private int _maxAutoZoom;
+        private int? _maxFeaturesGISSelect;
         private string _workingFileGDBPath;
 
         // User History options
@@ -134,7 +135,6 @@ namespace HLU.UI.ViewModel
         // Filter options
         private int? _getValueRows;
         private int _maxGetValueRows;
-        private int? _warnBeforeGISSelect;
         private string _sqlPath;
 
         // Backup variables
@@ -205,6 +205,7 @@ namespace HLU.UI.ViewModel
             _autoZoomToSelection = AutoZoomToSelectionString(enumValue);
             _minAutoZoom = Settings.Default.MinAutoZoom;
             _maxAutoZoom = Settings.Default.MaxAutoZoom;
+            _maxFeaturesGISSelect = Settings.Default.MaxFeaturesGISSelect;
             _workingFileGDBPath = Settings.Default.WorkingFileGDBPath;
 
             // User History options
@@ -241,7 +242,6 @@ namespace HLU.UI.ViewModel
             // Set the user SQL options
             _getValueRows = Settings.Default.GetValueRows;
             _maxGetValueRows = Settings.Default.MaxGetValueRows;
-            _warnBeforeGISSelect = Settings.Default.WarnBeforeGISSelect;
             _sqlPath = Settings.Default.SQLPath;
 
             // Load the navigation items (the individual options pages).
@@ -540,6 +540,7 @@ namespace HLU.UI.ViewModel
             var enumValue = AutoZoomToSelectionEnum(_autoZoomToSelection);
             Settings.Default.AutoZoomToSelection = (int)enumValue;
             Settings.Default.MinAutoZoom = (int)_minAutoZoom;
+            Settings.Default.MaxFeaturesGISSelect = (int)_maxFeaturesGISSelect;
             Settings.Default.WorkingFileGDBPath = _workingFileGDBPath;
 
             // Update user history options
@@ -566,7 +567,6 @@ namespace HLU.UI.ViewModel
 
             // Update user SQL options
             Settings.Default.GetValueRows = (int)_getValueRows;
-            Settings.Default.WarnBeforeGISSelect = (int)_warnBeforeGISSelect;
             Settings.Default.SQLPath = _sqlPath;
 
             // Update user updates options
@@ -786,6 +786,15 @@ namespace HLU.UI.ViewModel
         public int MaxAutoZoom
         {
             get { return _maxAutoZoom; }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum number of features at which to warn the user before selecting.
+        /// </summary>
+        public int? MaxFeaturesGISSelect
+        {
+            get { return _maxFeaturesGISSelect; }
+            set { _maxFeaturesGISSelect = value; }
         }
 
         /// <summary>
@@ -1346,38 +1355,6 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets or sets the list of available warn before GIS selection
-        /// options from the enum.
-        /// </summary>
-        /// <value>
-        /// The list of options for warning before any GIS selection.
-        /// </value>
-        public WarnBeforeGISSelect[] WarnBeforeGISSelectOptions
-        {
-            get
-            {
-                return Enum.GetValues(typeof(WarnBeforeGISSelect)).Cast<WarnBeforeGISSelect>()
-                    .ToArray();
-            }
-            set { }
-        }
-
-        /// <summary>
-        /// Gets or sets the preferred warning before any GIS selection option.
-        /// </summary>
-        /// <value>
-        /// The preferred option for warning before any GIS selection.
-        /// </value>
-        public WarnBeforeGISSelect? WarnBeforeGISSelect
-        {
-            get { return (WarnBeforeGISSelect)_warnBeforeGISSelect; }
-            set
-            {
-                _warnBeforeGISSelect = (int)value;
-            }
-        }
-
-        /// <summary>
         /// Get the browse SQL path command.
         /// </summary>
         /// <value>
@@ -1674,6 +1651,10 @@ namespace HLU.UI.ViewModel
                     error.Append("\n" + "Minimum auto zoom scale must be at least 100.");
                 if (Convert.ToInt32(MinAutoZoom) > Settings.Default.MaxAutoZoom)
                     error.Append("\n" + String.Format("Minimum auto zoom scale must not be greater than {0}.", Settings.Default.MaxAutoZoom));
+                if (Convert.ToInt32(MaxFeaturesGISSelect) < 0 || MaxFeaturesGISSelect == null)
+                    error.Append("Error: Maximum features expected before warning on select must be zero or greater.");
+                if (Convert.ToInt32(MaxFeaturesGISSelect) > 100000)
+                    error.Append("Error: Maximum features expected before warning on select must not be greater than 10000. Otherwise set to zero to disable warning");
                 if (String.IsNullOrEmpty(WorkingFileGDBPath))
                     error.Append("\n" + "You must enter a working File Geodatabase path.");
 
@@ -1787,6 +1768,12 @@ namespace HLU.UI.ViewModel
                             error = "Error: Minimum auto zoom scale must be at least 100.";
                         if (Convert.ToInt32(MinAutoZoom) > Settings.Default.MaxAutoZoom)
                             error = String.Format("Error: Minimum auto zoom scale must not be greater than {0}.", Settings.Default.MaxAutoZoom);
+                        break;
+                    case "MaxFeaturesGISSelect":
+                        if (Convert.ToInt32(MaxFeaturesGISSelect) < 0 || MaxFeaturesGISSelect == null)
+                            error = "Error: Maximum features expected before warning on select must be zero or greater.";
+                        if (Convert.ToInt32(MaxFeaturesGISSelect) > 100000)
+                            error = "Error: Maximum features expected before warning on select must not be greater than 10000. Otherwise set to zero to disable warning";
                         break;
                     case "WorkingFileGDBPath":
                         if (String.IsNullOrEmpty(WorkingFileGDBPath))

@@ -102,7 +102,6 @@ namespace HLU.UI.ViewModel
         private ICommand _osmmAcceptCommand;
         private ICommand _osmmRejectCommand;
         private ICommand _osmmBulkUpdateCommandMenu;
-        private ICommand _closeCommand;
 
         #endregion Commands
 
@@ -141,6 +140,7 @@ namespace HLU.UI.ViewModel
         // GIS/Export options
         private int _minZoom;
         private int _autoZoomToSelection;
+        private int _warnBeforeMaxFeatures;
         private string _workingFileGDBPath;
 
         // History options
@@ -171,7 +171,7 @@ namespace HLU.UI.ViewModel
         private int _potentialPriorityDetermQtyValidation;
 
         // Filter options
-        private int _warnBeforeGISSelect;
+        // None
 
         // Dates options
         // None
@@ -309,7 +309,6 @@ namespace HLU.UI.ViewModel
         private bool _readingMap = false;
         private bool _moving = false;
         private bool _saving = false;
-        private bool _closing = false;
         private bool _autoSplit = true;
         private bool _splitting = false;
         private bool _filteredByMap = false;
@@ -466,12 +465,10 @@ namespace HLU.UI.ViewModel
             _secondaryCodeDelimiter = _addInSettings.SecondaryCodeDelimiter;
             _resetOSMMUpdatesStatus = _addInSettings.ResetOSMMUpdatesStatus;
 
-            // Get user filter options
-            _warnBeforeGISSelect = Settings.Default.WarnBeforeGISSelect;
-
             // Get user GIS options
             _minZoom = Settings.Default.MinAutoZoom;
             _autoZoomToSelection = Settings.Default.AutoZoomToSelection;
+            _warnBeforeMaxFeatures = Settings.Default.MaxFeaturesGISSelect;
             _workingFileGDBPath = Settings.Default.WorkingFileGDBPath;
 
             // Get user interface options
@@ -4527,6 +4524,7 @@ namespace HLU.UI.ViewModel
         {
             // Apply user GIS options
             _minZoom = Settings.Default.MinAutoZoom;
+            _warnBeforeMaxFeatures = Settings.Default.MaxFeaturesGISSelect;
 
             // Apply user history options
             _historyDisplayLastN = Settings.Default.HistoryDisplayLastN;
@@ -4546,9 +4544,6 @@ namespace HLU.UI.ViewModel
 
             // Apply user updates options
             _notifyOnSplitMerge = Settings.Default.NotifyOnSplitMerge;
-
-            // Apply user SQL options
-            _warnBeforeGISSelect = Settings.Default.WarnBeforeGISSelect;
         }
 
         #endregion Options
@@ -4865,7 +4860,7 @@ namespace HLU.UI.ViewModel
                     // Find the expected number of features to be selected from the database.
                     _selectedToidsInDBCount = 0;
                     _selectedFragsInDBCount = 0;
-                    ExpectedSelectionDBFeatures(whereTables, newWhereClause, ref _selectedToidsInDBCount, ref _selectedFragsInDBCount);
+                    (_selectedToidsInDBCount, _selectedFragsInDBCount) = await ExpectedSelectionDBFeatures(whereTables, newWhereClause);
 
                     // Store the number of incids found in the database
                     _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -5014,23 +5009,18 @@ namespace HLU.UI.ViewModel
             finally { RefreshStatus(); }
         }
 
-        //TODO: Remove selectByJoin and replace with 'warn when record count > nnn'?
         /// <summary>
         /// Opens the warning on gis selection window to prompt the user
         /// for confirmation before proceeding.
         /// </summary>
-        /// <param name="selectByjoin">if set to <c>true</c> [select byjoin].</param>
         /// <param name="expectedNumFeatures">The expected number features.</param>
         /// <param name="expectedNumIncids">The expected number incids.</param>
         /// <returns></returns>
         /// <exception cref="Exception">No parent window loaded</exception>
-        private bool ConfirmGISSelect(bool selectByjoin, int expectedNumFeatures, int expectedNumIncids)
+        private bool ConfirmGISSelect(int expectedNumFeatures, int expectedNumIncids)
         {
-            // Warn the user either if the user option is set to
-            // 'Always' or if a GIS table join will be used and
-            // the user option is set to 'Joins'.
-            if ((_warnBeforeGISSelect == 0) ||
-                (selectByjoin && _warnBeforeGISSelect == 1))
+            // Warn the user if the expected number of features is going to be above the warning threshold set in the options.
+            if ((expectedNumFeatures > _warnBeforeMaxFeatures))
             {
                 // Create warning GIS on selection window
                 _windowWarnGISSelect = new()
@@ -5043,7 +5033,7 @@ namespace HLU.UI.ViewModel
 
                 // Create ViewModel to which main window binds
                 _viewModelWinWarnGISSelect = new ViewModelWindowWarnOnGISSelect(
-                    expectedNumFeatures, expectedNumIncids, expectedNumFeatures > -1 ? _gisLayerType : GeometryTypes.Unknown, selectByjoin);
+                    expectedNumFeatures, expectedNumIncids, expectedNumFeatures > -1 ? _gisLayerType : GeometryTypes.Unknown, _warnBeforeMaxFeatures);
 
                 // When ViewModel asks to be closed, close window
                 _viewModelWinWarnGISSelect.RequestClose -= viewModelWinWarnGISSelect_RequestClose; // Safety: avoid double subscription.
@@ -5075,8 +5065,8 @@ namespace HLU.UI.ViewModel
             _viewModelWinWarnGISSelect.RequestClose -= viewModelWinWarnGISSelect_RequestClose;
             _windowWarnGISSelect.Close();
 
-            // Update the user warning variable
-            _warnBeforeGISSelect = Settings.Default.WarnBeforeGISSelect;
+            // Update the user warning count threshold in case it was changed in the options within the warning window.
+            _warnBeforeMaxFeatures = Settings.Default.MaxFeaturesGISSelect;
 
             // If the user doesn't wish to proceed then clear the
             // current incid filter.
@@ -5156,7 +5146,7 @@ namespace HLU.UI.ViewModel
                     // Find the expected number of features to be selected in GIS.
                     _selectedToidsInDBCount = 0;
                     _selectedFragsInDBCount = 0;
-                    ExpectedSelectionDBFeatures(whereTables, newWhereClause, ref _selectedToidsInDBCount, ref _selectedFragsInDBCount);
+                    (_selectedToidsInDBCount, _selectedFragsInDBCount) = await ExpectedSelectionDBFeatures(whereTables, newWhereClause);
 
                     // Store the number of incids found in the database
                     _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -5542,8 +5532,7 @@ namespace HLU.UI.ViewModel
                         // Find the expected number of features to be selected in GIS.
                         _selectedToidsInDBCount = 0;
                         _selectedFragsInDBCount = 0;
-                        //ExpectedSelectionFeatures(whereTables, sqlWhereClause, ref _toidsSelectedDBCount, ref _fragsSelectedDBCount);
-                        ExpectedSelectionDBFeatures(whereTables, newWhereClause, ref _selectedToidsInDBCount, ref _selectedFragsInDBCount);
+                        (_selectedToidsInDBCount, _selectedFragsInDBCount) = await ExpectedSelectionDBFeatures(whereTables, newWhereClause);
 
                         // Store the number of incids found in the database
                         _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -5776,8 +5765,7 @@ namespace HLU.UI.ViewModel
                     // Find the expected number of features to be selected in GIS.
                     _selectedToidsInDBCount = 0;
                     _selectedFragsInDBCount = 0;
-                    //ExpectedSelectionFeatures(whereTables, sqlWhereClause, ref _toidsSelectedDBCount, ref _fragsSelectedDBCount);
-                    ExpectedSelectionDBFeatures(whereTables, newWhereClause, ref _selectedToidsInDBCount, ref _selectedFragsInDBCount);
+                    (_selectedToidsInDBCount, _selectedFragsInDBCount) = await ExpectedSelectionDBFeatures(whereTables, newWhereClause);
 
                     // Store the number of incids found in the database
                     _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -6318,7 +6306,7 @@ namespace HLU.UI.ViewModel
                 // Update the number of features found in the database.
                 _selectedToidsInDBCount = 0;
                 _selectedFragsInDBCount = 0;
-                (_selectedToidsInDBCount, _selectedFragsInDBCount) = await ExpectedSelectionFeatures(_incidSelectionWhereClause);
+                (_selectedToidsInDBCount, _selectedFragsInDBCount) = ExpectedSelectionFeatures(_incidSelectionWhereClause);
 
                 // Store the number of incids found in the database
                 _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -6467,9 +6455,9 @@ namespace HLU.UI.ViewModel
                 {
                     int countInvalid = _incidBapRowsAuto.Count(be => !be.IsValid());
                     if (countInvalid > 0)
-                        AddErrorList(ref _priorityErrors, "BapAuto");
+                        AddToErrorList(_priorityErrors, "BapAuto");
                     else
-                        DelErrorList(ref _priorityErrors, "BapAuto");
+                        RemoveFromErrorList(_priorityErrors, "BapAuto");
                 }
 
                 OnPropertyChanged(nameof(IncidBapHabitatsAuto));
@@ -6563,9 +6551,9 @@ namespace HLU.UI.ViewModel
                 {
                     int countInvalid = _incidBapRowsUser.Count(be => !be.IsValid());
                     if (countInvalid > 0)
-                        AddErrorList(ref _priorityErrors, "BapUser");
+                        AddToErrorList(_priorityErrors, "BapUser");
                     else
-                        DelErrorList(ref _priorityErrors, "BapUser");
+                        RemoveFromErrorList(_priorityErrors, "BapUser");
                 }
 
                 OnPropertyChanged(nameof(IncidBapHabitatsUser));
@@ -6871,14 +6859,13 @@ namespace HLU.UI.ViewModel
                 // (by querying the database).
                 int expectedNumToids = -1;
                 int expectedNumFeatures = -1;
-                (expectedNumToids, expectedNumFeatures) = await ExpectedSelectionFeatures(whereClause);
+                (expectedNumToids, expectedNumFeatures) = ExpectedSelectionFeatures(whereClause);
 
                 // Find the expected number of incids to be selected in GIS.
                 int expectedNumIncids = _incidSelection.Rows.Count;
 
                 // Select the required incid(s) in GIS and read the selection.
-                if (await PerformGisSelectionAsync(true, expectedNumFeatures, expectedNumIncids)
-                    )
+                if (await PerformGisSelectionAsync(true, expectedNumFeatures, expectedNumIncids))
                 {
                     // Analyse the results of the GIS selection by counting the number of
                     // incids, toids and fragments selected. Do not overwrite DB filter selection.
@@ -6908,8 +6895,9 @@ namespace HLU.UI.ViewModel
                         //TODO: Not comparing correct things. _toidsIncidGisCount and _fragsIncidGisCount
                         // are only for the current incid not all incids.
                         // Check if the counts returned are less than those expected.
-                        if ((_currentIncidToidsInGISCount < expectedNumToids) ||
-                                (_currentIncidFragsInGISCount < expectedNumFeatures))
+                        if ((_selectedIncidsInDBCount < expectedNumIncids) ||
+                            (_selectedToidsInDBCount < expectedNumToids) ||
+                            (_selectedFragsInDBCount < expectedNumFeatures))
                         {
                             MessageBox.Show("Not all incid features found in active layer.", "HLU: Selection",
                             MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -7140,13 +7128,14 @@ namespace HLU.UI.ViewModel
         /// by the sql query based upon a list of conditions.
         /// </summary>
         /// <param name="whereClause">The list of where clause conditions.</param>
-        /// <param name="numToids">The number of toids expected.</param>
-        /// <param name="numFragments">The number of fragments expected.</param>
-        /// <returns>An integer of the number of GIS features to be selected.</returns>
-        private async Task<(int NumToids, int NumFragments)> ExpectedSelectionFeatures(List<List<SqlFilterCondition>> whereClause)
+        /// <returns>A tuple of integers of the number of toids and fragments expected to be selected.</returns>
+        private (int numToids, int numFragments) ExpectedSelectionFeatures(List<List<SqlFilterCondition>> whereClause)
         {
             int numToids = 0;
             int numFragments = 0;
+
+            // Track distinct TOIDs across all chunks for an exact unique count.
+            HashSet<string> distinctToids = new(StringComparer.OrdinalIgnoreCase);
 
             if ((_incidSelection != null) && (_incidSelection.Rows.Count > 0) &&
                 (whereClause != null) && (whereClause.Count > 0))
@@ -7177,9 +7166,15 @@ namespace HLU.UI.ViewModel
                         {
                             List<SqlFilterCondition> whereCond = [];
                             whereCond = whereClause[0];
-                            whereClause = whereCond.ChunkClause(IncidPageSize).ToList();
+
+                            // Chunk only at top-level OR boundaries while tracking parentheses.
+                            // This avoids splitting matched pairs such as "incid >= 1" AND "incid <= 4".
+                            whereClause = whereCond.ChunkClauseTopLevel(10, 500).ToList();
                         }
-                        catch { }
+                        catch
+                        {
+                            // Ignore chunking failures.
+                        }
                     }
 
                     for (int i = 0; i < whereClause.Count; i++)
@@ -7203,11 +7198,31 @@ namespace HLU.UI.ViewModel
                             cond.CloseParentheses = "))";
                         }
 
-                        numToids += await _db.SqlCount(selTables, String.Format("Distinct {0}", _hluDS.incid_mm_polygons.toidColumn.ColumnName), joinCond.Concat(whereClause[i]).ToList());
-                        numFragments += await _db.SqlCount(selTables, "*", joinCond.Concat(whereClause[i]).ToList());
+                        List<SqlFilterCondition> allConds = joinCond.Concat(whereClause[i]).ToList();
+                        DataColumn[] targetColumns = [_hluDS.incid_mm_polygons.toidColumn];
+
+                        // Select TOID for every matching row, then:
+                        // - fragments = row count,
+                        // - distinct TOIDs = hash set union.
+                        DataTable rows = _db.SqlSelect(false, targetColumns, allConds);
+
+                        numFragments += rows.Rows.Count;
+
+                        foreach (DataRow row in rows.Rows)
+                        {
+                            string toid = row[0]?.ToString();
+                            if (!String.IsNullOrWhiteSpace(toid))
+                                distinctToids.Add(toid);
+                        }
                     }
+
+                    // Exact TOID count across all chunks.
+                    numToids = distinctToids.Count;
                 }
-                catch { }
+                catch
+                {
+                    // Ignore failures.
+                }
             }
 
             return (numToids, numFragments);
@@ -7221,8 +7236,11 @@ namespace HLU.UI.ViewModel
         /// <param name="sqlFromTables">The list of data tables.</param>
         /// <param name="sqlWhereClause">The where clause string.</param>
         /// <returns>An integer of the number of GIS features expected to be selected.</returns>
-        private void ExpectedSelectionDBFeatures(List<DataTable> sqlFromTables, string sqlWhereClause, ref int numToids, ref int numFragments)
+        private async Task<(int numToids, int numFragments)> ExpectedSelectionDBFeatures(List<DataTable> sqlFromTables, string sqlWhereClause)
         {
+            int numToids = 0;
+            int numFragments = 0;
+
             if ((_incidSelection != null) && (_incidSelection.Rows.Count > 0) &&
                 sqlFromTables.Count != 0)
             {
@@ -7241,11 +7259,15 @@ namespace HLU.UI.ViewModel
                         (rel = GetRelation(_hluDS.incid, st)) != null ?
                         new SqlFilterCondition("AND", t, t.incidColumn, typeof(DataColumn), "(", ")", rel.ChildColumns[0]) : null).Where(c => c != null);
 
-                    numToids = _db.SqlCount(whereTables, String.Format("Distinct {0}", _hluDS.incid_mm_polygons.toidColumn.ColumnName), joinCond.ToList(), sqlWhereClause);
-                    numFragments = _db.SqlCount(whereTables, "*", joinCond.ToList(), sqlWhereClause);
+                    numToids = await _db.SqlCount(whereTables, String.Format("Distinct {0}", _hluDS.incid_mm_polygons.toidColumn.ColumnName), joinCond.ToList(), sqlWhereClause);
+                    numFragments = await _db.SqlCount(whereTables, "*", joinCond.ToList(), sqlWhereClause);
 
                     // Create a selection DataTable of PK values of IncidMMPolygons.
                     _incidMMPolygonSelection = _db.SqlSelect(true, false, _hluDS.incid_mm_polygons.PrimaryKey, whereTables.ToList(), joinCond.ToList(), sqlWhereClause);
+
+                    //TODO: Temporary check.
+                    if (numFragments != _incidMMPolygonSelection.Rows.Count)
+                        Debug.Print("Diff");
 
                     //TODO: Why is this set twice?
                     // Count the number of fragments from the selection table.
@@ -7261,6 +7283,8 @@ namespace HLU.UI.ViewModel
                 }
                 catch { }
             }
+
+            return (numToids, numFragments);
         }
 
         /// <summary>
@@ -7293,11 +7317,9 @@ namespace HLU.UI.ViewModel
             // so the dialog should be treated as a general "large selection" warning.
             if (confirmSelect)
             {
-                //TODO: Remove selectbyJoin parameter
-                // selectByJoin is now always false in Pro, but keep the meaning:
-                // we are not doing a join-based selection anymore.
+                // Confirm the GIS selection with the user if required based on user options and
+                // the expected number of features to be selected in GIS.
                 bool proceed = ConfirmGISSelect(
-                    selectByjoin: false,
                     expectedNumFeatures: expectedNumFeatures,
                     expectedNumIncids: expectedNumIncids);
 
@@ -11291,12 +11313,12 @@ namespace HLU.UI.ViewModel
             {
                 int countInvalid = _incidSecondaryHabitats.Count(sh => !sh.IsValid());
                 if (countInvalid > 0)
-                    AddErrorList(ref _habitatErrors, "SecondaryHabitat");
+                    AddToErrorList(_habitatErrors, "SecondaryHabitat");
                 else
-                    DelErrorList(ref _habitatErrors, "SecondaryHabitat");
+                    RemoveFromErrorList(_habitatErrors, "SecondaryHabitat");
             }
             else
-                DelErrorList(ref _habitatErrors, "SecondaryHabitat");
+                RemoveFromErrorList(_habitatErrors, "SecondaryHabitat");
 
             OnPropertyChanged(nameof(IncidSecondaryHabitats));
             OnPropertyChanged(nameof(HabitatSecondariesMandatory));
@@ -11372,12 +11394,12 @@ namespace HLU.UI.ViewModel
                 {
                     int countInvalid = _incidSecondaryHabitats.Count(sh => !sh.IsValid());
                     if (countInvalid > 0)
-                        AddErrorList(ref _habitatErrors, "SecondaryHabitat");
+                        AddToErrorList(_habitatErrors, "SecondaryHabitat");
                     else
-                        DelErrorList(ref _habitatErrors, "SecondaryHabitat");
+                        RemoveFromErrorList(_habitatErrors, "SecondaryHabitat");
                 }
                 else
-                    DelErrorList(ref _habitatErrors, "SecondaryHabitat");
+                    RemoveFromErrorList(_habitatErrors, "SecondaryHabitat");
 
                 OnPropertyChanged(nameof(IncidSecondaryHabitats));
                 OnPropertyChanged(nameof(HabitatSecondariesMandatory));
@@ -11399,13 +11421,13 @@ namespace HLU.UI.ViewModel
             {
                 int countInvalid = _incidSecondaryHabitats.Count(sh => !sh.IsValid());
                 if (countInvalid > 0)
-                    AddErrorList(ref _habitatErrors, "SecondaryHabitat");
+                    AddToErrorList(_habitatErrors, "SecondaryHabitat");
                 else
-                    DelErrorList(ref _habitatErrors, "SecondaryHabitat");
+                    RemoveFromErrorList(_habitatErrors, "SecondaryHabitat");
             }
             else
             {
-                DelErrorList(ref _habitatErrors, "SecondaryHabitat");
+                RemoveFromErrorList(_habitatErrors, "SecondaryHabitat");
             }
 
             // Update the list of secondary habitat rows for the class.
@@ -12598,12 +12620,12 @@ namespace HLU.UI.ViewModel
             {
                 int countInvalid = _incidBapRowsAuto.Count(be => !be.IsValid());
                 if (countInvalid > 0)
-                    AddErrorList(ref _priorityErrors, "BapAuto");
+                    AddToErrorList(_priorityErrors, "BapAuto");
                 else
-                    DelErrorList(ref _priorityErrors, "BapAuto");
+                    RemoveFromErrorList(_priorityErrors, "BapAuto");
             }
             else
-                DelErrorList(ref _priorityErrors, "BapAuto");
+                RemoveFromErrorList(_priorityErrors, "BapAuto");
 
             OnPropertyChanged(nameof(IncidBapHabitatsAuto));
 
@@ -12702,9 +12724,9 @@ namespace HLU.UI.ViewModel
             {
                 int countInvalid = _incidBapRowsUser.Count(be => !be.IsValid());
                 if (countInvalid > 0)
-                    AddErrorList(ref _priorityErrors, "BapUser");
+                    AddToErrorList(_priorityErrors, "BapUser");
                 else
-                    DelErrorList(ref _priorityErrors, "BapUser");
+                    RemoveFromErrorList(_priorityErrors, "BapUser");
 
                 // Check if there are any duplicates between the primary and
                 // secondary BAP records.
@@ -12722,13 +12744,13 @@ namespace HLU.UI.ViewModel
                     //                        select g.Key).Aggregate(new(), (sb, code) => sb.Append(", " + code));
 
                     if (beDups.Count > 2)
-                        AddErrorList(ref _priorityErrors, "BapUserDup");
+                        AddToErrorList(_priorityErrors, "BapUserDup");
                     else
-                        DelErrorList(ref _priorityErrors, "BapUserDup");
+                        RemoveFromErrorList(_priorityErrors, "BapUserDup");
                 }
             }
             else
-                DelErrorList(ref _priorityErrors, "BapUser");
+                RemoveFromErrorList(_priorityErrors, "BapUser");
 
             OnPropertyChanged(nameof(IncidBapHabitatsUser));
 
@@ -12754,9 +12776,9 @@ namespace HLU.UI.ViewModel
             {
                 int countInvalid = _incidBapRowsAuto.Count(be => !be.IsValid());
                 if (countInvalid > 0)
-                    AddErrorList(ref _priorityErrors, "BapAuto");
+                    AddToErrorList(_priorityErrors, "BapAuto");
                 else
-                    DelErrorList(ref _priorityErrors, "BapAuto");
+                    RemoveFromErrorList(_priorityErrors, "BapAuto");
             }
             OnPropertyChanged(nameof(PriorityTabLabel));
         }
@@ -12775,9 +12797,9 @@ namespace HLU.UI.ViewModel
             {
                 int countInvalid = _incidBapRowsUser.Count(be => !be.IsValid());
                 if (countInvalid > 0)
-                    AddErrorList(ref _priorityErrors, "BapUser");
+                    AddToErrorList(_priorityErrors, "BapUser");
                 else
-                    DelErrorList(ref _priorityErrors, "BapUser");
+                    RemoveFromErrorList(_priorityErrors, "BapUser");
 
                 // Check if there are any duplicates between the primary and
                 // secondary BAP records.
@@ -12795,9 +12817,9 @@ namespace HLU.UI.ViewModel
                     //                        select g.Key).Aggregate(new(), (sb, code) => sb.Append(", " + code));
 
                     if (beDups.Count > 2)
-                        AddErrorList(ref _priorityErrors, "BapUserDup");
+                        AddToErrorList(_priorityErrors, "BapUserDup");
                     else
-                        DelErrorList(ref _priorityErrors, "BapUserDup");
+                        RemoveFromErrorList(_priorityErrors, "BapUserDup");
                 }
             }
             OnPropertyChanged(nameof(PriorityTabLabel));
@@ -12880,9 +12902,9 @@ namespace HLU.UI.ViewModel
             {
                 int countInvalid = _incidBapRowsAuto.Count(be => !be.IsValid());
                 if (countInvalid > 0)
-                    AddErrorList(ref _priorityErrors, "BapAuto");
+                    AddToErrorList(_priorityErrors, "BapAuto");
                 else
-                    DelErrorList(ref _priorityErrors, "BapAuto");
+                    RemoveFromErrorList(_priorityErrors, "BapAuto");
             }
             OnPropertyChanged(nameof(PriorityTabLabel));
         }
@@ -12906,9 +12928,9 @@ namespace HLU.UI.ViewModel
             {
                 int countInvalid = _incidBapRowsUser.Count(be => !be.IsValid());
                 if (countInvalid > 0)
-                    AddErrorList(ref _priorityErrors, "BapUser");
+                    AddToErrorList(_priorityErrors, "BapUser");
                 else
-                    DelErrorList(ref _priorityErrors, "BapUser");
+                    RemoveFromErrorList(_priorityErrors, "BapUser");
 
                 // Check if there are any duplicates between the primary and
                 // secondary BAP records.
@@ -12926,14 +12948,14 @@ namespace HLU.UI.ViewModel
                     //                        select g.Key).Aggregate(new(), (sb, code) => sb.Append(", " + code));
 
                     if (beDups.Count > 2)
-                        AddErrorList(ref _priorityErrors, "BapUserDup");
+                        AddToErrorList(_priorityErrors, "BapUserDup");
                     else
-                        DelErrorList(ref _priorityErrors, "BapUserDup");
+                        RemoveFromErrorList(_priorityErrors, "BapUserDup");
                 }
             }
             else
             {
-                DelErrorList(ref _priorityErrors, "BapUser");
+                RemoveFromErrorList(_priorityErrors, "BapUser");
             }
 
             OnPropertyChanged(nameof(PriorityTabLabel));
@@ -15525,11 +15547,11 @@ namespace HLU.UI.ViewModel
                         if (String.IsNullOrEmpty(IncidPrimary) && BulkUpdateMode == false)
                         {
                             error = "Error: Primary Habitat is mandatory for every INCID";
-                            AddErrorList(ref _habitatErrors, columnName);
+                            AddToErrorList(_habitatErrors, columnName);
                         }
                         else
                         {
-                            DelErrorList(ref _habitatErrors, columnName);
+                            RemoveFromErrorList(_habitatErrors, columnName);
                         }
                         OnPropertyChanged(nameof(HabitatTabLabel));
                         break;
@@ -15550,32 +15572,32 @@ namespace HLU.UI.ViewModel
                                     // If the habitat secondary codes validation is error.
                                     if (_habitatSecondaryCodeValidation > 1)
                                     {
-                                        AddErrorList(ref _habitatErrors, columnName);
+                                        AddToErrorList(_habitatErrors, columnName);
                                         error = "Error: One or more mandatory secondary habitats for habitat type not found";
                                     }
                                     // If the habitat secondary codes validation is warning.
                                     else
                                     {
-                                        AddErrorList(ref _habitatWarnings, columnName);
+                                        AddToErrorList(_habitatWarnings, columnName);
                                         error = "Warning: One or more mandatory secondary habitats for habitat type not found";
                                     }
                                 }
                                 else
                                 {
-                                    DelErrorList(ref _habitatErrors, columnName);
-                                    DelErrorList(ref _habitatWarnings, columnName);
+                                    RemoveFromErrorList(_habitatErrors, columnName);
+                                    RemoveFromErrorList(_habitatWarnings, columnName);
                                 }
                             }
                             else
                             {
-                                DelErrorList(ref _habitatErrors, columnName);
-                                DelErrorList(ref _habitatWarnings, columnName);
+                                RemoveFromErrorList(_habitatErrors, columnName);
+                                RemoveFromErrorList(_habitatWarnings, columnName);
                             }
                         }
                         else
                         {
-                            DelErrorList(ref _habitatErrors, columnName);
-                            DelErrorList(ref _habitatWarnings, columnName);
+                            RemoveFromErrorList(_habitatErrors, columnName);
+                            RemoveFromErrorList(_habitatWarnings, columnName);
                         }
                         OnPropertyChanged(nameof(HabitatTabLabel));
                         break;
@@ -15714,11 +15736,11 @@ namespace HLU.UI.ViewModel
                             if (String.IsNullOrEmpty(IncidBoundaryBaseMap))
                             {
                                 error = "Error: Boundary basemap is mandatory for every INCID";
-                                AddErrorList(ref _detailsErrors, columnName);
+                                AddToErrorList(_detailsErrors, columnName);
                             }
                             else
                             {
-                                DelErrorList(ref _detailsErrors, columnName);
+                                RemoveFromErrorList(_detailsErrors, columnName);
                             }
                             OnPropertyChanged(nameof(DetailsTabLabel));
                             break;
@@ -15729,11 +15751,11 @@ namespace HLU.UI.ViewModel
                             if (String.IsNullOrEmpty(IncidDigitisationBaseMap))
                             {
                                 error = "Error: Digitisation basemap is mandatory for every INCID";
-                                AddErrorList(ref _detailsErrors, columnName);
+                                AddToErrorList(_detailsErrors, columnName);
                             }
                             else
                             {
-                                DelErrorList(ref _detailsErrors, columnName);
+                                RemoveFromErrorList(_detailsErrors, columnName);
                             }
                             OnPropertyChanged(nameof(DetailsTabLabel));
                             break;
@@ -15744,11 +15766,11 @@ namespace HLU.UI.ViewModel
                                 && (String.IsNullOrEmpty(IncidQualityDetermination)))
                             {
                                 error = "Error: Determination quality is mandatory for every INCID";
-                                AddErrorList(ref _detailsErrors, columnName);
+                                AddToErrorList(_detailsErrors, columnName);
                             }
                             else
                             {
-                                DelErrorList(ref _detailsErrors, columnName);
+                                RemoveFromErrorList(_detailsErrors, columnName);
                             }
                             OnPropertyChanged(nameof(DetailsTabLabel));
                             break;
@@ -15759,11 +15781,11 @@ namespace HLU.UI.ViewModel
                                 && (String.IsNullOrEmpty(IncidQualityInterpretation)))
                             {
                                 error = "Error: Interpretation quality is mandatory for every INCID";
-                                AddErrorList(ref _detailsErrors, columnName);
+                                AddToErrorList(_detailsErrors, columnName);
                             }
                             else
                             {
-                                DelErrorList(ref _detailsErrors, columnName);
+                                RemoveFromErrorList(_detailsErrors, columnName);
                             }
                             OnPropertyChanged(nameof(DetailsTabLabel));
                             break;
@@ -15775,11 +15797,11 @@ namespace HLU.UI.ViewModel
                                 && String.IsNullOrEmpty(IncidQualityInterpretation))
                             {
                                 error = "Error: Interpretation comments are invalid without interpretation quality";
-                                AddErrorList(ref _detailsErrors, columnName);
+                                AddToErrorList(_detailsErrors, columnName);
                             }
                             else
                             {
-                                DelErrorList(ref _detailsErrors, columnName);
+                                RemoveFromErrorList(_detailsErrors, columnName);
                             }
                             OnPropertyChanged(nameof(DetailsTabLabel));
                             break;
@@ -15797,14 +15819,16 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Adds a column name to the list of errors.
+        /// Adds a column name to the list of errors if it is not already in the list.
         /// </summary>
         /// <param name="errorList"></param>
         /// <param name="columnName"></param>
-        public void AddErrorList(ref List<string> errorList, string columnName)
+        public void AddToErrorList(List<string> errorList, string columnName)
         {
-            if (!errorList.Contains(columnName))
-                errorList.Add(columnName);
+            if (errorList.Contains(columnName))
+                return;
+
+            errorList.Add(columnName);
         }
 
         /// <summary>
@@ -15812,7 +15836,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="errorList"></param>
         /// <param name="columnName"></param>
-        public void DelErrorList(ref List<string> errorList, string columnName)
+        public void RemoveFromErrorList(List<string> errorList, string columnName)
         {
             errorList.Remove(columnName);
         }

@@ -27,8 +27,13 @@ using HLU.Properties;
 
 namespace HLU
 {
+    /// <summary>
+    /// Represents a condition in a SQL where clause.
+    /// </summary>
     public class SqlFilterCondition : ICloneable
     {
+        #region Fields
+
         private string _booleanOperator;
         private string _openParentheses;
         private DataTable _table;
@@ -37,6 +42,69 @@ namespace HLU
         private string _operator;
         private object _value;
         private string _closeParentheses;
+
+        #endregion Fields
+
+        #region Constructor
+
+        public SqlFilterCondition()
+        {
+            SetDefaults();
+        }
+
+        public SqlFilterCondition(DataTable table, DataColumn column, object value)
+        {
+            _table = table;
+            _column = column;
+            _value = value;
+            SetDefaults();
+        }
+
+        public SqlFilterCondition(string booleanOp, DataTable table, DataColumn column, object value)
+        {
+            _booleanOperator = booleanOp;
+            _table = table;
+            _column = column;
+            _value = value;
+            SetDefaults();
+        }
+
+        public SqlFilterCondition(string booleanOp, DataTable table, DataColumn column, Type systemDataType, string openParentheses, string closeParentheses, object value)
+        {
+            _booleanOperator = booleanOp;
+            _table = table;
+            _column = column;
+            _columnSystemType = systemDataType;
+            _openParentheses = openParentheses;
+            _closeParentheses = closeParentheses;
+            _value = value;
+            SetDefaults();
+        }
+
+        #endregion Constructor
+
+        #region Methods
+
+        private void SetDefaults()
+        {
+            if (String.IsNullOrEmpty(_booleanOperator))
+                _booleanOperator = "AND";
+            if (String.IsNullOrEmpty(_openParentheses))
+                _openParentheses = String.Empty;
+            _operator = "=";
+            if (String.IsNullOrEmpty(_closeParentheses))
+                _closeParentheses = String.Empty;
+        }
+
+        public SqlFilterCondition Clone()
+        {
+            return (SqlFilterCondition)((ICloneable)this).Clone();
+        }
+
+        object ICloneable.Clone()
+        {
+            return this.MemberwiseClone();
+        }
 
         /// <summary>
         /// Defaults to "AND".
@@ -59,7 +127,7 @@ namespace HLU
         public DataTable Table
         {
             get { return _table; }
-            set { _table = value;}
+            set { _table = value; }
         }
 
         public DataColumn Column
@@ -101,62 +169,12 @@ namespace HLU
             set { _closeParentheses = value; }
         }
 
-        public SqlFilterCondition()
-        {
-            SetDefaults();
-        }
-
-        public SqlFilterCondition(DataTable table, DataColumn column, object value)
-        {
-            _table = table;
-            _column = column;
-            _value = value;
-            SetDefaults();
-        }
-
-        public SqlFilterCondition(string booleanOp, DataTable table, DataColumn column, object value)
-        {
-            _booleanOperator = booleanOp;
-            _table = table;
-            _column = column;
-            _value = value;
-            SetDefaults();
-        }
-
-        public SqlFilterCondition(string booleanOp, DataTable table, DataColumn column, Type systemDataType, string openParentheses, string closeParentheses, object value)
-        {
-            _booleanOperator = booleanOp;
-            _table = table;
-            _column = column;
-            _columnSystemType = systemDataType;
-            _openParentheses = openParentheses;
-            _closeParentheses = closeParentheses;
-            _value = value;
-            SetDefaults();
-        }
-
-        private void SetDefaults()
-        {
-            if (String.IsNullOrEmpty(_booleanOperator))
-                _booleanOperator = "AND";
-            if (String.IsNullOrEmpty(_openParentheses))
-                _openParentheses = String.Empty;
-            _operator = "=";
-            if (String.IsNullOrEmpty(_closeParentheses))
-                _closeParentheses = String.Empty;
-        }
-
-        public SqlFilterCondition Clone()
-        {
-            return (SqlFilterCondition)((ICloneable)this).Clone();
-        }
-
-        object ICloneable.Clone()
-        {
-            return this.MemberwiseClone();
-        }
+        #endregion Methods
     }
 
+    /// <summary>
+    /// Abstract class to build SQL statements for different database types.
+    /// </summary>
     public abstract class SqlBuilder
     {
         #region Abstract
@@ -242,10 +260,10 @@ namespace HLU
                 return tableName + Settings.Default.ColumnTableNameSeparator + columnName;
         }
 
-        public abstract string TargetList(DataColumn[] targetColumns, bool quoteIdentifiers, 
+        public abstract string TargetList(DataColumn[] targetColumns, bool quoteIdentifiers,
             bool checkQualify, ref bool qualifyColumns, out DataTable resultTable);
 
-        public string TargetList(DataTable[] targetTables, bool quoteIdentifiers, 
+        public string TargetList(DataTable[] targetTables, bool quoteIdentifiers,
             ref bool qualifyColumns, out DataTable resultTable)
         {
             if ((targetTables == null) || (targetTables.Length == 0) || (targetTables[0].Columns.Count == 0))
@@ -273,7 +291,7 @@ namespace HLU
             return FromList(includeFrom, targetColumns, quoteIdentifiers, ref whereClause, out additionalTables);
         }
 
-        public string FromList(bool includeFrom, DataColumn[] targetColumns, 
+        public string FromList(bool includeFrom, DataColumn[] targetColumns,
             bool quoteIdentifiers, ref List<SqlFilterCondition> whereClause, out bool additionalTables)
         {
             DataTable[] colTables = targetColumns.Select(c => c.Table).Distinct().ToArray();
@@ -346,11 +364,11 @@ namespace HLU
         public virtual string WhereClause(bool includeWhere, bool quoteIdentifiers,
             bool qualifyColumns, List<List<SqlFilterCondition>> whereConds)
         {
-            return WhereClause(includeWhere, quoteIdentifiers, qualifyColumns, 
+            return WhereClause(includeWhere, quoteIdentifiers, qualifyColumns,
                 whereConds.SelectMany(cond => cond).ToList());
         }
 
-        public virtual string WhereClause(bool includeWhere, bool quoteIdentifiers, 
+        public virtual string WhereClause(bool includeWhere, bool quoteIdentifiers,
             bool qualifyColumns, List<SqlFilterCondition> whereConds)
         {
             if ((whereConds != null) && (whereConds.Count > 0))

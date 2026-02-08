@@ -45,6 +45,8 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="6" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="6" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <Grid Grid.Row="0">
@@ -99,7 +101,36 @@
 
                     </Grid>
 
-                    <Grid x:Name="GridWorkingFileGDBPath" Grid.Row="4">
+                    <Grid x:Name="GridMaxFeaturesGISSelect" Grid.Row="4">
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="70" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Label
+                            x:Name="LabeMaxFeaturesGISSelect"
+                            Grid.Column="0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Content="Warn Before Selecting Features" />
+                        <TextBox
+                            x:Name="TextBoxMaxFeaturesGISSelect"
+                            Grid.Column="1"
+                            Height="24"
+                            HorizontalContentAlignment="Right"
+                            BorderThickness="1"
+                            Tag="ErrorContent"
+                            Text="{Binding MaxFeaturesGISSelect, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}" />
+                        <controls:InfoButton
+                            Grid.Column="2"
+                            Margin="5,0,0,0"
+                            Description=""
+                            Header="Warn Before GIS Select" />
+                    </Grid>
+
+                    <Grid x:Name="GridWorkingFileGDBPath" Grid.Row="6">
 
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
