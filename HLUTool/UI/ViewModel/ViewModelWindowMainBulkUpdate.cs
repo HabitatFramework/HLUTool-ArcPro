@@ -513,7 +513,6 @@ namespace HLU.UI.ViewModel
 
             // Reset the database counts
             _viewModelMain.SelectedIncidsInDBCount = 0;
-            _viewModelMain.SelectedToidsInDBCount = 0;
             _viewModelMain.SelectedFragsInDBCount = 0;
 
             // Open the OSMM Update filter

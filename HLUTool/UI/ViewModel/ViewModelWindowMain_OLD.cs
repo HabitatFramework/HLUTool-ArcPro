@@ -319,20 +319,20 @@ namespace HLU.UI.ViewModel
         private DataColumn[] _gisIDColumns;
         private int[] _gisIDColumnOrdinals;
 
+        // The IDs of the currently selected incids, toids and fragments in GIS (set in AnalyzeGisSelectionSet).
         private IEnumerable<string> _incidsSelectedMap;
         private IEnumerable<string> _toidsSelectedMap;
         private IEnumerable<string> _fragsSelectedMap;
-
-        // How many incids, toids and fragments are selected in the database for the current GIS selection
-        // (set in whenever a filter is applied and in ExpectedSelectionFeatures).
-        private int _selectedIncidsInDBCount = 0;
-        private int _selectedToidsInDBCount = 0;
-        private int _selectedFragsInDBCount = 0;
 
         // How many incids, toids and fragments are selected in GIS (set in AnalyzeGisSelectionSet).
         private int _selectedIncidsInGISCount = 0;
         private int _selectedToidsInGISCount = 0;
         private int _selectedFragsInGISCount = 0;
+
+        // How many incids and fragments are selected in the database for the current GIS selection
+        // (set whenever a filter is applied and in ExpectedSelectionFeatures).
+        private int _selectedIncidsInDBCount = 0;
+        private int _selectedFragsInDBCount = 0;
 
         // How many toids and fragments are selected in GIS and the database for the current incid (set in CountToidFrags).
         private int _currentIncidToidsInGISCount = 0;
@@ -701,9 +701,8 @@ namespace HLU.UI.ViewModel
             // Check the GIS map
             ChangeCursor(Cursors.Wait, "Checking GIS map ...");
 
-            // Create a new GIS functions instance if necessary.
-            if (_gisApp == null || _gisApp.MapName == null)
-                _gisApp = new();
+            // Create a new GIS functions instance (so that it will use the new active layer to set any cached variables).
+            _gisApp = new();
 
             bool mapChanged = false;
 
@@ -2249,10 +2248,10 @@ namespace HLU.UI.ViewModel
                 itemTypes = itemType;
 
             // Check if the GIS features have been physically split by the user but not processed in HLU yet.
-            if (((_gisSelection != null) && (_gisSelection.Rows.Count > 1)) &&
-               ((SelectedIncidsInGISCount == 1) && (SelectedToidsInGISCount == 1) && (SelectedFragsInGISCount == 1)))
-            //if ((_currentIncidToidsInGISCount == _currentIncidToidsInDBCount) &&
-            //   (_currentIncidFragsInGISCount > _currentIncidFragsInDBCount))
+            //if (((_gisSelection != null) && (_gisSelection.Rows.Count > 1)) &&
+            //   ((SelectedIncidsInGISCount == 1) && (SelectedToidsInGISCount == 1) && (SelectedFragsInGISCount == 1)))
+            if ((_currentIncidToidsInGISCount == _currentIncidToidsInDBCount) &&
+               (_currentIncidFragsInGISCount > _currentIncidFragsInDBCount))
             {
                 if (showMessage)
                 {
@@ -2565,7 +2564,7 @@ namespace HLU.UI.ViewModel
             return (BulkUpdateMode == false && OSMMUpdateMode == false) &&
                 EditMode && !String.IsNullOrEmpty(Reason) && !String.IsNullOrEmpty(Process) &&
                 (_gisSelection != null) && (_selectedIncidsInGISCount == 1) &&
-                ((_gisSelection.Rows.Count > 1) && ((_selectedToidsInGISCount > 1) || (_selectedFragsInGISCount > 1)) ||
+                ((_gisSelection.Rows.Count > 1) && (_selectedFragsInGISCount > 1) ||
                 (_gisSelection.Rows.Count == 1)) &&
                 (_filteredByMap == true) &&
                 ((_currentIncidToidsInGISCount < _currentIncidToidsInDBCount) ||
@@ -2702,7 +2701,7 @@ namespace HLU.UI.ViewModel
             if (!await _gisApp.SelectedRowsUniqueAsync())
             {
                 MessageBox.Show("The map selection contains one or more features where a physical split has not been completed.\n\n" +
-                    "Please select the features and invoke the Split command to prevent the map and database going out of sync.",
+                    "Please select the features and invoke the Split command to prevent the map and database getting out of sync.",
                     "HLU: Data Integrity", MessageBoxButton.OK, MessageBoxImage.Exclamation);
 
                 return;
@@ -2766,7 +2765,7 @@ namespace HLU.UI.ViewModel
             if (!await _gisApp.SelectedRowsUniqueAsync())
             {
                 MessageBox.Show("The map selection contains one or more features where a physical split has not been completed.\n\n" +
-                    "Please select the features and invoke the Split command to prevent the map and database going out of sync.",
+                    "Please select the features and invoke the Split command to prevent the map and database getting out of sync.",
                     "HLU: Data Integrity", MessageBoxButton.OK, MessageBoxImage.Exclamation);
 
                 return;
@@ -2799,7 +2798,7 @@ namespace HLU.UI.ViewModel
             if (!await _gisApp.SelectedRowsUniqueAsync())
             {
                 MessageBox.Show("The map selection contains one or more features where a physical split has not been completed.\n\n" +
-                    "Please select the features and invoke the Split command to prevent the map and database going out of sync.",
+                    "Please select the features and invoke the Split command to prevent the map and database getting out of sync.",
                     "HLU: Data Integrity", MessageBoxButton.OK, MessageBoxImage.Exclamation);
 
                 return;
@@ -4858,15 +4857,22 @@ namespace HLU.UI.ViewModel
                     ChangeCursor(Cursors.Wait, "Counting ...");
 
                     // Find the expected number of features to be selected from the database.
-                    _selectedToidsInDBCount = 0;
-                    _selectedFragsInDBCount = 0;
-                    (_selectedToidsInDBCount, _selectedFragsInDBCount) = await ExpectedSelectionDBFeatures(whereTables, newWhereClause);
+                    _selectedFragsInDBCount = await ExpectedSelectionFeatures(whereTables, newWhereClause);
 
                     // Store the number of incids found in the database
                     _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
 
                     // Find the expected number of features to be selected from GIS.
                     (_selectedIncidsInGISCount, _selectedToidsInGISCount, _selectedFragsInGISCount) = await _gisApp.ExpectedSelectionGISFeaturesAsync(_incidSelection);
+
+                    //TODO: Now doing this before SetFilterAsync() otherwise _selectedFragsInGISCount may
+                    // have been changed when auto selecting the first incid.
+                    // Check if the counts returned are less than those expected.
+                    if (_selectedFragsInGISCount < _selectedFragsInDBCount)
+                    {
+                        MessageBox.Show("Not all expected features found in active layer.", "HLU: Selection",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
 
                     //TODO: Needed?
                     // Indicate the selection didn't come from the map.
@@ -4886,16 +4892,7 @@ namespace HLU.UI.ViewModel
                         ChangeCursor(Cursors.Arrow, null);
 
                         // Check if the GIS and database are in sync.
-                        if (CheckInSync("Selection", "Expected", "Not all expected"))
-                        {
-                            // Check if the counts returned are less than those expected.
-                            if ((_currentIncidToidsInGISCount < _selectedToidsInDBCount) ||
-                                    (_currentIncidFragsInGISCount < _selectedFragsInDBCount))
-                            {
-                                MessageBox.Show("Not all expected features found in active layer.", "HLU: Selection",
-                                MessageBoxButton.OK, MessageBoxImage.Warning);
-                            }
-                        }
+                        CheckInSync("Selection", "Expected", "Not all expected");
                     }
                     else
                     {
@@ -4918,64 +4915,6 @@ namespace HLU.UI.ViewModel
                         MessageBox.Show("No map features found in active layer.", "HLU: Apply Query",
                             MessageBoxButton.OK, MessageBoxImage.Information);
                     }
-
-                    //ChangeCursor(Cursors.Wait, "Filtering ...");
-
-                    //// Select the required incid(s) in GIS.
-                    //if (await PerformGisSelectionAsync(true, _fragsSelectedDBCount, _incidsSelectedDBCount))
-                    //{
-                    //    // Analyse the results, set the filter and reset the cursor AFTER
-                    //    // returning from performing the GIS selection so that other calls
-                    //    // to the PerformGisSelection method can control if/when these things
-                    //    // are done.
-                    //    //
-                    //    // Analyse the results of the GIS selection by counting the number of
-                    //    // incids, toids and fragments selected.
-                    //    //TODO: Done. Set updateIncidSelection to false as selection already set.
-                    //    AnalyzeGisSelectionSet(false);
-
-                    //    // Indicate the selection didn't come from the map.
-                    //    _filterByMap = false;
-
-                    //    // Set the filter back to the first incid.
-                    //    await SetFilterAsync();
-
-                    //    // Reset the cursor back to normal.
-                    //    ChangeCursor(Cursors.Arrow, null);
-
-                    //    // Check if the GIS and database are in sync.
-                    //    if (CheckInSync("Selection", "Selected", "Not all selected"))
-                    //    {
-                    //        // Check if the counts returned are less than those expected.
-                    //        if ((_toidsIncidGisCount < _toidsSelectedDBCount) ||
-                    //                (_fragsIncidGisCount < _fragsSelectedDBCount))
-                    //        {
-                    //            MessageBox.Show("Not all selected features found in active layer.", "HLU: Selection",
-                    //            MessageBoxButton.OK, MessageBoxImage.Warning);
-                    //        }
-                    //    }
-                    //}
-                    //else
-                    //{
-                    //    // Restore the previous selection (filter).
-                    //    //_incidSelection = incidSelectionBackup;
-
-                    //    // Clear the selection (filter).
-                    //    _incidSelection = null;
-
-                    //    // Indicate the selection didn't come from the map.
-                    //    _filterByMap = false;
-
-                    //    // Set the filter back to the first incid.
-                    //    await SetFilterAsync();
-
-                    //    // Reset the cursor back to normal.
-                    //    ChangeCursor(Cursors.Arrow, null);
-
-                    //    // Warn the user that no records were found.
-                    //    MessageBox.Show("No map features found in active layer.", "HLU: Apply Query",
-                    //        MessageBoxButton.OK, MessageBoxImage.Information);
-                    //}
                 }
                 else
                 {
@@ -5144,9 +5083,7 @@ namespace HLU.UI.ViewModel
                 if (IsFiltered)
                 {
                     // Find the expected number of features to be selected in GIS.
-                    _selectedToidsInDBCount = 0;
-                    _selectedFragsInDBCount = 0;
-                    (_selectedToidsInDBCount, _selectedFragsInDBCount) = await ExpectedSelectionDBFeatures(whereTables, newWhereClause);
+                    _selectedFragsInDBCount = await ExpectedSelectionFeatures(whereTables, newWhereClause);
 
                     // Store the number of incids found in the database
                     _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -5181,8 +5118,7 @@ namespace HLU.UI.ViewModel
                                 MessageBoxButton.OK, MessageBoxImage.Warning);
                         }
                         // Check if the counts returned are less than those expected.
-                        else if ((_currentIncidToidsInGISCount < _selectedToidsInDBCount) ||
-                                (_currentIncidFragsInGISCount < _selectedFragsInDBCount))
+                        else if (_currentIncidFragsInGISCount < _selectedFragsInDBCount)
                         {
                             MessageBox.Show("Not all selected features found in active layer.", "HLU: Selection",
                             MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -5530,9 +5466,7 @@ namespace HLU.UI.ViewModel
                     if (IsFiltered)
                     {
                         // Find the expected number of features to be selected in GIS.
-                        _selectedToidsInDBCount = 0;
-                        _selectedFragsInDBCount = 0;
-                        (_selectedToidsInDBCount, _selectedFragsInDBCount) = await ExpectedSelectionDBFeatures(whereTables, newWhereClause);
+                        _selectedFragsInDBCount = await ExpectedSelectionFeatures(whereTables, newWhereClause);
 
                         // Store the number of incids found in the database
                         _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -5551,6 +5485,15 @@ namespace HLU.UI.ViewModel
                             // incids, toids and fragments selected.
                             AnalyzeGisSelectionSet(true);
 
+                            //TODO: Now doing this before SetFilterAsync() otherwise _selectedFragsInGISCount may
+                            // have been changed when auto selecting the first incid.
+                            // Check if the counts returned are less than those expected.
+                            if (_selectedFragsInGISCount < _selectedFragsInDBCount)
+                            {
+                                MessageBox.Show("Not all selected features found in active layer.", "HLU: Selection",
+                                MessageBoxButton.OK, MessageBoxImage.Warning);
+                            }
+
                             // Indicate the selection didn't come from the map.
                             _filteredByMap = false;
 
@@ -5566,16 +5509,7 @@ namespace HLU.UI.ViewModel
                                 await SetFilterAsync();
 
                                 // Check if the GIS and database are in sync.
-                                if (CheckInSync("Selection", "Selected", "Not all selected"))
-                                {
-                                    // Check if the counts returned are less than those expected.
-                                    if ((_currentIncidToidsInGISCount < _selectedToidsInDBCount) ||
-                                            (_currentIncidFragsInGISCount < _selectedFragsInDBCount))
-                                    {
-                                        MessageBox.Show("Not all selected features found in active layer.", "HLU: Selection",
-                                        MessageBoxButton.OK, MessageBoxImage.Warning);
-                                    }
-                                }
+                                CheckInSync("Selection", "Selected", "Not all selected");
                             }
 
                             // Refresh all the controls
@@ -5763,9 +5697,7 @@ namespace HLU.UI.ViewModel
                 if (IsFiltered)
                 {
                     // Find the expected number of features to be selected in GIS.
-                    _selectedToidsInDBCount = 0;
-                    _selectedFragsInDBCount = 0;
-                    (_selectedToidsInDBCount, _selectedFragsInDBCount) = await ExpectedSelectionDBFeatures(whereTables, newWhereClause);
+                    _selectedFragsInDBCount = await ExpectedSelectionFeatures(whereTables, newWhereClause);
 
                     // Store the number of incids found in the database
                     _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -6304,9 +6236,7 @@ namespace HLU.UI.ViewModel
                 AnalyzeGisSelectionSet(true);
 
                 // Update the number of features found in the database.
-                _selectedToidsInDBCount = 0;
-                _selectedFragsInDBCount = 0;
-                (_selectedToidsInDBCount, _selectedFragsInDBCount) = ExpectedSelectionFeatures(_incidSelectionWhereClause);
+                _selectedFragsInDBCount = await ExpectedSelectionFeatures(_incidSelectionWhereClause);
 
                 // Store the number of incids found in the database
                 _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -6342,7 +6272,7 @@ namespace HLU.UI.ViewModel
                     ChangeCursor(Cursors.Arrow, null);
 
                     // Check if the GIS and database are in sync.
-                    CheckInSync("Selection", "Map", showMessage: false);
+                    CheckInSync("Selection", "Map", showMessage: showMessage);
 
                     // Clear any messages.
                     ClearMessage();
@@ -6857,9 +6787,7 @@ namespace HLU.UI.ViewModel
 
                 // Find the expected number of features to be selected in GIS
                 // (by querying the database).
-                int expectedNumToids = -1;
-                int expectedNumFeatures = -1;
-                (expectedNumToids, expectedNumFeatures) = ExpectedSelectionFeatures(whereClause);
+                int expectedNumFeatures = await ExpectedSelectionFeatures(whereClause);
 
                 // Find the expected number of incids to be selected in GIS.
                 int expectedNumIncids = _incidSelection.Rows.Count;
@@ -6870,6 +6798,15 @@ namespace HLU.UI.ViewModel
                     // Analyse the results of the GIS selection by counting the number of
                     // incids, toids and fragments selected. Do not overwrite DB filter selection.
                     AnalyzeGisSelectionSet(false);
+
+                    //TODO: Now doing this before SetFilterAsync() otherwise _selectedFragsInGISCount may
+                    // have been changed when auto selecting the first incid.
+                    // Check if the counts returned are less than those expected.
+                    if (_selectedFragsInGISCount < _selectedFragsInDBCount)
+                    {
+                        MessageBox.Show("Not all selected features found in active layer.", "HLU: Selection",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    }
 
                     // Indicate the selection came from the map.
                     if ((_gisSelection != null) && (_gisSelection.Rows.Count > 0))
@@ -6890,20 +6827,7 @@ namespace HLU.UI.ViewModel
                     await _gisApp.ZoomSelectedAsync(_minZoom, _autoZoomToSelection);
 
                     // Check if the GIS and database are in sync.
-                    if (CheckInSync("Selection", "Incid", "Not all incid"))
-                    {
-                        //TODO: Not comparing correct things. _toidsIncidGisCount and _fragsIncidGisCount
-                        // are only for the current incid not all incids.
-                        // Check if the counts returned are less than those expected.
-                        if ((_selectedIncidsInDBCount < expectedNumIncids) ||
-                            (_selectedToidsInDBCount < expectedNumToids) ||
-                            (_selectedFragsInDBCount < expectedNumFeatures))
-                        {
-                            MessageBox.Show("Not all incid features found in active layer.", "HLU: Selection",
-                            MessageBoxButton.OK, MessageBoxImage.Warning);
-                        }
-                    }
-                }
+                    CheckInSync("Selection", "Incid", "Not all incid");                }
                 else
                 {
                     // Restore the previous selection (filter).
@@ -6969,7 +6893,6 @@ namespace HLU.UI.ViewModel
             _incidSelectionWhereClause = null;
             _gisSelection = null;
             _selectedIncidsInDBCount = 0;
-            _selectedToidsInDBCount = 0;
             _selectedFragsInDBCount = 0;
             _selectedIncidsInGISCount = 0;
             _selectedToidsInGISCount = 0;
@@ -7033,7 +6956,7 @@ namespace HLU.UI.ViewModel
                 switch (_gisSelection.Columns.Count)
                 {
                     case 3:
-                        // Get the fragments selected in GIS.
+                        // Get the unique fragments selected in GIS.
                         _fragsSelectedMap = from r in _gisSelection.AsEnumerable()
                                             group r by new
                                             {
@@ -7048,7 +6971,7 @@ namespace HLU.UI.ViewModel
                         _selectedFragsInGISCount = _fragsSelectedMap.Count();
                         goto case 2;
                     case 2:
-                        // Get the toids selected in GIS.
+                        // Get the unique toids selected in GIS.
                         _toidsSelectedMap = _gisSelection.AsEnumerable()
                             .GroupBy(r => r.Field<string>(_gisIDColumns[1].ColumnName)).Select(g => g.Key);
 
@@ -7056,7 +6979,7 @@ namespace HLU.UI.ViewModel
                         _selectedToidsInGISCount = _toidsSelectedMap.Count();
                         goto case 1;
                     case 1:
-                        // Get the incids selected in GIS (ordered so that the filter
+                        // Get the unique incids selected in GIS (ordered so that the filter
                         // is sorted in incid order).
                         _incidsSelectedMap = _gisSelection.AsEnumerable()
                             .GroupBy(r => r.Field<string>(_gisIDColumns[0].ColumnName)).Select(g => g.Key).OrderBy(s => s);
@@ -7129,9 +7052,8 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="whereClause">The list of where clause conditions.</param>
         /// <returns>A tuple of integers of the number of toids and fragments expected to be selected.</returns>
-        private (int numToids, int numFragments) ExpectedSelectionFeatures(List<List<SqlFilterCondition>> whereClause)
+        private async Task<int> ExpectedSelectionFeatures(List<List<SqlFilterCondition>> whereClause)
         {
-            int numToids = 0;
             int numFragments = 0;
 
             // Track distinct TOIDs across all chunks for an exact unique count.
@@ -7169,7 +7091,7 @@ namespace HLU.UI.ViewModel
 
                             // Chunk only at top-level OR boundaries while tracking parentheses.
                             // This avoids splitting matched pairs such as "incid >= 1" AND "incid <= 4".
-                            whereClause = whereCond.ChunkClauseTopLevel(10, 500).ToList();
+                            whereClause = whereCond.ChunkClauseTopLevel(50, 500).ToList();
                         }
                         catch
                         {
@@ -7198,26 +7120,8 @@ namespace HLU.UI.ViewModel
                             cond.CloseParentheses = "))";
                         }
 
-                        List<SqlFilterCondition> allConds = joinCond.Concat(whereClause[i]).ToList();
-                        DataColumn[] targetColumns = [_hluDS.incid_mm_polygons.toidColumn];
-
-                        // Select TOID for every matching row, then:
-                        // - fragments = row count,
-                        // - distinct TOIDs = hash set union.
-                        DataTable rows = _db.SqlSelect(false, targetColumns, allConds);
-
-                        numFragments += rows.Rows.Count;
-
-                        foreach (DataRow row in rows.Rows)
-                        {
-                            string toid = row[0]?.ToString();
-                            if (!String.IsNullOrWhiteSpace(toid))
-                                distinctToids.Add(toid);
-                        }
+                        numFragments += await _db.SqlCount(selTables, "*", joinCond.Concat(whereClause[i]).ToList());
                     }
-
-                    // Exact TOID count across all chunks.
-                    numToids = distinctToids.Count;
                 }
                 catch
                 {
@@ -7225,7 +7129,7 @@ namespace HLU.UI.ViewModel
                 }
             }
 
-            return (numToids, numFragments);
+            return numFragments;
         }
 
         /// <summary>
@@ -7236,9 +7140,8 @@ namespace HLU.UI.ViewModel
         /// <param name="sqlFromTables">The list of data tables.</param>
         /// <param name="sqlWhereClause">The where clause string.</param>
         /// <returns>An integer of the number of GIS features expected to be selected.</returns>
-        private async Task<(int numToids, int numFragments)> ExpectedSelectionDBFeatures(List<DataTable> sqlFromTables, string sqlWhereClause)
+        private async Task<int> ExpectedSelectionFeatures(List<DataTable> sqlFromTables, string sqlWhereClause)
         {
-            int numToids = 0;
             int numFragments = 0;
 
             if ((_incidSelection != null) && (_incidSelection.Rows.Count > 0) &&
@@ -7259,7 +7162,6 @@ namespace HLU.UI.ViewModel
                         (rel = GetRelation(_hluDS.incid, st)) != null ?
                         new SqlFilterCondition("AND", t, t.incidColumn, typeof(DataColumn), "(", ")", rel.ChildColumns[0]) : null).Where(c => c != null);
 
-                    numToids = await _db.SqlCount(whereTables, String.Format("Distinct {0}", _hluDS.incid_mm_polygons.toidColumn.ColumnName), joinCond.ToList(), sqlWhereClause);
                     numFragments = await _db.SqlCount(whereTables, "*", joinCond.ToList(), sqlWhereClause);
 
                     // Create a selection DataTable of PK values of IncidMMPolygons.
@@ -7284,7 +7186,7 @@ namespace HLU.UI.ViewModel
                 catch { }
             }
 
-            return (numToids, numFragments);
+            return numFragments;
         }
 
         /// <summary>
@@ -7819,15 +7721,6 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets or sets the count of selected Toids in the database, which is used for status display and selection logic.
-        /// </summary>
-        public int SelectedToidsInDBCount
-        {
-            get { return _selectedToidsInDBCount; }
-            set { _selectedToidsInDBCount = value; }
-        }
-
-        /// <summary>
         /// Gets or sets the count of selected Frags in the database, which is used for status display and selection logic.
         /// </summary>
         public int SelectedFragsInDBCount
@@ -7887,7 +7780,7 @@ namespace HLU.UI.ViewModel
                 // Call the safe fire and forget helper to move to the
                 // new current row index asynchronously.
                 AsyncHelpers.SafeFireAndForget(MoveIncidCurrentRowIndexAsync(value),
-                Exception => System.Diagnostics.Debug.WriteLine(Exception.Message));
+                Exception => Debug.WriteLine(Exception.Message));
             }
         }
 
@@ -9338,7 +9231,6 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(TabItemHistoryEnabled));
 
             OnPropertyChanged(nameof(SelectedIncidsInDBCount));
-            OnPropertyChanged(nameof(SelectedToidsInDBCount));
             OnPropertyChanged(nameof(SelectedFragsInDBCount));
 
             OnPropertyChanged(nameof(SelectedIncidsInGISCount));
@@ -15705,8 +15597,6 @@ namespace HLU.UI.ViewModel
                     case "NumToidSelectedMap":
                         if (_selectedToidsInGISCount == 0)
                             error = "Warning: No database toids are selected in map";
-                        else if (_selectedToidsInGISCount < _selectedToidsInDBCount)
-                            error = "Warning: Not all database toids are selected in map";
                         break;
 
                     case "NumFragmentsSelectedMap":

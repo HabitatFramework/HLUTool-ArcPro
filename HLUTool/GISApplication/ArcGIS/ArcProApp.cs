@@ -87,6 +87,16 @@ namespace HLU.GISApplication
         #region Fields
 
         /// <summary>
+        /// Workspace-dependent prefix added to field and table names in SQL queries.
+        /// </summary>
+        private string _quotePrefix = null;
+
+        /// <summary>
+        /// Workspace-dependent suffix added to field and table names in SQL queries.
+        /// </summary>
+        private string _quoteSuffix = null;
+
+        /// <summary>
         /// Workspace-dependent prefix added to date values in SQL queries.
         /// </summary>
         private string _dateLiteralPrefix;
@@ -245,7 +255,18 @@ namespace HLU.GISApplication
         {
             get
             {
-                return GetIdentifierQuoteDelimiters().Prefix;
+                if (_quotePrefix == null)
+                {
+                    if (QueuedTask.OnWorker)
+                    {
+                        InitialiseQuoteDelimiters();
+                    }
+                    else
+                    {
+                        QueuedTask.Run(InitialiseQuoteDelimiters).Wait();
+                    }
+                }
+                return _quotePrefix;
             }
         }
 
@@ -256,7 +277,18 @@ namespace HLU.GISApplication
         {
             get
             {
-                return GetIdentifierQuoteDelimiters().Suffix;
+                if (_quoteSuffix == null)
+                {
+                    if (QueuedTask.OnWorker)
+                    {
+                        InitialiseQuoteDelimiters();
+                    }
+                    else
+                    {
+                        QueuedTask.Run(InitialiseQuoteDelimiters).Wait();
+                    }
+                }
+                return _quoteSuffix;
             }
         }
 
@@ -267,47 +299,50 @@ namespace HLU.GISApplication
         /// Shapefiles and file geodatabases typically do not require identifier delimiters,
         /// so empty strings are returned for those sources.
         /// </remarks>
-        private (string Prefix, string Suffix) GetIdentifierQuoteDelimiters()
+        private void InitialiseQuoteDelimiters()
         {
-            return QueuedTask.Run(() =>
+            _quotePrefix = string.Empty;
+            _quoteSuffix = string.Empty;
+
+            var map = MapView.Active?.Map;
+            if (map == null)
+                return;
+
+            // Pick a representative feature layer.
+            // If you know the specific layer you're querying, pass it in instead.
+            var layer = map.Layers.OfType<FeatureLayer>().FirstOrDefault();
+            if (layer == null)
+                return;
+
+            using var table = layer.GetTable();
+            var datastore = table.GetDatastore();
+
+            // Shapefiles / folders (FileSystemDatastore) and file-based sources generally don't need quoting.
+            // This covers shapefiles and other folder-based vector sources.
+            if (datastore is ArcGIS.Core.Data.FileSystemDatastore)
+                return;
+
+            // Geodatabases: could be file GDB, mobile GDB, or enterprise.
+            if (datastore is Geodatabase)
             {
-                var map = MapView.Active?.Map;
-                if (map == null)
-                    return (string.Empty, string.Empty);
+                // Fast path: treat local GDBs as no-quote.
+                // We detect enterprise by looking for telltale connection-string markers.
+                var cs = SafeGetConnectionString(datastore);
 
-                // Pick a representative feature layer.
-                // If you know the specific layer you're querying, pass it in instead.
-                var layer = map.Layers.OfType<FeatureLayer>().FirstOrDefault();
-                if (layer == null)
-                    return (string.Empty, string.Empty);
-
-                using var table = layer.GetTable();
-                var datastore = table.GetDatastore();
-
-                // Shapefiles / folders (FileSystemDatastore) and file-based sources generally don't need quoting.
-                // This covers shapefiles and other folder-based vector sources.
-                if (datastore is ArcGIS.Core.Data.FileSystemDatastore)
-                    return (string.Empty, string.Empty);
-
-                // Geodatabases: could be file GDB, mobile GDB, or enterprise.
-                if (datastore is ArcGIS.Core.Data.Geodatabase geodatabase)
+                if (IsSqlServer(cs))
                 {
-                    // Fast path: treat local GDBs as no-quote.
-                    // We detect enterprise by looking for telltale connection-string markers.
-                    var cs = SafeGetConnectionString(datastore);
-
-                    if (IsSqlServer(cs))
-                        return ("[", "]");
-
-                    if (IsOracle(cs) || IsPostgreSql(cs))
-                        return ("\"", "\"");
-
-                    return (string.Empty, string.Empty);
+                    _quotePrefix = "[";
+                    _quoteSuffix = "]";
+                    return;
                 }
 
-                // Default: don't quote.
-                return (string.Empty, string.Empty);
-            }).Result;
+                if (IsOracle(cs) || IsPostgreSql(cs))
+                {
+                    _quotePrefix = "\"";
+                    _quoteSuffix = "\"";
+                    return;
+                }
+            }
         }
 
         /// <summary>
@@ -4860,32 +4895,6 @@ namespace HLU.GISApplication
         //    else
         //    {
         //        return new T();
-        //    }
-        //}
-
-        //TODO: appROTEvent
-        //private void appROTEvent_AppRemoved(AppRef app)
-        //{
-        //    if ((app is IMxApplication) && (new IntPtr(app.hWnd) == hWnd))
-        //    {
-        //        _objectFactory = null;
-        //        _arcMap = null;
-        //        _pipeName = null;
-        //        DestroyHluLayer();
-
-        //        MessageBoxResult userResponse = MessageBox.Show("ArcMap was unexpectedly closed.",
-        //            "ArcMap Closed", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-        //    }
-        //}
-
-        //TODO: appROTEvent
-        //private void appROTEvent_AppAdded(AppRef app)
-        //{
-        //    if ((app is IMxApplication) && (_arcMap == null))
-        //    {
-        //        _arcMap = (IApplication)app;
-        //        _objectFactory = (IObjectFactory)_arcMap;
-        //        _pipeName = String.Format("{0}.{1}", PipeBaseName, _arcMap.hWnd);
         //    }
         //}
 

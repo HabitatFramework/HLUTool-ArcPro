@@ -98,8 +98,8 @@
 				<!-- Split/Merge group -->
 				<group id="HLUTool_Group6" caption="Split/Merge" keytip="G6">
 					<button refID="esri_editing_SplitCommand" size ="large" />
-					<dynamicMenu refID="HLUTool_SplitMenu" size="large" separator="true" />
-					<dynamicMenu refID="HLUTool_MergeMenu" size="large" separator="true" />
+					<dynamicMenu refID="HLUTool_SplitMenu" size="large" />
+					<dynamicMenu refID="HLUTool_MergeMenu" size="large" />
 				</group>
 
 				<!-- OSMM Updates group -->

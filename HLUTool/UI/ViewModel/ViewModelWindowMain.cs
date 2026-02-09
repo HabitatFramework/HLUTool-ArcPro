@@ -635,7 +635,6 @@ namespace HLU.UI.ViewModel
             {
                 // If the active layer has been removed force
                 // a new GIS functions object to be created.
-                //TODO: Clear variables instead of creating new instance?
                 if (layer.Name == ActiveLayerName)
                     _gisApp = null;
             }
@@ -836,9 +835,8 @@ namespace HLU.UI.ViewModel
             // Check if the layer name has actually changed.
             if (selectedValue != ActiveLayerName)
             {
-                // Create a new GIS functions instance if necessary.
-                if (_gisApp == null || _gisApp.MapName == null)
-                    _gisApp = new();
+                // Create a new GIS functions instance (so that it will use the new active layer to set any cached variables).
+                _gisApp = new();
 
                 // Get the new active map view (if there is one).
                 if (MapView.Active is null || MapView.Active.Map.Name != _gisApp.MapName)
