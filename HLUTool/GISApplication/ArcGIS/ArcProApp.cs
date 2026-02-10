@@ -2145,6 +2145,7 @@ namespace HLU.GISApplication
                         // Update geometry fields if they exist (primarily shapefiles).
                         if (row is Feature feature)
                         {
+                            //TODO: Can this use GetGeometryHistoryValues() instead?
                             Geometry shape = feature.GetShape();
 
                             if (shape != null)
@@ -3195,7 +3196,16 @@ namespace HLU.GISApplication
         //    return null;
         //}
 
-        public async Task<DataTable> GetHistoryAsync(DataColumn[] historyColumns, List<SqlFilterCondition> selectionWhereClause)
+        /// <summary>
+        /// Gets the history for the currently selected features based on the provided history columns and selection criteria.
+        /// </summary>
+        /// <param name="historyColumns">The list of history columns to return.</param>
+        /// <param name="selectionWhereClause">The selection where clause.</param>
+        /// <returns>A DataTable populated with the pre-edit ("before") values.</returns>
+        /// <exception cref="HLUToolException">Thrown when reading GIS features fails.</exception>
+        public async Task<DataTable> GetHistoryAsync(
+            DataColumn[] historyColumns,
+            List<SqlFilterCondition> selectionWhereClause)
         {
             //TODO: Needed?
             // Ensure selection event handlers do not interfere
@@ -3217,7 +3227,14 @@ namespace HLU.GISApplication
                 historyTable.Columns.Add(columnName);
             }
 
-            // Get the history field indexes
+            // Add geometry history columns (used for HistoryWrite mapping, not UI display).
+            if (!historyTable.Columns.Contains(ViewModelWindowMain.HistoryGeometry1ColumnName))
+                historyTable.Columns.Add(ViewModelWindowMain.HistoryGeometry1ColumnName, typeof(double));
+
+            if (!historyTable.Columns.Contains(ViewModelWindowMain.HistoryGeometry2ColumnName))
+                historyTable.Columns.Add(ViewModelWindowMain.HistoryGeometry2ColumnName, typeof(double));
+
+            // Get the history field indexes for columns that exist in the feature class schema.
             int[] historyFieldIndexes = HistorySchema(historyColumnNames);
 
             // Build the history data to return
@@ -3237,10 +3254,24 @@ namespace HLU.GISApplication
 
                         // Capture the history before modification
                         DataRow historyRow = historyTable.NewRow();
-                        for (int i = 0; i < historyFieldIndexes.Length; i++)
+
+                        // Populate standard columns from the row where possible.
+                        for (int i = 0; i < historyColumnNames.Length; i++)
                         {
-                            historyRow[i] = row[historyFieldIndexes[i]] ?? DBNull.Value;
+                            int fieldIndex = historyFieldIndexes[i];
+                            historyRow[i] = fieldIndex >= 0 ? row[fieldIndex] ?? DBNull.Value : DBNull.Value;
                         }
+
+                        // Get geometry history values (length/area or X/Y) and add to the history row.
+                        if (row is Feature feature)
+                        {
+                            Geometry geom = feature.GetShape();
+                            (double geom1, double geom2) = GetGeometryHistoryValues(geom);
+
+                            historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = geom1;
+                            historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = geom2;
+                        }
+
                         historyTable.Rows.Add(historyRow);
                     }
                 }
@@ -3367,34 +3398,54 @@ namespace HLU.GISApplication
 
         #region History
 
+        /// <summary>
+        /// Gets the field ordinals for the requested history columns based on the HLU layer structure and mapping.
+        /// </summary>
+        /// <param name="historyColumns"></param>
+        /// <returns></returns>
         private int[] HistorySchema(string[] historyColumns)
         {
-            int ix;
-            var historyFields = from c in historyColumns
-                                let ordinal = (ix = MapField(c)) != -1 ? ix : FuzzyFieldOrdinal(c)
-                                where ordinal != -1
-                                select new
-                                {
-                                    FieldOrdinal = ordinal,
-                                    FieldName = c.Replace(HistoryAdditionalFieldsDelimiter, String.Empty)
-                                };
+            //int ix;
+            //var historyFields = from c in historyColumns
+            //                    let ordinal = (ix = MapField(c)) != -1 ? ix : FuzzyFieldOrdinal(c)
+            //                    where ordinal != -1
+            //                    select new
+            //                    {
+            //                        FieldOrdinal = ordinal,
+            //                        FieldName = c.Replace(HistoryAdditionalFieldsDelimiter, String.Empty)
+            //                    };
 
-            //for (int i = 0; i < historyFields.Count(); i++)
-            //{
-            //    var a = historyFields.ElementAt(i);
-            //    _pipeData.Add(String.Format("{0}{1}{2}", a.FieldName, _pipeFieldDelimiter,
-            //        _hluFieldSysTypeNames[a.FieldOrdinal]));
-            //}
+            ////for (int i = 0; i < historyFields.Count(); i++)
+            ////{
+            ////    var a = historyFields.ElementAt(i);
+            ////    _pipeData.Add(String.Format("{0}{1}{2}", a.FieldName, _pipeFieldDelimiter,
+            ////        _hluFieldSysTypeNames[a.FieldOrdinal]));
+            ////}
 
-            //// GeometryColumn1: Length for polygons; length for polylines; X for points
-            //_pipeData.Add(String.Format("{0}{1}System.Double", _historyGeometry1ColumnName, _pipeFieldDelimiter));
+            ////// GeometryColumn1: Length for polygons; length for polylines; X for points
+            ////_pipeData.Add(String.Format("{0}{1}System.Double", _historyGeometry1ColumnName, _pipeFieldDelimiter));
 
-            //// GeometryColumn2: Area for polygons; empty for polylines; Y for points
-            //_pipeData.Add(String.Format("{0}{1}System.Double", _historyGeometry2ColumnName, _pipeFieldDelimiter));
+            ////// GeometryColumn2: Area for polygons; empty for polylines; Y for points
+            ////_pipeData.Add(String.Format("{0}{1}System.Double", _historyGeometry2ColumnName, _pipeFieldDelimiter));
 
-            //_pipeData.Add(_pipeTransmissionInterrupt);
+            ////_pipeData.Add(_pipeTransmissionInterrupt);
 
-            return historyFields.Select(hf => hf.FieldOrdinal).ToArray();
+            //return historyFields.Select(hf => hf.FieldOrdinal).ToArray();
+
+
+
+            if (historyColumns == null || historyColumns.Length == 0)
+                return Array.Empty<int>();
+
+            int[] ordinals = new int[historyColumns.Length];
+
+            for (int i = 0; i < historyColumns.Length; i++)
+            {
+                int ix = MapField(historyColumns[i]);
+                ordinals[i] = ix != -1 ? ix : FuzzyFieldOrdinal(historyColumns[i]);
+            }
+
+            return ordinals;
         }
 
         private string History(FeatureClass feature, int[] historyFieldOrdinals, string[] additionalValues)
