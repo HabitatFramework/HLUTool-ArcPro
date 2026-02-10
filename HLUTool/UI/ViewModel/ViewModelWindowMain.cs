@@ -20,6 +20,8 @@
 // along with with program.  If not, see <http://www.gnu.org/licenses/>.
 
 using ArcGIS.Core.Data.UtilityNetwork;
+using ArcGIS.Core.Data.UtilityNetwork.Trace;
+using ArcGIS.Core.Events;
 using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
@@ -131,39 +133,6 @@ namespace HLU.UI.ViewModel
         OSMMUpdate
     };
 
-    /// <summary>
-    /// Represents the current operational state(s) of the HLU tool.
-    ///
-    /// This enum uses the [Flags] attribute, meaning each value corresponds
-    /// to a single bit in a binary number. Because of that, multiple values
-    /// can be combined using bitwise OR (e.g. Edit | Bulk).
-    ///
-    /// For example:
-    ///   Edit       = 0001 (1)
-    ///   Bulk       = 0010 (2)
-    ///   OsmmReview = 0100 (4)
-    ///   OsmmBulk   = 1000 (8)
-    ///
-    /// If the tool is simultaneously in Edit mode and Bulk Update mode,
-    /// the combined state is:
-    ///   0001 | 0010 = 0011  (decimal value 3)
-    ///
-    /// Checking whether a specific mode is active is done with:
-    ///   WorkMode.HasFlag(HluEditMode.Bulk)
-    ///
-    /// This creates a clean, extensible state system without relying
-    /// on multiple unrelated booleans.
-    /// </summary>
-    [Flags]
-    public enum HluWorkMode
-    {
-        None = 0,
-        Edit = 1 << 0, // Previously EditMode.
-        Bulk = 1 << 1, // Previously _bulkUpdateMode.
-        OSMMReview = 1 << 2, // Previously _osmmUpdateMode.
-        OSMMBulk = 1 << 3  // Previously _osmmBulkUpdateMode.
-    }
-
     #endregion enums
 
     /// <summary>
@@ -180,11 +149,11 @@ namespace HLU.UI.ViewModel
         private Exception _initializationException;
 
         private bool _mapEventsSubscribed;
+        private bool _mapMemberEventsSubscribed;
         private bool _projectClosedEventsSubscribed;
         private bool _layersChangedEventsSubscribed;
 
         private string _displayName = "HLU Tool";
-        private bool _editMode;
 
         private MapView _activeMapView;
 
@@ -213,7 +182,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return String.Format("{0}{1}", DisplayName, _editMode ? String.Empty : " [READONLY]");
+                return String.Format("{0}{1}", DisplayName, CanEdit ? String.Empty : " [READONLY]");
             }
         }
 
@@ -285,6 +254,15 @@ namespace HLU.UI.ViewModel
                     ActiveMapViewChangedEvent.Subscribe(OnActiveMapViewChanged);
                 }
 
+                // Subscribe to map member property changes to track editability changes.
+                if (!_mapMemberEventsSubscribed)
+                {
+                    _mapMemberEventsSubscribed = true;
+
+                    // Subscribe to map member property changes to track editability changes.
+                    MapMemberPropertiesChangedEvent.Subscribe(OnMapMemberPropertiesChanged, keepSubscriberAlive: true);
+                }
+
                 if (!_projectClosedEventsSubscribed)
                 {
                     _projectClosedEventsSubscribed = true;
@@ -326,6 +304,15 @@ namespace HLU.UI.ViewModel
 
                     // Unsubscribe from ActiveMapViewChangedEvent events.
                     ActiveMapViewChangedEvent.Unsubscribe(OnActiveMapViewChanged);
+                }
+
+                // Unsubscribe from map member property changes to track editability changes.
+                if (_mapMemberEventsSubscribed)
+                {
+                    _mapMemberEventsSubscribed = false;
+
+                    // Unsubscribe from map member property changes to track editability changes.
+                    MapMemberPropertiesChangedEvent.Unsubscribe(OnMapMemberPropertiesChanged);
                 }
 
                 if (_layersChangedEventsSubscribed)
@@ -652,6 +639,9 @@ namespace HLU.UI.ViewModel
 
         private void OnProjectClosed(ProjectEventArgs obj)
         {
+            // Recomputes whether editing is currently possible.
+            RefreshEditCapability();
+
             if (MapView.Active == null)
             {
                 // Make the UI controls hidden.
@@ -731,6 +721,36 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion Active Map View
+
+        #region MapMember properties
+
+        /// <summary>
+        /// Handles map member property changes and refreshes edit capability if the active HLU layer is affected.
+        /// </summary>
+        private void OnMapMemberPropertiesChanged(MapMemberPropertiesChangedEventArgs args)
+        {
+            if (_gisApp?.ActiveHluLayer == null)
+                return;
+
+            if (_gisApp?.HluLayer == null)
+                return;
+
+            for (int i = 0; i < args.MapMembers.Count; i++)
+            {
+                if (!ReferenceEquals(args.MapMembers[i], _gisApp.HluLayer))
+                    continue;
+
+                // Reassess edit capability of the current layer asynchronously.
+                _ = RefreshIsLayerEditableAsync();
+
+                // Recomputes whether editing is currently possible.
+                RefreshEditCapability();
+
+                return;
+            }
+        }
+
+        #endregion MapMember properties
 
         #region StatusMessage
 
@@ -837,6 +857,9 @@ namespace HLU.UI.ViewModel
             {
                 // Create a new GIS functions instance (so that it will use the new active layer to set any cached variables).
                 _gisApp = new();
+
+                // Recomputes whether editing is currently possible.
+                RefreshEditCapability();
 
                 // Get the new active map view (if there is one).
                 if (MapView.Active is null || MapView.Active.Map.Name != _gisApp.MapName)

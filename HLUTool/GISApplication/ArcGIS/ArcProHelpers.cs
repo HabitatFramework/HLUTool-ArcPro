@@ -7,7 +7,7 @@ namespace HLU.GISApplication
     /// <summary>
     /// Provides helper methods for safely working with rows/features retrieved by ObjectID.
     /// </summary>
-    internal static class GisRowHelpers
+    internal static class ArcGISProHelpers
     {
         /// <summary>
         /// Executes an action for a row identified by ObjectID.

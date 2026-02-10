@@ -1611,14 +1611,13 @@ namespace HLU.GISApplication
                 // Should we activate the featureLayer.
                 if (activate)
                 {
-                    // Check if the featureLayer is editable.
-                    bool isEditable = await IsLayerEditableAsync(result.FeatureLayer.Name);
-
                     _hluLayer = result.FeatureLayer;
-                    _hluTableName = result.FeatureLayer.Name;
                     _hluFieldMap = result.HluFieldMap;
                     _hluFieldNames = result.HluFieldNames; //TODO: Not set when tool first loaded? (only when layer changed)
                     _hluFeatureClass = result.FeatureClass;
+
+                    // Check if the featureLayer is editable.
+                    bool isEditable = await IsLayerEditableAsync(_hluLayer);
 
                     // Set the active HLU layer.
                     _hluActiveLayer = new(result.FeatureLayer.Name, isEditable);
@@ -1705,45 +1704,25 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Get a list of editable feature layers.
+        /// Check if the given layer is currently editable (permission + enabled in map).
         /// </summary>
-        /// <returns></returns>
-        public async Task<List<FeatureLayer>> GetEditableLayersAsync()
+        /// <param name="featureLayer">The feature layer to test.</param>
+        /// <returns>True if the layer is editable.</returns>
+        public async Task<bool> IsLayerEditableAsync(FeatureLayer featureLayer)
         {
-            List<FeatureLayer> editableLayers = [];
+            if (featureLayer == null)
+                return false;
 
-            // Check the active map
-            if (_activeMap == null)
-                return editableLayers;
-
-            await QueuedTask.Run(() =>
+            return await QueuedTask.Run(() =>
             {
-                //Get the feature layers in the active map view.
-                List<FeatureLayer> featureLayerList = _activeMap.GetLayersAsFlattenedList().OfType<FeatureLayer>().ToList();
+                // CanEditData() answers "is it possible to edit the datasource?".
+                bool canEditData = featureLayer.CanEditData(); // Must be called on the MCT.
 
-                // Loop through layers and check for edit capability
-                foreach (var layer in featureLayerList)
-                {
-                    if (layer.CanEditData())
-                    {
-                        editableLayers.Add(layer);
-                    }
-                }
+                // IsEditable answers "is it currently editable (permissions + enabled in the map)?"
+                bool isEditableInMap = (featureLayer as IDisplayTable)?.IsEditable ?? false;
+
+                return canEditData && isEditableInMap;
             });
-
-            return editableLayers;
-        }
-
-        /// <summary>
-        /// Check if a layer is editable.
-        /// </summary>
-        public async Task<bool> IsLayerEditableAsync(string layerName)
-        {
-            // Get the list of editable layers
-            List<FeatureLayer> editableLayers = await GetEditableLayersAsync();
-
-            // Check if the specified layer is in the list
-            return editableLayers.Any(layer => layer.Name.Equals(layerName, System.StringComparison.OrdinalIgnoreCase));
         }
 
         #endregion Editing

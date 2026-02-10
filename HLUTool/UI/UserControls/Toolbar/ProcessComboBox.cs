@@ -27,6 +27,8 @@ namespace HLU.UI.UserControls.Toolbar
         private bool _isInitialized;
         private bool _isEnabled;
 
+        private string _previousProcess;
+
         #endregion Fields
 
         #region Constructor
@@ -75,12 +77,12 @@ namespace HLU.UI.UserControls.Toolbar
             if (!_isInitialized)
                 Initialize();
 
-            // Select the process if it hasn't been selected.
-            if (this.SelectedItem == null && _viewModel?.Process != null)
-            {
-                this.SelectedItem = _viewModel.Process;
-                OnSelectionChange(this.SelectedItem);
-            }
+            //// Select the process if it hasn't been selected.
+            //if (SelectedItem == null && _viewModel?.Process != null)
+            //{
+            //    SelectedItem = _viewModel.Process;
+            //    OnSelectionChange(SelectedItem);
+            //}
 
             //if (_viewModel == null)
             //{
@@ -156,7 +158,7 @@ namespace HLU.UI.UserControls.Toolbar
 
         public string Process
         {
-            get { return this.SelectedItem?.ToString(); }
+            get { return (SelectedItem as ComboBoxItem)?.Text; }
         }
 
         /// <summary>
@@ -165,6 +167,19 @@ namespace HLU.UI.UserControls.Toolbar
         /// <param name="item"></param>
         protected override void OnSelectionChange(ComboBoxItem item)
         {
+            // Store the new value
+            string newProcess = item?.Text;
+
+            // Return if the value hasn't actually changed.
+            if (String.Equals(_previousProcess, newProcess, StringComparison.Ordinal))
+                return;
+
+            // Store the old value.
+            _previousProcess = newProcess;
+
+            // Update the main view model.
+            _viewModel.Process = newProcess;
+
             // Notify the ViewModel of the selection change.
             _viewModel?.RefreshReasonProcess();
         }

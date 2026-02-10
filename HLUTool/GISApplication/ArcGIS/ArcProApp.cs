@@ -140,11 +140,6 @@ namespace HLU.GISApplication
         private FeatureLayer _hluLayer;
 
         /// <summary>
-        /// The name of the feature class.
-        /// </summary>
-        private string _hluTableName;
-
-        /// <summary>
         /// The list of valid HLU map layer names in the document.
         /// </summary>
         private List<string> _hluLayerNamesList;
@@ -160,7 +155,6 @@ namespace HLU.GISApplication
         ///// </summary>
         //private IGeoFeatureLayer _templateLayer;
 
-        //TODO: ArcPro
         /// <summary>
         /// The feature class of the HLU layer.
         /// </summary>
@@ -2736,7 +2730,7 @@ namespace HLU.GISApplication
                     List<Geometry> geometriesToUnion = [];
 
                     // Start union with the result feature geometry.
-                    GisRowHelpers.WithRowByObjectId(_hluFeatureClass, resultObjectId, row =>
+                    ArcGISProHelpers.WithRowByObjectId(_hluFeatureClass, resultObjectId, row =>
                     {
                         if (row is Feature f)
                             geometriesToUnion.Add(f.GetShape());
@@ -2745,7 +2739,7 @@ namespace HLU.GISApplication
                     // Loop through the features to merge, buffer by OID to ensure stable processing order, and collect geometries and history rows.
                     foreach (long oid in mergeObjectIds)
                     {
-                        bool found = GisRowHelpers.WithRowByObjectId(_hluFeatureClass, oid, row =>
+                        bool found = ArcGISProHelpers.WithRowByObjectId(_hluFeatureClass, oid, row =>
                         {
                             // Create history row (before delete).
                             DataRow historyRow = historyTable.NewRow();
@@ -2792,7 +2786,7 @@ namespace HLU.GISApplication
                         throw new HLUToolException("Failed to union feature geometries during physical merge.");
 
                     // Add the final history row for the result feature AFTER update (using merged geometry).
-                    GisRowHelpers.WithRowByObjectId(_hluFeatureClass, resultObjectId, row =>
+                    ArcGISProHelpers.WithRowByObjectId(_hluFeatureClass, resultObjectId, row =>
                     {
                         DataRow resultHistoryRow = historyTable.NewRow();
 
@@ -2821,7 +2815,7 @@ namespace HLU.GISApplication
                         // Delete merge features.
                         foreach (long oid in mergeObjectIds)
                         {
-                            GisRowHelpers.WithRowByObjectId(_hluFeatureClass, oid, row =>
+                            ArcGISProHelpers.WithRowByObjectId(_hluFeatureClass, oid, row =>
                             {
                                 row.Delete();
                                 context.Invalidate(row);
@@ -2829,7 +2823,7 @@ namespace HLU.GISApplication
                         }
 
                         // Update the result feature geometry and toidfragid.
-                        GisRowHelpers.WithRowByObjectId(_hluFeatureClass, resultObjectId, row =>
+                        ArcGISProHelpers.WithRowByObjectId(_hluFeatureClass, resultObjectId, row =>
                         {
                             // Update the geometry to the merged geometry.
                             if (row is Feature feature)
@@ -2981,7 +2975,7 @@ namespace HLU.GISApplication
                     long? keepOid = null;
                     foreach (long oid in selectedObjectIds)
                     {
-                        bool found = GisRowHelpers.WithRowByObjectId(_hluFeatureClass, oid, row =>
+                        bool found = ArcGISProHelpers.WithRowByObjectId(_hluFeatureClass, oid, row =>
                         {
                             string rowIncid = Convert.ToString(row[incidFieldIndex]) ?? String.Empty;
 
@@ -2999,7 +2993,7 @@ namespace HLU.GISApplication
                         throw new HLUToolException($"Cannot logically merge: No selected feature has incid '{keepIncid}'.");
 
                     // Read keep attribute values.
-                    bool keepFound = GisRowHelpers.WithRowByObjectId(_hluFeatureClass, keepOid.Value, keepRow =>
+                    bool keepFound = ArcGISProHelpers.WithRowByObjectId(_hluFeatureClass, keepOid.Value, keepRow =>
                     {
                         // Extract values for the copy fields.
                         foreach ((string columnName, int fieldIndex) in copyFields)
@@ -3017,7 +3011,7 @@ namespace HLU.GISApplication
                     foreach (long oid in selectedObjectIds)
                     {
                         // Read each selected feature.
-                        bool found = GisRowHelpers.WithRowByObjectId(_hluFeatureClass, oid, row =>
+                        bool found = ArcGISProHelpers.WithRowByObjectId(_hluFeatureClass, oid, row =>
                         {
                             // Get the incid value.
                             string rowIncid = Convert.ToString(row[incidFieldIndex]) ?? String.Empty;
@@ -3073,7 +3067,7 @@ namespace HLU.GISApplication
                         foreach (long oid in objectIdsToUpdate)
                         {
                             // Update the feature.
-                            GisRowHelpers.WithRowByObjectId(_hluFeatureClass, oid, row =>
+                            ArcGISProHelpers.WithRowByObjectId(_hluFeatureClass, oid, row =>
                             {
                                 row[incidFieldIndex] = keepIncid;
 
@@ -3942,6 +3936,14 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
+        /// The active HLU layer on which the tool is operating.
+        /// </summary>
+        public FeatureLayer HluLayer
+        {
+            get { return _hluLayer; }
+        }
+
+        /// <summary>
         /// The properties of the active hlu layer.
         /// </summary>
         public HLULayer ActiveHluLayer
@@ -4113,7 +4115,6 @@ namespace HLU.GISApplication
         private void DestroyHluLayer()
         {
             _hluLayer = null;
-            _hluTableName = null;
             _hluActiveLayer = null;
 
             _hluFieldMap = null;

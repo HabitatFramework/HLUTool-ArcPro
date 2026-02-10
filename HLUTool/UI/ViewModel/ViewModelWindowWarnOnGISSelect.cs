@@ -172,7 +172,7 @@ namespace HLU.UI.ViewModel
 
         public string GroupBoxWarnOnGISSelectHeader
         {
-            get { return String.Format("Expected number of selected {0}s & incids", _gisFeaturesType); }
+            get { return "HLU Tool"; }
             set { }
         }
 

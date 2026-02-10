@@ -27,6 +27,8 @@ namespace HLU.UI.UserControls.Toolbar
         private bool _isInitialized;
         private bool _isEnabled;
 
+        private string _previousReason;
+
         #endregion Fields
 
         #region Constructor
@@ -75,12 +77,12 @@ namespace HLU.UI.UserControls.Toolbar
             if (!_isInitialized)
                 Initialize();
 
-            // Select the reason if it hasn't been selected.
-            if (SelectedItem == null && _viewModel?.Reason != null)
-            {
-                SelectedItem = _viewModel.Reason;
-                OnSelectionChange(SelectedItem);
-            }
+            //// Select the reason if it hasn't been selected.
+            //if (SelectedItem == null && _viewModel?.Reason != null)
+            //{
+            //    SelectedItem = _viewModel.Reason;
+            //    OnSelectionChange(SelectedItem);
+            //}
 
             //if (_viewModel == null)
             //{
@@ -156,7 +158,7 @@ namespace HLU.UI.UserControls.Toolbar
 
         public string Reason
         {
-            get { return SelectedItem?.ToString(); }
+            get { return (SelectedItem as ComboBoxItem)?.Text; }
         }
 
         /// <summary>
@@ -165,11 +167,23 @@ namespace HLU.UI.UserControls.Toolbar
         /// <param name="item"></param>
         protected override void OnSelectionChange(ComboBoxItem item)
         {
+            // Store the new value
+            string newReason = item?.Text;
+
+            // Return if the value hasn't actually changed.
+            if (String.Equals(_previousReason, newReason, StringComparison.Ordinal))
+                return;
+
+            // Store the old value.
+            _previousReason = newReason;
+
+            // Update the main view model.
+            _viewModel.Reason = newReason;
+
             // Notify the ViewModel of the selection change.
             _viewModel?.RefreshReasonProcess();
         }
 
         #endregion Methods
-
     }
 }

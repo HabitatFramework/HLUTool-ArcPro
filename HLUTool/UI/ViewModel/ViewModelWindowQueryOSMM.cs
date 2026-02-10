@@ -127,7 +127,7 @@ namespace HLU.UI.ViewModel
             _osmmChangeFlag = _codeAnyRow;
 
             // Set the default status value
-            if (_viewModelMain.OSMMBulkUpdateMode == true)
+            if (_viewModelMain.IsOsmmBulkMode)
                 _osmmUpdatesStatus = "Pending";
             else
                 _osmmUpdatesStatus = "Proposed";
@@ -252,7 +252,7 @@ namespace HLU.UI.ViewModel
             _osmmChangeFlag = _codeAnyRow;
 
             // Set the default status value
-            if (_viewModelMain.OSMMBulkUpdateMode == true)
+            if (_viewModelMain.IsOsmmBulkMode)
                 _osmmUpdatesStatus = "Pending";
             else
                 _osmmUpdatesStatus = "Proposed";
@@ -417,7 +417,7 @@ namespace HLU.UI.ViewModel
             get
             {
                 string[] osmmUpdateStatuses;
-                if (_viewModelMain.OSMMBulkUpdateMode == true)
+                if (_viewModelMain.IsOsmmBulkMode)
                     osmmUpdateStatuses = ["Pending"];
                 else
                     osmmUpdateStatuses = Settings.Default.OSMMUpdatesStatuses.Cast<string>().ToArray();

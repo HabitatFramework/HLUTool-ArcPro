@@ -3074,8 +3074,7 @@
                             Margin="0,0,2,0"
                             Command="{Binding NavigateFirstCommand}"
                             Style="{DynamicResource Esri_ButtonUpSmall}"
-                            ToolTip="First record">
-                        </Button>
+                            ToolTip="First record" />
                         <Button
                             Name="ButtonPreviousRecord"
                             Grid.Column="2"
@@ -3105,8 +3104,7 @@
                             Margin="2,0,2,0"
                             Command="{Binding NavigateNextCommand}"
                             Style="{DynamicResource Esri_ButtonForwardSmall}"
-                            ToolTip="Next record">
-                        </Button>
+                            ToolTip="Next record" />
                         <Button
                             Name="ButtonLastRecord"
                             Grid.Column="5"

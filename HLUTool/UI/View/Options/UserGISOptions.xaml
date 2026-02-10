@@ -126,7 +126,7 @@
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
-                            Description=""
+                            Description="Sets the maximum number of features that are expected to be found in GIS when performing a selection before the user is warned. Set to zero to disable warnings."
                             Header="Warn Before GIS Select" />
                     </Grid>
 
