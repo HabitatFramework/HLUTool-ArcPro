@@ -1385,7 +1385,6 @@ namespace HLU.Data.Connection
         [GeneratedRegex(@"\s*\(\s*[0-9]+(\s*,\s*[0-9]+\s*)*\)")]
         private static partial Regex SqlTypeRegex();
 
-
         #endregion
     }
 }

@@ -16,17 +16,18 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using System;
-using System.Data;
-using System.Linq;
 using HLU.Data.Connection;
 using HLU.Data.Model;
 using HLU.Data.Model.HluDataSetTableAdapters;
 using HLU.UI.ViewModel;
+using System;
+using System.Data;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace HLU.Data
 {
-    class RecordIds
+    internal partial class RecordIds
     {
         #region Fields
 
@@ -179,7 +180,7 @@ namespace HLU.Data
                 return IncidString(_incidCurrentNumber);
             }
         }
-        
+
         /// <summary>
         /// Gets the current INCID string.
         /// </summary>
@@ -187,7 +188,7 @@ namespace HLU.Data
         {
             get { return SiteID + ":" + _incidCurrentNumber.ToString("D7"); }
         }
-        
+
         /// <summary>
         /// Gets the current INCID Bap ID.
         /// </summary>
@@ -199,7 +200,7 @@ namespace HLU.Data
                     _hluDataset.incid_bap.bap_idColumn.Ordinal) - 1;
             }
         }
-        
+
         /// <summary>
         /// Gets the next available INCID Secondary ID.
         /// </summary>
@@ -212,7 +213,7 @@ namespace HLU.Data
                 return _nextIncidSecondaryId;
             }
         }
-        
+
         /// <summary>
         /// Gets the next available INCID Condition ID.
         /// </summary>
@@ -225,7 +226,7 @@ namespace HLU.Data
                 return _nextIncidConditionId;
             }
         }
-        
+
         /// <summary>
         /// Gets the next available INCID Bap ID.
         /// </summary>
@@ -238,7 +239,7 @@ namespace HLU.Data
                 return _nextIncidBapId;
             }
         }
-        
+
         /// <summary>
         /// Gets the next available INCID Sources ID.
         /// </summary>
@@ -246,12 +247,12 @@ namespace HLU.Data
         {
             get
             {
-                _nextIncidSourcesId = NextID(_nextIncidSourcesId, _hluDataset.incid_sources, 
+                _nextIncidSourcesId = NextID(_nextIncidSourcesId, _hluDataset.incid_sources,
                     _hluDataset.incid_sources.incid_source_idColumn.Ordinal);
                 return _nextIncidSourcesId;
             }
         }
-        
+
         /// <summary>
         /// Gets the maximum INCID number.
         /// </summary>
@@ -398,6 +399,6 @@ namespace HLU.Data
             return nextID;
         }
 
-        #endregion
+        #endregion Private
     }
 }

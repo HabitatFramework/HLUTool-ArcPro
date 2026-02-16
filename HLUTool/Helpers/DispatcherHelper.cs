@@ -19,14 +19,14 @@
 using System;
 using System.Windows.Threading;
 
-namespace HLU
+namespace HLU.Helpers
 {
     /// <summary>
     /// Encapsulates a WPF dispatcher with added functionalities.
     /// </summary>
-    public class DispatcherHelper
+    public static class DispatcherHelper
     {
-        private static DispatcherOperationCallback exitFrameCallback =
+        private static readonly DispatcherOperationCallback exitFrameCallback =
             new(ExitFrame);
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace HLU
             }
         }
 
-        private static Object ExitFrame(Object state)
+        private static object ExitFrame(object state)
         {
             DispatcherFrame frame = state as DispatcherFrame;
 

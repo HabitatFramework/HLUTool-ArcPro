@@ -23,6 +23,7 @@ using System.Data;
 using System.Linq;
 using HLU.Data;
 using HLU.Data.Model;
+using HLU.Enums;
 
 namespace HLU.UI.ViewModel
 {

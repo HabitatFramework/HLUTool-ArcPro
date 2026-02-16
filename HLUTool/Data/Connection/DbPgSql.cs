@@ -1178,7 +1178,6 @@ namespace HLU.Data.Connection
                 _command.ExecuteNonQuery();
             }
             catch { }
-            //DONE: _connection.Clone()
             finally { if (previousConnectionState != ConnectionState.Open) _connection.Open() ; }
         }
 

@@ -119,7 +119,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion INotifyPropertyChanged Members
 
         #region IDisposable Members
 

@@ -843,7 +843,6 @@ namespace HLU.UI.ViewModel
                     String.Join(", ", errorProps.ToArray())), "HLU: Copy Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
 
-            //DONE: Compile dependency?
             vmMain.OnPropertyChanged(nameof(vmMain.CanPaste));
         }
 

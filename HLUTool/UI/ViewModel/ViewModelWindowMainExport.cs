@@ -27,7 +27,6 @@ using HLU.Date;
 using HLU.GISApplication;
 using HLU.Properties;
 using HLU.UI.View;
-//DONE: using Microsoft.Office.Interop.Access.Dao
 using Microsoft.Office.Interop.Access.Dao;
 using System;
 using System.Collections.Generic;

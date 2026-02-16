@@ -33,6 +33,7 @@ using System.Windows.Forms;
 using ArcGIS.Desktop.Framework;
 using System.Text.RegularExpressions;
 using HLU.Data.Model;
+using HLU.Enums;
 using HLU.UI.ViewModel;
 using HLU.GISApplication;
 using HLU.Properties;
@@ -1917,8 +1918,6 @@ namespace HLU.UI.ViewModel
         /// <returns>A <see cref="Regex"/> instance that can be used to match a single alphanumeric character.</returns>
         [GeneratedRegex(@"[a-zA-Z0-9]")]
         private static partial Regex SecondaryCodeDelimeterRegex();
-
-
 
         /// <summary>
         /// Defines a compiled regular expression that matches any single alphanumeric character.

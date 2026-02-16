@@ -19,6 +19,7 @@
 // You should have received a copy of the GNU General Public License
 // along with with program.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Helpers;
 using System;
 using System.Windows;
 using System.Windows.Forms;

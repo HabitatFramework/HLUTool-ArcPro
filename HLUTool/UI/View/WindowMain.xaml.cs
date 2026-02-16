@@ -23,6 +23,7 @@ using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using HLU.Data;
 using HLU.Data.Model;
+using HLU.Helpers;
 using HLU.UI.ViewModel;
 using System;
 using System.Linq;

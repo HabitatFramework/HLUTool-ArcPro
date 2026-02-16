@@ -23,6 +23,8 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using HLU.Data.Model;
+using HLU.Enums;
+using HLU.Helpers;
 
 namespace HLU.UI.ViewModel
 {
@@ -227,7 +229,7 @@ namespace HLU.UI.ViewModel
             string operationName = Enum.GetName(typeof(Operations), modifyOperation);
 
             // Create a regex pattern that matches the operation name with any
-            string descriptionPattern = string.Join(@"\s*", CapitalisedRegex().Matches(operationName).Cast<Match>()
+            string descriptionPattern = string.Join(@"\s*", StringHelper.GetCapitalisedRegex().Matches(operationName).Cast<Match>()
                 .Select(m => operationName.Substring(m.Index, m.Length))) + @"\s*";
 
             // Find the operation code that matches the description pattern.
@@ -286,24 +288,5 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion Helpers
-
-        #region Regex Definitions
-
-        /// <summary>
-        /// Defines a compiled regular expression that matches capitalized words in a string.
-        /// </summary>
-        /// <remarks>
-        /// - The pattern `[A-Z][^A-Z]*` matches:
-        ///   - An uppercase letter (`[A-Z]`) at the beginning of a word.
-        ///   - Followed by zero or more non-uppercase letters (`[^A-Z]*`).
-        /// - This effectively extracts words that start with a capital letter and continue until
-        ///   the next capital letter is encountered.
-        /// - The `[GeneratedRegex]` attribute compiles the regex at compile time for performance benefits.
-        /// </remarks>
-        /// <returns>A `Regex` instance that can be used to match capitalized words in a string.</returns>
-        [GeneratedRegex("[A-Z][^A-Z]*")]
-        private static partial Regex CapitalisedRegex();
-
-        #endregion Regex Definitions
     }
 }

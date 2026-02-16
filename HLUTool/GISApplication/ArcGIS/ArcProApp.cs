@@ -1536,7 +1536,7 @@ namespace HLU.GISApplication
                 if (row is not Feature feature)
                     continue;
 
-                ArcGIS.Core.Geometry.Geometry shape = feature.GetShape();
+                Geometry shape = feature.GetShape();
                 if (shape == null)
                     continue;
 
@@ -2153,11 +2153,6 @@ namespace HLU.GISApplication
                                 // Only tries for shapefile-style fields; failures are ignored.
                                 TrySetRowValue(row, shapeLengthFieldIndex, GeometryEngine.Instance.Length(shape));
                                 TrySetRowValue(row, shapeAreaFieldIndex, GeometryEngine.Instance.Area(shape));
-
-                                //if (shapeLengthFieldIndex != -1)
-                                //    row[shapeLengthFieldIndex] = GeometryEngine.Instance.Length(shape);
-                                //if (shapeAreaFieldIndex != -1)
-                                //    row[shapeAreaFieldIndex] = GeometryEngine.Instance.Area(shape);
                             }
                         }
 
@@ -3267,11 +3262,11 @@ namespace HLU.GISApplication
                         {
                             Geometry geom = feature.GetShape();
                             (double geom1, double geom2) = GetGeometryHistoryValues(geom);
-
                             historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = geom1;
                             historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = geom2;
                         }
 
+                        // Add the history row to the history table.
                         historyTable.Rows.Add(historyRow);
                     }
                 }
@@ -3432,10 +3427,8 @@ namespace HLU.GISApplication
 
             //return historyFields.Select(hf => hf.FieldOrdinal).ToArray();
 
-
-
             if (historyColumns == null || historyColumns.Length == 0)
-                return Array.Empty<int>();
+                return [];
 
             int[] ordinals = new int[historyColumns.Length];
 
@@ -4498,10 +4491,6 @@ namespace HLU.GISApplication
         {
             try
             {
-                //DONE: Result is always false
-                //if (value == null)
-                //    return "NULL";
-                //else
                 return value.ToString(_dateFormatString);
             }
             catch { return value.ToString(); }

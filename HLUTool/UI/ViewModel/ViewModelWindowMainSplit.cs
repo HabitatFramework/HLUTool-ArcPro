@@ -24,6 +24,7 @@ using ArcGIS.Desktop.Editing;
 using HLU.Data;
 using HLU.Data.Connection;
 using HLU.Data.Model;
+using HLU.Enums;
 using HLU.GISApplication;
 using System;
 using System.Collections.Generic;

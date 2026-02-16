@@ -37,6 +37,7 @@ using HLU.UI.ViewModel;
 using HLU.GISApplication;
 using HLU.Properties;
 using HLU.UI.UserControls;
+using HLU.Helpers;
 
 namespace HLU.UI.ViewModel
 {

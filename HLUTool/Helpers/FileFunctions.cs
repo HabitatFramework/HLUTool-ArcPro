@@ -23,7 +23,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace HLU
+namespace HLU.Helpers
 {
     /// <summary>
     /// This class provides basic file and folder functions.
@@ -40,7 +40,7 @@ namespace HLU
         public static bool DirExists(string filePath)
         {
             // Check input first.
-            if (String.IsNullOrEmpty(filePath))
+            if (string.IsNullOrEmpty(filePath))
                 return false;
 
             // Check if the directory exists.
@@ -59,7 +59,7 @@ namespace HLU
         public static string GetDirectoryName(string fullPath)
         {
             // Check input first.
-            if (String.IsNullOrEmpty(fullPath))
+            if (string.IsNullOrEmpty(fullPath))
                 return null;
 
             // Get the directory name.
@@ -82,11 +82,11 @@ namespace HLU
         public static bool FileExists(string filePath, string fileName)
         {
             // Check input first.
-            if (String.IsNullOrEmpty(filePath))
+            if (string.IsNullOrEmpty(filePath))
                 return false;
 
             // Check input first.
-            if (String.IsNullOrEmpty(fileName))
+            if (string.IsNullOrEmpty(fileName))
                 return false;
 
             // If the directory exists.
@@ -119,7 +119,7 @@ namespace HLU
         public static bool FileExists(string fullPath)
         {
             // Check input first.
-            if (String.IsNullOrEmpty(fullPath))
+            if (string.IsNullOrEmpty(fullPath))
                 return false;
 
             // Check if the file exists.
@@ -138,7 +138,7 @@ namespace HLU
         public static string GetFileName(string fullPath)
         {
             // Check input first.
-            if (String.IsNullOrEmpty(fullPath))
+            if (string.IsNullOrEmpty(fullPath))
                 return null;
 
             // Get the file name.
@@ -156,7 +156,7 @@ namespace HLU
         public static string GetExtension(string fullPath)
         {
             // Check input first.
-            if (String.IsNullOrEmpty(fullPath))
+            if (string.IsNullOrEmpty(fullPath))
                 return null;
 
             // Get the file extension.
@@ -174,7 +174,7 @@ namespace HLU
         public static List<string> GetAllFilesInDirectory(string filePath)
         {
             // Check input first.
-            if (String.IsNullOrEmpty(filePath))
+            if (string.IsNullOrEmpty(filePath))
                 return null;
 
             List<string> myFileList = [];
@@ -198,7 +198,7 @@ namespace HLU
         public static string GetFullNameWithoutExtension(string fullName)
         {
             // Check input first.
-            if (String.IsNullOrEmpty(fullName))
+            if (string.IsNullOrEmpty(fullName))
                 return null;
 
             // Get the directory name.
@@ -218,7 +218,7 @@ namespace HLU
         public static string GetFileNameWithoutExtension(string fileName)
         {
             // Check input first.
-            if (String.IsNullOrEmpty(fileName))
+            if (string.IsNullOrEmpty(fileName))
                 return null;
 
             // Get the file name without the extension.
@@ -235,7 +235,7 @@ namespace HLU
         public static bool DeleteFile(string fullPath)
         {
             // Check input first.
-            if (String.IsNullOrEmpty(fullPath))
+            if (string.IsNullOrEmpty(fullPath))
                 return false;
 
             if (FileExists(fullPath))
@@ -263,7 +263,7 @@ namespace HLU
         public static bool WriteEmptyTextFile(string outTable, string outHeader)
         {
             // Check input first.
-            if (String.IsNullOrEmpty(outTable))
+            if (string.IsNullOrEmpty(outTable))
                 return false;
 
             try
@@ -272,7 +272,7 @@ namespace HLU
                 StreamWriter txtFile = new(outTable, false);
 
                 // Write the headers to the file.
-                if (!String.IsNullOrEmpty(outHeader))
+                if (!string.IsNullOrEmpty(outHeader))
                     txtFile.WriteLine(outHeader);
 
                 // Close the file.
@@ -291,7 +291,7 @@ namespace HLU
         public static bool RenameFile(string oldPath, string newPath)
         {
             // Check input first.
-            if (String.IsNullOrEmpty(oldPath))
+            if (string.IsNullOrEmpty(oldPath))
                 return false;
 
             // Check if input exists.
@@ -321,7 +321,7 @@ namespace HLU
         public static bool CreateLogFile(string logFile)
         {
             // Check input first.
-            if (String.IsNullOrEmpty(logFile))
+            if (string.IsNullOrEmpty(logFile))
                 return false;
 
             StreamWriter myWriter = new(logFile, false);
@@ -341,7 +341,7 @@ namespace HLU
         public static bool WriteLine(string logFile, string logLine)
         {
             // Check input first.
-            if (String.IsNullOrEmpty(logFile))
+            if (string.IsNullOrEmpty(logFile))
                 return false;
 
             try

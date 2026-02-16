@@ -23,7 +23,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using HLU.Properties;
+using HLU.Helpers;
 
 namespace HLU.Date
 {
@@ -736,7 +736,7 @@ namespace HLU.Date
                             case VagueDateTypes.StartSeason: // "P"
                                 if (!String.IsNullOrEmpty(startDateString))
                                 {
-                                    string[] splitArray = RegexWholeWord().Split(startDateString);
+                                    string[] splitArray = StringHelper.GetWhitespaceRegex().Split(startDateString);
                                     if ((splitArray.Length != 2) || !Int32.TryParse(splitArray[1], out year))
                                         return DateUnknown;
                                     var q = SeasonNames.Where(s => s.Equals(splitArray[0], StringComparison.CurrentCultureIgnoreCase));
@@ -772,7 +772,7 @@ namespace HLU.Date
                                 //if (endDateOk) return endDate.Subtract(BaseDate).Days;
                                 if (!String.IsNullOrEmpty(endDateString))
                                 {
-                                    string[] splitArray = RegexWholeWord().Split(endDateString);
+                                    string[] splitArray = StringHelper.GetWhitespaceRegex().Split(endDateString);
                                     if ((splitArray.Length != 2) || !Int32.TryParse(splitArray[1], out year))
                                         return DateUnknown;
                                     var q = dtFormatInfo.MonthNames.Where(s => s.Equals(splitArray[0], StringComparison.CurrentCultureIgnoreCase));
@@ -797,7 +797,7 @@ namespace HLU.Date
                             case VagueDateTypes.StartSeason: // "P"
                                 if (!String.IsNullOrEmpty(endDateString))
                                 {
-                                    string[] splitArray = RegexWholeWord().Split(endDateString);
+                                    string[] splitArray = StringHelper.GetWhitespaceRegex().Split(endDateString);
                                     if ((splitArray.Length != 2) || !Int32.TryParse(splitArray[1], out year))
                                         return DateUnknown;
                                     var q = SeasonNames.Where(s => s.Equals(splitArray[0], StringComparison.CurrentCultureIgnoreCase));
@@ -952,20 +952,5 @@ namespace HLU.Date
         }
 
         #endregion Methods
-
-        /// <summary>
-        /// Defines a compiled regular expression that matches one or more whitespace characters.
-        /// </summary>
-        /// <remarks>
-        /// - The pattern `\s+` matches:
-        ///   - One or more whitespace characters (`\s+`), including spaces, tabs, and newlines.
-        /// - This regex is useful for detecting or replacing multiple whitespace occurrences in a string.
-        /// - The `[GeneratedRegex]` attribute ensures that the regex is compiled at compile-time,
-        ///   improving performance.
-        /// </remarks>
-        /// <returns>A <see cref="Regex"/> instance that can be used to match whitespace sequences.</returns>
-        [GeneratedRegex(@"\s+")]
-        private static partial Regex RegexWholeWord();
-
     }
 }

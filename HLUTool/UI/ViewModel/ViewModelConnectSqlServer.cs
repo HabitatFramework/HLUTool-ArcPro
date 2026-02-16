@@ -201,7 +201,6 @@ namespace HLU.UI.ViewModel
                 if (!String.IsNullOrEmpty(value) && (value != _connStrBuilder.DataSource))
                     _connStrBuilder.DataSource = value;
 
-                //DONE: Manually set encryption to optional.
                 _connStrBuilder.Encrypt = SqlConnectionEncryptOption.Optional;
             }
         }

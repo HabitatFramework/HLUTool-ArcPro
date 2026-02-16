@@ -38,6 +38,7 @@ using HLU.GISApplication;
 using HLU.Properties;
 using HLU.UI.UserControls;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
+using HLU.Helpers;
 
 namespace HLU.UI.ViewModel
 {
@@ -1512,7 +1513,6 @@ namespace HLU.UI.ViewModel
                     {
                         // Strip out the date string.
                         DateTime dt;
-                        //DONE: Added success check on TryParse
                         if (DateTime.TryParse(sqlcmd.AsSpan(i1 + 1, i2 - i1 - 1), out dt))
                         {
                             // Split the date string from the rest of the sql command.
