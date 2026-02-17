@@ -267,11 +267,11 @@ namespace HLU.UI.ViewModel
 
         #endregion Fields - Update Control
 
-        #region Fields - Temp/Working
+        #region Fields - Temp GDB
 
         private string _workingFileGDBName;
 
-        #endregion Fields - Temp/Working
+        #endregion Fields - Temp GDB
 
         #region Fields - Static Config
 
@@ -596,6 +596,16 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion Properties - Export
+
+        #region Properties - Temp GDB
+
+        public string WorkingFileGDBName
+        {
+            get { return _workingFileGDBName; }
+            set { _workingFileGDBName = value; }
+        }
+
+        #endregion Properties - Temp GDB
 
         #region Properties - Configuration
 

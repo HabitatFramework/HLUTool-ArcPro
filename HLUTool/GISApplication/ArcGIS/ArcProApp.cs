@@ -23,7 +23,9 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.Analyst3D;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Core.Internal.CIM;
+using ArcGIS.Desktop.Catalog;
+using ArcGIS.Desktop.Core;
+using ArcGIS.Desktop.Core.Geoprocessing;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -200,6 +202,14 @@ namespace HLU.GISApplication
         /// Maximum (nominal) allowable length of a SQL query.
         /// </summary>
         private int _maxSqlLength = Settings.Default.MaxSqlLengthArcGIS;
+
+        /// <summary>
+        /// Export parameters used to pass information.
+        /// </summary>
+        private string _exportOutputPath;
+        private string _exportTempGdbPath;
+        private string _exportTableName;
+        private bool _exportSelectedOnly;
 
         #endregion Fields
 
@@ -2156,8 +2166,8 @@ namespace HLU.GISApplication
                             }
                         }
 
+                        // Store the row.
                         row.Store();
-                        context.Invalidate(row);
                     }
                 }, hluTable);
             });
@@ -3582,79 +3592,130 @@ namespace HLU.GISApplication
 
         #endregion Fields
 
-        /// <summary>
-        /// Prompts the user for the export layer name.
-        /// </summary>
-        /// <param name="tempMdbPathName">Name of the temporary MDB path to save the
-        /// temporary attribute data to.</param>
-        /// <param name="attributeDatasetName">Name of the attribute dataset.</param>
-        /// <param name="attributesLength">Length of the attribute data row.</param>
-        /// <returns></returns>
-        public bool ExportPrompt(string tempMdbPathName, string attributeDatasetName, int attributesLength, bool selectedOnly)
-        {
-            //List<string> returnList = IpcArcMap(
-            //    ["ep", tempMdbPathName, attributeDatasetName]);
+        #region Export
 
-            //if ((returnList.Count > 0) && (returnList[0] == "cancelled"))
-            //{
-            //    // Display message if no output layer is entered by the user.
-            //    MessageBox.Show("Export cancelled. No output table selected.",
-            //        "HLU: Export", MessageBoxButton.OK, MessageBoxImage.Error);
-            //    return false;
-            //}
-            //else if (returnList.Count > 0)
-            //{
-            //    MessageBox.Show(String.Format("The export operation failed. The Message returned was:\n\n{0}",
-            //        returnList[0]), "HLU: Export", MessageBoxButton.OK, MessageBoxImage.Error);
-            //    return false;
-            //}
-            //else
-            //{
-            //    return true;
-            //}
-            return false;
+        /// <summary>
+        /// Prompts the user for export location and validates the export.
+        /// </summary>
+        public async Task<bool> ExportPromptAsync(string tempGdbPath, string attributeTableName,
+            int attributesLength, bool selectedOnly)
+        {
+            return await QueuedTask.Run(() =>
+            {
+                try
+                {
+                    if (_hluLayer == null || _hluFeatureClass == null)
+                        return false;
+
+                    // Prompt for output location.
+                    SaveItemDialog saveDialog = new()
+                    {
+                        Title = "Export Features",
+                        InitialLocation = Project.Current.HomeFolderPath,
+                        DefaultExt = "shp",
+                        Filter = "Shapefile (*.shp)|*.shp|File Geodatabase Feature Class|*.gdb"
+                    };
+
+                    if (saveDialog.ShowDialog() != true)
+                        return false;
+
+                    string outputPath = saveDialog.FilePath;
+
+                    // Store export parameters for use in Export method.
+                    _exportOutputPath = outputPath;
+                    _exportTempGdbPath = tempGdbPath;
+                    _exportTableName = attributeTableName;
+                    _exportSelectedOnly = selectedOnly;
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Export prompt failed: {ex.Message}", "Export Error");
+                    return false;
+                }
+            });
         }
 
         /// <summary>
-        /// Exports the HLU features and attribute data to a new GIS layer file.
+        /// Exports features with attributes to a new feature class.
         /// </summary>
-        /// <param name="tempMdbPathName">Name of the temporary MDB path containing the
-        /// attribute data.</param>
-        /// <param name="attributeDatasetName">Name of the attribute dataset.</param>
-        /// <param name="selectedOnly">If set to <c>true</c> only selected features
-        /// will be exported.</param>
-        /// <returns></returns>
-        public bool Export(string tempMdbPathName, string attributeDatasetName, bool selectedOnly)
+        public async Task<bool> ExportAsync(string tempGdbPath, string attributeTableName, bool selectedOnly)
         {
-            //List<string> returnList = IpcArcMap(
-            //    ["ex", tempMdbPathName, attributeDatasetName, (selectedOnly ? "true" : "false")]);
+            return await QueuedTask.Run(async () =>
+            {
+                try
+                {
+                    if (_hluLayer == null || _hluFeatureClass == null)
+                        return false;
 
-            //if ((returnList.Count > 0) && (returnList[0] == "cancelled"))
-            //{
-            //    // Display message if no output layer is entered by the user.
-            //    MessageBox.Show("Export cancelled.", "HLU: Export",
-            //        MessageBoxButton.OK, MessageBoxImage.Information);
-            //    return true;
-            //}
-            //else if ((returnList.Count > 0) && (returnList[0] == "noselection"))
-            //{
-            //    // Display message if no selected features are found.
-            //    MessageBox.Show("Export cancelled. No features selected.", "HLU: Export",
-            //        MessageBoxButton.OK, MessageBoxImage.Exclamation);
-            //    return true;
-            //}
-            //else if (returnList.Count > 0)
-            //{
-            //    MessageBox.Show(String.Format("The export operation failed. The Message returned was:\n\n{0}",
-            //        returnList[0]), "HLU: Export", MessageBoxButton.OK, MessageBoxImage.Error);
-            //    return false;
-            //}
-            //else
-            //{
-            //    return true;
-            //}
-            return false;
+                    // Get the incid field name.
+                    string incidFieldName = await IncidFieldNameAsync();
+                    if (string.IsNullOrEmpty(incidFieldName))
+                        return false;
+
+                    // Create temporary feature class path.
+                    string tempFeaturesPath = System.IO.Path.Combine(tempGdbPath, "TempFeatures");
+
+                    // Copy the selected features to temp location.
+                    var copyParams = Geoprocessing.MakeValueArray(
+                        _hluLayer.Name,
+                        tempFeaturesPath
+                    );
+
+                    var result = await Geoprocessing.ExecuteToolAsync("management.CopyFeatures", copyParams);
+
+                    if (result.IsFailed)
+                    {
+                        MessageBox.Show($"Failed to copy features: {string.Join("\n", result.Messages.Select(m => m.Text))}",
+                            "Export Error");
+                        return false;
+                    }
+
+                    // Join the attribute table to the features.
+                    var joinParams = Geoprocessing.MakeValueArray(
+                        tempFeaturesPath,
+                        incidFieldName,
+                        Path.Combine(tempGdbPath, attributeTableName),
+                        incidFieldName
+                    );
+
+                    result = await Geoprocessing.ExecuteToolAsync("management.JoinField", joinParams);
+
+                    if (result.IsFailed)
+                    {
+                        MessageBox.Show($"Failed to join attributes: {string.Join("\n", result.Messages.Select(m => m.Text))}",
+                            "Export Error");
+                        return false;
+                    }
+
+                    // Copy to final output location.
+                    var exportParams = Geoprocessing.MakeValueArray(
+                        tempFeaturesPath,
+                        _exportOutputPath
+                    );
+
+                    result = await Geoprocessing.ExecuteToolAsync("management.CopyFeatures", exportParams);
+
+                    if (result.IsFailed)
+                    {
+                        MessageBox.Show($"Failed to export to final location: {string.Join("\n", result.Messages.Select(m => m.Text))}",
+                            "Export Error");
+                        return false;
+                    }
+
+                    MessageBox.Show($"Export completed successfully to:\n{_exportOutputPath}", "Export Complete");
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Export failed: {ex.Message}", "Export Error");
+                    return false;
+                }
+            });
         }
+
+        #endregion Export
 
         #region Private Methods
 

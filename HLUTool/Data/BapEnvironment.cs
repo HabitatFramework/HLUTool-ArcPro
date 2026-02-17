@@ -82,7 +82,7 @@ namespace HLU.Data
             if (dataRow.IsNull(table.interpretation_commentsColumn))
                 _interpretation_comments = null;
             else
-                _interpretation_comments = dataRow.interpretation_comments.Length < 255 ? dataRow.interpretation_comments : dataRow.interpretation_comments.Substring(0, 254);
+                _interpretation_comments = dataRow.interpretation_comments.Length <= 254 ? dataRow.interpretation_comments : dataRow.interpretation_comments.Substring(0, 254);
         }
 
         public BapEnvironment(bool bulkUpdateMode, bool isSecondary, HluDataSet.incid_bapRow dataRow, IEnumerable<BapEnvironment> beList)
@@ -100,7 +100,7 @@ namespace HLU.Data
             if (dataRow.IsNull(table.interpretation_commentsColumn))
                 _interpretation_comments = null;
             else
-                _interpretation_comments = dataRow.interpretation_comments.Length < 255 ? dataRow.interpretation_comments : dataRow.interpretation_comments.Substring(0, 254);
+                _interpretation_comments = dataRow.interpretation_comments.Length <= 254 ? dataRow.interpretation_comments : dataRow.interpretation_comments.Substring(0, 254);
 
             _bapEnvironmentList = beList;
         }
@@ -119,7 +119,7 @@ namespace HLU.Data
             if (itemArray[5].ToString() == null)
                 _interpretation_comments = null;
             else
-                _interpretation_comments = itemArray[5].ToString().Length < 255 ? itemArray[5].ToString() : itemArray[5].ToString().Substring(0, 254);
+                _interpretation_comments = itemArray[5].ToString().Length <= 254 ? itemArray[5].ToString() : itemArray[5].ToString().Substring(0, 254);
         }
 
         public BapEnvironment(bool bulkUpdateMode, bool isSecondary, int bap_id, string incid, string bap_habitat,
@@ -137,7 +137,7 @@ namespace HLU.Data
             if (interpretation_comments == null)
                 _interpretation_comments = null;
             else
-                _interpretation_comments = interpretation_comments.Length < 255 ? interpretation_comments : interpretation_comments.Substring(0, 254);
+                _interpretation_comments = interpretation_comments.Length <= 254 ? interpretation_comments : interpretation_comments.Substring(0, 254);
         }
 
         public BapEnvironment(BapEnvironment inBH)
@@ -258,7 +258,7 @@ namespace HLU.Data
             get { return _interpretation_comments; }
             set
             {
-                _interpretation_comments = value == null || value.Length < 255 ? value : value.Substring(0, 254);
+                _interpretation_comments = value == null || value.Length <= 254 ? value : value.Substring(0, 254);
                 // Flag that the current record has changed so that the apply button
                 // will appear.
                 if (this.DataChanged != null)
