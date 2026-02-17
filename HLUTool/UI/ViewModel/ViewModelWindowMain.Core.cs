@@ -343,7 +343,7 @@ namespace HLU.UI.ViewModel
 
         #endregion Properties - Core Infrastructure
 
-        #region Properties - Initialization
+        #region Properties - Initialisation
 
         /// <summary>
         /// Has the DockPane been initialised?
@@ -357,7 +357,19 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion Properties - Initialization
+        /// <summary>
+        /// Is the DockPane in error?
+        /// </summary>
+        public bool InError
+        {
+            get { return _inError; }
+            set
+            {
+                _inError = value;
+            }
+        }
+
+        #endregion Properties - Initialisation
 
         #region Properties - Data Tables
 

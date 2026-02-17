@@ -269,18 +269,6 @@ namespace HLU.UI.ViewModel
         #region Properties - DockPane/View
 
         /// <summary>
-        /// Is the DockPane in error?
-        /// </summary>
-        public bool InError
-        {
-            get { return _inError; }
-            set
-            {
-                _inError = value;
-            }
-        }
-
-        /// <summary>
         /// Is the form loading?
         /// </summary>
         public bool FormLoading
