@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
-using ArcGIS.Core.Data;
+﻿using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.DDL;
 using ArcGIS.Core.Data.Exceptions;
 using ArcGIS.Desktop.Catalog;
@@ -10,6 +6,12 @@ using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Core.Geoprocessing;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using HLU.Helpers;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace HLU.GISApplication
 {
@@ -195,144 +197,6 @@ namespace HLU.GISApplication
             try
             {
                 IGPResult gp_result = await Geoprocessing.ExecuteToolAsync("management.AddField", parameters, environments, null, null, executeFlags);
-
-                if (gp_result.IsFailed)
-                {
-                    Geoprocessing.ShowMessageBox(gp_result.Messages, "GP Messages", GPMessageBoxStyle.Error);
-
-                    var messages = gp_result.Messages;
-                    var errMessages = gp_result.ErrorMessages;
-                    return false;
-                }
-            }
-            catch (Exception)
-            {
-                // Handle Exception.
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Spatially join a feature class with another feature class.
-        /// </summary>
-        /// <param name="targetFeatures"></param>
-        /// <param name="joinFeatures"></param>
-        /// <param name="outFeatureClass"></param>
-        /// <param name="joinOperation"></param>
-        /// <param name="joinType"></param>
-        /// <param name="fieldMapping"></param>
-        /// <param name="matchOption"></param>
-        /// <param name="searchRadius"></param>
-        /// <param name="distanceField"></param>
-        /// <param name="matchFields"></param>
-        /// <param name="addToMap"></param>
-        /// <returns>bool</returns>
-        public static async Task<bool> SpatialJoinAsync(string targetFeatures, string joinFeatures, string outFeatureClass, string joinOperation = "JOIN_ONE_TO_ONE",
-            string joinType = "KEEP_ALL", string fieldMapping = "", string matchOption = "INTERSECT", string searchRadius = "0", string distanceField = "",
-            string matchFields = "", bool addToMap = false)
-        {
-            // Check if there is an input target feature class.
-            if (String.IsNullOrEmpty(targetFeatures))
-                return false;
-
-            // Check if there is an input join feature class.
-            if (String.IsNullOrEmpty(joinFeatures))
-                return false;
-
-            // Check if there is an output feature class.
-            if (String.IsNullOrEmpty(outFeatureClass))
-                return false;
-
-            // Make a value array of strings to be passed to the tool.
-            List<string> parameters = [.. Geoprocessing.MakeValueArray(targetFeatures, joinFeatures, outFeatureClass, joinOperation, joinType, fieldMapping,
-                matchOption, searchRadius, distanceField, matchFields)];
-
-            // Make a value array of the environments to be passed to the tool.
-            var environments = Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
-
-            // Set the geoprocessing flags.
-            GPExecuteToolFlags executeFlags = GPExecuteToolFlags.GPThread; // | GPExecuteToolFlags.RefreshProjectItems;
-            if (addToMap)
-                executeFlags |= GPExecuteToolFlags.AddOutputsToMap;
-
-            //Geoprocessing.OpenToolDialog("analysis.SpatialJoin", parameters);  // Useful for debugging.
-
-            // Execute the tool.
-            try
-            {
-                IGPResult gp_result = await Geoprocessing.ExecuteToolAsync("analysis.SpatialJoin", parameters, environments, null, null, executeFlags);
-
-                if (gp_result.IsFailed)
-                {
-                    Geoprocessing.ShowMessageBox(gp_result.Messages, "GP Messages", GPMessageBoxStyle.Error);
-
-                    var messages = gp_result.Messages;
-                    var errMessages = gp_result.ErrorMessages;
-                    return false;
-                }
-            }
-            catch (Exception)
-            {
-                // Handle Exception.
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Permanently join fields from one feature class to another feature class.
-        /// </summary>
-        /// <param name="inFeatures"></param>
-        /// <param name="inField"
-        /// <param name="joinFeatures"></param>
-        /// <param name="joinField"></param>
-        /// <param name="fields"></param>
-        /// <param name="fmOption"></param>
-        /// <param name="fieldMapping"></param>
-        /// <param name="indexJoinFields"></param>
-        /// <param name="addToMap"></param>
-        /// <returns>bool</returns>
-        public static async Task<bool> JoinFieldsAsync(string inFeatures, string inField, string joinFeatures, string joinField,
-            string fields = "", string fmOption = "NOT_USE_FM", string fieldMapping = "", string indexJoinFields = "NO_INDEXES",
-            bool addToMap = false)
-        {
-            // Check if there is an input target feature class.
-            if (String.IsNullOrEmpty(inFeatures))
-                return false;
-
-            // Check if there is an input field name.
-            if (String.IsNullOrEmpty(inField))
-                return false;
-
-            // Check if there is a join feature class.
-            if (String.IsNullOrEmpty(joinFeatures))
-                return false;
-
-            // Check if there is a join field name.
-            if (String.IsNullOrEmpty(joinField))
-                return false;
-
-            // Make a value array of strings to be passed to the tool.
-            List<string> parameters = [.. Geoprocessing.MakeValueArray(inFeatures, inField, joinFeatures, joinField, fields,
-                fmOption, fieldMapping, indexJoinFields)];
-
-            // Make a value array of the environments to be passed to the tool.
-            var environments = Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
-
-            // Set the geoprocessing flags.
-            GPExecuteToolFlags executeFlags = GPExecuteToolFlags.GPThread; // | GPExecuteToolFlags.RefreshProjectItems;
-            if (addToMap)
-                executeFlags |= GPExecuteToolFlags.AddOutputsToMap;
-
-            //Geoprocessing.OpenToolDialog("management.JoinField", parameters);  // Useful for debugging.
-
-            // Execute the tool.
-            try
-            {
-                IGPResult gp_result = await Geoprocessing.ExecuteToolAsync("management.JoinField", parameters, environments, null, null, executeFlags);
 
                 if (gp_result.IsFailed)
                 {
@@ -905,7 +769,432 @@ namespace HLU.GISApplication
             return success;
         }
 
+        /// <summary>
+        /// Cleans up all tables and feature classes from a geodatabase.
+        /// </summary>
+        /// <param name="gdbPath">Path to the geodatabase.</param>
+        /// <returns>Number of items deleted.</returns>
+        public static async Task<int> CleanupGeodatabaseAsync(string gdbPath)
+        {
+            // Check parameters.
+            if (string.IsNullOrEmpty(gdbPath) || !Directory.Exists(gdbPath))
+                return 0;
+
+            int deletedCount = 0;
+
+            try
+            {
+                await QueuedTask.Run(() =>
+                {
+                    // Open the file geodatabase. This will open the geodatabase if the folder exists and contains a valid geodatabase.
+                    using Geodatabase geodatabase = new(new FileGeodatabaseConnectionPath(new Uri(gdbPath)));
+
+                    // Create a SchemaBuilder object
+                    SchemaBuilder schemaBuilder = new(geodatabase);
+
+                    // Get and delete all tables
+                    IReadOnlyList<TableDefinition> tableDefs = geodatabase.GetDefinitions<TableDefinition>();
+                    foreach (var tableDef in tableDefs)
+                    {
+                        try
+                        {
+                            // Create a TableDescription object
+                            TableDescription tableDescription = new(tableDef);
+
+                            // Add the deletion for the table to the list of DDL tasks
+                            schemaBuilder.Delete(tableDescription);
+                            deletedCount++;
+                        }
+                        catch
+                        {
+                            // Skip if deletion fails
+                        }
+                    }
+
+                    // Get and delete all feature classes
+                    IReadOnlyList<FeatureClassDefinition> fcDefs = geodatabase.GetDefinitions<FeatureClassDefinition>();
+                    foreach (var fcDef in fcDefs)
+                    {
+                        try
+                        {
+                            // Create a FeatureClassDescription object
+                            FeatureClassDescription fcDescription = new(fcDef);
+
+                            // Add the deletion for the feature class to the list of DDL tasks
+                            schemaBuilder.Delete(fcDescription);
+                            deletedCount++;
+                        }
+                        catch
+                        {
+                            // Skip if deletion fails
+                        }
+                    }
+
+                    // Only execute if there are operations to perform
+                    if (deletedCount > 0)
+                    {
+                        bool success = schemaBuilder.Build();
+
+                        // If build failed, reset the count
+                        if (!success)
+                            deletedCount = 0;
+                    }
+                });
+            }
+            catch
+            {
+                // Silently fail
+            }
+
+            return deletedCount;
+        }
+
         #endregion Geodatabase
+
+        #region Indexes
+
+        /// <summary>
+        /// Adds an attribute index to a table or feature class for improved join performance.
+        /// </summary>
+        /// <remarks>
+        /// This method checks if an index already exists on the specified field before attempting to create one.
+        /// If an index exists, the method returns true without creating a duplicate index.
+        /// </remarks>
+        /// <param name="inTable">The full path to the input table or feature class.</param>
+        /// <param name="fieldNames">The field name(s) to index (comma-separated for composite indexes).</param>
+        /// <param name="indexName">The name for the new index.</param>
+        /// <returns>True if the index was created successfully or already exists, otherwise false.</returns>
+        public static async Task<bool> AddAttributeIndexAsync(string gdbPath, string inTable, string fieldNames, string indexName)
+        {
+            // Check there is an input geodatabase path.
+            if (String.IsNullOrWhiteSpace(gdbPath))
+                return false;
+
+            // Check there is an input table path.
+            if (String.IsNullOrWhiteSpace(inTable))
+                return false;
+
+            // Check there is an input field name.
+            if (String.IsNullOrWhiteSpace(fieldNames))
+                return false;
+
+            return await QueuedTask.Run(async () =>
+            {
+                try
+                {
+                    // Open the file geodatabase. This will open the geodatabase if the folder exists and contains a valid geodatabase.
+                    using Geodatabase geodatabase = new(new FileGeodatabaseConnectionPath(new Uri(gdbPath)));
+
+                    using Table table = geodatabase.OpenDataset<Table>(inTable);
+
+                    TableDefinition def = table.GetDefinition();
+                    IReadOnlyList<ArcGIS.Core.Data.Index> indexes = def.GetIndexes();
+
+                    // Check if any index includes the specified field.
+                    bool indexExists = indexes.Any(idx =>
+                        idx.GetFields().Any(f =>
+                            f.Name.Equals(fieldNames, StringComparison.OrdinalIgnoreCase)));
+
+                    // If the index already exists, return true without creating a duplicate.
+                    if (indexExists)
+                        return true;
+
+                    // Set the parameters to add the index to the table or feature class.
+                    var parameters = Geoprocessing.MakeValueArray(inTable, fieldNames, indexName, "", "");
+
+                    // Make a value array of the environments to be passed to the tool.
+                    var environments = Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
+
+                    // Set the geoprocessing flags.
+                    GPExecuteToolFlags executeFlags = GPExecuteToolFlags.GPThread;
+
+                    //Geoprocessing.OpenToolDialog("management.AddIndex", parameters);  // Useful for debugging.
+
+                    // Add the index to the table or feature class.
+                    try
+                    {
+                        // Execute the tool.
+                        IGPResult gp_result = await Geoprocessing.ExecuteToolAsync(
+                            "management.AddIndex",
+                            parameters,
+                            environments,
+                            null,
+                            null,
+                            executeFlags);
+
+                        if (gp_result.IsFailed)
+                        {
+                            Geoprocessing.ShowMessageBox(gp_result.Messages, "GP Messages", GPMessageBoxStyle.Error);
+
+                            System.Diagnostics.Debug.WriteLine(
+                                $"Failed to add index: {string.Join("\n", gp_result.Messages.Select(m => m.Text))}");
+
+                            //var messages = gp_result.Messages;
+                            //var errMessages = gp_result.ErrorMessages;
+                            return false;
+                        }
+
+                        return true;
+                    }
+                    catch (Exception)
+                    {
+                        // Handle Exception.
+                        return false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error checking for existing index: {ex.Message}");
+                    return false;
+                }
+            });
+        }
+
+        #endregion Indexes
+
+        #region Joins
+
+        /// <summary>
+        /// Spatially join a feature class with another feature class.
+        /// </summary>
+        /// <param name="targetFeatures"></param>
+        /// <param name="joinFeatures"></param>
+        /// <param name="outFeatureClass"></param>
+        /// <param name="joinOperation"></param>
+        /// <param name="joinType"></param>
+        /// <param name="fieldMapping"></param>
+        /// <param name="matchOption"></param>
+        /// <param name="searchRadius"></param>
+        /// <param name="distanceField"></param>
+        /// <param name="matchFields"></param>
+        /// <param name="addToMap"></param>
+        /// <returns>bool</returns>
+        public static async Task<bool> SpatialJoinAsync(string targetFeatures, string joinFeatures, string outFeatureClass, string joinOperation = "JOIN_ONE_TO_ONE",
+            string joinType = "KEEP_ALL", string fieldMapping = "", string matchOption = "INTERSECT", string searchRadius = "0", string distanceField = "",
+            string matchFields = "", bool addToMap = false)
+        {
+            // Check if there is an input target feature class.
+            if (String.IsNullOrEmpty(targetFeatures))
+                return false;
+
+            // Check if there is an input join feature class.
+            if (String.IsNullOrEmpty(joinFeatures))
+                return false;
+
+            // Check if there is an output feature class.
+            if (String.IsNullOrEmpty(outFeatureClass))
+                return false;
+
+            // Make a value array of strings to be passed to the tool.
+            List<string> parameters = [.. Geoprocessing.MakeValueArray(targetFeatures, joinFeatures, outFeatureClass, joinOperation, joinType, fieldMapping,
+                matchOption, searchRadius, distanceField, matchFields)];
+
+            // Make a value array of the environments to be passed to the tool.
+            var environments = Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
+
+            // Set the geoprocessing flags.
+            GPExecuteToolFlags executeFlags = GPExecuteToolFlags.GPThread; // | GPExecuteToolFlags.RefreshProjectItems;
+            if (addToMap)
+                executeFlags |= GPExecuteToolFlags.AddOutputsToMap;
+
+            //Geoprocessing.OpenToolDialog("analysis.SpatialJoin", parameters);  // Useful for debugging.
+
+            // Execute the tool.
+            try
+            {
+                IGPResult gp_result = await Geoprocessing.ExecuteToolAsync("analysis.SpatialJoin", parameters, environments, null, null, executeFlags);
+
+                if (gp_result.IsFailed)
+                {
+                    Geoprocessing.ShowMessageBox(gp_result.Messages, "GP Messages", GPMessageBoxStyle.Error);
+
+                    var messages = gp_result.Messages;
+                    var errMessages = gp_result.ErrorMessages;
+                    return false;
+                }
+            }
+            catch (Exception)
+            {
+                // Handle Exception.
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Permanently join fields from one feature class to another feature class.
+        /// </summary>
+        /// <param name="inFeatures"></param>
+        /// <param name="inField"
+        /// <param name="joinFeatures"></param>
+        /// <param name="joinField"></param>
+        /// <param name="fields"></param>
+        /// <param name="fmOption"></param>
+        /// <param name="fieldMapping"></param>
+        /// <param name="indexJoinFields"></param>
+        /// <param name="addToMap"></param>
+        /// <returns>bool</returns>
+        public static async Task<bool> JoinFieldsAsync(string inFeatures, string inField, string joinFeatures, string joinField,
+            string fields = "", string fmOption = "NOT_USE_FM", string fieldMapping = "", string indexJoinFields = "NO_INDEXES",
+            bool addToMap = false)
+        {
+            // Check if there is an input target feature class.
+            if (String.IsNullOrEmpty(inFeatures))
+                return false;
+
+            // Check if there is an input field name.
+            if (String.IsNullOrEmpty(inField))
+                return false;
+
+            // Check if there is a join feature class.
+            if (String.IsNullOrEmpty(joinFeatures))
+                return false;
+
+            // Check if there is a join field name.
+            if (String.IsNullOrEmpty(joinField))
+                return false;
+
+            // Make a value array of strings to be passed to the tool.
+            List<string> parameters = [.. Geoprocessing.MakeValueArray(inFeatures, inField, joinFeatures, joinField, fields,
+                fmOption, fieldMapping, indexJoinFields)];
+
+            // Make a value array of the environments to be passed to the tool.
+            var environments = Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
+
+            // Set the geoprocessing flags.
+            GPExecuteToolFlags executeFlags = GPExecuteToolFlags.GPThread; // | GPExecuteToolFlags.RefreshProjectItems;
+            if (addToMap)
+                executeFlags |= GPExecuteToolFlags.AddOutputsToMap;
+
+            //Geoprocessing.OpenToolDialog("management.JoinField", parameters);  // Useful for debugging.
+
+            // Execute the tool.
+            try
+            {
+                IGPResult gp_result = await Geoprocessing.ExecuteToolAsync("management.JoinField", parameters, environments, null, null, executeFlags);
+
+                if (gp_result.IsFailed)
+                {
+                    Geoprocessing.ShowMessageBox(gp_result.Messages, "GP Messages", GPMessageBoxStyle.Error);
+
+                    var messages = gp_result.Messages;
+                    var errMessages = gp_result.ErrorMessages;
+                    return false;
+                }
+            }
+            catch (Exception)
+            {
+                // Handle Exception.
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Deletes the duplicate join field that was added from the join table.
+        /// </summary>
+        /// <remarks>
+        /// The JoinField geoprocessing tool retains both the original field from the target feature class
+        /// and the joined field from the join table. This method removes the duplicate field that was added
+        /// during the join operation (typically named "fieldname_1", "fieldname_2", etc.).
+        /// </remarks>
+        /// <param name="featureClassPath">The full path to the feature class.</param>
+        /// <param name="baseFieldName">The base name of the join field (e.g., "incid").</param>
+        /// <returns>True if the duplicate field was deleted or didn't exist, otherwise false.</returns>
+        public static async Task<bool> DeleteDuplicateJoinFieldAsync(string featureClassPath, string baseFieldName)
+        {
+            // Check there is an input feature class path.
+            if (String.IsNullOrWhiteSpace(featureClassPath))
+                return false;
+
+            // Check there is an input field name.
+            if (String.IsNullOrWhiteSpace(baseFieldName))
+                return false;
+
+            return await QueuedTask.Run(async () =>
+            {
+                try
+                {
+                    string gdbPath = System.IO.Path.GetDirectoryName(featureClassPath);
+                    string fcName = System.IO.Path.GetFileName(featureClassPath);
+
+                    // Open the file geodatabase. This will open the geodatabase if the folder exists and contains a valid geodatabase.
+                    using Geodatabase geodatabase = new(new FileGeodatabaseConnectionPath(new Uri(gdbPath)));
+
+                    using FeatureClass fc = geodatabase.OpenDataset<FeatureClass>(fcName);
+
+                    FeatureClassDefinition def = fc.GetDefinition();
+                    IReadOnlyList<Field> fields = def.GetFields();
+
+                    // Find duplicate fields created by JoinField.
+                    // The JoinField tool typically appends "_1", "_2", etc. to duplicate field names.
+                    var duplicateFields = fields
+                        .Where(f => f.Name.StartsWith(baseFieldName + "_", StringComparison.OrdinalIgnoreCase))
+                        .Select(f => f.Name)
+                        .ToList();
+
+                    // If no duplicate fields found, nothing to do.
+                    if (duplicateFields.Count == 0)
+                        return true;
+
+                    // Set the geoprocessing flags.
+                    GPExecuteToolFlags executeFlags = GPExecuteToolFlags.GPThread;
+
+                    // Make a value array of the environments to be passed to the tool.
+                    var environments = Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
+
+                    // Delete all duplicate fields using the DeleteField geoprocessing tool.
+                    foreach (string fieldName in duplicateFields)
+                    {
+                        // Set the parameters to delete the duplicate field.
+                        var parameters = Geoprocessing.MakeValueArray(featureClassPath, fieldName);
+
+                        //Geoprocessing.OpenToolDialog("management.DeleteField", parameters);  // Useful for debugging.
+
+                        // Delete the duplicate field.
+                        try
+                        {
+                            // Execute the tool.
+                            IGPResult gp_result = await Geoprocessing.ExecuteToolAsync(
+                                "management.DeleteField",
+                                parameters,
+                                environments,
+                                null,
+                                null,
+                                executeFlags);
+
+                            if (gp_result.IsFailed)
+                            {
+                                Geoprocessing.ShowMessageBox(gp_result.Messages, "GP Messages", GPMessageBoxStyle.Error);
+
+                                System.Diagnostics.Debug.WriteLine(
+                                    $"Failed to delete field {fieldName}: {string.Join("\n", gp_result.Messages.Select(m => m.Text))}");
+
+                                //var messages = gp_result.Messages;
+                                //var errMessages = gp_result.ErrorMessages;
+                                return false;
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            // Handle Exception.
+                            return false;
+                        }
+                    }
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error deleting duplicate join fields: {ex.Message}");
+                    return false;
+                }
+            });
+        }
+
+        #endregion Joins
 
         #region Table
 
@@ -966,6 +1255,290 @@ namespace HLU.GISApplication
                 return false;
 
             return await TableExistsAsync(FileFunctions.GetDirectoryName(fullPath), FileFunctions.GetFileName(fullPath));
+        }
+
+        /// <summary>
+        /// Creates a table in a file geodatabase based on a DataTable schema.
+        /// </summary>
+        /// <param name="gdbPath">Full path to the file geodatabase.</param>
+        /// <param name="tableName">Name of the table to create.</param>
+        /// <param name="schemaTable">DataTable defining the table structure.</param>
+        /// <returns>True if the table was successfully created; false otherwise.</returns>
+        public static async Task<bool> CreateTableAsync(string gdbPath, string tableName, DataTable schemaTable)
+        {
+            // Check there is an input geodatabase path.
+            if (String.IsNullOrEmpty(gdbPath))
+                return false;
+
+            // Check there is an input table name.
+            if (String.IsNullOrEmpty(tableName))
+                return false;
+
+            // Check there is a schema table.
+            if (schemaTable == null || schemaTable.Columns.Count == 0)
+                return false;
+
+            try
+            {
+                // Check if the geodatabase exists.
+                if (!Directory.Exists(gdbPath))
+                    return false;
+
+                // Delete the table if it already exists.
+                bool tableExists = await TableExistsGDBAsync(gdbPath, tableName);
+                if (tableExists)
+                {
+                    bool deleted = await DeleteGeodatabaseTableAsync(gdbPath, tableName);
+                    if (!deleted)
+                        return false;
+                }
+
+                // Build the schema on the MCT.
+                await QueuedTask.Run(() =>
+                {
+                    // Open the file geodatabase. This will open the geodatabase if the folder exists and contains a valid geodatabase.
+                    using Geodatabase geodatabase = new(new FileGeodatabaseConnectionPath(new Uri(gdbPath)));
+
+                    List<FieldDescription> fieldDescriptions = [];
+
+                    // Create a FieldDescription for each column in the schema DataTable and add it to the list of field descriptions for the table.
+                    foreach (DataColumn column in schemaTable.Columns)
+                    {
+                        FieldDescription fieldDesc = CreateFieldDescriptionFromColumn(column);
+                        fieldDescriptions.Add(fieldDesc);
+                    }
+
+                    // Create a TableDescription for the new table.
+                    TableDescription tableDescription = new(tableName, fieldDescriptions);
+
+                    // Create a SchemaBuilder object
+                    SchemaBuilder builder = new(geodatabase);
+                    builder.Create(tableDescription);
+
+                    // Execute the DDL to create the table.
+                    bool built = builder.Build();
+                    if (!built)
+                    {
+                        string msg = builder.ErrorMessages != null && builder.ErrorMessages.Any()
+                            ? string.Join(Environment.NewLine, builder.ErrorMessages)
+                            : $"SchemaBuilder.Build() failed for '{tableName}'.";
+
+                        throw new Exception(msg);
+                    }
+                });
+
+                return true;
+            }
+            catch (Exception)
+            {
+                // Handle Exception.
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Creates a field description from a DataColumn for geodatabase table creation.
+        /// </summary>
+        /// <param name="column">The DataColumn to convert.</param>
+        /// <returns>A FieldDescription for the geodatabase table.</returns>
+        private static FieldDescription CreateFieldDescriptionFromColumn(DataColumn column)
+        {
+            FieldDescription fieldDesc;
+            FieldType fieldType;
+            int fieldLength = column.MaxLength;
+
+            // Map .NET type to geodatabase field type.
+            if (column.DataType == typeof(string))
+            {
+                fieldType = FieldType.String;
+                fieldLength = fieldLength > 0 ? Math.Min(fieldLength, 254) : 254;
+            }
+            else if (column.DataType == typeof(int) || column.DataType == typeof(Int32))
+            {
+                fieldType = FieldType.Integer;
+            }
+            else if (column.DataType == typeof(double) || column.DataType == typeof(Double))
+            {
+                fieldType = FieldType.Double;
+            }
+            else if (column.DataType == typeof(float) || column.DataType == typeof(Single))
+            {
+                fieldType = FieldType.Single;
+            }
+            else if (column.DataType == typeof(DateTime))
+            {
+                fieldType = FieldType.Date;
+            }
+            else
+            {
+                // Default to string for unsupported types.
+                fieldType = FieldType.String;
+                fieldLength = 254;
+            }
+
+            // Create the field description.
+            if (fieldType == FieldType.String)
+            {
+                fieldDesc = new FieldDescription(column.ColumnName, fieldType)
+                {
+                    Length = fieldLength
+                };
+            }
+            else
+            {
+                fieldDesc = new FieldDescription(column.ColumnName, fieldType);
+            }
+
+            return fieldDesc;
+        }
+
+        /// <summary>
+        /// Performs a bulk insert of rows into a geodatabase table using batched operations.
+        /// </summary>
+        /// <param name="gdbPath">Full path to the file geodatabase.</param>
+        /// <param name="tableName">Name of the table to insert rows into.</param>
+        /// <param name="rows">List of rows to insert, where each row is a dictionary of field name to value.</param>
+        /// <returns>The number of rows successfully inserted.</returns>
+        /// <remarks>
+        /// This method uses InsertCursor for efficient batch insertion. Each row dictionary should contain
+        /// field names as keys and field values as objects. DBNull.Value is used for null values.
+        /// The method processes rows in batches for optimal performance.
+        /// </remarks>
+        public static async Task<int> BulkInsertRowsAsync(string gdbPath, string tableName, List<Dictionary<string, object>> rows)
+        {
+            // Check there is an input geodatabase path.
+            if (String.IsNullOrEmpty(gdbPath))
+                return 0;
+
+            // Check there is an input table name.
+            if (String.IsNullOrEmpty(tableName))
+                return 0;
+
+            // Check there are rows to insert.
+            if (rows == null || rows.Count == 0)
+                return 0;
+
+            try
+            {
+                int insertedCount = await QueuedTask.Run(() =>
+                {
+                    // Open the file geodatabase. This will open the geodatabase if the folder exists and contains a valid geodatabase.
+                    using Geodatabase geodatabase = new(new FileGeodatabaseConnectionPath(new Uri(gdbPath)));
+
+                    // Open the table for inserting rows.
+                    using Table table = geodatabase.OpenDataset<Table>(tableName);
+
+                    // Create an InsertCursor for the table to perform batch inserts.
+                    using InsertCursor insertCursor = table.CreateInsertCursor();
+
+                    int count = 0;
+
+                    // Iterate through the rows to insert.
+                    foreach (var rowValues in rows)
+                    {
+                        // Create a new RowBuffer for the table schema.
+                        using RowBuffer rowBuffer = table.CreateRowBuffer();
+
+                        // Populate the RowBuffer with values from the row dictionary. Use DBNull.Value for nulls.
+                        foreach (var kvp in rowValues)
+                        {
+                            rowBuffer[kvp.Key] = kvp.Value ?? DBNull.Value;
+                        }
+
+                        // Insert the row into the table using the InsertCursor.
+                        insertCursor.Insert(rowBuffer);
+                        count++;
+                    }
+
+                    // Flush all pending inserts in one operation.
+                    insertCursor.Flush();
+
+                    return count;
+                });
+
+                return insertedCount;
+            }
+            catch (Exception)
+            {
+                // Handle Exception.
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// Performs a bulk insert of rows into a geodatabase table using batched operations with multiple batches.
+        /// </summary>
+        /// <param name="gdbPath">Full path to the file geodatabase.</param>
+        /// <param name="tableName">Name of the table to insert rows into.</param>
+        /// <param name="batches">List of batches, where each batch contains rows to insert.</param>
+        /// <returns>The number of rows successfully inserted across all batches.</returns>
+        /// <remarks>
+        /// This overload processes multiple batches of rows in a single operation for improved efficiency
+        /// when dealing with very large datasets. Each batch is a list of row dictionaries.
+        /// </remarks>
+        public static async Task<int> BulkInsertRowsAsync(string gdbPath, string tableName, List<List<Dictionary<string, object>>> batches)
+        {
+            // Check there is an input geodatabase path.
+            if (String.IsNullOrEmpty(gdbPath))
+                return 0;
+
+            // Check there is an input table name.
+            if (String.IsNullOrEmpty(tableName))
+                return 0;
+
+            // Check there are batches to insert.
+            if (batches == null || batches.Count == 0)
+                return 0;
+
+            try
+            {
+                int insertedCount = await QueuedTask.Run(() =>
+                {
+                    // Open the file geodatabase. This will open the geodatabase if the folder exists and contains a valid geodatabase.
+                    using Geodatabase geodatabase = new(new FileGeodatabaseConnectionPath(new Uri(gdbPath)));
+
+                    // Open the table for inserting rows.
+                    using Table table = geodatabase.OpenDataset<Table>(tableName);
+
+                    // Create an InsertCursor for the table to perform batch inserts.
+                    using InsertCursor insertCursor = table.CreateInsertCursor();
+
+                    int count = 0;
+
+                    // Iterate through each batch of rows to insert.
+                    foreach (var batch in batches)
+                    {
+                        // Iterate through each row in the batch.
+                        foreach (var rowValues in batch)
+                        {
+                            // Create a new RowBuffer for the table schema.
+                            using RowBuffer rowBuffer = table.CreateRowBuffer();
+
+                            // Populate the RowBuffer with values from the row dictionary. Use DBNull.Value for nulls.
+                            foreach (var kvp in rowValues)
+                            {
+                                rowBuffer[kvp.Key] = kvp.Value ?? DBNull.Value;
+                            }
+
+                            // Insert the row into the table using the InsertCursor.
+                            insertCursor.Insert(rowBuffer);
+                            count++;
+                        }
+                    }
+
+                    // Flush all pending inserts in one operation.
+                    insertCursor.Flush();
+
+                    return count;
+                });
+
+                return insertedCount;
+            }
+            catch (Exception)
+            {
+                // Handle Exception.
+                return 0;
+            }
         }
 
         #endregion Table

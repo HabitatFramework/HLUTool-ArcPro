@@ -21,6 +21,9 @@
 
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
+using HLU.GISApplication;
+using HLU.Properties;
+using System.IO;
 
 namespace HLU
 {
@@ -29,9 +32,23 @@ namespace HLU
         private static HLUTool _this = null;
 
         /// <summary>
+        /// Stores the path to the working geodatabase for cleanup on exit
+        /// </summary>
+        private static string _workingGdbPath = null;
+
+        /// <summary>
         /// Retrieve the singleton instance to this module here
         /// </summary>
         public static HLUTool Current => _this ??= (HLUTool)FrameworkApplication.FindModule("HLUTool_Module");
+
+        /// <summary>
+        /// Gets or sets the working geodatabase path for this module instance
+        /// </summary>
+        public static string WorkingGdbPath
+        {
+            get => _workingGdbPath;
+            set => _workingGdbPath = value;
+        }
 
         #region Overrides
 
@@ -43,6 +60,21 @@ namespace HLU
         {
             //return false to ~cancel~ Application close
             return true;
+        }
+
+        /// <summary>
+        /// Called by Framework when the module is being unloaded
+        /// </summary>
+        protected override void Uninitialize()
+        {
+            // Clean up working GDB on shutdown
+            if (!string.IsNullOrEmpty(_workingGdbPath) && Directory.Exists(_workingGdbPath))
+            {
+                // Attempt to delete the entire working GDB
+                _ = ArcGISProHelpers.DeleteFileGeodatabaseAsync(_workingGdbPath);
+            }
+
+            base.Uninitialize();
         }
 
         #endregion Overrides

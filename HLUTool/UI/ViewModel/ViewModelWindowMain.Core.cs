@@ -141,10 +141,12 @@ namespace HLU.UI.ViewModel
         // Database options
         private int _dbConnectionTimeout;
 
-        // GIS/Export options
+        // Export options
         private int _minZoom;
         private int _autoZoomToSelection;
         private int _warnBeforeMaxFeatures;
+
+        // Export options
         private string _workingFileGDBPath;
 
         // History options
@@ -266,12 +268,6 @@ namespace HLU.UI.ViewModel
         private bool _autoSelectOnGis;
 
         #endregion Fields - Update Control
-
-        #region Fields - Temp GDB
-
-        private string _workingFileGDBName;
-
-        #endregion Fields - Temp GDB
 
         #region Fields - Static Config
 
@@ -599,10 +595,10 @@ namespace HLU.UI.ViewModel
 
         #region Properties - Temp GDB
 
-        public string WorkingFileGDBName
+        public string WorkingFileGDBPath
         {
-            get { return _workingFileGDBName; }
-            set { _workingFileGDBName = value; }
+            get { return _workingFileGDBPath; }
+            set { _workingFileGDBPath = value; }
         }
 
         #endregion Properties - Temp GDB
@@ -1503,6 +1499,9 @@ namespace HLU.UI.ViewModel
                 // Upgrade the user settings if necessary.
                 UpgradeUserSettings();
 
+                // Create the working geodatabase for exports and queries.
+                await CreateWorkingGeodatabaseAsync();
+
                 // Initialise the main view (start the tool).
                 await InitializeToolPaneAsync();
 
@@ -1566,56 +1565,54 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
+        /// Creates the working geodatabase for exports and advanced queries.
+        /// </summary>
+        private async Task CreateWorkingGeodatabaseAsync()
+        {
+            try
+            {
+                string workingGdbDirectory = Settings.Default.WorkingFileGDBPath;
+
+                if (!string.IsNullOrEmpty(workingGdbDirectory))
+                {
+                    // Create a unique name for this session
+                    string uniqueID = System.Guid.NewGuid().ToString("N").Substring(0, 8);
+                    string workingGdbPath = Path.Combine(workingGdbDirectory, $"HLUTool_{uniqueID}.gdb");
+
+                    // Create the working file geodatabase
+                    await Task.Run(() =>
+                    {
+                        var tempGDB = ArcGISProHelpers.CreateFileGeodatabase(workingGdbPath);
+
+                        if (tempGDB != null)
+                        {
+                            // Store the path in the HLUTool module for cleanup on exit
+                            HLUTool.WorkingGdbPath = workingGdbPath;
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log but don't fail initialization - exports just won't work
+                System.Diagnostics.Debug.WriteLine($"Failed to create working GDB: {ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// Initialise settings for main window.
         /// </summary>
         /// <returns>Returns a task that resolves to true if the tool pane was initialized successfully; false otherwise.</returns>
         internal async Task<bool> InitializeToolPaneAsync()
         {
-            // Get add-in database options
-            _dbConnectionTimeout = _addInSettings.DbConnectionTimeout;
+            // Get incid table size setting.
             _incidPageSize = _addInSettings.IncidTablePageSize;
 
-            // Get add-in dates options
-            VagueDate.Delimiter = _addInSettings.VagueDateDelimiter; // Set in the vague date class
-            VagueDate.SeasonNames = _addInSettings.SeasonNames.Cast<string>().ToArray(); // Set in the vague date class
+            // Get add-in settings.
+            ApplyAddInSettings();
 
-            // Get add-in validation options
-            _habitatSecondaryCodeValidation = _addInSettings.HabitatSecondaryCodeValidation;
-            _primarySecondaryCodeValidation = _addInSettings.PrimarySecondaryCodeValidation;
-            SecondaryHabitat.PrimarySecondaryCodeValidation = _primarySecondaryCodeValidation; // Set in the secondary habitat class
-            _qualityValidation = _addInSettings.QualityValidation;
-            _potentialPriorityDetermQtyValidation = _addInSettings.PotentialPriorityDetermQtyValidation;
-            BapEnvironment.PotentialPriorityDetermQtyValidation = _potentialPriorityDetermQtyValidation; // Used in the priority habitat class
-
-            // Get add-in updates options
-            _subsetUpdateAction = _addInSettings.SubsetUpdateAction;
-            _clearIHSUpdateAction = _addInSettings.ClearIHSUpdateAction;
-            _secondaryCodeDelimiter = _addInSettings.SecondaryCodeDelimiter;
-            _resetOSMMUpdatesStatus = _addInSettings.ResetOSMMUpdatesStatus;
-
-            // Get user GIS options
-            _minZoom = Settings.Default.MinAutoZoom;
-            _autoZoomToSelection = Settings.Default.AutoZoomToSelection;
-            _warnBeforeMaxFeatures = Settings.Default.MaxFeaturesGISSelect;
-            _workingFileGDBPath = Settings.Default.WorkingFileGDBPath;
-
-            // Get user interface options
-            _preferredHabitatClass = Settings.Default.PreferredHabitatClass;
-            _showGroupHeaders = Settings.Default.ShowGroupHeaders;
-            _showIHSTab = Settings.Default.ShowIHSTab;
-            _showSourceHabitatGroup = Settings.Default.ShowSourceHabitatGroup;
-            _showHabitatSecondariesSuggested = Settings.Default.ShowHabitatSecondariesSuggested;
-            _showNVCCodes = Settings.Default.ShowNVCCodes;
-            _showHabitatSummary = Settings.Default.ShowHabitatSummary;
-            _showOSMMUpdates = Settings.Default.ShowOSMMUpdatesOption;
-            _preferredSecondaryGroup = Settings.Default.PreferredSecondaryGroup;
-            _secondaryCodeOrder = Settings.Default.SecondaryCodeOrder;
-
-            // Get user updates options
-            _notifyOnSplitMerge = Settings.Default.NotifyOnSplitMerge;
-
-            // Get user history options
-            _historyDisplayLastN = Settings.Default.HistoryDisplayLastN;
+            // Get user settings;
+            ApplyUserSettings();
 
             // Get application settings
             _codeDeleteRow = Settings.Default.CodeDeleteRow;
@@ -1731,10 +1728,6 @@ namespace HLU.UI.ViewModel
 
                 // Set the validation option for potential priority habitats
                 BapEnvironment.PotentialPriorityDetermQtyValidation = _potentialPriorityDetermQtyValidation;
-
-                // Prepare the temporary geodatabase
-                if (!PrepareTemporaryGDB())
-                    return false;
 
                 // Clear the status bar (or reset the cursor to an arrow)
                 ChangeCursor(Cursors.Arrow, null);
@@ -2004,27 +1997,6 @@ namespace HLU.UI.ViewModel
             _appVersion = addInVersion;
             _dbVersion = lutDbVersion;
             _dataVersion = lutDataVersion;
-
-            return true;
-        }
-
-        /// <summary>
-        /// Prepare a new working GDB to use for large/complex GIS queries.
-        /// </summary>
-        /// <returns>Returns true if the working GDB is ready to use; false if there was an error preparing the GDB.</returns>
-        private bool PrepareTemporaryGDB()
-        {
-            // Create a unique name for the working file geodatabase.
-            string uniqueID = Guid.NewGuid().ToString("N").Substring(0, 8);
-            _workingFileGDBName = Path.Combine(_workingFileGDBPath, $"Temp_HLUTool_{uniqueID}.gdb");
-
-            // Create the working file geodatabase if it doesn't exist.
-            if (!FileFunctions.DirExists(_workingFileGDBName))
-            {
-                Geodatabase tempGDB = ArcGISProHelpers.CreateFileGeodatabase(_workingFileGDBName);
-                if (tempGDB == null)
-                    return false;
-            }
 
             return true;
         }
@@ -2837,6 +2809,9 @@ namespace HLU.UI.ViewModel
             // Apply user settings.
             ApplyUserSettings();
 
+            // Get columns to be saved to history when altering GIS layer.
+            _historyColumns = InitializeHistoryColumns(_historyColumns);
+
             // If the show source habitat group value has changed and
             // is now true, set the habitat class to null to force
             // the user default value to be set.
@@ -2881,15 +2856,15 @@ namespace HLU.UI.ViewModel
 
         private void ApplyAddInSettings()
         {
-            // Apply add-in database options
+            // Get add-in database options
             _dbConnectionTimeout = _addInSettings.DbConnectionTimeout;
             //TODO - Is IncidPageSize too dangerous to change on the fly?
 
-            // Apply add-in dates options
+            // Get add-in dates options
             VagueDate.Delimiter = _addInSettings.VagueDateDelimiter; // Set in the vague date class
             VagueDate.SeasonNames = _addInSettings.SeasonNames.Cast<string>().ToArray(); // Set in the vague date class
 
-            // Apply add-in validation options
+            // Get add-in validation options
             _habitatSecondaryCodeValidation = _addInSettings.HabitatSecondaryCodeValidation;
             _primarySecondaryCodeValidation = _addInSettings.PrimarySecondaryCodeValidation;
             SecondaryHabitat.PrimarySecondaryCodeValidation = _primarySecondaryCodeValidation; // Set in the secondary habitat class
@@ -2897,27 +2872,28 @@ namespace HLU.UI.ViewModel
             _potentialPriorityDetermQtyValidation = _addInSettings.PotentialPriorityDetermQtyValidation;
             BapEnvironment.PotentialPriorityDetermQtyValidation = _potentialPriorityDetermQtyValidation; // Used in the priority habitat class
 
-            // Apply add-in updates options
+            // Get add-in updates options
             _subsetUpdateAction = _addInSettings.SubsetUpdateAction;
             _clearIHSUpdateAction = _addInSettings.ClearIHSUpdateAction;
             _secondaryCodeDelimiter = _addInSettings.SecondaryCodeDelimiter;
             _resetOSMMUpdatesStatus = _addInSettings.ResetOSMMUpdatesStatus;
 
-            // Apply add-in bulk update options
+            // Get add-in bulk update options
             //None - done in bulk update class.
         }
 
         private void ApplyUserSettings()
         {
-            // Apply user GIS options
+            // Get user GIS options
             _minZoom = Settings.Default.MinAutoZoom;
+            _autoZoomToSelection = Settings.Default.AutoZoomToSelection;
             _warnBeforeMaxFeatures = Settings.Default.MaxFeaturesGISSelect;
+            _workingFileGDBPath = Settings.Default.WorkingFileGDBPath;
 
-            // Apply user history options
+            // Get user history options
             _historyDisplayLastN = Settings.Default.HistoryDisplayLastN;
-            _historyColumns = InitializeHistoryColumns(_historyColumns);
 
-            // Apply user interface options
+            // Get user interface options
             _preferredHabitatClass = Settings.Default.PreferredHabitatClass;
             _showGroupHeaders = Settings.Default.ShowGroupHeaders;
             _showIHSTab = Settings.Default.ShowIHSTab;
@@ -2929,7 +2905,7 @@ namespace HLU.UI.ViewModel
             _preferredSecondaryGroup = Settings.Default.PreferredSecondaryGroup;
             _secondaryCodeOrder = Settings.Default.SecondaryCodeOrder;
 
-            // Apply user updates options
+            // Get user updates options
             _notifyOnSplitMerge = Settings.Default.NotifyOnSplitMerge;
         }
 

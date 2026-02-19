@@ -22,7 +22,9 @@
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.Analyst3D;
+using ArcGIS.Core.Data.UtilityNetwork.Trace;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Core.Internal.CIM;
 using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Core.Geoprocessing;
@@ -202,14 +204,6 @@ namespace HLU.GISApplication
         /// Maximum (nominal) allowable length of a SQL query.
         /// </summary>
         private int _maxSqlLength = Settings.Default.MaxSqlLengthArcGIS;
-
-        /// <summary>
-        /// Export parameters used to pass information.
-        /// </summary>
-        private string _exportOutputPath;
-        private string _exportTempGdbPath;
-        private string _exportTableName;
-        private bool _exportSelectedOnly;
 
         #endregion Fields
 
@@ -863,12 +857,14 @@ namespace HLU.GISApplication
                     var table = hluLayer.GetTable();
                     var def = table.GetDefinition();
 
+                    // Check that all columns in the resultTable exist in the layer's feature class.
                     var missing = resultTable.Columns
                         .Cast<DataColumn>()
                         .Select(c => c.ColumnName)
                         .Where(colName => def.FindField(colName) < 0)
                         .ToList();
 
+                    // If any columns are missing, throw an exception with the list of missing columns.
                     if (missing.Count > 0)
                         throw new MissingLayerFieldsException(missing);
 
@@ -1083,6 +1079,7 @@ namespace HLU.GISApplication
             string whereClause,
             SelectionCombinationMethod selectionMethod)
         {
+            // Check the parameters.
             if (_hluLayer == null)
                 throw new GisSelectionException("No active HLU layer is set.");
 
@@ -1091,11 +1088,13 @@ namespace HLU.GISApplication
 
             await QueuedTask.Run(() =>
             {
+                // Construct a QueryFilter with the supplied where clause and apply the selection on the layer.
                 QueryFilter filter = new()
                 {
                     WhereClause = whereClause
                 };
 
+                // Execute the selection on the layer using the specified combination method.
                 _hluLayer.Select(filter, selectionMethod);
             }).ConfigureAwait(false);
         }
@@ -1105,11 +1104,13 @@ namespace HLU.GISApplication
         /// </summary>
         public async Task ClearMapSelectionAsync()
         {
+            // Check the parameters.
             if (_hluLayer == null)
                 throw new GisSelectionException("No active HLU layer is set.");
 
             await QueuedTask.Run(() =>
             {
+                // Clear the selection on the layer.
                 _hluLayer.ClearSelection();
             }).ConfigureAwait(false);
         }
@@ -1120,11 +1121,13 @@ namespace HLU.GISApplication
         /// <returns>The selection count, or 0 if no layer/selection.</returns>
         public async Task<int> CountMapSelectionAsync()
         {
+            // Check the parameters.
             if (_hluLayer == null)
                 throw new GisSelectionException("No active HLU layer is set.");
 
             return await QueuedTask.Run(() =>
             {
+                // Return the selection count from the layer.
                 return _hluLayer.SelectionCount;
             }).ConfigureAwait(false);
         }
@@ -1138,12 +1141,16 @@ namespace HLU.GISApplication
         /// <returns>True if unique or empty selection; false if duplicates found.</returns>
         public async Task<bool> SelectedRowsUniqueAsync()
         {
+            // Check the parameters.
             if (_hluLayer == null)
                 throw new GisSelectionException("No active HLU layer is set.");
 
             return await QueuedTask.Run(() =>
             {
+                // Get the selection from the layer.
                 var selection = _hluLayer.GetSelection();
+
+                // If there is no selection, we can consider the rows to be unique.
                 if (selection == null || selection.GetCount() == 0)
                     return true;
 
@@ -1152,13 +1159,17 @@ namespace HLU.GISApplication
                 string toidField = GetFieldName(_hluLayerStructure.toidColumn.Ordinal);
                 string fragField = GetFieldName(_hluLayerStructure.toidfragidColumn.Ordinal);
 
+                // If any of the required fields can't be resolved, we can't perform the check,
+                // but we also can't find duplicates, so return true.
                 if (String.IsNullOrWhiteSpace(incidField) ||
                     String.IsNullOrWhiteSpace(toidField) ||
                     String.IsNullOrWhiteSpace(fragField))
                     return true;
 
+                // Use a HashSet to track unique combinations of (incid,toid,frag).
                 HashSet<string> keys = new(StringComparer.Ordinal);
 
+                // Loop through the selected rows and build a key for each one.
                 using RowCursor cursor = selection.Search();
                 while (cursor.MoveNext())
                 {
@@ -1170,6 +1181,7 @@ namespace HLU.GISApplication
 
                     string key = $"{incid}|{toid}|{frag}";
 
+                    // If the key already exists in the HashSet, then the rows are not unique.
                     if (!keys.Add(key))
                         return false;
                 }
@@ -1241,6 +1253,7 @@ namespace HLU.GISApplication
             {
                 int fragmentCount = 0;
 
+                // Create HashSets to track distinct INCIDs and TOIDs explicitly, since the layer may return duplicates.
                 var distinctIncids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 var distinctToids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -1344,6 +1357,7 @@ namespace HLU.GISApplication
                 var distinctToids =
                     new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+                // Iterate through the layer using the chunked WHERE clauses and count distinct TOIDs and total features.
                 foreach (string whereClause in whereClauses)
                 {
                     // Limit returned fields for performance.
@@ -1611,13 +1625,9 @@ namespace HLU.GISApplication
         /// <summary>
         /// Counts the currently selected map features.
         /// </summary>
-        public void CountMapSelection(ref int fragCount)
+        public async Task<int> CountMapSelection()
         {
-            //List<string> retList = IpcArcMap(["qs"]);
-            //if (retList.Count > 0)
-            //    fragCount = Convert.ToInt32(retList[0]);
-            //else
-            //    fragCount = 0;
+            return await CountMapSelectionAsync();
         }
 
         #endregion Selection
@@ -1883,13 +1893,14 @@ namespace HLU.GISApplication
                 { _hluLayer, oids }
             };
 
-            // Flash twice with a short gap so it’s really obvious.
+            // Flash the features by OID on the MCT.
             await QueuedTask.Run(() =>
             {
                 SelectionSet selectionSet = SelectionSet.FromDictionary(selectionDictionary);
                 MapView.Active.FlashFeature(selectionSet);
             }).ConfigureAwait(false);
 
+            // Flashing twice is not natively supported, so we flash twice in succession with a short delay.
             //await Task.Delay(50).ConfigureAwait(false);
 
             //await QueuedTask.Run(() =>
@@ -2037,6 +2048,7 @@ namespace HLU.GISApplication
             // Determine the selection, build history rows (post-update values), and queue the update using an EditOperation.
             await QueuedTask.Run(() =>
             {
+                // Get the current selection from the layer. This should reflect the features to be split.
                 Selection selection = _hluLayer.GetSelection();
                 IReadOnlyList<long> selectedObjectIds = selection?.GetObjectIDs() ?? [];
 
@@ -2044,6 +2056,8 @@ namespace HLU.GISApplication
                 if (selectedObjectIds.Count < 2)
                     return;
 
+                // Order OIDs to ensure the "original" feature (with the smallest OID) is processed
+                // first and retains the current toidfragid, while the others get new fragment IDs.
                 List<long> orderedOids = selectedObjectIds.OrderBy(o => o).ToList();
                 long minOid = orderedOids[0];
 
@@ -3335,6 +3349,7 @@ namespace HLU.GISApplication
                     // Get update field indexes using the HLU schema mapping logic.
                     List<int> updateFieldIndexes = [];
 
+                    // Iterate through the update columns and resolve their corresponding field indexes on the GIS layer using the mapping logic.
                     for (int i = 0; i < updateColumns.Length; i++)
                     {
                         DataColumn c = updateColumns[i];
@@ -3597,51 +3612,176 @@ namespace HLU.GISApplication
         /// <summary>
         /// Prompts the user for export location and validates the export.
         /// </summary>
-        public async Task<bool> ExportPromptAsync(string tempGdbPath, string attributeTableName,
-            int attributesLength, bool selectedOnly)
+        /// <param name="initialDirectory">The initial directory for the save dialog. If null/empty, uses project home or My Documents.</param>
+        public async Task<(string outputWorkspace, string outputFeatureClassName)> ExportPromptAsync(
+            string initialDirectory)
         {
-            return await QueuedTask.Run(() =>
+            string outputPath = null;
+            string outputWorkspace = null;
+            string outputFeatureClassName = null;
+
+            await FrameworkApplication.Current.Dispatcher.InvokeAsync(() =>
             {
-                try
+                // The the initial directory with fallback logic.
+                string dialogInitialDir = initialDirectory;
+
+                if (String.IsNullOrWhiteSpace(dialogInitialDir))
                 {
-                    if (_hluLayer == null || _hluFeatureClass == null)
-                        return false;
-
-                    // Prompt for output location.
-                    SaveItemDialog saveDialog = new()
-                    {
-                        Title = "Export Features",
-                        InitialLocation = Project.Current.HomeFolderPath,
-                        DefaultExt = "shp",
-                        Filter = "Shapefile (*.shp)|*.shp|File Geodatabase Feature Class|*.gdb"
-                    };
-
-                    if (saveDialog.ShowDialog() != true)
-                        return false;
-
-                    string outputPath = saveDialog.FilePath;
-
-                    // Store export parameters for use in Export method.
-                    _exportOutputPath = outputPath;
-                    _exportTempGdbPath = tempGdbPath;
-                    _exportTableName = attributeTableName;
-                    _exportSelectedOnly = selectedOnly;
-
-                    return true;
+                    // Fallback 1: Project home folder
+                    dialogInitialDir = Project.Current?.HomeFolderPath;
                 }
-                catch (Exception ex)
+
+                if (String.IsNullOrWhiteSpace(dialogInitialDir))
                 {
-                    MessageBox.Show($"Export prompt failed: {ex.Message}", "Export Error");
-                    return false;
+                    // Fallback 2: My Documents
+                    dialogInitialDir = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                }
+
+                // Prompt the user for the export location and type (shapefile or geodatabase feature class).
+                SaveFileDialog saveDialog = new()
+                {
+                    Title = "Export Features",
+                    Filter = "Shapefile (*.shp)|*.shp|File Geodatabase Feature Class (*.gdb)|*.gdb",
+                    DefaultExt = "shp",
+                    FileName = "HLU_Export",
+                    InitialDirectory = dialogInitialDir
+                };
+
+                // If the user confirmed the dialog, determine the output path, workspace,
+                // and feature class name based on their selection.
+                if (saveDialog.ShowDialog() == true)
+                {
+                    // Store the output path.
+                    outputPath = saveDialog.FileName;
+
+                    // Determine if output is shapefile or geodatabase feature class.
+                    if (outputPath.EndsWith(".gdb", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Prompt for feature class name since geodatabase export requires both a workspace and feature class name.
+                        string featureClassName = PromptForFeatureClassName();
+
+                        // If no valid feature class name was provided, show a warning and do not proceed with the export.
+                        if (String.IsNullOrWhiteSpace(featureClassName))
+                        {
+                            MessageBox.Show("Feature class name is required for geodatabase export.",
+                                "Export Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            return;
+                        }
+
+                        // Store the output workspace and feature class name for geodatabase export.
+                        outputWorkspace = outputPath;
+                        outputFeatureClassName = featureClassName;
+                    }
+                    else
+                    {
+                        // For shapefile export, the output path is the full path to the shapefile, and the workspace is the containing folder.
+                        outputWorkspace = System.IO.Path.GetDirectoryName(outputPath);
+                        outputFeatureClassName = System.IO.Path.GetFileName(outputPath);
+                    }
                 }
             });
+
+            return (outputWorkspace, outputFeatureClassName);
+        }
+
+        /// <summary>
+        /// Shows a simple input dialog and returns the entered text.
+        /// </summary>
+        private string PromptForFeatureClassName()
+        {
+            // Create a custom WPF window for input
+            var inputDialog = new Window
+            {
+                Title = "Export to Geodatabase",
+                Width = 400,
+                Height = 200,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Owner = FrameworkApplication.Current.MainWindow,
+                ResizeMode = ResizeMode.NoResize
+            };
+
+            var stackPanel = new System.Windows.Controls.StackPanel
+            {
+                Margin = new Thickness(20)
+            };
+
+            // Instructions text
+            stackPanel.Children.Add(new System.Windows.Controls.TextBlock
+            {
+                Text = "Enter feature class name:\n\nRules:\n" +
+                       "• Must start with a letter\n" +
+                       "• Only letters, numbers, and underscores\n" +
+                       "• Maximum 64 characters",
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 0, 0, 10)
+            });
+
+            // Input text box
+            var textBox = new System.Windows.Controls.TextBox
+            {
+                Text = "HLU_Export",
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+            stackPanel.Children.Add(textBox);
+
+            // Buttons panel
+            var buttonPanel = new System.Windows.Controls.StackPanel
+            {
+                Orientation = System.Windows.Controls.Orientation.Horizontal,
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Right
+            };
+
+            var okButton = new System.Windows.Controls.Button
+            {
+                Content = "OK",
+                Width = 75,
+                Margin = new Thickness(0, 0, 10, 0),
+                IsDefault = true
+            };
+            okButton.Click += (s, e) => { inputDialog.DialogResult = true; inputDialog.Close(); };
+
+            var cancelButton = new System.Windows.Controls.Button
+            {
+                Content = "Cancel",
+                Width = 75,
+                IsCancel = true
+            };
+            cancelButton.Click += (s, e) => { inputDialog.DialogResult = false; inputDialog.Close(); };
+
+            buttonPanel.Children.Add(okButton);
+            buttonPanel.Children.Add(cancelButton);
+            stackPanel.Children.Add(buttonPanel);
+
+            inputDialog.Content = stackPanel;
+
+            // Focus the text box
+            textBox.Focus();
+            textBox.SelectAll();
+
+            // Show dialog and return result
+            bool? result = inputDialog.ShowDialog();
+            return result == true ? textBox.Text?.Trim() : null;
         }
 
         /// <summary>
         /// Exports features with attributes to a new feature class.
         /// </summary>
-        public async Task<bool> ExportAsync(string tempGdbPath, string attributeTableName, bool selectedOnly)
+        /// <param name="gdbName">The full path and name of the temporary geodatabase.</param>
+        /// <param name="attributeTableName">The name of the attribute table to join.</param>
+        /// <param name="exportWorkspace">The workspace for the final export output.</param>
+        /// <param name="exportFeatureClassName">The name of the final export feature class or shapefile.</param>
+        /// <param name="selectedOnly">If set to <c>true</c> export only selected features.</param>
+        public async Task<bool> ExportAsync(string gdbName,
+            string attributeTableName,
+            string exportWorkspace,
+            string exportFeatureClassName,
+            bool selectedOnly)
         {
+            // Set the full output path for the export.
+            string exportOutputPath = exportWorkspace +
+                (exportWorkspace.EndsWith(".gdb", StringComparison.OrdinalIgnoreCase) ? "\\" : "") +
+                exportFeatureClassName;
+
             return await QueuedTask.Run(async () =>
             {
                 try
@@ -3649,63 +3789,88 @@ namespace HLU.GISApplication
                     if (_hluLayer == null || _hluFeatureClass == null)
                         return false;
 
+                    // Get the full layer path (in case it's nested in one or more groups).
+                    string mapLayerPath = await GetLayerPathAsync(_hluLayer);
+
                     // Get the incid field name.
                     string incidFieldName = await IncidFieldNameAsync();
                     if (string.IsNullOrEmpty(incidFieldName))
                         return false;
 
-                    // Create temporary feature class path.
-                    string tempFeaturesPath = System.IO.Path.Combine(tempGdbPath, "TempFeatures");
+                    // Store the original selection state so we can restore it later.
+                    Selection originalSelection = _hluLayer.GetSelection();
+                    bool hadSelection = originalSelection != null && originalSelection.GetCount() > 0;
 
-                    // Copy the selected features to temp location.
-                    var copyParams = Geoprocessing.MakeValueArray(
-                        _hluLayer.Name,
-                        tempFeaturesPath
-                    );
-
-                    var result = await Geoprocessing.ExecuteToolAsync("management.CopyFeatures", copyParams);
-
-                    if (result.IsFailed)
+                    try
                     {
-                        MessageBox.Show($"Failed to copy features: {string.Join("\n", result.Messages.Select(m => m.Text))}",
-                            "Export Error");
-                        return false;
+                        // If exporting all features (selectedOnly == false) and there is a current selection,
+                        // temporarily clear the selection so that CopyFeatures exports all features.
+                        if (!selectedOnly && hadSelection)
+                        {
+                            _hluLayer.ClearSelection();
+                        }
+
+                        // Create temporary feature class path.
+                        string tempFeaturesPath = System.IO.Path.Combine(gdbName, "TempFeatures");
+
+                        // Copy features to temporary location.
+                        // CopyFeatures respects the current layer selection automatically.
+                        bool copySuccess = await ArcGISProHelpers.CopyFeaturesAsync(mapLayerPath, tempFeaturesPath);
+
+                        if (!copySuccess)
+                        {
+                            MessageBox.Show("Failed to copy features.", "Export Error");
+                            return false;
+                        }
+
+                        // Add an index to the temporary feature class on the incid field to improve join performance.
+                        // Note: The attribute table already has an index because it was created with a primary key.
+                        await ArcGISProHelpers.AddAttributeIndexAsync(gdbName, tempFeaturesPath, incidFieldName, "idx_incid_temp");
+
+                        // Join the attribute table to the temporary feature class.
+                        string attributeTablePath = System.IO.Path.Combine(gdbName, attributeTableName);
+
+                        bool joinSuccess = await ArcGISProHelpers.JoinFieldsAsync(
+                            tempFeaturesPath,
+                            incidFieldName,
+                            attributeTablePath,
+                            incidFieldName);
+
+                        if (!joinSuccess)
+                        {
+                            MessageBox.Show("Failed to join attributes.", "Export Error");
+                            return false;
+                        }
+
+                        // Delete the duplicate 'incid' field from the joined table.
+                        // The JoinField tool retains both the original and joined field, creating a duplicate.
+                        await ArcGISProHelpers.DeleteDuplicateJoinFieldAsync(tempFeaturesPath, incidFieldName);
+
+                        // Copy to final output location.
+                        // For shapefile export, this will be a .shp file;
+                        // for geodatabase export, this will be a feature class within the specified geodatabase.
+                        bool exportSuccess = await ArcGISProHelpers.CopyFeaturesAsync(
+                            tempFeaturesPath,
+                            exportOutputPath,
+                            addToMap: true); // Add to map so user can see the results
+
+                        if (!exportSuccess)
+                        {
+                            MessageBox.Show("Failed to export to final location.", "Export Error");
+                            return false;
+                        }
+
+                        MessageBox.Show($"Export completed successfully to:\n{exportOutputPath}", "Export Complete");
+                        return true;
                     }
-
-                    // Join the attribute table to the features.
-                    var joinParams = Geoprocessing.MakeValueArray(
-                        tempFeaturesPath,
-                        incidFieldName,
-                        Path.Combine(tempGdbPath, attributeTableName),
-                        incidFieldName
-                    );
-
-                    result = await Geoprocessing.ExecuteToolAsync("management.JoinField", joinParams);
-
-                    if (result.IsFailed)
+                    finally
                     {
-                        MessageBox.Show($"Failed to join attributes: {string.Join("\n", result.Messages.Select(m => m.Text))}",
-                            "Export Error");
-                        return false;
+                        // Restore the original selection state if we cleared it.
+                        if (!selectedOnly && hadSelection)
+                        {
+                            _hluLayer.SetSelection(originalSelection);
+                        }
                     }
-
-                    // Copy to final output location.
-                    var exportParams = Geoprocessing.MakeValueArray(
-                        tempFeaturesPath,
-                        _exportOutputPath
-                    );
-
-                    result = await Geoprocessing.ExecuteToolAsync("management.CopyFeatures", exportParams);
-
-                    if (result.IsFailed)
-                    {
-                        MessageBox.Show($"Failed to export to final location: {string.Join("\n", result.Messages.Select(m => m.Text))}",
-                            "Export Error");
-                        return false;
-                    }
-
-                    MessageBox.Show($"Export completed successfully to:\n{_exportOutputPath}", "Export Complete");
-                    return true;
                 }
                 catch (Exception ex)
                 {
@@ -4308,6 +4473,7 @@ namespace HLU.GISApplication
                         // Get the field count.
                         int fieldCnt = hluFeatureClassDefinition.GetFields().Count;
 
+                        // Check the field ordinal is within the valid range before trying to get the field.
                         if (fieldOrdinal < fieldCnt)
                             field = hluFeatureClassDefinition.GetFields()[_hluFieldMap[columnOrdinal]];
                     });
@@ -4398,7 +4564,7 @@ namespace HLU.GISApplication
                 await QueuedTask.Run(() =>
                 {
                     // Get the underlying feature class as a table.
-                    using ArcGIS.Core.Data.Table table = featurelayer.GetTable();
+                    using Table table = featurelayer.GetTable();
                     if (table != null)
                     {
                         // Get the table definition of the table.
@@ -4459,7 +4625,7 @@ namespace HLU.GISApplication
                 await QueuedTask.Run(() =>
                 {
                     // Get the underlying feature class as a table.
-                    using ArcGIS.Core.Data.Table table = featurelayer.GetTable();
+                    using Table table = featurelayer.GetTable();
                     if (table != null)
                     {
                         // Get the table definition of the table.

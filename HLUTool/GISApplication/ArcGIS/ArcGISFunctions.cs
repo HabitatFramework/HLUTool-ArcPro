@@ -283,7 +283,7 @@ namespace HLU.GISApplication
         /// </summary>
         /// <param name="layerPath"></param>
         /// <returns>IReadOnlyList<ArcGIS.Core.Data.Field></returns>
-        public async Task<IReadOnlyList<ArcGIS.Core.Data.Field>> GetFCFieldsAsync(string layerPath, Map targetMap = null)
+        public async Task<IReadOnlyList<Field>> GetFCFieldsAsync(string layerPath, Map targetMap = null)
         {
             // Check there is an input feature layer path.
             if (String.IsNullOrEmpty(layerPath))
@@ -297,7 +297,7 @@ namespace HLU.GISApplication
                 if (featureLayer == null)
                     return null;
 
-                IReadOnlyList<ArcGIS.Core.Data.Field> fields = null;
+                IReadOnlyList<Field> fields = null;
                 List<string> fieldList = [];
 
                 await QueuedTask.Run(() =>
@@ -329,7 +329,7 @@ namespace HLU.GISApplication
         /// </summary>
         /// <param name="layerPath"></param>
         /// <returns>IReadOnlyList<ArcGIS.Core.Data.Field></returns>
-        public async Task<IReadOnlyList<ArcGIS.Core.Data.Field>> GetTableFieldsAsync(string layerPath, Map targetMap = null)
+        public async Task<IReadOnlyList<Field>> GetTableFieldsAsync(string layerPath, Map targetMap = null)
         {
             // Check there is an input feature layer name.
             if (String.IsNullOrEmpty(layerPath))
@@ -343,7 +343,7 @@ namespace HLU.GISApplication
                 if (inputTable == null)
                     return null;
 
-                IReadOnlyList<ArcGIS.Core.Data.Field> fields = null;
+                IReadOnlyList<Field> fields = null;
                 List<string> fieldList = [];
 
                 await QueuedTask.Run(() =>
@@ -376,7 +376,7 @@ namespace HLU.GISApplication
         /// <param name="fields"></param>
         /// <param name="fieldName"></param>
         /// <returns>bool</returns>
-        public static bool FieldExists(IReadOnlyList<ArcGIS.Core.Data.Field> fields, string fieldName)
+        public static bool FieldExists(IReadOnlyList<Field> fields, string fieldName)
         {
             bool fldFound = false;
 
@@ -384,7 +384,7 @@ namespace HLU.GISApplication
             if (String.IsNullOrEmpty(fieldName))
                 return false;
 
-            foreach (ArcGIS.Core.Data.Field fld in fields)
+            foreach (Field fld in fields)
             {
                 if (fld.Name.Equals(fieldName, StringComparison.OrdinalIgnoreCase) ||
                     (fld.AliasName != null && fld.AliasName.Equals(fieldName, StringComparison.OrdinalIgnoreCase)))
@@ -433,10 +433,10 @@ namespace HLU.GISApplication
                         using TableDefinition tableDef = table.GetDefinition();
 
                         // Get the fields in the table.
-                        IReadOnlyList<ArcGIS.Core.Data.Field> fields = tableDef.GetFields();
+                        IReadOnlyList<Field> fields = tableDef.GetFields();
 
                         // Loop through all fields looking for a name match.
-                        foreach (ArcGIS.Core.Data.Field fld in fields)
+                        foreach (Field fld in fields)
                         {
                             if (fld.Name.Equals(fieldName, StringComparison.OrdinalIgnoreCase) ||
                                 (fld.AliasName != null && fld.AliasName.Equals(fieldName, StringComparison.OrdinalIgnoreCase)))
@@ -866,7 +866,7 @@ namespace HLU.GISApplication
             FeatureLayer inputFeaturelayer;
             List<string> outColumnsList = [];
             List<string> orderByColumnsList = [];
-            IReadOnlyList<ArcGIS.Core.Data.Field> inputfields;
+            IReadOnlyList<Field> inputfields;
 
             try
             {
@@ -965,7 +965,7 @@ namespace HLU.GISApplication
                             if ((columnName.Substring(0, 1) != "\"") && (FieldExists(inputfields, columnName)))
                             {
                                 // Get the field from the feature class definition.
-                                using ArcGIS.Core.Data.Field field = featureClassDefinition.GetFields()
+                                using Field field = featureClassDefinition.GetFields()
                                   .First(x => x.Name.Equals(columnName, StringComparison.OrdinalIgnoreCase));
 
                                 // Create a SortDescription for the field.
@@ -1086,7 +1086,7 @@ namespace HLU.GISApplication
             StandaloneTable inputTable;
             List<string> outColumnsList = [];
             List<string> orderByColumnsList = [];
-            IReadOnlyList<ArcGIS.Core.Data.Field> inputfields;
+            IReadOnlyList<Field> inputfields;
 
             try
             {
@@ -1154,7 +1154,7 @@ namespace HLU.GISApplication
                     /// Get the underlying table for the input layer.
                     using Table table = inputTable.GetTable();
 
-                    // Get the table defintion.
+                    // Get the table definition of the table.
                     using TableDefinition tableDefinition = table.GetDefinition();
 
                     // Create a row cursor.
@@ -1185,7 +1185,7 @@ namespace HLU.GISApplication
                             if ((columnName.Substring(0, 1) != "\"") && (FieldExists(inputfields, columnName)))
                             {
                                 // Get the field from the feature class definition.
-                                using ArcGIS.Core.Data.Field field = tableDefinition.GetFields()
+                                using Field field = tableDefinition.GetFields()
                                   .First(x => x.Name.Equals(columnName, StringComparison.OrdinalIgnoreCase));
 
                                 // Create a SortDescription for the field.
@@ -1347,7 +1347,7 @@ namespace HLU.GISApplication
             int intFieldCount;
             try
             {
-                IReadOnlyList<ArcGIS.Core.Data.Field> fields;
+                IReadOnlyList<Field> fields;
 
                 if (isSpatial)
                 {
@@ -1373,7 +1373,7 @@ namespace HLU.GISApplication
                     // Get the fieldName name.
                     fieldName = fields[i].Name;
 
-                    using ArcGIS.Core.Data.Field field = fields[i];
+                    using Field field = fields[i];
 
                     // Get the fieldName type.
                     FieldType fieldType = field.FieldType;

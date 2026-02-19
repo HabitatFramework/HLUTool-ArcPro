@@ -158,5 +158,6 @@ public class HelpPages
     public string UserInterface { get; set; } = "interface/interface.html#interface-options";
     public string UserUpdates { get; set; } = "interface/interface.html#updates-options";
     public string UserSQL { get; set; } = "interface/interface.html#filter-options";
+    public string UserExport { get; set; } = "interface/interface.html#export-options";
     public string UserHistory { get; set; } = "interface/interface.html#history-options";
 }

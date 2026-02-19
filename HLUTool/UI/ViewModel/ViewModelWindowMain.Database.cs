@@ -234,10 +234,11 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Check if the GIS and database are in sync for the selected features.
         /// </summary>
-        /// <param name="action"></param>
-        /// <param name="itemType"></param>
-        /// <param name="itemTypes"></param>
-        /// <returns></returns>
+        /// <param name="action">The action being performed that requires the check, used for user messaging.</param>
+        /// <param name="itemType">The type of item being checked.</param>
+        /// <param name="itemTypes">The plural form of the item type, used for user messaging.</param>
+        /// <param name="showMessage">Indicates whether to show a message if the items are not in sync.</param>
+        /// <returns>True if the GIS and database are in sync; otherwise, false.</returns>
         public bool CheckInSync(string action, string itemType, string itemTypes = "", bool showMessage = true)
         {
             // Set plural item types if not provided.
@@ -279,7 +280,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Checks if there are any valid ihs matrix rows.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>True if there are valid ihs matrix rows; otherwise, false.</returns>
         private bool CheckIhsMatrix()
         {
             if (_hluDS == null) return false;
@@ -317,7 +318,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Checks if there are any valid ihs formation rows.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>True if there are valid ihs formation rows; otherwise, false.</returns>
         private bool CheckIhsFormation()
         {
             if (_hluDS == null) return false;
@@ -353,7 +354,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Checks if there are any valid ihs management rows.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>True if there are valid ihs management rows; otherwise, false.</returns>
         private bool CheckIhsManagement()
         {
             if (_hluDS == null) return false;
@@ -390,7 +391,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Checks if there are any valid ihs complex rows.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>True if there are valid ihs complex rows; otherwise, false.</returns>
         private bool CheckIhsComplex()
         {
             if (_hluDS == null) return false;
@@ -648,6 +649,15 @@ namespace HLU.UI.ViewModel
             return false;
         }
 
+        /// <summary>
+        /// Determines whether the specified secondary habitat row is considered dirty, indicating that it is new or has
+        /// unsaved changes compared to the current data set.
+        /// </summary>
+        /// <remarks>A row is considered dirty if it does not exist in the current data set, has been
+        /// added but is invalid, or any of its values differ from the corresponding stored row. This method ignores
+        /// rows marked as deleted.</remarks>
+        /// <param name="sh">The secondary habitat row to evaluate for changes.</param>
+        /// <returns>true if the row is new or has unsaved changes; otherwise, false.</returns>
         private bool IncidSecondaryRowDirty(SecondaryHabitat sh)
         {
             // deleted secondary habitat row
@@ -678,6 +688,12 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Determines whether the specified BAP environment row is considered dirty, indicating that it is new or has
+        /// unsaved changes compared to the current data set.
+        /// </summary>
+        /// <param name="be">The BAP environment row to evaluate for changes.</param>
+        /// <returns>true if the row is new or has unsaved changes; otherwise, false.</returns>
         private bool IncidBapRowDirty(BapEnvironment be)
         {
             // deleted user BAP row
@@ -1128,9 +1144,9 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the error message for the property with the given column name.
         /// </summary>
-        /// <param name="columnName"></param>
-        /// <param name="errorList"></param>
-        /// <returns></returns>
+        /// <param name="columnName">The name of the column for which to retrieve the error message.</param>
+        /// <param name="errorList">The list of errors to search.</param>
+        /// <returns>The error message for the specified column, or null if no error exists.</returns>
         private string ErrorMessage(string columnName, List<string[]> errorList)
         {
             if (errorList != null)
@@ -1144,8 +1160,8 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets a list of all of the errors.
         /// </summary>
-        /// <param name="errors"></param>
-        /// <returns></returns>
+        /// <param name="errors">The list of errors to process.</param>
+        /// <returns>A concatenated string of all error messages, or null if no errors exist.</returns>
         private string ErrorMessageList(List<string[]> errors)
         {
             if ((errors == null) || (errors.Count == 0)) return null;
@@ -1172,8 +1188,8 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Adds a column name to the list of errors if it is not already in the list.
         /// </summary>
-        /// <param name="errorList"></param>
-        /// <param name="columnName"></param>
+        /// <param name="errorList">The list of errors to which the column name will be added.</param>
+        /// <param name="columnName">The name of the column to add to the error list.</param>
         public void AddToErrorList(List<string> errorList, string columnName)
         {
             if (errorList.Contains(columnName))
@@ -1185,8 +1201,8 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Removes a column name from the list of errors.
         /// </summary>
-        /// <param name="errorList"></param>
-        /// <param name="columnName"></param>
+        /// <param name="errorList">The list of errors from which the column name will be removed.</param>
+        /// <param name="columnName">The name of the column to remove from the error list.</param>
         public void RemoveFromErrorList(List<string> errorList, string columnName)
         {
             errorList.Remove(columnName);
@@ -1338,6 +1354,12 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Add a secondary habitat.
         /// </summary>
+        /// <param name="bulkUpdateMode">Whether the application is in bulk update mode.</param>
+        /// <param name="secondary_id">The ID of the secondary habitat.</param>
+        /// <param name="incid">The incident associated with the secondary habitat.</param>
+        /// <param name="secondary_habitat">The name of the secondary habitat.</param>
+        /// <param name="secondary_group">The group of the secondary habitat.</param>
+        /// <returns>True if the secondary habitat was added successfully; otherwise, false.</returns>
         public bool AddSecondaryHabitat(bool bulkUpdateMode, int secondary_id, string incid, string secondary_habitat, string secondary_group)
         {
             // Store old secondary habitats list
@@ -1417,6 +1439,11 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Actions when the secondary habitats have been changed, including validation and refreshing of related fields.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The event data.</param>
         private void _incidSecondaryHabitats_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             OnPropertyChanged(nameof(Error));
@@ -1746,6 +1773,7 @@ namespace HLU.UI.ViewModel
         /// Track when the BAP primary records have changed so that the apply
         /// button will appear.
         /// </summary>
+        /// <param name="BapChanged">Indicates whether the BAP records have changed.</param>
         private void _incidBapRowsAuto_DataChanged(bool BapChanged)
         {
             Changed = true;
@@ -1767,6 +1795,7 @@ namespace HLU.UI.ViewModel
         /// Track when the BAP secondary records have changed so that the apply
         /// button will appear.
         /// </summary>
+        /// <param name="BapChanged">Indicates whether the BAP records have changed.</param>
         private void _incidBapRowsUser_DataChanged(bool BapChanged)
         {
             Changed = true;
@@ -1860,8 +1889,8 @@ namespace HLU.UI.ViewModel
         /// Track when the BAP primary records have changed so that the apply
         /// button will appear.
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The event data.</param>
         private void _incidBapRowsAuto_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             OnPropertyChanged(nameof(Error));
@@ -1887,8 +1916,8 @@ namespace HLU.UI.ViewModel
         /// Track when the BAP secondary records have changed so that the apply
         /// button will appear.
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The event data.</param>
         private void _incidBapRowsUser_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             OnPropertyChanged(nameof(Error));
@@ -1945,7 +1974,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Check if there are any valid condition rows.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>True if there are valid condition rows, otherwise false.</returns>
         private bool CheckCondition()
         {
             if (_hluDS == null) return false;
@@ -2053,7 +2082,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Checks if there are any valid source rows.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>True if there are valid source rows; otherwise, false.</returns>
         private bool CheckSources()
         {
             if (_hluDS == null) return false;
@@ -2074,7 +2103,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="currentDate">The current date.</param>
         /// <param name="sourceID">The source identifier.</param>
-        /// <returns></returns>
+        /// <returns>The default date for the specified source, or the current date if no default is found.</returns>
         public Date.VagueDateInstance DefaultSourceDate(Date.VagueDateInstance currentDate, Nullable<int> sourceID)
         {
             if ((HluDataset == null) || (HluDataset.lut_sources == null)) return currentDate;
@@ -2744,6 +2773,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Count how many incids, toids and fragments are selected in GIS.
         /// </summary>
+        /// <param name="updateIncidSelection">Indicates whether the Incid selection should be updated based on the GIS selection.</param>
         private void AnalyzeGisSelectionSet(bool updateIncidSelection)
         {
             _selectedIncidsInGISCount = 0;
@@ -2829,6 +2859,10 @@ namespace HLU.UI.ViewModel
 
         #region Selection Tables
 
+        /// <summary>
+        /// Creates a new DataTable to hold the Incid selection with the appropriate schema.
+        /// </summary>
+        /// <returns>A new DataTable with the schema for Incid selection.</returns>
         private DataTable NewIncidSelectionTable()
         {
             DataTable outTable = new();
@@ -2880,7 +2914,7 @@ namespace HLU.UI.ViewModel
         /// Counts the rows in the Incid table.
         /// </summary>
         /// <param name="recount">if set to <c>true</c> [recount].</param>
-        /// <returns></returns>
+        /// <returns>The number of rows in the Incid table.</returns>
         public int IncidRowCount(bool recount)
         {
             if (recount || (_incidRowCount <= 0))
@@ -2906,6 +2940,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Initiates all the necessary actions when moving to another incid row.
         /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         private async Task NewIncidCurrentRowAsync()
         {
             //TODO: Check if the selection is already being read so it
@@ -3031,8 +3066,8 @@ namespace HLU.UI.ViewModel
         /// Replaces any string or date delimiters with connection type specific
         /// versions and qualifies any table names.
         /// </summary>
-        /// <param name="words">The words.</param>
-        /// <returns></returns>
+        /// <param name="sqlcmd">The SQL command string.</param>
+        /// <returns>The SQL command string with replaced qualifiers.</returns>
         internal String ReplaceStringQualifiers(String sqlcmd)
         {
             // Check if a table name (delimited by '[]' characters) is found
