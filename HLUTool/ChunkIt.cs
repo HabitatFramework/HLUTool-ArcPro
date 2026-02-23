@@ -101,7 +101,7 @@ namespace HLU
 
         #endregion Grouping extensions
 
-        #region Chunk class
+        #region Chunking
 
         /// <summary>
         /// A Chunk is a contiguous group of one or more source elements that have the same key.
@@ -290,7 +290,7 @@ namespace HLU
             }
         }
 
-        #endregion Chunk class
+        #endregion Chunking
 
         #region List extensions
 
@@ -300,6 +300,7 @@ namespace HLU
         {
             // Check for invalid chunk size
             if (chunksize <= 0) throw new ArgumentException("Chunk size must be greater than zero.", nameof(chunksize));
+
             while (source.Any())
             {
                 yield return source.Take(chunksize).ToList();

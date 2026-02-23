@@ -22,6 +22,7 @@
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.Analyst3D;
+using ArcGIS.Core.Data.DDL;
 using ArcGIS.Core.Data.UtilityNetwork.Trace;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Internal.CIM;
@@ -52,12 +53,14 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
 using static HLU.GISApplication.HistoryFieldBindingHelper;
 using Envelope = ArcGIS.Core.Geometry.Envelope;
 using Field = ArcGIS.Core.Data.Field;
+using FieldDescription = ArcGIS.Core.Data.DDL.FieldDescription;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
 using LinearUnit = ArcGIS.Core.Geometry.LinearUnit;
 using QueryFilter = ArcGIS.Core.Data.QueryFilter;
@@ -204,6 +207,8 @@ namespace HLU.GISApplication
         /// Maximum (nominal) allowable length of a SQL query.
         /// </summary>
         private int _maxSqlLength = Settings.Default.MaxSqlLengthArcGIS;
+
+        private int _batchSize = Settings.Default.BatchProcessingSize;
 
         #endregion Fields
 
@@ -918,7 +923,6 @@ namespace HLU.GISApplication
         /// Selects the feature(s) for a single incid in the active HLU layer and returns the selected IDs.
         /// </summary>
         /// <param name="incid">The incid to select.</param>
-        /// <param name="resultTable">
         /// A DataTable defining the columns to return (typically incid/toid/toidfragid).
         /// </param>
         /// <returns>The populated selection table.</returns>
@@ -1102,6 +1106,7 @@ namespace HLU.GISApplication
         /// <summary>
         /// Clears the selection on the active HLU layer.
         /// </summary>
+        /// <returns>A task representing the asynchronous operation.</returns>
         public async Task ClearMapSelectionAsync()
         {
             // Check the parameters.
@@ -1118,7 +1123,7 @@ namespace HLU.GISApplication
         /// <summary>
         /// Counts the selected features on the active HLU layer.
         /// </summary>
-        /// <returns>The selection count, or 0 if no layer/selection.</returns>
+        /// <returns>A task that returns the number of selected features.</returns>
         public async Task<int> CountMapSelectionAsync()
         {
             // Check the parameters.
@@ -1138,7 +1143,7 @@ namespace HLU.GISApplication
         /// <remarks>
         /// Check if all selected rows have unique keys to avoid any potential data integrity problems.
         /// </remarks>
-        /// <returns>True if unique or empty selection; false if duplicates found.</returns>
+        /// <returns>A task that returns true if unique or empty selection; false if duplicates found.</returns>
         public async Task<bool> SelectedRowsUniqueAsync()
         {
             // Check the parameters.
@@ -1202,7 +1207,10 @@ namespace HLU.GISApplication
         /// A DataTable containing INCID values that should be tested in GIS.
         /// </param>
         /// <returns>
-        /// A tuple containing (Incids, Toids, Fragments).
+        /// A task that returns a tuple containing:
+        /// - Incids: The number of distinct INCIDs.
+        /// - Toids: The number of distinct TOIDs.
+        /// - Fragments: The number of feature rows (fragments).
         /// </returns>
         public async Task<(int Incids, int Toids, int Fragments)> ExpectedSelectionGISFeaturesAsync(
             DataTable incidSelection)
@@ -1300,9 +1308,9 @@ namespace HLU.GISApplication
         /// A DataTable containing INCID values to test.
         /// </param>
         /// <returns>
-        /// A tuple containing:
-        ///  - the expected number of distinct TOIDs,
-        ///  - the expected number of feature rows.
+        /// A task that returns a tuple containing:
+        /// - the expected number of distinct TOIDs,
+        /// - the expected number of feature rows.
         /// </returns>
         public async Task<(int ExpectedNumToids, int ExpectedNumFeatures)>
             ExpectedSelectionFeaturesAsync(DataTable incidSelection)
@@ -1621,15 +1629,6 @@ namespace HLU.GISApplication
             //IpcArcMap(["cs"]);
         }
 
-        //TODO: Replace calls with CountMapSelectionAsync
-        /// <summary>
-        /// Counts the currently selected map features.
-        /// </summary>
-        public async Task<int> CountMapSelection()
-        {
-            return await CountMapSelectionAsync();
-        }
-
         #endregion Selection
 
         #region Helpers
@@ -1783,6 +1782,8 @@ namespace HLU.GISApplication
         /// <summary>
         /// Asynchronously flashes the features matching the supplied where clause.
         /// </summary>
+        /// <param name="whereClause">A list of SQL filter conditions representing the where clause.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         private async Task FlashSelectedFeatureAsync(List<SqlFilterCondition> whereClause)
         {
             // Check the where clause is not empty.
@@ -1804,6 +1805,8 @@ namespace HLU.GISApplication
         /// <summary>
         /// Asynchronously flashes the features matching the supplied where clauses.
         /// </summary>
+        /// <param name="whereClauses">A list of lists of SQL filter conditions representing the where clauses.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         private async Task FlashSelectedFeaturesAsync(List<List<SqlFilterCondition>> whereClauses)
         {
             // Check the where clauses are not empty.
@@ -1838,6 +1841,8 @@ namespace HLU.GISApplication
         /// <summary>
         /// Flashes all features matching any of the supplied where clauses, twice, at the same time.
         /// </summary>
+        /// <param name="whereClauses">A list of where clause strings to match features to flash.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         private async Task FlashWhereClausesAsync(IEnumerable<string> whereClauses)
         {
             // Check prerequisites.
@@ -1912,8 +1917,9 @@ namespace HLU.GISApplication
 
         /// <summary>
         /// Attempts to read the ObjectID from a Row in a version-tolerant way.
-        /// Returns -1 if it cannot be read.
         /// </summary>
+        /// <param name="row"> The Row from which to attempt to read the ObjectID.</param>
+        /// <returns>The ObjectID if it can be read; otherwise, -1.</returns>
         private static long TryGetObjectId(Row row)
         {
             if (row == null)
@@ -1949,6 +1955,8 @@ namespace HLU.GISApplication
         /// <summary>
         /// Runs an action on the UI dispatcher.
         /// </summary>
+        /// <param name="action"> The action to run on the UI thread.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         private static Task RunOnUiAsync(Action action)
         {
             if (action == null)
@@ -2203,7 +2211,7 @@ namespace HLU.GISApplication
         /// <param name="newIncid">The new incid number.</param>
         /// <param name="historyColumns">The history columns to be used for tracking changes.</param>
         /// <param name="editOperation">The edit operation to be used for the logical split.</param>
-        /// <returns></returns>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a DataTable with the history of changes.</returns>
         public async Task<DataTable> SplitFeaturesLogicallyAsync(
             string oldIncid,
             string newIncid,
@@ -2372,6 +2380,8 @@ namespace HLU.GISApplication
         /// Computes the two geometry history values.
         /// Polygons: (length, area). Polylines: (length, -1). Points: (X, Y).
         /// </summary>
+        /// <param name="geometry"> The geometry to compute history values for.</param>
+        /// <returns>A tuple containing the two geometry history values.</returns>
         private static (double Geom1, double Geom2) GetGeometryHistoryValues(Geometry geometry)
         {
             if (geometry == null)
@@ -2448,6 +2458,8 @@ namespace HLU.GISApplication
         /// Builds a list of history field specs from requested column names.
         /// Supports delimiter-based "additional fields" (prefix + delimiter + sourceFieldName).
         /// </summary>
+        /// <param name="historyColumnNames">The requested history column names.</param>
+        /// <returns>A list of history field specs with output column name, source field index, and data type.</returns>
         private List<HistoryFieldSpec> BuildHistoryFieldSpecs(string[] historyColumnNames)
         {
             List<HistoryFieldSpec> specs = [];
@@ -2578,6 +2590,9 @@ namespace HLU.GISApplication
         /// Attempts to resolve an editable numeric field index from a list of possible names.
         /// Returns -1 if no suitable field is found.
         /// </summary>
+        /// <param name="table">The table to search for the field.</param>
+        /// <param name="candidateNames">Candidate field names to check, in order of preference.</param>
+        /// <returns>Returns the index of the first matching editable numeric field, or -1 if none found.</returns>
         private static int TryResolveEditableNumericFieldIndex(Table table, params string[] candidateNames)
         {
             if (table == null)
@@ -3144,77 +3159,6 @@ namespace HLU.GISApplication
 
         #endregion Merge Helpers
 
-        private DataTable ResultTableFromList(List<string> resultList)
-        {
-            //try
-            //{
-            //    if ((resultList != null) && (resultList.Count > 1))
-            //    {
-            //        // Create a new result table
-            //        DataTable resultTable = new();
-
-            //        // Define the result table by adding the columns
-            //        int i = 0;
-            //        string s;
-            //        while ((i < resultList.Count) && ((s = resultList[i++]) != PipeTransmissionInterrupt))
-            //        {
-            //            string[] items = s.Split(PipeFieldDelimiter);
-            //            resultTable.Columns.Add(new DataColumn(items[0], Type.GetType(items[1])));
-            //        }
-
-            //        // Add the values to the result table
-            //        while (i < resultList.Count)
-            //        {
-            //            // Split the final resultlist string and trim spaces
-            //            string[] items = resultList[i++].Split(PipeFieldDelimiter).Select(r => r.Trim()).ToArray();
-            //            resultTable.Rows.Add(items);
-            //        }
-
-            //        return resultTable;
-            //    }
-            //}
-            //catch { }
-
-            return null;
-        }
-
-        public DataTable UpdateFeatures(DataColumn[] updateColumns, object[] updateValues,
-            DataColumn[] historyColumns)
-        {
-            //try
-            //{
-            //    string delimiter = PipeFieldDelimiter.ToString();
-
-            //    return ResultTableFromList(IpcArcMap(new string[] { "us" }
-            //        .Concat(updateColumns.Select(c => c.ColumnName))
-            //        .Concat([PipeTransmissionInterrupt])
-            //        .Concat(updateValues.Select(o => o.ToString()))
-            //        .Concat([PipeTransmissionInterrupt])
-            //        .Concat(historyColumns.Select(c => c.ColumnName)).ToArray()));
-            //}
-            //catch { throw; }
-            return null;
-        }
-
-        //public DataTable UpdateFeatures(DataColumn[] updateColumns, object[] updateValues,
-        //    DataColumn[] historyColumns, List<SqlFilterCondition> selectionWhereClause)
-        //{
-        //    try
-        //    {
-        //        string delimiter = PipeFieldDelimiter.ToString();
-
-        //        return ResultTableFromList(IpcArcMap(new string[] { "up",
-        //            WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, selectionWhereClause)) }
-        //            .Concat(updateColumns.Select(c => c.ColumnName))
-        //            .Concat([PipeTransmissionInterrupt])
-        //            .Concat(updateValues.Select(o => o.ToString()))
-        //            .Concat([PipeTransmissionInterrupt])
-        //            .Concat(historyColumns.Select(c => c.ColumnName)).ToArray()));
-        //    }
-        //    catch { throw; }
-        //    return null;
-        //}
-
         /// <summary>
         /// Gets the history for the currently selected features based on the provided history columns and selection criteria.
         /// </summary>
@@ -3398,31 +3342,13 @@ namespace HLU.GISApplication
             });
         }
 
-        public DataTable UpdateFeatures(DataColumn[] updateColumns, object[] updateValues,
-            DataColumn[] historyColumns, string tempMdbPathName, string selectionTableName)
-        {
-            //string delimiter = PipeFieldDelimiter.ToString();
-
-            //try
-            //{
-            //    return ResultTableFromList(IpcArcMap(new string[] { "ub", tempMdbPathName, selectionTableName }
-            //        .Concat(updateColumns.Select(c => c.ColumnName))
-            //        .Concat([PipeTransmissionInterrupt])
-            //        .Concat(updateValues.Select(o => o == null ? String.Empty : o.ToString()))
-            //        .Concat([PipeTransmissionInterrupt])
-            //        .Concat(historyColumns.Select(c => c.ColumnName)).ToArray()));
-            //}
-            //catch { throw; }
-            return null;
-        }
-
         #region History
 
         /// <summary>
         /// Gets the field ordinals for the requested history columns based on the HLU layer structure and mapping.
         /// </summary>
         /// <param name="historyColumns"></param>
-        /// <returns></returns>
+        /// <returns>An array of field ordinals for the requested history columns.</returns>
         private int[] HistorySchema(string[] historyColumns)
         {
             //int ix;
@@ -3466,6 +3392,13 @@ namespace HLU.GISApplication
             return ordinals;
         }
 
+        /// <summary>
+        /// Builds a history string for a given feature based on the provided history field ordinals and additional values.
+        /// </summary>
+        /// <param name="feature">The feature for which to build the history string.</param>
+        /// <param name="historyFieldOrdinals">An array of field ordinals representing the history fields.</param>
+        /// <param name="additionalValues">An array of additional values to include in the history string.</param>
+        /// <returns>A string representing the history of the feature.</returns>
         private string History(FeatureClass feature, int[] historyFieldOrdinals, string[] additionalValues)
         {
             StringBuilder history = new();
@@ -3488,6 +3421,19 @@ namespace HLU.GISApplication
             return history.Remove(0, 1).ToString();
         }
 
+        /// <summary>
+        /// Extracts geometry-related properties from the specified feature and outputs them as double values, depending
+        /// on the feature's geometry type.
+        /// </summary>
+        /// <remarks>The specific values assigned to geom1 and geom2 depend on the geometry type of the
+        /// feature. For example, for polygons, geom1 may represent length and geom2 area; for points, geom1 and geom2
+        /// may represent X and Y coordinates, respectively. If a property is not applicable for the geometry type, its
+        /// value will be set to -1.</remarks>
+        /// <param name="feature">The feature from which to retrieve geometry properties. Must not be null.</param>
+        /// <param name="geom1">When this method returns, contains the first geometry property value, such as length, X coordinate, or other
+        /// type-specific value, depending on the geometry type of the feature.</param>
+        /// <param name="geom2">When this method returns, contains the second geometry property value, such as area or Y coordinate,
+        /// depending on the geometry type of the feature. May be set to -1 if not applicable.</param>
         private void GetGeometryProperties(FeatureClass feature, out double geom1, out double geom2)
         {
             geom1 = -1;
@@ -3518,8 +3464,8 @@ namespace HLU.GISApplication
         /// <summary>
         /// Maps a given field name to the corresponding field index on the GIS layer, using the HLU layer structure and field mapping.
         /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
+        /// <param name="name">The name of the field to map.</param>
+        /// <returns>The field index corresponding to the specified field name, or -1 if not found.</returns>
         private int MapField(string name)
         {
             name = name.Trim();
@@ -3538,8 +3484,8 @@ namespace HLU.GISApplication
         /// <summary>
         /// Maps a given column ordinal to the corresponding field index on the GIS layer, using the HLU layer structure and field mapping.
         /// </summary>
-        /// <param name="columnName"></param>
-        /// <returns></returns>
+        /// <param name="columnName">The name of the column to map.</param>
+        /// <returns>The field index corresponding to the specified column name, or -1 if not found.</returns>
         private int FieldOrdinal(string columnName)
         {
             int ordinal = -1;
@@ -3554,8 +3500,8 @@ namespace HLU.GISApplication
         /// <summary>
         /// Maps a given column ordinal to the corresponding field index on the GIS layer, using the HLU field mapping.
         /// </summary>
-        /// <param name="columnOrdinal"></param>
-        /// <returns></returns>
+        /// <param name="columnOrdinal">The ordinal of the column to map.</param>
+        /// <returns>The field index corresponding to the specified column ordinal, or -1 if not found.</returns>
         private int FieldOrdinal(int columnOrdinal)
         {
             if ((_hluFieldMap != null) && (columnOrdinal > -1) && (columnOrdinal < _hluFieldMap.Length))
@@ -3567,8 +3513,8 @@ namespace HLU.GISApplication
         /// <summary>
         /// Maps a given field name to the corresponding column ordinal on the GIS layer, using the HLU layer structure.
         /// </summary>
-        /// <param name="fieldName"></param>
-        /// <returns></returns>
+        /// <param name="fieldName">The name of the field to map.</param>
+        /// <returns>The column ordinal corresponding to the specified field name, or -1 if not found.</returns>
         private int ColumnOrdinal(string fieldName)
         {
             if ((_hluFieldNames != null) && !String.IsNullOrEmpty((fieldName = fieldName.Trim())))
@@ -3580,8 +3526,8 @@ namespace HLU.GISApplication
         /// <summary>
         /// Maps a given field name to the corresponding field index on the GIS layer, using a fuzzy matching approach against the HLU layer structure.
         /// </summary>
-        /// <param name="fieldName"></param>
-        /// <returns></returns>
+        /// <param name="fieldName">The name of the field to map.</param>
+        /// <returns>The field index corresponding to the specified field name, or -1 if not found.</returns>
         private int FuzzyFieldOrdinal(string fieldName)
         {
             return FieldOrdinal(FuzzyColumnOrdinal(fieldName));
@@ -3590,8 +3536,8 @@ namespace HLU.GISApplication
         /// <summary>
         /// Maps a given field name to the corresponding column ordinal on the GIS layer, using a fuzzy matching approach against the HLU layer structure.
         /// </summary>
-        /// <param name="fieldName"></param>
-        /// <returns></returns>
+        /// <param name="fieldName">The name of the field to map.</param>
+        /// <returns>The column ordinal corresponding to the specified field name, or -1 if not found.</returns>
         private int FuzzyColumnOrdinal(string fieldName)
         {
             if ((_hluFieldNames != null) && !String.IsNullOrEmpty((fieldName = fieldName.Trim())))
@@ -3613,6 +3559,7 @@ namespace HLU.GISApplication
         /// Prompts the user for export location and validates the export.
         /// </summary>
         /// <param name="initialDirectory">The initial directory for the save dialog. If null/empty, uses project home or My Documents.</param>
+        /// <returns>A tuple containing the output workspace and feature class name for the export, or null values if the user cancels.</returns>
         public async Task<(string outputWorkspace, string outputFeatureClassName)> ExportPromptAsync(
             string initialDirectory)
         {
@@ -3764,120 +3711,716 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Exports features with attributes to a new feature class.
+        /// Exports GIS features with joined attributes, field filtering, and custom field ordering.
         /// </summary>
-        /// <param name="gdbName">The full path and name of the temporary geodatabase.</param>
-        /// <param name="attributeTableName">The name of the attribute table to join.</param>
-        /// <param name="exportWorkspace">The workspace for the final export output.</param>
-        /// <param name="exportFeatureClassName">The name of the final export feature class or shapefile.</param>
-        /// <param name="selectedOnly">If set to <c>true</c> export only selected features.</param>
-        public async Task<bool> ExportAsync(string gdbName,
-            string attributeTableName,
-            string exportWorkspace,
-            string exportFeatureClassName,
-            bool selectedOnly)
+        /// <remarks>
+        /// This method performs a complete export workflow:
+        /// <list type="number">
+        /// <item>Builds the output schema with field filtering, renaming, and ordering</item>
+        /// <item>Creates the output feature class (geodatabase or shapefile)</item>
+        /// <item>Performs a streaming merge join between GIS features and attributes</item>
+        /// <item>Writes features in batches for optimal performance</item>
+        /// </list>
+        /// The attribute table is assumed to be already sorted by incid (via primary key constraint).
+        /// </remarks>
+        /// <param name="sourceLayerPath">The full path to the source GIS layer.</param>
+        /// <param name="gdbPath">The path to the geodatabase containing the attribute table.</param>
+        /// <param name="tableName">The name of the attribute table to join.</param>
+        /// <param name="isShapefile">True if the output is a shapefile; false for geodatabase feature class.</param>
+        /// <param name="outputWorkspace">The workspace where the output feature class will be created (folder for shapefile, .gdb path for geodatabase).</param>
+        /// <param name="outputFeatureClassName">The name of the output feature class (including .shp extension for shapefiles).</param>
+        /// <param name="selectedOnly">If true, only export selected features; otherwise export all features.</param>
+        /// <param name="gisFieldsToInclude">Optional list of GIS field names to include. If null, all non-system fields are included.</param>
+        /// <param name="fieldOrderMap">Optional dictionary mapping field names to their desired order (0-based position). If null, default ordering is used.</param>
+        /// <param name="fieldRenameMap">Optional dictionary mapping source field names to export field names. If null, original names are used.</param>
+        /// <param name="progress">Optional progress reporter for monitoring export progress.</param>
+        /// <param name="cancellationToken">Optional cancellation token to allow cancellation of the export.</param>
+        /// <returns>True if the export succeeded; false otherwise.</returns>
+        /// <exception cref="HLUToolException">Thrown when export fails due to missing layer, invalid parameters, or I/O errors.</exception>
+        public async Task<bool> ExportWithJoinAsync(
+            string sourceLayerPath,
+            string gdbPath,
+            string tableName,
+            bool isShapefile,
+            string outputWorkspace,
+            string outputFeatureClassName,
+            bool selectedOnly,
+            List<string> gisFieldsToInclude = null,
+            Dictionary<string, int> fieldOrderMap = null,
+            Dictionary<string, string> fieldRenameMap = null,
+            IProgress<int> progress = null,
+            CancellationToken cancellationToken = default)
         {
-            // Set the full output path for the export.
-            string exportOutputPath = exportWorkspace +
-                (exportWorkspace.EndsWith(".gdb", StringComparison.OrdinalIgnoreCase) ? "\\" : "") +
-                exportFeatureClassName;
+            // Check parameters
+            if (string.IsNullOrWhiteSpace(sourceLayerPath))
+                throw new ArgumentException("Source layer path is required.", nameof(sourceLayerPath));
 
-            return await QueuedTask.Run(async () =>
+            if (string.IsNullOrWhiteSpace(gdbPath))
+                throw new ArgumentException("Geodatabase path is required.", nameof(gdbPath));
+
+            if (string.IsNullOrWhiteSpace(tableName))
+                throw new ArgumentException("Table name is required.", nameof(tableName));
+
+            if (string.IsNullOrWhiteSpace(outputWorkspace))
+                throw new ArgumentException("Output workspace is required.", nameof(outputWorkspace));
+
+            if (string.IsNullOrWhiteSpace(outputFeatureClassName))
+                throw new ArgumentException("Output feature class name is required.", nameof(outputFeatureClassName));
+
+            bool success = await QueuedTask.Run(async () =>
             {
+                FeatureClass outputFC = null;
                 try
                 {
-                    if (_hluLayer == null || _hluFeatureClass == null)
+                    // Find the source layer in the active map
+                    FeatureLayer sourceLayer = await FindLayerAsync(sourceLayerPath);
+                    if (sourceLayer == null)
                         return false;
 
-                    // Get the full layer path (in case it's nested in one or more groups).
-                    string mapLayerPath = await GetLayerPathAsync(_hluLayer);
+                    // Get the source feature class and its schema definition
+                    using FeatureClass sourceFC = sourceLayer.GetFeatureClass();
+                    using FeatureClassDefinition sourceDef = sourceFC.GetDefinition();
 
-                    // Get the incid field name.
-                    string incidFieldName = await IncidFieldNameAsync();
-                    if (string.IsNullOrEmpty(incidFieldName))
-                        return false;
+                    // Open the attribute table geodatabase and get the table definition
+                    using Geodatabase attrGdb = new(new FileGeodatabaseConnectionPath(new Uri(gdbPath)));
+                    using Table attributeTable = attrGdb.OpenDataset<Table>(tableName);
+                    using TableDefinition attrDef = attributeTable.GetDefinition();
 
-                    // Store the original selection state so we can restore it later.
-                    Selection originalSelection = _hluLayer.GetSelection();
-                    bool hadSelection = originalSelection != null && originalSelection.GetCount() > 0;
+                    // Resolve the join key field name (typically 'incid')
+                    string joinKeyField = await IncidFieldNameAsync();
+                    if (String.IsNullOrWhiteSpace(joinKeyField))
+                        throw new HLUToolException("Failed to resolve incid field name for join.");
 
-                    try
-                    {
-                        // If exporting all features (selectedOnly == false) and there is a current selection,
-                        // temporarily clear the selection so that CopyFeatures exports all features.
-                        if (!selectedOnly && hadSelection)
-                        {
-                            _hluLayer.ClearSelection();
-                        }
+                    // Build the complete output schema including field filtering, renaming, and ordering
+                    var (outputFields, fieldMappings) = BuildExportSchema(
+                        sourceDef,
+                        attrDef,
+                        joinKeyField,
+                        gisFieldsToInclude,
+                        fieldOrderMap,
+                        fieldRenameMap);
 
-                        // Create temporary feature class path.
-                        string tempFeaturesPath = System.IO.Path.Combine(gdbName, "TempFeatures");
+                    if (outputFields == null || outputFields.Count == 0)
+                        throw new HLUToolException("No fields to export after applying filters and mappings.");
 
-                        // Copy features to temporary location.
-                        // CopyFeatures respects the current layer selection automatically.
-                        bool copySuccess = await ArcGISProHelpers.CopyFeaturesAsync(mapLayerPath, tempFeaturesPath);
+                    // Create the output feature class (either shapefile or geodatabase)
+                    outputFC = await CreateOutputFeatureClassAsync(
+                        isShapefile,
+                        outputWorkspace,
+                        outputFeatureClassName,
+                        outputFields,
+                        sourceDef,
+                        gdbPath);
 
-                        if (!copySuccess)
-                        {
-                            MessageBox.Show("Failed to copy features.", "Export Error");
-                            return false;
-                        }
+                    if (outputFC == null)
+                        throw new HLUToolException("Failed to create output feature class.");
 
-                        // Add an index to the temporary feature class on the incid field to improve join performance.
-                        // Note: The attribute table already has an index because it was created with a primary key.
-                        await ArcGISProHelpers.AddAttributeIndexAsync(gdbName, tempFeaturesPath, incidFieldName, "idx_incid_temp");
+                    // Populate the output feature class using streaming merge join
+                    bool populateSuccess = await PopulateOutputFeatureClassAsync(
+                        sourceLayer,
+                        sourceFC,
+                        sourceDef,
+                        attributeTable,
+                        attrDef,
+                        outputFC,
+                        joinKeyField,
+                        fieldMappings,
+                        selectedOnly,
+                        progress,
+                        cancellationToken);
 
-                        // Join the attribute table to the temporary feature class.
-                        string attributeTablePath = System.IO.Path.Combine(gdbName, attributeTableName);
+                    if (!populateSuccess)
+                        throw new HLUToolException("Failed to populate output feature class.");
 
-                        bool joinSuccess = await ArcGISProHelpers.JoinFieldsAsync(
-                            tempFeaturesPath,
-                            incidFieldName,
-                            attributeTablePath,
-                            incidFieldName);
-
-                        if (!joinSuccess)
-                        {
-                            MessageBox.Show("Failed to join attributes.", "Export Error");
-                            return false;
-                        }
-
-                        // Delete the duplicate 'incid' field from the joined table.
-                        // The JoinField tool retains both the original and joined field, creating a duplicate.
-                        await ArcGISProHelpers.DeleteDuplicateJoinFieldAsync(tempFeaturesPath, incidFieldName);
-
-                        // Copy to final output location.
-                        // For shapefile export, this will be a .shp file;
-                        // for geodatabase export, this will be a feature class within the specified geodatabase.
-                        bool exportSuccess = await ArcGISProHelpers.CopyFeaturesAsync(
-                            tempFeaturesPath,
-                            exportOutputPath,
-                            addToMap: true); // Add to map so user can see the results
-
-                        if (!exportSuccess)
-                        {
-                            MessageBox.Show("Failed to export to final location.", "Export Error");
-                            return false;
-                        }
-
-                        MessageBox.Show($"Export completed successfully to:\n{exportOutputPath}", "Export Complete");
-                        return true;
-                    }
-                    finally
-                    {
-                        // Restore the original selection state if we cleared it.
-                        if (!selectedOnly && hadSelection)
-                        {
-                            _hluLayer.SetSelection(originalSelection);
-                        }
-                    }
+                    return true;
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Export failed: {ex.Message}", "Export Error");
-                    return false;
+                    throw new HLUToolException("Error exporting GIS features: " + ex.Message, ex);
+                }
+                finally
+                {
+                    outputFC?.Dispose();  // Dispose after all writes complete
                 }
             });
+
+            // If population failed, return false
+            if (!success)
+                return false;
+
+            // Save all pending edits
+            await Project.Current.SaveEditsAsync();
+
+            // Build the full path to the output feature class
+            string outputPath = System.IO.Path.Combine(outputWorkspace, outputFeatureClassName);
+
+            // Get the actual geometry attribute field names for this feature class
+            string lengthField;
+            string areaField;
+            (lengthField, areaField) = await ArcGISProHelpers.GetGeometryFieldNamesAsync(outputPath);
+
+            if (string.IsNullOrEmpty(lengthField) && string.IsNullOrEmpty(areaField))
+                throw new HLUToolException("Failed to establish geometry attribute fields for output feature class.");
+
+            // Recalculate the geometry attribute for all features (needed for BOTH shapefiles AND geodatabases)
+            bool recalcSuccess = await ArcGISProHelpers.RecalculateGeometryAttributesAsync(outputPath, lengthField, areaField);
+
+            if (!recalcSuccess)
+                throw new HLUToolException("Failed to recalculate geometry in output feature class.");
+
+            // Set the layer name
+            string layerName = System.IO.Path.GetFileNameWithoutExtension(outputFeatureClassName);
+
+            // Add to the active map
+            bool addSuccess = await ArcGISProHelpers.AddFeatureLayerToMapAsync(
+                outputPath,
+                layerName,
+                groupLayerName: null,
+                position: 0);  // Add to top of map
+
+            if (!addSuccess)
+                throw new HLUToolException("Failed to add output feature class to map.");
+
+            return true;
+        }
+
+        /// <summary>
+        /// Builds the export schema by determining field order, renaming, and filtering.
+        /// </summary>
+        /// <remarks>
+        /// This method processes both GIS layer fields and attribute table fields to create:
+        /// <list type="bullet">
+        /// <item>A list of field descriptions for creating the output feature class</item>
+        /// <item>A mapping between source field names and export field names</item>
+        /// </list>
+        /// Fields are ordered according to the fieldOrderMap, with unmapped fields placed at the end.
+        /// When a field exists in both the GIS layer and attribute table, the attribute table value takes precedence.
+        /// </remarks>
+        /// <param name="sourceDef">The feature class definition of the source layer.</param>
+        /// <param name="attrDef">The table definition of the attribute table.</param>
+        /// <param name="joinKeyField">The field name used to join features and attributes (typically 'incid').</param>
+        /// <param name="gisFieldsToInclude">Optional list of GIS field names to include. If null, all non-system fields are included.</param>
+        /// <param name="fieldOrderMap">Optional dictionary mapping field names to their desired order. If null, default ordering is used.</param>
+        /// <param name="fieldRenameMap">Optional dictionary mapping source field names to export field names. If null, original names are used.</param>
+        /// <returns>
+        /// A tuple containing:
+        /// <list type="bullet">
+        /// <item>outputFields: List of field descriptions for the output feature class</item>
+        /// <item>fieldMappings: List of tuples mapping (source name, export name, is from GIS layer)</item>
+        /// </list>
+        /// </returns>
+        private (List<FieldDescription> outputFields, List<(string sourceName, string targetName, bool isGIS)> fieldMappings)
+            BuildExportSchema(
+                FeatureClassDefinition sourceDef,
+                TableDefinition attrDef,
+                string joinKeyField,
+                List<string> gisFieldsToInclude,
+                Dictionary<string, int> fieldOrderMap,
+                Dictionary<string, string> fieldRenameMap)
+        {
+            // Temporary collection to hold all fields with their metadata before ordering
+            List<(FieldDescription desc, string name, int order, bool isGIS)> allFieldsWithOrder = [];
+
+            // First, build a set of attribute table field names for quick lookup
+            HashSet<string> attributeFieldNames = new(StringComparer.OrdinalIgnoreCase);
+            foreach (Field field in attrDef.GetFields())
+            {
+                if (field.FieldType != FieldType.OID)
+                    attributeFieldNames.Add(field.Name);
+            }
+
+            // Process GIS layer fields
+            foreach (Field field in sourceDef.GetFields())
+            {
+                // Skip system-managed fields that shouldn't be copied
+                if (field.FieldType == FieldType.OID || field.FieldType == FieldType.Geometry ||
+                    field.FieldType == FieldType.GlobalID)
+                    continue;
+
+                // Skip this GIS field if it exists in the attribute table (attribute table takes precedence)
+                // Exception: Always include geometry attribute fields from GIS
+                bool isGeometryAttributeField = field.Name.Equals("Shape_Length", StringComparison.OrdinalIgnoreCase) ||
+                                               field.Name.Equals("Shape_Area", StringComparison.OrdinalIgnoreCase) ||
+                                               field.Name.Equals("Shape_Leng", StringComparison.OrdinalIgnoreCase);
+
+                if (!isGeometryAttributeField && attributeFieldNames.Contains(field.Name))
+                    continue;
+
+                // Apply field filtering if a whitelist was provided
+                if (gisFieldsToInclude != null &&
+                    !gisFieldsToInclude.Contains(field.Name, StringComparer.OrdinalIgnoreCase))
+                    continue;
+
+                // Determine the export name (either renamed or original)
+                string outputFieldName = fieldRenameMap?.ContainsKey(field.Name) == true
+                    ? fieldRenameMap[field.Name]
+                    : field.Name;
+
+                // Determine the sort order for this field
+                // Fields with explicit order come first; unmapped fields go to the end
+                // Geometry attribute fields go to the very end if not explicitly ordered
+                int order;
+                if (fieldOrderMap?.ContainsKey(outputFieldName) == true)
+                {
+                    order = fieldOrderMap[outputFieldName];
+                }
+                else if (isGeometryAttributeField)
+                {
+                    // Put geometry fields at the very end
+                    order = int.MaxValue - 100;
+                }
+                else
+                {
+                    // Other unmapped fields
+                    order = int.MaxValue - 1000000;
+                }
+
+                // Create a field description using the export name
+                var renamedFieldDesc = new FieldDescription(outputFieldName, field.FieldType)
+                {
+                    Length = field.Length,
+                    Precision = field.Precision,
+                    Scale = field.Scale
+                };
+
+                // Add to temporary collection
+                allFieldsWithOrder.Add((renamedFieldDesc, outputFieldName, order, true));
+            }
+
+            // Process attribute table fields
+            foreach (Field field in attrDef.GetFields())
+            {
+                // Skip system-managed fields
+                if (field.FieldType == FieldType.OID)
+                    continue;
+
+                // Skip the join key if it's already present in GIS fields to avoid duplication
+                if (field.Name.Equals(joinKeyField, StringComparison.OrdinalIgnoreCase) &&
+                    allFieldsWithOrder.Any(f => f.name.Equals(joinKeyField, StringComparison.OrdinalIgnoreCase)))
+                    continue;
+
+                // Skip fields already present (should only happen for geometry fields)
+                if (allFieldsWithOrder.Any(f => f.name.Equals(field.Name, StringComparison.OrdinalIgnoreCase)))
+                    continue;
+
+                // Determine the export name (either renamed or original)
+                string outputFieldName = fieldRenameMap?.ContainsKey(field.Name) == true
+                    ? fieldRenameMap[field.Name]
+                    : field.Name;
+
+                // Determine the sort order for this field
+                // Attribute fields default to the end if not explicitly ordered
+                int order = fieldOrderMap?.ContainsKey(outputFieldName) == true
+                    ? fieldOrderMap[outputFieldName]
+                    : int.MaxValue;
+
+                // Create a field description using the export name
+                var renamedFieldDesc = new FieldDescription(outputFieldName, field.FieldType)
+                {
+                    Length = field.Length,
+                    Precision = field.Precision,
+                    Scale = field.Scale
+                };
+
+                // Add to temporary collection
+                allFieldsWithOrder.Add((renamedFieldDesc, outputFieldName, order, false));
+            }
+
+            // Build the final ordered lists
+            List<FieldDescription> outputFields = [];
+            List<(string sourceName, string targetName, bool isGIS)> fieldMappings = [];
+
+            // Sort by order value and process each field
+            foreach (var (desc, outputName, order, isGIS) in allFieldsWithOrder.OrderBy(f => f.order))
+            {
+                // Add field description for output feature class creation
+                outputFields.Add(desc);
+
+                // Resolve the original source name by reverse lookup in rename map
+                string sourceName = outputName;
+                if (fieldRenameMap != null)
+                {
+                    // Look for a rename entry where the value matches our output name
+                    var reverseEntry = fieldRenameMap.FirstOrDefault(kvp =>
+                        kvp.Value.Equals(outputName, StringComparison.OrdinalIgnoreCase));
+                    if (!String.IsNullOrEmpty(reverseEntry.Key))
+                        sourceName = reverseEntry.Key;
+                }
+
+                // Add to mapping collection for use during data copy
+                fieldMappings.Add((sourceName, outputName, isGIS));
+            }
+
+            return (outputFields, fieldMappings);
+        }
+
+        /// <summary>
+        /// Creates the output feature class for the export.
+        /// </summary>
+        /// <remarks>
+        /// This method handles both shapefile and geodatabase outputs:
+        /// <list type="bullet">
+        /// <item>For shapefiles: Uses the Geoprocessing CreateFeatureclass tool, then adds fields manually</item>
+        /// <item>For geodatabases: Uses SchemaBuilder for better control</item>
+        /// </list>
+        /// The output feature class inherits spatial reference and geometry type from the source.
+        /// </remarks>
+        /// <param name="isShapefile">True if creating a shapefile; false for geodatabase feature class.</param>
+        /// <param name="outputWorkspace">The workspace path (folder for shapefile, .gdb path for geodatabase).</param>
+        /// <param name="outputFeatureClassName">The feature class name (including .shp extension for shapefiles).</param>
+        /// <param name="outputFields">The list of field descriptions for the output schema.</param>
+        /// <param name="sourceDef">The source feature class definition (for geometry type and spatial reference).</param>
+        /// <param name="tempGdbPath">The path to the temporary geodatabase for intermediate feature class creation (required for shapefile output).</param>
+        /// <returns>The created feature class, opened and ready for editing.</returns>
+        /// <exception cref="ArgumentException">Thrown if the feature class name is invalid.</exception>
+        /// <exception cref="Exception">Thrown if feature class creation fails.</exception>
+        private async Task<FeatureClass> CreateOutputFeatureClassAsync(
+            bool isShapefile,
+            string outputWorkspace,
+            string outputFeatureClassName,
+            List<FieldDescription> outputFields,
+            FeatureClassDefinition sourceDef,
+            string tempGdbPath)
+        {
+            // ALWAYS create in temp GDB first using SchemaBuilder
+            string tempFcName = "ExportTemp_" + Guid.NewGuid().ToString("N").Substring(0, 8);
+
+            // Create shape description
+            var shapeDescription = new ShapeDescription(
+                sourceDef.GetShapeType(),
+                sourceDef.GetSpatialReference())
+            {
+                HasM = sourceDef.HasM(),
+                HasZ = sourceDef.HasZ()
+            };
+
+            // Create feature class description
+            FeatureClassDescription fcDescription = new(
+                tempFcName,
+                outputFields,
+                shapeDescription);
+
+            // Open temp geodatabase
+            using Geodatabase tempGdb = new(new FileGeodatabaseConnectionPath(new Uri(tempGdbPath)));
+
+            // Create schema using SchemaBuilder (atomic operation, no flashing)
+            SchemaBuilder schemaBuilder = new(tempGdb);
+            schemaBuilder.Create(fcDescription);
+
+            bool success = schemaBuilder.Build();
+            if (!success)
+            {
+                IReadOnlyList<string> errors = schemaBuilder.ErrorMessages;
+                string errorMsg = errors.Count > 0
+                    ? string.Join("; ", errors)
+                    : "Unknown schema creation error";
+                throw new Exception($"Failed to create temp feature class: {errorMsg}");
+            }
+
+            // If geodatabase output, copy temp FC to final location
+            if (!isShapefile)
+            {
+                string tempFcPath = System.IO.Path.Combine(tempGdbPath, tempFcName);
+                string outputFcPath = System.IO.Path.Combine(outputWorkspace, outputFeatureClassName);
+
+                bool copySuccess = await ArcGISProHelpers.CopyFeaturesAsync(
+                    tempFcPath,
+                    outputFcPath,
+                    addToMap: false);
+
+                if (!copySuccess)
+                    throw new Exception("Failed to copy feature class to output geodatabase.");
+
+                // Open and return the final feature class
+                using Geodatabase outputGdb = new(new FileGeodatabaseConnectionPath(new Uri(outputWorkspace)));
+                return outputGdb.OpenDataset<FeatureClass>(outputFeatureClassName);
+            }
+            else
+            {
+                // For shapefile output, copy from temp GDB to shapefile
+                // CopyFeatures handles field name truncation automatically
+                string tempFcPath = System.IO.Path.Combine(tempGdbPath, tempFcName);
+                string outputShpPath = System.IO.Path.Combine(outputWorkspace, outputFeatureClassName);
+
+                bool copySuccess = await ArcGISProHelpers.CopyFeaturesAsync(
+                    tempFcPath,
+                    outputShpPath,
+                    addToMap: false);
+
+                if (!copySuccess)
+                    throw new Exception("Failed to copy feature class to shapefile.");
+
+                // Open and return the shapefile
+                FileSystemConnectionPath shpPath = new(
+                    new Uri(outputWorkspace),
+                    FileSystemDatastoreType.Shapefile);
+
+                using FileSystemDatastore shpDatastore = new(shpPath);
+                return shpDatastore.OpenDataset<FeatureClass>(
+                    System.IO.Path.GetFileNameWithoutExtension(outputFeatureClassName));
+            }
+        }
+
+        /// <summary>
+        /// Populates the output feature class with joined data using a streaming merge join algorithm.
+        /// </summary>
+        /// <remarks>
+        /// This method implements a memory-efficient streaming merge join:
+        /// <list type="number">
+        /// <item>Assumes the attribute table is already sorted by incid (via primary key)</item>
+        /// <item>Sorts GIS features by incid using SQL ORDER BY in the query filter</item>
+        /// <item>Performs a single-pass merge join without caching all attributes in memory</item>
+        /// <item>Writes features in batches to optimize performance</item>
+        /// </list>
+        /// This approach scales efficiently to millions of features without exhausting memory.
+        /// </remarks>
+        /// <param name="sourceLayer">The source feature layer.</param>
+        /// <param name="sourceFC">The source feature class.</param>
+        /// <param name="sourceDef">The source feature class definition.</param>
+        /// <param name="attributeTable">The attribute table to join.</param>
+        /// <param name="attrDef">The attribute table definition.</param>
+        /// <param name="outputFC">The output feature class to populate.</param>
+        /// <param name="joinKeyField">The field name used to join (typically 'incid').</param>
+        /// <param name="fieldMappings">The list of field mappings (source name, export name, is GIS field).</param>
+        /// <param name="selectedOnly">If true, only export selected features.</param>
+        /// <param name="progress">Optional progress reporter.</param>
+        /// <param name="cancellationToken">Optional cancellation token.</param>
+        /// <returns>True if population succeeded; false otherwise.</returns>
+        private async Task<bool> PopulateOutputFeatureClassAsync(
+            FeatureLayer sourceLayer,
+            FeatureClass sourceFC,
+            FeatureClassDefinition sourceDef,
+            Table attributeTable,
+            TableDefinition attrDef,
+            FeatureClass outputFC,
+            string joinKeyField,
+            List<(string sourceName, string targetName, bool isGIS)> fieldMappings,
+            bool selectedOnly,
+            IProgress<int> progress,
+            CancellationToken cancellationToken)
+        {
+            // Batch size for writing features (balances memory usage vs. transaction overhead)
+            int batchSize = _batchSize;
+
+            return await QueuedTask.Run(() =>
+            {
+                // Resolve field indices for the join key in both tables
+                int gisIncidIdx = sourceDef.FindField(joinKeyField);
+                int attrIncidIdx = attrDef.FindField(joinKeyField);
+
+                // Get the output definition and shape field name once, outside the loop
+                using FeatureClassDefinition outputDef = outputFC.GetDefinition();
+                string shapeFieldName = outputDef.GetShapeField();
+
+                // Create a query filter that sorts GIS features by the join key
+                // This enables the streaming merge join algorithm
+                QueryFilter sortedQuery = selectedOnly
+                    ? new QueryFilter
+                    {
+                        ObjectIDs = sourceLayer.GetSelection()?.GetObjectIDs(),
+                        PostfixClause = $"ORDER BY {joinKeyField}"
+                    }
+                    : new QueryFilter
+                    {
+                        PostfixClause = $"ORDER BY {joinKeyField}"
+                    };
+
+                // Create cursors for both GIS features and attributes
+                // Both are sorted by incid, enabling single-pass merge
+                using RowCursor gisFeatureCursor = sourceFC.Search(sortedQuery, false);
+                using RowCursor attrCursor = attributeTable.Search(null, false);
+
+                // Buffer for accumulating row buffers before batch write
+                List<RowBuffer> batchBuffers = [];
+                int totalProcessed = 0;
+
+                // State for streaming merge join
+                Row currentAttrRow = null;
+                string currentAttrIncid = null;
+
+                // Advance to first attribute row
+                if (attrCursor.MoveNext())
+                {
+                    currentAttrRow = attrCursor.Current;
+                    currentAttrIncid = currentAttrRow[attrIncidIdx]?.ToString();
+                }
+
+                // Main merge join loop
+                // Iterate through GIS features in incid order
+                while (gisFeatureCursor.MoveNext())
+                {
+                    // Check for cancellation
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    // Get current GIS feature and its incid
+                    using Feature gisFeature = (Feature)gisFeatureCursor.Current;
+                    string gisIncid = gisFeature[gisIncidIdx]?.ToString();
+
+                    // Advance attribute cursor to match or exceed current GIS incid
+                    // This is the core of the merge join algorithm
+                    while (currentAttrRow != null &&
+                           String.Compare(currentAttrIncid, gisIncid, StringComparison.OrdinalIgnoreCase) < 0)
+                    {
+                        // Dispose current row and advance to next
+                        currentAttrRow?.Dispose();
+                        if (attrCursor.MoveNext())
+                        {
+                            currentAttrRow = attrCursor.Current;
+                            currentAttrIncid = currentAttrRow[attrIncidIdx]?.ToString();
+                        }
+                        else
+                        {
+                            // No more attribute rows
+                            currentAttrRow = null;
+                            currentAttrIncid = null;
+                        }
+                    }
+
+                    // Create a row buffer for the output feature
+                    RowBuffer rowBuffer = outputFC.CreateRowBuffer();
+
+                    // Copy geometry from source feature
+                    Geometry sourceGeom = gisFeature.GetShape();
+                    if (sourceGeom != null)
+                    {
+                        rowBuffer[shapeFieldName] = sourceGeom;
+                    }
+
+                    // Copy field values according to the field mapping
+                    foreach (var (sourceName, targetName, isGIS) in fieldMappings)
+                    {
+                        // Skip the shape field - it's already been copied above
+                        if (targetName.Equals(shapeFieldName, StringComparison.OrdinalIgnoreCase))
+                            continue;
+
+                        object value = null;
+
+                        if (isGIS)
+                        {
+                            // Get value from GIS feature using the source field name
+                            int srcIdx = sourceDef.FindField(sourceName);
+                            if (srcIdx >= 0)
+                            {
+                                value = gisFeature[srcIdx];
+                                // Check for DBNull and convert to null
+                                if (value is DBNull)
+                                    value = null;
+                            }
+                        }
+                        else if (currentAttrRow != null &&
+                                 String.Equals(currentAttrIncid, gisIncid, StringComparison.OrdinalIgnoreCase))
+                        {
+                            // Get value from matching attribute row
+                            int attrIdx = attrDef.FindField(targetName);
+                            if (attrIdx >= 0)
+                            {
+                                value = currentAttrRow[attrIdx];
+                                // Check for DBNull and convert to null
+                                if (value is DBNull)
+                                    value = null;
+                            }
+                        }
+
+                        // Set the value in the output row buffer if not null
+                        if (value != null)
+                        {
+                            int targetIdx = outputDef.FindField(targetName);
+                            if (targetIdx >= 0)
+                                rowBuffer[targetIdx] = value;
+                        }
+                    }
+
+                    // Add to batch
+                    batchBuffers.Add(rowBuffer);
+
+                    // Write batch if threshold reached
+                    if (batchBuffers.Count >= batchSize)
+                    {
+                        WriteBatch(outputFC, batchBuffers);
+                        totalProcessed += batchBuffers.Count;
+
+                        // Dispose row buffers to free memory
+                        batchBuffers.ForEach(b => b.Dispose());
+                        batchBuffers.Clear();
+
+                        // Report progress
+                        progress?.Report(totalProcessed);
+                    }
+                }
+
+                // Write final partial batch
+                if (batchBuffers.Count > 0)
+                {
+                    WriteBatch(outputFC, batchBuffers);
+                    totalProcessed += batchBuffers.Count;
+
+                    // Dispose row buffers to free memory
+                    batchBuffers.ForEach(b => b.Dispose());
+                    progress?.Report(totalProcessed);
+                }
+
+                // Clean up attribute cursor state
+                currentAttrRow?.Dispose();
+
+                return true;
+            });
+        }
+
+        /// <summary>
+        /// Writes a batch of row buffers to the output feature class within a single edit operation.
+        /// </summary>
+        /// <remarks>
+        /// This method creates and executes an edit operation to write multiple features atomically.
+        /// Using batch writes improves performance by reducing transaction overhead.
+        /// </remarks>
+        /// <param name="outputFC">The output feature class to write to.</param>
+        /// <param name="buffers">The list of row buffers to write.</param>
+        /// <exception cref="Exception">Thrown if the batch write fails.</exception>
+        private void WriteBatch(FeatureClass outputFC, List<RowBuffer> buffers)
+        {
+            // Create a new edit operation for this batch
+            EditOperation editOp = new();
+
+            // Define the callback that will execute within the edit operation
+            editOp.Callback(context =>
+            {
+                // Create and store each feature in the batch
+                foreach (var buffer in buffers)
+                {
+                    using Feature newFeature = outputFC.CreateRow(buffer);
+                    newFeature.Store();
+                }
+            }, outputFC);
+
+            // Execute the edit operation synchronously
+            bool success = editOp.Execute();
+            if (!success)
+                throw new Exception($"Batch write failed: {editOp.ErrorMessage}");
+        }
+
+        /// <summary>
+        /// Validates that a feature class name conforms to geodatabase/shapefile naming rules.
+        /// </summary>
+        /// <param name="name">The feature class name to validate.</param>
+        /// <returns>True if valid, otherwise false.</returns>
+        private static bool IsValidFeatureClassName(string name)
+        {
+            if (String.IsNullOrWhiteSpace(name))
+                return false;
+
+            // Must start with a letter
+            if (!Char.IsLetter(name[0]))
+                return false;
+
+            // Must contain only letters, numbers, and underscores
+            if (!name.All(c => Char.IsLetterOrDigit(c) || c == '_'))
+                return false;
+
+            // Maximum length (64 for geodatabase, 10 for shapefile, but we use 64 as safe limit)
+            if (name.Length > 64)
+                return false;
+
+            return true;
         }
 
         #endregion Export
@@ -4170,19 +4713,27 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Maximum (nominal) allowable length of a SQL query.
+        /// Gets the maximum length of SQL statements supported by the current HLU layer's workspace.
         /// </summary>
         public int MaxSqlLength
         {
             get { return _maxSqlLength; }
         }
 
+        /// <summary>
+        /// Gets the name of the active HLU layer on which the tool is operating, or null if no active layer.
+        /// This is the name as displayed in the table of contents and used in ArcGIS Pro geoprocessing parameters,
+        /// and may differ from the actual feature class name in the workspace.
+        /// </summary>
         public string HluLayerName
         {
             get { return _hluLayer?.Name; }
         }
 
-        //TODO: ArcPro
+        /// <summary>
+        /// The name of the field in the active HLU layer that contains the incid values, or null if no active layer.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the name of the field.</returns>
         public async Task<string> IncidFieldNameAsync()
         {
             Field field = await GetFieldAsync(_hluLayerStructure.incidColumn.Ordinal);
@@ -4190,7 +4741,7 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// The number of valid hlu layer namess.
+        /// Gets the number of valid HLU layer names.
         /// </summary>
         public int HluLayerCount
         {
@@ -4198,7 +4749,7 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// The list of valid hlu layer names.
+        /// Gets the list of valid HLU layer names.
         /// </summary>
         public List<string> ValidHluLayerNames
         {
@@ -4214,7 +4765,7 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// The properties of the active hlu layer.
+        /// Gets the properties of the active HLU layer.
         /// </summary>
         public HLULayer ActiveHluLayer
         {
@@ -4230,7 +4781,9 @@ namespace HLU.GISApplication
         /// The preferred active layer name to keep, if it exists and is valid in the current map.
         /// </param>
         /// <returns>
-        /// True if the current map contains at least one valid HLU layer, otherwise false.
+        /// A task that represents the asynchronous operation. The task result is true if at least
+        /// one valid HLU layer was found and the candidate active layer name was set;
+        /// otherwise, false if no valid layers were found and HLU state was cleared.
         /// </returns>
         public async Task<bool> IsHluMapAsync(string activeLayerName)
         {
@@ -4296,6 +4849,7 @@ namespace HLU.GISApplication
             return true;
         }
 
+        //TODO: ArcGIS
         /// <summary>
         /// Determines which of the layers in all the maps are valid HLU layers
         /// and stores these in a list so the user can switch between them.
@@ -4349,31 +4903,6 @@ namespace HLU.GISApplication
             //    _hluCurrentLayer = _hluLayerNamesList[0];
             //return _hluLayerNamesList.Count;
             return 0;
-        }
-
-        /// <summary>
-        /// Populates field map from list returned by ArcMap through pipe.
-        /// </summary>
-        /// <param name="minLength">Minimum valid length of pipeReturnList (7 for workspace, 6 for layer).</param>
-        /// <param name="skipElems">Number of elements of pipeReturnList to be skipped
-        /// (5 for workspace, 4 for layer).</param>
-        /// <param name="skipFirst">Number of elements to be skipped at the beginning of pipeReturnList
-        /// (3 for workspace, 2 for layer).</param>
-        /// <param name="pipeReturnList">List returned from pipe.</param>
-        private void CreateFieldMap(int minLength, int skipElems, int skipFirst, List<string> pipeReturnList)
-        {
-            //TODO: ArcGIS
-            //if ((pipeReturnList == null) || (pipeReturnList.Count < minLength) ||
-            //    (pipeReturnList.Count % 2 != minLength % 2)) return;
-
-            //int numFields = (pipeReturnList.Count - skipElems) / 2;
-
-            //int limit = numFields + skipFirst + 1;
-
-            //_hluFieldMap = pipeReturnList.Where((s, index) => index > skipFirst && index < limit )
-            //    .Select(s => Int32.Parse(s)).ToArray();
-
-            //_hluFieldNames = pipeReturnList.Where((s, index) => index > limit).ToArray();
         }
 
         /// <summary>
@@ -4491,7 +5020,7 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Gets the ordinal for a field matching the expected name, type and (if applicable) maximum length.
+        /// Retreives the ordinal for a field matching the expected name, type and (if applicable) maximum length.
         /// Returns -1 if no match is found.
         /// </summary>
         /// <param name="definition">The feature class definition.</param>
@@ -4601,9 +5130,11 @@ namespace HLU.GISApplication
         /// <summary>
         /// Get a field position in a feature class by name, type and length.
         /// </summary>
-        /// <param name="layerPath"></param>
-        /// <param name="fieldName"></param>
-        /// <returns>bool</returns>
+        /// <param name="featurelayer">The feature layer to search.</param>
+        /// <param name="fieldName">The name of the field to find.</param>
+        /// <param name="fieldType">The type of the field to find.</param>
+        /// <param name="fieldMaxLength">The maximum length of the field to find (optional).</param>
+        /// <returns>The ordinal of the field if found, otherwise -1.</returns>
         public async Task<int> GetFieldOrdinalAsync(FeatureLayer featurelayer, string fieldName, esriFieldType fieldType, int fieldMaxLength = 0)
         {
             // Check there is an input feature featureLayer.
@@ -4714,6 +5245,11 @@ namespace HLU.GISApplication
                 return null;
         }
 
+        /// <summary>
+        /// Formats a DateTime value as a string according to the date format string for the current HLU layer's workspace.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         private string FormatDate(DateTime value)
         {
             try
@@ -4723,11 +5259,21 @@ namespace HLU.GISApplication
             catch { return value.ToString(); }
         }
 
+        /// <summary>
+        /// Formats a number as a string according to the number format info for the current HLU layer's workspace.
+        /// </summary>
+        /// <param name="number"></param>
+        /// <returns></returns>
         private string FormatNumber(double number)
         {
             return number.ToString(_numberFormatInfo);
         }
 
+        /// <summary>
+        /// Formats a number as a string according to the number format info for the current HLU layer's workspace.
+        /// </summary>
+        /// <param name="number"></param>
+        /// <returns></returns>
         private string FormatNumber(float number)
         {
             return number.ToString(_numberFormatInfo);
@@ -4787,6 +5333,13 @@ namespace HLU.GISApplication
             //}
         }
 
+        /// <summary>
+        /// Maps the columns in the where clause from the HLU layer structure to the corresponding
+        /// field names in the HLU feature class.
+        /// </summary>
+        /// <param name="_hluLayerStructure"></param>
+        /// <param name="whereClause"></param>
+        /// <returns>A list of mapped SQL filter conditions.</returns>
         protected List<SqlFilterCondition> MapWhereClauseFields(
             HluGISLayer.incid_mm_polygonsDataTable _hluLayerStructure, List<SqlFilterCondition> whereClause)
         {
@@ -4820,445 +5373,12 @@ namespace HLU.GISApplication
             return outWhereClause;
         }
 
-        #region SDE
-
         //TODO: ArcGIS
-        //private void SetDefaultsSde(IWorkspace ws)
-        //{
-        //    Int32 SE_RETURN = 0;
-
-        //    SdeDLL[] sdeLibs = null;
-
-        //    try
-        //    {
-        //        IPropertySet propSet = ws.ConnectionProperties;
-        //        object propNames, outPropVals;
-        //        propSet.GetAllProperties(out propNames, out outPropVals);
-        //        List<string> propNamesList = new((string[])propNames);
-        //        object[] propValsArray = (object[])outPropVals;
-
-        //        propNamesList.ForEach(delegate (string pn) { pn = pn.ToUpper(); });
-
-        //        int ix = propNamesList.IndexOf("SERVER");
-        //        string server = ix != -1 ? propValsArray[ix].ToString() : String.Empty;
-
-        //        ix = propNamesList.IndexOf("INSTANCE");
-        //        string instance = ix != -1 ? propValsArray[ix].ToString() : String.Empty;
-
-        //        ix = propNamesList.IndexOf("DATABASE");
-        //        string database = ix != -1 ? propValsArray[ix].ToString() : String.Empty;
-
-        //        ix = propNamesList.IndexOf("USERNAME");
-        //        if (ix == -1) ix = propNamesList.IndexOf("USER");
-        //        string username = ix != -1 ? propValsArray[ix].ToString() : String.Empty;
-
-        //        ix = propNamesList.IndexOf("PASSWORD");
-        //        string password = ix != -1 ? propValsArray[ix].ToString() : String.Empty;
-
-        //        sdeLibs = ExtractSDE();
-
-        //        SE_Error seConnError = new();
-        //        SE_Connection connection = new();
-        //        if ((SE_RETURN = SE_connection_create(server, instance, database, username, password, ref seConnError,
-        //            ref connection)) != SE_SUCCESS) throw (new Exception(Enum.GetName(typeof(sdeError), SE_RETURN)));
-
-        //        Int32 dbms_id = Int32.MinValue;
-        //        Int32 dbms_properties = Int32.MinValue;
-        //        SE_connection_get_dbms_info(connection.handle, ref dbms_id, ref dbms_properties);
-
-        //        SE_connection_free(connection.handle);
-
-        //        switch ((SE_DBMS)dbms_id)
-        //        {
-        //            case SE_DBMS.SE_DBMS_IS_INFORMIX:
-        //                // Datefield = 'yyyy-mm-dd hh:mm:ss' // hh:mm:ss part cannot be omitted even if it's equal to 00:00:00.
-        //                _dateLiteralPrefix = "'";
-        //                _dateLiteralSuffix = "'";
-        //                _dateFormatString = "yyyy-MM-dd HH:mm:ss";
-        //                break;
-        //            case SE_DBMS.SE_DBMS_IS_ORACLE:
-        //                // Datefield = date 'yyyy-mm-dd' // this will not return records where the time is not null.
-        //                // Datefield = TO_DATE('yyyy-mm-dd hh:mm:ss','YYYY-MM-DD HH24:MI:SS')
-        //                // Datefield = TO_DATE('2003-01-08 14:35:00','YYYY-MM-DD HH24:MI:SS')
-        //                // Datefield = TO_DATE('2003-11-18','YYYY-MM-DD') // this will not return records where the time is not null.
-        //                _dateLiteralPrefix = " TO_DATE('";
-        //                _dateLiteralSuffix = "','YYYY-MM-DD HH24:MI:SS')";
-        //                _dateFormatString = "yyyy-MM-dd HH:mm:ss";
-        //                break;
-        //            case SE_DBMS.SE_DBMS_IS_SQLSERVER:
-        //                // Datefield = 'yyyy-mm-dd hh:mm:ss' // hh:mm:ss part can be omitted when the time is not set in the records.
-        //                // Datefield = 'mm/dd/yyyy'
-        //                _dateLiteralPrefix = "'";
-        //                _dateLiteralSuffix = "'";
-        //                _dateFormatString = "yyyy-MM-dd HH:mm:ss";
-        //                break;
-        //            case SE_DBMS.SE_DBMS_IS_DB2:
-        //            case SE_DBMS.SE_DBMS_IS_DB2_EXT:
-        //                // Datefield = TO_DATE('yyyy-mm-dd hh:mm:ss','YYYY-MM-DD HH24:MI:SS') // hh:mm:ss part cannot be omitted even if the time is equal to 00:00:00.
-        //                _dateLiteralPrefix = " TO_DATE('";
-        //                _dateLiteralSuffix = "','YYYY-MM-DD HH24:MI:SS')"; // assumes 24h format, use CultureInfo ??
-        //                _dateFormatString = "yyyy-MM-dd HH:mm:ss";
-        //                break;
-        //            case SE_DBMS.SE_DBMS_IS_OTHER: // guessing PostgreSQL
-        //            case SE_DBMS.SE_DBMS_IS_UNKNOWN:
-        //                //Datefield = TIMESTAMP 'YYYY-MM-DD HH24:MI:SS'
-        //                //Datefield = TIMESTAMP 'YYYY-MM-DD' // must specify full time stamp when using "=" queries, not with "<" or ">".
-        //                _dateLiteralPrefix = "TIMESTAMP '";
-        //                _dateLiteralSuffix = "'";
-        //                _dateFormatString = "yyyy-MM-dd HH:mm:ss";
-        //                break;
-        //            case SE_DBMS.SE_DBMS_IS_JET:
-        //                //[Datefield] = #mm-dd-yyyy hh:mm:ss# or [Datefield] = #mm-dd-yyyy# or [Datefield] = #yyyy/mm/dd#
-        //                _dateLiteralPrefix = "#";
-        //                _dateLiteralSuffix = "#";
-        //                _dateFormatString = "yyyy-MM-dd HH:mm:ss";
-        //                break;
-        //            default:
-        //                //"Datefield" = date 'yyyy-mm-dd'
-        //                _dateLiteralPrefix = " date '";
-        //                _dateLiteralSuffix = "'";
-        //                _dateFormatString = "yyyy-MM-dd";
-        //                break;
-        //        }
-        //    }
-        //    catch // (Exception ex)
-        //    {
-        //        _dateLiteralPrefix = "date '";
-        //        _dateLiteralSuffix = "'";
-        //        //MessageBox.Show(SE_RETURN != 0 ? String.Format("There was an error trying to obtain the correct date format from" +
-        //        //    " the SDE server.{0}The error code returned from the server was:{0}{0}{1}.{0}{0}Using default SDE date format.",
-        //        //    Environment.NewLine, ex.Message) : ex.Message, "SDE Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        //    }
-        //    finally
-        //    {
-        //        if (sdeLibs != null)
-        //        {
-        //            for (int i = sdeLibs.Length - 1; i > -1; i--)
-        //            {
-        //                if ((sdeLibs[i].LibHandle != IntPtr.Zero) &&
-        //                    WinAPI.FreeLibrary(sdeLibs[i].LibHandle) && File.Exists(sdeLibs[i].LibPath))
-        //                {
-        //                    File.Delete(sdeLibs[i].LibPath);
-        //                }
-        //            }
-        //        }
-        //    }
-        //}
-
-        //private SdeDLL[] ExtractSDE()
-        //{
-        //    string sdeLibPrefix = "HLU.GISApplication.lib";
-        //    // sde DLLs in order of dependency, i.e., main DLL last
-        //    SdeDLL[] sdeLibs =
-        //    [
-        //        new SdeDLL("pe.dll", sdeLibPrefix),
-        //        new SdeDLL("sg.dll", sdeLibPrefix),
-        //        new SdeDLL("sde.dll", sdeLibPrefix),
-        //    ];
-        //    try
-        //    {
-        //        Process p = Process.GetCurrentProcess();
-        //        ProcessModule[] pms = null;
-        //        if ((p != null) && ((pms = p.Modules.Cast<ProcessModule>().Where(pm => pm.ModuleName
-        //            .Equals(sdeLibs[sdeLibs.Length - 1].LibName, StringComparison.CurrentCultureIgnoreCase)).ToArray()).Length > 0))
-        //        {
-        //            return null;
-        //        }
-
-        //        int pid;
-        //        WinAPI.GetWindowThreadProcessId(_arcMapWindow, out pid);
-        //        Process _arcProcess = Process.GetProcessById(pid);
-        //        string arcDirName = System.IO.Path.GetDirectoryName(_arcProcess.MainModule.FileName);
-        //        string tmpDirName = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "HLUTool" +
-        //            Assembly.GetExecutingAssembly().GetName().Version.ToString());
-
-        //        for (int i = 0; i < sdeLibs.Length; i++)
-        //        {
-        //            if (!pms.Any(pm => pm.ModuleName.Equals(sdeLibs[i].LibName, StringComparison.CurrentCultureIgnoreCase)))
-        //            {
-        //                sdeLibs[i].LibPath = System.IO.Path.Combine(arcDirName, sdeLibs[i].LibName);
-        //                if (!File.Exists(sdeLibs[i].LibPath))
-        //                {
-        //                    sdeLibs[i].LibPath = System.IO.Path.Combine(tmpDirName, sdeLibs[i].LibName);
-        //                    if (!Directory.Exists(tmpDirName)) Directory.CreateDirectory(tmpDirName);
-        //                    sdeLibs[i].LibPath = ExtractDLL(sdeLibs[i], tmpDirName);
-        //                }
-        //                sdeLibs[i].LibHandle = WinAPI.LoadLibrary(sdeLibs[i].LibPath);
-        //            }
-        //        }
-        //    }
-        //    catch { }
-        //    return sdeLibs;
-        //}
-
-        //private struct SdeDLL
-        //{
-        //    public IntPtr LibHandle;
-        //    public string ResourceName;
-        //    public string LibName;
-        //    public string LibPath;
-
-        //    public SdeDLL(string dllName, string resourcePrefix)
-        //    {
-        //        LibHandle = IntPtr.Zero;
-        //        ResourceName = (!String.IsNullOrEmpty(resourcePrefix) ? resourcePrefix +
-        //            (!resourcePrefix.EndsWith('.') ? "." : String.Empty) : String.Empty) + dllName;
-        //        LibName = dllName;
-        //        LibPath = null;
-        //    }
-        //}
-
-        //private static string ExtractDLL(SdeDLL lib, string extractDir)
-        //{
-        //    string dllPath = null;
-        //    using (Stream sm = Assembly.GetExecutingAssembly().GetManifestResourceStream(lib.ResourceName))
-        //    {
-        //        try
-        //        {
-        //            dllPath = System.IO.Path.Combine(extractDir, lib.LibName);
-        //            using (Stream outFile = File.Create(dllPath))
-        //            {
-        //                const int sz = 4096;
-        //                byte[] buf = new byte[sz];
-        //                while (true)
-        //                {
-        //                    int bytesRead = sm.Read(buf, 0, sz);
-        //                    if (bytesRead < 1) break;
-        //                    outFile.Write(buf, 0, bytesRead);
-        //                }
-        //            }
-        //        }
-        //        catch { }
-        //    }
-        //    return dllPath;
-        //}
-
-        //private enum SE_DBMS : int
-        //{
-        //    SE_DBMS_IS_UNKNOWN = -1,
-        //    SE_DBMS_IS_OTHER = 0,
-        //    SE_DBMS_IS_ORACLE = 1,
-        //    SE_DBMS_IS_INFORMIX = 2,
-        //    SE_DBMS_IS_SYBASE = 3,
-        //    SE_DBMS_IS_DB2 = 4,
-        //    SE_DBMS_IS_SQLSERVER = 5,
-        //    SE_DBMS_IS_ARCINFO = 6,
-        //    SE_DBMS_IS_IUS = 7,
-        //    SE_DBMS_IS_DB2_EXT = 8,
-        //    SE_DBMS_IS_ARCSERVER = 9,
-        //    SE_DBMS_IS_JET = 10
-        //};
-
-        //private const Int32 SE_SUCCESS = 0;
-
-        //[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-        //public struct SE_Connection
-        //{
-        //    public Int32 handle;
-        //}
-
-        //[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-        //public struct SE_Error
-        //{
-        //    public Int32 sde_error;
-        //    public Int32 ext_error;
-        //    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 512)]
-        //    public char[] err_msg1;
-        //    [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4096)]
-        //    public char[] err_msg2;
-        //}
-
-        //[DllImport("sde.dll")]
-        //private static extern Int32 SE_connection_get_dbms_info(Int32 hSDE_Connection,
-        //    ref Int32 dbms_id, ref Int32 dbms_properties);
-
-        //[DllImport("sde.dll", SetLastError = true, ThrowOnUnmappableChar = true)]
-        //public static extern Int32 SE_connection_create(string server, string instance,
-        //    string database, string username, string password, ref SE_Error error, ref SE_Connection conn);
-
-        //[DllImport("sde.dll")]
-        //private static extern void SE_connection_free(Int32 hSDE_Connection);
-
-        #endregion
-
-        //TODO: ArcGIS
-        //private bool OpenMapDocument(string path, string title)
-        //{
-        //    if (_arcMap == null) return false;
-
-        //    try
-        //    {
-        //        if (!File.Exists(path))
-        //        {
-        //            OpenFileDialog openFileDlg = new()
-        //            {
-        //                Filter = "ESRI ArcMap Documents (*.mxd)|*.mxd",
-        //                Title = title,
-        //                CheckPathExists = true,
-        //                CheckFileExists = true,
-        //                ValidateNames = true,
-        //                Multiselect = false,
-        //                RestoreDirectory = false,
-        //                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
-        //            };
-
-        //            _arcMap.Visible = false;
-
-        //            if (openFileDlg.ShowDialog() == true)
-        //            {
-        //                path = openFileDlg.FileName;
-        //                Settings.Default.MapPath = path;
-
-        //                // For some reason the HLU layer does not display in the map
-        //                // window (although it appears in the contents list and the
-        //                // attribute table can be opened) if the application is not set
-        //                // to visible again before opening the document.
-        //                _arcMap.Visible = true;
-        //            }
-        //            else
-        //            {
-        //                return false;
-        //            }
-        //        }
-
-        //        _arcMap.OpenDocument(path);
-
-        //        return true;
-        //    }
-        //    catch { return false; }
-        //    finally { _arcMap.Visible = true; }
-        //}
-
-        //TODO: ArcGIS
-        //private IEnumLayer Layers(IMap map)
-        //{
-        //    if (map == null) return null;
-
-        //    UID uid = new UIDClass();
-        //    uid.Value = typeof(IFeatureLayer).GUID.ToString("B");
-        //    return map.get_Layers(uid, true);
-        //}
-
-        //TODO: ArcGIS
-        //private IMaps Maps(IApplication app)
-        //{
-        //    if (app == null)
-        //        return null;
-        //    else
-        //        return ((IMxDocument)app.Document).Maps;
-        //}
-
-        //TODO: ArcGIS
-        //private object CreateArcObject<T>(bool useObjectFactory)
-        //    where T : new()
-        //{
-        //    if (_arcMap == null) return default(T);
-
-        //    if (useObjectFactory)
-        //    {
-        //        if (_objectFactory == null) _objectFactory = (IObjectFactory)_arcMap;
-        //        string typeClsID = typeof(T).GUID.ToString("B");
-        //        return _objectFactory.Create(typeClsID);
-        //    }
-        //    else
-        //    {
-        //        return new T();
-        //    }
-        //}
-
-        //TODO: Is _hluFeatureClass Needed?
-        //TODO: ArcGIS
-        ///// <summary>
-        ///// Retrieves the field of _hluFeatureClass that corresponds to the column of _hluLayerStructure whose name is passed in.
-        ///// </summary>
-        ///// <param name="columnName">Name of the column of _hluLayerStructure.</param>
-        ///// <returns>The field of _hluFeatureClass corresponding to column _hluLayerStructure[columnName].</returns>
-        //public static IField GetField(string columnName, IFeatureClass _hluFeatureClass,
-        //    HluGISLayer.incid_mm_polygonsDataTable _hluLayerStructure, int[] _hluFieldMap)
-        //{
-        //    if ((_hluLayerStructure == null) || (_hluFieldMap == null) ||
-        //        (_hluFeatureClass == null) || String.IsNullOrEmpty(columnName)) return null;
-        //    DataColumn c = _hluLayerStructure.Columns[columnName.Trim()];
-        //    if ((c == null) || (c.Ordinal >= _hluFieldMap.Length)) return null;
-        //    int fieldOrdinal = _hluFieldMap[c.Ordinal];
-        //    if ((fieldOrdinal >= 0) && (fieldOrdinal <= _hluFieldMap.Length))
-        //        return _hluFeatureClass.Fields.get_Field(fieldOrdinal);
-        //    else
-        //        return null;
-        //}
-
-        //TODO: ArcGIS
-        //public static string WhereClauseFromCursor(int oidOrdinalCursor, string oidColumnAlias, ICursor cursor)
-        //{
-        //    StringBuilder sbIDs = new();
-        //    StringBuilder sbBetween = new();
-        //    string betweenTemplate = " OR (" + oidColumnAlias + " BETWEEN {0} AND {1})";
-        //    int currOid = -1;
-        //    int nextOid = -1;
-        //    int countContinuous = 0;
-        //    IRow row = cursor.NextRow();
-
-        //    while (row != null)
-        //    {
-        //        currOid = (int)row.get_Value(oidOrdinalCursor);
-        //        nextOid = currOid;
-        //        countContinuous = 1;
-        //        do
-        //        {
-        //            row = cursor.NextRow();
-        //            if (row != null)
-        //            {
-        //                nextOid = (int)row.get_Value(oidOrdinalCursor);
-        //                if (nextOid != currOid + countContinuous)
-        //                    break;
-        //                else
-        //                    countContinuous++;
-        //            }
-        //            else
-        //            {
-        //                break;
-        //            }
-        //        }
-        //        while (true);
-        //        switch (countContinuous)
-        //        {
-        //            case 1:
-        //                sbIDs.Append(',').Append(currOid);
-        //                break;
-        //            case 2:
-        //                sbIDs.Append(',').Append(currOid);
-        //                if (nextOid != currOid) sbIDs.Append(',').Append(nextOid);
-        //                break;
-        //            default:
-        //                sbBetween.Append(String.Format(betweenTemplate, currOid, currOid + countContinuous - 1));
-        //                break;
-        //        }
-        //    }
-
-        //    if (sbIDs.Length > 1) sbIDs.Remove(0, 1).Insert(0, oidColumnAlias + " IN (").Append(')');
-        //    return sbIDs.Append(sbBetween).ToString();
-        //}
-
-        //TODO: ArcGIS
-        //public static IQueryDef CreateQueryDef(IFeatureWorkspace featureWorkspace,
-        //    String tables, String subFields, String whereClause)
-        //{
-        //    // Create the query definition.
-        //    IQueryDef queryDef = featureWorkspace.CreateQueryDef();
-
-        //    // Provide a list of table(s) to join.
-        //    queryDef.Tables = tables;
-
-        //    // Declare the subfields to retrieve.
-        //    queryDef.SubFields = subFields; // must be qualified if multiple tables !!
-
-        //    // Assign a where clause to filter the results.
-        //    queryDef.WhereClause = whereClause;
-
-        //    return queryDef;
-        //}
-
-        //TODO: ArcGIS
+        /// <summary>
+        /// Gets the type maps between system types and Esri field types for the current HLU layer's workspace.
+        /// </summary>
+        /// <param name="_typeMapSystemToSQL">A dictionary mapping system types to Esri field types.</param>
+        /// <param name="_typeMapSQLToSystem">A dictionary mapping Esri field types to system types.</param>
         public static void GetTypeMaps(out Dictionary<Type, int> _typeMapSystemToSQL,
             out Dictionary<int, Type> _typeMapSQLToSystem)
         {

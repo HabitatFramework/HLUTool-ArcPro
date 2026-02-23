@@ -1038,6 +1038,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //TODO: Bug here?
                 var q = HabitatClassCodes.Where(h => h.code == _preferredHabitatClass);
                 if (q.Any())
                     return _preferredHabitatClass;

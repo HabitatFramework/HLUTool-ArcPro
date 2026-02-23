@@ -296,15 +296,17 @@ namespace HLU.GISApplication
         /// Input is assumed to be 0 based.</param>
         /// <param name="db">Database against which UNION query will be run.</param>
         /// <returns></returns>
-        public static string UnionQuery(string targetList, string fromClause, int[] sortOrdinals,
-            List<SqlFilterCondition> IncidSelectionWhereClause, DbBase db)
+        public static string UnionQuery(
+            string targetList,
+            string fromClause,
+            int[] sortOrdinals,
+            List<SqlFilterCondition> IncidSelectionWhereClause,
+            DbBase db)
         {
             // Add order by from list of sort ordinals.
             StringBuilder sql = new();
 
             // Sort negative sortOrdinals in descending order
-            //sql.Append(String.Format("SELECT {0} FROM {1}{2}", targetList, fromClause, db.WhereClause(true, true, true, IncidSelectionWhereClause)))
-            //        .Append(sortOrdinals != null ? String.Format(" ORDER BY {0}", string.Join(", ", sortOrdinals.Select(x => x.ToString()).ToArray())) : String.Empty);
             sql.Append(String.Format("SELECT {0} FROM {1}{2}", targetList, fromClause, db.WhereClause(true, true, true, IncidSelectionWhereClause)));
             if (sortOrdinals != null)
                 sql.Append(String.Format(" ORDER BY {0}", string.Join(", ", sortOrdinals.Select(x => x < 0 ? String.Format("{0} DESC", Math.Abs(x).ToString()) : x.ToString()).ToArray())));

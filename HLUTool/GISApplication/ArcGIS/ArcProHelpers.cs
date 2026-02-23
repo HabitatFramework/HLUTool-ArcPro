@@ -5,6 +5,7 @@ using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Core.Geoprocessing;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ArcGIS.Desktop.Mapping;
 using HLU.Helpers;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using FieldDescription = ArcGIS.Core.Data.DDL.FieldDescription;
 
 namespace HLU.GISApplication
 {
@@ -480,6 +482,7 @@ namespace HLU.GISApplication
             return success;
         }
 
+        //TODO: Change input parameter to 'featureClass'
         /// <summary>
         /// Check if a feature class exists in a geodatabase.
         /// </summary>
@@ -526,6 +529,7 @@ namespace HLU.GISApplication
             return exists;
         }
 
+        //TODO: Change input parameter to 'tableName'
         /// <summary>
         /// Check if a layer exists in a geodatabase.
         /// </summary>
@@ -551,11 +555,11 @@ namespace HLU.GISApplication
                     // Open the file geodatabase. This will open the geodatabase if the folder exists and contains a valid geodatabase.
                     using Geodatabase geodatabase = new(new FileGeodatabaseConnectionPath(new Uri(filePath)));
 
-                    // Create a TableDefinition object.
-                    using TableDefinition tableDefinition = geodatabase.GetDefinition<TableDefinition>(fileName);
+                    // Get all table definitions and check if the table name exists
+                    IReadOnlyList<TableDefinition> tableDefinitions = geodatabase.GetDefinitions<TableDefinition>();
 
-                    if (tableDefinition != null)
-                        exists = true;
+                    exists = tableDefinitions.Any(td =>
+                        td.GetName().Equals(fileName, StringComparison.OrdinalIgnoreCase));
                 });
             }
             catch (GeodatabaseNotFoundOrOpenedException)
@@ -1117,8 +1121,8 @@ namespace HLU.GISApplication
             {
                 try
                 {
-                    string gdbPath = System.IO.Path.GetDirectoryName(featureClassPath);
-                    string fcName = System.IO.Path.GetFileName(featureClassPath);
+                    string gdbPath = Path.GetDirectoryName(featureClassPath);
+                    string fcName = Path.GetFileName(featureClassPath);
 
                     // Open the file geodatabase. This will open the geodatabase if the folder exists and contains a valid geodatabase.
                     using Geodatabase geodatabase = new(new FileGeodatabaseConnectionPath(new Uri(gdbPath)));
@@ -1393,12 +1397,12 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Performs a bulk insert of rows into a geodatabase table using batched operations.
+        /// Performs a bulk insert of rows into a geodatabase table using batched operations with multiple batches.
         /// </summary>
         /// <param name="gdbPath">Full path to the file geodatabase.</param>
         /// <param name="tableName">Name of the table to insert rows into.</param>
         /// <param name="rows">List of rows to insert, where each row is a dictionary of field name to value.</param>
-        /// <returns>The number of rows successfully inserted.</returns>
+        /// <returns>The number of rows successfully inserted across all batches.</returns>
         /// <remarks>
         /// This method uses InsertCursor for efficient batch insertion. Each row dictionary should contain
         /// field names as keys and field values as objects. DBNull.Value is used for null values.
@@ -1465,82 +1469,6 @@ namespace HLU.GISApplication
             }
         }
 
-        /// <summary>
-        /// Performs a bulk insert of rows into a geodatabase table using batched operations with multiple batches.
-        /// </summary>
-        /// <param name="gdbPath">Full path to the file geodatabase.</param>
-        /// <param name="tableName">Name of the table to insert rows into.</param>
-        /// <param name="batches">List of batches, where each batch contains rows to insert.</param>
-        /// <returns>The number of rows successfully inserted across all batches.</returns>
-        /// <remarks>
-        /// This overload processes multiple batches of rows in a single operation for improved efficiency
-        /// when dealing with very large datasets. Each batch is a list of row dictionaries.
-        /// </remarks>
-        public static async Task<int> BulkInsertRowsAsync(string gdbPath, string tableName, List<List<Dictionary<string, object>>> batches)
-        {
-            // Check there is an input geodatabase path.
-            if (String.IsNullOrEmpty(gdbPath))
-                return 0;
-
-            // Check there is an input table name.
-            if (String.IsNullOrEmpty(tableName))
-                return 0;
-
-            // Check there are batches to insert.
-            if (batches == null || batches.Count == 0)
-                return 0;
-
-            try
-            {
-                int insertedCount = await QueuedTask.Run(() =>
-                {
-                    // Open the file geodatabase. This will open the geodatabase if the folder exists and contains a valid geodatabase.
-                    using Geodatabase geodatabase = new(new FileGeodatabaseConnectionPath(new Uri(gdbPath)));
-
-                    // Open the table for inserting rows.
-                    using Table table = geodatabase.OpenDataset<Table>(tableName);
-
-                    // Create an InsertCursor for the table to perform batch inserts.
-                    using InsertCursor insertCursor = table.CreateInsertCursor();
-
-                    int count = 0;
-
-                    // Iterate through each batch of rows to insert.
-                    foreach (var batch in batches)
-                    {
-                        // Iterate through each row in the batch.
-                        foreach (var rowValues in batch)
-                        {
-                            // Create a new RowBuffer for the table schema.
-                            using RowBuffer rowBuffer = table.CreateRowBuffer();
-
-                            // Populate the RowBuffer with values from the row dictionary. Use DBNull.Value for nulls.
-                            foreach (var kvp in rowValues)
-                            {
-                                rowBuffer[kvp.Key] = kvp.Value ?? DBNull.Value;
-                            }
-
-                            // Insert the row into the table using the InsertCursor.
-                            insertCursor.Insert(rowBuffer);
-                            count++;
-                        }
-                    }
-
-                    // Flush all pending inserts in one operation.
-                    insertCursor.Flush();
-
-                    return count;
-                });
-
-                return insertedCount;
-            }
-            catch (Exception)
-            {
-                // Handle Exception.
-                return 0;
-            }
-        }
-
         #endregion Table
 
         #region Outputs
@@ -1584,6 +1512,265 @@ namespace HLU.GISApplication
         }
 
         #endregion Outputs
+
+        #region Geometry
+
+        /// <summary>
+        /// Recalculates geometry attributes (Shape_Length and Shape_Area) for a feature class using geodesic measurements.
+        /// </summary>
+        /// <remarks>
+        /// This method uses the Calculate Geometry Attributes geoprocessing tool to recalculate
+        /// Shape_Length and Shape_Area fields for all features in the specified feature class.
+        /// This is necessary after programmatic feature creation as these fields are not automatically
+        /// calculated when using CreateRow().
+        /// </remarks>
+        /// <param name="featureClassPath">The full path to the feature class (e.g., "C:\data\test.gdb\myfeatures").</param>
+        /// <param name="lengthUnit">Length unit. Default is "METERS".</param>
+        /// <param name="areaUnit">Area unit. Default is "SQUARE_METERS".</param>
+        /// <returns>True if successful, otherwise false.</returns>
+        public static async Task<bool> RecalculateGeometryAttributesAsync(
+            string featureClassPath,
+            string lengthField,
+            string areaField,
+                string lengthUnit = "METERS",
+                string areaUnit = "SQUARE_METERS")
+        {
+            // Check parameters
+            if (string.IsNullOrWhiteSpace(featureClassPath))
+                return false;
+
+            if (string.IsNullOrEmpty(lengthField) && string.IsNullOrEmpty(areaField))
+                return false;
+
+            // Build the geometry property string based on available fields
+            List<string> geometryProps = [];
+
+            if (!string.IsNullOrEmpty(lengthField))
+                geometryProps.Add($"{lengthField} PERIMETER_LENGTH");
+
+            if (!string.IsNullOrEmpty(areaField))
+                geometryProps.Add($"{areaField} AREA {areaUnit}");
+
+            string geometryProperties = string.Join(";", geometryProps);
+
+            // Make a value array of strings to be passed to the tool.
+            var parameters = Geoprocessing.MakeValueArray(featureClassPath, geometryProperties, lengthUnit, areaUnit);
+
+            // Make a value array of the environments to be passed to the tool.
+            var environments = Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
+
+            // Set the geoprocessing flags.
+            GPExecuteToolFlags executeFlags = GPExecuteToolFlags.GPThread; // | GPExecuteToolFlags.RefreshProjectItems;
+
+            //Geoprocessing.OpenToolDialog("management.CalculateGeometryAttributes", parameters);  // Useful for debugging.
+
+            // Execute the tool.
+            try
+            {
+                IGPResult gp_result = await Geoprocessing.ExecuteToolAsync("management.CalculateGeometryAttributes", parameters, environments, null, null, executeFlags);
+
+                if (gp_result.IsFailed)
+                {
+                    Geoprocessing.ShowMessageBox(gp_result.Messages, "GP Messages", GPMessageBoxStyle.Error);
+
+                    var messages = gp_result.Messages;
+                    var errMessages = gp_result.ErrorMessages;
+                    return false;
+                }
+            }
+            catch (Exception)
+            {
+                // Handle Exception.
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Gets the geometry field names (length and area) for a feature class.
+        /// </summary>
+        /// <param name="featureClassPath">Full path to the feature class or shapefile.</param>
+        /// <returns>A tuple containing (lengthFieldName, areaFieldName), or (null, null) if not found.</returns>
+        public static async Task<(string lengthField, string areaField)> GetGeometryFieldNamesAsync(string featureClassPath)
+        {
+            if (string.IsNullOrWhiteSpace(featureClassPath))
+                return (null, null);
+
+            return await QueuedTask.Run(() =>
+            {
+                FeatureClass fc = null;
+                Datastore datastore = null;
+
+                try
+                {
+                    // Determine if it's a shapefile or geodatabase feature class
+                    bool isShapefile = featureClassPath.EndsWith(".shp", StringComparison.OrdinalIgnoreCase);
+
+                    if (isShapefile)
+                    {
+                        // Open shapefile using FileSystemDatastore
+                        string shapefileFolder = Path.GetDirectoryName(featureClassPath);
+                        string shapefileName = Path.GetFileNameWithoutExtension(featureClassPath);
+
+                        FileSystemConnectionPath fileConnection = new(new Uri(shapefileFolder), FileSystemDatastoreType.Shapefile);
+                        FileSystemDatastore shapefile = new(fileConnection);
+                        fc = shapefile.OpenDataset<FeatureClass>(shapefileName);
+                        datastore = shapefile;
+                    }
+                    else
+                    {
+                        // Open geodatabase feature class
+                        string gdbPath = Path.GetDirectoryName(featureClassPath);
+                        string fcName = Path.GetFileName(featureClassPath);
+
+                        Geodatabase geodatabase = new(new FileGeodatabaseConnectionPath(new Uri(gdbPath)));
+                        fc = geodatabase.OpenDataset<FeatureClass>(fcName);
+                        datastore = geodatabase;
+                    }
+
+                    FeatureClassDefinition def = fc.GetDefinition();
+                    IReadOnlyList<Field> fields = def.GetFields();
+
+                    // Find length and area fields
+                    // Shapefiles typically use "Shape_Leng" and "Shape_Area"
+                    // Geodatabases use "Shape_Length" and "Shape_Area"
+                    string lengthField = fields.FirstOrDefault(f =>
+                        f.Name.Equals("Shape_Length", StringComparison.OrdinalIgnoreCase) ||
+                        f.Name.Equals("Shape_Leng", StringComparison.OrdinalIgnoreCase))?.Name;
+
+                    string areaField = fields.FirstOrDefault(f =>
+                        f.Name.Equals("Shape_Area", StringComparison.OrdinalIgnoreCase))?.Name;
+
+                    return (lengthField, areaField);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error getting geometry field names: {ex.Message}");
+                    return (null, null);
+                }
+                finally
+                {
+                    // Dispose of resources in the correct order
+                    fc?.Dispose();
+                    datastore?.Dispose();
+                }
+            });
+        }
+
+        #endregion Geometry
+
+        #region Add to Map
+
+        /// <summary>
+        /// Adds a feature class or shapefile to the active map.
+        /// </summary>
+        /// <param name="featureClassPath">The full path to the feature class or shapefile.</param>
+        /// <param name="layerName">Optional name for the layer. If null, uses the feature class name.</param>
+        /// <param name="groupLayerName">Optional group layer to add the layer to. If null, adds to top level.</param>
+        /// <param name="position">Optional position to insert the layer. If -1, adds to top.</param>
+        /// <returns>True if the layer was successfully added; false otherwise.</returns>
+        public static async Task<bool> AddFeatureLayerToMapAsync(
+            string featureClassPath,
+            string layerName = null,
+            string groupLayerName = null,
+            int position = 0)
+        {
+            // Check there is an input feature class path.
+            if (String.IsNullOrWhiteSpace(featureClassPath))
+                return false;
+
+            // Check if the active map view exists.
+            MapView mapView = MapView.Active;
+            if (mapView == null)
+                return false;
+
+            try
+            {
+                return await QueuedTask.Run(() =>
+                {
+                    // Get the active map.
+                    Map activeMap = mapView.Map;
+                    if (activeMap == null)
+                        return false;
+
+                    // Create a URI for the feature class path.
+                    Uri uri = new(featureClassPath);
+
+                    // Determine the layer name (use feature class name if not specified).
+                    string finalLayerName = layerName;
+                    if (String.IsNullOrWhiteSpace(finalLayerName))
+                    {
+                        // Extract feature class name from path.
+                        finalLayerName = Path.GetFileNameWithoutExtension(featureClassPath);
+                    }
+
+                    // Create the feature layer.
+                    FeatureLayer newLayer = null;
+
+                    // Check if we should add to a group layer.
+                    if (!String.IsNullOrWhiteSpace(groupLayerName))
+                    {
+                        // Find or create the group layer.
+                        GroupLayer groupLayer = activeMap.FindLayers(groupLayerName, true)
+                            .OfType<GroupLayer>()
+                            .FirstOrDefault();
+
+                        if (groupLayer == null)
+                        {
+                            // Create the group layer if it doesn't exist.
+                            groupLayer = LayerFactory.Instance.CreateGroupLayer(
+                                activeMap,
+                                0,
+                                groupLayerName);
+                        }
+
+                        // Create layer parameters for creating within the group layer.
+                        LayerCreationParams layerParams = new(uri)
+                        {
+                            Name = finalLayerName,
+                            MapMemberPosition = MapMemberPosition.AddToTop
+                        };
+
+                        // Create the feature layer.
+                        newLayer = LayerFactory.Instance.CreateLayer<FeatureLayer>(
+                            layerParams,
+                            activeMap);
+
+                        if (newLayer != null)
+                        {
+                            // Move the layer into the group at the specified position.
+                            activeMap.MoveLayer(newLayer, groupLayer, position);
+                        }
+                    }
+                    else
+                    {
+                        // Create layer parameters for adding to the map.
+                        LayerCreationParams layerParams = new(uri)
+                        {
+                            Name = finalLayerName,
+                            MapMemberPosition = position == 0
+                                ? MapMemberPosition.AddToTop
+                                : MapMemberPosition.AddToBottom
+                        };
+
+                        // Create the feature layer at the specified position.
+                        newLayer = LayerFactory.Instance.CreateLayer<FeatureLayer>(
+                            layerParams,
+                            activeMap);
+                    }
+
+                    return newLayer != null;
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error adding feature layer to map: {ex.Message}");
+                return false;
+            }
+        }
+
+        #endregion Add to Map
 
         #region CopyFeatures
 

@@ -875,5 +875,14 @@ namespace HLU.Properties {
                 this["ExportPath"] = value;
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("5000")]
+        public int BatchProcessingSize {
+            get {
+                return ((int)(this["BatchProcessingSize"]));
+            }
+        }
     }
 }

@@ -325,6 +325,35 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
+        /// Get the list of field names for a feature class.
+        /// </summary>
+        /// <param name="layerPath"></param>
+        /// <returns>List<string></returns>
+        public async Task<List<string>> GetFCFieldNamesAsync(string layerPath, Map targetMap = null)
+        {
+            // Check there is a layer path.
+            if (String.IsNullOrEmpty(layerPath))
+                return null;
+
+            try
+            {
+                // Get the fields from the feature class.
+                IReadOnlyList<Field> fields = await GetFCFieldsAsync(layerPath, targetMap);
+
+                if (fields == null)
+                    return null;
+
+                // Extract just the field names.
+                return fields.Select(f => f.Name).ToList();
+            }
+            catch (Exception ex)
+            {
+                TraceLog($"GetFCFieldNamesAsync error: Exception {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Get the list of fields for a standalone table.
         /// </summary>
         /// <param name="layerPath"></param>

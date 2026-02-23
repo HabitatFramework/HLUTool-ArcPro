@@ -40,12 +40,21 @@ namespace HLU.UI.ViewModel
         private int _exportID = -1;
         private bool _selectedOnly;
         private int _selectedNumber;
-        //private GISApplications _gisApp;
 
         #endregion
 
         #region Constructor
 
+        /// <summary>
+        /// Initializes a new instance of the ViewModelWindowExport class with the specified selection count, layer
+        /// name, and available export formats.
+        /// </summary>
+        /// <remarks>If only one export format is provided, it is automatically selected for the export
+        /// operation.</remarks>
+        /// <param name="numberSelected">The number of items selected for export. If greater than zero, only the selected items will be considered.</param>
+        /// <param name="layerName">The name of the GIS layer associated with the export operation. Cannot be null.</param>
+        /// <param name="exportFormats">A data table containing the available export formats. Must not be null and should contain at least one
+        /// format.</param>
         public ViewModelWindowExport(int numberSelected, string layerName,
             HluDataSet.exportsDataTable exportFormats)
         {
