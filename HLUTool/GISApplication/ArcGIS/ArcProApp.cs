@@ -208,8 +208,6 @@ namespace HLU.GISApplication
         /// </summary>
         private int _maxSqlLength = Settings.Default.MaxSqlLengthArcGIS;
 
-        private int _batchSize = Settings.Default.BatchProcessingSize;
-
         #endregion Fields
 
         #region Implementation of SqlBuilder
@@ -468,8 +466,8 @@ namespace HLU.GISApplication
         /// Does not escape string delimiter or other special characters.
         /// Does check if value is already quoted.
         /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
+        /// <param name="value">The value to quote.</param>
+        /// <returns>The quoted value as a string.</returns>
         public override string QuoteValue(object value)
         {
             if (value == null) return "NULL";
@@ -508,8 +506,8 @@ namespace HLU.GISApplication
         /// <summary>
         /// Get the field name alis of a supplied data column.
         /// </summary>
-        /// <param name="c"></param>
-        /// <returns></returns>
+        /// <param name="c">The data column for which to get the alias.</param>
+        /// <returns>The field name alias as a string.</returns>
         public override string ColumnAlias(DataColumn c)
         {
             if (c == null)
@@ -521,9 +519,9 @@ namespace HLU.GISApplication
         /// <summary>
         /// Get the field name alias of a supplied table name and column name.
         /// </summary>
-        /// <param name="tableName"></param>
-        /// <param name="columnName"></param>
-        /// <returns></returns>
+        /// <param name="tableName">The name of the table.</param>
+        /// <param name="columnName">The name of the column.</param>
+        /// <returns>The field name alias as a string.</returns>
         public override string ColumnAlias(string tableName, string columnName)
         {
             if (String.IsNullOrEmpty(columnName))
@@ -537,8 +535,8 @@ namespace HLU.GISApplication
         /// <summary>
         /// Qualify the column names of the supplied data columns.
         /// </summary>
-        /// <param name="targetColumns"></param>
-        /// <returns></returns>
+        /// <param name="targetColumns">The array of data columns to qualify.</param>
+        /// <returns>True if any column names were qualified; otherwise, false.</returns>
         public override bool QualifyColumnNames(DataColumn[] targetColumns)
         {
             if ((targetColumns == null) || (targetColumns.Length == 0)) return false;
@@ -548,12 +546,12 @@ namespace HLU.GISApplication
         /// <summary>
         /// Get the target list of data columns as a comma-seperated string.
         /// </summary>
-        /// <param name="targetColumns"></param>
-        /// <param name="quoteIdentifiers"></param>
-        /// <param name="checkQualify"></param>
-        /// <param name="qualifyColumns"></param>
-        /// <param name="resultTable"></param>
-        /// <returns></returns>
+        /// <param name="targetColumns">The array of data columns to include in the target list.</param>
+        /// <param name="quoteIdentifiers">Indicates whether to quote identifiers in the target list.</param>
+        /// <param name="checkQualify">Indicates whether to check if column names need to be qualified.</param>
+        /// <param name="qualifyColumns">Indicates whether to qualify column names.</param>
+        /// <param name="resultTable">The resulting DataTable with the target columns.</param>
+        /// <returns>The target list as a comma-separated string.</returns>
         public override string TargetList(DataColumn[] targetColumns, bool quoteIdentifiers,
             bool checkQualify, ref bool qualifyColumns, out DataTable resultTable)
         {
@@ -605,7 +603,7 @@ namespace HLU.GISApplication
         /// <param name="selectDistinct">If set to true a 'DISTINCT' clause is added to the SQL statement.</param>
         /// <param name="targetList">The target list of data columns.</param>
         /// <param name="whereConds">The SQL WHERE conditions.</param>
-        /// <returns></returns>
+        /// <returns>The resulting DataTable with the selected data.</returns>
         public override DataTable SqlSelect(bool selectDistinct,
             DataColumn[] targetList, List<SqlFilterCondition> whereConds)
         {
@@ -641,7 +639,7 @@ namespace HLU.GISApplication
         /// <param name="addGeometryInfo">If set to true the geometry fields will be added to the returned data table.</param>
         /// <param name="targetList">The target list of data columns.</param>
         /// <param name="whereConds">The SQL WHERE conditions.</param>
-        /// <returns></returns>
+        /// <returns>The resulting DataTable with the selected data.</returns>
         public DataTable SqlSelect(bool selectDistinct, bool addGeometryInfo,
             DataColumn[] targetList, List<SqlFilterCondition> whereConds)
         {
@@ -670,12 +668,12 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        ///
+        /// Joins are supported using WHERE syntax.
         /// </summary>
-        /// <param name="selectDistinct"></param>
-        /// <param name="targetTables"></param>
-        /// <param name="whereConds"></param>
-        /// <returns></returns>
+        /// <param name="selectDistinct">If set to true a 'DISTINCT' clause is added to the SQL statement.</param>
+        /// <param name="targetTables">The array of target tables for the SQL select.</param>
+        /// <param name="whereConds">The SQL WHERE conditions.</param>
+        /// <returns>The resulting DataTable with the selected data.</returns>
         public override DataTable SqlSelect(bool selectDistinct,
             DataTable[] targetTables, List<SqlFilterCondition> whereConds)
         {
@@ -702,6 +700,14 @@ namespace HLU.GISApplication
             }
         }
 
+        /// <summary>
+        /// Shared code for SQL select methods. Joins are supported using WHERE syntax.
+        /// </summary>
+        /// <param name="fromList">The list of tables for the SQL FROM clause.</param>
+        /// <param name="whereConds">The SQL WHERE conditions.</param>
+        /// <param name="resultTable">The resulting DataTable with the selected data.</param>
+        /// <param name="qualifyColumns">Indicates whether to qualify column names.</param>
+        /// <param name="subFields">The list of subfields for the SQL SELECT clause.</param>
         private void SqlSelectShared(string fromList, List<SqlFilterCondition> whereConds,
             ref DataTable resultTable, bool qualifyColumns, string subFields)
         {
@@ -755,6 +761,13 @@ namespace HLU.GISApplication
 
         public static readonly string HistoryAdditionalFieldsDelimiter = Settings.Default.HistoryAdditionalFieldsDelimiter;
 
+        /// <summary>
+        /// Asynchronous method to read the map selection using a SQL select and populate the DataTable.
+        /// </summary>
+        /// <param name="scratchMdbPath">The path to the scratch geodatabase.</param>
+        /// <param name="selectionTableName">The name of the selection table.</param>
+        /// <param name="targetColumns">The array of target columns for the SQL select.</param>
+        /// <returns>The resulting DataTable with the selected data.</returns>
         public DataTable SqlSelect(string scratchMdbPath,
             string selectionTableName, DataColumn[] targetColumns)
         {
@@ -827,10 +840,8 @@ namespace HLU.GISApplication
         /// <summary>
         /// Asynchronous method to read the map selection and populate the DataTable.
         /// </summary>
-        /// <param name="resultTable">
-        /// A DataTable defining the schema of the rows to be returned from GIS.
-        /// </param>
-        /// <returns></returns>
+        /// <param name="resultTable">A DataTable defining the schema of the rows to be returned from GIS.</param>
+        /// <returns>A task representing the asynchronous operation, with a DataTable result.</returns>
         /// <exception cref="Exception"></exception>
         public async Task<DataTable> ReadMapSelectionAsync(DataTable resultTable)
         {
@@ -923,9 +934,7 @@ namespace HLU.GISApplication
         /// Selects the feature(s) for a single incid in the active HLU layer and returns the selected IDs.
         /// </summary>
         /// <param name="incid">The incid to select.</param>
-        /// A DataTable defining the columns to return (typically incid/toid/toidfragid).
-        /// </param>
-        /// <returns>The populated selection table.</returns>
+        /// <returns>A task representing the asynchronous operation, with a boolean result indicating success.</returns>
         /// <exception cref="GisSelectionException">Thrown if no active HLU layer is set.</exception>
         public async Task<bool> SelectIncidOnMapAsync(string incid)
         {
@@ -957,7 +966,7 @@ namespace HLU.GISApplication
         /// A DataTable containing the INCID values that should be selected in GIS.
         /// </param>
         /// <returns>
-        /// The populated result table containing the selected GIS features.
+        /// A task representing the asynchronous operation, with a boolean result indicating success.
         /// </returns>
         public async Task<bool> SelectIncidsOnMapAsync(DataTable incidSelection)
         {
@@ -1079,6 +1088,7 @@ namespace HLU.GISApplication
         /// <param name="whereClause">The SQL where clause.</param>
         /// <param name="selectionMethod">The selection combination method.</param>
         /// <exception cref="GisSelectionException">Thrown if no active HLU layer is set.</exception>
+        /// <returns>A task representing the asynchronous operation.</returns>
         public async Task SelectByWhereClauseAsync(
             string whereClause,
             SelectionCombinationMethod selectionMethod)
@@ -1765,6 +1775,7 @@ namespace HLU.GISApplication
         /// Flashes the features matching the supplied where clause (built from SqlFilterCondition list).
         /// Flashes all matched features at the same time, twice.
         /// </summary>
+        /// <param name="whereClause">A list of SQL filter conditions representing the where clause.</param>
         public void FlashSelectedFeature(List<SqlFilterCondition> whereClause)
         {
             _ = FlashSelectedFeatureAsync(whereClause);
@@ -1774,6 +1785,7 @@ namespace HLU.GISApplication
         /// Flashes the features matching the supplied where clauses (built from SqlFilterCondition lists).
         /// Flashes all matched features at the same time, twice.
         /// </summary>
+        /// <param name="whereClauses">A list of lists of SQL filter conditions representing the where clauses.</param>
         public void FlashSelectedFeatures(List<List<SqlFilterCondition>> whereClauses)
         {
             _ = FlashSelectedFeaturesAsync(whereClauses);
@@ -1955,7 +1967,7 @@ namespace HLU.GISApplication
         /// <summary>
         /// Runs an action on the UI dispatcher.
         /// </summary>
-        /// <param name="action"> The action to run on the UI thread.</param>
+        /// <param name="action">The action to run on the UI thread.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
         private static Task RunOnUiAsync(Action action)
         {
@@ -1981,7 +1993,7 @@ namespace HLU.GISApplication
         /// <param name="lastToidFragmentID">The last used toidfragid value.</param>
         /// <param name="selectionWhereClause">The selection where clause conditions.</param>
         /// <param name="historyColumns">The history columns to be used for tracking changes.</param>
-        /// <returns></returns>
+        /// <returns>A task representing the asynchronous operation, with a DataTable result containing the split features.</returns>
         /// <exception cref="ArgumentException"></exception>
         /// <exception cref="HLUToolException"></exception>
         public async Task<DataTable> SplitFeaturesPhysicallyAsync(
@@ -2558,8 +2570,8 @@ namespace HLU.GISApplication
         /// <summary>
         /// Attempts to resolve a field index from a list of candidate field names.
         /// </summary>
-        /// <param name="featureClass"></param>
-        /// <param name="candidateNames"></param>
+        /// <param name="featureClass">The feature class to search for the field.</param>
+        /// <param name="candidateNames">Candidate field names to check, in order of preference.</param>
         /// <returns>Returns the first match found, or -1 if no match is found.</returns>
         private static int TryResolveFieldIndex(
             FeatureClass featureClass,
@@ -3261,7 +3273,7 @@ namespace HLU.GISApplication
         /// <param name="historyColumns">The columns to capture for history.</param>
         /// <param name="selectionWhereClause">The selection criteria for features to update.</param>
         /// <param name="editOperation">The edit operation to perform the updates.</param>
-        /// <returns></returns>
+        /// <returns>A task representing the asynchronous operation.</returns>
         /// <exception cref="HLUToolException"></exception>
         public async Task UpdateFeaturesAsync(
             DataColumn[] updateColumns,
@@ -3711,17 +3723,16 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Exports GIS features with joined attributes, field filtering, and custom field ordering.
+        /// Exports GIS features with joined attributes using a simple join-copy approach.
         /// </summary>
         /// <remarks>
-        /// This method performs a complete export workflow:
-        /// <list type="number">
-        /// <item>Builds the output schema with field filtering, renaming, and ordering</item>
-        /// <item>Creates the output feature class (geodatabase or shapefile)</item>
-        /// <item>Performs a streaming merge join between GIS features and attributes</item>
-        /// <item>Writes features in batches for optimal performance</item>
-        /// </list>
-        /// The attribute table is assumed to be already sorted by incid (via primary key constraint).
+        /// This method:
+        /// 1. Creates a temp feature class with selected GIS fields (in export format order)
+        /// 2. Joins ALL fields from the attribute table
+        /// 3. Copies to final output
+        /// 4. Recalculates geometry and adds to map
+        ///
+        /// GIS fields appear first (in export format order), followed by attribute fields (in SQL query order).
         /// </remarks>
         /// <param name="sourceLayerPath">The full path to the source GIS layer.</param>
         /// <param name="gdbPath">The path to the geodatabase containing the attribute table.</param>
@@ -3767,660 +3778,238 @@ namespace HLU.GISApplication
             if (string.IsNullOrWhiteSpace(outputFeatureClassName))
                 throw new ArgumentException("Output feature class name is required.", nameof(outputFeatureClassName));
 
-            bool success = await QueuedTask.Run(async () =>
+            try
             {
-                FeatureClass outputFC = null;
-                try
-                {
-                    // Find the source layer in the active map
-                    FeatureLayer sourceLayer = await FindLayerAsync(sourceLayerPath);
-                    if (sourceLayer == null)
-                        return false;
+                // Find the source layer
+                FeatureLayer sourceLayer = await FindLayerAsync(sourceLayerPath);
+                if (sourceLayer == null)
+                    throw new HLUToolException($"Source layer not found: {sourceLayerPath}");
 
-                    // Get the source feature class and its schema definition
-                    using FeatureClass sourceFC = sourceLayer.GetFeatureClass();
-                    using FeatureClassDefinition sourceDef = sourceFC.GetDefinition();
+                // Generate unique temp feature class name
+                string tempFcName = string.Concat("ExportTemp_", Guid.NewGuid().ToString("N").AsSpan(0, 8));
+                string tempFcPath = System.IO.Path.Combine(gdbPath, tempFcName);
 
-                    // Open the attribute table geodatabase and get the table definition
-                    using Geodatabase attrGdb = new(new FileGeodatabaseConnectionPath(new Uri(gdbPath)));
-                    using Table attributeTable = attrGdb.OpenDataset<Table>(tableName);
-                    using TableDefinition attrDef = attributeTable.GetDefinition();
+                // STEP 1: Copy source FC to temp (all fields, selected features if applicable)
 
-                    // Resolve the join key field name (typically 'incid')
-                    string joinKeyField = await IncidFieldNameAsync();
-                    if (String.IsNullOrWhiteSpace(joinKeyField))
-                        throw new HLUToolException("Failed to resolve incid field name for join.");
+                // Get the full layer path of the source layer
+                string sourcePath = await GetLayerPathAsync(sourceLayer);
 
-                    // Build the complete output schema including field filtering, renaming, and ordering
-                    var (outputFields, fieldMappings) = BuildExportSchema(
-                        sourceDef,
-                        attrDef,
-                        joinKeyField,
-                        gisFieldsToInclude,
-                        fieldOrderMap,
-                        fieldRenameMap);
-
-                    if (outputFields == null || outputFields.Count == 0)
-                        throw new HLUToolException("No fields to export after applying filters and mappings.");
-
-                    // Create the output feature class (either shapefile or geodatabase)
-                    outputFC = await CreateOutputFeatureClassAsync(
-                        isShapefile,
-                        outputWorkspace,
-                        outputFeatureClassName,
-                        outputFields,
-                        sourceDef,
-                        gdbPath);
-
-                    if (outputFC == null)
-                        throw new HLUToolException("Failed to create output feature class.");
-
-                    // Populate the output feature class using streaming merge join
-                    bool populateSuccess = await PopulateOutputFeatureClassAsync(
-                        sourceLayer,
-                        sourceFC,
-                        sourceDef,
-                        attributeTable,
-                        attrDef,
-                        outputFC,
-                        joinKeyField,
-                        fieldMappings,
-                        selectedOnly,
-                        progress,
-                        cancellationToken);
-
-                    if (!populateSuccess)
-                        throw new HLUToolException("Failed to populate output feature class.");
-
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    throw new HLUToolException("Error exporting GIS features: " + ex.Message, ex);
-                }
-                finally
-                {
-                    outputFC?.Dispose();  // Dispose after all writes complete
-                }
-            });
-
-            // If population failed, return false
-            if (!success)
-                return false;
-
-            // Save all pending edits
-            await Project.Current.SaveEditsAsync();
-
-            // Build the full path to the output feature class
-            string outputPath = System.IO.Path.Combine(outputWorkspace, outputFeatureClassName);
-
-            // Get the actual geometry attribute field names for this feature class
-            string lengthField;
-            string areaField;
-            (lengthField, areaField) = await ArcGISProHelpers.GetGeometryFieldNamesAsync(outputPath);
-
-            if (string.IsNullOrEmpty(lengthField) && string.IsNullOrEmpty(areaField))
-                throw new HLUToolException("Failed to establish geometry attribute fields for output feature class.");
-
-            // Recalculate the geometry attribute for all features (needed for BOTH shapefiles AND geodatabases)
-            bool recalcSuccess = await ArcGISProHelpers.RecalculateGeometryAttributesAsync(outputPath, lengthField, areaField);
-
-            if (!recalcSuccess)
-                throw new HLUToolException("Failed to recalculate geometry in output feature class.");
-
-            // Set the layer name
-            string layerName = System.IO.Path.GetFileNameWithoutExtension(outputFeatureClassName);
-
-            // Add to the active map
-            bool addSuccess = await ArcGISProHelpers.AddFeatureLayerToMapAsync(
-                outputPath,
-                layerName,
-                groupLayerName: null,
-                position: 0);  // Add to top of map
-
-            if (!addSuccess)
-                throw new HLUToolException("Failed to add output feature class to map.");
-
-            return true;
-        }
-
-        /// <summary>
-        /// Builds the export schema by determining field order, renaming, and filtering.
-        /// </summary>
-        /// <remarks>
-        /// This method processes both GIS layer fields and attribute table fields to create:
-        /// <list type="bullet">
-        /// <item>A list of field descriptions for creating the output feature class</item>
-        /// <item>A mapping between source field names and export field names</item>
-        /// </list>
-        /// Fields are ordered according to the fieldOrderMap, with unmapped fields placed at the end.
-        /// When a field exists in both the GIS layer and attribute table, the attribute table value takes precedence.
-        /// </remarks>
-        /// <param name="sourceDef">The feature class definition of the source layer.</param>
-        /// <param name="attrDef">The table definition of the attribute table.</param>
-        /// <param name="joinKeyField">The field name used to join features and attributes (typically 'incid').</param>
-        /// <param name="gisFieldsToInclude">Optional list of GIS field names to include. If null, all non-system fields are included.</param>
-        /// <param name="fieldOrderMap">Optional dictionary mapping field names to their desired order. If null, default ordering is used.</param>
-        /// <param name="fieldRenameMap">Optional dictionary mapping source field names to export field names. If null, original names are used.</param>
-        /// <returns>
-        /// A tuple containing:
-        /// <list type="bullet">
-        /// <item>outputFields: List of field descriptions for the output feature class</item>
-        /// <item>fieldMappings: List of tuples mapping (source name, export name, is from GIS layer)</item>
-        /// </list>
-        /// </returns>
-        private (List<FieldDescription> outputFields, List<(string sourceName, string targetName, bool isGIS)> fieldMappings)
-            BuildExportSchema(
-                FeatureClassDefinition sourceDef,
-                TableDefinition attrDef,
-                string joinKeyField,
-                List<string> gisFieldsToInclude,
-                Dictionary<string, int> fieldOrderMap,
-                Dictionary<string, string> fieldRenameMap)
-        {
-            // Temporary collection to hold all fields with their metadata before ordering
-            List<(FieldDescription desc, string name, int order, bool isGIS)> allFieldsWithOrder = [];
-
-            // First, build a set of attribute table field names for quick lookup
-            HashSet<string> attributeFieldNames = new(StringComparer.OrdinalIgnoreCase);
-            foreach (Field field in attrDef.GetFields())
-            {
-                if (field.FieldType != FieldType.OID)
-                    attributeFieldNames.Add(field.Name);
-            }
-
-            // Process GIS layer fields
-            foreach (Field field in sourceDef.GetFields())
-            {
-                // Skip system-managed fields that shouldn't be copied
-                if (field.FieldType == FieldType.OID || field.FieldType == FieldType.Geometry ||
-                    field.FieldType == FieldType.GlobalID)
-                    continue;
-
-                // Skip this GIS field if it exists in the attribute table (attribute table takes precedence)
-                // Exception: Always include geometry attribute fields from GIS
-                bool isGeometryAttributeField = field.Name.Equals("Shape_Length", StringComparison.OrdinalIgnoreCase) ||
-                                               field.Name.Equals("Shape_Area", StringComparison.OrdinalIgnoreCase) ||
-                                               field.Name.Equals("Shape_Leng", StringComparison.OrdinalIgnoreCase);
-
-                if (!isGeometryAttributeField && attributeFieldNames.Contains(field.Name))
-                    continue;
-
-                // Apply field filtering if a whitelist was provided
-                if (gisFieldsToInclude != null &&
-                    !gisFieldsToInclude.Contains(field.Name, StringComparer.OrdinalIgnoreCase))
-                    continue;
-
-                // Determine the export name (either renamed or original)
-                string outputFieldName = fieldRenameMap?.ContainsKey(field.Name) == true
-                    ? fieldRenameMap[field.Name]
-                    : field.Name;
-
-                // Determine the sort order for this field
-                // Fields with explicit order come first; unmapped fields go to the end
-                // Geometry attribute fields go to the very end if not explicitly ordered
-                int order;
-                if (fieldOrderMap?.ContainsKey(outputFieldName) == true)
-                {
-                    order = fieldOrderMap[outputFieldName];
-                }
-                else if (isGeometryAttributeField)
-                {
-                    // Put geometry fields at the very end
-                    order = int.MaxValue - 100;
-                }
-                else
-                {
-                    // Other unmapped fields
-                    order = int.MaxValue - 1000000;
-                }
-
-                // Create a field description using the export name
-                var renamedFieldDesc = new FieldDescription(outputFieldName, field.FieldType)
-                {
-                    Length = field.Length,
-                    Precision = field.Precision,
-                    Scale = field.Scale
-                };
-
-                // Add to temporary collection
-                allFieldsWithOrder.Add((renamedFieldDesc, outputFieldName, order, true));
-            }
-
-            // Process attribute table fields
-            foreach (Field field in attrDef.GetFields())
-            {
-                // Skip system-managed fields
-                if (field.FieldType == FieldType.OID)
-                    continue;
-
-                // Skip the join key if it's already present in GIS fields to avoid duplication
-                if (field.Name.Equals(joinKeyField, StringComparison.OrdinalIgnoreCase) &&
-                    allFieldsWithOrder.Any(f => f.name.Equals(joinKeyField, StringComparison.OrdinalIgnoreCase)))
-                    continue;
-
-                // Skip fields already present (should only happen for geometry fields)
-                if (allFieldsWithOrder.Any(f => f.name.Equals(field.Name, StringComparison.OrdinalIgnoreCase)))
-                    continue;
-
-                // Determine the export name (either renamed or original)
-                string outputFieldName = fieldRenameMap?.ContainsKey(field.Name) == true
-                    ? fieldRenameMap[field.Name]
-                    : field.Name;
-
-                // Determine the sort order for this field
-                // Attribute fields default to the end if not explicitly ordered
-                int order = fieldOrderMap?.ContainsKey(outputFieldName) == true
-                    ? fieldOrderMap[outputFieldName]
-                    : int.MaxValue;
-
-                // Create a field description using the export name
-                var renamedFieldDesc = new FieldDescription(outputFieldName, field.FieldType)
-                {
-                    Length = field.Length,
-                    Precision = field.Precision,
-                    Scale = field.Scale
-                };
-
-                // Add to temporary collection
-                allFieldsWithOrder.Add((renamedFieldDesc, outputFieldName, order, false));
-            }
-
-            // Build the final ordered lists
-            List<FieldDescription> outputFields = [];
-            List<(string sourceName, string targetName, bool isGIS)> fieldMappings = [];
-
-            // Sort by order value and process each field
-            foreach (var (desc, outputName, order, isGIS) in allFieldsWithOrder.OrderBy(f => f.order))
-            {
-                // Add field description for output feature class creation
-                outputFields.Add(desc);
-
-                // Resolve the original source name by reverse lookup in rename map
-                string sourceName = outputName;
-                if (fieldRenameMap != null)
-                {
-                    // Look for a rename entry where the value matches our output name
-                    var reverseEntry = fieldRenameMap.FirstOrDefault(kvp =>
-                        kvp.Value.Equals(outputName, StringComparison.OrdinalIgnoreCase));
-                    if (!String.IsNullOrEmpty(reverseEntry.Key))
-                        sourceName = reverseEntry.Key;
-                }
-
-                // Add to mapping collection for use during data copy
-                fieldMappings.Add((sourceName, outputName, isGIS));
-            }
-
-            return (outputFields, fieldMappings);
-        }
-
-        /// <summary>
-        /// Creates the output feature class for the export.
-        /// </summary>
-        /// <remarks>
-        /// This method handles both shapefile and geodatabase outputs:
-        /// <list type="bullet">
-        /// <item>For shapefiles: Uses the Geoprocessing CreateFeatureclass tool, then adds fields manually</item>
-        /// <item>For geodatabases: Uses SchemaBuilder for better control</item>
-        /// </list>
-        /// The output feature class inherits spatial reference and geometry type from the source.
-        /// </remarks>
-        /// <param name="isShapefile">True if creating a shapefile; false for geodatabase feature class.</param>
-        /// <param name="outputWorkspace">The workspace path (folder for shapefile, .gdb path for geodatabase).</param>
-        /// <param name="outputFeatureClassName">The feature class name (including .shp extension for shapefiles).</param>
-        /// <param name="outputFields">The list of field descriptions for the output schema.</param>
-        /// <param name="sourceDef">The source feature class definition (for geometry type and spatial reference).</param>
-        /// <param name="tempGdbPath">The path to the temporary geodatabase for intermediate feature class creation (required for shapefile output).</param>
-        /// <returns>The created feature class, opened and ready for editing.</returns>
-        /// <exception cref="ArgumentException">Thrown if the feature class name is invalid.</exception>
-        /// <exception cref="Exception">Thrown if feature class creation fails.</exception>
-        private async Task<FeatureClass> CreateOutputFeatureClassAsync(
-            bool isShapefile,
-            string outputWorkspace,
-            string outputFeatureClassName,
-            List<FieldDescription> outputFields,
-            FeatureClassDefinition sourceDef,
-            string tempGdbPath)
-        {
-            // ALWAYS create in temp GDB first using SchemaBuilder
-            string tempFcName = "ExportTemp_" + Guid.NewGuid().ToString("N").Substring(0, 8);
-
-            // Create shape description
-            var shapeDescription = new ShapeDescription(
-                sourceDef.GetShapeType(),
-                sourceDef.GetSpatialReference())
-            {
-                HasM = sourceDef.HasM(),
-                HasZ = sourceDef.HasZ()
-            };
-
-            // Create feature class description
-            FeatureClassDescription fcDescription = new(
-                tempFcName,
-                outputFields,
-                shapeDescription);
-
-            // Open temp geodatabase
-            using Geodatabase tempGdb = new(new FileGeodatabaseConnectionPath(new Uri(tempGdbPath)));
-
-            // Create schema using SchemaBuilder (atomic operation, no flashing)
-            SchemaBuilder schemaBuilder = new(tempGdb);
-            schemaBuilder.Create(fcDescription);
-
-            bool success = schemaBuilder.Build();
-            if (!success)
-            {
-                IReadOnlyList<string> errors = schemaBuilder.ErrorMessages;
-                string errorMsg = errors.Count > 0
-                    ? string.Join("; ", errors)
-                    : "Unknown schema creation error";
-                throw new Exception($"Failed to create temp feature class: {errorMsg}");
-            }
-
-            // If geodatabase output, copy temp FC to final location
-            if (!isShapefile)
-            {
-                string tempFcPath = System.IO.Path.Combine(tempGdbPath, tempFcName);
-                string outputFcPath = System.IO.Path.Combine(outputWorkspace, outputFeatureClassName);
-
-                bool copySuccess = await ArcGISProHelpers.CopyFeaturesAsync(
-                    tempFcPath,
-                    outputFcPath,
-                    addToMap: false);
+                bool copySuccess = await ArcGISProHelpers.CopyFeaturesAsync(sourcePath, tempFcPath, addToMap: false);
 
                 if (!copySuccess)
-                    throw new Exception("Failed to copy feature class to output geodatabase.");
+                    throw new HLUToolException("Failed to create temporary feature class.");
 
-                // Open and return the final feature class
-                using Geodatabase outputGdb = new(new FileGeodatabaseConnectionPath(new Uri(outputWorkspace)));
-                return outputGdb.OpenDataset<FeatureClass>(outputFeatureClassName);
-            }
-            else
-            {
-                // For shapefile output, copy from temp GDB to shapefile
-                // CopyFeatures handles field name truncation automatically
-                string tempFcPath = System.IO.Path.Combine(tempGdbPath, tempFcName);
-                string outputShpPath = System.IO.Path.Combine(outputWorkspace, outputFeatureClassName);
+                // STEP 2: Delete unwanted GIS fields from temp FC
 
-                bool copySuccess = await ArcGISProHelpers.CopyFeaturesAsync(
+                // Create a list of fields to delete from the temp FC
+                List<string> fieldsToDelete = await QueuedTask.Run(() =>
+                {
+                    using var tempGDB = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(gdbPath)));
+                    using var tempFC = tempGDB.OpenDataset<FeatureClass>(tempFcName);
+                    using var fcDef = tempFC.GetDefinition();
+
+                    // Build list of fields to KEEP
+                    HashSet<string> fieldsToKeep = new(StringComparer.OrdinalIgnoreCase);
+
+                    // Always keep these system/essential fields
+                    fieldsToKeep.Add("OBJECTID");
+                    fieldsToKeep.Add("Shape");
+                    fieldsToKeep.Add("GlobalID");
+
+                    // Add INCID field (needed for join)
+                    fieldsToKeep.Add(_hluLayerStructure.incidColumn.ColumnName);
+
+                    // Add GIS fields from export format
+                    if (gisFieldsToInclude != null)
+                    {
+                        foreach (string fieldName in gisFieldsToInclude)
+                            fieldsToKeep.Add(fieldName);
+                    }
+
+                    // Find fields to DELETE (all non-system fields not in the keep list)
+                    return fcDef.GetFields()
+                        .Where(f => !fieldsToKeep.Contains(f.Name) &&
+                                   f.FieldType != FieldType.OID &&
+                                   f.FieldType != FieldType.Geometry &&
+                                   f.FieldType != FieldType.GlobalID)
+                        .Select(f => f.Name)
+                        .ToList();
+                });
+
+                // Delete the unwanted fields using the helper method (outside QueuedTask)
+                if (fieldsToDelete != null && fieldsToDelete.Count > 0)
+                {
+                    string fieldsToDeleteStr = string.Join(";", fieldsToDelete);
+                    bool deleteSuccess = await ArcGISProHelpers.DeleteFieldAsync(tempFcPath, fieldsToDeleteStr);
+
+                    if (!deleteSuccess)
+                        throw new HLUToolException("Failed to delete unwanted fields from temp FC.");
+                }
+
+                // STEP 3: Join ALL attribute table fields to temp FC
+                string attributeTablePath = System.IO.Path.Combine(gdbPath, tableName);
+                string joinKeyField = await IncidFieldNameAsync();
+
+                // Join ALL fields from the attribute table (it was generated with exactly the fields needed)
+                bool joinSuccess = await ArcGISProHelpers.JoinFieldsAsync(
                     tempFcPath,
-                    outputShpPath,
+                    joinKeyField,
+                    attributeTablePath,
+                    joinKeyField,
+                    fields: "",                        // Empty string = join ALL fields
+                    indexJoinFields: "NEW_INDEXES");   // Add indexes for better performance
+
+                if (!joinSuccess)
+                    throw new HLUToolException("Failed to join attribute table.");
+
+                // STEP 3: Delete duplicate join key field if it was added by the join
+                await ArcGISProHelpers.DeleteDuplicateJoinFieldAsync(tempFcPath, joinKeyField);
+
+                // STEP 4: Copy to final output
+                string outputPath = System.IO.Path.Combine(outputWorkspace, outputFeatureClassName);
+
+                bool finalCopySuccess = await ArcGISProHelpers.CopyFeaturesAsync(
+                    tempFcPath,
+                    outputPath,
                     addToMap: false);
 
-                if (!copySuccess)
-                    throw new Exception("Failed to copy feature class to shapefile.");
+                if (!finalCopySuccess)
+                    throw new HLUToolException("Failed to copy to final output.");
 
-                // Open and return the shapefile
-                FileSystemConnectionPath shpPath = new(
-                    new Uri(outputWorkspace),
-                    FileSystemDatastoreType.Shapefile);
+                // STEP 5: Recalculate geometry attributes
+                var (lengthField, areaField) = await ArcGISProHelpers.GetGeometryFieldNamesAsync(outputPath);
 
-                using FileSystemDatastore shpDatastore = new(shpPath);
-                return shpDatastore.OpenDataset<FeatureClass>(
-                    System.IO.Path.GetFileNameWithoutExtension(outputFeatureClassName));
-            }
-        }
-
-        /// <summary>
-        /// Populates the output feature class with joined data using a streaming merge join algorithm.
-        /// </summary>
-        /// <remarks>
-        /// This method implements a memory-efficient streaming merge join:
-        /// <list type="number">
-        /// <item>Assumes the attribute table is already sorted by incid (via primary key)</item>
-        /// <item>Sorts GIS features by incid using SQL ORDER BY in the query filter</item>
-        /// <item>Performs a single-pass merge join without caching all attributes in memory</item>
-        /// <item>Writes features in batches to optimize performance</item>
-        /// </list>
-        /// This approach scales efficiently to millions of features without exhausting memory.
-        /// </remarks>
-        /// <param name="sourceLayer">The source feature layer.</param>
-        /// <param name="sourceFC">The source feature class.</param>
-        /// <param name="sourceDef">The source feature class definition.</param>
-        /// <param name="attributeTable">The attribute table to join.</param>
-        /// <param name="attrDef">The attribute table definition.</param>
-        /// <param name="outputFC">The output feature class to populate.</param>
-        /// <param name="joinKeyField">The field name used to join (typically 'incid').</param>
-        /// <param name="fieldMappings">The list of field mappings (source name, export name, is GIS field).</param>
-        /// <param name="selectedOnly">If true, only export selected features.</param>
-        /// <param name="progress">Optional progress reporter.</param>
-        /// <param name="cancellationToken">Optional cancellation token.</param>
-        /// <returns>True if population succeeded; false otherwise.</returns>
-        private async Task<bool> PopulateOutputFeatureClassAsync(
-            FeatureLayer sourceLayer,
-            FeatureClass sourceFC,
-            FeatureClassDefinition sourceDef,
-            Table attributeTable,
-            TableDefinition attrDef,
-            FeatureClass outputFC,
-            string joinKeyField,
-            List<(string sourceName, string targetName, bool isGIS)> fieldMappings,
-            bool selectedOnly,
-            IProgress<int> progress,
-            CancellationToken cancellationToken)
-        {
-            // Batch size for writing features (balances memory usage vs. transaction overhead)
-            int batchSize = _batchSize;
-
-            return await QueuedTask.Run(() =>
-            {
-                // Resolve field indices for the join key in both tables
-                int gisIncidIdx = sourceDef.FindField(joinKeyField);
-                int attrIncidIdx = attrDef.FindField(joinKeyField);
-
-                // Get the output definition and shape field name once, outside the loop
-                using FeatureClassDefinition outputDef = outputFC.GetDefinition();
-                string shapeFieldName = outputDef.GetShapeField();
-
-                // Create a query filter that sorts GIS features by the join key
-                // This enables the streaming merge join algorithm
-                QueryFilter sortedQuery = selectedOnly
-                    ? new QueryFilter
-                    {
-                        ObjectIDs = sourceLayer.GetSelection()?.GetObjectIDs(),
-                        PostfixClause = $"ORDER BY {joinKeyField}"
-                    }
-                    : new QueryFilter
-                    {
-                        PostfixClause = $"ORDER BY {joinKeyField}"
-                    };
-
-                // Create cursors for both GIS features and attributes
-                // Both are sorted by incid, enabling single-pass merge
-                using RowCursor gisFeatureCursor = sourceFC.Search(sortedQuery, false);
-                using RowCursor attrCursor = attributeTable.Search(null, false);
-
-                // Buffer for accumulating row buffers before batch write
-                List<RowBuffer> batchBuffers = [];
-                int totalProcessed = 0;
-
-                // State for streaming merge join
-                Row currentAttrRow = null;
-                string currentAttrIncid = null;
-
-                // Advance to first attribute row
-                if (attrCursor.MoveNext())
+                if (!string.IsNullOrEmpty(lengthField) || !string.IsNullOrEmpty(areaField))
                 {
-                    currentAttrRow = attrCursor.Current;
-                    currentAttrIncid = currentAttrRow[attrIncidIdx]?.ToString();
+                    bool recalcSuccess = await ArcGISProHelpers.RecalculateGeometryAttributesAsync(
+                        outputPath,
+                        lengthField,
+                        areaField);
+
+                    if (!recalcSuccess)
+                        throw new HLUToolException("Failed to recalculate geometry attributes.");
                 }
 
-                // Main merge join loop
-                // Iterate through GIS features in incid order
-                while (gisFeatureCursor.MoveNext())
-                {
-                    // Check for cancellation
-                    cancellationToken.ThrowIfCancellationRequested();
+                // STEP 6: Add to map
+                string layerName = System.IO.Path.GetFileNameWithoutExtension(outputFeatureClassName);
 
-                    // Get current GIS feature and its incid
-                    using Feature gisFeature = (Feature)gisFeatureCursor.Current;
-                    string gisIncid = gisFeature[gisIncidIdx]?.ToString();
+                bool addSuccess = await ArcGISProHelpers.AddFeatureLayerToMapAsync(
+                    outputPath,
+                    layerName,
+                    groupLayerName: null,
+                    position: 0);
 
-                    // Advance attribute cursor to match or exceed current GIS incid
-                    // This is the core of the merge join algorithm
-                    while (currentAttrRow != null &&
-                           String.Compare(currentAttrIncid, gisIncid, StringComparison.OrdinalIgnoreCase) < 0)
-                    {
-                        // Dispose current row and advance to next
-                        currentAttrRow?.Dispose();
-                        if (attrCursor.MoveNext())
-                        {
-                            currentAttrRow = attrCursor.Current;
-                            currentAttrIncid = currentAttrRow[attrIncidIdx]?.ToString();
-                        }
-                        else
-                        {
-                            // No more attribute rows
-                            currentAttrRow = null;
-                            currentAttrIncid = null;
-                        }
-                    }
-
-                    // Create a row buffer for the output feature
-                    RowBuffer rowBuffer = outputFC.CreateRowBuffer();
-
-                    // Copy geometry from source feature
-                    Geometry sourceGeom = gisFeature.GetShape();
-                    if (sourceGeom != null)
-                    {
-                        rowBuffer[shapeFieldName] = sourceGeom;
-                    }
-
-                    // Copy field values according to the field mapping
-                    foreach (var (sourceName, targetName, isGIS) in fieldMappings)
-                    {
-                        // Skip the shape field - it's already been copied above
-                        if (targetName.Equals(shapeFieldName, StringComparison.OrdinalIgnoreCase))
-                            continue;
-
-                        object value = null;
-
-                        if (isGIS)
-                        {
-                            // Get value from GIS feature using the source field name
-                            int srcIdx = sourceDef.FindField(sourceName);
-                            if (srcIdx >= 0)
-                            {
-                                value = gisFeature[srcIdx];
-                                // Check for DBNull and convert to null
-                                if (value is DBNull)
-                                    value = null;
-                            }
-                        }
-                        else if (currentAttrRow != null &&
-                                 String.Equals(currentAttrIncid, gisIncid, StringComparison.OrdinalIgnoreCase))
-                        {
-                            // Get value from matching attribute row
-                            int attrIdx = attrDef.FindField(targetName);
-                            if (attrIdx >= 0)
-                            {
-                                value = currentAttrRow[attrIdx];
-                                // Check for DBNull and convert to null
-                                if (value is DBNull)
-                                    value = null;
-                            }
-                        }
-
-                        // Set the value in the output row buffer if not null
-                        if (value != null)
-                        {
-                            int targetIdx = outputDef.FindField(targetName);
-                            if (targetIdx >= 0)
-                                rowBuffer[targetIdx] = value;
-                        }
-                    }
-
-                    // Add to batch
-                    batchBuffers.Add(rowBuffer);
-
-                    // Write batch if threshold reached
-                    if (batchBuffers.Count >= batchSize)
-                    {
-                        WriteBatch(outputFC, batchBuffers);
-                        totalProcessed += batchBuffers.Count;
-
-                        // Dispose row buffers to free memory
-                        batchBuffers.ForEach(b => b.Dispose());
-                        batchBuffers.Clear();
-
-                        // Report progress
-                        progress?.Report(totalProcessed);
-                    }
-                }
-
-                // Write final partial batch
-                if (batchBuffers.Count > 0)
-                {
-                    WriteBatch(outputFC, batchBuffers);
-                    totalProcessed += batchBuffers.Count;
-
-                    // Dispose row buffers to free memory
-                    batchBuffers.ForEach(b => b.Dispose());
-                    progress?.Report(totalProcessed);
-                }
-
-                // Clean up attribute cursor state
-                currentAttrRow?.Dispose();
+                if (!addSuccess)
+                    throw new HLUToolException("Failed to add output to map.");
 
                 return true;
-            });
+            }
+            catch (Exception ex)
+            {
+                throw new HLUToolException($"Export failed: {ex.Message}", ex);
+            }
         }
 
         /// <summary>
-        /// Writes a batch of row buffers to the output feature class within a single edit operation.
+        /// Creates a temporary feature class with only the specified GIS fields in the correct order.
         /// </summary>
         /// <remarks>
-        /// This method creates and executes an edit operation to write multiple features atomically.
-        /// Using batch writes improves performance by reducing transaction overhead.
+        /// Uses CopyFeatures with a custom FieldMapping parameter to:
+        /// - Filter which GIS fields are included
+        /// - Control the order of GIS fields in the output
+        ///
+        /// System fields (OBJECTID, Shape, etc.) are always included first.
         /// </remarks>
-        /// <param name="outputFC">The output feature class to write to.</param>
-        /// <param name="buffers">The list of row buffers to write.</param>
-        /// <exception cref="Exception">Thrown if the batch write fails.</exception>
-        private void WriteBatch(FeatureClass outputFC, List<RowBuffer> buffers)
+        /// <param name="sourceLayer">The source feature layer to copy from.</param>
+        /// <param name="gdbPath">The path to the geodatabase where the temp feature class will be created.</param>
+        /// <param name="tempFcName">The name of the temporary feature class to create.</param>
+        /// <param name="gisFieldsToInclude">Optional list of GIS field names to include. If null, all non-system fields are included.</param>
+        /// <param name="fieldOrderMap">Optional dictionary mapping field names to their desired order (0-based position). If null, default ordering is used.</param>
+        /// <returns>True if the temp feature class was created successfully; false otherwise.</returns>
+        private async Task<bool> CreateTempFeatureClassAsync(
+            FeatureLayer sourceLayer,
+            string gdbPath,
+            string tempFcName,
+            List<string> gisFieldsToInclude,
+            Dictionary<string, int> fieldOrderMap)
         {
-            // Create a new edit operation for this batch
-            EditOperation editOp = new();
+            // Build field mapping string for CopyFeatures that controls field order
+            string fieldMapping = await BuildFieldMappingAsync(
+                sourceLayer,
+                gisFieldsToInclude,
+                fieldOrderMap);
 
-            // Define the callback that will execute within the edit operation
-            editOp.Callback(context =>
-            {
-                // Create and store each feature in the batch
-                foreach (var buffer in buffers)
-                {
-                    using Feature newFeature = outputFC.CreateRow(buffer);
-                    newFeature.Store();
-                }
-            }, outputFC);
+            // Get the full layer path
+            string sourcePath = await GetLayerPathAsync(sourceLayer);
 
-            // Execute the edit operation synchronously
-            bool success = editOp.Execute();
-            if (!success)
-                throw new Exception($"Batch write failed: {editOp.ErrorMessage}");
+            // Call the helper method to create the temp feature class
+            return await ArcGISProHelpers.CreateTempFeatureClassAsync(
+                sourcePath,
+                gdbPath,
+                tempFcName,
+                fieldMapping);
         }
 
         /// <summary>
-        /// Validates that a feature class name conforms to geodatabase/shapefile naming rules.
+        /// Builds a field mapping string for CopyFeatures that controls which GIS fields are copied and in what order.
         /// </summary>
-        /// <param name="name">The feature class name to validate.</param>
-        /// <returns>True if valid, otherwise false.</returns>
-        private static bool IsValidFeatureClassName(string name)
+        /// <remarks>
+        /// Creates a FieldMapping parameter string in the format:
+        /// "field1 field1 VISIBLE NONE;field2 field2 VISIBLE NONE;..."
+        ///
+        /// System fields (OBJECTID, Shape, etc.) are always included first.
+        /// Other GIS fields are ordered according to fieldOrderMap.
+        /// </remarks>
+        private async Task<string> BuildFieldMappingAsync(
+            FeatureLayer sourceLayer,
+            List<string> gisFieldsToInclude,
+            Dictionary<string, int> fieldOrderMap)
         {
-            if (String.IsNullOrWhiteSpace(name))
-                return false;
+            return await QueuedTask.Run(() =>
+            {
+                using FeatureClass fc = sourceLayer.GetFeatureClass();
+                using FeatureClassDefinition def = fc.GetDefinition();
+                IReadOnlyList<Field> allFields = def.GetFields();
 
-            // Must start with a letter
-            if (!Char.IsLetter(name[0]))
-                return false;
+                // System fields that are always included (and go first)
+                HashSet<string> systemFields = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "OBJECTID", "OID", "FID", "Shape", "SHAPE", "GlobalID", "GLOBALID"
+        };
 
-            // Must contain only letters, numbers, and underscores
-            if (!name.All(c => Char.IsLetterOrDigit(c) || c == '_'))
-                return false;
+                // Build list of GIS fields to include with their order
+                List<(Field field, int order)> fieldsWithOrder = [];
 
-            // Maximum length (64 for geodatabase, 10 for shapefile, but we use 64 as safe limit)
-            if (name.Length > 64)
-                return false;
+                foreach (Field field in allFields)
+                {
+                    // Always include system fields first (order = -1)
+                    if (systemFields.Contains(field.Name))
+                    {
+                        fieldsWithOrder.Add((field, -1));
+                        continue;
+                    }
 
-            return true;
+                    // Skip if not in whitelist (when whitelist provided)
+                    if (gisFieldsToInclude != null &&
+                        !gisFieldsToInclude.Contains(field.Name, StringComparer.OrdinalIgnoreCase))
+                        continue;
+
+                    // Determine order from fieldOrderMap, or place at end
+                    int order = fieldOrderMap?.ContainsKey(field.Name) == true
+                        ? fieldOrderMap[field.Name]
+                        : int.MaxValue;
+
+                    fieldsWithOrder.Add((field, order));
+                }
+
+                // Sort by order and build the FieldMapping string
+                var orderedFields = fieldsWithOrder.OrderBy(f => f.order).Select(f => f.field);
+
+                // Format: "field1 field1 VISIBLE NONE;field2 field2 VISIBLE NONE;..."
+                var mappings = orderedFields.Select(f => $"{f.Name} {f.Name} VISIBLE NONE");
+
+                return string.Join(";", mappings);
+            });
         }
 
         #endregion Export

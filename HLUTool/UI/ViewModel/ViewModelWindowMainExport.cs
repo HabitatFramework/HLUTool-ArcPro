@@ -65,7 +65,6 @@ namespace HLU.UI.ViewModel
 
         private string _lastTableName;
         private int _tableCount;
-        private int _fieldCount;
         private int _incidOrdinal;
         private int _conditionIdOrdinal;
         private int _conditionDateStartOrdinal;
@@ -84,9 +83,14 @@ namespace HLU.UI.ViewModel
         private List<int> _sourceDateTypeOrdinals = [];
         private int _attributesLength;
 
-        private Dictionary<string, FieldDescription> _fieldDescriptionCache = [];
+        /// <summary>
+        /// Cache for vague date calculations to improve performance by avoiding redundant calculations for the same condition/source IDs.
+        /// </summary>
         private Dictionary<int, DateTime> _vagueDateCache = [];
 
+        /// <summary>
+        /// Number of records to process in each batch when processing a selection that exceeds the maximum SQL length.
+        /// </summary>
         private int _batchSize = Settings.Default.BatchProcessingSize;
 
         #endregion Fields
@@ -391,10 +395,6 @@ namespace HLU.UI.ViewModel
 
                 _viewModelMain.ChangeCursor(Cursors.Wait, "Exporting from GIS ...");
 
-                // Create field order mapping AND field rename mapping for the final output (all fields, GIS + attributes)
-                Dictionary<string, int> fieldOrderMap = CreateFieldOrderMapping(exportFields);
-                Dictionary<string, string> fieldRenameMap = CreateFieldRenameMapping(exportFields);
-
                 // Extract the list of GIS fields to include from exportFields
                 // Use ColumnName (source name in the GIS layer), not FieldName (export name)
                 List<string> gisFieldsToInclude = exportFields
@@ -413,8 +413,8 @@ namespace HLU.UI.ViewModel
                     exportFeatureClassName,                      // Output feature class name
                     selectedOnly,                                // Selected features only?
                     gisFieldsToInclude,                          // Filtered GIS fields
-                    fieldOrderMap,                               // Field order mapping
-                    fieldRenameMap);                             // Field rename mapping
+                    null,                                        // No field ordering needed
+                    null);                                       // No field renaming needed
 
                 if (!exportSuccess)
                 {
@@ -424,7 +424,9 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Inform the user of success and that the output has been added to the current map
-
+                MessageBox.Show($"Export successful! {exportRowCount} records were exported.\n\n" +
+                    $"The exported data has been added to the current map.",
+                    "HLU: Export", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
@@ -461,9 +463,6 @@ namespace HLU.UI.ViewModel
                 {
                     throw new Exception("Working file geodatabase is not available.");
                 }
-
-                // Clear field description cache to manage memory.
-                _fieldDescriptionCache = [];
 
                 // Create the table structure in the existing geodatabase.
                 bool created = await ArcGISProHelpers.CreateTableAsync(workingFileGDBName, exportTableName, exportTable);
@@ -587,6 +586,9 @@ namespace HLU.UI.ViewModel
                         sortOrdinals,
                         exportFilter[j],
                         dataBase);
+
+                    //TODO: Debug - Print sql to debug output
+                    System.Diagnostics.Debug.WriteLine($"Executing export SQL (chunk {j + 1}/{exportFilter.Count}, length: {sql.Length} chars, {exportFilter[j].Count} conditions):\n{sql}");
 
                     // Execute the export query and get the results as a list of rows
                     List<Dictionary<string, object>> rowsBatch = new(_batchSize);
@@ -1248,42 +1250,21 @@ namespace HLU.UI.ViewModel
             int tableAliasNum = 1;
             bool firstJoin = true;
             _lastTableName = null;
-            _fieldCount = 0;
+            int sqlFieldOrdinal = 0;  // NEW: Track actual SQL field position
             int fieldLength = 0;
             _attributesLength = 0;
             _tableCount = 0;
+
+            Dictionary<string, string> tableAliases = new(); // Maps qualified table name -> alias
 
             // Iterate through the export fields in ordinal order to construct the SQL target list and from clause with necessary joins.
             foreach (HluDataSet.exports_fieldsRow r in
                 _viewModelMain.HluDataset.exports_fields.OrderBy(r => r.field_ordinal))
             {
-                // Check if this is a GIS layer field
+                // Check if this is a GIS layer field - skip it (no GIS fields in attribute table)
                 if (r.table_name.Equals("<gis>", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    // Verify the field actually exists in the GIS layer
-                    if (gisLayerFields == null || !gisLayerFields.Contains(r.column_name, StringComparer.OrdinalIgnoreCase))
-                    {
-                        // Skip this field if it doesn't exist in the GIS layer
-                        continue;
-                    }
-
-                    // Get the field metadata from the GIS layer
-                    Field gisField = gisFields.FirstOrDefault(f =>
-                        f.Name.Equals(r.column_name, StringComparison.OrdinalIgnoreCase));
-
-                    // Determine field length
-                    int gisFieldLength = 254; // Default for string fields
-                    if (gisField != null && gisField.FieldType == FieldType.String)
-                        gisFieldLength = gisField.Length;
-
-                    // Override with export field length if specified
-                    if (!r.IsNull(_viewModelMain.HluDataset.exports_fields.field_lengthColumn) && r.field_length > 0)
-                        gisFieldLength = r.field_length;
-
-                    // Add GIS field to export structure (not to SQL query)
-                    AddExportColumn(0, r.table_name, r.column_name, r.field_name,
-                        r.field_type, gisFieldLength, null, ref exportFields);
-                    continue;
+                    continue;  // Skip - don't add to exportTable or exportFields for attribute table
                 }
 
                 // Get the field length of the input table/column.
@@ -1300,8 +1281,9 @@ namespace HLU.UI.ViewModel
 
                     AddExportColumn(0, r.table_name, r.column_name, r.field_name,
                         r.field_type, fieldLength, !r.IsNull(_viewModelMain.HluDataset.exports_fields.field_formatColumn) ? r.field_format : null,
+                        sqlFieldOrdinal,
                         ref exportFields);
-                    continue;
+                    continue;  // Don't increment sqlFieldOrdinal for empty fields
                 }
 
                 // Determine if this field is to be output multiple times,
@@ -1314,9 +1296,16 @@ namespace HLU.UI.ViewModel
                 // Add the required table to the list of sql tables in
                 // the from clause.
                 string currTable = _viewModelMain.DataBase.QualifyTableName(r.table_name);
+                string currTableAlias = currTable; // Default to full table name
+
+                // If this table has not already been added to the from clause, add it now along with the necessary join(s).
                 if (!fromList.Contains(currTable))
                 {
                     fromList.Add(currTable);
+
+                    // Assign a unique alias for this table
+                    currTableAlias = tableAlias + tableAliasNum++;
+                    tableAliases[currTable] = currTableAlias;
 
                     var incidRelation = _viewModelMain.HluDataset.incid.ChildRelations.Cast<DataRelation>()
                         .Where(dr => dr.ChildTable.TableName == r.table_name);
@@ -1324,6 +1313,8 @@ namespace HLU.UI.ViewModel
                     if (!incidRelation.Any())
                     {
                         fromClause.Append(currTable);
+                        fromClause.Append(" ");
+                        fromClause.Append(currTableAlias);
                     }
                     else
                     {
@@ -1332,11 +1323,18 @@ namespace HLU.UI.ViewModel
                             firstJoin = false;
                         else
                             fromClause.Insert(0, "(").Append(')');
+
                         fromClause.Append(RelationJoinClause("LEFT", currTable, true,
                             _viewModelMain.DataBase.QuoteIdentifier(
-                            incidRel.ParentTable.TableName), incidRel, fromList));
+                            incidRel.ParentTable.TableName), incidRel, fromList, currTableAlias));
+
                         leftJoined.Add(currTable);
                     }
+                }
+                else
+                {
+                    // Table already added, retrieve its alias
+                    currTableAlias = tableAliases[currTable];
                 }
 
                 // Get the relationships for the table/column if a
@@ -1354,7 +1352,7 @@ namespace HLU.UI.ViewModel
                     case 0:     // If this field does not have any related lookup tables.
 
                         // Add the field to the sql target list.
-                        targetList.Append(String.Format(",{0}.{1} AS {2}", currTable,
+                        targetList.Append(String.Format(",{0}.{1} AS {2}", currTableAlias,
                             _viewModelMain.DataBase.QuoteIdentifier(r.column_name), r.field_name.Replace("<no>", "")));
 
                         // Enable text field lengths to be specified in
@@ -1370,8 +1368,12 @@ namespace HLU.UI.ViewModel
                         AddExportColumn(multipleFields ? r.fields_count : 0, r.table_name, r.column_name, r.field_name,
                             r.field_type, fieldLength,
                             !r.IsNull(_viewModelMain.HluDataset.exports_fields.field_formatColumn) ? r.field_format : String.Empty,
+                            sqlFieldOrdinal,
                             ref exportFields);
+
+                        sqlFieldOrdinal++;  // Increment SQL field position
                         break;
+
                     case 1:     // If this field has a related lookup table.
 
                         DataRelation lutRelation = relations.ElementAt(0);
@@ -1423,7 +1425,7 @@ namespace HLU.UI.ViewModel
                                 // Add the corresponding lookup table field to the sql
                                 // target list.
                                 targetList.Append(String.Format(",{0}.{1} {5} {6} {5} {2}.{3} AS {4}",
-                                    currTable,
+                                    currTableAlias,
                                     _viewModelMain.DataBase.QuoteIdentifier(r.column_name),
                                     parentTableAlias,
                                     _viewModelMain.DataBase.QuoteIdentifier(lutFieldName),
@@ -1461,7 +1463,10 @@ namespace HLU.UI.ViewModel
                             // Add the field to the sql list of export table columns.
                             AddExportColumn(multipleFields ? r.fields_count : 0, r.table_name, r.column_name, r.field_name,
                                 r.field_type, fieldLength, !r.IsNull(_viewModelMain.HluDataset.exports_fields.field_formatColumn) ? r.field_format : String.Empty,
+                                sqlFieldOrdinal,
                                 ref exportFields);
+
+                            sqlFieldOrdinal++;  // Increment SQL field position
                         }
                         // If the lookup table does not contains the required field
                         // name, but does contain the required field ordinal.
@@ -1475,7 +1480,7 @@ namespace HLU.UI.ViewModel
                                 // Add the corresponding lookup table field to the sql
                                 // target list.
                                 targetList.Append(String.Format(",{0}.{1} {5} {6} {5} {2}.{3} AS {4}",
-                                    currTable,
+                                    currTableAlias,
                                     _viewModelMain.DataBase.QuoteIdentifier(r.column_name),
                                     parentTableAlias,
                                     _viewModelMain.DataBase.QuoteIdentifier(lutRelation.ParentTable.Columns[lutFieldOrdinal].ColumnName),
@@ -1511,13 +1516,15 @@ namespace HLU.UI.ViewModel
                             // Add the field to the sql list of export table columns.
                             AddExportColumn(multipleFields ? r.fields_count : 0, r.table_name, r.column_name, r.field_name,
                                 r.field_type, fieldLength, !r.IsNull(_viewModelMain.HluDataset.exports_fields.field_formatColumn) ? r.field_format : null,
+                                sqlFieldOrdinal,
                                 ref exportFields);
+
+                            sqlFieldOrdinal++;  // Increment SQL field position
                         }
                         else
                         {
                             continue;
                         }
-
 
                         // Make all joins LEFT joins for simplicity and to allow for null
                         // foreign key values.
@@ -1530,7 +1537,7 @@ namespace HLU.UI.ViewModel
                             fromClause.Insert(0, "(").Append(')');
 
                         fromClause.Append(RelationJoinClause(joinType, currTable,
-                            false, parentTableAlias, lutRelation, fromList));
+                            false, parentTableAlias, lutRelation, fromList, currTableAlias));
 
                         break;
                 }
@@ -1768,11 +1775,8 @@ namespace HLU.UI.ViewModel
                 fieldTotal += 1;
             }
 
-            // Get the last input field ordinal.
-            int lastFieldOrdinal = exportFields.Max(e => e.FieldOrdinal);
-
-            // Count how many fields are already in the SQL query (count commas + 1)
-            int currentFieldCount = targetList.ToString().Split(',').Length - 1;
+            // Note: sqlFieldOrdinal contains the count of SQL fields added so far
+            // Use it when adding extra fields at the end
 
             // If any incid_condition fields are in the export file.
             if ((exportFields.Any(f => f.TableName == _viewModelMain.HluDataset.incid_condition.TableName)))
@@ -1781,56 +1785,72 @@ namespace HLU.UI.ViewModel
                 // it so that different conditions can be identified.
                 if (_conditionIdOrdinal == -1)
                 {
+                    // Get the alias for the incid_condition table
+                    string conditionTableAlias = tableAliases.TryGetValue(
+                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_condition.TableName),
+                        out string alias) ? alias : _viewModelMain.HluDataset.incid_condition.TableName;
+
                     // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}", _viewModelMain.HluDataset.incid_condition.TableName,
+                    targetList.Append(String.Format(",{0}.{1} AS {2}",
+                        conditionTableAlias,
                         _viewModelMain.HluDataset.incid_condition.incid_condition_idColumn.ColumnName, _viewModelMain.HluDataset.incid_condition.incid_condition_idColumn.ColumnName));
 
-                    // Store the input field ordinal for use
-                    // later as the unique incid_condition field ordinal.
-                    _conditionIdOrdinal = currentFieldCount;
-                    currentFieldCount++;
+                    _conditionIdOrdinal = sqlFieldOrdinal;
+                    sqlFieldOrdinal++;
                 }
 
-                // Store all of the condition date fields for use later when
-                // formatting the attribute data.
-                //
                 // If the condition_date_start column is not included then add
                 // it for use later.
                 if (_conditionDateStartOrdinal == -1)
                 {
+                    // Get the alias for the incid_condition table
+                    string conditionTableAlias = tableAliases.TryGetValue(
+                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_condition.TableName),
+                        out string alias) ? alias : _viewModelMain.HluDataset.incid_condition.TableName;
+
                     // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}", _viewModelMain.HluDataset.incid_condition.TableName,
+                    targetList.Append(String.Format(",{0}.{1} AS {2}",
+                        conditionTableAlias,
                         _viewModelMain.HluDataset.incid_condition.condition_date_startColumn.ColumnName, _viewModelMain.HluDataset.incid_condition.condition_date_startColumn.ColumnName));
 
-                    // Store the input field ordinal for use later.
-                    _conditionDateStartOrdinal = currentFieldCount;
-                    currentFieldCount++;
+                    _conditionDateStartOrdinal = sqlFieldOrdinal;
+                    sqlFieldOrdinal++;
                 }
 
                 // If the condition_date_end column is not included then add
                 // it for use later.
                 if (_conditionDateEndOrdinal == -1)
                 {
+                    // Get the alias for the incid_condition table
+                    string conditionTableAlias = tableAliases.TryGetValue(
+                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_condition.TableName),
+                        out string alias) ? alias : _viewModelMain.HluDataset.incid_condition.TableName;
+
                     // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}", _viewModelMain.HluDataset.incid_condition.TableName,
+                    targetList.Append(String.Format(",{0}.{1} AS {2}",
+                        conditionTableAlias,
                         _viewModelMain.HluDataset.incid_condition.condition_date_endColumn.ColumnName, _viewModelMain.HluDataset.incid_condition.condition_date_endColumn.ColumnName));
 
-                    // Store the input field ordinal for use later.
-                    _conditionDateEndOrdinal = currentFieldCount;
-                    currentFieldCount++;
+                    _conditionDateEndOrdinal = sqlFieldOrdinal;
+                    sqlFieldOrdinal++;
                 }
 
                 // If the condition_date_type column is not included then add
                 // it for use later.
                 if (_conditionDateTypeOrdinal == -1)
                 {
+                    // Get the alias for the incid_condition table
+                    string conditionTableAlias = tableAliases.TryGetValue(
+                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_condition.TableName),
+                        out string alias) ? alias : _viewModelMain.HluDataset.incid_condition.TableName;
+
                     // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}", _viewModelMain.HluDataset.incid_condition.TableName,
+                    targetList.Append(String.Format(",{0}.{1} AS {2}",
+                        conditionTableAlias,
                         _viewModelMain.HluDataset.incid_condition.condition_date_typeColumn.ColumnName, _viewModelMain.HluDataset.incid_condition.condition_date_typeColumn.ColumnName));
 
-                    // Store the input field ordinal for use later.
-                    _conditionDateTypeOrdinal = currentFieldCount;
-                    currentFieldCount++;
+                    _conditionDateTypeOrdinal = sqlFieldOrdinal;
+                    sqlFieldOrdinal++;
                 }
 
                 // Add the input field position to the list of fields
@@ -1846,14 +1866,18 @@ namespace HLU.UI.ViewModel
                 // it so that different matrixs can be identified.
                 if (_matrixIdOrdinal == -1)
                 {
+                    // Get the alias for the incid_ihs_matrix table
+                    string matrixTableAlias = tableAliases.TryGetValue(
+                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_ihs_matrix.TableName),
+                        out string alias) ? alias : _viewModelMain.HluDataset.incid_ihs_matrix.TableName;
+
                     // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}", _viewModelMain.HluDataset.incid_ihs_matrix.TableName,
+                    targetList.Append(String.Format(",{0}.{1} AS {2}",
+                        matrixTableAlias,
                         _viewModelMain.HluDataset.incid_ihs_matrix.matrix_idColumn.ColumnName, _viewModelMain.HluDataset.incid_ihs_matrix.matrix_idColumn.ColumnName));
 
-                    // Store the input field ordinal for use
-                    // later as the unique incid_ihs_matrix field ordinal.
-                    _matrixIdOrdinal = currentFieldCount;
-                    currentFieldCount++;
+                    _matrixIdOrdinal = sqlFieldOrdinal;
+                    sqlFieldOrdinal++;
                 }
 
                 // Add the input field position to the list of fields
@@ -1868,14 +1892,18 @@ namespace HLU.UI.ViewModel
                 // it so that different formations can be identified.
                 if (_formationIdOrdinal == -1)
                 {
+                    // Get the alias for the incid_ihs_formation table
+                    string formationTableAlias = tableAliases.TryGetValue(
+                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_ihs_formation.TableName),
+                        out string alias) ? alias : _viewModelMain.HluDataset.incid_ihs_formation.TableName;
+
                     // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}", _viewModelMain.HluDataset.incid_ihs_formation.TableName,
+                    targetList.Append(String.Format(",{0}.{1} AS {2}",
+                        formationTableAlias,
                         _viewModelMain.HluDataset.incid_ihs_formation.formation_idColumn.ColumnName, _viewModelMain.HluDataset.incid_ihs_formation.formation_idColumn.ColumnName));
 
-                    // Store the input field ordinal for use
-                    // later as the unique incid_ihs_formation field ordinal.
-                    _formationIdOrdinal = currentFieldCount;
-                    currentFieldCount++;
+                    _formationIdOrdinal = sqlFieldOrdinal;
+                    sqlFieldOrdinal++;
                 }
 
                 // Add the input field position to the list of fields
@@ -1890,14 +1918,18 @@ namespace HLU.UI.ViewModel
                 // it so that different managements can be identified.
                 if (_managementIdOrdinal == -1)
                 {
+                    // Get the alias for the incid_ihs_management table
+                    string managementTableAlias = tableAliases.TryGetValue(
+                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_ihs_management.TableName),
+                        out string alias) ? alias : _viewModelMain.HluDataset.incid_ihs_management.TableName;
+
                     // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}", _viewModelMain.HluDataset.incid_ihs_management.TableName,
+                    targetList.Append(String.Format(",{0}.{1} AS {2}",
+                        managementTableAlias,
                         _viewModelMain.HluDataset.incid_ihs_management.management_idColumn.ColumnName, _viewModelMain.HluDataset.incid_ihs_management.management_idColumn.ColumnName));
 
-                    // Store the input field ordinal for use
-                    // later as the unique incid_ihs_management field ordinal.
-                    _managementIdOrdinal = currentFieldCount;
-                    currentFieldCount++;
+                    _managementIdOrdinal = sqlFieldOrdinal;
+                    sqlFieldOrdinal++;
                 }
 
                 // Add the input field position to the list of fields
@@ -1912,14 +1944,18 @@ namespace HLU.UI.ViewModel
                 // it so that different complexs can be identified.
                 if (_complexIdOrdinal == -1)
                 {
+                    // Get the alias for the incid_ihs_complex table
+                    string complexTableAlias = tableAliases.TryGetValue(
+                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_ihs_complex.TableName),
+                        out string alias) ? alias : _viewModelMain.HluDataset.incid_ihs_complex.TableName;
+
                     // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}", _viewModelMain.HluDataset.incid_ihs_complex.TableName,
+                    targetList.Append(String.Format(",{0}.{1} AS {2}",
+                        complexTableAlias,
                         _viewModelMain.HluDataset.incid_ihs_complex.complex_idColumn.ColumnName, _viewModelMain.HluDataset.incid_ihs_complex.complex_idColumn.ColumnName));
 
-                    // Store the input field ordinal for use
-                    // later as the unique incid_ihs_complex field ordinal.
-                    _complexIdOrdinal = currentFieldCount;
-                    currentFieldCount++;
+                    _complexIdOrdinal = sqlFieldOrdinal;
+                    sqlFieldOrdinal++;
                 }
 
                 // Add the input field position to the list of fields
@@ -1934,31 +1970,32 @@ namespace HLU.UI.ViewModel
                 // add it so that the baps can be sorted by quality.
                 if (_bapQualityOrdinal == -1)
                 {
+                    // Get the alias for the incid_bap table
+                    string bapTableAlias = tableAliases.TryGetValue(
+                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_bap.TableName),
+                        out string alias) ? alias : _viewModelMain.HluDataset.incid_bap.TableName;
+
                     // Add a field to the input table to get the determination
                     // quality of the bap habitat so that 'not present' habitats
                     // are listed after 'present' habitats.
                     if ((DbFactory.ConnectionType.ToString().Equals("access", StringComparison.CurrentCultureIgnoreCase)) ||
                         (DbFactory.Backend.ToString().Equals("access", StringComparison.CurrentCultureIgnoreCase)))
                         targetList.Append(String.Format(", IIF({0}.{1} = {2}, 2, IIF({0}.{1} = {3}, 1, 0)) AS {4}",
-                            _viewModelMain.HluDataset.incid_bap.TableName,
+                            bapTableAlias,
                             _viewModelMain.HluDataset.incid_bap.quality_determinationColumn.ColumnName,
                             _viewModelMain.DataBase.QuoteValue(Settings.Default.BAPDeterminationQualityUserAdded),
                             _viewModelMain.DataBase.QuoteValue(Settings.Default.BAPDeterminationQualityPrevious),
                             "bap_habitat_quality"));
                     else
                         targetList.Append(String.Format(", CASE {0}.{1} WHEN {2} THEN 2 WHEN {3} THEN 1 ELSE 0 END AS {4}",
-                            _viewModelMain.HluDataset.incid_bap.TableName,
+                            bapTableAlias,
                             _viewModelMain.HluDataset.incid_bap.quality_determinationColumn.ColumnName,
                             _viewModelMain.DataBase.QuoteValue(Settings.Default.BAPDeterminationQualityUserAdded),
                             _viewModelMain.DataBase.QuoteValue(Settings.Default.BAPDeterminationQualityPrevious),
                             "bap_habitat_quality"));
-                    //// Add the field to the input table.
-                    //targetList.Append(String.Format(",{0}.{1} AS {2}", _viewModelMain.HluDataset.incid_bap.TableName,
-                    //    _viewModelMain.HluDataset.incid_bap.quality_determinationColumn.ColumnName, _viewModelMain.HluDataset.incid_bap.quality_determinationColumn.ColumnName));
 
-                    // Store the input field ordinal for use later.
-                    _bapQualityOrdinal = currentFieldCount;
-                    currentFieldCount++;
+                    _bapQualityOrdinal = sqlFieldOrdinal;
+                    sqlFieldOrdinal++;
 
                     // Add the input field position to the list of fields
                     // that will be used to sort the input records.
@@ -1969,13 +2006,18 @@ namespace HLU.UI.ViewModel
                 // add it so that the baps can be sorted by type.
                 if (_bapTypeOrdinal == -1)
                 {
+                    // Get the alias for the incid_bap table
+                    string bapTableAlias = tableAliases.TryGetValue(
+                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_bap.TableName),
+                        out string alias) ? alias : _viewModelMain.HluDataset.incid_bap.TableName;
+
                     // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}", _viewModelMain.HluDataset.incid_bap.TableName,
+                    targetList.Append(String.Format(",{0}.{1} AS {2}",
+                        bapTableAlias,
                         _viewModelMain.HluDataset.incid_bap.bap_habitatColumn.ColumnName, _viewModelMain.HluDataset.incid_bap.bap_habitatColumn.ColumnName));
 
-                    // Store the input field ordinal for use later.
-                    _bapTypeOrdinal = currentFieldCount;
-                    currentFieldCount++;
+                    _bapTypeOrdinal = sqlFieldOrdinal;
+                    sqlFieldOrdinal++;
 
                     // Add the input field position to the list of fields
                     // that will be used to sort the input records.
@@ -1986,14 +2028,18 @@ namespace HLU.UI.ViewModel
                 // it so that different baps can be identified.
                 if (_bapIdOrdinal == -1)
                 {
+                    // Get the alias for the incid_bap table
+                    string bapTableAlias = tableAliases.TryGetValue(
+                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_bap.TableName),
+                        out string alias) ? alias : _viewModelMain.HluDataset.incid_bap.TableName;
+
                     // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}", _viewModelMain.HluDataset.incid_bap.TableName,
+                    targetList.Append(String.Format(",{0}.{1} AS {2}",
+                        bapTableAlias,
                         _viewModelMain.HluDataset.incid_bap.bap_idColumn.ColumnName, _viewModelMain.HluDataset.incid_bap.bap_idColumn.ColumnName));
 
-                    // Store the input field ordinal for use
-                    // later as the unique incid_bap field ordinal.
-                    _bapIdOrdinal = currentFieldCount;
-                    currentFieldCount++;
+                    _bapIdOrdinal = sqlFieldOrdinal;
+                    sqlFieldOrdinal++;
 
                     // Add the input field position to the list of fields
                     // that will be used to sort the input records.
@@ -2008,28 +2054,36 @@ namespace HLU.UI.ViewModel
                 // it so that different sources can be identified.
                 if (_sourceIdOrdinal == -1)
                 {
+                    // Get the alias for the incid_sources table
+                    string sourceTableAlias = tableAliases.TryGetValue(
+                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_sources.TableName),
+                        out string alias) ? alias : _viewModelMain.HluDataset.incid_sources.TableName;
+
                     // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}", _viewModelMain.HluDataset.incid_sources.TableName,
+                    targetList.Append(String.Format(",{0}.{1} AS {2}",
+                        sourceTableAlias,
                         _viewModelMain.HluDataset.incid_sources.source_idColumn.ColumnName, _viewModelMain.HluDataset.incid_sources.source_idColumn.ColumnName));
 
-                    // Store the input field ordinal for use
-                    // later as the unique incid_source field ordinal.
-                    _sourceIdOrdinal = currentFieldCount;
-                    currentFieldCount++;
+                    _sourceIdOrdinal = sqlFieldOrdinal;
+                    sqlFieldOrdinal++;
                 }
 
                 // If the sort_order column is not included then add
                 // it so that the sources can be sorted.
                 if (sourceSortOrderOrdinal == -1)
                 {
+                    // Get the alias for the incid_sources table
+                    string sourceTableAlias = tableAliases.TryGetValue(
+                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_sources.TableName),
+                        out string alias) ? alias : _viewModelMain.HluDataset.incid_sources.TableName;
+
                     // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}", _viewModelMain.HluDataset.incid_sources.TableName,
+                    targetList.Append(String.Format(",{0}.{1} AS {2}",
+                        sourceTableAlias,
                         _viewModelMain.HluDataset.incid_sources.sort_orderColumn.ColumnName, _viewModelMain.HluDataset.incid_sources.sort_orderColumn.ColumnName));
 
-                    // Store the input field ordinal for use
-                    // later as the unique incid_source field ordinal.
-                    sourceSortOrderOrdinal = currentFieldCount;
-                    currentFieldCount++;
+                    sourceSortOrderOrdinal = sqlFieldOrdinal;
+                    sqlFieldOrdinal++;
                 }
 
                 // Add the input field position to the list of fields
@@ -2040,36 +2094,54 @@ namespace HLU.UI.ViewModel
                 // it for use later.
                 if (_sourceDateStartOrdinals.Count == 0)
                 {
+                    // Get the alias for the incid_sources table
+                    string sourceTableAlias = tableAliases.TryGetValue(
+                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_sources.TableName),
+                        out string alias) ? alias : _viewModelMain.HluDataset.incid_sources.TableName;
+
                     // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}", _viewModelMain.HluDataset.incid_sources.TableName,
+                    targetList.Append(String.Format(",{0}.{1} AS {2}",
+                        sourceTableAlias,
                         _viewModelMain.HluDataset.incid_sources.source_date_startColumn.ColumnName, _viewModelMain.HluDataset.incid_sources.source_date_startColumn.ColumnName));
 
-                    // Store the input field ordinal for use later.
-                    _sourceDateStartOrdinals.Add(lastFieldOrdinal += 1);
+                    _sourceDateStartOrdinals.Add(sqlFieldOrdinal);
+                    sqlFieldOrdinal++;
                 }
 
                 // If the source_date_end column is not included then add
                 // it for use later.
                 if (_sourceDateEndOrdinals.Count == 0)
                 {
+                    // Get the alias for the incid_sources table
+                    string sourceTableAlias = tableAliases.TryGetValue(
+                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_sources.TableName),
+                        out string alias) ? alias : _viewModelMain.HluDataset.incid_sources.TableName;
+
                     // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}", _viewModelMain.HluDataset.incid_sources.TableName,
+                    targetList.Append(String.Format(",{0}.{1} AS {2}",
+                        sourceTableAlias,
                         _viewModelMain.HluDataset.incid_sources.source_date_endColumn.ColumnName, _viewModelMain.HluDataset.incid_sources.source_date_endColumn.ColumnName));
 
-                    // Store the input field ordinal for use later.
-                    _sourceDateEndOrdinals.Add(lastFieldOrdinal += 1);
+                    _sourceDateEndOrdinals.Add(sqlFieldOrdinal);
+                    sqlFieldOrdinal++;
                 }
 
                 // If the source_date_type column is not included then add
                 // it for use later.
                 if (_sourceDateTypeOrdinals.Count == 0)
                 {
+                    // Get the alias for the incid_sources table
+                    string sourceTableAlias = tableAliases.TryGetValue(
+                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_sources.TableName),
+                        out string alias) ? alias : _viewModelMain.HluDataset.incid_sources.TableName;
+
                     // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}", _viewModelMain.HluDataset.incid_sources.TableName,
+                    targetList.Append(String.Format(",{0}.{1} AS {2}",
+                        sourceTableAlias,
                         _viewModelMain.HluDataset.incid_sources.source_date_typeColumn.ColumnName, _viewModelMain.HluDataset.incid_sources.source_date_typeColumn.ColumnName));
 
-                    // Store the input field ordinal for use later.
-                    _sourceDateTypeOrdinals.Add(lastFieldOrdinal += 1);
+                    _sourceDateTypeOrdinals.Add(sqlFieldOrdinal);
+                    sqlFieldOrdinal++;
                 }
             }
 
@@ -2142,9 +2214,10 @@ namespace HLU.UI.ViewModel
         /// <param name="fieldType">The data type of the field.</param>
         /// <param name="maxLength">The maximum length of the column.</param>
         /// <param name="fieldFormat">The format of the field.</param>
+        /// <param name="sqlFieldOrdinal">The ordinal position of the field in the SQL query.</param>
         /// <param name="exportFields">The list of export fields.</param>
         private void AddExportColumn(int numFields, string tableName, string columnName, string fieldName, int fieldType, int maxLength,
-            string fieldFormat, ref List<ExportField> exportFields)
+            string fieldFormat, int sqlFieldOrdinal, ref List<ExportField> exportFields)
         {
             Type dataType = null;
             int fieldLength = 0;
@@ -2233,7 +2306,7 @@ namespace HLU.UI.ViewModel
                     if (tableName.Equals("<none>", StringComparison.CurrentCultureIgnoreCase))
                         fld.FieldOrdinal = -1;
                     else
-                        fld.FieldOrdinal = _fieldCount;
+                        fld.FieldOrdinal = sqlFieldOrdinal;
 
                     fld.TableName = tableName;
                     fld.ColumnName = columnName;
@@ -2269,7 +2342,7 @@ namespace HLU.UI.ViewModel
                 if (tableName.Equals("<none>", StringComparison.CurrentCultureIgnoreCase))
                     fld.FieldOrdinal = -1;
                 else
-                    fld.FieldOrdinal = _fieldCount;
+                    fld.FieldOrdinal = sqlFieldOrdinal;
 
                 fld.TableName = tableName;
                 fld.ColumnName = columnName;
@@ -2292,31 +2365,32 @@ namespace HLU.UI.ViewModel
 
             // Store the last table referenced.
             _lastTableName = tableName;
-
-            // Increment the field counter.
-            if (!tableName.Equals("<none>", StringComparison.CurrentCultureIgnoreCase))
-                _fieldCount += 1;
         }
 
         /// <summary>
         /// Constructs the SQL JOIN clause for a given relationship between tables, based on the specified join type and table aliases.
         /// </summary>
-        /// <param name="joinType"></param>
-        /// <param name="currTable"></param>
-        /// <param name="parentLeft"></param>
-        /// <param name="parentTableAlias"></param>
-        /// <param name="rel"></param>
-        /// <param name="fromList"></param>
+        /// <param name="joinType">The type of SQL JOIN (e.g., INNER, LEFT, RIGHT).</param>
+        /// <param name="currTable">The current table involved in the join.</param>
+        /// <param name="parentLeft">Indicates if the parent table is on the left side of the join.</param>
+        /// <param name="parentTableAlias">The alias for the parent table.</param>
+        /// <param name="rel">The DataRelation object representing the relationship between tables.</param>
+        /// <param name="fromList">A list of tables already included in the FROM clause.</param>
+        /// <param name="currTableAlias">The alias for the current table (optional).</param>
         /// <returns>The SQL JOIN clause as a string.</returns>
         private string RelationJoinClause(string joinType, string currTable, bool parentLeft,
-            string parentTableAlias, DataRelation rel, List<string> fromList)
+            string parentTableAlias, DataRelation rel, List<string> fromList, string currTableAlias = null)
         {
             StringBuilder joinClausePart = new();
+
+            // Use the alias if provided, otherwise use the table name
+            string childTableRef = string.IsNullOrEmpty(currTableAlias) ? currTable : currTableAlias;
 
             for (int i = 0; i < rel.ParentColumns.Length; i++)
             {
                 joinClausePart.Append(String.Format(" AND {0}.{2} = {1}.{3}", parentTableAlias,
-                    currTable, _viewModelMain.DataBase.QuoteIdentifier(rel.ParentColumns[i].ColumnName),
+                    childTableRef, // Use the aliased child table reference
+                    _viewModelMain.DataBase.QuoteIdentifier(rel.ParentColumns[i].ColumnName),
                     _viewModelMain.DataBase.QuoteIdentifier(rel.ChildColumns[i].ColumnName)));
             }
 
@@ -2330,11 +2404,11 @@ namespace HLU.UI.ViewModel
             if (parentLeft)
             {
                 leftTable = _viewModelMain.DataBase.QuoteIdentifier(rel.ParentTable.TableName) + parentTableAlias;
-                rightTable = currTable;
+                rightTable = childTableRef; // Use alias here
             }
             else
             {
-                leftTable = currTable;
+                leftTable = childTableRef; // Use alias here
                 rightTable = _viewModelMain.DataBase.QuoteIdentifier(rel.ParentTable.TableName) + parentTableAlias;
             }
 
@@ -2351,20 +2425,33 @@ namespace HLU.UI.ViewModel
         /// The method iteratively constructs potential aliases by combining characters and checks for their
         /// uniqueness against the dataset's table names using regular expressions.
         /// </summary>
-        /// <returns></returns>
+        /// <remarks>The default is generally the lower case letter 'z'.</remarks>
+        /// <returns>A unique table alias as a string.</returns>
         private string GetTableAlias()
         {
+            // Iterate through potential alias combinations, starting with single characters and increasing in length up to 4 characters.
             for (int i = 1; i < 5; i++)
             {
+                // Iterate through ASCII values for lowercase letters (a-z) to construct potential aliases
+                // starting from 'z' (122) down to 'a' (97) to create aliases in reverse alphabetical order.
                 for (int j = 122; j > 96; j--)
                 {
+                    // Construct a potential alias by creating a character array of length 'i'
+                    // filled with the character corresponding to ASCII value 'j'.
                     char[] testCharArray = new char[i];
+
+                    // Fill the character array with the same character to create aliases like "z", "zz", "zzz", etc.
                     for (int k = 0; k < i; k++)
                         testCharArray[k] = (char)j;
+
+                    // Convert the character array to a string to form the potential alias.
                     string testString = new(testCharArray);
+
+                    // Check if the generated alias does not match any existing table names in the dataset.
                     if (!_viewModelMain.HluDataset.Tables.Cast<DataTable>().Any(t => Regex.IsMatch(t.TableName,
                         testString + "[0-9]+", RegexOptions.IgnoreCase)))
                     {
+                        // If the alias is unique, return it for use in SQL queries.
                         return testString;
                     }
                 }

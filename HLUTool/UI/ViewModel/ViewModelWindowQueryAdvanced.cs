@@ -172,6 +172,7 @@ namespace HLU.UI.ViewModel
 
                 try
                 {
+                    //TODO: Restrict the number returned?
                     // Load the data reader to retrieve the rows for
                     // the required column.
                     dataReader = _db.ExecuteReader(String.Format(

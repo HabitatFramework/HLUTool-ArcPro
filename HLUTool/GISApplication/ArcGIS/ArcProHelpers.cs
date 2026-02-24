@@ -35,9 +35,9 @@ namespace HLU.GISApplication
         /// <summary>
         /// Check if the feature class exists in the file path.
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="fileName"></param>
-        /// <returns>bool</returns>
+        /// <param name="filePath">The path to the file or geodatabase.</param>
+        /// <param name="fileName">The name of the feature class.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the feature class exists, otherwise false.</returns>
         public static async Task<bool> FeatureClassExistsAsync(string filePath, string fileName)
         {
             // Check there is an input file path.
@@ -78,8 +78,8 @@ namespace HLU.GISApplication
         /// <summary>
         /// Check if the feature class exists.
         /// </summary>
-        /// <param name="fullPath"></param>
-        /// <returns>bool</returns>
+        /// <param name="fullPath">The full path to the feature class.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the feature class exists, otherwise false.</returns>
         public static async Task<bool> FeatureClassExistsAsync(string fullPath)
         {
             // Check there is an input file path.
@@ -90,11 +90,102 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
+        /// Creates a temporary feature class with only the specified GIS fields in the correct order.
+        /// </summary>
+        /// <remarks>
+        /// Uses the CopyFeatures geoprocessing tool with a custom FieldMapping parameter to filter which GIS
+        /// fields are included and control their order in the output. System fields (OBJECTID, Shape, etc.)
+        /// are always included first. The method wraps the ArcGIS Pro CopyFeatures tool and executes it on
+        /// a background thread to avoid blocking the UI.
+        /// </remarks>
+        /// <param name="sourcePath">The full path to the source feature layer.</param>
+        /// <param name="gdbPath">The file geodatabase path where the temporary feature class will be created.</param>
+        /// <param name="tempFcName">The name for the temporary feature class.</param>
+        /// <param name="fieldMapping">
+        /// The field mapping string that controls which fields are copied and their order.
+        /// Format: "field1 field1 VISIBLE NONE;field2 field2 VISIBLE NONE;..."
+        /// </param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains true if the temporary feature class was created successfully; otherwise, false.
+        /// </returns>
+        public static async Task<bool> CreateTempFeatureClassAsync(
+            string sourcePath,
+            string gdbPath,
+            string tempFcName,
+            string fieldMapping)
+        {
+            // Check if there is a source path.
+            if (String.IsNullOrEmpty(sourcePath))
+                return false;
+
+            // Check if there is a geodatabase path.
+            if (String.IsNullOrEmpty(gdbPath))
+                return false;
+
+            // Check if there is a temporary feature class name.
+            if (String.IsNullOrEmpty(tempFcName))
+                return false;
+
+            // Check if there is a field mapping.
+            if (String.IsNullOrEmpty(fieldMapping))
+                return false;
+
+            // Build temp feature class path.
+            string tempFcPath = System.IO.Path.Combine(gdbPath, tempFcName);
+
+            // Make a value array of strings to be passed to the tool.
+            var parameters = Geoprocessing.MakeValueArray(
+                sourcePath,
+                tempFcPath,
+                "", // config_keyword
+                "", // spatial_grid_1
+                "", // spatial_grid_2
+                "", // spatial_grid_3
+                fieldMapping); // field_mapping
+
+            // Make a value array of the environments to be passed to the tool.
+            var environments = Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
+
+            // Set the geoprocessing flags.
+            GPExecuteToolFlags executeFlags = GPExecuteToolFlags.GPThread;
+
+            //Geoprocessing.OpenToolDialog("management.CopyFeatures", parameters);  // Useful for debugging.
+
+            // Execute the tool.
+            try
+            {
+                IGPResult gp_result = await Geoprocessing.ExecuteToolAsync(
+                    "management.CopyFeatures",
+                    parameters,
+                    environments,
+                    null,
+                    null,
+                    executeFlags);
+
+                if (gp_result.IsFailed)
+                {
+                    Geoprocessing.ShowMessageBox(gp_result.Messages, "GP Messages", GPMessageBoxStyle.Error);
+
+                    var messages = gp_result.Messages;
+                    var errMessages = gp_result.ErrorMessages;
+                    return false;
+                }
+            }
+            catch (Exception)
+            {
+                // Handle Exception.
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Delete a feature class by file path and file name.
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="fileName"></param>
-        /// <returns>bool</returns>
+        /// <param name="filePath">The path to the file or geodatabase.</param>
+        /// <param name="fileName">The name of the feature class.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the feature class was successfully deleted, otherwise false.</returns>
         public static async Task<bool> DeleteFeatureClassAsync(string filePath, string fileName)
         {
             // Check there is an input file path.
@@ -113,8 +204,8 @@ namespace HLU.GISApplication
         /// <summary>
         /// Delete a feature class by file name.
         /// </summary>
-        /// <param name="fileName"></param>
-        /// <returns>bool</returns>
+        /// <param name="fileName">The name of the feature class.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the feature class was successfully deleted, otherwise false.</returns>
         public static async Task<bool> DeleteFeatureClassAsync(string fileName)
         {
             // Check there is an input file name.
@@ -158,17 +249,17 @@ namespace HLU.GISApplication
         /// <summary>
         /// Add a field to a feature class or table.
         /// </summary>
-        /// <param name="inTable"></param>
-        /// <param name="fieldName"></param>
-        /// <param name="fieldType"></param>
-        /// <param name="fieldPrecision"></param>
-        /// <param name="fieldScale"></param>
-        /// <param name="fieldLength"></param>
-        /// <param name="fieldAlias"></param>
-        /// <param name="fieldIsNullable"></param>
-        /// <param name="fieldIsRequred"></param>
-        /// <param name="fieldDomain"></param>
-        /// <returns>bool</returns>
+        /// <param name="inTable">The input table or feature class.</param>
+        /// <param name="fieldName">The name of the field to add.</param>
+        /// <param name="fieldType">The type of the field.</param>
+        /// <param name="fieldPrecision">The precision of the field.</param>
+        /// <param name="fieldScale">The scale of the field.</param>
+        /// <param name="fieldLength">The length of the field.</param>
+        /// <param name="fieldAlias">The alias of the field.</param>
+        /// <param name="fieldIsNullable">Whether the field is nullable.</param>
+        /// <param name="fieldIsRequred">Whether the field is required.</param>
+        /// <param name="fieldDomain">The domain of the field.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the field was successfully added, otherwise false.</returns>
         public static async Task<bool> AddFieldAsync(string inTable, string fieldName, string fieldType = "TEXT",
             long fieldPrecision = -1, long fieldScale = -1, long fieldLength = -1, string fieldAlias = null,
             bool fieldIsNullable = true, bool fieldIsRequred = false, string fieldDomain = null)
@@ -219,15 +310,65 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
+        /// Delete one or more fields from a feature class or table.
+        /// </summary>
+        /// <param name="inTable">The input table or feature class.</param>
+        /// <param name="dropFields">Semicolon-separated list of field names to delete (e.g., "field1;field2;field3").</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the fields were successfully deleted, otherwise false.</returns>
+        public static async Task<bool> DeleteFieldAsync(string inTable, string dropFields)
+        {
+            // Check if there is an input table name.
+            if (String.IsNullOrEmpty(inTable))
+                return false;
+
+            // Check if there are fields to delete.
+            if (String.IsNullOrEmpty(dropFields))
+                return false;
+
+            // Make a value array of strings to be passed to the tool.
+            var parameters = Geoprocessing.MakeValueArray(inTable, dropFields);
+
+            // Make a value array of the environments to be passed to the tool.
+            var environments = Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
+
+            // Set the geoprocessing flags.
+            GPExecuteToolFlags executeFlags = GPExecuteToolFlags.GPThread;
+
+            //Geoprocessing.OpenToolDialog("management.DeleteField", parameters);  // Useful for debugging.
+
+            // Execute the tool.
+            try
+            {
+                IGPResult gp_result = await Geoprocessing.ExecuteToolAsync("management.DeleteField", parameters, environments, null, null, executeFlags);
+
+                if (gp_result.IsFailed)
+                {
+                    Geoprocessing.ShowMessageBox(gp_result.Messages, "GP Messages", GPMessageBoxStyle.Error);
+
+                    var messages = gp_result.Messages;
+                    var errMessages = gp_result.ErrorMessages;
+                    return false;
+                }
+            }
+            catch (Exception)
+            {
+                // Handle Exception.
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Calculate the summary statistics for a feature class or table.
         /// </summary>
-        /// <param name="inTable"></param>
-        /// <param name="outTable"></param>
-        /// <param name="statisticsFields"></param>
-        /// <param name="caseFields"></param>
-        /// <param name="concatenationSeparator"></param>
-        /// <param name="addToMap"></param>
-        /// <returns>bool</returns>
+        /// <param name="inTable">The input table or feature class.</param>
+        /// <param name="outTable">The output table.</param>
+        /// <param name="statisticsFields">The fields to calculate statistics on.</param>
+        /// <param name="caseFields">The fields to use for case grouping.</param>
+        /// <param name="concatenationSeparator">The separator for concatenated values.</param>
+        /// <param name="addToMap">Whether to add the output to the map.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the summary statistics were successfully calculated, otherwise false.</returns>
         public static async Task<bool> CalculateSummaryStatisticsAsync(string inTable, string outTable, string statisticsFields,
             string caseFields = "", string concatenationSeparator = "", bool addToMap = false)
         {
@@ -282,11 +423,11 @@ namespace HLU.GISApplication
         /// <summary>
         /// Convert the features in a feature class to a point feature class.
         /// </summary>
-        /// <param name="inFeatureClass"></param>
-        /// <param name="outFeatureClass"></param>
-        /// <param name="pointLocation"></param>
-        /// <param name="addToMap"></param>
-        /// <returns>bool</returns>
+        /// <param name="inFeatureClass">The input feature class.</param>
+        /// <param name="outFeatureClass">The output feature class.</param>
+        /// <param name="pointLocation">The location of the point (e.g., "CENTROID").</param>
+        /// <param name="addToMap">Whether to add the output to the map.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the analysis was successful, otherwise false.</returns>
         public static async Task<bool> FeatureToPointAsync(string inFeatureClass, string outFeatureClass, string pointLocation = "CENTROID", bool addToMap = false)
         {
             // Check if there is an input feature class.
@@ -336,15 +477,15 @@ namespace HLU.GISApplication
         /// <summary>
         /// Convert the features in a feature class to a point feature class.
         /// </summary>
-        /// <param name="inFeatureClass"></param>
-        /// <param name="nearFeatureClass"></param>
-        /// <param name="searchRadius"></param>
-        /// <param name="location"></param>
-        /// <param name="angle"></param>
-        /// <param name="method"></param>
-        /// <param name="fieldNames"></param>
-        /// <param name="distanceUnit"></param>
-        /// <returns>bool</returns>
+        /// <param name="inFeatureClass">The input feature class.</param>
+        /// <param name="nearFeatureClass">The near feature class.</param>
+        /// <param name="searchRadius">The search radius.</param>
+        /// <param name="location">The location.</param>
+        /// <param name="angle">The angle.</param>
+        /// <param name="method">The method.</param>
+        /// <param name="fieldNames">The field names.</param>
+        /// <param name="distanceUnit">The distance unit.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the analysis was successful, otherwise false.</returns>
         public static async Task<bool> NearAnalysisAsync(string inFeatureClass, string nearFeatureClass, string searchRadius = "",
             string location = "NO_LOCATION", string angle = "NO_ANGLE", string method = "PLANAR", string fieldNames = "", string distanceUnit = "")
         {
@@ -397,8 +538,8 @@ namespace HLU.GISApplication
         /// <summary>
         /// Create a new file geodatabase.
         /// </summary>
-        /// <param name="fullPath"></param>
-        /// <returns>Geodatabase</returns>
+        /// <param name="fullPath">The full path to the file geodatabase to create.</param>
+        /// <returns>The created geodatabase, or null if creation failed.</returns>
         public static Geodatabase CreateFileGeodatabase(string fullPath)
         {
             // Check if there is an input full path.
@@ -428,7 +569,7 @@ namespace HLU.GISApplication
         /// Deletes a file geodatabase at the specified path, retrying if it's temporarily locked.
         /// </summary>
         /// <param name="fullPath">The full path to the .gdb folder to delete.</param>
-        /// <returns>True if the geodatabase was successfully deleted; false otherwise.</returns>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the geodatabase was successfully deleted; false otherwise.</returns>
         public static async Task<bool> DeleteFileGeodatabaseAsync(string fullPath)
         {
             // Check if there is an input full path.
@@ -482,21 +623,20 @@ namespace HLU.GISApplication
             return success;
         }
 
-        //TODO: Change input parameter to 'featureClass'
         /// <summary>
         /// Check if a feature class exists in a geodatabase.
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="fileName"></param>
-        /// <returns>bool</returns>
-        public static async Task<bool> FeatureClassExistsGDBAsync(string filePath, string fileName)
+        /// <param name="gdbPath">The path to the geodatabase.</param>
+        /// <param name="featureClassName">The name of the feature class.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the feature class exists; otherwise, false.</returns>
+        public static async Task<bool> FeatureClassExistsGDBAsync(string gdbPath, string featureClassName)
         {
             // Check there is an input file path.
-            if (String.IsNullOrEmpty(filePath))
+            if (String.IsNullOrEmpty(gdbPath))
                 return false;
 
             // Check there is an input file name.
-            if (String.IsNullOrEmpty(fileName))
+            if (String.IsNullOrEmpty(featureClassName))
                 return false;
 
             bool exists = false;
@@ -506,10 +646,10 @@ namespace HLU.GISApplication
                 await QueuedTask.Run(() =>
                 {
                     // Open the file geodatabase. This will open the geodatabase if the folder exists and contains a valid geodatabase.
-                    using Geodatabase geodatabase = new(new FileGeodatabaseConnectionPath(new Uri(filePath)));
+                    using Geodatabase geodatabase = new(new FileGeodatabaseConnectionPath(new Uri(gdbPath)));
 
                     // Create a FeatureClassDefinition object.
-                    using FeatureClassDefinition featureClassDefinition = geodatabase.GetDefinition<FeatureClassDefinition>(fileName);
+                    using FeatureClassDefinition featureClassDefinition = geodatabase.GetDefinition<FeatureClassDefinition>(featureClassName);
 
                     if (featureClassDefinition != null)
                         exists = true;
@@ -529,21 +669,20 @@ namespace HLU.GISApplication
             return exists;
         }
 
-        //TODO: Change input parameter to 'tableName'
         /// <summary>
         /// Check if a layer exists in a geodatabase.
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="fileName"></param>
-        /// <returns>bool</returns>
-        public static async Task<bool> TableExistsGDBAsync(string filePath, string fileName)
+        /// <param name="gdbPath">The path to the geodatabase.</param>
+        /// <param name="tableName">The name of the table.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the table exists; otherwise, false.</returns>
+        public static async Task<bool> TableExistsGDBAsync(string gdbPath, string tableName)
         {
             // Check there is an input file path.
-            if (String.IsNullOrEmpty(filePath))
+            if (String.IsNullOrEmpty(gdbPath))
                 return false;
 
             // Check there is an input file name.
-            if (String.IsNullOrEmpty(fileName))
+            if (String.IsNullOrEmpty(tableName))
                 return false;
 
             bool exists = false;
@@ -553,13 +692,13 @@ namespace HLU.GISApplication
                 await QueuedTask.Run(() =>
                 {
                     // Open the file geodatabase. This will open the geodatabase if the folder exists and contains a valid geodatabase.
-                    using Geodatabase geodatabase = new(new FileGeodatabaseConnectionPath(new Uri(filePath)));
+                    using Geodatabase geodatabase = new(new FileGeodatabaseConnectionPath(new Uri(gdbPath)));
 
                     // Get all table definitions and check if the table name exists
                     IReadOnlyList<TableDefinition> tableDefinitions = geodatabase.GetDefinitions<TableDefinition>();
 
                     exists = tableDefinitions.Any(td =>
-                        td.GetName().Equals(fileName, StringComparison.OrdinalIgnoreCase));
+                        td.GetName().Equals(tableName, StringComparison.OrdinalIgnoreCase));
                 });
             }
             catch (GeodatabaseNotFoundOrOpenedException)
@@ -579,17 +718,17 @@ namespace HLU.GISApplication
         /// <summary>
         /// Delete a feature class from a geodatabase.
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="fileName"></param>
-        /// <returns>bool</returns>
-        public static async Task<bool> DeleteGeodatabaseFCAsync(string filePath, string fileName)
+        /// <param name="gdbPath">The path to the geodatabase.</param>
+        /// <param name="featureClassName">The name of the feature class.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the feature class was deleted; otherwise, false.</returns>
+        public static async Task<bool> DeleteGeodatabaseFCAsync(string gdbPath, string featureClassName)
         {
             // Check there is an input file path.
-            if (String.IsNullOrEmpty(filePath))
+            if (String.IsNullOrEmpty(gdbPath))
                 return false;
 
             // Check there is an input file name.
-            if (String.IsNullOrEmpty(fileName))
+            if (String.IsNullOrEmpty(featureClassName))
                 return false;
 
             bool success = false;
@@ -599,13 +738,13 @@ namespace HLU.GISApplication
                 await QueuedTask.Run(() =>
                 {
                     // Open the file geodatabase. This will open the geodatabase if the folder exists and contains a valid geodatabase.
-                    using Geodatabase geodatabase = new(new FileGeodatabaseConnectionPath(new Uri(filePath)));
+                    using Geodatabase geodatabase = new(new FileGeodatabaseConnectionPath(new Uri(gdbPath)));
 
                     // Create a SchemaBuilder object
                     SchemaBuilder schemaBuilder = new(geodatabase);
 
                     // Create a FeatureClassDescription object.
-                    using FeatureClassDefinition featureClassDefinition = geodatabase.GetDefinition<FeatureClassDefinition>(fileName);
+                    using FeatureClassDefinition featureClassDefinition = geodatabase.GetDefinition<FeatureClassDefinition>(featureClassName);
 
                     // Create a FeatureClassDescription object
                     FeatureClassDescription featureClassDescription = new(featureClassDefinition);
@@ -634,9 +773,9 @@ namespace HLU.GISApplication
         /// <summary>
         /// Delete a feature class from a geodatabase.
         /// </summary>
-        /// <param name="geodatabase"></param>
-        /// <param name="featureClassName"></param>
-        /// <returns>bool</returns>
+        /// <param name="geodatabase">The geodatabase containing the feature class.</param>
+        /// <param name="featureClassName">The name of the feature class.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the feature class was deleted; otherwise, false.</returns>
         public static async Task<bool> DeleteGeodatabaseFCAsync(Geodatabase geodatabase, string featureClassName)
         {
             // Check there is an input geodatabase.
@@ -681,17 +820,17 @@ namespace HLU.GISApplication
         /// <summary>
         /// Delete a table from a geodatabase.
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="fileName"></param>
-        /// <returns>bool</returns>
-        public static async Task<bool> DeleteGeodatabaseTableAsync(string filePath, string fileName)
+        /// <param name="gdbPath">The path to the geodatabase.</param>
+        /// <param name="tableName">The name of the table.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the table was deleted; otherwise, false.</returns>
+        public static async Task<bool> DeleteGeodatabaseTableAsync(string gdbPath, string tableName)
         {
             // Check there is an input file path.
-            if (String.IsNullOrEmpty(filePath))
+            if (String.IsNullOrEmpty(gdbPath))
                 return false;
 
             // Check there is an input file name.
-            if (String.IsNullOrEmpty(fileName))
+            if (String.IsNullOrEmpty(tableName))
                 return false;
 
             bool success = false;
@@ -701,13 +840,13 @@ namespace HLU.GISApplication
                 await QueuedTask.Run(() =>
                 {
                     // Open the file geodatabase. This will open the geodatabase if the folder exists and contains a valid geodatabase.
-                    using Geodatabase geodatabase = new(new FileGeodatabaseConnectionPath(new Uri(filePath)));
+                    using Geodatabase geodatabase = new(new FileGeodatabaseConnectionPath(new Uri(gdbPath)));
 
                     // Create a SchemaBuilder object
                     SchemaBuilder schemaBuilder = new(geodatabase);
 
                     // Create a FeatureClassDescription object.
-                    using TableDefinition tableDefinition = geodatabase.GetDefinition<TableDefinition>(fileName);
+                    using TableDefinition tableDefinition = geodatabase.GetDefinition<TableDefinition>(tableName);
 
                     // Create a FeatureClassDescription object
                     TableDescription tableDescription = new(tableDefinition);
@@ -730,9 +869,9 @@ namespace HLU.GISApplication
         /// <summary>
         /// Delete a table from a geodatabase.
         /// </summary>
-        /// <param name="geodatabase"></param>
-        /// <param name="tableName"></param>
-        /// <returns>bool</returns>
+        /// <param name="geodatabase">The geodatabase containing the table.</param>
+        /// <param name="tableName">The name of the table.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the table was deleted; otherwise, false.</returns>
         public static async Task<bool> DeleteGeodatabaseTableAsync(Geodatabase geodatabase, string tableName)
         {
             // Check if the is an input geodatabase
@@ -776,8 +915,8 @@ namespace HLU.GISApplication
         /// <summary>
         /// Cleans up all tables and feature classes from a geodatabase.
         /// </summary>
-        /// <param name="gdbPath">Path to the geodatabase.</param>
-        /// <returns>Number of items deleted.</returns>
+        /// <param name="gdbPath">The path to the geodatabase.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the number of items deleted.</returns>
         public static async Task<int> CleanupGeodatabaseAsync(string gdbPath)
         {
             // Check parameters.
@@ -864,10 +1003,11 @@ namespace HLU.GISApplication
         /// This method checks if an index already exists on the specified field before attempting to create one.
         /// If an index exists, the method returns true without creating a duplicate index.
         /// </remarks>
+        /// <param name="gdbPath">The path to the geodatabase containing the table or feature class.</param>
         /// <param name="inTable">The full path to the input table or feature class.</param>
         /// <param name="fieldNames">The field name(s) to index (comma-separated for composite indexes).</param>
         /// <param name="indexName">The name for the new index.</param>
-        /// <returns>True if the index was created successfully or already exists, otherwise false.</returns>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the index was created successfully or already exists, otherwise false.</returns>
         public static async Task<bool> AddAttributeIndexAsync(string gdbPath, string inTable, string fieldNames, string indexName)
         {
             // Check there is an input geodatabase path.
@@ -961,18 +1101,18 @@ namespace HLU.GISApplication
         /// <summary>
         /// Spatially join a feature class with another feature class.
         /// </summary>
-        /// <param name="targetFeatures"></param>
-        /// <param name="joinFeatures"></param>
-        /// <param name="outFeatureClass"></param>
-        /// <param name="joinOperation"></param>
-        /// <param name="joinType"></param>
-        /// <param name="fieldMapping"></param>
-        /// <param name="matchOption"></param>
-        /// <param name="searchRadius"></param>
-        /// <param name="distanceField"></param>
-        /// <param name="matchFields"></param>
-        /// <param name="addToMap"></param>
-        /// <returns>bool</returns>
+        /// <param name="targetFeatures">The target feature class.</param>
+        /// <param name="joinFeatures">The join feature class.</param>
+        /// <param name="outFeatureClass">The output feature class.</param>
+        /// <param name="joinOperation">The join operation.</param>
+        /// <param name="joinType">The join type.</param>
+        /// <param name="fieldMapping">The field mapping.</param>
+        /// <param name="matchOption">The match option.</param>
+        /// <param name="searchRadius">The search radius.</param>
+        /// <param name="distanceField">The distance field.</param>
+        /// <param name="matchFields">The match fields.</param>
+        /// <param name="addToMap">Whether to add the output to the map.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the analysis was successful, otherwise false.</returns>
         public static async Task<bool> SpatialJoinAsync(string targetFeatures, string joinFeatures, string outFeatureClass, string joinOperation = "JOIN_ONE_TO_ONE",
             string joinType = "KEEP_ALL", string fieldMapping = "", string matchOption = "INTERSECT", string searchRadius = "0", string distanceField = "",
             string matchFields = "", bool addToMap = false)
@@ -1027,20 +1167,33 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Permanently join fields from one feature class to another feature class.
+        /// Permanently join fields from one table/feature class to another table/feature class.
         /// </summary>
-        /// <param name="inFeatures"></param>
-        /// <param name="inField"
-        /// <param name="joinFeatures"></param>
-        /// <param name="joinField"></param>
-        /// <param name="fields"></param>
-        /// <param name="fmOption"></param>
-        /// <param name="fieldMapping"></param>
-        /// <param name="indexJoinFields"></param>
-        /// <param name="addToMap"></param>
-        /// <returns>bool</returns>
-        public static async Task<bool> JoinFieldsAsync(string inFeatures, string inField, string joinFeatures, string joinField,
-            string fields = "", string fmOption = "NOT_USE_FM", string fieldMapping = "", string indexJoinFields = "NO_INDEXES",
+        /// <remarks>
+        /// This method uses the JoinField geoprocessing tool to permanently add fields from a join table
+        /// to a target table or feature class. The fields parameter can be:
+        /// - Empty/null: Join ALL fields from the join table
+        /// - Semicolon-separated list: Join only specified fields (e.g., "field1;field2;field3")
+        /// </remarks>
+        /// <param name="inFeatures">The target table or feature class to join fields to.</param>
+        /// <param name="inField">The field in the target table used for the join.</param>
+        /// <param name="joinFeatures">The join table containing fields to add.</param>
+        /// <param name="joinField">The field in the join table used for the join.</param>
+        /// <param name="fields">Semicolon-separated list of field names to join, or empty/null to join all fields.</param>
+        /// <param name="fmOption">Use field mapping: "USE_FM" or "NOT_USE_FM" (default).</param>
+        /// <param name="fieldMapping">Optional field mapping string (only used if fmOption is "USE_FM").</param>
+        /// <param name="indexJoinFields">Index join fields: "INDEX" to add index, "NO_INDEX" to skip (default).</param>
+        /// <param name="addToMap">If true, add the result to the active map.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if successful, otherwise false.</returns>
+        public static async Task<bool> JoinFieldsAsync(
+            string inFeatures,
+            string inField,
+            string joinFeatures,
+            string joinField,
+            string fields = "",
+            string fmOption = "NOT_USE_FM",
+            string fieldMapping = "",
+            string indexJoinFields = "NO_INDEXES",
             bool addToMap = false)
         {
             // Check if there is an input target feature class.
@@ -1057,6 +1210,10 @@ namespace HLU.GISApplication
 
             // Check if there is a join field name.
             if (String.IsNullOrEmpty(joinField))
+                return false;
+
+            // Validate indexJoinFields parameter (must be "NEW_INDEXES", "REPLACE_INDEXES", or "NO_INDEXES")
+            if (indexJoinFields != "NEW_INDEXES" && indexJoinFields != "REPLACE_INDEXES" && indexJoinFields != "NO_INDEXES")
                 return false;
 
             // Make a value array of strings to be passed to the tool.
@@ -1106,7 +1263,7 @@ namespace HLU.GISApplication
         /// </remarks>
         /// <param name="featureClassPath">The full path to the feature class.</param>
         /// <param name="baseFieldName">The base name of the join field (e.g., "incid").</param>
-        /// <returns>True if the duplicate field was deleted or didn't exist, otherwise false.</returns>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the duplicate field was deleted or didn't exist, otherwise false.</returns>
         public static async Task<bool> DeleteDuplicateJoinFieldAsync(string featureClassPath, string baseFieldName)
         {
             // Check there is an input feature class path.
@@ -1117,7 +1274,7 @@ namespace HLU.GISApplication
             if (String.IsNullOrWhiteSpace(baseFieldName))
                 return false;
 
-            return await QueuedTask.Run(async () =>
+            List<string> duplicateFields = await QueuedTask.Run(() =>
             {
                 try
                 {
@@ -1134,68 +1291,28 @@ namespace HLU.GISApplication
 
                     // Find duplicate fields created by JoinField.
                     // The JoinField tool typically appends "_1", "_2", etc. to duplicate field names.
-                    var duplicateFields = fields
+                    return fields
                         .Where(f => f.Name.StartsWith(baseFieldName + "_", StringComparison.OrdinalIgnoreCase))
                         .Select(f => f.Name)
                         .ToList();
-
-                    // If no duplicate fields found, nothing to do.
-                    if (duplicateFields.Count == 0)
-                        return true;
-
-                    // Set the geoprocessing flags.
-                    GPExecuteToolFlags executeFlags = GPExecuteToolFlags.GPThread;
-
-                    // Make a value array of the environments to be passed to the tool.
-                    var environments = Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
-
-                    // Delete all duplicate fields using the DeleteField geoprocessing tool.
-                    foreach (string fieldName in duplicateFields)
-                    {
-                        // Set the parameters to delete the duplicate field.
-                        var parameters = Geoprocessing.MakeValueArray(featureClassPath, fieldName);
-
-                        //Geoprocessing.OpenToolDialog("management.DeleteField", parameters);  // Useful for debugging.
-
-                        // Delete the duplicate field.
-                        try
-                        {
-                            // Execute the tool.
-                            IGPResult gp_result = await Geoprocessing.ExecuteToolAsync(
-                                "management.DeleteField",
-                                parameters,
-                                environments,
-                                null,
-                                null,
-                                executeFlags);
-
-                            if (gp_result.IsFailed)
-                            {
-                                Geoprocessing.ShowMessageBox(gp_result.Messages, "GP Messages", GPMessageBoxStyle.Error);
-
-                                System.Diagnostics.Debug.WriteLine(
-                                    $"Failed to delete field {fieldName}: {string.Join("\n", gp_result.Messages.Select(m => m.Text))}");
-
-                                //var messages = gp_result.Messages;
-                                //var errMessages = gp_result.ErrorMessages;
-                                return false;
-                            }
-                        }
-                        catch (Exception)
-                        {
-                            // Handle Exception.
-                            return false;
-                        }
-                    }
-
-                    return true;
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Error deleting duplicate join fields: {ex.Message}");
-                    return false;
+                    System.Diagnostics.Debug.WriteLine($"Error finding duplicate join fields: {ex.Message}");
+                    return null;
                 }
             });
+
+            // If no duplicate fields found or error occurred, return appropriate result.
+            if (duplicateFields == null)
+                return false;
+
+            if (duplicateFields.Count == 0)
+                return true;
+
+            // Delete all duplicate fields using the DeleteField helper method.
+            string fieldsToDelete = string.Join(";", duplicateFields);
+            return await DeleteFieldAsync(featureClassPath, fieldsToDelete);
         }
 
         #endregion Joins
@@ -1205,9 +1322,9 @@ namespace HLU.GISApplication
         /// <summary>
         /// Check if a feature class exists in the file path.
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="fileName"></param>
-        /// <returns>bool</returns>
+        /// <param name="filePath">The path to the file.</param>
+        /// <param name="fileName">The name of the file.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the feature class exists; otherwise, false.</returns>
         public static async Task<bool> TableExistsAsync(string filePath, string fileName)
         {
             // Check there is an input file path.
@@ -1250,8 +1367,8 @@ namespace HLU.GISApplication
         /// <summary>
         /// Check if a feature class exists.
         /// </summary>
-        /// <param name="fullPath"></param>
-        /// <returns>bool</returns>
+        /// <param name="fullPath">The full path to the feature class.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the feature class exists, otherwise false.</returns>
         public static async Task<bool> TableExistsAsync(string fullPath)
         {
             // Check there is an input full path.
@@ -1267,7 +1384,7 @@ namespace HLU.GISApplication
         /// <param name="gdbPath">Full path to the file geodatabase.</param>
         /// <param name="tableName">Name of the table to create.</param>
         /// <param name="schemaTable">DataTable defining the table structure.</param>
-        /// <returns>True if the table was successfully created; false otherwise.</returns>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the table was successfully created; false otherwise.</returns>
         public static async Task<bool> CreateTableAsync(string gdbPath, string tableName, DataTable schemaTable)
         {
             // Check there is an input geodatabase path.
@@ -1402,12 +1519,12 @@ namespace HLU.GISApplication
         /// <param name="gdbPath">Full path to the file geodatabase.</param>
         /// <param name="tableName">Name of the table to insert rows into.</param>
         /// <param name="rows">List of rows to insert, where each row is a dictionary of field name to value.</param>
-        /// <returns>The number of rows successfully inserted across all batches.</returns>
         /// <remarks>
         /// This method uses InsertCursor for efficient batch insertion. Each row dictionary should contain
         /// field names as keys and field values as objects. DBNull.Value is used for null values.
         /// The method processes rows in batches for optimal performance.
         /// </remarks>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the number of rows successfully inserted across all batches.</returns>
         public static async Task<int> BulkInsertRowsAsync(string gdbPath, string tableName, List<Dictionary<string, object>> rows)
         {
             // Check there is an input geodatabase path.
@@ -1476,9 +1593,9 @@ namespace HLU.GISApplication
         /// <summary>
         /// Prompt the user to specify an output file in the required format.
         /// </summary>
-        /// <param name="fileType"></param>
-        /// <param name="initialDirectory"></param>
-        /// <returns>string</returns>
+        /// <param name="fileType">The type of file to save.</param>
+        /// <param name="initialDirectory">The initial directory to open in the save dialog.</param>
+        /// <returns>The full path to the selected output file, or null if the user cancels.</returns>
         public static string GetOutputFileName(string fileType, string initialDirectory = @"C:\")
         {
             BrowseProjectFilter bf = fileType switch
@@ -1525,15 +1642,17 @@ namespace HLU.GISApplication
         /// calculated when using CreateRow().
         /// </remarks>
         /// <param name="featureClassPath">The full path to the feature class (e.g., "C:\data\test.gdb\myfeatures").</param>
+        /// <param name="lengthField">The name of the length field.</param>
+        /// <param name="areaField">The name of the area field.</param>
         /// <param name="lengthUnit">Length unit. Default is "METERS".</param>
         /// <param name="areaUnit">Area unit. Default is "SQUARE_METERS".</param>
-        /// <returns>True if successful, otherwise false.</returns>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if successful, otherwise false.</returns>
         public static async Task<bool> RecalculateGeometryAttributesAsync(
             string featureClassPath,
             string lengthField,
             string areaField,
-                string lengthUnit = "METERS",
-                string areaUnit = "SQUARE_METERS")
+            string lengthUnit = "METERS",
+            string areaUnit = "SQUARE_METERS")
         {
             // Check parameters
             if (string.IsNullOrWhiteSpace(featureClassPath))
@@ -1591,7 +1710,7 @@ namespace HLU.GISApplication
         /// Gets the geometry field names (length and area) for a feature class.
         /// </summary>
         /// <param name="featureClassPath">Full path to the feature class or shapefile.</param>
-        /// <returns>A tuple containing (lengthFieldName, areaFieldName), or (null, null) if not found.</returns>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a tuple with (lengthFieldName, areaFieldName), or (null, null) if not found.</returns>
         public static async Task<(string lengthField, string areaField)> GetGeometryFieldNamesAsync(string featureClassPath)
         {
             if (string.IsNullOrWhiteSpace(featureClassPath))
@@ -1669,7 +1788,7 @@ namespace HLU.GISApplication
         /// <param name="layerName">Optional name for the layer. If null, uses the feature class name.</param>
         /// <param name="groupLayerName">Optional group layer to add the layer to. If null, adds to top level.</param>
         /// <param name="position">Optional position to insert the layer. If -1, adds to top.</param>
-        /// <returns>True if the layer was successfully added; false otherwise.</returns>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the layer was successfully added; false otherwise.</returns>
         public static async Task<bool> AddFeatureLayerToMapAsync(
             string featureClassPath,
             string layerName = null,
@@ -1777,10 +1896,10 @@ namespace HLU.GISApplication
         /// <summary>
         /// Copy the input feature class to the output feature class.
         /// </summary>
-        /// <param name="inFeatureClass"></param>
-        /// <param name="outFeatureClass"></param>
-        /// <param name="addToMap"></param>
-        /// <returns>bool</returns>
+        /// <param name="inFeatureClass">The input feature class.</param>
+        /// <param name="outFeatureClass">The output feature class.</param>
+        /// <param name="addToMap">Whether to add the output feature class to the map.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the copy operation was successful, otherwise false.</returns>
         public static async Task<bool> CopyFeaturesAsync(string inFeatureClass, string outFeatureClass, bool addToMap = false)
         {
             // Check if there is an input feature class.
@@ -1830,11 +1949,11 @@ namespace HLU.GISApplication
         /// <summary>
         /// Copy the input dataset name to the output feature class.
         /// </summary>
-        /// <param name="inputWorkspace"></param>
-        /// <param name="inputDatasetName"></param>
-        /// <param name="outputFeatureClass"></param>
-        /// <param name="addToMap"></param>
-        /// <returns>bool</returns>
+        /// <param name="inputWorkspace">The input workspace.</param>
+        /// <param name="inputDatasetName">The input dataset name.</param>
+        /// <param name="outputFeatureClass">The output feature class.</param>
+        /// <param name="addToMap">Whether to add the output feature class to the map.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the copy operation was successful, otherwise false.</returns>
         public static async Task<bool> CopyFeaturesAsync(string inputWorkspace, string inputDatasetName, string outputFeatureClass, bool addToMap = false)
         {
             // Check there is an input workspace.
@@ -1857,12 +1976,12 @@ namespace HLU.GISApplication
         /// <summary>
         /// Copy the input dataset to the output dataset.
         /// </summary>
-        /// <param name="inputWorkspace"></param>
-        /// <param name="inputDatasetName"></param>
-        /// <param name="outputWorkspace"></param>
-        /// <param name="outputDatasetName"></param>
-        /// <param name="addToMap"></param>
-        /// <returns>bool</returns>
+        /// <param name="inputWorkspace">The workspace of the input dataset.</param>
+        /// <param name="inputDatasetName">The name of the input dataset.</param>
+        /// <param name="outputWorkspace">The workspace of the output dataset.</param>
+        /// <param name="outputDatasetName">The name of the output dataset.</param>
+        /// <param name="addToMap">Whether to add the output dataset to the map.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the copy operation was successful, otherwise false.</returns>
         public static async Task<bool> CopyFeaturesAsync(string inputWorkspace, string inputDatasetName, string outputWorkspace, string outputDatasetName, bool addToMap = false)
         {
             // Check there is an input workspace.
@@ -1894,10 +2013,10 @@ namespace HLU.GISApplication
         /// <summary>
         /// Export the input table to the output table.
         /// </summary>
-        /// <param name="inTable"></param>
-        /// <param name="outTable"></param>
-        /// <param name="addToMap"></param>
-        /// <returns>bool</returns>
+        /// <param name="inTable">The input table.</param>
+        /// <param name="outTable">The output table.</param>
+        /// <param name="addToMap">Whether to add the output table to the map.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the export operation was successful, otherwise false.</returns>
         public static async Task<bool> ExportFeaturesAsync(string inTable, string outTable, bool addToMap = false)
         {
             // Check there is an input table name.
@@ -1951,10 +2070,10 @@ namespace HLU.GISApplication
         /// <summary>
         /// Copy the input table to the output table.
         /// </summary>
-        /// <param name="inTable"></param>
-        /// <param name="outTable"></param>
-        /// <param name="addToMap"></param>
-        /// <returns>bool</returns>
+        /// <param name="inTable">The input table.</param>
+        /// <param name="outTable">The output table.</param>
+        /// <param name="addToMap">Whether to add the output table to the map.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the copy operation was successful, otherwise false.</returns>
         public static async Task<bool> CopyTableAsync(string inTable, string outTable, bool addToMap = false)
         {
             // Check there is an input table name.
@@ -2004,10 +2123,10 @@ namespace HLU.GISApplication
         /// <summary>
         /// Copy the input dataset name to the output table.
         /// </summary>
-        /// <param name="inputWorkspace"></param>
-        /// <param name="inputDatasetName"></param>
-        /// <param name="outputTable"></param>
-        /// <returns>bool</returns>
+        /// <param name="inputWorkspace">The input workspace.</param>
+        /// <param name="inputDatasetName">The input dataset name.</param>
+        /// <param name="outputTable">The output table.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the copy operation was successful, otherwise false.</returns>
         public static async Task<bool> CopyTableAsync(string inputWorkspace, string inputDatasetName, string outputTable)
         {
             // Check there is an input workspace.
@@ -2030,11 +2149,11 @@ namespace HLU.GISApplication
         /// <summary>
         /// Copy the input dataset to the output dataset.
         /// </summary>
-        /// <param name="inputWorkspace"></param>
-        /// <param name="inputDatasetName"></param>
-        /// <param name="outputWorkspace"></param>
-        /// <param name="outputDatasetName"></param>
-        /// <returns>bool</returns>
+        /// <param name="inputWorkspace">The input workspace.</param>
+        /// <param name="inputDatasetName">The input dataset name.</param>
+        /// <param name="outputWorkspace">The output workspace.</param>
+        /// <param name="outputDatasetName">The output dataset name.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the copy operation was successful, otherwise false.</returns>
         public static async Task<bool> CopyTableAsync(string inputWorkspace, string inputDatasetName, string outputWorkspace, string outputDatasetName)
         {
             // Check there is an input workspace.
