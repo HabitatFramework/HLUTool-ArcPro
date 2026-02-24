@@ -291,23 +291,60 @@ namespace HLU.GISApplication
         /// </summary>
         /// <param name="targetList">Target list for union query. Same for each select query.</param>
         /// <param name="fromClause">From clause for union query. Same for each select query.</param>
-        /// <param name="orderByOrdinal">Ordinal of column by which to order otput.</param>
-        /// <param name="IncidSelectionWhereClause">List of where clauses from which to build UNION query.
-        /// Input is assumed to be 0 based.</param>
+        /// <param name="sortOrdinals">Ordinals of columns by which to order output.</param>
+        /// <param name="IncidSelectionWhereClause">List of where clauses from which to build UNION query. Input is assumed to be 0 based.</param>
         /// <param name="db">Database against which UNION query will be run.</param>
-        /// <returns></returns>
+        /// <param name="tableAliases">Optional dictionary mapping qualified table names to their aliases in the FROM clause.</param>
+        /// <returns>The complete SQL query string.</returns>
         public static string UnionQuery(
             string targetList,
             string fromClause,
             int[] sortOrdinals,
             List<SqlFilterCondition> IncidSelectionWhereClause,
-            DbBase db)
+            DbBase db,
+            Dictionary<string, string> tableAliases = null)
         {
             // Add order by from list of sort ordinals.
             StringBuilder sql = new();
 
+            // If table aliases are provided, replace table names with aliases in the WHERE conditions
+            List<SqlFilterCondition> adjustedWhereClause = IncidSelectionWhereClause;
+            if (tableAliases != null && tableAliases.Count > 0)
+            {
+                adjustedWhereClause = IncidSelectionWhereClause.Select(cond =>
+                {
+                    // Create a copy of the condition
+                    SqlFilterCondition newCond = new(cond.BooleanOperator, cond.Table, cond.Column, cond.Value)
+                    {
+                        OpenParentheses = cond.OpenParentheses,
+                        CloseParentheses = cond.CloseParentheses,
+                        Operator = cond.Operator,
+                        ColumnSystemType = cond.ColumnSystemType
+                    };
+
+                    // If the condition's table has an alias, replace the table reference
+                    if (cond.Table != null)
+                    {
+                        string qualifiedTableName = db.QualifyTableName(cond.Table.TableName);
+                        if (tableAliases.TryGetValue(qualifiedTableName, out string alias))
+                        {
+                            // Create a clone of the table with the alias as the table name
+                            // This is a workaround - we're using a temporary DataTable just to hold the alias
+                            DataTable aliasedTable = new(alias);
+                            foreach (DataColumn col in cond.Table.Columns)
+                            {
+                                aliasedTable.Columns.Add(col.ColumnName, col.DataType);
+                            }
+                            newCond.Table = aliasedTable;
+                        }
+                    }
+
+                    return newCond;
+                }).ToList();
+            }
+
             // Sort negative sortOrdinals in descending order
-            sql.Append(String.Format("SELECT {0} FROM {1}{2}", targetList, fromClause, db.WhereClause(true, true, true, IncidSelectionWhereClause)));
+            sql.Append(String.Format("SELECT {0} FROM {1}{2}", targetList, fromClause, db.WhereClause(true, true, true, adjustedWhereClause)));
             if (sortOrdinals != null)
                 sql.Append(String.Format(" ORDER BY {0}", string.Join(", ", sortOrdinals.Select(x => x < 0 ? String.Format("{0} DESC", Math.Abs(x).ToString()) : x.ToString()).ToArray())));
 

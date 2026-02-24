@@ -37,6 +37,7 @@ using HLU.UI.View;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -97,6 +98,10 @@ namespace HLU.UI.ViewModel
 
         #region Constructor
 
+        /// <summary>
+        /// Initializes a new instance of the ViewModelWindowMainExport class with a reference to the main view model.
+        /// </summary>
+        /// <param name="viewModelMain"></param>
         public ViewModelWindowMainExport(ViewModelWindowMain viewModelMain)
         {
             _viewModelMain = viewModelMain;
@@ -202,6 +207,7 @@ namespace HLU.UI.ViewModel
         /// <param name="userExportId">The export format selected by the user.</param>
         /// <param name="exportPath">The path to export the data to.</param>
         /// <param name="selectedOnly">If set to <c>true</c> export only selected incids/features.</param>
+        /// <returns>A task that represents the asynchronous export operation.</returns>
         private async Task ProcessExportAsync(int userExportId, string exportPath, bool selectedOnly)
         {
             // Check parameters.
@@ -288,6 +294,7 @@ namespace HLU.UI.ViewModel
                 int[] bapOrdinals;
                 int[] sourceOrdinals;
                 List<ExportField> exportFields = [];
+                Dictionary<string, string> tableAliases;
 
                 // Get the name of the active layer.
                 string layerName = _viewModelMain.GISApplication.HluLayerName;
@@ -303,7 +310,7 @@ namespace HLU.UI.ViewModel
                 ExportJoins(tableAlias, gisFieldNames, gisFields, ref exportFields, out attributeTable,
                     out fieldMapTemplate, out targetList, out fromClause, out sortOrdinals, out conditionOrdinals,
                     out matrixOrdinals, out formationOrdinals, out managementOrdinals, out complexOrdinals,
-                    out bapOrdinals, out sourceOrdinals);
+                    out bapOrdinals, out sourceOrdinals, out tableAliases);
 
                 // Check if output is a shapefile (based on file extension)
                 bool isShapefile = exportFeatureClassName.EndsWith(".shp", StringComparison.OrdinalIgnoreCase);
@@ -329,6 +336,21 @@ namespace HLU.UI.ViewModel
                     }
                 }
 
+                // Count the number of incids to be exported.
+                int rowCount = selectedOnly ? _viewModelMain.SelectedIncidsInGISCount : _viewModelMain.IncidRowCount(false);
+
+                //TODO: Set this in options?
+                // Warn the user if the export is very large.
+                if (rowCount > 50000)
+                {
+                    MessageBoxResult userResponse = MessageBox.Show(
+                        "This export operation may take some time.\n\nDo you wish to proceed?",
+                        "HLU: Export", MessageBoxButton.YesNo, MessageBoxImage.Question);
+
+                    if (userResponse != MessageBoxResult.Yes)
+                        return;
+                }
+
                 // Set the export filter conditions.
                 List<List<SqlFilterCondition>> exportFilter = null;
                 if (selectedOnly)
@@ -352,28 +374,57 @@ namespace HLU.UI.ViewModel
                 }
                 else
                 {
-                    SqlFilterCondition cond = new("AND",
-                        _viewModelMain.IncidTable, _viewModelMain.IncidTable.incidColumn, null)
+                    // Filter to only INCIDs that exist in the GIS layer
+                    _viewModelMain.ChangeCursor(Cursors.Wait, "Filtering from GIS ...");
+
+                    // Get the INCID field name
+                    string incidFieldName = await _viewModelMain.GISApplication.IncidFieldNameAsync();
+
+                    // Get distinct INCIDs from the GIS layer
+                    HashSet<string> layerIncids = await ArcGISProHelpers.GetDistinctIncidValuesAsync(
+                        _viewModelMain.GISApplication.HluFeatureClass,
+                        incidFieldName);
+
+                    // If we got layer INCIDs, attempt to filter to only those INCIDs in the export
+                    // query to reduce export size and improve performance.
+                    if (layerIncids != null && layerIncids.Count > 0)
                     {
-                        Operator = "IS NOT NULL"
-                    };
-                    exportFilter = new List<List<SqlFilterCondition>>([
-                        new List<SqlFilterCondition>([cond])]);
-                }
+                        // Calculate filter ratio
+                        int totalIncids = _viewModelMain.IncidRowCount(false);
+                        double filterRatio = (double)layerIncids.Count / totalIncids;
 
-                // Count the number of incids to be exported.
-                int rowCount = selectedOnly ? _viewModelMain.SelectedIncidsInGISCount : _viewModelMain.IncidRowCount(false);
+                        // Only filter if < 70% of records needed (otherwise overhead not worth it)
+                        if (filterRatio < 0.7)
+                        {
+                            // Build WHERE clause from layer INCIDs
+                            int incidOrd = _viewModelMain.IncidTable.incidColumn.Ordinal;
 
-                //TODO: Set this in options?
-                // Warn the user if the export is very large.
-                if (rowCount > 50000)
-                {
-                    MessageBoxResult userResponse = MessageBox.Show(
-                        "This export operation may take some time.\n\nDo you wish to proceed?",
-                        "HLU: Export", MessageBoxButton.YesNo, MessageBoxImage.Question);
-
-                    if (userResponse != MessageBoxResult.Yes)
-                        return;
+                            exportFilter = ViewModelWindowMainHelpers.IncidSelectionToWhereClause(
+                                250, incidOrd, _viewModelMain.IncidTable, layerIncids.OrderBy(s => s));
+                        }
+                        else
+                        {
+                            // Use ALL records - filtering overhead not worth it
+                            SqlFilterCondition cond = new("AND",
+                                _viewModelMain.IncidTable, _viewModelMain.IncidTable.incidColumn, null)
+                            {
+                                Operator = "IS NOT NULL"
+                            };
+                            exportFilter = new List<List<SqlFilterCondition>>([
+                                new List<SqlFilterCondition>([cond])]);
+                        }
+                    }
+                    else
+                    {
+                        // Fallback: export all INCIDs if we couldn't get layer INCIDs
+                        SqlFilterCondition cond = new("AND",
+                            _viewModelMain.IncidTable, _viewModelMain.IncidTable.incidColumn, null)
+                        {
+                            Operator = "IS NOT NULL"
+                        };
+                        exportFilter = new List<List<SqlFilterCondition>>([
+                            new List<SqlFilterCondition>([cond])]);
+                    }
                 }
 
                 // Create export attribute table in the existing working geodatabase.
@@ -387,8 +438,7 @@ namespace HLU.UI.ViewModel
                     targetList.ToString(), fromClause.ToString(), exportFilter,
                     _viewModelMain.DataBase, exportFields, attributeTable, sortOrdinals, conditionOrdinals,
                     matrixOrdinals, formationOrdinals, managementOrdinals, complexOrdinals, bapOrdinals,
-                    sourceOrdinals, fieldMapTemplate);
-
+                    sourceOrdinals, fieldMapTemplate, tableAliases);
                 // Exit if no rows were exported.
                 if (exportRowCount == 0)
                     return;
@@ -453,7 +503,7 @@ namespace HLU.UI.ViewModel
         /// <param name="workingFileGDBName">The full path and name of the existing working file geodatabase.</param>
         /// <param name="exportTable">The DataTable structure for the export.</param>
         /// <param name="exportTableName">The name of the export table to create.</param>
-        /// <returns>The path to the working file geodatabase with the export table.</returns>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a boolean indicating whether the table was created successfully.</returns>
         private async Task<bool> CreateExportTableAsync(string workingFileGDBName, DataTable exportTable, string exportTableName)
         {
             try
@@ -501,6 +551,8 @@ namespace HLU.UI.ViewModel
         /// <param name="bapOrdinals">The array of BAP ordinals.</param>
         /// <param name="sourceOrdinals">The array of source ordinals.</param>
         /// <param name="fieldMap">The array of field maps.</param>
+        /// <param name="tableAliases"> The dictionary of table aliases.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the number of rows exported.</returns>
         private async Task<int> ExportToTableAsync(
             string gdbName,
             string tableName,
@@ -518,7 +570,8 @@ namespace HLU.UI.ViewModel
             int[] complexOrdinals,
             int[] bapOrdinals,
             int[] sourceOrdinals,
-            int[][] fieldMap)
+            int[][] fieldMap,
+            Dictionary<string, string> tableAliases)
         {
             // Reset export row counter.
             int outputRowCount = 0;
@@ -540,6 +593,8 @@ namespace HLU.UI.ViewModel
 
             try
             {
+                // If there is only one filter chunk and it has a large number of conditions, attempt to
+                // split it into smaller chunks to avoid exceeding SQL length limits.
                 if (exportFilter.Count == 1)
                 {
                     try
@@ -585,10 +640,8 @@ namespace HLU.UI.ViewModel
                         fromClauseStr,
                         sortOrdinals,
                         exportFilter[j],
-                        dataBase);
-
-                    //TODO: Debug - Print sql to debug output
-                    System.Diagnostics.Debug.WriteLine($"Executing export SQL (chunk {j + 1}/{exportFilter.Count}, length: {sql.Length} chars, {exportFilter[j].Count} conditions):\n{sql}");
+                        dataBase,
+                        tableAliases);
 
                     // Execute the export query and get the results as a list of rows
                     List<Dictionary<string, object>> rowsBatch = new(_batchSize);
@@ -941,7 +994,7 @@ namespace HLU.UI.ViewModel
         /// <param name="conditionDateStart">The condition date start.</param>
         /// <param name="conditionDateEnd">The condition date end.</param>
         /// <param name="conditionDateType">The condition date type.</param>
-        /// <returns></returns>
+        /// <returns>The converted value, or null if conversion is not possible.</returns>
         private object ConvertInput(int inOrdinal, object inValue, System.Type inType,
             System.Type outType, string outFormat, int sourceDateStart, int sourceDateEnd, string sourceDateType,
             int conditionDateStart, int conditionDateEnd, string conditionDateType)
@@ -1152,48 +1205,6 @@ namespace HLU.UI.ViewModel
                 return inValue;
         }
 
-        /// <summary>
-        /// Creates a field mapping that indicates the desired order of fields in the final output.
-        /// </summary>
-        /// <param name="exportFields">The list of export fields with order information.</param>
-        /// <returns>Dictionary mapping field name to target position (0-based).</returns>
-        private Dictionary<string, int> CreateFieldOrderMapping(List<ExportField> exportFields)
-        {
-            var fieldOrderMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-
-            // Sort by FieldOrder and assign sequential positions
-            int position = 0;
-            foreach (var field in exportFields.OrderBy(f => f.FieldOrder))
-            {
-                fieldOrderMap[field.FieldName] = position;
-                position++;
-            }
-
-            return fieldOrderMap;
-        }
-
-        /// <summary>
-        /// Creates a field rename mapping from source column names to export field names.
-        /// Only includes fields where ColumnName != FieldName.
-        /// </summary>
-        /// <param name="exportFields">The list of export fields.</param>
-        /// <returns>Dictionary mapping source column name to export field name.</returns>
-        private Dictionary<string, string> CreateFieldRenameMapping(List<ExportField> exportFields)
-        {
-            var fieldRenameMap = new Dictionary<string, string>(StringComparer.Ordinal);
-
-            foreach (var field in exportFields)
-            {
-                // Only add to rename map if the name is actually different
-                if (!field.ColumnName.Equals(field.FieldName, StringComparison.Ordinal))
-                {
-                    fieldRenameMap[field.ColumnName] = field.FieldName;
-                }
-            }
-
-            return fieldRenameMap;
-        }
-
         #endregion Export Processing
 
         #region Export Joins
@@ -1201,14 +1212,14 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Constructs the SQL target list and from clause with the necessary joins based on the export fields defined in the dataset.
         /// </summary>
-        /// <param name="tableAlias">The alias for the main table in the SQL query.</param>
-        /// <param name="gisLayerFields">The list of field names from the GIS layer.</param>
-        /// <param name="gisFields">The list of field objects from the GIS layer.</param>
-        /// <param name="exportFields">The list of export fields with order information.</param>
+        /// <param name="tableAlias">The alias to use for the main table in the FROM clause.</param>
+        /// <param name="gisLayerFields">The list of GIS layer fields.</param>
+        /// <param name="gisFields">The list of GIS fields.</param>
+        /// <param name="exportFields">The list of export fields.</param>
         /// <param name="exportTable">The DataTable to hold the export data.</param>
-        /// <param name="fieldMapTemplate">The template for mapping fields in the export.</param>
+        /// <param name="fieldMapTemplate">The field map template for mapping source fields to export fields.</param>
         /// <param name="targetList">The SQL target list for the export query.</param>
-        /// <param name="fromClause">The SQL from clause for the export query.</param>
+        /// <param name="fromClause">The SQL FROM clause for the export query.</param>
         /// <param name="sortOrdinals">The ordinals for sorting fields.</param>
         /// <param name="conditionOrdinals">The ordinals for condition fields.</param>
         /// <param name="matrixOrdinals">The ordinals for matrix fields.</param>
@@ -1217,6 +1228,7 @@ namespace HLU.UI.ViewModel
         /// <param name="complexOrdinals">The ordinals for complex fields.</param>
         /// <param name="bapOrdinals">The ordinals for BAP fields.</param>
         /// <param name="sourceOrdinals">The ordinals for source fields.</param>
+        /// <param name="tableAliases">The dictionary to hold table aliases.</param>
         private void ExportJoins(
             string tableAlias,
             List<string> gisLayerFields,
@@ -1227,17 +1239,138 @@ namespace HLU.UI.ViewModel
             out int[] sortOrdinals, out int[] conditionOrdinals,
             out int[] matrixOrdinals, out int[] formationOrdinals,
             out int[] managementOrdinals, out int[] complexOrdinals,
-            out int[] bapOrdinals, out int[] sourceOrdinals)
+            out int[] bapOrdinals, out int[] sourceOrdinals,
+            out Dictionary<string, string> tableAliases)
         {
             // Ensure we have GIS field information
             if (gisLayerFields == null || gisFields == null)
                 throw new ArgumentException("GIS layer field information is required for export.");
 
-            exportTable = new("HluExport");
-            targetList = new();
-            List<string> fromList = [];
-            List<string> leftJoined = [];
-            fromClause = new();
+            // Initialize output structures
+            InitializeExportStructures(out exportTable, out targetList, out fromClause,
+                out sortOrdinals, out conditionOrdinals, out matrixOrdinals, out formationOrdinals,
+                out managementOrdinals, out complexOrdinals, out bapOrdinals, out sourceOrdinals);
+
+            // Build SQL and field mappings
+            var context = new ExportJoinContext(tableAlias);
+            BuildSqlTargetListAndFromClause(context, ref exportFields);
+
+            // Build field map template
+            fieldMapTemplate = BuildFieldMapTemplate(exportFields, context, exportTable);
+
+            // Add any missing required fields for sorting and relationships
+            AddRequiredExtraFields(context, exportFields, ref targetList);
+
+            // Finalize sort and field ordinals
+            FinalizeSortAndFieldOrdinals(context, out sortOrdinals, out conditionOrdinals,
+                out matrixOrdinals, out formationOrdinals, out managementOrdinals,
+                out complexOrdinals, out bapOrdinals, out sourceOrdinals);
+
+            // Set primary key
+            if (context.PrimaryKeyOrdinal != -1)
+                exportTable.PrimaryKey = [exportTable.Columns[context.PrimaryKeyOrdinal]];
+
+            // Output the built SQL components
+            targetList = context.TargetList;
+            fromClause = context.FromClause;
+
+            // Output the table aliases
+            tableAliases = context.TableAliases;
+
+            // Remove leading comma from target list
+            if (targetList.Length > 1) targetList.Remove(0, 1);
+        }
+
+        /// <summary>
+        /// Context object to hold state during export join construction.
+        /// </summary>
+        private class ExportJoinContext
+        {
+            public string TableAlias { get; }
+            public StringBuilder TargetList { get; }
+            public StringBuilder FromClause { get; }
+            public List<string> FromList { get; }
+            public List<string> LeftJoined { get; }
+            public Dictionary<string, string> TableAliases { get; }
+
+            public int TableAliasNum { get; set; }
+            public int SqlFieldOrdinal { get; set; }
+            public bool FirstJoin { get; set; }
+
+            // Field tracking
+            public int PrimaryKeyOrdinal { get; set; }
+            public List<int> SortFields { get; }
+            public List<int> ConditionFields { get; }
+            public List<int> MatrixFields { get; }
+            public List<int> FormationFields { get; }
+            public List<int> ManagementFields { get; }
+            public List<int> ComplexFields { get; }
+            public List<int> BapFields { get; }
+            public List<int> SourceFields { get; }
+
+            public int SourceSortOrderOrdinal { get; set; }
+
+            /// <summary>
+            /// Initializes a new instance of the ExportJoinContext class with the specified main table alias.
+            /// </summary>
+            /// <param name="tableAlias"></param>
+            public ExportJoinContext(string tableAlias)
+            {
+                TableAlias = tableAlias;
+                TargetList = new StringBuilder();
+                FromClause = new StringBuilder();
+                FromList = [];
+                LeftJoined = [];
+                TableAliases = [];
+
+                TableAliasNum = 1;
+                SqlFieldOrdinal = 0;
+                FirstJoin = true;
+
+                PrimaryKeyOrdinal = -1;
+                SortFields = [];
+                ConditionFields = [];
+                MatrixFields = [];
+                FormationFields = [];
+                ManagementFields = [];
+                ComplexFields = [];
+                BapFields = [];
+                SourceFields = [];
+
+                SourceSortOrderOrdinal = -1;
+            }
+        }
+
+        /// <summary>
+        /// Initializes all output data structures for the export.
+        /// </summary>
+        /// <param name="exportTable">The DataTable to hold the export data.</param>
+        /// <param name="targetList">The SQL target list for the export query.</param>
+        /// <param name="fromClause">The SQL FROM clause for the export query.</param>
+        /// <param name="sortOrdinals">The ordinals for sorting fields.</param>
+        /// <param name="conditionOrdinals">The ordinals for condition fields.</param>
+        /// <param name="matrixOrdinals">The ordinals for matrix fields.</param>
+        /// <param name="formationOrdinals">The ordinals for formation fields.</param>
+        /// <param name="managementOrdinals">The ordinals for management fields.</param>
+        /// <param name="complexOrdinals">The ordinals for complex fields.</param>
+        /// <param name="bapOrdinals">The ordinals for BAP fields.</param>
+        /// <param name="sourceOrdinals">The ordinals for source fields.</param>
+        private void InitializeExportStructures(
+            out DataTable exportTable,
+            out StringBuilder targetList,
+            out StringBuilder fromClause,
+            out int[] sortOrdinals,
+            out int[] conditionOrdinals,
+            out int[] matrixOrdinals,
+            out int[] formationOrdinals,
+            out int[] managementOrdinals,
+            out int[] complexOrdinals,
+            out int[] bapOrdinals,
+            out int[] sourceOrdinals)
+        {
+            exportTable = new DataTable("HluExport");
+            targetList = new StringBuilder();
+            fromClause = new StringBuilder();
             sortOrdinals = null;
             conditionOrdinals = null;
             matrixOrdinals = null;
@@ -1247,314 +1380,11 @@ namespace HLU.UI.ViewModel
             bapOrdinals = null;
             sourceOrdinals = null;
 
-            int tableAliasNum = 1;
-            bool firstJoin = true;
             _lastTableName = null;
-            int sqlFieldOrdinal = 0;  // NEW: Track actual SQL field position
-            int fieldLength = 0;
             _attributesLength = 0;
             _tableCount = 0;
 
-            Dictionary<string, string> tableAliases = new(); // Maps qualified table name -> alias
-
-            // Iterate through the export fields in ordinal order to construct the SQL target list and from clause with necessary joins.
-            foreach (HluDataSet.exports_fieldsRow r in
-                _viewModelMain.HluDataset.exports_fields.OrderBy(r => r.field_ordinal))
-            {
-                // Check if this is a GIS layer field - skip it (no GIS fields in attribute table)
-                if (r.table_name.Equals("<gis>", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    continue;  // Skip - don't add to exportTable or exportFields for attribute table
-                }
-
-                // Get the field length of the input table/column.
-                fieldLength = GetFieldLength(r.table_name, r.column_ordinal);
-
-                // Enable new 'empty' fields to be included in exports.
-                if (r.table_name.Equals("<none>", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    // Override the input field length(s) if an export
-                    // field length has been set.
-                    if (!r.IsNull(_viewModelMain.HluDataset.exports_fields.field_lengthColumn) &&
-                        r.field_length > 0)
-                        fieldLength = r.field_length;
-
-                    AddExportColumn(0, r.table_name, r.column_name, r.field_name,
-                        r.field_type, fieldLength, !r.IsNull(_viewModelMain.HluDataset.exports_fields.field_formatColumn) ? r.field_format : null,
-                        sqlFieldOrdinal,
-                        ref exportFields);
-                    continue;  // Don't increment sqlFieldOrdinal for empty fields
-                }
-
-                // Determine if this field is to be output multiple times,
-                // once for each row in the relevant table up to the
-                // maximum fields_count value.
-                bool multipleFields = false;
-                if (!r.IsNull(_viewModelMain.HluDataset.exports_fields.fields_countColumn))
-                    multipleFields = true;
-
-                // Add the required table to the list of sql tables in
-                // the from clause.
-                string currTable = _viewModelMain.DataBase.QualifyTableName(r.table_name);
-                string currTableAlias = currTable; // Default to full table name
-
-                // If this table has not already been added to the from clause, add it now along with the necessary join(s).
-                if (!fromList.Contains(currTable))
-                {
-                    fromList.Add(currTable);
-
-                    // Assign a unique alias for this table
-                    currTableAlias = tableAlias + tableAliasNum++;
-                    tableAliases[currTable] = currTableAlias;
-
-                    var incidRelation = _viewModelMain.HluDataset.incid.ChildRelations.Cast<DataRelation>()
-                        .Where(dr => dr.ChildTable.TableName == r.table_name);
-
-                    if (!incidRelation.Any())
-                    {
-                        fromClause.Append(currTable);
-                        fromClause.Append(" ");
-                        fromClause.Append(currTableAlias);
-                    }
-                    else
-                    {
-                        DataRelation incidRel = incidRelation.ElementAt(0);
-                        if (firstJoin)
-                            firstJoin = false;
-                        else
-                            fromClause.Insert(0, "(").Append(')');
-
-                        fromClause.Append(RelationJoinClause("LEFT", currTable, true,
-                            _viewModelMain.DataBase.QuoteIdentifier(
-                            incidRel.ParentTable.TableName), incidRel, fromList, currTableAlias));
-
-                        leftJoined.Add(currTable);
-                    }
-                }
-                else
-                {
-                    // Table already added, retrieve its alias
-                    currTableAlias = tableAliases[currTable];
-                }
-
-                // Get the relationships for the table/column if a
-                // value from a lookup table is required.
-                string fieldFormat = !r.IsNull(_viewModelMain.HluDataset.exports_fields.field_formatColumn) ? r.field_format : null;
-
-                // Get the list of data relations for this table/column.
-                var relations = ((fieldFormat != null) && (fieldFormat.Equals("both", StringComparison.CurrentCultureIgnoreCase)
-                    || fieldFormat.Equals("lookup", StringComparison.CurrentCultureIgnoreCase))) ? _viewModelMain.HluDataRelations.Where(rel =>
-                    rel.ChildTable.TableName == r.table_name && rel.ChildColumns
-                    .Count(ch => ch.ColumnName == r.column_name) == 1) : [];
-
-                switch (relations.Count())
-                {
-                    case 0:     // If this field does not have any related lookup tables.
-
-                        // Add the field to the sql target list.
-                        targetList.Append(String.Format(",{0}.{1} AS {2}", currTableAlias,
-                            _viewModelMain.DataBase.QuoteIdentifier(r.column_name), r.field_name.Replace("<no>", "")));
-
-                        // Enable text field lengths to be specified in
-                        // the export format.
-                        //
-                        // Override the input field length(s) if an export
-                        // field length has been set.
-                        if (!r.IsNull(_viewModelMain.HluDataset.exports_fields.field_lengthColumn) &&
-                            r.field_length > 0)
-                            fieldLength = r.field_length;
-
-                        // Add the field to the sql list of export table columns.
-                        AddExportColumn(multipleFields ? r.fields_count : 0, r.table_name, r.column_name, r.field_name,
-                            r.field_type, fieldLength,
-                            !r.IsNull(_viewModelMain.HluDataset.exports_fields.field_formatColumn) ? r.field_format : String.Empty,
-                            sqlFieldOrdinal,
-                            ref exportFields);
-
-                        sqlFieldOrdinal++;  // Increment SQL field position
-                        break;
-
-                    case 1:     // If this field has a related lookup table.
-
-                        DataRelation lutRelation = relations.ElementAt(0);
-                        string parentTable = _viewModelMain.DataBase.QualifyTableName(lutRelation.ParentTable.TableName);
-
-                        string parentTableAlias = tableAlias + tableAliasNum++;
-                        fromList.Add(parentTable);
-
-                        // Determine the related lookup table field name and
-                        // field ordinal.
-                        string lutFieldName;
-                        int lutFieldOrdinal;
-                        if ((r.table_name == _viewModelMain.HluDataset.incid_sources.TableName) && (IdSuffixRegex().IsMatch(r.column_name)))
-                        {
-                            string lutSourceFieldName = Settings.Default.LutSourceFieldName;
-                            int lutSourceFieldOrdinal = Settings.Default.LutSourceFieldOrdinal;
-
-                            lutFieldName = lutSourceFieldName;
-                            lutFieldOrdinal = lutSourceFieldOrdinal - 1;
-                        }
-                        else if ((r.table_name == _viewModelMain.HluDataset.incid.TableName) && (UseridSuffixRegex().IsMatch(r.column_name)))
-                        {
-                            string lutUserFieldName = Settings.Default.LutUserFieldName;
-                            int lutUserFieldOrdinal = Settings.Default.LutUserFieldOrdinal;
-                            lutFieldName = lutUserFieldName;
-                            lutFieldOrdinal = lutUserFieldOrdinal - 1;
-                        }
-                        else
-                        {
-                            string lutDescriptionFieldName = Settings.Default.LutDescriptionFieldName;
-                            int lutDescriptionFieldOrdinal = Settings.Default.LutDescriptionFieldOrdinal;
-
-                            lutFieldName = lutDescriptionFieldName;
-                            lutFieldOrdinal = lutDescriptionFieldOrdinal - 1;
-                        }
-
-                        // Get the list of columns for the lookup table.
-                        DataColumn[] lutColumns = new DataColumn[lutRelation.ParentTable.Columns.Count];
-                        lutRelation.ParentTable.Columns.CopyTo(lutColumns, 0);
-
-                        // If the lookup table contains the required field name.
-                        if (lutRelation.ParentTable.Columns.Contains(lutFieldName))
-                        {
-                            // If both the original field and it's corresponding lookup
-                            // table field are required then add them both to the sql
-                            // target list.
-                            if ((fieldFormat != null) && (fieldFormat.Equals("both", StringComparison.CurrentCultureIgnoreCase)))
-                            {
-                                // Add the corresponding lookup table field to the sql
-                                // target list.
-                                targetList.Append(String.Format(",{0}.{1} {5} {6} {5} {2}.{3} AS {4}",
-                                    currTableAlias,
-                                    _viewModelMain.DataBase.QuoteIdentifier(r.column_name),
-                                    parentTableAlias,
-                                    _viewModelMain.DataBase.QuoteIdentifier(lutFieldName),
-                                    r.field_name.Replace("<no>", ""),
-                                    _viewModelMain.DataBase.ConcatenateOperator,
-                                    _viewModelMain.DataBase.QuoteValue(" : ")));
-
-                                // Set the field length of the export field to the input
-                                // field length plus the lookup table field length plus 3
-                                // for the concatenation string length.
-                                fieldLength += lutColumns.First(c => c.ColumnName == lutFieldName).MaxLength + 3;
-                            }
-                            else
-                            {
-                                // Add the corresponding lookup table field to the sql
-                                // target list.
-                                targetList.Append(String.Format(",{0}.{1} AS {2}",
-                                    parentTableAlias,
-                                    _viewModelMain.DataBase.QuoteIdentifier(lutFieldName),
-                                    r.field_name.Replace("<no>", "")));
-
-                                // Set the field length of the lookup table field.
-                                fieldLength = lutColumns.First(c => c.ColumnName == lutFieldName).MaxLength;
-                            }
-
-                            // Enable text field lengths to be specified in
-                            // the export format.
-                            //
-                            // Override the input field length(s) if an export
-                            // field length has been set.
-                            if (!r.IsNull(_viewModelMain.HluDataset.exports_fields.field_lengthColumn) &&
-                                r.field_length > 0)
-                                fieldLength = r.field_length;
-
-                            // Add the field to the sql list of export table columns.
-                            AddExportColumn(multipleFields ? r.fields_count : 0, r.table_name, r.column_name, r.field_name,
-                                r.field_type, fieldLength, !r.IsNull(_viewModelMain.HluDataset.exports_fields.field_formatColumn) ? r.field_format : String.Empty,
-                                sqlFieldOrdinal,
-                                ref exportFields);
-
-                            sqlFieldOrdinal++;  // Increment SQL field position
-                        }
-                        // If the lookup table does not contains the required field
-                        // name, but does contain the required field ordinal.
-                        else if (lutRelation.ParentTable.Columns.Count >= lutFieldOrdinal)
-                        {
-                            // If both the original field and it's corresponding lookup
-                            // table field are required then add them both to the sql
-                            // target list.
-                            if ((fieldFormat != null) && (fieldFormat.Equals("both", StringComparison.CurrentCultureIgnoreCase)))
-                            {
-                                // Add the corresponding lookup table field to the sql
-                                // target list.
-                                targetList.Append(String.Format(",{0}.{1} {5} {6} {5} {2}.{3} AS {4}",
-                                    currTableAlias,
-                                    _viewModelMain.DataBase.QuoteIdentifier(r.column_name),
-                                    parentTableAlias,
-                                    _viewModelMain.DataBase.QuoteIdentifier(lutRelation.ParentTable.Columns[lutFieldOrdinal].ColumnName),
-                                    r.field_name.Replace("<no>", ""),
-                                    _viewModelMain.DataBase.ConcatenateOperator,
-                                    _viewModelMain.DataBase.QuoteValue(" : ")));
-
-                                // Set the field length of the lookup table field.
-                                fieldLength = lutColumns.First(c => c.ColumnName == lutFieldName).MaxLength;
-                            }
-                            else
-                            {
-                                // Add the corresponding lookup table field to the sql
-                                // target list.
-                                targetList.Append(String.Format(",{0}.{1} AS {2}",
-                                    parentTableAlias,
-                                    _viewModelMain.DataBase.QuoteIdentifier(lutRelation.ParentTable.Columns[lutFieldOrdinal].ColumnName),
-                                    r.field_name.Replace("<no>", "")));
-
-                                // Set the field length of the lookup table field.
-                                fieldLength = lutColumns.First(c => c.ColumnName == lutFieldName).MaxLength;
-                            }
-
-                            // Enable text field lengths to be specified in
-                            // the export format.
-                            //
-                            // Override the input field length(s) if an export
-                            // field length has been set.
-                            if (!r.IsNull(_viewModelMain.HluDataset.exports_fields.field_lengthColumn) &&
-                                r.field_length > 0)
-                                fieldLength = r.field_length;
-
-                            // Add the field to the sql list of export table columns.
-                            AddExportColumn(multipleFields ? r.fields_count : 0, r.table_name, r.column_name, r.field_name,
-                                r.field_type, fieldLength, !r.IsNull(_viewModelMain.HluDataset.exports_fields.field_formatColumn) ? r.field_format : null,
-                                sqlFieldOrdinal,
-                                ref exportFields);
-
-                            sqlFieldOrdinal++;  // Increment SQL field position
-                        }
-                        else
-                        {
-                            continue;
-                        }
-
-                        // Make all joins LEFT joins for simplicity and to allow for null
-                        // foreign key values.
-                        string joinType = "LEFT";
-                        leftJoined.Add(parentTableAlias);
-
-                        if (firstJoin)
-                            firstJoin = false;
-                        else
-                            fromClause.Insert(0, "(").Append(')');
-
-                        fromClause.Append(RelationJoinClause(joinType, currTable,
-                            false, parentTableAlias, lutRelation, fromList, currTableAlias));
-
-                        break;
-                }
-            }
-
-            // Interweave multiple record fields from the same
-            // table together.
-            //
-            // Create a new field map template with as many items
-            // as there are input fields.
-            fieldMapTemplate = new int[exportFields.Max(e => e.FieldOrdinal) + 1][];
-
-            // Initialize the input field ordinals for any important fields that
-            // may be required for formatting or to maintain relationships between
-            // tables during the export process.
-            int fieldTotal = 0;
-            int primaryKeyOrdinal = -1;
+            // Initialize field ordinals
             _incidOrdinal = -1;
             _conditionIdOrdinal = -1;
             _conditionDateStartOrdinal = -1;
@@ -1571,190 +1401,518 @@ namespace HLU.UI.ViewModel
             _sourceDateStartOrdinals = [];
             _sourceDateEndOrdinals = [];
             _sourceDateTypeOrdinals = [];
-            int sourceSortOrderOrdinal = -1;
+        }
 
-            // Initialize lists to hold the output field positions of fields from important tables that
-            // may be required for formatting or to maintain relationships between tables during
-            // the export process.
-            List<int> sortFields = [];
-            List<int> conditionFields = [];
-            List<int> matrixFields = [];
-            List<int> formationFields = [];
-            List<int> managementFields = [];
-            List<int> complexFields = [];
-            List<int> bapFields = [];
-            List<int> sourceFields = [];
-
-            // Loop through all the export fields, adding them as columns
-            // in the export table and adding them to the field map template.
-            foreach (ExportField f in exportFields.OrderBy(f => f.FieldOrder))
+        /// <summary>
+        /// Builds the SQL target list and FROM clause by iterating through export fields.
+        /// </summary>
+        /// <param name="context">The context object holding state for SQL construction.</param>
+        /// <param name="exportFields">The list of export fields to populate based on the dataset configuration.</param>
+        private void BuildSqlTargetListAndFromClause(ExportJoinContext context, ref List<ExportField> exportFields)
+        {
+            foreach (HluDataSet.exports_fieldsRow r in
+                _viewModelMain.HluDataset.exports_fields.OrderBy(r => r.field_ordinal))
             {
-                // Create a new data column for the field.
-                DataColumn c = new(f.FieldName, f.FieldType);
-
-                // If the field is an autonumber set the relevant
-                // auto increment properties.
-                if (f.AutoNum == true) c.AutoIncrement = true;
-
-                // If the field is a text field and has a maximum length
-                // then set the maximum length property.
-                if ((f.FieldType == System.Type.GetType("System.String")) &&
-                    (f.FieldLength > 0)) c.MaxLength = f.FieldLength;
-
-                // Add the field as a new column in the export table.
-                exportTable.Columns.Add(c);
-
-                // If the field will not be sourced from the database.
-                if (f.FieldOrdinal == -1)
+                // Handle GIS fields - add to exportFields but don't add to SQL query
+                if (r.table_name.Equals("<gis>", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    // Increment the total number of fields to be exported.
-                    fieldTotal += 1;
-
-                    // Skip adding the field to the field map template.
+                    AddGisField(r, ref exportFields);
                     continue;
                 }
 
-                // If the field is not repeated and refers to the incid column
-                // in the incid table.
-                if ((f.FieldsCount == 0) && ((f.TableName == _viewModelMain.HluDataset.incid.TableName) &&
-                    (f.ColumnName == _viewModelMain.HluDataset.incid.incidColumn.ColumnName)))
+                // Handle empty fields
+                if (r.table_name.Equals("<none>", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    // Store the input field position for use later
-                    // when exporting the data.
-                    _incidOrdinal = f.FieldOrdinal;
-
-                    // Add the input field position to the list of fields
-                    // that will be used to sort the input records.
-                    sortFields.Add(f.FieldOrdinal + 1);
-
-                    // Store the output field position for use later
-                    // as the primary index field ordinal.
-                    primaryKeyOrdinal = fieldTotal;
+                    AddEmptyField(r, context.SqlFieldOrdinal, ref exportFields);
+                    continue;
                 }
 
-                // If the table is the incid_condition table.
-                if (f.TableName == _viewModelMain.HluDataset.incid_condition.TableName)
+                // Process regular database field
+                ProcessDatabaseField(r, context, ref exportFields);
+            }
+        }
+
+        /// <summary>
+        /// Adds a GIS field to the export fields list without adding it to the SQL query.
+        /// GIS fields are sourced from the GIS layer, not the database.
+        /// </summary>
+        /// <param name="fieldRow">The row representing the GIS field to add.</param>
+        /// <param name="exportFields">The list of export fields to populate.</param>
+        private void AddGisField(HluDataSet.exports_fieldsRow fieldRow, ref List<ExportField> exportFields)
+        {
+            // Get field length from the export definition or use a default
+            int fieldLength = !fieldRow.IsNull(_viewModelMain.HluDataset.exports_fields.field_lengthColumn) && fieldRow.field_length > 0
+                ? fieldRow.field_length
+                : 254; // Default for GIS text fields
+
+            // Determine field type
+            Type dataType;
+            int attributeLength;
+
+            switch (fieldRow.field_type)
+            {
+                case 3:     // Integer
+                    dataType = typeof(int);
+                    attributeLength = 4;
+                    break;
+                case 6:     // Single
+                    dataType = typeof(float);
+                    attributeLength = 4;
+                    break;
+                case 7:     // Double
+                    dataType = typeof(double);
+                    attributeLength = 8;
+                    break;
+                case 8:     // Date/Time
+                    dataType = typeof(DateTime);
+                    attributeLength = 8;
+                    break;
+                case 10:    // Text
+                    dataType = typeof(string);
+                    attributeLength = Math.Min(fieldLength, 254);
+                    break;
+                default:
+                    dataType = typeof(string);
+                    attributeLength = Math.Min(fieldLength, 254);
+                    break;
+            }
+
+            // Create the export field entry
+            ExportField fld = new()
+            {
+                FieldOrdinal = -1,  // Not in SQL query
+                TableName = "<gis>",
+                ColumnName = fieldRow.column_name,  // Source field name in GIS layer
+                FieldName = fieldRow.field_name,    // Export field name
+                FieldType = dataType,
+                FieldOrder = exportFields.Count + 1,
+                FieldLength = fieldLength,
+                FieldsCount = 0,
+                FieldFormat = !fieldRow.IsNull(_viewModelMain.HluDataset.exports_fields.field_formatColumn)
+                    ? fieldRow.field_format
+                    : null,
+                AutoNum = false
+            };
+
+            exportFields.Add(fld);
+
+            // Add to total attribute length for shapefile validation
+            _attributesLength += attributeLength;
+        }
+
+        /// <summary>
+        /// Adds an empty field (placeholder) to the export.
+        /// </summary>
+        /// <param name="fieldRow">The row representing the field to add.</param>
+        /// <param name="sqlFieldOrdinal">The ordinal position of the field in the SQL query.</param>
+        /// <param name="exportFields">The list of export fields to populate.</param>
+        private void AddEmptyField(HluDataSet.exports_fieldsRow fieldRow, int sqlFieldOrdinal, ref List<ExportField> exportFields)
+        {
+            int fieldLength = GetFieldLength(fieldRow.table_name, fieldRow.column_ordinal);
+
+            if (!fieldRow.IsNull(_viewModelMain.HluDataset.exports_fields.field_lengthColumn) &&
+                fieldRow.field_length > 0)
+                fieldLength = fieldRow.field_length;
+
+            AddExportColumn(0, fieldRow.table_name, fieldRow.column_name, fieldRow.field_name,
+                fieldRow.field_type, fieldLength,
+                !fieldRow.IsNull(_viewModelMain.HluDataset.exports_fields.field_formatColumn) ? fieldRow.field_format : null,
+                sqlFieldOrdinal,
+                ref exportFields);
+        }
+
+        /// <summary>
+        /// Processes a regular database field and adds it to the target list.
+        /// </summary>
+        /// <param name="fieldRow">The row representing the field to process.</param>
+        /// <param name="context">The context object holding state for SQL construction.</param>
+        /// <param name="exportFields">The list of export fields to populate.</param>
+        private void ProcessDatabaseField(HluDataSet.exports_fieldsRow fieldRow, ExportJoinContext context, ref List<ExportField> exportFields)
+        {
+            int fieldLength = GetFieldLength(fieldRow.table_name, fieldRow.column_ordinal);
+            bool multipleFields = !fieldRow.IsNull(_viewModelMain.HluDataset.exports_fields.fields_countColumn);
+
+            // Get or create table alias
+            string currTable = _viewModelMain.DataBase.QualifyTableName(fieldRow.table_name);
+            string currTableAlias = GetOrCreateTableAlias(currTable, fieldRow.table_name, context);
+
+            // Get field format and lookup relations
+            string fieldFormat = !fieldRow.IsNull(_viewModelMain.HluDataset.exports_fields.field_formatColumn) ? fieldRow.field_format : null;
+            var relations = GetLookupRelations(fieldRow.table_name, fieldRow.column_name, fieldFormat);
+
+            if (!relations.Any())
+            {
+                // No lookup table - direct field
+                AddDirectField(fieldRow, currTableAlias, fieldLength, multipleFields, context, ref exportFields);
+            }
+            else if (relations.Count() == 1)
+            {
+                // Has lookup table
+                AddFieldWithLookup(fieldRow, currTable, currTableAlias, fieldLength, multipleFields, fieldFormat, relations.First(), context, ref exportFields);
+            }
+        }
+
+        /// <summary>
+        /// Gets or creates a table alias for the specified table.
+        /// </summary>
+        /// <param name="qualifiedTableName">The fully qualified name of the table.</param>
+        /// <param name="tableName"> The base name of the table.</param>
+        /// <param name="context"> The context object holding state for SQL construction.</param>
+        /// <returns>The table alias to use for the specified table.</returns>
+        private string GetOrCreateTableAlias(string qualifiedTableName, string tableName, ExportJoinContext context)
+        {
+            if (context.FromList.Contains(qualifiedTableName))
+            {
+                // Table already added, retrieve its alias
+                return context.TableAliases[qualifiedTableName];
+            }
+
+            // Add table to FROM list
+            context.FromList.Add(qualifiedTableName);
+
+            // Create unique alias
+            string tableAlias = context.TableAlias + context.TableAliasNum++;
+            context.TableAliases[qualifiedTableName] = tableAlias;
+
+            // Build FROM clause with appropriate JOIN
+            AddTableToFromClause(qualifiedTableName, tableName, tableAlias, context);
+
+            return tableAlias;
+        }
+
+        /// <summary>
+        /// Adds a table to the FROM clause with appropriate JOIN syntax.
+        /// </summary>
+        /// <param name="qualifiedTableName"> The fully qualified name of the table.</param>
+        /// <param name="tableName"> The base name of the table.</param>
+        /// <param name="tableAlias">The alias to use for the table in the FROM clause.</param>
+        /// <param name="context">The context object holding state for SQL construction.</param>
+        private void AddTableToFromClause(string qualifiedTableName, string tableName, string tableAlias, ExportJoinContext context)
+        {
+            var incidRelation = _viewModelMain.HluDataset.incid.ChildRelations.Cast<DataRelation>()
+                .Where(dr => dr.ChildTable.TableName == tableName);
+
+            if (!incidRelation.Any())
+            {
+                // Simple table reference
+                context.FromClause.Append(qualifiedTableName);
+                context.FromClause.Append(' ');
+                context.FromClause.Append(tableAlias);
+            }
+            else
+            {
+                // Table needs LEFT JOIN
+                DataRelation incidRel = incidRelation.ElementAt(0);
+                if (context.FirstJoin)
+                    context.FirstJoin = false;
+                else
+                    context.FromClause.Insert(0, "(").Append(')');
+
+                // Get the parent table's qualified name and look up its alias
+                string parentQualifiedTableName = _viewModelMain.DataBase.QualifyTableName(incidRel.ParentTable.TableName);
+                string parentTableAlias;
+
+                // Look up the parent table's alias from the TableAliases dictionary
+                if (context.TableAliases.TryGetValue(parentQualifiedTableName, out string parentAlias))
                 {
-                    // Add the output field position to the list of fields
-                    // that are from the condition table.
-                    conditionFields.Add(fieldTotal);
-
-                    // If the field refers to the condition_id column then store
-                    // the input field ordinal for use later as the unique
-                    // incid_condition field ordinal.
-                    if (f.ColumnName == _viewModelMain.HluDataset.incid_condition.incid_condition_idColumn.ColumnName)
-                        _conditionIdOrdinal = f.FieldOrdinal;
-                    // If the field refers to the condition_date_start column then
-                    // store the input field ordinal for use later.
-                    else if (f.ColumnName == _viewModelMain.HluDataset.incid_condition.condition_date_startColumn.ColumnName)
-                        _conditionDateStartOrdinal = f.FieldOrdinal;
-                    // If the field refers to the condition_date_end column then
-                    // store the input field ordinal for use later.
-                    else if (f.ColumnName == _viewModelMain.HluDataset.incid_condition.condition_date_endColumn.ColumnName)
-                        _conditionDateEndOrdinal = f.FieldOrdinal;
-                    // If the field refers to the condition_date_type column then
-                    // store the input field ordinal for use later.
-                    else if (f.ColumnName == _viewModelMain.HluDataset.incid_condition.condition_date_typeColumn.ColumnName)
-                        _conditionDateTypeOrdinal = f.FieldOrdinal;
+                    parentTableAlias = parentAlias;
                 }
-                // If the table is the incid_ihs_matrix table.
-                else if (f.TableName == _viewModelMain.HluDataset.incid_ihs_matrix.TableName)
+                else
                 {
-                    // Add the output field position to the list of fields
-                    // that are from the matrix table.
-                    matrixFields.Add(fieldTotal);
-
-                    // If the field refers to the matrix_id column then store
-                    // the input field ordinal for use later as the unique
-                    // incid_ihs_matrix field ordinal.
-                    if (f.ColumnName == _viewModelMain.HluDataset.incid_ihs_matrix.matrix_idColumn.ColumnName)
-                        _matrixIdOrdinal = f.FieldOrdinal;
+                    // If no alias found, use the quoted table name (shouldn't happen normally)
+                    parentTableAlias = _viewModelMain.DataBase.QuoteIdentifier(incidRel.ParentTable.TableName);
                 }
-                // If the table is the incid_ihs_formation table.
-                else if (f.TableName == _viewModelMain.HluDataset.incid_ihs_formation.TableName)
+
+                context.FromClause.Append(RelationJoinClause("LEFT", qualifiedTableName, true,
+                    parentTableAlias,  // Now using the actual alias, not the table name
+                    incidRel, context.FromList, tableAlias));
+
+                context.LeftJoined.Add(qualifiedTableName);
+            }
+        }
+
+        /// <summary>
+        /// Gets lookup relations for a field if it has a lookup format.
+        /// </summary>
+        /// <param name="tableName">The name of the table containing the field.</param>
+        /// <param name="columnName">The name of the column representing the field.</param>
+        /// <param name="fieldFormat">The field format specified for the field.</param>
+        /// <returns>A collection of DataRelation objects representing the lookup relations for the field, or an empty collection if none.</returns>
+        private IEnumerable<DataRelation> GetLookupRelations(string tableName, string columnName, string fieldFormat)
+        {
+            if (fieldFormat != null && (fieldFormat.Equals("both", StringComparison.CurrentCultureIgnoreCase) ||
+                fieldFormat.Equals("lookup", StringComparison.CurrentCultureIgnoreCase)))
+            {
+                return _viewModelMain.HluDataRelations.Where(rel =>
+                    rel.ChildTable.TableName == tableName &&
+                    rel.ChildColumns.Count(ch => ch.ColumnName == columnName) == 1);
+            }
+
+            return [];
+        }
+
+        /// <summary>
+        /// Adds a direct field (no lookup) to the target list.
+        /// </summary>
+        /// <param name="fieldRow">The row representing the field to add.</param>
+        /// <param name="tableAlias">The alias of the table containing the field.</param>
+        /// <param name="fieldLength">The length of the field.</param>
+        /// <param name="multipleFields">Indicates whether the field represents multiple underlying fields.</param>
+        /// <param name="context">The context object holding state for SQL construction.</param>
+        /// <param name="exportFields">The list of export fields to populate.</param>
+        private void AddDirectField(HluDataSet.exports_fieldsRow fieldRow, string tableAlias, int fieldLength,
+            bool multipleFields, ExportJoinContext context, ref List<ExportField> exportFields)
+        {
+            // Add to SQL target list
+            context.TargetList.Append(String.Format(",{0}.{1} AS {2}", tableAlias,
+                _viewModelMain.DataBase.QuoteIdentifier(fieldRow.column_name), fieldRow.field_name.Replace("<no>", "")));
+
+            // Override field length if specified
+            if (!fieldRow.IsNull(_viewModelMain.HluDataset.exports_fields.field_lengthColumn) &&
+                fieldRow.field_length > 0)
+                fieldLength = fieldRow.field_length;
+
+            // Add to export columns
+            AddExportColumn(multipleFields ? fieldRow.fields_count : 0, fieldRow.table_name, fieldRow.column_name, fieldRow.field_name,
+                fieldRow.field_type, fieldLength,
+                !fieldRow.IsNull(_viewModelMain.HluDataset.exports_fields.field_formatColumn) ? fieldRow.field_format : String.Empty,
+                context.SqlFieldOrdinal,
+                ref exportFields);
+
+            context.SqlFieldOrdinal++;
+        }
+
+        /// <summary>
+        /// Adds a field with lookup table to the target list.
+        /// </summary>
+        /// <param name="fieldRow">The row representing the field to add.</param>
+        /// <param name="currTable">The fully qualified name of the current table containing the field.</param>
+        /// <param name="currTableAlias">The alias of the current table in the SQL query.</param>
+        /// <param name="fieldLength">The length of the field.</param>
+        /// <param name="multipleFields">Indicates whether the field represents multiple underlying fields.</param>
+        /// <param name="fieldFormat">The field format specified for the field.</param>
+        /// <param name="lutRelation">The DataRelation representing the lookup relationship for the field.</param>
+        /// <param name="context">The context object holding state for SQL construction.</param>
+        /// <param name="exportFields">The list of export fields to populate.</param>
+        private void AddFieldWithLookup(HluDataSet.exports_fieldsRow fieldRow, string currTable, string currTableAlias,
+            int fieldLength, bool multipleFields, string fieldFormat, DataRelation lutRelation,
+            ExportJoinContext context, ref List<ExportField> exportFields)
+        {
+            string parentTable = _viewModelMain.DataBase.QualifyTableName(lutRelation.ParentTable.TableName);
+            string parentTableAlias = context.TableAlias + context.TableAliasNum++;
+            context.FromList.Add(parentTable);
+
+            // Determine lookup field name and ordinal
+            (string lutFieldName, int lutFieldOrdinal) = GetLookupFieldInfo(fieldRow);
+
+            DataColumn[] lutColumns = new DataColumn[lutRelation.ParentTable.Columns.Count];
+            lutRelation.ParentTable.Columns.CopyTo(lutColumns, 0);
+
+            // Add field to target list (either by name or ordinal)
+            bool fieldAdded = false;
+            if (lutRelation.ParentTable.Columns.Contains(lutFieldName))
+            {
+                fieldAdded = AddLookupFieldByName(fieldRow, currTableAlias, parentTableAlias, lutFieldName,
+                    lutColumns, fieldLength, multipleFields, fieldFormat, context, ref exportFields);
+            }
+            else if (lutRelation.ParentTable.Columns.Count >= lutFieldOrdinal)
+            {
+                fieldAdded = AddLookupFieldByOrdinal(fieldRow, currTableAlias, parentTableAlias, lutFieldOrdinal,
+                    lutRelation, lutColumns, lutFieldName, fieldLength, multipleFields, fieldFormat, context, ref exportFields);
+            }
+
+            if (fieldAdded)
+            {
+                // Add JOIN to FROM clause
+                context.LeftJoined.Add(parentTableAlias);
+
+                if (context.FirstJoin)
+                    context.FirstJoin = false;
+                else
+                    context.FromClause.Insert(0, "(").Append(')');
+
+                context.FromClause.Append(RelationJoinClause("LEFT", currTable,
+                    false, parentTableAlias, lutRelation, context.FromList, currTableAlias));
+            }
+        }
+
+        /// <summary>
+        /// Gets the lookup field name and ordinal for a field.
+        /// </summary>
+        /// <param name="fieldRow">The row representing the field to get lookup info for.</param>
+        /// <returns>A tuple containing the lookup field name and ordinal.</returns>
+        private (string fieldName, int fieldOrdinal) GetLookupFieldInfo(HluDataSet.exports_fieldsRow fieldRow)
+        {
+            // If field is an ID field in incid_sources, use LutSourceField
+            if ((fieldRow.table_name == _viewModelMain.HluDataset.incid_sources.TableName) && IdSuffixRegex().IsMatch(fieldRow.column_name))
+            {
+                return (Settings.Default.LutSourceFieldName, Settings.Default.LutSourceFieldOrdinal - 1);
+            }
+            // If it's a user ID field in incid, use LutUserField
+            else if ((fieldRow.table_name == _viewModelMain.HluDataset.incid.TableName) && UseridSuffixRegex().IsMatch(fieldRow.column_name))
+            {
+                return (Settings.Default.LutUserFieldName, Settings.Default.LutUserFieldOrdinal - 1);
+            }
+            // Otherwise use LutDescriptionField
+            else
+            {
+                return (Settings.Default.LutDescriptionFieldName, Settings.Default.LutDescriptionFieldOrdinal - 1);
+            }
+        }
+
+        /// <summary>
+        /// Adds a lookup field by name to the target list.
+        /// </summary>
+        /// <param name="fieldRow">The row representing the field to add.</param>
+        /// <param name="currTableAlias">The alias of the current table in the SQL query.</param>
+        /// <param name="parentTableAlias">The alias of the parent (lookup) table in the SQL query.</param>
+        /// <param name="lutFieldName">The name of the lookup field in the parent table.</param>
+        /// <param name="lutColumns">The columns of the parent (lookup) table.</param>
+        /// <param name="fieldLength">The length of the field.</param>
+        /// <param name="multipleFields">Indicates whether the field represents multiple underlying fields.</param>
+        /// <param name="fieldFormat">The field format specified for the field.</param>
+        /// <param name="context">The context object holding state for SQL construction.</param>
+        /// <param name="exportFields">The list of export fields to populate.</param>
+        /// <returns>True if the field was successfully added; otherwise, false.</returns>
+        private bool AddLookupFieldByName(HluDataSet.exports_fieldsRow fieldRow, string currTableAlias, string parentTableAlias,
+            string lutFieldName, DataColumn[] lutColumns, int fieldLength, bool multipleFields, string fieldFormat,
+            ExportJoinContext context, ref List<ExportField> exportFields)
+        {
+            if (fieldFormat != null && fieldFormat.Equals("both", StringComparison.CurrentCultureIgnoreCase))
+            {
+                // Both code and description
+                context.TargetList.Append(String.Format(",{0}.{1} {5} {6} {5} {2}.{3} AS {4}",
+                    currTableAlias,
+                    _viewModelMain.DataBase.QuoteIdentifier(fieldRow.column_name),
+                    parentTableAlias,
+                    _viewModelMain.DataBase.QuoteIdentifier(lutFieldName),
+                    fieldRow.field_name.Replace("<no>", ""),
+                    _viewModelMain.DataBase.ConcatenateOperator,
+                    _viewModelMain.DataBase.QuoteValue(" : ")));
+
+                fieldLength += lutColumns.First(c => c.ColumnName == lutFieldName).MaxLength + 3;
+            }
+            else
+            {
+                // Just description
+                context.TargetList.Append(String.Format(",{0}.{1} AS {2}",
+                    parentTableAlias,
+                    _viewModelMain.DataBase.QuoteIdentifier(lutFieldName),
+                    fieldRow.field_name.Replace("<no>", "")));
+
+                fieldLength = lutColumns.First(c => c.ColumnName == lutFieldName).MaxLength;
+            }
+
+            // Override field length if specified
+            if (!fieldRow.IsNull(_viewModelMain.HluDataset.exports_fields.field_lengthColumn) &&
+                fieldRow.field_length > 0)
+                fieldLength = fieldRow.field_length;
+
+            AddExportColumn(multipleFields ? fieldRow.fields_count : 0, fieldRow.table_name, fieldRow.column_name, fieldRow.field_name,
+                fieldRow.field_type, fieldLength,
+                !fieldRow.IsNull(_viewModelMain.HluDataset.exports_fields.field_formatColumn) ? fieldRow.field_format : String.Empty,
+                context.SqlFieldOrdinal,
+                ref exportFields);
+
+            context.SqlFieldOrdinal++;
+            return true;
+        }
+
+        /// <summary>
+        /// Adds a lookup field by ordinal to the target list.
+        /// </summary>
+        /// <param name="fieldRow"The row representing the field to add.</param>
+        /// <param name="currTableAlias">The alias of the current table in the SQL query.</param>
+        /// <param name="parentTableAlias">The alias of the parent (lookup) table in the SQL query.</param>
+        /// <param name="lutFieldOrdinal">The ordinal position of the lookup field in the parent table.</param>
+        /// <param name="lutRelation">The DataRelation representing the lookup relationship for the field.</param>
+        /// <param name="lutColumns">The columns of the parent (lookup) table.</param>
+        /// <param name="lutFieldName">The name of the lookup field (for error messaging).</param>
+        /// <param name="fieldLength">The length of the field.</param>
+        /// <param name="multipleFields">Indicates whether the field represents multiple underlying fields.</param>
+        /// <param name="fieldFormat">The field format specified for the field.</param>
+        /// <param name="context">The context object holding state for SQL construction.</param>
+        /// <param name="exportFields">The list of export fields to populate.</param>
+        /// <returns>True if the field was successfully added; otherwise, false.</returns>
+        private bool AddLookupFieldByOrdinal(HluDataSet.exports_fieldsRow fieldRow, string currTableAlias, string parentTableAlias,
+            int lutFieldOrdinal, DataRelation lutRelation, DataColumn[] lutColumns, string lutFieldName,
+            int fieldLength, bool multipleFields, string fieldFormat, ExportJoinContext context, ref List<ExportField> exportFields)
+        {
+            if (fieldFormat != null && fieldFormat.Equals("both", StringComparison.CurrentCultureIgnoreCase))
+            {
+                context.TargetList.Append(String.Format(",{0}.{1} {5} {6} {5} {2}.{3} AS {4}",
+                    currTableAlias,
+                    _viewModelMain.DataBase.QuoteIdentifier(fieldRow.column_name),
+                    parentTableAlias,
+                    _viewModelMain.DataBase.QuoteIdentifier(lutRelation.ParentTable.Columns[lutFieldOrdinal].ColumnName),
+                    fieldRow.field_name.Replace("<no>", ""),
+                    _viewModelMain.DataBase.ConcatenateOperator,
+                    _viewModelMain.DataBase.QuoteValue(" : ")));
+
+                fieldLength = lutColumns.First(c => c.ColumnName == lutFieldName).MaxLength;
+            }
+            else
+            {
+                context.TargetList.Append(String.Format(",{0}.{1} AS {2}",
+                    parentTableAlias,
+                    _viewModelMain.DataBase.QuoteIdentifier(lutRelation.ParentTable.Columns[lutFieldOrdinal].ColumnName),
+                    fieldRow.field_name.Replace("<no>", "")));
+
+                fieldLength = lutColumns.First(c => c.ColumnName == lutFieldName).MaxLength;
+            }
+
+            if (!fieldRow.IsNull(_viewModelMain.HluDataset.exports_fields.field_lengthColumn) &&
+                fieldRow.field_length > 0)
+                fieldLength = fieldRow.field_length;
+
+            AddExportColumn(multipleFields ? fieldRow.fields_count : 0, fieldRow.table_name, fieldRow.column_name, fieldRow.field_name,
+                fieldRow.field_type, fieldLength,
+                !fieldRow.IsNull(_viewModelMain.HluDataset.exports_fields.field_formatColumn) ? fieldRow.field_format : null,
+                context.SqlFieldOrdinal,
+                ref exportFields);
+
+            context.SqlFieldOrdinal++;
+            return true;
+        }
+
+        /// <summary>
+        /// Builds the field map template from export fields.
+        /// </summary>
+        /// <param name="exportFields">The list of export fields.</param>
+        /// <param name="context">The context object holding state for SQL construction.</param>
+        /// <param name="exportTable">The DataTable to which export fields will be added.</param>
+        /// <returns>A jagged array representing the field map template.</returns>
+        private int[][] BuildFieldMapTemplate(List<ExportField> exportFields, ExportJoinContext context, DataTable exportTable)
+        {
+            var fieldMapTemplate = new int[exportFields.Max(e => e.FieldOrdinal) + 1][];
+            int fieldTotal = 0;
+
+            foreach (ExportField f in exportFields.OrderBy(f => f.FieldOrder))
+            {
+                // Skip GIS fields - they'll be added during the GIS export/join process
+                if (f.TableName != null && f.TableName.Equals("<gis>", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    // Add the output field position to the list of fields
-                    // that are from the formation table.
-                    formationFields.Add(fieldTotal);
-
-                    // If the field refers to the formation_id column then store
-                    // the input field ordinal for use later as the unique
-                    // incid_ihs_formation field ordinal.
-                    if (f.ColumnName == _viewModelMain.HluDataset.incid_ihs_formation.formation_idColumn.ColumnName)
-                        _formationIdOrdinal = f.FieldOrdinal;
+                    continue;
                 }
-                // If the table is the incid_ihs_management table.
-                else if (f.TableName == _viewModelMain.HluDataset.incid_ihs_management.TableName)
+
+                // Add field to export table
+                DataColumn c = new(f.FieldName, f.FieldType);
+                if (f.AutoNum == true) c.AutoIncrement = true;
+                if ((f.FieldType == System.Type.GetType("System.String")) && (f.FieldLength > 0))
+                    c.MaxLength = f.FieldLength;
+
+                exportTable.Columns.Add(c);  // Now we have access to exportTable
+
+                if (f.FieldOrdinal == -1)
                 {
-                    // Add the output field position to the list of fields
-                    // that are from the management table.
-                    managementFields.Add(fieldTotal);
-
-                    // If the field refers to the management_id column then store
-                    // the input field ordinal for use later as the unique
-                    // incid_ihs_management field ordinal.
-                    if (f.ColumnName == _viewModelMain.HluDataset.incid_ihs_management.management_idColumn.ColumnName)
-                        _managementIdOrdinal = f.FieldOrdinal;
-                }
-                // If the table is the incid_ihs_complex table.
-                else if (f.TableName == _viewModelMain.HluDataset.incid_ihs_complex.TableName)
-                {
-                    // Add the output field position to the list of fields
-                    // that are from the complex table.
-                    complexFields.Add(fieldTotal);
-
-                    // If the field refers to the complex_id column then store
-                    // the input field ordinal for use later as the unique
-                    // incid_ihs_complex field ordinal.
-                    if (f.ColumnName == _viewModelMain.HluDataset.incid_ihs_complex.complex_idColumn.ColumnName)
-                        _complexIdOrdinal = f.FieldOrdinal;
-                }
-                // If the table is the incid_bap table.
-                else if (f.TableName == _viewModelMain.HluDataset.incid_bap.TableName)
-                {
-                    // Add the output field position to the list of fields
-                    // that are from the bap table.
-                    bapFields.Add(fieldTotal);
-
-                    // If the field refers to the bap_id column then store
-                    // the input field ordinal for use later as the unique
-                    // incid_bap field ordinal.
-                    if (f.ColumnName == _viewModelMain.HluDataset.incid_bap.bap_idColumn.ColumnName)
-                        _bapIdOrdinal = f.FieldOrdinal;
-                }
-                // If the table is the incid_sources table.
-                else if (f.TableName == _viewModelMain.HluDataset.incid_sources.TableName)
-                {
-                    // Add the output field position to the list of fields
-                    // that are from the sources table.
-                    sourceFields.Add(fieldTotal);
-
-                    // If the field refers to the source_id column and is
-                    // retrieved in it's 'raw' integer state then store
-                    // the input field ordinal for use later as the unique
-                    // incid_source field ordinal.
-                    if ((f.ColumnName == _viewModelMain.HluDataset.incid_sources.source_idColumn.ColumnName) &&
-                        ((String.IsNullOrEmpty(f.FieldFormat)) || (f.FieldFormat.Equals("code", StringComparison.CurrentCultureIgnoreCase))))
-                        _sourceIdOrdinal = f.FieldOrdinal;
-                    // If the field refers to the source_sort_order column then
-                    // store the input field ordinal for use later.
-                    else if (f.ColumnName == _viewModelMain.HluDataset.incid_sources.sort_orderColumn.ColumnName)
-                        sourceSortOrderOrdinal = f.FieldOrdinal;
-                    // If the field refers to the source_date_start column then
-                    // store the input field ordinal for use later.
-                    else if (f.ColumnName == _viewModelMain.HluDataset.incid_sources.source_date_startColumn.ColumnName)
-                        _sourceDateStartOrdinals.Add(f.FieldOrdinal);
-                    // If the field refers to the source_date_end column then
-                    // store the input field ordinal for use later.
-                    else if (f.ColumnName == _viewModelMain.HluDataset.incid_sources.source_date_endColumn.ColumnName)
-                        _sourceDateEndOrdinals.Add(f.FieldOrdinal);
-                    // If the field refers to the source_date_type column then
-                    // store the input field ordinal for use later.
-                    else if (f.ColumnName == _viewModelMain.HluDataset.incid_sources.source_date_typeColumn.ColumnName)
-                        _sourceDateTypeOrdinals.Add(f.FieldOrdinal);
+                    fieldTotal += 1;
+                    continue;
                 }
 
-                // Set the field mapping for the current field ordinal.
+                // Track important field ordinals
+                TrackImportantFields(f, fieldTotal, context);
+
+                // Build field map
                 List<int> fieldMap;
                 if ((fieldMapTemplate[f.FieldOrdinal] != null) && (f.AutoNum != true))
                     fieldMap = fieldMapTemplate[f.FieldOrdinal].ToList();
@@ -1764,407 +1922,452 @@ namespace HLU.UI.ViewModel
                     fieldMap.Add(f.FieldOrdinal);
                 }
 
-                // Add the current field number to the field map for
-                // this field ordinal.
                 fieldMap.Add(fieldTotal);
-
-                // Update the field map template for this field ordinal.
                 fieldMapTemplate[f.FieldOrdinal] = fieldMap.ToArray();
 
-                // Increment the total number of fields to be exported.
                 fieldTotal += 1;
             }
 
-            // Note: sqlFieldOrdinal contains the count of SQL fields added so far
-            // Use it when adding extra fields at the end
+            return fieldMapTemplate;
+        }
 
-            // If any incid_condition fields are in the export file.
-            if ((exportFields.Any(f => f.TableName == _viewModelMain.HluDataset.incid_condition.TableName)))
+        /// <summary>
+        /// Tracks important field ordinals for sorting and relationships.
+        /// </summary>
+        /// <param name="f">The export field to track.</param>
+        /// <param name="fieldTotal">The current total number of fields processed.</param>
+        /// <param name="context">The context object holding state for SQL construction.</param>
+        private void TrackImportantFields(ExportField f, int fieldTotal, ExportJoinContext context)
+        {
+            // Track incid field
+            if ((f.FieldsCount == 0) && (f.TableName == _viewModelMain.HluDataset.incid.TableName) &&
+                (f.ColumnName == _viewModelMain.HluDataset.incid.incidColumn.ColumnName))
             {
-                // If the incid_condition_id column is not included then add
-                // it so that different conditions can be identified.
-                if (_conditionIdOrdinal == -1)
-                {
-                    // Get the alias for the incid_condition table
-                    string conditionTableAlias = tableAliases.TryGetValue(
-                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_condition.TableName),
-                        out string alias) ? alias : _viewModelMain.HluDataset.incid_condition.TableName;
-
-                    // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}",
-                        conditionTableAlias,
-                        _viewModelMain.HluDataset.incid_condition.incid_condition_idColumn.ColumnName, _viewModelMain.HluDataset.incid_condition.incid_condition_idColumn.ColumnName));
-
-                    _conditionIdOrdinal = sqlFieldOrdinal;
-                    sqlFieldOrdinal++;
-                }
-
-                // If the condition_date_start column is not included then add
-                // it for use later.
-                if (_conditionDateStartOrdinal == -1)
-                {
-                    // Get the alias for the incid_condition table
-                    string conditionTableAlias = tableAliases.TryGetValue(
-                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_condition.TableName),
-                        out string alias) ? alias : _viewModelMain.HluDataset.incid_condition.TableName;
-
-                    // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}",
-                        conditionTableAlias,
-                        _viewModelMain.HluDataset.incid_condition.condition_date_startColumn.ColumnName, _viewModelMain.HluDataset.incid_condition.condition_date_startColumn.ColumnName));
-
-                    _conditionDateStartOrdinal = sqlFieldOrdinal;
-                    sqlFieldOrdinal++;
-                }
-
-                // If the condition_date_end column is not included then add
-                // it for use later.
-                if (_conditionDateEndOrdinal == -1)
-                {
-                    // Get the alias for the incid_condition table
-                    string conditionTableAlias = tableAliases.TryGetValue(
-                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_condition.TableName),
-                        out string alias) ? alias : _viewModelMain.HluDataset.incid_condition.TableName;
-
-                    // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}",
-                        conditionTableAlias,
-                        _viewModelMain.HluDataset.incid_condition.condition_date_endColumn.ColumnName, _viewModelMain.HluDataset.incid_condition.condition_date_endColumn.ColumnName));
-
-                    _conditionDateEndOrdinal = sqlFieldOrdinal;
-                    sqlFieldOrdinal++;
-                }
-
-                // If the condition_date_type column is not included then add
-                // it for use later.
-                if (_conditionDateTypeOrdinal == -1)
-                {
-                    // Get the alias for the incid_condition table
-                    string conditionTableAlias = tableAliases.TryGetValue(
-                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_condition.TableName),
-                        out string alias) ? alias : _viewModelMain.HluDataset.incid_condition.TableName;
-
-                    // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}",
-                        conditionTableAlias,
-                        _viewModelMain.HluDataset.incid_condition.condition_date_typeColumn.ColumnName, _viewModelMain.HluDataset.incid_condition.condition_date_typeColumn.ColumnName));
-
-                    _conditionDateTypeOrdinal = sqlFieldOrdinal;
-                    sqlFieldOrdinal++;
-                }
-
-                // Add the input field position to the list of fields
-                // that will be used to sort the input records. Multiply
-                // by minus 1 to indicate descending order).
-                sortFields.Add((_conditionIdOrdinal + 1) * -1);
+                _incidOrdinal = f.FieldOrdinal;
+                context.SortFields.Add(f.FieldOrdinal + 1);
+                context.PrimaryKeyOrdinal = fieldTotal;
             }
 
-            // If any incid_ihs_matrix fields are in the export file.
-            if ((exportFields.Any(f => f.TableName == _viewModelMain.HluDataset.incid_ihs_matrix.TableName)))
+            // Track condition fields
+            if (f.TableName == _viewModelMain.HluDataset.incid_condition.TableName)
             {
-                // If the matrix_id column is not included then add
-                // it so that different matrixs can be identified.
-                if (_matrixIdOrdinal == -1)
-                {
-                    // Get the alias for the incid_ihs_matrix table
-                    string matrixTableAlias = tableAliases.TryGetValue(
-                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_ihs_matrix.TableName),
-                        out string alias) ? alias : _viewModelMain.HluDataset.incid_ihs_matrix.TableName;
+                context.ConditionFields.Add(fieldTotal);
+                TrackConditionFieldOrdinals(f);
+            }
+            // Track matrix fields
+            else if (f.TableName == _viewModelMain.HluDataset.incid_ihs_matrix.TableName)
+            {
+                context.MatrixFields.Add(fieldTotal);
+                if (f.ColumnName == _viewModelMain.HluDataset.incid_ihs_matrix.matrix_idColumn.ColumnName)
+                    _matrixIdOrdinal = f.FieldOrdinal;
+            }
+            // Track formation fields
+            else if (f.TableName == _viewModelMain.HluDataset.incid_ihs_formation.TableName)
+            {
+                context.FormationFields.Add(fieldTotal);
+                if (f.ColumnName == _viewModelMain.HluDataset.incid_ihs_formation.formation_idColumn.ColumnName)
+                    _formationIdOrdinal = f.FieldOrdinal;
+            }
+            // Track management fields
+            else if (f.TableName == _viewModelMain.HluDataset.incid_ihs_management.TableName)
+            {
+                context.ManagementFields.Add(fieldTotal);
+                if (f.ColumnName == _viewModelMain.HluDataset.incid_ihs_management.management_idColumn.ColumnName)
+                    _managementIdOrdinal = f.FieldOrdinal;
+            }
+            // Track complex fields
+            else if (f.TableName == _viewModelMain.HluDataset.incid_ihs_complex.TableName)
+            {
+                context.ComplexFields.Add(fieldTotal);
+                if (f.ColumnName == _viewModelMain.HluDataset.incid_ihs_complex.complex_idColumn.ColumnName)
+                    _complexIdOrdinal = f.FieldOrdinal;
+            }
+            // Track BAP fields
+            else if (f.TableName == _viewModelMain.HluDataset.incid_bap.TableName)
+            {
+                context.BapFields.Add(fieldTotal);
+                if (f.ColumnName == _viewModelMain.HluDataset.incid_bap.bap_idColumn.ColumnName)
+                    _bapIdOrdinal = f.FieldOrdinal;
+            }
+            // Track source fields
+            else if (f.TableName == _viewModelMain.HluDataset.incid_sources.TableName)
+            {
+                context.SourceFields.Add(fieldTotal);
 
-                    // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}",
-                        matrixTableAlias,
-                        _viewModelMain.HluDataset.incid_ihs_matrix.matrix_idColumn.ColumnName, _viewModelMain.HluDataset.incid_ihs_matrix.matrix_idColumn.ColumnName));
+                if ((f.ColumnName == _viewModelMain.HluDataset.incid_sources.source_idColumn.ColumnName) &&
+                    ((String.IsNullOrEmpty(f.FieldFormat)) || (f.FieldFormat.Equals("code", StringComparison.CurrentCultureIgnoreCase))))
+                    _sourceIdOrdinal = f.FieldOrdinal;
+                else if (f.ColumnName == _viewModelMain.HluDataset.incid_sources.sort_orderColumn.ColumnName)
+                    context.SourceSortOrderOrdinal = f.FieldOrdinal;
+                else if (f.ColumnName == _viewModelMain.HluDataset.incid_sources.source_date_startColumn.ColumnName)
+                    _sourceDateStartOrdinals.Add(f.FieldOrdinal);
+                else if (f.ColumnName == _viewModelMain.HluDataset.incid_sources.source_date_endColumn.ColumnName)
+                    _sourceDateEndOrdinals.Add(f.FieldOrdinal);
+                else if (f.ColumnName == _viewModelMain.HluDataset.incid_sources.source_date_typeColumn.ColumnName)
+                    _sourceDateTypeOrdinals.Add(f.FieldOrdinal);
+            }
+        }
 
-                    _matrixIdOrdinal = sqlFieldOrdinal;
-                    sqlFieldOrdinal++;
-                }
+        /// <summary>
+        /// Tracks condition field ordinals.
+        /// </summary>
+        /// <param name="f">The export field representing a condition field.</param>
+        private void TrackConditionFieldOrdinals(ExportField f)
+        {
+            if (f.ColumnName == _viewModelMain.HluDataset.incid_condition.incid_condition_idColumn.ColumnName)
+                _conditionIdOrdinal = f.FieldOrdinal;
+            else if (f.ColumnName == _viewModelMain.HluDataset.incid_condition.condition_date_startColumn.ColumnName)
+                _conditionDateStartOrdinal = f.FieldOrdinal;
+            else if (f.ColumnName == _viewModelMain.HluDataset.incid_condition.condition_date_endColumn.ColumnName)
+                _conditionDateEndOrdinal = f.FieldOrdinal;
+            else if (f.ColumnName == _viewModelMain.HluDataset.incid_condition.condition_date_typeColumn.ColumnName)
+                _conditionDateTypeOrdinal = f.FieldOrdinal;
+        }
 
-                // Add the input field position to the list of fields
-                // that will be used to sort the input records.
-                sortFields.Add(_matrixIdOrdinal + 1);
+        /// <summary>
+        /// Adds any required extra fields for sorting and relationships that weren't in the export definition.
+        /// </summary>
+        /// <param name="context">The context object holding state for SQL construction.</param>
+        /// <param name="exportFields">The list of export fields to check for required extra fields.</param>
+        /// <param name="targetList">The StringBuilder representing the SQL target list to which extra fields will be added if needed.</param>
+        private void AddRequiredExtraFields(ExportJoinContext context, List<ExportField> exportFields, ref StringBuilder targetList)
+        {
+            AddConditionExtraFields(context, exportFields);
+            AddMatrixExtraFields(context, exportFields);
+            AddFormationExtraFields(context, exportFields);
+            AddManagementExtraFields(context, exportFields);
+            AddComplexExtraFields(context, exportFields);
+            AddBapExtraFields(context, exportFields);
+            AddSourceExtraFields(context, exportFields);
+        }
+
+        /// <summary>
+        /// Adds extra condition fields if needed.
+        /// </summary>
+        /// <param name="context"> The context object holding state for SQL construction.</param>
+        /// <param name="exportFields">The list of export fields to check for required condition fields.</param>
+        private void AddConditionExtraFields(ExportJoinContext context, List<ExportField> exportFields)
+        {
+            if (!exportFields.Any(f => f.TableName == _viewModelMain.HluDataset.incid_condition.TableName))
+                return;
+
+            string conditionTableAlias = GetTableAliasOrDefault(_viewModelMain.HluDataset.incid_condition.TableName, context);
+
+            if (_conditionIdOrdinal == -1)
+            {
+                context.TargetList.Append(String.Format(",{0}.{1} AS {2}",
+                    conditionTableAlias,
+                    _viewModelMain.HluDataset.incid_condition.incid_condition_idColumn.ColumnName,
+                    _viewModelMain.HluDataset.incid_condition.incid_condition_idColumn.ColumnName));
+
+                _conditionIdOrdinal = context.SqlFieldOrdinal++;
             }
 
-            // If any incid_ihs_formation fields are in the export file.
-            if ((exportFields.Any(f => f.TableName == _viewModelMain.HluDataset.incid_ihs_formation.TableName)))
+            if (_conditionDateStartOrdinal == -1)
             {
-                // If the formation_id column is not included then add
-                // it so that different formations can be identified.
-                if (_formationIdOrdinal == -1)
-                {
-                    // Get the alias for the incid_ihs_formation table
-                    string formationTableAlias = tableAliases.TryGetValue(
-                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_ihs_formation.TableName),
-                        out string alias) ? alias : _viewModelMain.HluDataset.incid_ihs_formation.TableName;
+                context.TargetList.Append(String.Format(",{0}.{1} AS {2}",
+                    conditionTableAlias,
+                    _viewModelMain.HluDataset.incid_condition.condition_date_startColumn.ColumnName,
+                    _viewModelMain.HluDataset.incid_condition.condition_date_startColumn.ColumnName));
 
-                    // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}",
-                        formationTableAlias,
-                        _viewModelMain.HluDataset.incid_ihs_formation.formation_idColumn.ColumnName, _viewModelMain.HluDataset.incid_ihs_formation.formation_idColumn.ColumnName));
-
-                    _formationIdOrdinal = sqlFieldOrdinal;
-                    sqlFieldOrdinal++;
-                }
-
-                // Add the input field position to the list of fields
-                // that will be used to sort the input records.
-                sortFields.Add(_formationIdOrdinal + 1);
+                _conditionDateStartOrdinal = context.SqlFieldOrdinal++;
             }
 
-            // If any incid_ihs_management fields are in the export file.
-            if ((exportFields.Any(f => f.TableName == _viewModelMain.HluDataset.incid_ihs_management.TableName)))
+            if (_conditionDateEndOrdinal == -1)
             {
-                // If the management_id column is not included then add
-                // it so that different managements can be identified.
-                if (_managementIdOrdinal == -1)
-                {
-                    // Get the alias for the incid_ihs_management table
-                    string managementTableAlias = tableAliases.TryGetValue(
-                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_ihs_management.TableName),
-                        out string alias) ? alias : _viewModelMain.HluDataset.incid_ihs_management.TableName;
+                context.TargetList.Append(String.Format(",{0}.{1} AS {2}",
+                    conditionTableAlias,
+                    _viewModelMain.HluDataset.incid_condition.condition_date_endColumn.ColumnName,
+                    _viewModelMain.HluDataset.incid_condition.condition_date_endColumn.ColumnName));
 
-                    // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}",
-                        managementTableAlias,
-                        _viewModelMain.HluDataset.incid_ihs_management.management_idColumn.ColumnName, _viewModelMain.HluDataset.incid_ihs_management.management_idColumn.ColumnName));
-
-                    _managementIdOrdinal = sqlFieldOrdinal;
-                    sqlFieldOrdinal++;
-                }
-
-                // Add the input field position to the list of fields
-                // that will be used to sort the input records.
-                sortFields.Add(_managementIdOrdinal + 1);
+                _conditionDateEndOrdinal = context.SqlFieldOrdinal++;
             }
 
-            // If any incid_ihs_complex fields are in the export file.
-            if ((exportFields.Any(f => f.TableName == _viewModelMain.HluDataset.incid_ihs_complex.TableName)))
+            if (_conditionDateTypeOrdinal == -1)
             {
-                // If the complex_id column is not included then add
-                // it so that different complexs can be identified.
-                if (_complexIdOrdinal == -1)
-                {
-                    // Get the alias for the incid_ihs_complex table
-                    string complexTableAlias = tableAliases.TryGetValue(
-                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_ihs_complex.TableName),
-                        out string alias) ? alias : _viewModelMain.HluDataset.incid_ihs_complex.TableName;
+                context.TargetList.Append(String.Format(",{0}.{1} AS {2}",
+                    conditionTableAlias,
+                    _viewModelMain.HluDataset.incid_condition.condition_date_typeColumn.ColumnName,
+                    _viewModelMain.HluDataset.incid_condition.condition_date_typeColumn.ColumnName));
 
-                    // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}",
-                        complexTableAlias,
-                        _viewModelMain.HluDataset.incid_ihs_complex.complex_idColumn.ColumnName, _viewModelMain.HluDataset.incid_ihs_complex.complex_idColumn.ColumnName));
-
-                    _complexIdOrdinal = sqlFieldOrdinal;
-                    sqlFieldOrdinal++;
-                }
-
-                // Add the input field position to the list of fields
-                // that will be used to sort the input records.
-                sortFields.Add(_complexIdOrdinal + 1);
+                _conditionDateTypeOrdinal = context.SqlFieldOrdinal++;
             }
 
-            // If any incid_bap fields are in the export file.
-            if ((exportFields.Any(f => f.TableName == _viewModelMain.HluDataset.incid_bap.TableName)))
+            // Add to sort fields (descending order)
+            context.SortFields.Add((_conditionIdOrdinal + 1) * -1);
+        }
+
+        /// <summary>
+        /// Adds extra matrix fields if needed.
+        /// </summary>
+        /// <param name="context">The context object holding state for SQL construction.</param>
+        /// <param name="exportFields">The list of export fields to check for required matrix fields.</param>
+        private void AddMatrixExtraFields(ExportJoinContext context, List<ExportField> exportFields)
+        {
+            if (!exportFields.Any(f => f.TableName == _viewModelMain.HluDataset.incid_ihs_matrix.TableName))
+                return;
+
+            string matrixTableAlias = GetTableAliasOrDefault(_viewModelMain.HluDataset.incid_ihs_matrix.TableName, context);
+
+            if (_matrixIdOrdinal == -1)
             {
-                // If the bap_habitat_quality column is not included then
-                // add it so that the baps can be sorted by quality.
-                if (_bapQualityOrdinal == -1)
+                context.TargetList.Append(String.Format(",{0}.{1} AS {2}",
+                    matrixTableAlias,
+                    _viewModelMain.HluDataset.incid_ihs_matrix.matrix_idColumn.ColumnName,
+                    _viewModelMain.HluDataset.incid_ihs_matrix.matrix_idColumn.ColumnName));
+
+                _matrixIdOrdinal = context.SqlFieldOrdinal++;
+            }
+
+            context.SortFields.Add(_matrixIdOrdinal + 1);
+        }
+
+        /// <summary>
+        /// Adds extra formation fields if needed.
+        /// </summary>
+        /// <param name="context">The context object holding state for SQL construction.</param>
+        /// <param name="exportFields">The list of export fields to check for required formation fields.</param>
+        private void AddFormationExtraFields(ExportJoinContext context, List<ExportField> exportFields)
+        {
+            if (!exportFields.Any(f => f.TableName == _viewModelMain.HluDataset.incid_ihs_formation.TableName))
+                return;
+
+            string formationTableAlias = GetTableAliasOrDefault(_viewModelMain.HluDataset.incid_ihs_formation.TableName, context);
+
+            if (_formationIdOrdinal == -1)
+            {
+                context.TargetList.Append(String.Format(",{0}.{1} AS {2}",
+                    formationTableAlias,
+                    _viewModelMain.HluDataset.incid_ihs_formation.formation_idColumn.ColumnName,
+                    _viewModelMain.HluDataset.incid_ihs_formation.formation_idColumn.ColumnName));
+
+                _formationIdOrdinal = context.SqlFieldOrdinal++;
+            }
+
+            context.SortFields.Add(_formationIdOrdinal + 1);
+        }
+
+        /// <summary>
+        /// Adds extra management fields if needed.
+        /// </summary>
+        /// <param name="context">The context object holding state for SQL construction.</param>
+        /// <param name="exportFields">The list of export fields to check for required management fields.</param>
+        private void AddManagementExtraFields(ExportJoinContext context, List<ExportField> exportFields)
+        {
+            if (!exportFields.Any(f => f.TableName == _viewModelMain.HluDataset.incid_ihs_management.TableName))
+                return;
+
+            string managementTableAlias = GetTableAliasOrDefault(_viewModelMain.HluDataset.incid_ihs_management.TableName, context);
+
+            if (_managementIdOrdinal == -1)
+            {
+                context.TargetList.Append(String.Format(",{0}.{1} AS {2}",
+                    managementTableAlias,
+                    _viewModelMain.HluDataset.incid_ihs_management.management_idColumn.ColumnName,
+                    _viewModelMain.HluDataset.incid_ihs_management.management_idColumn.ColumnName));
+
+                _managementIdOrdinal = context.SqlFieldOrdinal++;
+            }
+
+            context.SortFields.Add(_managementIdOrdinal + 1);
+        }
+
+        /// <summary>
+        /// Adds extra complex fields if needed.
+        /// </summary>
+        /// <param name="context">The context object holding state for SQL construction.</param>
+        /// <param name="exportFields">The list of export fields to check for required complex fields.</param>
+        private void AddComplexExtraFields(ExportJoinContext context, List<ExportField> exportFields)
+        {
+            if (!exportFields.Any(f => f.TableName == _viewModelMain.HluDataset.incid_ihs_complex.TableName))
+                return;
+
+            string complexTableAlias = GetTableAliasOrDefault(_viewModelMain.HluDataset.incid_ihs_complex.TableName, context);
+
+            if (_complexIdOrdinal == -1)
+            {
+                context.TargetList.Append(String.Format(",{0}.{1} AS {2}",
+                    complexTableAlias,
+                    _viewModelMain.HluDataset.incid_ihs_complex.complex_idColumn.ColumnName,
+                    _viewModelMain.HluDataset.incid_ihs_complex.complex_idColumn.ColumnName));
+
+                _complexIdOrdinal = context.SqlFieldOrdinal++;
+            }
+
+            context.SortFields.Add(_complexIdOrdinal + 1);
+        }
+
+        /// <summary>
+        /// Adds extra BAP fields if needed.
+        /// </summary>
+        /// <param name="context">The context object holding state for SQL construction.</param>
+        /// <param name="exportFields">The list of export fields to check for required BAP fields.</param>
+        private void AddBapExtraFields(ExportJoinContext context, List<ExportField> exportFields)
+        {
+            if (!exportFields.Any(f => f.TableName == _viewModelMain.HluDataset.incid_bap.TableName))
+                return;
+
+            string bapTableAlias = GetTableAliasOrDefault(_viewModelMain.HluDataset.incid_bap.TableName, context);
+
+            // Add bap_habitat_quality field
+            if (_bapQualityOrdinal == -1)
+            {
+                if ((DbFactory.ConnectionType.ToString().Equals("access", StringComparison.CurrentCultureIgnoreCase)) ||
+                    (DbFactory.Backend.ToString().Equals("access", StringComparison.CurrentCultureIgnoreCase)))
                 {
-                    // Get the alias for the incid_bap table
-                    string bapTableAlias = tableAliases.TryGetValue(
-                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_bap.TableName),
-                        out string alias) ? alias : _viewModelMain.HluDataset.incid_bap.TableName;
-
-                    // Add a field to the input table to get the determination
-                    // quality of the bap habitat so that 'not present' habitats
-                    // are listed after 'present' habitats.
-                    if ((DbFactory.ConnectionType.ToString().Equals("access", StringComparison.CurrentCultureIgnoreCase)) ||
-                        (DbFactory.Backend.ToString().Equals("access", StringComparison.CurrentCultureIgnoreCase)))
-                        targetList.Append(String.Format(", IIF({0}.{1} = {2}, 2, IIF({0}.{1} = {3}, 1, 0)) AS {4}",
-                            bapTableAlias,
-                            _viewModelMain.HluDataset.incid_bap.quality_determinationColumn.ColumnName,
-                            _viewModelMain.DataBase.QuoteValue(Settings.Default.BAPDeterminationQualityUserAdded),
-                            _viewModelMain.DataBase.QuoteValue(Settings.Default.BAPDeterminationQualityPrevious),
-                            "bap_habitat_quality"));
-                    else
-                        targetList.Append(String.Format(", CASE {0}.{1} WHEN {2} THEN 2 WHEN {3} THEN 1 ELSE 0 END AS {4}",
-                            bapTableAlias,
-                            _viewModelMain.HluDataset.incid_bap.quality_determinationColumn.ColumnName,
-                            _viewModelMain.DataBase.QuoteValue(Settings.Default.BAPDeterminationQualityUserAdded),
-                            _viewModelMain.DataBase.QuoteValue(Settings.Default.BAPDeterminationQualityPrevious),
-                            "bap_habitat_quality"));
-
-                    _bapQualityOrdinal = sqlFieldOrdinal;
-                    sqlFieldOrdinal++;
-
-                    // Add the input field position to the list of fields
-                    // that will be used to sort the input records.
-                    sortFields.Add(_bapQualityOrdinal + 1);
-                }
-
-                // If the bap_habitat_type column is not included then
-                // add it so that the baps can be sorted by type.
-                if (_bapTypeOrdinal == -1)
-                {
-                    // Get the alias for the incid_bap table
-                    string bapTableAlias = tableAliases.TryGetValue(
-                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_bap.TableName),
-                        out string alias) ? alias : _viewModelMain.HluDataset.incid_bap.TableName;
-
-                    // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}",
+                    context.TargetList.Append(String.Format(", IIF({0}.{1} = {2}, 2, IIF({0}.{1} = {3}, 1, 0)) AS {4}",
                         bapTableAlias,
-                        _viewModelMain.HluDataset.incid_bap.bap_habitatColumn.ColumnName, _viewModelMain.HluDataset.incid_bap.bap_habitatColumn.ColumnName));
-
-                    _bapTypeOrdinal = sqlFieldOrdinal;
-                    sqlFieldOrdinal++;
-
-                    // Add the input field position to the list of fields
-                    // that will be used to sort the input records.
-                    sortFields.Add(_bapTypeOrdinal + 1);
+                        _viewModelMain.HluDataset.incid_bap.quality_determinationColumn.ColumnName,
+                        _viewModelMain.DataBase.QuoteValue(Settings.Default.BAPDeterminationQualityUserAdded),
+                        _viewModelMain.DataBase.QuoteValue(Settings.Default.BAPDeterminationQualityPrevious),
+                        "bap_habitat_quality"));
                 }
-
-                // If the bap_id column is not included then add
-                // it so that different baps can be identified.
-                if (_bapIdOrdinal == -1)
+                else
                 {
-                    // Get the alias for the incid_bap table
-                    string bapTableAlias = tableAliases.TryGetValue(
-                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_bap.TableName),
-                        out string alias) ? alias : _viewModelMain.HluDataset.incid_bap.TableName;
-
-                    // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}",
+                    context.TargetList.Append(String.Format(", CASE {0}.{1} WHEN {2} THEN 2 WHEN {3} THEN 1 ELSE 0 END AS {4}",
                         bapTableAlias,
-                        _viewModelMain.HluDataset.incid_bap.bap_idColumn.ColumnName, _viewModelMain.HluDataset.incid_bap.bap_idColumn.ColumnName));
-
-                    _bapIdOrdinal = sqlFieldOrdinal;
-                    sqlFieldOrdinal++;
-
-                    // Add the input field position to the list of fields
-                    // that will be used to sort the input records.
-                    sortFields.Add(_bapIdOrdinal + 1);
+                        _viewModelMain.HluDataset.incid_bap.quality_determinationColumn.ColumnName,
+                        _viewModelMain.DataBase.QuoteValue(Settings.Default.BAPDeterminationQualityUserAdded),
+                        _viewModelMain.DataBase.QuoteValue(Settings.Default.BAPDeterminationQualityPrevious),
+                        "bap_habitat_quality"));
                 }
+
+                _bapQualityOrdinal = context.SqlFieldOrdinal++;
+                context.SortFields.Add(_bapQualityOrdinal + 1);
             }
 
-            // If any incid_source fields are in the export file.
-            if ((exportFields.Any(f => f.TableName == _viewModelMain.HluDataset.incid_sources.TableName)))
+            // Add bap_habitat field
+            if (_bapTypeOrdinal == -1)
             {
-                // If the source_id column is not included then add
-                // it so that different sources can be identified.
-                if (_sourceIdOrdinal == -1)
-                {
-                    // Get the alias for the incid_sources table
-                    string sourceTableAlias = tableAliases.TryGetValue(
-                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_sources.TableName),
-                        out string alias) ? alias : _viewModelMain.HluDataset.incid_sources.TableName;
+                context.TargetList.Append(String.Format(",{0}.{1} AS {2}",
+                    bapTableAlias,
+                    _viewModelMain.HluDataset.incid_bap.bap_habitatColumn.ColumnName,
+                    _viewModelMain.HluDataset.incid_bap.bap_habitatColumn.ColumnName));
 
-                    // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}",
-                        sourceTableAlias,
-                        _viewModelMain.HluDataset.incid_sources.source_idColumn.ColumnName, _viewModelMain.HluDataset.incid_sources.source_idColumn.ColumnName));
-
-                    _sourceIdOrdinal = sqlFieldOrdinal;
-                    sqlFieldOrdinal++;
-                }
-
-                // If the sort_order column is not included then add
-                // it so that the sources can be sorted.
-                if (sourceSortOrderOrdinal == -1)
-                {
-                    // Get the alias for the incid_sources table
-                    string sourceTableAlias = tableAliases.TryGetValue(
-                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_sources.TableName),
-                        out string alias) ? alias : _viewModelMain.HluDataset.incid_sources.TableName;
-
-                    // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}",
-                        sourceTableAlias,
-                        _viewModelMain.HluDataset.incid_sources.sort_orderColumn.ColumnName, _viewModelMain.HluDataset.incid_sources.sort_orderColumn.ColumnName));
-
-                    sourceSortOrderOrdinal = sqlFieldOrdinal;
-                    sqlFieldOrdinal++;
-                }
-
-                // Add the input field position to the list of fields
-                // that will be used to sort the input records.
-                sortFields.Add(sourceSortOrderOrdinal + 1);
-
-                // If the source_date_start column is not included then add
-                // it for use later.
-                if (_sourceDateStartOrdinals.Count == 0)
-                {
-                    // Get the alias for the incid_sources table
-                    string sourceTableAlias = tableAliases.TryGetValue(
-                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_sources.TableName),
-                        out string alias) ? alias : _viewModelMain.HluDataset.incid_sources.TableName;
-
-                    // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}",
-                        sourceTableAlias,
-                        _viewModelMain.HluDataset.incid_sources.source_date_startColumn.ColumnName, _viewModelMain.HluDataset.incid_sources.source_date_startColumn.ColumnName));
-
-                    _sourceDateStartOrdinals.Add(sqlFieldOrdinal);
-                    sqlFieldOrdinal++;
-                }
-
-                // If the source_date_end column is not included then add
-                // it for use later.
-                if (_sourceDateEndOrdinals.Count == 0)
-                {
-                    // Get the alias for the incid_sources table
-                    string sourceTableAlias = tableAliases.TryGetValue(
-                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_sources.TableName),
-                        out string alias) ? alias : _viewModelMain.HluDataset.incid_sources.TableName;
-
-                    // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}",
-                        sourceTableAlias,
-                        _viewModelMain.HluDataset.incid_sources.source_date_endColumn.ColumnName, _viewModelMain.HluDataset.incid_sources.source_date_endColumn.ColumnName));
-
-                    _sourceDateEndOrdinals.Add(sqlFieldOrdinal);
-                    sqlFieldOrdinal++;
-                }
-
-                // If the source_date_type column is not included then add
-                // it for use later.
-                if (_sourceDateTypeOrdinals.Count == 0)
-                {
-                    // Get the alias for the incid_sources table
-                    string sourceTableAlias = tableAliases.TryGetValue(
-                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_sources.TableName),
-                        out string alias) ? alias : _viewModelMain.HluDataset.incid_sources.TableName;
-
-                    // Add the field to the input table.
-                    targetList.Append(String.Format(",{0}.{1} AS {2}",
-                        sourceTableAlias,
-                        _viewModelMain.HluDataset.incid_sources.source_date_typeColumn.ColumnName, _viewModelMain.HluDataset.incid_sources.source_date_typeColumn.ColumnName));
-
-                    _sourceDateTypeOrdinals.Add(sqlFieldOrdinal);
-                    sqlFieldOrdinal++;
-                }
+                _bapTypeOrdinal = context.SqlFieldOrdinal++;
+                context.SortFields.Add(_bapTypeOrdinal + 1);
             }
 
-            // Store which export fields will be used to sort the
-            // input records.
-            sortOrdinals = sortFields.ToArray();
+            // Add bap_id field
+            if (_bapIdOrdinal == -1)
+            {
+                context.TargetList.Append(String.Format(",{0}.{1} AS {2}",
+                    bapTableAlias,
+                    _viewModelMain.HluDataset.incid_bap.bap_idColumn.ColumnName,
+                    _viewModelMain.HluDataset.incid_bap.bap_idColumn.ColumnName));
 
-            // Store the field ordinals for all the fields for
-            // every child table.
-            conditionOrdinals = conditionFields.ToArray();
-            matrixOrdinals = matrixFields.ToArray();
-            formationOrdinals = formationFields.ToArray();
-            managementOrdinals = managementFields.ToArray();
-            complexOrdinals = complexFields.ToArray();
-            bapOrdinals = bapFields.ToArray();
-            sourceOrdinals = sourceFields.ToArray();
+                _bapIdOrdinal = context.SqlFieldOrdinal++;
+                context.SortFields.Add(_bapIdOrdinal + 1);
+            }
+        }
 
-            // Set the incid field as the primary key to the table.
-            if (primaryKeyOrdinal != -1)
-                exportTable.PrimaryKey = [exportTable.Columns[primaryKeyOrdinal]];
+        /// <summary>
+        /// Adds extra source fields if needed.
+        /// </summary>
+        /// <param name="context">The context object holding state for SQL construction.</param>
+        /// <param name="exportFields">The list of export fields to check for required source fields.</param>
+        private void AddSourceExtraFields(ExportJoinContext context, List<ExportField> exportFields)
+        {
+            if (!exportFields.Any(f => f.TableName == _viewModelMain.HluDataset.incid_sources.TableName))
+                return;
 
-            // Remove the leading comma from the target list of fields.
-            if (targetList.Length > 1) targetList.Remove(0, 1);
+            string sourceTableAlias = GetTableAliasOrDefault(_viewModelMain.HluDataset.incid_sources.TableName, context);
+
+            // Add source_id field
+            if (_sourceIdOrdinal == -1)
+            {
+                context.TargetList.Append(String.Format(",{0}.{1} AS {2}",
+                    sourceTableAlias,
+                    _viewModelMain.HluDataset.incid_sources.source_idColumn.ColumnName,
+                    _viewModelMain.HluDataset.incid_sources.source_idColumn.ColumnName));
+
+                _sourceIdOrdinal = context.SqlFieldOrdinal++;
+            }
+
+            // Add sort_order field
+            if (context.SourceSortOrderOrdinal == -1)
+            {
+                context.TargetList.Append(String.Format(",{0}.{1} AS {2}",
+                    sourceTableAlias,
+                    _viewModelMain.HluDataset.incid_sources.sort_orderColumn.ColumnName,
+                    _viewModelMain.HluDataset.incid_sources.sort_orderColumn.ColumnName));
+
+                context.SourceSortOrderOrdinal = context.SqlFieldOrdinal++;
+            }
+
+            context.SortFields.Add(context.SourceSortOrderOrdinal + 1);
+
+            // Add source_date_start field
+            if (_sourceDateStartOrdinals.Count == 0)
+            {
+                context.TargetList.Append(String.Format(",{0}.{1} AS {2}",
+                    sourceTableAlias,
+                    _viewModelMain.HluDataset.incid_sources.source_date_startColumn.ColumnName,
+                    _viewModelMain.HluDataset.incid_sources.source_date_startColumn.ColumnName));
+
+                _sourceDateStartOrdinals.Add(context.SqlFieldOrdinal++);
+            }
+
+            // Add source_date_end field
+            if (_sourceDateEndOrdinals.Count == 0)
+            {
+                context.TargetList.Append(String.Format(",{0}.{1} AS {2}",
+                    sourceTableAlias,
+                    _viewModelMain.HluDataset.incid_sources.source_date_endColumn.ColumnName,
+                    _viewModelMain.HluDataset.incid_sources.source_date_endColumn.ColumnName));
+
+                _sourceDateEndOrdinals.Add(context.SqlFieldOrdinal++);
+            }
+
+            // Add source_date_type field
+            if (_sourceDateTypeOrdinals.Count == 0)
+            {
+                context.TargetList.Append(String.Format(",{0}.{1} AS {2}",
+                    sourceTableAlias,
+                    _viewModelMain.HluDataset.incid_sources.source_date_typeColumn.ColumnName,
+                    _viewModelMain.HluDataset.incid_sources.source_date_typeColumn.ColumnName));
+
+                _sourceDateTypeOrdinals.Add(context.SqlFieldOrdinal++);
+            }
+        }
+
+        /// <summary>
+        /// Gets the table alias for a table name, or returns the table name if no alias exists.
+        /// </summary>
+        /// <param name="tableName">The name of the table.</param>
+        /// <param name="context">The context object holding state for SQL construction, including table aliases.</param>
+        /// <returns>The table alias if it exists; otherwise, the original table name.</returns>
+        private string GetTableAliasOrDefault(string tableName, ExportJoinContext context)
+        {
+            string qualifiedTableName = _viewModelMain.DataBase.QualifyTableName(tableName);
+            return context.TableAliases.TryGetValue(qualifiedTableName, out string alias) ? alias : tableName;
+        }
+
+        /// <summary>
+        /// Finalizes sort and field ordinals from the context.
+        /// </summary>
+        /// <param name="context">The context object holding state for SQL construction, including field ordinals.</param>
+        /// <param name="sortOrdinals">The output array of sort field ordinals.</param>
+        /// <param name="conditionOrdinals">The output array of condition field ordinals.</param>
+        /// <param name="matrixOrdinals">The output array of matrix field ordinals.</param>
+        /// <param name="formationOrdinals">The output array of formation field ordinals.</param>
+        /// <param name="managementOrdinals">The output array of management field ordinals.</param>
+        /// <param name="complexOrdinals">The output array of complex field ordinals.</param>
+        /// <param name="bapOrdinals">The output array of BAP field ordinals.</param>
+        /// <param name="sourceOrdinals">The output array of source field ordinals.</param>
+        private void FinalizeSortAndFieldOrdinals(ExportJoinContext context,
+            out int[] sortOrdinals, out int[] conditionOrdinals, out int[] matrixOrdinals,
+            out int[] formationOrdinals, out int[] managementOrdinals, out int[] complexOrdinals,
+            out int[] bapOrdinals, out int[] sourceOrdinals)
+        {
+            sortOrdinals = context.SortFields.ToArray();
+            conditionOrdinals = context.ConditionFields.ToArray();
+            matrixOrdinals = context.MatrixFields.ToArray();
+            formationOrdinals = context.FormationFields.ToArray();
+            managementOrdinals = context.ManagementFields.ToArray();
+            complexOrdinals = context.ComplexFields.ToArray();
+            bapOrdinals = context.BapFields.ToArray();
+            sourceOrdinals = context.SourceFields.ToArray();
         }
 
         #endregion Export Joins
@@ -2176,7 +2379,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="tableName">Name of the table.</param>
         /// <param name="columnOrdinal">The column ordinal.</param>
-        /// <returns></returns>
+        /// <returns>The length of the field.</returns>
         private int GetFieldLength(string tableName, int columnOrdinal)
         {
             int fieldLength = 0;
@@ -2386,38 +2589,33 @@ namespace HLU.UI.ViewModel
             // Use the alias if provided, otherwise use the table name
             string childTableRef = string.IsNullOrEmpty(currTableAlias) ? currTable : currTableAlias;
 
+            // Build the ON conditions using only aliases
             for (int i = 0; i < rel.ParentColumns.Length; i++)
             {
                 joinClausePart.Append(String.Format(" AND {0}.{2} = {1}.{3}", parentTableAlias,
-                    childTableRef, // Use the aliased child table reference
+                    childTableRef,
                     _viewModelMain.DataBase.QuoteIdentifier(rel.ParentColumns[i].ColumnName),
                     _viewModelMain.DataBase.QuoteIdentifier(rel.ChildColumns[i].ColumnName)));
             }
 
-            if (parentTableAlias == _viewModelMain.DataBase.QuoteIdentifier(rel.ParentTable.TableName))
-                parentTableAlias = String.Empty;
-            else
-                parentTableAlias = " " + parentTableAlias;
+            string tableToJoin = string.Empty;
 
-            string leftTable = String.Empty;
-            string rightTable = string.Empty;
             if (parentLeft)
             {
-                leftTable = _viewModelMain.DataBase.QuoteIdentifier(rel.ParentTable.TableName) + parentTableAlias;
-                rightTable = childTableRef; // Use alias here
+                // Parent on left (already in FROM clause), child on right (being added)
+                tableToJoin = currTable + " " + childTableRef;
             }
             else
             {
-                leftTable = childTableRef; // Use alias here
-                rightTable = _viewModelMain.DataBase.QuoteIdentifier(rel.ParentTable.TableName) + parentTableAlias;
+                // Child on left (already in FROM clause), parent on right (being added - lookup table)
+                // For lookup tables, qualify the parent table name and add alias
+                string qualifiedParentTable = _viewModelMain.DataBase.QualifyTableName(rel.ParentTable.TableName);
+                tableToJoin = qualifiedParentTable + " " + parentTableAlias;
             }
 
-            if (!fromList.Contains(currTable))
-                return joinClausePart.Remove(0, 5).Insert(0, String.Format(" {0} {1} JOIN {2} ON ",
-                    leftTable, joinType, rightTable)).ToString();
-            else
-                return joinClausePart.Remove(0, 5).Insert(0, String.Format(" {0} JOIN {1} ON ",
-                    joinType, rightTable)).ToString();
+            // Remove leading " AND " and prepend the JOIN clause
+            return joinClausePart.Remove(0, 5).Insert(0, String.Format(" {0} JOIN {1} ON ",
+                joinType, tableToJoin)).ToString();
         }
 
         /// <summary>
@@ -2462,6 +2660,11 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Checks if a field should be skipped due to duplicate ID detection.
         /// </summary>
+        /// <param name="exportColumn">The ordinal of the export column.</param>
+        /// <param name="currentId">The current ID being checked.</param>
+        /// <param name="ordinalSet">The set of ordinals to check against.</param>
+        /// <param name="usedIds">The set of IDs that have already been used.</param>
+        /// <returns>True if the field should be skipped; otherwise, false.</returns>
         private static bool ShouldSkipDuplicate(int exportColumn, int currentId, HashSet<int> ordinalSet, HashSet<int> usedIds)
         {
             return currentId != -1 && ordinalSet.Contains(exportColumn) && usedIds.Contains(currentId);

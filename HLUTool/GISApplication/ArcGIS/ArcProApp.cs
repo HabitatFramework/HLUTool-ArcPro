@@ -3785,6 +3785,13 @@ namespace HLU.GISApplication
                 if (sourceLayer == null)
                     throw new HLUToolException($"Source layer not found: {sourceLayerPath}");
 
+                // Clear selection if exporting all features (not selected only)
+                if (!selectedOnly)
+                {
+                    string sourceLayerName = System.IO.Path.GetFileNameWithoutExtension(sourceLayerPath);
+                    await ArcGISProHelpers.ClearLayerSelectionAsync(sourceLayerName);
+                }
+
                 // Generate unique temp feature class name
                 string tempFcName = string.Concat("ExportTemp_", Guid.NewGuid().ToString("N").AsSpan(0, 8));
                 string tempFcPath = System.IO.Path.Combine(gdbPath, tempFcName);
@@ -3809,15 +3816,21 @@ namespace HLU.GISApplication
                     using var fcDef = tempFC.GetDefinition();
 
                     // Build list of fields to KEEP
-                    HashSet<string> fieldsToKeep = new(StringComparer.OrdinalIgnoreCase);
+                    HashSet<string> fieldsToKeep = new(StringComparer.OrdinalIgnoreCase)
+                    {
+                        // Always keep these system/essential fields
+                        "OBJECTID",
+                        "Shape",
+                        "GlobalID",
 
-                    // Always keep these system/essential fields
-                    fieldsToKeep.Add("OBJECTID");
-                    fieldsToKeep.Add("Shape");
-                    fieldsToKeep.Add("GlobalID");
+                        // Always keep geometry attribute fields (required by ArcGIS Pro)
+                        "Shape_Length",
+                        "Shape_Leng",
+                        "Shape_Area",
 
-                    // Add INCID field (needed for join)
-                    fieldsToKeep.Add(_hluLayerStructure.incidColumn.ColumnName);
+                        // Add INCID field (needed for join)
+                        _hluLayerStructure.incidColumn.ColumnName
+                    };
 
                     // Add GIS fields from export format
                     if (gisFieldsToInclude != null)
@@ -4362,6 +4375,14 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
+        /// Gets the feature class associated with the active HLU layer.
+        /// </summary>
+        public FeatureClass HluFeatureClass
+        {
+            get { return _hluFeatureClass; }
+        }
+
+        /// <summary>
         /// Determines whether the current map contains any valid HLU layers.
         /// This method only discovers valid layers and chooses a candidate active layer name.
         /// It does not activate a layer and does not set _hluLayer or _hluTableName.
@@ -4565,7 +4586,6 @@ namespace HLU.GISApplication
                 return _hluFieldMap[columnOrdinal];
         }
 
-        //TODO: Is _hluFeatureClass Needed?
         /// <summary>
         /// Retrieves the field of _hluFeatureClass that corresponds to the column of _hluLayerStructure whose ordinal is passed in.
         /// </summary>
@@ -4573,11 +4593,12 @@ namespace HLU.GISApplication
         /// <returns>The field of _hluFeatureClass corresponding to column _hluLayerStructure[columnOrdinal].</returns>
         private async Task<Field> GetFieldAsync(int columnOrdinal)
         {
-            if ((_hluFeatureClass == null) || (_hluFieldMap == null) ||
+            // Check the field map and column ordinal are valid.
+            if ((_hluFieldMap == null) ||
                 (columnOrdinal < 0) || (columnOrdinal >= _hluFieldMap.Length)) return null;
+
             int fieldOrdinal = _hluFieldMap[columnOrdinal];
 
-            //TODO: ArcPro
             if (fieldOrdinal >= 0)
             {
                 Field field = null;
@@ -4606,6 +4627,40 @@ namespace HLU.GISApplication
             }
             else
                 return null;
+        }
+
+        /// <summary>
+        /// Retrieves the field of _hluFeatureClass that corresponds to the column of _hluLayerStructure whose ordinal is passed in.
+        /// </summary>
+        /// <param name="columnOrdinal">Ordinal of the column in _hluLayerStructure.</param>
+        /// <returns>The field of _hluFeatureClass corresponding to column _hluLayerStructure[columnOrdinal].</returns>
+        private Field GetField(int columnOrdinal)  // ⚠️ Changed to synchronous
+        {
+            if ((_hluFeatureClass == null) || (_hluFieldMap == null) ||
+                (columnOrdinal < 0) || (columnOrdinal >= _hluFieldMap.Length))
+                return null;
+
+            int fieldOrdinal = _hluFieldMap[columnOrdinal];
+
+            if (fieldOrdinal >= 0)
+            {
+                try
+                {
+                    // No QueuedTask.Run() - we're already on the MCT
+                    using FeatureClassDefinition hluFeatureClassDefinition = _hluFeatureClass.GetDefinition();
+
+                    int fieldCnt = hluFeatureClassDefinition.GetFields().Count;
+
+                    if (fieldOrdinal < fieldCnt)
+                        return hluFeatureClassDefinition.GetFields()[fieldOrdinal];
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>

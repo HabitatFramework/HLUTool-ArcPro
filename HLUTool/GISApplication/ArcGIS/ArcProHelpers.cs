@@ -2008,6 +2008,155 @@ namespace HLU.GISApplication
 
         #endregion CopyFeatures
 
+        #region Selection
+
+        /// <summary>
+        /// Clears the selection on a feature layer by name.
+        /// </summary>
+        /// <param name="layerName">Name of the feature layer in the active map.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if successful, otherwise false.</returns>
+        public static async Task<bool> ClearLayerSelectionAsync(string layerName)
+        {
+            if (string.IsNullOrWhiteSpace(layerName))
+                return false;
+
+            return await QueuedTask.Run(() =>
+            {
+                try
+                {
+                    MapView mapView = MapView.Active;
+                    if (mapView == null)
+                        return false;
+
+                    Map activeMap = mapView.Map;
+                    if (activeMap == null)
+                        return false;
+
+                    FeatureLayer layer = activeMap.FindLayers(layerName, true)
+                        .OfType<FeatureLayer>()
+                        .FirstOrDefault();
+
+                    if (layer == null)
+                        return false;
+
+                    layer.ClearSelection();
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            });
+        }
+
+        #endregion Selection
+
+        #region INCID Filtering
+
+        /// <summary>
+        /// Gets the distinct INCID values from a feature class object.
+        /// </summary>
+        /// <param name="featureClass">The feature class object to query.</param>
+        /// <param name="incidFieldName">Name of the INCID field.</param>
+        /// <param name="whereClause">Optional WHERE clause to filter features.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a HashSet of distinct INCID values, or null if an error occurred.</returns>
+        public static async Task<HashSet<string>> GetDistinctIncidValuesAsync(
+            FeatureClass featureClass,
+            string incidFieldName,
+            string whereClause = null)
+        {
+            // Check there is an input feature class.
+            if (featureClass == null)
+                return null;
+
+            // Check there is an input field name.
+            if (String.IsNullOrWhiteSpace(incidFieldName))
+                return null;
+
+            return await QueuedTask.Run(() =>
+            {
+                HashSet<string> incidValues = [];
+
+                try
+                {
+                    QueryFilter queryFilter = new();
+                    if (!String.IsNullOrWhiteSpace(whereClause))
+                        queryFilter.WhereClause = whereClause;
+
+                    // Only retrieve the INCID field for efficiency
+                    queryFilter.SubFields = incidFieldName;
+
+                    using RowCursor cursor = featureClass.Search(queryFilter, false);
+                    while (cursor.MoveNext())
+                    {
+                        using Row row = cursor.Current;
+                        object incidValue = row[incidFieldName];
+
+                        if (incidValue != null && incidValue != DBNull.Value)
+                            incidValues.Add(incidValue.ToString());
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error getting distinct INCID values: {ex.Message}");
+                    return null;
+                }
+
+                return incidValues;
+            });
+        }
+
+        /// <summary>
+        /// Filters a DataTable to only include rows where the INCID matches values in the provided set.
+        /// </summary>
+        /// <param name="sourceTable">The source DataTable to filter.</param>
+        /// <param name="incidFieldName">Name of the INCID field in the DataTable.</param>
+        /// <param name="validIncids">HashSet of valid INCID values to keep.</param>
+        /// <returns>A new DataTable containing only matching rows, or null if an error occurred.</returns>
+        public static DataTable FilterTableByIncids(
+            DataTable sourceTable,
+            string incidFieldName,
+            HashSet<string> validIncids)
+        {
+            // Check there is a source table.
+            if (sourceTable == null)
+                return null;
+
+            // Check there is an input field name.
+            if (String.IsNullOrWhiteSpace(incidFieldName))
+                return null;
+
+            // Check there are valid INCIDs.
+            if (validIncids == null || validIncids.Count == 0)
+                return null;
+
+            try
+            {
+                // Create a new DataTable with the same schema
+                DataTable filteredTable = sourceTable.Clone();
+
+                // Only copy rows where INCID is in the validIncids set
+                foreach (DataRow row in sourceTable.Rows)
+                {
+                    object incidValue = row[incidFieldName];
+                    if (incidValue != null && incidValue != DBNull.Value)
+                    {
+                        if (validIncids.Contains(incidValue.ToString()))
+                            filteredTable.ImportRow(row);
+                    }
+                }
+
+                return filteredTable;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error filtering table by INCIDs: {ex.Message}");
+                return null;
+            }
+        }
+
+        #endregion INCID Filtering
+
         #region Export Features
 
         /// <summary>

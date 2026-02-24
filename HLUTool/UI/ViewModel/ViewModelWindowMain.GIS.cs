@@ -487,6 +487,41 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
+        /// Event when the DockPane is disposed. Unsubscribes from all events to prevent memory leaks and calls base to allow parent cleanup.
+        /// </summary>
+        protected override void OnDispose()
+        {
+            // Unsubscribe from all events to prevent memory leaks
+            if (_mapEventsSubscribed)
+            {
+                ActiveMapViewChangedEvent.Unsubscribe(OnActiveMapViewChanged);
+                _mapEventsSubscribed = false;
+            }
+
+            if (_layersChangedEventsSubscribed)
+            {
+                LayersAddedEvent.Unsubscribe(OnLayersAdded);
+                LayersRemovedEvent.Unsubscribe(OnLayersRemoved);
+                _layersChangedEventsSubscribed = false;
+            }
+
+            if (_projectClosedEventsSubscribed)
+            {
+                ProjectClosedEvent.Unsubscribe(OnProjectClosed);
+                _projectClosedEventsSubscribed = false;
+            }
+
+            if (_mapMemberEventsSubscribed)
+            {
+                MapMemberPropertiesChangedEvent.Unsubscribe(OnMapMemberPropertiesChanged);
+                _mapMemberEventsSubscribed = false;
+            }
+
+            // Call base to allow parent cleanup
+            base.OnDispose();
+        }
+
+        /// <summary>
         /// Handles map member property changes and refreshes edit capability if the active HLU layer is affected.
         /// </summary>
         private void OnMapMemberPropertiesChanged(MapMemberPropertiesChangedEventArgs args)

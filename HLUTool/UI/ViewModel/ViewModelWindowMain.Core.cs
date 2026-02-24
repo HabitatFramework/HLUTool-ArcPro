@@ -1822,6 +1822,9 @@ namespace HLU.UI.ViewModel
             // Check the GIS map
             ChangeCursor(Cursors.Wait, "Checking GIS map ...");
 
+            // Store the current active layer name before validation
+            string currentActiveLayerName = ActiveLayerName;
+
             // Create a new GIS functions instance (so that it will use the new active layer to set any cached variables).
             _gisApp = new();
 
@@ -1838,6 +1841,7 @@ namespace HLU.UI.ViewModel
 
                 // Clear the active layer name.
                 ActiveLayerName = null;
+                currentActiveLayerName = null;
             }
 
             // Check if there is no active map.
@@ -1862,8 +1866,8 @@ namespace HLU.UI.ViewModel
             if (_activeLayerComboBox == null)
                 _activeLayerComboBox = ActiveLayerComboBox.GetInstance();
 
-            // Check if the GIS map is valid
-            if (!await _gisApp.IsHluMapAsync(ActiveLayerName))
+            // Check if the GIS map is valid (pass the current active layer name to validate)
+            if (!await _gisApp.IsHluMapAsync(currentActiveLayerName))
             {
                 // Clear the status bar (or reset the cursor to an arrow)
                 ChangeCursor(Cursors.Arrow, null);
@@ -1890,8 +1894,18 @@ namespace HLU.UI.ViewModel
             // Set the list of valid HLU layer names.
             AvailableHLULayerNames = new ObservableCollection<string>(_gisApp.ValidHluLayerNames);
 
-            // Set the active HLU layer name.
-            ActiveLayerName = _gisApp.ActiveHluLayer?.LayerName ?? string.Empty;
+            // Preserve the current active HLU layer name if it's still valid, otherwise use the default
+            if (!string.IsNullOrEmpty(currentActiveLayerName) &&
+                _gisApp.ValidHluLayerNames.Contains(currentActiveLayerName))
+            {
+                // Keep the current active layer if it's still valid
+                ActiveLayerName = currentActiveLayerName;
+            }
+            else
+            {
+                // Use the layer determined by the GIS application (e.g., first valid layer)
+                ActiveLayerName = _gisApp.ActiveHluLayer?.LayerName ?? string.Empty;
+            }
 
             // Activate the current active HLU layer so GIS internals are set.
             var isActiveHluLayer = !String.IsNullOrEmpty(ActiveLayerName) &&

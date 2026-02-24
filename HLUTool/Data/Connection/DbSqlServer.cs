@@ -33,6 +33,9 @@ using CommandType = System.Data.CommandType;
 
 namespace HLU.Data.Connection
 {
+    /// <summary>
+    /// Class for handling SQL Server database connections and operations.
+    /// </summary>
     class DbSqlServer : DbBase
     {
         #region Private Members
@@ -53,6 +56,23 @@ namespace HLU.Data.Connection
 
         #region Constructor
 
+        /// <summary>
+        /// Initializes a new instance of the DbSqlServer class with the specified connection parameters.
+        /// </summary>
+        /// <param name="connString">The connection string for the SQL Server database.</param>
+        /// <param name="defaultSchema">The default schema for the SQL Server database.</param>
+        /// <param name="promptPwd">Indicates whether to prompt for a password.</param>
+        /// <param name="pwdMask">The password mask.</param>
+        /// <param name="useCommandBuilder">Indicates whether to use a command builder.</param>
+        /// <param name="useColumnNames">Indicates whether to use column names.</param>
+        /// <param name="isUnicode">Indicates whether to use Unicode.</param>
+        /// <param name="useTimeZone">Indicates whether to use time zone.</param>
+        /// <param name="textLength">The length of text fields.</param>
+        /// <param name="binaryLength">The length of binary fields.</param>
+        /// <param name="timePrecision">The precision of time fields.</param>
+        /// <param name="numericPrecision">The precision of numeric fields.</param>
+        /// <param name="numericScale">The scale of numeric fields.</param>
+        /// <param name="connectTimeOut">The connection timeout in seconds.</param>
         public DbSqlServer(ref string connString, ref string defaultSchema, ref bool promptPwd, string pwdMask,
             bool useCommandBuilder, bool useColumnNames, bool isUnicode, bool useTimeZone, uint textLength,
             uint binaryLength, uint timePrecision, uint numericPrecision, uint numericScale, int connectTimeOut)
@@ -87,8 +107,17 @@ namespace HLU.Data.Connection
 
         #region Public Members
 
+        /// <summary>
+        /// Gets the backend type for this database connection, which is SQL Server in this case.
+        /// </summary>
         public override Backends Backend { get { return Backends.SqlServer; } }
 
+        /// <summary>
+        /// Checks if the database schema contains the necessary tables and columns as defined in the provided DataSet.
+        /// </summary>
+        /// <param name="ds">The DataSet containing the tables and columns to check.</param>
+        /// <param name="errorMessage">An error message if the schema does not match.</param>
+        /// <returns>True if the schema matches, false otherwise.</returns>
         public override bool ContainsDataSet(DataSet ds, out string errorMessage)
         {
             errorMessage = null;
@@ -149,15 +178,30 @@ namespace HLU.Data.Connection
             return false;
         }
 
+        /// <summary>
+        /// Gets the database connection object for this SQL Server connection.
+        /// </summary>
         public override IDbConnection Connection { get { return _connection; } }
 
+        /// <summary>
+        /// Gets the connection string builder for this SQL Server connection, which allows for constructing and modifying the connection string.
+        /// </summary>
         public override DbConnectionStringBuilder ConnectionStringBuilder { get { return _connStrBuilder; } }
 
+        /// <summary>
+        /// Gets the current database transaction for this SQL Server connection, if any. This allows for managing transactions across multiple database operations.
+        /// </summary>
         public override IDbTransaction Transaction
         {
             get { return _transaction; }
         }
 
+        /// <summary>
+        /// Creates and returns a new database command object for executing SQL queries and commands
+        /// against the SQL Server database. If a connection is available, the command will be associated
+        /// with that connection; otherwise, a standalone command object will be returned.
+        /// </summary>
+        /// <returns>A new database command object for executing SQL queries and commands.</returns>
         public override IDbCommand CreateCommand()
         {
             if (_connection != null)
@@ -166,18 +210,25 @@ namespace HLU.Data.Connection
                 return new SqlCommand();
         }
 
-        //TODO: CreateAdapter
-        //public override IDbDataAdapter CreateAdapter()
-        //{
-        //    return new SqlDataAdapter();
-        //}
-
+        /// <summary>
+        /// Creates and returns a new data adapter for the specified DataTable type. The adapter is
+        /// configured with the appropriate select, insert, update, and delete commands based on the
+        /// schema of the provided DataTable. If an adapter for the specified type already exists in
+        /// the internal dictionary, it will be returned; otherwise, a new adapter will be created,
+        /// configured, and stored in the dictionary before being returned.
+        /// </summary>
+        /// <typeparam name="T">The type of the DataTable for which to create the adapter.</typeparam>
+        /// <param name="table">The DataTable instance for which to create the adapter.</param>
+        /// <returns>A new data adapter configured for the specified DataTable type.</returns>
         public override IDbDataAdapter CreateAdapter<T>(T table)
         {
+            // If the provided table is null, create a new instance of T to use for adapter creation. This allows
+            // the method to proceed with adapter creation even if the caller does not provide a specific DataTable instance.
             table ??= new T();
 
             SqlDataAdapter adapter;
 
+            // Check if an adapter for this type already exists in the dictionary. If it does, return it.
             if (!_adaptersDic.TryGetValue(typeof(T), out adapter))
             {
                 adapter = new();
@@ -222,6 +273,11 @@ namespace HLU.Data.Connection
                 string delAddString;
                 string updAddString;
 
+                // Iterate through each column in the DataTable to configure the adapter's column mappings
+                // and commands. For each column, determine the appropriate SQL data type, create parameters
+                // for delete, insert, and update operations, and build the SQL command text for the adapter's
+                // commands. Special handling is included for columns that allow null values to ensure that the
+                // generated SQL commands correctly account for nullability in their WHERE clauses.
                 for (int i = 0; i < table.Columns.Count; i++)
                 {
                     c = table.Columns[i];
@@ -286,6 +342,7 @@ namespace HLU.Data.Connection
                         sbWherePkIns.Append(String.Format(" AND ({0} = {1})", colName, ParameterMarker(insColParamName)));
                     }
                 }
+
                 updateParams.AddRange(updateParamsOrig);
                 sbTargetList.Remove(0, 2);
                 sbInsValues.Remove(0, 2);
@@ -297,6 +354,8 @@ namespace HLU.Data.Connection
 
                 adapter.TableMappings.Add(tableMapping);
 
+                // Configure the SelectCommand for the adapter to retrieve data from the specified table.
+                // The command text is constructed using the target column list and the qualified table name.
                 adapter.SelectCommand = new()
                 {
                     CommandType = CommandType.Text,
@@ -304,6 +363,8 @@ namespace HLU.Data.Connection
                     CommandText = String.Format("SELECT {0} FROM {1}", sbTargetList, tableName)
                 };
 
+                // If the useCommandBuilder flag is not set, manually create and configure the DeleteCommand,
+                // UpdateCommand, and InsertCommand for the adapter using the constructed SQL command text and parameters.
                 if (!_useCommandBuilder)
                 {
                     adapter.DeleteCommand = new()
@@ -340,11 +401,18 @@ namespace HLU.Data.Connection
                     adapter.InsertCommand = cmdBuilder.GetInsertCommand(_useColumnNames);
                 }
 
+                // Append SELECT statements to the end of the UpdateCommand and InsertCommand to retrieve
+                // the updated or inserted row after the command is executed. This allows for retrieving
+                // the new values of the row, including any auto-generated values such as identity columns,
+                // after an update or insert operation is performed.
                 adapter.UpdateCommand.CommandText += ";\r\n" +
                     String.Format("SELECT {0} FROM {1} WHERE {2}", sbTargetList, tableName, sbWherePkUpd);
                 adapter.InsertCommand.CommandText += ";\r\n" +
                     String.Format("SELECT {0} FROM {1} WHERE {2}", sbTargetList, tableName, sbWherePkIns);
 
+                // Store the configured adapter in the dictionary for future use, using the type of T as the key.
+                // This allows for efficient retrieval of the adapter for subsequent operations involving the same
+                // type of DataTable without needing to recreate and reconfigure the adapter each time.
                 if (typeof(T) != typeof(DataTable))
                     _adaptersDic.Add(typeof(T), adapter);
             }
@@ -352,6 +420,17 @@ namespace HLU.Data.Connection
             return adapter;
         }
 
+        /// <summary>
+        /// Creates a new SQL parameter with the specified properties, including name, data type, direction,
+        /// source column, source version, and null mapping.
+        /// </summary>
+        /// <param name="name">The name of the parameter.</param>
+        /// <param name="type">The SQL data type of the parameter.</param>
+        /// <param name="direction">The direction of the parameter (Input, Output, InputOutput, or ReturnValue).</param>
+        /// <param name="srcColumn">The source column for the parameter.</param>
+        /// <param name="srcVersion">The source version for the parameter.</param>
+        /// <param name="nullMapping">Indicates whether the parameter maps to a column that allows null values.</param>
+        /// <returns>A new SqlParameter instance with the specified properties.</returns>
         private SqlParameter CreateParameter(string name, SqlDbType type, ParameterDirection direction,
             string srcColumn, DataRowVersion srcVersion, bool nullMapping)
         {
@@ -365,6 +444,17 @@ namespace HLU.Data.Connection
             return param;
         }
 
+        /// <summary>
+        /// Creates a new SQL parameter with the specified properties, including name, value, direction,
+        /// source column, source version, and null mapping.
+        /// </summary>
+        /// <param name="name">The name of the parameter.</param>
+        /// <param name="value">The value of the parameter.</param>
+        /// <param name="direction">The direction of the parameter (Input, Output, InputOutput, or ReturnValue).</param>
+        /// <param name="srcColumn">The source column for the parameter.</param>
+        /// <param name="srcVersion">The source version for the parameter.</param>
+        /// <param name="nullMapping">Indicates whether the parameter maps to a column that allows null values.</param>
+        /// <returns>A new SqlParameter instance with the specified properties.</returns>
         private SqlParameter CreateParameter(string name, object value, ParameterDirection direction,
             string srcColumn, DataRowVersion srcVersion, bool nullMapping)
         {
@@ -378,6 +468,13 @@ namespace HLU.Data.Connection
             return param;
         }
 
+        /// <summary>
+        /// Generates a parameter name based on the specified prefix, column name, and parameter number.
+        /// </summary>
+        /// <param name="prefix">The prefix for the parameter name.</param>
+        /// <param name="columnName">The name of the column associated with the parameter.</param>
+        /// <param name="paramNo">The parameter number.</param>
+        /// <returns>The generated parameter name.</returns>
         protected override string ParameterName(string prefix, string columnName, int paramNo)
         {
             if (_useColumnNames)
@@ -386,11 +483,26 @@ namespace HLU.Data.Connection
                 return String.Format("{0}p{1}", ParameterPrefix, paramNo);
         }
 
+        /// <summary>
+        /// Formats the parameter name for use in SQL command text. For SQL Server, parameters are typically
+        /// prefixed with the '@' symbol.
+        /// </summary>
+        /// <param name="parameterName">The name of the parameter.</param>
+        /// <returns>The formatted parameter name.</returns>
         protected override string ParameterMarker(string parameterName)
         {
             return parameterName;
         }
 
+        /// <summary>
+        /// Fills the schema of the provided DataTable based on the specified SQL query and schema type. The method
+        /// uses a SqlDataAdapter to retrieve the schema information from the database.
+        /// </summary>
+        /// <typeparam name="T">The type of the DataTable.</typeparam>
+        /// <param name="schemaType">The type of schema to retrieve.</param>
+        /// <param name="sql">The SQL query to execute.</param>
+        /// <param name="table">The DataTable to fill.</param>
+        /// <returns>True if the schema was successfully filled; otherwise, false.</returns>
         public override bool FillSchema<T>(SchemaType schemaType, string sql, ref T table)
         {
             if (String.IsNullOrEmpty(sql)) return false;
@@ -429,6 +541,14 @@ namespace HLU.Data.Connection
             finally { if (previousConnectionState == ConnectionState.Closed) _connection.Close(); }
         }
 
+        /// <summary>
+        /// Fills the provided DataTable with data based on the specified SQL query. The method uses a SqlDataAdapter
+        /// to retrieve the data from the database.
+        /// </summary>
+        /// <typeparam name="T">The type of the DataTable.</typeparam>
+        /// <param name="sql">The SQL query to execute.</param>
+        /// <param name="table">The DataTable to fill.</param>
+        /// <returns>The number of rows added to the DataTable, or -1 if an error occurred.</returns>
         public override int FillTable<T>(string sql, ref T table)
         {
             if (String.IsNullOrEmpty(sql)) return 0;
@@ -462,6 +582,14 @@ namespace HLU.Data.Connection
             finally { if (previousConnectionState == ConnectionState.Closed) _connection.Close(); }
         }
 
+        /// <summary>
+        /// Executes the specified SQL query and returns a data reader for reading the results. The method configures
+        /// the command with the provided timeout and command type, and associates it with the current transaction if available.
+        /// </summary>
+        /// <param name="sql">The SQL query to execute.</param>
+        /// <param name="commandTimeout">The command timeout in seconds.</param>
+        /// <param name="commandType">The type of the command (Text, StoredProcedure, etc.).</param>
+        /// <returns>An IDataReader for reading the results, or null if an error occurred.</returns>
         public override IDataReader ExecuteReader(string sql, int commandTimeout, CommandType commandType)
         {
             _errorMessage = String.Empty;
@@ -486,6 +614,14 @@ namespace HLU.Data.Connection
             }
         }
 
+        /// <summary>
+        /// Executes the specified SQL query and returns the number of rows affected. The method configures
+        /// the command with the provided timeout and command type, and associates it with the current transaction if available.
+        /// </summary>
+        /// <param name="sql">The SQL query to execute.</param>
+        /// <param name="commandTimeout">The command timeout in seconds.</param>
+        /// <param name="commandType">The type of the command (Text, StoredProcedure, etc.).</param>
+        /// <returns>The number of rows affected, or -1 if an error occurred.</returns>
         public override int ExecuteNonQuery(string sql, int commandTimeout, CommandType commandType)
         {
             _errorMessage = String.Empty;
@@ -511,12 +647,13 @@ namespace HLU.Data.Connection
         }
 
         /// <summary>
-        /// Executes the query and returns the first column of the first row
+        /// Executes the query and returns the first column of the first row. The method configures
+        /// the command with the provided timeout and command type, and associates it with the current transaction if available.
         /// </summary>
-        /// <param name="sql"></param>
-        /// <param name="commandTimeout"></param>
-        /// <param name="commandType"></param>
-        /// <returns></returns>
+        /// <param name="sql">The SQL query to execute.</param>
+        /// <param name="commandTimeout">The command timeout in seconds.</param>
+        /// <param name="commandType">The type of the command (Text, StoredProcedure, etc.).</param>
+        /// <returns>The first column of the first row, or null if an error occurred.</returns>
         public override object ExecuteScalar(string sql, int commandTimeout, CommandType commandType)
         {
             _errorMessage = String.Empty;
@@ -542,36 +679,67 @@ namespace HLU.Data.Connection
         }
 
         /// <summary>
-        /// Executes the query and returns the first column of the first row
+        /// Executes the query and returns the first column of the first row. The method configures
+        /// the command with the provided timeout and command type, and associates it with the current transaction if available.
         /// </summary>
-        /// <param name="sql"></param>
-        /// <param name="commandTimeout"></param>
-        /// <param name="commandType"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <param name="sql">The SQL query to execute.</param>
+        /// <param name="commandTimeout">The command timeout in seconds.</param>
+        /// <param name="commandType">The type of the command (Text, StoredProcedure, etc.).</param>
+        /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+        /// <returns>The first column of the first row, or null if an error occurred.</returns>
         public override async Task<object> ExecuteScalarAsync(string sql, int commandTimeout, CommandType commandType, CancellationToken cancellationToken = default)
         {
             _errorMessage = String.Empty;
 
             if (String.IsNullOrEmpty(sql)) return null;
 
-            ConnectionState previousConnectionState = _connection.State;
+            // Create local copies of the connection and command to avoid race conditions
+            // where shared instance members might be disposed/nullified during async operations
+            SqlConnection connection = _connection;
+            SqlCommand command = null;
+
+            // Capture the previous connection state for local reference
+            ConnectionState previousConnectionState = connection?.State ?? ConnectionState.Closed;
 
             try
             {
-                _command.CommandType = commandType;
-                _command.CommandTimeout = commandTimeout;
-                _command.CommandText = sql;
+                // Check for null before proceeding
+                if (connection == null)
+                {
+                    _errorMessage = "Connection object is null";
+                    return null;
+                }
 
+                // Create a new command instance for this async operation
+                // to avoid sharing command state across concurrent operations
+                command = connection.CreateCommand();
+                command.CommandType = commandType;
+                command.CommandTimeout = commandTimeout;
+                command.CommandText = sql;
+
+                // Assign transaction if one exists
                 if (_transaction != null)
-                    _command.Transaction = _transaction;
+                    command.Transaction = _transaction;
 
-                _commandBuilder.RefreshSchema();
+                // Only refresh schema if command builder is not null
+                _commandBuilder?.RefreshSchema();
 
-                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
-                    await _connection.OpenAsync(cancellationToken);
+                // Open connection if needed
+                if ((connection.State & ConnectionState.Open) != ConnectionState.Open)
+                    await connection.OpenAsync(cancellationToken);
 
-                return await _command.ExecuteScalarAsync(cancellationToken);
+                // Execute the scalar query
+                return await command.ExecuteScalarAsync(cancellationToken);
+            }
+            catch (ObjectDisposedException ex)
+            {
+                _errorMessage = "Connection or command has been disposed: " + ex.Message;
+                return null;
+            }
+            catch (NullReferenceException ex)
+            {
+                _errorMessage = "Null reference during async execution: " + ex.Message;
+                return null;
             }
             catch (Exception ex)
             {
@@ -580,8 +748,25 @@ namespace HLU.Data.Connection
             }
             finally
             {
-                if (previousConnectionState == ConnectionState.Closed)
-                    _connection.Close();
+                // Clean up the local command instance
+                if (command != null)
+                {
+                    try
+                    {
+                        command.Dispose();
+                    }
+                    catch { }
+                }
+
+                // Close connection if it was previously closed
+                if (previousConnectionState == ConnectionState.Closed && connection?.State == ConnectionState.Open)
+                {
+                    try
+                    {
+                        connection.Close();
+                    }
+                    catch { }
+                }
             }
         }
 
@@ -621,6 +806,15 @@ namespace HLU.Data.Connection
             finally { if (previousConnectionState == ConnectionState.Closed) _connection.Close(); }
         }
 
+        /// <summary>
+        /// Begins a database transaction with the specified isolation level. If a transaction is already
+        /// in progress, it can either be committed or rolled back based on the commitPrevious parameter
+        /// before starting the new transaction. The method also refreshes the command builder's schema
+        /// to ensure that any changes to the database schema are reflected in the commands used by the adapter.
+        /// </summary>
+        /// <param name="commitPrevious">Indicates whether to commit the previous transaction if one is in progress.</param>
+        /// <param name="isolationLevel">The isolation level for the new transaction.</param>
+        /// <returns>True if the transaction was successfully started; otherwise, false.</returns>
         public override bool BeginTransaction(bool commitPrevious, IsolationLevel isolationLevel)
         {
             try
@@ -647,6 +841,10 @@ namespace HLU.Data.Connection
             }
         }
 
+        /// <summary>
+        /// Commits the current database transaction. If there is no active transaction, the method does nothing.
+        /// </summary>
+        /// <returns>True if the transaction was successfully committed; otherwise, false.</returns>
         public override bool CommitTransaction()
         {
             try
@@ -667,6 +865,10 @@ namespace HLU.Data.Connection
             }
         }
 
+        /// <summary>
+        /// Rolls back the current database transaction. If there is no active transaction, the method does nothing.
+        /// </summary>
+        /// <returns>True if the transaction was successfully rolled back; otherwise, false.</returns>
         public override bool RollbackTransaction()
         {
             try
@@ -687,6 +889,16 @@ namespace HLU.Data.Connection
             }
         }
 
+        /// <summary>
+        /// Updates the database with the changes made to the provided DataTable. The method configures the adapter's
+        /// commands for inserting, updating, and deleting rows based on the provided SQL commands.
+        /// </summary>
+        /// <typeparam name="T">The type of the DataTable or DataSet being updated.</typeparam>
+        /// <param name="table">The DataTable or DataSet containing the changes to be applied to the database.</param>
+        /// <param name="insertCommand">The SQL command used to insert new rows.</param>
+        /// <param name="updateCommand">The SQL command used to update existing rows.</param>
+        /// <param name="deleteCommand">The SQL command used to delete rows.</param>
+        /// <returns>The number of rows affected by the update operation.</returns>
         public override int Update<T>(T table, string insertCommand, string updateCommand, string deleteCommand)
         {
             ConnectionState previousConnectionState = _connection.State;
@@ -714,6 +926,13 @@ namespace HLU.Data.Connection
             finally { if (previousConnectionState == ConnectionState.Closed) _connection.Close(); }
         }
 
+        /// <summary>
+        /// Updates the database with the changes made to the provided DataTable. The method uses a SqlDataAdapter
+        /// to apply the changes to the database.
+        /// </summary>
+        /// <typeparam name="T">The type of the DataTable being updated.</typeparam>
+        /// <param name="table">The DataTable containing the changes to be applied to the database.</param>
+        /// <returns>The number of rows affected by the update operation.</returns>
         public override int Update<T>(T table)
         {
             ConnectionState previousConnectionState = _connection.State;
@@ -734,6 +953,14 @@ namespace HLU.Data.Connection
             finally { if (previousConnectionState == ConnectionState.Closed) _connection.Close(); }
         }
 
+        /// <summary>
+        /// Updates the database with the changes made to the provided DataSet. The method uses a SqlDataAdapter
+        /// to apply the changes to the database.
+        /// </summary>
+        /// <typeparam name="T">The type of the DataSet being updated.</typeparam>
+        /// <param name="dataSet">The DataSet containing the changes to be applied to the database.</param>
+        /// <param name="sourceTable">The name of the table within the DataSet to be updated.</param>
+        /// <returns>The number of rows affected by the update operation.</returns>
         public override int Update<T>(T dataSet, string sourceTable)
         {
             ConnectionState previousConnectionState = _connection.State;
@@ -757,6 +984,14 @@ namespace HLU.Data.Connection
             finally { if (previousConnectionState == ConnectionState.Closed) _connection.Close(); }
         }
 
+        /// <summary>
+        /// Updates the database with the changes made to the provided array of DataRows. The method uses a SqlDataAdapter
+        /// to apply the changes to the database.
+        /// </summary>
+        /// <typeparam name="T">The type of the DataTable containing the DataRows.</typeparam>
+        /// <typeparam name="R">The type of the DataRow being updated.</typeparam>
+        /// <param name="rows">The array of DataRows containing the changes to be applied to the database.</param>
+        /// <returns>The number of rows affected by the update operation.</returns>
         public override int Update<T, R>(R[] rows)
         {
             ConnectionState previousConnectionState = _connection.State;
@@ -779,6 +1014,14 @@ namespace HLU.Data.Connection
             finally { if (previousConnectionState == ConnectionState.Closed) _connection.Close(); }
         }
 
+        /// <summary>
+        /// Updates the database with the changes made to the provided DataTable. The method checks if a SqlDataAdapter
+        /// exists for the DataTable type and creates one if necessary. It also ensures that the adapter's commands
+        /// are associated with the current transaction if one exists.
+        /// </summary>
+        /// <typeparam name="T">The type of the DataTable being updated.</typeparam>
+        /// <param name="table">The DataTable containing the changes to be applied to the database.</param>
+        /// <returns>The SqlDataAdapter used to update the DataTable.</returns>
         private SqlDataAdapter UpdateAdapter<T>(T table) where T : DataTable, new()
         {
             if (table == null) return null;
@@ -810,6 +1053,9 @@ namespace HLU.Data.Connection
 
         #region Protected Members
 
+        /// <summary>
+        /// Gets the prefix used for parameter names in SQL commands. For SQL Server, the parameter prefix is typically '@'.
+        /// </summary>
         protected override string ParameterPrefix
         {
             get { return "@"; }
@@ -817,6 +1063,10 @@ namespace HLU.Data.Connection
 
         #region Browse Connection
 
+        /// <summary>
+        /// Displays a connection dialog to the user for configuring the SQL Server connection. The method creates a new window
+        /// and ViewModel for the connection dialog, binds the ViewModel to the window, and handles the closing event of the dialog.
+        /// </summary>
         protected override void BrowseConnection()
         {
             try
@@ -857,6 +1107,14 @@ namespace HLU.Data.Connection
             }
         }
 
+        /// <summary>
+        /// Handles the RequestClose event from the connection ViewModel. When the event is raised, the
+        /// method unsubscribes from the event, closes the connection window, and updates the connection
+        /// string, default schema, or error message based on the event arguments.
+        /// </summary>
+        /// <param name="connString">The connection string provided by the ViewModel.</param>
+        /// <param name="defaultSchema">The default schema provided by the ViewModel.</param>
+        /// <param name="errorMsg">The error message provided by the ViewModel, if any.</param>
         protected void _connViewModel_RequestClose(string connString, string defaultSchema, string errorMsg)
         {
             _connViewModel.RequestClose -= _connViewModel_RequestClose;
@@ -903,8 +1161,8 @@ namespace HLU.Data.Connection
         /// Does not escape string delimiter or other special characters.
         /// Does check if value is already quoted.
         /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
+        /// <param name="value">The value to be quoted.</param>
+        /// <returns>The quoted value as a string.</returns>
         public override string QuoteValue(object value)
         {
             if (value == null) return "NULL";
@@ -956,6 +1214,16 @@ namespace HLU.Data.Connection
 
         #region Private Methods
 
+        /// <summary>
+        /// Populates the type mapping dictionaries that map between .NET types and SQL Server types. The method retrieves
+        /// metadata from the SQL Server database and uses it to populate the dictionaries.
+        /// </summary>
+        /// <param name="isUnicode">Indicates whether the database uses Unicode encoding.</param>
+        /// <param name="textLength">The maximum length of text columns.</param>
+        /// <param name="binaryLength">The maximum length of binary columns.</param>
+        /// <param name="timePrecision">The precision of time columns.</param>
+        /// <param name="numericPrecision">The precision of numeric columns.</param>
+        /// <param name="numericScale">The scale of numeric columns.</param>
         private void PopulateTypeMaps(bool isUnicode, uint textLength, uint binaryLength,
             uint timePrecision, uint numericPrecision, uint numericScale)
         {
