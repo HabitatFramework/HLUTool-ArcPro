@@ -24,6 +24,7 @@
     <controls:ProWindow.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Dictionary\ValidationTemplates.xaml" />
                 <ResourceDictionary Source="Dictionary\NullableValueConverterDictionary.xaml" />
                 <ResourceDictionary Source="Dictionary\ErrorMessageConverterDictionary.xaml" />
             </ResourceDictionary.MergedDictionaries>

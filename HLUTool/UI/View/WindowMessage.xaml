@@ -20,8 +20,6 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Dictionary\ErrorMessageConverterDictionary.xaml" />
-                <!--<ResourceDictionary Source="Dictionary\WindowDictionary.xaml" />
-                <ResourceDictionary Source="Dictionary\HluTheme.xaml" />-->
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </controls:ProWindow.Resources>

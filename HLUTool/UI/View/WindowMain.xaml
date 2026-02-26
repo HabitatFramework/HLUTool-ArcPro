@@ -18,6 +18,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <extensions:DesignOnlyResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
+                <ResourceDictionary Source="Dictionary\ValidationTemplates.xaml" />
                 <ResourceDictionary Source="Dictionary\CodeDescriptionConverterDictionary.xaml" />
                 <ResourceDictionary Source="Dictionary\CodeDescriptionBoolConverterDictionary.xaml" />
                 <ResourceDictionary Source="Dictionary\CodeNameDescriptionConverterDictionary.xaml" />
@@ -419,8 +420,8 @@
                             <StackPanel>
                                 <Label
                                     x:Name="HabitatTabLabel"
-                                    Margin="0,0,0,0"
-                                    Padding="0,0,0,0"
+                                    Margin="0"
+                                    Padding="4,1,4,1"
                                     VerticalAlignment="Bottom"
                                     Content="{Binding HabitatTabLabel, ValidatesOnDataErrors=True}"
                                     FontSize="12"
@@ -1006,8 +1007,8 @@
                             <StackPanel>
                                 <Label
                                     x:Name="IHSTabLabel"
-                                    Margin="4,0,4,0"
-                                    Padding="0,0,0,0"
+                                    Margin="0"
+                                    Padding="4,1,4,1"
                                     VerticalAlignment="Bottom"
                                     Content="{Binding IHSTabLabel}"
                                     FontSize="12"
@@ -1382,8 +1383,8 @@
                             <StackPanel>
                                 <Label
                                     x:Name="PriorityTabLabel"
-                                    Margin="0,0,0,0"
-                                    Padding="0,0,0,0"
+                                    Margin="0"
+                                    Padding="4,1,4,1"
                                     VerticalAlignment="Bottom"
                                     Content="{Binding PriorityTabLabel, ValidatesOnDataErrors=True}"
                                     FontSize="12"
@@ -1788,8 +1789,8 @@
                             <StackPanel>
                                 <Label
                                     x:Name="DetailsTabLabel"
-                                    Margin="0,0,0,0"
-                                    Padding="0,0,0,0"
+                                    Margin="0"
+                                    Padding="4,1,4,1"
                                     VerticalAlignment="Bottom"
                                     Content="{Binding DetailsTabLabel, ValidatesOnDataErrors=True}"
                                     FontSize="12"
@@ -2246,8 +2247,8 @@
                             <StackPanel>
                                 <Label
                                     x:Name="SourcesTabLabel"
-                                    Margin="0,0,0,0"
-                                    Padding="0,0,0,0"
+                                    Margin="0"
+                                    Padding="4,1,4,1"
                                     VerticalAlignment="Bottom"
                                     Content="{Binding SourcesTabLabel, ValidatesOnDataErrors=True}"
                                     FontSize="12"
@@ -2979,8 +2980,8 @@
                         <TabItem.Header>
                             <StackPanel>
                                 <Label
-                                    Margin="0,0,0,0"
-                                    Padding="0,0,0,0"
+                                    Margin="0"
+                                       Padding="4,1,4,1"
                                     VerticalAlignment="Bottom"
                                     Content="History"
                                     FontSize="12"
