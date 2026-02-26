@@ -82,6 +82,7 @@
                 CanUserReorderColumns="False"
                 CanUserResizeColumns="True"
                 CanUserSortColumns="True"
+                CellStyle="{StaticResource DataGridCellErrorStyle}"
                 HeadersVisibility="All"
                 IsEnabled="{Binding BapHabitatsUserEnabled}"
                 IsReadOnly="False"
@@ -89,6 +90,7 @@
                 RowDetailsVisibilityMode="Visible"
                 RowHeaderWidth="20"
                 RowHeight="24"
+                RowStyle="{StaticResource DataGridRowWithValidation}"
                 Style="{DynamicResource Esri_DataGrid}">
                 <DataGrid.RowValidationRules>
                     <DataErrorValidationRule />

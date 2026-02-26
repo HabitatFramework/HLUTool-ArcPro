@@ -1,27 +1,26 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!--  ErrorTemplate - Red circle with exclamation mark  -->
     <ControlTemplate x:Key="ErrorTemplate">
         <DockPanel>
             <Grid DockPanel.Dock="Right">
-                <Ellipse Width="14"
-                         Height="14"
-                         VerticalAlignment="Center"
-                         Fill="Red"
-                         Stroke="Black"
-                         StrokeThickness="0.5" />
-                <TextBlock Margin="0"
-                           VerticalAlignment="Center"
-                           FontWeight="Bold"
-                           Foreground="White"
-                           Padding="5,0,0,0"
-                           Text="!"
-                           ToolTip="{Binding RelativeSource={RelativeSource Self},
-                                             Path=(Validation.Errors).CurrentItem.ErrorContent}" />
+                <Ellipse
+                    Width="14"
+                    Height="14"
+                    VerticalAlignment="Center"
+                    Fill="Red"
+                    Stroke="Black"
+                    StrokeThickness="0.5" />
+                <TextBlock
+                    Margin="0"
+                    Padding="5,0,0,0"
+                    VerticalAlignment="Center"
+                    FontWeight="Bold"
+                    Foreground="White"
+                    Text="!"
+                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}" />
             </Grid>
-            <Border BorderBrush="Red"
-                    BorderThickness="1">
+            <Border BorderBrush="Red" BorderThickness="1">
                 <AdornedElementPlaceholder />
             </Border>
         </DockPanel>
@@ -31,74 +30,108 @@
     <ControlTemplate x:Key="WarningTemplate">
         <DockPanel>
             <Grid DockPanel.Dock="Right">
-                <Polygon Points="0,17 14,17, 7,1"
-                         VerticalAlignment="Center"
-                         Fill="Orange"
-                         Stroke="Black"
-                         StrokeThickness="0.5" />
-                <TextBlock Margin="0"
-                           VerticalAlignment="Center"
-                           FontWeight="Bold"
-                           Foreground="White"
-                           Padding="5,4,0,0"
-                           Text="!"
-                           ToolTip="{Binding RelativeSource={RelativeSource Self},
-                                             Path=(Validation.Errors).CurrentItem.ErrorContent}" />
+                <Polygon
+                    VerticalAlignment="Center"
+                    Fill="Orange"
+                    Points="0,17 14,17, 7,1"
+                    Stroke="Black"
+                    StrokeThickness="0.5" />
+                <TextBlock
+                    Margin="0"
+                    Padding="5,4,0,0"
+                    VerticalAlignment="Center"
+                    FontWeight="Bold"
+                    Foreground="White"
+                    Text="!"
+                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}" />
             </Grid>
-            <Border BorderBrush="Orange"
-                    BorderThickness="1">
+            <Border BorderBrush="Orange" BorderThickness="1">
                 <AdornedElementPlaceholder />
             </Border>
         </DockPanel>
     </ControlTemplate>
 
-    <!--  Global TextBox Style - Based on default, adds validation template triggers  -->
-    <Style TargetType="{x:Type TextBox}"
-           BasedOn="{StaticResource {x:Type TextBox}}">
+    <!--  DataGrid Cell Error Template - Shows error icon in the cell itself  -->
+    <Style x:Key="DataGridCellErrorStyle" TargetType="DataGridCell">
+        <Setter Property="ToolTip">
+            <Setter.Value>
+                <Binding
+                    Path="(Validation.Errors)[0].ErrorContent"
+                    RelativeSource="{RelativeSource Self}"
+                    StringFormat="{}{0}" />
+            </Setter.Value>
+        </Setter>
         <Style.Triggers>
-            <Trigger Property="Tag"
-                     Value="Error">
-                <Setter Property="Validation.ErrorTemplate"
-                        Value="{StaticResource ErrorTemplate}" />
+            <Trigger Property="Validation.HasError" Value="True">
+                <Setter Property="Background" Value="#FFFFE0E0" />
+                <Setter Property="BorderBrush" Value="Red" />
+                <Setter Property="BorderThickness" Value="1" />
             </Trigger>
-            <Trigger Property="Tag"
-                     Value="Warning">
-                <Setter Property="Validation.ErrorTemplate"
-                        Value="{StaticResource WarningTemplate}" />
+        </Style.Triggers>
+    </Style>
+
+    <!--  DataGrid Row Style with Validation - Shows error icon in row header  -->
+    <Style x:Key="DataGridRowWithValidation" TargetType="DataGridRow">
+        <Setter Property="ValidationErrorTemplate">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Grid
+                        Width="16"
+                        Height="16"
+                        Margin="-2,0,0,0"
+                        ToolTip="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type DataGridRow}}, Path=(Validation.Errors)[0].ErrorContent, StringFormat={}{0}}">
+                        <Ellipse
+                            Width="14"
+                            Height="14"
+                            Fill="Red"
+                            Stroke="Black"
+                            StrokeThickness="0.5" />
+                        <TextBlock
+                            Margin="0,0,0,1"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="10"
+                            FontWeight="Bold"
+                            Foreground="White"
+                            Text="!" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--  Global TextBox Style - Based on default, adds validation template triggers  -->
+    <Style BasedOn="{StaticResource {x:Type TextBox}}" TargetType="{x:Type TextBox}">
+        <Style.Triggers>
+            <Trigger Property="Tag" Value="Error">
+                <Setter Property="Validation.ErrorTemplate" Value="{StaticResource ErrorTemplate}" />
+            </Trigger>
+            <Trigger Property="Tag" Value="Warning">
+                <Setter Property="Validation.ErrorTemplate" Value="{StaticResource WarningTemplate}" />
             </Trigger>
         </Style.Triggers>
     </Style>
 
     <!--  Global ComboBox Style - Based on default, adds validation template triggers  -->
-    <Style TargetType="{x:Type ComboBox}"
-           BasedOn="{StaticResource {x:Type ComboBox}}">
+    <Style BasedOn="{StaticResource {x:Type ComboBox}}" TargetType="{x:Type ComboBox}">
         <Style.Triggers>
-            <Trigger Property="Tag"
-                     Value="Error">
-                <Setter Property="Validation.ErrorTemplate"
-                        Value="{StaticResource ErrorTemplate}" />
+            <Trigger Property="Tag" Value="Error">
+                <Setter Property="Validation.ErrorTemplate" Value="{StaticResource ErrorTemplate}" />
             </Trigger>
-            <Trigger Property="Tag"
-                     Value="Warning">
-                <Setter Property="Validation.ErrorTemplate"
-                        Value="{StaticResource WarningTemplate}" />
+            <Trigger Property="Tag" Value="Warning">
+                <Setter Property="Validation.ErrorTemplate" Value="{StaticResource WarningTemplate}" />
             </Trigger>
         </Style.Triggers>
     </Style>
 
     <!--  Global Label Style - Based on default, adds validation template triggers  -->
-    <Style TargetType="{x:Type Label}"
-           BasedOn="{StaticResource {x:Type Label}}">
+    <Style BasedOn="{StaticResource {x:Type Label}}" TargetType="{x:Type Label}">
         <Style.Triggers>
-            <Trigger Property="Tag"
-                     Value="Error">
-                <Setter Property="Validation.ErrorTemplate"
-                        Value="{StaticResource ErrorTemplate}" />
+            <Trigger Property="Tag" Value="Error">
+                <Setter Property="Validation.ErrorTemplate" Value="{StaticResource ErrorTemplate}" />
             </Trigger>
-            <Trigger Property="Tag"
-                     Value="Warning">
-                <Setter Property="Validation.ErrorTemplate"
-                        Value="{StaticResource WarningTemplate}" />
+            <Trigger Property="Tag" Value="Warning">
+                <Setter Property="Validation.ErrorTemplate" Value="{StaticResource WarningTemplate}" />
             </Trigger>
         </Style.Triggers>
     </Style>
