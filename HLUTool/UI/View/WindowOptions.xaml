@@ -79,9 +79,91 @@
                         </GroupStyle>
                     </ListBox.GroupStyle>
 
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="HorizontalContentAlignment"
+                                    Value="Stretch" />
+                            <Setter Property="ToolTip"
+                                    Value="{Binding ErrorMessage}" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="ItemBorder"
+                                                Padding="5,3"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="Transparent"
+                                                BorderThickness="2">
+                                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <!--  Selected State  -->
+                                            <Trigger Property="IsSelected"
+                                                     Value="True">
+                                                <Setter TargetName="ItemBorder"
+                                                        Property="Background"
+                                                        Value="{DynamicResource Esri_BackgroundSelectedBrush}" />
+                                            </Trigger>
+                                            <!--  Mouse Over State  -->
+                                            <Trigger Property="IsMouseOver"
+                                                     Value="True">
+                                                <Setter TargetName="ItemBorder"
+                                                        Property="Background"
+                                                        Value="{DynamicResource Esri_BackgroundHoverBrush}" />
+                                            </Trigger>
+                                            <!--  Error State - Uses standard WPF validation error color  -->
+                                            <DataTrigger Binding="{Binding HasErrors, Mode=OneWay}"
+                                                         Value="True">
+                                                <Setter TargetName="ItemBorder"
+                                                        Property="BorderBrush"
+                                                        Value="Red" />
+                                                <Setter TargetName="ItemBorder"
+                                                        Property="BorderThickness"
+                                                        Value="1" />
+                                            </DataTrigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Padding="0,3" Text="{Binding Name}" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock
+                                    Grid.Column="0"
+                                    Padding="0,3"
+                                    Text="{Binding Name}" />
+
+                                <!--  Error Icon  -->
+                                <TextBlock Grid.Column="1"
+                                           Margin="5,0,0,0"
+                                           VerticalAlignment="Center"
+                                           FontWeight="Bold"
+                                           Foreground="Red"
+                                           Text="⚠">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility"
+                                                    Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasErrors, Mode=OneWay}"
+                                                             Value="True">
+                                                    <Setter Property="Visibility"
+                                                            Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+
+                            </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
 

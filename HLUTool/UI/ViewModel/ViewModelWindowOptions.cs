@@ -19,34 +19,36 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Framework.Contracts;
+using HLU.Data.Model;
+using HLU.Enums;
+using HLU.GISApplication;
+using HLU.Properties;
+using HLU.UI.UserControls;
+using HLU.UI.View;
+using HLU.UI.ViewModel;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Windows.Input;
-using System.Windows.Forms;
-using ArcGIS.Desktop.Framework;
 using System.Text.RegularExpressions;
-using HLU.Data.Model;
-using HLU.Enums;
-using HLU.UI.ViewModel;
-using HLU.GISApplication;
-using HLU.Properties;
-using HLU.UI.UserControls;
-using System.Collections.ObjectModel;
-using HLU.UI.View;
+using System.Windows;
 using System.Windows.Data;
-using ArcGIS.Desktop.Framework.Contracts;
-using System.Windows.Media.Imaging;
+using System.Windows.Forms;
+using System.Windows.Input;
 using System.Windows.Media;
-using System.Diagnostics;
+using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using Microsoft.IdentityModel.Tokens;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
 {
@@ -283,6 +285,13 @@ namespace HLU.UI.ViewModel
 
             // Set the default selected view to the first page.
             SelectedView = NavigationItems.First();
+
+            // Initialize error states for all navigation items
+            foreach (var item in NavigationItems)
+            {
+                item.HasErrors = HasErrorsForNavigationItem(item);
+                item.ErrorMessage = GetErrorMessageForNavigationItem(item);
+            }
         }
 
         /// <summary>
@@ -345,8 +354,6 @@ namespace HLU.UI.ViewModel
             {
                 string imageSource = "pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/FolderOpenState32.png";
                 return new BitmapImage(new Uri(imageSource)) as ImageSource;
-                //var imageSource = System.Windows.Application.Current.Resources["FolderOpenState16"] as ImageSource;
-                //return imageSource;
             }
         }
 
@@ -543,10 +550,42 @@ namespace HLU.UI.ViewModel
             get => _selectedView;
             set
             {
-                _selectedView = value;
-                OnPropertyChanged(nameof(SelectedView));
+                // Don't allow switching if current tab has errors
+                if (_selectedView != null && _selectedView.HasErrors && value != _selectedView)
+                {
+                    // Show a message to the user
+                    MessageBox.Show(
+                        "Please correct the validation errors on this tab before switching to another tab.\n\n" +
+                        _selectedView.ErrorMessage,
+                        "Validation Errors",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+
+                    // Re-select the current item in the ListBox
+                    OnPropertyChanged(nameof(SelectedView));
+                    return;
+                }
+
+                if (_selectedView != value)
+                {
+                    // Clear previous selection
+                    if (_selectedView != null)
+                        _selectedView.IsSelected = false;
+
+                    _selectedView = value;
+
+                    // Set new selection
+                    if (_selectedView != null)
+                        _selectedView.IsSelected = true;
+
+                    OnPropertyChanged(nameof(SelectedView));
+
+                    // Force revalidation of all navigation items when switching tabs
+                    NotifyNavigationItemErrorsChanged();
+                }
             }
         }
+
         #endregion Navigation Items
 
         #region Save Command
@@ -768,7 +807,12 @@ namespace HLU.UI.ViewModel
         public int? DbConnectionTimeout
         {
             get { return _dbConnectionTimeout; }
-            set { _dbConnectionTimeout = value; }
+            set
+            {
+                _dbConnectionTimeout = value;
+                OnPropertyChanged(nameof(DbConnectionTimeout));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
@@ -785,7 +829,12 @@ namespace HLU.UI.ViewModel
         public int? IncidTablePageSize
         {
             get { return _incidTablePageSize; }
-            set { _incidTablePageSize = value; }
+            set
+            {
+                _incidTablePageSize = value;
+                OnPropertyChanged(nameof(IncidTablePageSize));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
@@ -801,7 +850,7 @@ namespace HLU.UI.ViewModel
         #region User GIS
 
         /// <summary>
-        /// Gets or sets the auto zoom selection options.
+        /// Gets the auto zoom selection options.
         /// </summary>
         /// <value>
         /// The auto zoom selection options.
@@ -817,7 +866,6 @@ namespace HLU.UI.ViewModel
 
                 return _autoZoomToSelectionOptions;
             }
-            set { }
         }
 
         /// <summary>
@@ -832,6 +880,8 @@ namespace HLU.UI.ViewModel
             set
             {
                 _autoZoomToSelection = value;
+                OnPropertyChanged(nameof(AutoZoomToSelectionOption));
+                NotifyNavigationItemErrorsChanged();
             }
         }
 
@@ -891,7 +941,12 @@ namespace HLU.UI.ViewModel
         public int? MinAutoZoom
         {
             get { return _minAutoZoom; }
-            set { _minAutoZoom = value; }
+            set
+            {
+                _minAutoZoom = value;
+                OnPropertyChanged(nameof(MinAutoZoom));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
@@ -911,7 +966,12 @@ namespace HLU.UI.ViewModel
         public int? MaxFeaturesGISSelect
         {
             get { return _maxFeaturesGISSelect; }
-            set { _maxFeaturesGISSelect = value; }
+            set
+            {
+                _maxFeaturesGISSelect = value;
+                OnPropertyChanged(nameof(MaxFeaturesGISSelect));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
@@ -960,7 +1020,12 @@ namespace HLU.UI.ViewModel
         public string WorkingFileGDBPath
         {
             get { return _workingFileGDBPath; }
-            set { _workingFileGDBPath = value; }
+            set
+            {
+                _workingFileGDBPath = value;
+                OnPropertyChanged(nameof(WorkingFileGDBPath));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
@@ -978,7 +1043,6 @@ namespace HLU.UI.ViewModel
                     Description = "Select Working File GDB Directory",
                     UseDescriptionForTitle = true,
                     SelectedPath = workingFileGDBPath,
-                    //openFolderDlg.RootFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                     ShowNewFolderButton = true
                 };
                 if (openFolderDlg.ShowDialog() == DialogResult.OK)
@@ -1002,7 +1066,12 @@ namespace HLU.UI.ViewModel
         public SelectionList<string> HistoryColumns
         {
             get { return _historyColumns; }
-            set { _historyColumns = value; }
+            set
+            {
+                _historyColumns = value;
+                OnPropertyChanged(nameof(HistoryColumns));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
@@ -1011,7 +1080,12 @@ namespace HLU.UI.ViewModel
         public int? HistoryDisplayLastN
         {
             get { return _historyDisplayLastN; }
-            set { _historyDisplayLastN = value; }
+            set
+            {
+                _historyDisplayLastN = value;
+                OnPropertyChanged(nameof(HistoryDisplayLastN));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
@@ -1027,7 +1101,7 @@ namespace HLU.UI.ViewModel
         #region User Interface
 
         /// <summary>
-        /// Gets or sets the list of possible habitat class codes.
+        /// Gets the list of possible habitat class codes.
         /// </summary>
         /// <value>
         /// The list of possible habitat class codes.
@@ -1056,6 +1130,8 @@ namespace HLU.UI.ViewModel
             set
             {
                 _preferredHabitatClass = value;
+                OnPropertyChanged(nameof(PreferredHabitatClass ));
+                NotifyNavigationItemErrorsChanged();
             }
         }
 
@@ -1068,7 +1144,12 @@ namespace HLU.UI.ViewModel
         public bool ShowGroupHeaders
         {
             get { return _showGroupHeaders; }
-            set { _showGroupHeaders = value; }
+            set
+            {
+                _showGroupHeaders = value;
+                OnPropertyChanged(nameof(ShowGroupHeaders));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
@@ -1080,7 +1161,12 @@ namespace HLU.UI.ViewModel
         public bool ShowIHSTab
         {
             get { return _showIHSTab; }
-            set { _showIHSTab = value; }
+            set
+            {
+                _showIHSTab = value;
+                OnPropertyChanged(nameof(ShowIHSTab));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
@@ -1092,7 +1178,12 @@ namespace HLU.UI.ViewModel
         public bool ShowSourceHabitatGroup
         {
             get { return _showSourceHabitatGroup; }
-            set { _showSourceHabitatGroup = value; }
+            set
+            {
+                _showSourceHabitatGroup = value;
+                OnPropertyChanged(nameof(ShowSourceHabitatGroup));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
@@ -1104,7 +1195,12 @@ namespace HLU.UI.ViewModel
         public bool ShowHabitatSecondariesSuggested
         {
             get { return _showHabitatSecondariesSuggested; }
-            set { _showHabitatSecondariesSuggested = value; }
+            set
+            {
+                _showHabitatSecondariesSuggested = value;
+                OnPropertyChanged(nameof(ShowHabitatSecondariesSuggested));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
@@ -1116,7 +1212,12 @@ namespace HLU.UI.ViewModel
         public bool ShowNVCCodes
         {
             get { return _showNVCCodes; }
-            set { _showNVCCodes = value; }
+            set
+            {
+                _showNVCCodes = value;
+                OnPropertyChanged(nameof(ShowNVCCodes));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
@@ -1128,11 +1229,16 @@ namespace HLU.UI.ViewModel
         public bool ShowHabitatSummary
         {
             get { return _showHabitatSummary; }
-            set { _showHabitatSummary = value; }
+            set
+            {
+                _showHabitatSummary = value;
+                OnPropertyChanged(nameof(ShowHabitatSummary));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
-        /// Gets or sets the list of available show OSMM Update options from
+        /// Gets the list of available show OSMM Update options from
         /// the class.
         /// </summary>
         /// <value>
@@ -1149,7 +1255,6 @@ namespace HLU.UI.ViewModel
 
                 return _showOSMMUpdatesOptions;
             }
-            set { }
         }
 
         /// <summary>
@@ -1164,11 +1269,13 @@ namespace HLU.UI.ViewModel
             set
             {
                 _showOSMMUpdatesOption = value;
+                OnPropertyChanged(nameof(ShowOSMMUpdatesOption));
+                NotifyNavigationItemErrorsChanged();
             }
         }
 
         /// <summary>
-        /// Gets or sets the list of secondary group codes.
+        /// Gets the list of secondary group codes.
         /// </summary>
         /// <value>
         /// The list of secondary group codes.
@@ -1176,7 +1283,6 @@ namespace HLU.UI.ViewModel
         public HluDataSet.lut_secondary_groupRow[] SecondaryGroupCodes
         {
             get { return _viewModelMain.SecondaryGroupCodesWithAll; }
-            set { }
         }
 
         /// <summary>
@@ -1198,11 +1304,13 @@ namespace HLU.UI.ViewModel
             set
             {
                 _preferredSecondaryGroup = value;
+                OnPropertyChanged(nameof(PreferredSecondaryGroup));
+                NotifyNavigationItemErrorsChanged();
             }
         }
 
         /// <summary>
-        /// Gets or sets the secondary code order options.
+        /// Gets the secondary code order options.
         /// </summary>
         /// <value>
         /// The secondary code order options.
@@ -1218,7 +1326,6 @@ namespace HLU.UI.ViewModel
 
                 return _secondaryCodeOrderOptions;
             }
-            set { }
         }
 
         /// <summary>
@@ -1233,6 +1340,8 @@ namespace HLU.UI.ViewModel
             set
             {
                 _secondaryCodeOrder = value;
+                OnPropertyChanged(nameof(SecondaryCodeOrder));
+                NotifyNavigationItemErrorsChanged();
             }
         }
 
@@ -1248,6 +1357,8 @@ namespace HLU.UI.ViewModel
             set
             {
                 _secondaryCodeDelimiter = value;
+                OnPropertyChanged(nameof(SecondaryCodeDelimiter));
+                NotifyNavigationItemErrorsChanged();
             }
         }
 
@@ -1256,7 +1367,7 @@ namespace HLU.UI.ViewModel
         #region Application Updates
 
         /// <summary>
-        /// Gets or sets the clear IHS update actions.
+        /// Gets the clear IHS update actions.
         /// </summary>
         /// <value>
         /// The clear IHS update actions.
@@ -1272,7 +1383,6 @@ namespace HLU.UI.ViewModel
 
                 return _clearIHSUpdateActions;
             }
-            set { }
         }
 
         /// <summary>
@@ -1287,6 +1397,8 @@ namespace HLU.UI.ViewModel
             set
             {
                 _clearIHSUpdateAction = value;
+                OnPropertyChanged(nameof(ClearIHSUpdateAction));
+                NotifyNavigationItemErrorsChanged();
             }
         }
 
@@ -1300,7 +1412,12 @@ namespace HLU.UI.ViewModel
         public bool NotifyOnSplitMerge
         {
             get { return _notifyOnSplitMerge; }
-            set { _notifyOnSplitMerge = value; }
+            set
+            {
+                _notifyOnSplitMerge = value;
+                OnPropertyChanged(nameof(NotifyOnSplitMerge));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
@@ -1314,7 +1431,12 @@ namespace HLU.UI.ViewModel
         public bool ResetOSMMUpdatesStatus
         {
             get { return _resetOSMMUpdatesStatus; }
-            set { _resetOSMMUpdatesStatus = value; }
+            set
+            {
+                _resetOSMMUpdatesStatus = value;
+                OnPropertyChanged(nameof(ResetOSMMUpdatesStatus));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
@@ -1330,7 +1452,6 @@ namespace HLU.UI.ViewModel
                 return Enum.GetValues(typeof(HabitatSecondaryCodeValidationOptions)).Cast<HabitatSecondaryCodeValidationOptions>()
                     .ToArray();
             }
-            set { }
         }
 
         /// <summary>
@@ -1345,6 +1466,8 @@ namespace HLU.UI.ViewModel
             set
             {
                 _habitatSecondaryCodeValidation = (int)value;
+                OnPropertyChanged(nameof(HabitatSecondaryCodeValidation));
+                NotifyNavigationItemErrorsChanged();
             }
         }
 
@@ -1361,7 +1484,6 @@ namespace HLU.UI.ViewModel
                 return Enum.GetValues(typeof(PrimarySecondaryCodeValidationOptions)).Cast<PrimarySecondaryCodeValidationOptions>()
                     .ToArray();
             }
-            set { }
         }
 
         /// <summary>
@@ -1376,11 +1498,13 @@ namespace HLU.UI.ViewModel
             set
             {
                 _primarySecondaryCodeValidation = (int)value;
+                OnPropertyChanged(nameof(PrimarySecondaryCodeValidation));
+                NotifyNavigationItemErrorsChanged();
             }
         }
 
         /// <summary>
-        /// Gets or sets the quality validation options.
+        /// Gets the quality validation options.
         /// </summary>
         /// <value>
         /// The quality validation options.
@@ -1392,7 +1516,6 @@ namespace HLU.UI.ViewModel
                 return Enum.GetValues(typeof(QualityValidationOptions)).Cast<QualityValidationOptions>()
                     .ToArray();
             }
-            set { }
         }
 
         /// <summary>
@@ -1407,14 +1530,16 @@ namespace HLU.UI.ViewModel
             set
             {
                 _qualityValidation = (int)value;
+                OnPropertyChanged(nameof(QualityValidation));
+                NotifyNavigationItemErrorsChanged();
             }
         }
 
         /// <summary>
-        /// Gets or sets the quality validation options.
+        /// Gets the quality validation options for potential priority determinations.
         /// </summary>
         /// <value>
-        /// The quality validation options.
+        /// The quality validation options for potential priority determinations.
         /// </value>
         public PotentialPriorityDetermQtyValidationOptions[] PotentialPriorityDetermQtyValidationOptions
         {
@@ -1423,14 +1548,13 @@ namespace HLU.UI.ViewModel
                 return Enum.GetValues(typeof(PotentialPriorityDetermQtyValidationOptions)).Cast<PotentialPriorityDetermQtyValidationOptions>()
                     .ToArray();
             }
-            set { }
         }
 
         /// <summary>
-        /// Gets or sets the quality validation choice.
+        /// Gets or sets the quality validation choice for potential priority determinations.
         /// </summary>
         /// <value>
-        /// The quality validation choice.
+        /// The quality validation choice for potential priority determinations.
         /// </value>
         public PotentialPriorityDetermQtyValidationOptions? PotentialPriorityDetermQtyValidation
         {
@@ -1438,6 +1562,8 @@ namespace HLU.UI.ViewModel
             set
             {
                 _potentialPriorityDetermQtyValidation = (int)value;
+                OnPropertyChanged(nameof(PotentialPriorityDetermQtyValidation));
+                NotifyNavigationItemErrorsChanged();
             }
         }
         #endregion Application Updates
@@ -1445,8 +1571,7 @@ namespace HLU.UI.ViewModel
         #region User Updates
 
         /// <summary>
-        /// Gets or sets the list of available subset update actions from
-        /// the enum.
+        /// Gets the list of available subset update actions from the enum.
         /// </summary>
         /// <value>
         /// The list of subset update actions.
@@ -1458,7 +1583,6 @@ namespace HLU.UI.ViewModel
                 return Enum.GetValues(typeof(SubsetUpdateActions)).Cast<SubsetUpdateActions>()
                     .ToArray();
             }
-            set { }
         }
 
         /// <summary>
@@ -1473,6 +1597,8 @@ namespace HLU.UI.ViewModel
             set
             {
                 _subsetUpdateAction = (int)value;
+                OnPropertyChanged(nameof(SubsetUpdateAction));
+                NotifyNavigationItemErrorsChanged();
             }
         }
 
@@ -1489,11 +1615,16 @@ namespace HLU.UI.ViewModel
         public int? GetValueRows
         {
             get { return _getValueRows; }
-            set { _getValueRows = value; }
+            set
+            {
+                _getValueRows = value;
+                OnPropertyChanged(nameof(GetValueRows));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
-        /// Gets or sets the maximum number of value rows to retrieve.
+        /// Gets the maximum number of value rows to retrieve.
         /// </summary>
         /// <value>
         /// The maximum get value rows.
@@ -1549,7 +1680,12 @@ namespace HLU.UI.ViewModel
         public string SQLPath
         {
             get { return _sqlPath; }
-            set { _sqlPath = value; }
+            set
+            {
+                _sqlPath = value;
+                OnPropertyChanged(nameof(SQLPath));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
@@ -1567,7 +1703,6 @@ namespace HLU.UI.ViewModel
                     Description = "Select SQL Query Default Path",
                     UseDescriptionForTitle = true,
                     SelectedPath = sqlPath,
-                    //openFolderDlg.RootFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                     ShowNewFolderButton = true
                 };
                 if (openFolderDlg.ShowDialog() == DialogResult.OK)
@@ -1631,7 +1766,12 @@ namespace HLU.UI.ViewModel
         public string ExportPath
         {
             get { return _exportPath; }
-            set { _exportPath = value; }
+            set
+            {
+                _exportPath = value;
+                OnPropertyChanged(nameof(ExportPath));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
@@ -1648,7 +1788,6 @@ namespace HLU.UI.ViewModel
                     Description = "Select Export Default Path",
                     UseDescriptionForTitle = true,
                     SelectedPath = exportPath,
-                    //openFolderDlg.RootFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                     ShowNewFolderButton = true
                 };
                 if (openFolderDlg.ShowDialog() == DialogResult.OK)
@@ -1672,7 +1811,12 @@ namespace HLU.UI.ViewModel
         public string SeasonSpring
         {
             get { return _seasonSpring; }
-            set { _seasonSpring = value; }
+            set
+            {
+                _seasonSpring = value;
+                OnPropertyChanged(nameof(SeasonSpring));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
@@ -1681,7 +1825,12 @@ namespace HLU.UI.ViewModel
         public string SeasonSummer
         {
             get { return _seasonSummer; }
-            set { _seasonSummer = value; }
+            set
+            {
+                _seasonSummer = value;
+                OnPropertyChanged(nameof(SeasonSummer));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
@@ -1690,7 +1839,12 @@ namespace HLU.UI.ViewModel
         public string SeasonAutumn
         {
             get { return _seasonAutumn; }
-            set { _seasonAutumn = value; }
+            set
+            {
+                _seasonAutumn = value;
+                OnPropertyChanged(nameof(SeasonAutumn));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
@@ -1699,7 +1853,12 @@ namespace HLU.UI.ViewModel
         public string SeasonWinter
         {
             get { return _seasonWinter; }
-            set { _seasonWinter = value; }
+            set
+            {
+                _seasonWinter = value;
+                OnPropertyChanged(nameof(SeasonWinter));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
@@ -1743,6 +1902,8 @@ namespace HLU.UI.ViewModel
             set
             {
                 _bulkDeleteSecondaryCodes = value;
+                OnPropertyChanged(nameof(BulkDeleteSecondaryCodes));
+                NotifyNavigationItemErrorsChanged();
             }
         }
 
@@ -1756,7 +1917,12 @@ namespace HLU.UI.ViewModel
         public bool BulkDeleteOrphanBapHabitats
         {
             get { return _bulkDeleteOrphanBapHabitats; }
-            set { _bulkDeleteOrphanBapHabitats = value; }
+            set
+            {
+                _bulkDeleteOrphanBapHabitats = value;
+                OnPropertyChanged(nameof(BulkDeleteOrphanBapHabitats));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
@@ -1769,7 +1935,12 @@ namespace HLU.UI.ViewModel
         public bool BulkDeletePotentialBapHabitats
         {
             get { return _bulkDeletePotentialBapHabitats; }
-            set { _bulkDeletePotentialBapHabitats = value; }
+            set
+            {
+                _bulkDeletePotentialBapHabitats = value;
+                OnPropertyChanged(nameof(BulkDeletePotentialBapHabitats));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
@@ -1782,7 +1953,12 @@ namespace HLU.UI.ViewModel
         public bool BulkCreateHistoryRecords
         {
             get { return _bulkCreateHistoryRecords; }
-            set { _bulkCreateHistoryRecords = value; }
+            set
+            {
+                _bulkCreateHistoryRecords = value;
+                OnPropertyChanged(nameof(BulkCreateHistoryRecords));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
@@ -1795,11 +1971,16 @@ namespace HLU.UI.ViewModel
         public bool BulkDeleteIHSCodes
         {
             get { return _bulkDeleteIHSCodes; }
-            set { _bulkDeleteIHSCodes = value; }
+            set
+            {
+                _bulkDeleteIHSCodes = value;
+                OnPropertyChanged(nameof(BulkDeleteIHSCodes));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
-        /// Gets or sets the list of determination qualities that
+        /// Gets the list of determination qualities that
         /// can be used when adding BAP habitats during an OSMM bulk
         /// update.
         /// </summary>
@@ -1822,11 +2003,16 @@ namespace HLU.UI.ViewModel
         public string BulkDeterminationQuality
         {
             get { return _bulkDeterminationQuality; }
-            set { _bulkDeterminationQuality = value; }
+            set
+            {
+                _bulkDeterminationQuality = value;
+                OnPropertyChanged(nameof(BulkDeterminationQuality));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
-        /// Gets or sets the list of interpretation qualities that
+        /// Gets the list of interpretation qualities that
         /// can be used when adding BAP habitats during an OSMM bulk
         /// update.
         /// </summary>
@@ -1849,11 +2035,16 @@ namespace HLU.UI.ViewModel
         public string BulkInterpretationQuality
         {
             get { return _bulkInterpretationQuality; }
-            set { _bulkInterpretationQuality = value; }
+            set
+            {
+                _bulkInterpretationQuality = value;
+                OnPropertyChanged(nameof(BulkInterpretationQuality));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         /// <summary>
-        /// Gets or sets the list of source names.
+        /// Gets the list of source names.
         /// </summary>
         /// <value>
         /// The list of source names.
@@ -1873,12 +2064,167 @@ namespace HLU.UI.ViewModel
         public int? OSMMSourceId
         {
             get { return _bulkOSMMSourceId; }
-            set { _bulkOSMMSourceId = value; }
+            set
+            {
+                _bulkOSMMSourceId = value;
+                OnPropertyChanged(nameof(OSMMSourceId));
+                NotifyNavigationItemErrorsChanged();
+            }
         }
 
         #endregion Application Bulk Update
 
-        #region IDataErrorInfo Members
+        #region Error Handling
+
+        /// <summary>
+        /// Validates a specific property and returns its error message.
+        /// </summary>
+        private string ValidateProperty(string propertyName)
+        {
+            return propertyName switch
+            {
+                // Database options
+                "DbConnectionTimeout" when (Convert.ToInt32(DbConnectionTimeout) <= 0 || DbConnectionTimeout == null)
+                    => "Error: Enter a database timeout greater than 0 seconds.",
+
+                "IncidTablePageSize" when (Convert.ToInt32(IncidTablePageSize) <= 0 || IncidTablePageSize == null)
+                    => "Error: Enter a database page size greater than 0 rows.",
+                "IncidTablePageSize" when Convert.ToInt32(IncidTablePageSize) > 1000
+                    => "Error: Enter a database page size no more than 1000 rows.",
+
+                // GIS options
+                "AutoZoomToSelectionOption" when AutoZoomToSelectionOption == null
+                    => "Select option of when to auto zoom to selected feature(s).",
+                "MinAutoZoom" when (Convert.ToInt32(MinAutoZoom) < 100 || MinAutoZoom == null)
+                    => "Error: Minimum auto zoom scale must be at least 100.",
+                "MinAutoZoom" when Convert.ToInt32(MinAutoZoom) > Settings.Default.MaxAutoZoom
+                    => $"Error: Minimum auto zoom scale must not be greater than {Settings.Default.MaxAutoZoom}.",
+                "MaxFeaturesGISSelect" when (Convert.ToInt32(MaxFeaturesGISSelect) < 0 || MaxFeaturesGISSelect == null)
+                    => "Error: Maximum features expected before warning on select must be zero or greater.",
+                "MaxFeaturesGISSelect" when Convert.ToInt32(MaxFeaturesGISSelect) > 100000
+                    => "Error: Maximum features expected before warning on select must not be greater than 10000. Otherwise set to zero to disable warning",
+                "WorkingFileGDBPath" when String.IsNullOrEmpty(WorkingFileGDBPath)
+                    => "Error: You must enter a working File Geodatabase path.",
+
+                // History options
+                "HistoryDisplayLastN" when (Convert.ToInt32(HistoryDisplayLastN) <= 0 || HistoryDisplayLastN == null)
+                    => "Error: Number of history rows to be displayed must be greater than 0.",
+
+                // Validation options
+                "HabitatSecondaryCodeValidation" when HabitatSecondaryCodeValidation == null
+                    => "Error: Select option of when to validate habitat/secondary codes.",
+                "PrimarySecondaryCodeValidation" when PrimarySecondaryCodeValidation == null
+                    => "Error: Select option of when to validate primary/secondary codes.",
+                "QualityValidation" when QualityValidation == null
+                    => "Error: Select option of when to validate determination and interpretation quality.",
+                "PotentialPriorityDetermQtyValidation" when PotentialPriorityDetermQtyValidation == null
+                    => "Error: Select option of when to validate potential priority habitat determination quality.",
+
+                // Update options
+                "SubsetUpdateAction" when SubsetUpdateAction == null
+                    => "Error: Select the action to take when updating an incid subset.",
+                "ClearIHSUpdateAction" when ClearIHSUpdateAction == null
+                    => "Error: Select when to clear IHS codes after an update.",
+
+                // Interface options
+                "PreferredHabitatClass" when PreferredHabitatClass == null
+                    => "Error: Select your preferred habitat class.",
+                "ShowOSMMUpdatesOption" when ShowOSMMUpdatesOption == null
+                    => "Error: Select option of when to display any OSMM Updates.",
+                "PreferredSecondaryGroup" when PreferredSecondaryGroup == null
+                    => "Error: Select your preferred secondary group.",
+
+                "SecondaryCodeDelimiter" when String.IsNullOrEmpty(SecondaryCodeDelimiter)
+                    => "Error: You must enter a secondary code delimiter character.",
+                "SecondaryCodeDelimiter" when SecondaryCodeDelimiter.Length > 2
+                    => "Error: Secondary code delimiter must be one or two characters.",
+                "SecondaryCodeDelimiter" when SecondaryCodeDelimeterRegex().IsMatch(SecondaryCodeDelimiter)
+                    => "Error: Secondary code delimiter cannot contain letters or numbers.",
+
+                // SQL options
+                "GetValueRows" when (Convert.ToInt32(GetValueRows) <= 0 || GetValueRows == null)
+                    => "Error: Number of value rows to be retrieved must be greater than 0.",
+                "GetValueRows" when Convert.ToInt32(GetValueRows) > Settings.Default.MaxGetValueRows
+                    => $"Error: Number of value rows to be retrieved must not be greater than {Settings.Default.MaxGetValueRows}.",
+                "SQLPath" when String.IsNullOrEmpty(SQLPath)
+                    => "Error: You must enter a default SQL path.",
+
+                // Export options
+                "ExportPath" when String.IsNullOrEmpty(ExportPath)
+                    => "Error: You must enter a default export path.",
+
+                // Date options
+                "SeasonSpring" when String.IsNullOrEmpty(SeasonSpring)
+                    => "Error: You must enter a season name for spring.",
+                "SeasonSummer" when String.IsNullOrEmpty(SeasonSummer)
+                    => "Error: You must enter a season name for summer.",
+                "SeasonAutumn" when String.IsNullOrEmpty(SeasonAutumn)
+                    => "Error: You must enter a season name for autumn.",
+                "SeasonWinter" when String.IsNullOrEmpty(SeasonWinter)
+                    => "Error: You must enter a season name for winter.",
+
+                "VagueDateDelimiter" when String.IsNullOrEmpty(VagueDateDelimiter)
+                    => "Error: You must enter a vague date delimiter character.",
+                "VagueDateDelimiter" when VagueDateDelimiter.Length > 1
+                    => "Error: Vague date delimiter must be a single character.",
+                "VagueDateDelimiter" when VagueDateDelimeterRegex().IsMatch(VagueDateDelimiter)
+                    => "Error: Vague date delimiter cannot contain letters or numbers.",
+
+                // Bulk Update options
+                "BulkDeterminationQuality" when BulkDeterminationQuality == null
+                    => "Error: Select the default determination quality for new priority habitats.",
+                "BulkInterpretationQuality" when BulkInterpretationQuality == null
+                    => "Error: Select the default interpretation quality for new priority habitats.",
+                "OSMMSourceId" when OSMMSourceId == null
+                    => "Error: Select the default source name for OS MasterMap.",
+
+                _ => null
+            };
+        }
+
+        /// <summary>
+        /// Gets all validation errors for properties in a specific tab/category.
+        /// </summary>
+        private List<string> GetErrorsForCategory(string category, string tabName)
+        {
+            var errors = new List<string>();
+            var properties = GetPropertiesForTab(category, tabName);
+
+            foreach (var prop in properties)
+            {
+                var error = ValidateProperty(prop);
+                if (!string.IsNullOrEmpty(error))
+                {
+                    // Remove "Error: " prefix for cleaner bullet list
+                    error = error.Replace("Error: ", "");
+                    errors.Add($"• {error}");
+                }
+            }
+
+            return errors;
+        }
+
+        /// <summary>
+        /// Maps tab names to their relevant property names.
+        /// </summary>
+        private string[] GetPropertiesForTab(string category, string tabName)
+        {
+            return (category, tabName) switch
+            {
+                ("Application", "Database") => ["DbConnectionTimeout", "IncidTablePageSize"],
+                ("Application", "Dates") => ["SeasonSpring", "SeasonSummer", "SeasonAutumn", "SeasonWinter", "VagueDateDelimiter"],
+                ("Application", "Validation") => ["HabitatSecondaryCodeValidation", "PrimarySecondaryCodeValidation", "QualityValidation", "PotentialPriorityDetermQtyValidation"],
+                ("Application", "Updates") => ["ClearIHSUpdateAction", "SecondaryCodeDelimiter"],
+                ("Application", "Bulk Update") => ["BulkDeterminationQuality", "BulkInterpretationQuality", "OSMMSourceId"],
+                ("User", "Interface") => ["PreferredHabitatClass", "ShowOSMMUpdatesOption", "PreferredSecondaryGroup"],
+                ("User", "GIS") => ["AutoZoomToSelectionOption", "MinAutoZoom", "MaxFeaturesGISSelect", "WorkingFileGDBPath"],
+                ("User", "Updates") => ["SubsetUpdateAction"],
+                ("User", "SQL") => ["GetValueRows", "SQLPath"],
+                ("User", "History") => ["HistoryDisplayLastN"],
+                ("User", "Export") => ["ExportPath"],
+                _ => []
+            };
+        }
 
         /// <summary>
         /// Are there any errors in the settings?
@@ -1887,281 +2233,164 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                StringBuilder error = new();
+                // Check all navigation items for errors
+                var hasAnyErrors = NavigationItems?.Any(item => HasErrorsForNavigationItem(item)) ?? false;
 
-                // Database options
-                if (Convert.ToInt32(DbConnectionTimeout) <= 0 || DbConnectionTimeout == null)
-                    error.Append("\n" + "Enter a database timeout greater than 0 seconds.");
-                if (Convert.ToInt32(IncidTablePageSize) <= 0 || IncidTablePageSize == null)
-                    error.Append("\n" + "Enter a database page size greater than 0 rows.");
-
-                // GIS options
-                if (AutoZoomToSelectionOption == null)
-                    error.Append("Select option of when to auto zoom to selected feature(s).");
-                if (Convert.ToInt32(MinAutoZoom) < 100 || MinAutoZoom == null)
-                    error.Append("\n" + "Minimum auto zoom scale must be at least 100.");
-                if (Convert.ToInt32(MinAutoZoom) > Settings.Default.MaxAutoZoom)
-                    error.Append("\n" + String.Format("Minimum auto zoom scale must not be greater than {0}.", Settings.Default.MaxAutoZoom));
-                if (Convert.ToInt32(MaxFeaturesGISSelect) < 0 || MaxFeaturesGISSelect == null)
-                    error.Append("Error: Maximum features expected before warning on select must be zero or greater.");
-                if (Convert.ToInt32(MaxFeaturesGISSelect) > 100000)
-                    error.Append("Error: Maximum features expected before warning on select must not be greater than 10000. Otherwise set to zero to disable warning");
-                if (String.IsNullOrEmpty(WorkingFileGDBPath))
-                    error.Append("\n" + "You must enter a working File Geodatabase path.");
-
-                // History options
-                if (Convert.ToInt32(HistoryDisplayLastN) <= 0 || HistoryDisplayLastN == null)
-                    error.Append("\n" + "Number of history rows to be displayed must be greater than 0.");
-
-                // Interface options
-                if (PreferredHabitatClass == null)
-                    error.Append("Select your preferred habitat class.");
-                if (ShowOSMMUpdatesOption == null)
-                    error.Append("Select option of when to display any OSMM Updates.");
-                if (PreferredSecondaryGroup == null)
-                    error.Append("Select your preferred secondary group.");
-                if (HabitatSecondaryCodeValidation == null)
-                    error.Append("Select option of when to validate habitat/secondary codes.");
-                if (PrimarySecondaryCodeValidation == null)
-                    error.Append("Select option of when to validate primary/secondary codes.");
-                if (String.IsNullOrEmpty(SecondaryCodeDelimiter))
-                    error.Append("\n" + "You must enter a secondary code delimiter character.");
-                else if (SecondaryCodeDelimiter.Length > 2)
-                    error.Append("\n" + "Secondary code delimiter must be one or two characters.");
-                else
-                {
-                    Match m = SecondaryCodeDelimeterRegex().Match(SecondaryCodeDelimiter);
-                    if (m.Success == true)
-                        error.Append("\n" + "Secondary code delimiter cannot contain letters or numbers.");
-                }
-
-                // Update options
-                if (SubsetUpdateAction == null)
-                    error.Append("Select the action to take when updating an incid subset.");
-                if (ClearIHSUpdateAction == null)
-                    error.Append("Select when to clear IHS codes after an update.");
-
-                // SQL options
-                if (Convert.ToInt32(GetValueRows) <= 0 || GetValueRows == null)
-                    error.Append("\n" + "Number of value rows to be retrieved must be greater than 0.");
-                if (Convert.ToInt32(GetValueRows) > Settings.Default.MaxGetValueRows)
-                    error.Append("\n" + String.Format("Number of value rows to be retrieved must not be greater than {0}.", Settings.Default.MaxGetValueRows));
-                if (String.IsNullOrEmpty(SQLPath))
-                    error.Append("\n" + "You must enter a default SQL path.");
-
-                // Export options
-                if (String.IsNullOrEmpty(ExportPath))
-                    error.Append("\n" + "You must enter a default export path.");
-
-                // Date options
-                if (String.IsNullOrEmpty(SeasonSpring))
-                    error.Append("\n" + "You must enter a season name for spring.");
-                if (String.IsNullOrEmpty(SeasonSummer))
-                    error.Append("\n" + "You must enter a season name for summer.");
-                if (String.IsNullOrEmpty(SeasonAutumn))
-                    error.Append("\n" + "You must enter a season name for autumn.");
-                if (String.IsNullOrEmpty(SeasonWinter))
-                    error.Append("\n" + "You must enter a season name for winter.");
-                if (String.IsNullOrEmpty(VagueDateDelimiter))
-                    error.Append("\n" + "You must enter a vague date delimiter character.");
-                else if (VagueDateDelimiter.Length > 1)
-                    error.Append("\n" + "Vague date delimiter must be a single character.");
-                else
-                {
-                    Match m = VagueDateDelimeterRegex().Match(VagueDateDelimiter);
-                    if (m.Success == true)
-                        error.Append("\n" + "Vague date delimiter cannot contain letters or numbers.");
-                }
-
-                // Bulk Update options
-                if (BulkDeterminationQuality == null)
-                    error.Append("Select the default determination quality for new priority habitats.");
-                if (BulkInterpretationQuality == null)
-                    error.Append("Select the default interpration quality for new priority habitats.");
-                if (OSMMSourceId == null)
-                    error.Append("Select the default source name for OS MasterMap.");
-
-                if (error.Length > 0)
-                    return error.ToString();
-                else
+                if (!hasAnyErrors)
                     return null;
+
+                // Collect all errors
+                var allErrors = new StringBuilder();
+                foreach (var item in NavigationItems)
+                {
+                    var errors = GetErrorsForCategory(item.Category, item.Name);
+                    foreach (var error in errors)
+                    {
+                        allErrors.AppendLine(error);
+                    }
+                }
+
+                return allErrors.Length > 0 ? allErrors.ToString() : null;
             }
         }
 
         /// <summary>
-        /// Get the error message for the specified column.
+        /// Get the error message for the specified property.
         /// </summary>
-        /// <param name="columnName"></param>
-        /// <returns></returns>
         public string this[string columnName]
         {
             get
             {
-                string error = null;
-
-                switch (columnName)
-                {
-                    // Database options
-                    case "DbConnectionTimeout":
-                        if (Convert.ToInt32(DbConnectionTimeout) <= 0 || DbConnectionTimeout == null)
-                            error = "Error: Enter a database timeout greater than 0 seconds.";
-                        break;
-                    case "IncidTablePageSize":
-                        if (Convert.ToInt32(IncidTablePageSize) <= 0 || IncidTablePageSize == null)
-                            error = "Error: Enter a database page size greater than 0 rows.";
-                        if (Convert.ToInt32(IncidTablePageSize) > 1000 || IncidTablePageSize == null)
-                            error = "Error: Enter a database page size no more than 1000 rows.";
-                        break;
-
-                    // GIS options
-                    case "AutoZoomToSelectionOption":
-                        if (AutoZoomToSelectionOption == null)
-                            error = "Select option of when to auto zoom to selected feature(s).";
-                        break;
-                    case "MinAutoZoom":
-                        if (Convert.ToInt32(MinAutoZoom) < 100 || MinAutoZoom == null)
-                            error = "Error: Minimum auto zoom scale must be at least 100.";
-                        if (Convert.ToInt32(MinAutoZoom) > Settings.Default.MaxAutoZoom)
-                            error = String.Format("Error: Minimum auto zoom scale must not be greater than {0}.", Settings.Default.MaxAutoZoom);
-                        break;
-                    case "MaxFeaturesGISSelect":
-                        if (Convert.ToInt32(MaxFeaturesGISSelect) < 0 || MaxFeaturesGISSelect == null)
-                            error = "Error: Maximum features expected before warning on select must be zero or greater.";
-                        if (Convert.ToInt32(MaxFeaturesGISSelect) > 100000)
-                            error = "Error: Maximum features expected before warning on select must not be greater than 10000. Otherwise set to zero to disable warning";
-                        break;
-                    case "WorkingFileGDBPath":
-                        if (String.IsNullOrEmpty(WorkingFileGDBPath))
-                            error = "Error: You must enter a working File Geodatabase path.";
-                        break;
-
-                    // History options
-                    case "HistoryDisplayLastN":
-                        if (Convert.ToInt32(HistoryDisplayLastN) <= 0 || HistoryDisplayLastN == null)
-                            error = "Error: Number of history rows to be displayed must be greater than 0.";
-                        break;
-
-                    // Update options
-                    case "HabitatSecondaryCodeValidation":
-                        if (HabitatSecondaryCodeValidation == null)
-                            error = "Error: Select option of when to validate habitat/secondary codes.";
-                        break;
-                    case "PrimarySecondaryCodeValidation":
-                        if (PrimarySecondaryCodeValidation == null)
-                            error = "Error: Select option of when to validate primary/secondary codes.";
-                        break;
-                    case "QualityValidation":
-                        if (QualityValidation == null)
-                            error = "Error: Select option of when to validate determination and interpretation quality.";
-                        break;
-                    case "PotentialPriorityDetermQtyValidation":
-                        if (PotentialPriorityDetermQtyValidation == null)
-                            error = "Error: Select option of when to validate potential priority habitat determination quality.";
-                        break;
-                    case "SubsetUpdateAction":
-                        if (SubsetUpdateAction == null)
-                            error = "Error: Select the action to take when updating an incid subset.";
-                        break;
-                    case "ClearIHSUpdateAction":
-                        if (ClearIHSUpdateAction == null)
-                            error = "Error: Select when to clear IHS codes after an update.";
-                        break;
-
-                    // Interface options
-                    case "PreferredHabitatClass":
-                        if (PreferredHabitatClass == null)
-                            error = "Error: Select your preferred habitat class.";
-                        break;
-                    case "ShowOSMMUpdatesOption":
-                        if (ShowOSMMUpdatesOption == null)
-                            error = "Error: Select option of when to display any OSMM Updates.";
-                        break;
-                    case "PreferredSecondaryGroup":
-                        if (PreferredSecondaryGroup == null)
-                            error = "Error: Select your preferred secondary group.";
-                        break;
-                    case "SecondaryCodeDelimiter":
-                        if (String.IsNullOrEmpty(SecondaryCodeDelimiter))
-                            error = "Error: You must enter a secondary code delimiter character.";
-                        else if (SecondaryCodeDelimiter.Length > 2)
-                            error = "Error: Secondary code delimiter must be one or two characters.";
-                        else
-                        {
-                            Match m = SecondaryCodeDelimeterRegex().Match(SecondaryCodeDelimiter);
-                            if (m.Success == true)
-                                error = "Error: Secondary code delimiter cannot contain letters or numbers.";
-                        }
-                        break;
-
-                    // SQL options
-                    case "GetValueRows":
-                        if (Convert.ToInt32(GetValueRows) <= 0 || GetValueRows == null)
-                            error = "Error: Number of value rows to be retrieved must be greater than 0.";
-                        if (Convert.ToInt32(GetValueRows) > Settings.Default.MaxGetValueRows)
-                            error = String.Format("Error: Number of value rows to be retrieved must not be greater than {0}.", Settings.Default.MaxGetValueRows);
-                        break;
-                    case "SQLPath":
-                        if (String.IsNullOrEmpty(SQLPath))
-                            error = "Error: You must enter a default SQL path.";
-                        break;
-
-                    // Export options
-                    case "ExportPath":
-                        if (String.IsNullOrEmpty(ExportPath))
-                            error = "Error: You must enter a default export path.";
-                        break;
-
-                    // Date options
-                    case "SeasonSpring":
-                        if (String.IsNullOrEmpty(SeasonSpring))
-                            error = "Error: You must enter a season name for spring.";
-                        break;
-                    case "SeasonSummer":
-                        if (String.IsNullOrEmpty(SeasonSummer))
-                            error = "Error: You must enter a season name for summer.";
-                        break;
-                    case "SeasonAutumn":
-                        if (String.IsNullOrEmpty(SeasonAutumn))
-                            error = "Error: You must enter a season name for autumn.";
-                        break;
-                    case "SeasonWinter":
-                        if (String.IsNullOrEmpty(SeasonWinter))
-                            error = "Error: You must enter a season name for winter.";
-                        break;
-                    case "VagueDateDelimiter":
-                        if (String.IsNullOrEmpty(VagueDateDelimiter))
-                            error = "Error: You must enter a vague date delimiter character.";
-                        else if (VagueDateDelimiter.Length > 1)
-                            error = "Error: Vague date delimiter must be a single character.";
-                        else
-                        {
-                            Match m = VagueDateDelimeterRegex().Match(VagueDateDelimiter);
-                            if (m.Success == true)
-                                error = "Error: Vague date delimiter cannot contain letters or numbers.";
-                        }
-                        break;
-
-                    // Bulk Update options
-                    case "BulkDeterminationQuality":
-                        if (BulkDeterminationQuality == null)
-                            error = "Error: Select the default determination quality for new priority habitats.";
-                        break;
-                    case "BulkInterpretationQuality":
-                        if (BulkInterpretationQuality == null)
-                            error = "Error: Select the default interpretation quality for new priority habitats.";
-                        break;
-                    case "OSMMSourceId":
-                        if (OSMMSourceId == null)
-                            error = "Error: Select the default source name for OS MasterMap.";
-                        break;
-
-                }
+                var error = ValidateProperty(columnName);
 
                 CommandManager.InvalidateRequerySuggested();
 
                 return error;
             }
         }
+
+        #endregion Error Handling
+
+        #region Error Display in Navigation
+
+        /// <summary>
+        /// Checks if a specific navigation item has validation errors.
+        /// </summary>
+        /// <param name="item">The navigation item to check.</param>
+        /// <returns>True if the item has errors, otherwise false.</returns>
+        private bool HasErrorsForNavigationItem(NavigationItem item)
+        {
+            if (item == null)
+                return false;
+
+            // Get all properties for this tab
+            var properties = GetPropertiesForTab(item.Category, item.Name);
+
+            // Check if any property has errors
+            return properties.Any(prop => !string.IsNullOrEmpty(ValidateProperty(prop)));
+        }
+
+        /// <summary>
+        /// Gets the specific error message for a navigation item.
+        /// </summary>
+        /// <param name="item">The navigation item to get errors for.</param>
+        /// <returns>A formatted error message describing the validation errors.</returns>
+        private string GetErrorMessageForNavigationItem(NavigationItem item)
+        {
+            if (item == null || !HasErrorsForNavigationItem(item))
+                return null;
+
+            StringBuilder errorMsg = new();
+            errorMsg.AppendLine("This tab contains validation errors:");
+            errorMsg.AppendLine();
+
+            var errors = GetErrorsForCategory(item.Category, item.Name);
+            errorMsg.Append(string.Join(Environment.NewLine, errors));
+
+            return errorMsg.ToString().TrimEnd();
+        }
+
+        /// <summary>
+        /// Updates the error state of all navigation items.
+        /// </summary>
+        private void NotifyNavigationItemErrorsChanged()
+        {
+            foreach (var item in NavigationItems)
+            {
+                item.HasErrors = HasErrorsForNavigationItem(item);
+                item.ErrorMessage = GetErrorMessageForNavigationItem(item);
+            }
+        }
+
+        private string GetDatabaseErrorMessages()
+        {
+            var errors = GetErrorsForCategory("Application", "Database");
+            return string.Join(Environment.NewLine, errors);
+        }
+
+        private string GetDatesErrorMessages()
+        {
+            var errors = GetErrorsForCategory("Application", "Dates");
+            return string.Join(Environment.NewLine, errors);
+        }
+
+        private string GetValidationErrorMessages()
+        {
+            var errors = GetErrorsForCategory("Application", "Validation");
+            return string.Join(Environment.NewLine, errors);
+        }
+
+        private string GetUpdatesErrorMessages()
+        {
+            var errors = GetErrorsForCategory("Application", "Updates");
+            return string.Join(Environment.NewLine, errors);
+        }
+
+        private string GetBulkUpdateErrorMessages()
+        {
+            var errors = GetErrorsForCategory("Application", "Bulk Update");
+            return string.Join(Environment.NewLine, errors);
+        }
+
+        private string GetInterfaceErrorMessages()
+        {
+            var errors = GetErrorsForCategory("User", "Interface");
+            return string.Join(Environment.NewLine, errors);
+        }
+
+        private string GetGISErrorMessages()
+        {
+            var errors = GetErrorsForCategory("User", "GIS");
+            return string.Join(Environment.NewLine, errors);
+        }
+
+        private string GetUserUpdatesErrorMessages()
+        {
+            var errors = GetErrorsForCategory("User", "Updates");
+            return string.Join(Environment.NewLine, errors);
+        }
+
+        private string GetSQLErrorMessages()
+        {
+            var errors = GetErrorsForCategory("User", "SQL");
+            return string.Join(Environment.NewLine, errors);
+        }
+
+        private string GetHistoryErrorMessages()
+        {
+            var errors = GetErrorsForCategory("User", "History");
+            return string.Join(Environment.NewLine, errors);
+        }
+
+        private string GetExportErrorMessages()
+        {
+            var errors = GetErrorsForCategory("User", "Export");
+            return string.Join(Environment.NewLine, errors);
+        }
+
+        #endregion Error Display in Navigation
+
+        #region Regular Expressions
 
         /// <summary>
         /// Defines a compiled regular expression that matches any single alphanumeric character.
@@ -2195,7 +2424,6 @@ namespace HLU.UI.ViewModel
         [GeneratedRegex(@"[a-zA-Z0-9]")]
         private static partial Regex VagueDateDelimeterRegex();
 
-
-        #endregion
+        #endregion Regular Expressions
     }
 }
