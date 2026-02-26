@@ -173,27 +173,35 @@ namespace HLU.UI.ViewModel
         #region Fields - ComboBox Sources
 
         private readonly ObservableCollection<CodeDescriptionBool> _primaryCodes = [];
+
         private HluDataSet.lut_sourcesRow[] _sourceNames;
         private HluDataSet.lut_habitat_classRow[] _sourceHabitatClassCodes;
         private HluDataSet.lut_importanceRow[] _sourceImportanceCodes;
+
         private HluDataSet.lut_habitat_typeRow[] _bapHabitatCodes;
+
         private HluDataSet.lut_boundary_mapRow[] _boundaryMapCodes;
+
         private HluDataSet.lut_conditionRow[] _conditionCodes;
         private HluDataSet.lut_condition_qualifierRow[] _conditionQualifierCodes;
-        private HluDataSet.lut_secondary_groupRow[] _secondaryGroupsValid;
+
         private HluDataSet.lut_secondary_groupRow[] _secondaryGroups;
-        private static HluDataSet.lut_secondary_groupRow[] _secondaryGroupsAll; // Used in the options window
+        private HluDataSet.lut_secondary_groupRow[] _secondaryGroupsValid;
+        private HluDataSet.lut_secondary_groupRow[] _secondaryGroupsWithAll; // Used in the options window
+
         private HluDataSet.lut_secondaryRow[] _secondaryCodesAll;
         private HluDataSet.lut_secondaryRow[] _secondaryCodesValid;
+
         private IEnumerable<string> _secondaryCodesOptional;
         private IEnumerable<string> _secondaryCodesMandatory;
+
         private ObservableCollection<SecondaryHabitat> _incidSecondaryHabitats;
         private ObservableCollection<BapEnvironment> _incidBapRowsAuto;
         private ObservableCollection<BapEnvironment> _incidBapRowsUser;
         private HluDataSet.lut_legacy_habitatRow[] _legacyHabitatCodes;
         private HistoryRowEqualityComparer _histRowEqComp = new();
         private HluDataSet.lut_habitat_classRow[] _habitatClassCodes;
-        private static HluDataSet.lut_habitat_classRow[] _habitatClasses; // Used in the options window
+        private HluDataSet.lut_habitat_classRow[] _habitatClasses; // Used in the options window
         private HluDataSet.lut_habitat_typeRow[] _habitatTypeCodes;
 
         #endregion Fields - ComboBox Sources
@@ -1017,6 +1025,10 @@ namespace HLU.UI.ViewModel
             get { return "Habitats"; }
         }
 
+        /// <summary>
+        /// Gets the habitat header to be used in the habitat tab. It is shown only
+        /// if the option to show group headers is set.
+        /// </summary>
         public string HabitatHeader
         {
             get
@@ -1069,12 +1081,6 @@ namespace HLU.UI.ViewModel
                 // Get the list of values from the lookup table.
                 if (_habitatClassCodes == null)
                 {
-                    // Set the static variable (used in the options window) for all
-                    // local habitat classes with local habitat types.
-                    HabitatClasses = (from c in _lutHabitatClass
-                                      join t in _lutHabitatType on c.code equals t.habitat_class_code
-                                      select c).Distinct().OrderBy(c => c.sort_order).ThenBy(c => c.description).ToArray();
-
                     // Set the habitat classes for all local habitat classes with
                     // local habitat types that relate to at least one primary
                     // habitat type that is local.
@@ -1088,10 +1094,30 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        public static HluDataSet.lut_habitat_classRow[] HabitatClasses
+        /// <summary>
+        /// Gets the list of habitat classes to be used in the options window.
+        /// This is set to all local habitat classes with local habitat types, regardless
+        /// of whether they relate to a primary habitat type that is local, as the options
+        /// window is used to set which habitat classes and types are flagged as local.
+        /// </summary>
+        /// <remarks>Used in the options window to display all local habitat classes with local habitat types.</remarks>
+        public HluDataSet.lut_habitat_classRow[] HabitatClasses
         {
-            get => _habitatClasses;
-            set => _habitatClasses = value;
+            get
+            {
+                // If not already populated
+                if (_habitatClasses == null && _hluDS != null)
+                {
+                    // Set the full list of habitat classes for all
+                    // local habitat classes with local habitat types.
+                    _habitatClasses = _hluDS.lut_habitat_class.AsEnumerable()
+                        .OrderBy(r => r.sort_order)
+                        .ThenBy(r => r.description)
+                        .ToArray();
+                }
+
+                return _habitatClasses ?? [];
+            }
         }
 
         /// <summary>
@@ -1323,6 +1349,10 @@ namespace HLU.UI.ViewModel
 
         #region Properties - Primary Habitat
 
+        /// <summary>
+        /// Gets the header for the primary habitat group box. It is only shown if
+        /// the option to show group headers is set.
+        /// </summary>
         public string PrimaryHeader
         {
             get
@@ -1334,6 +1364,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether the primary habitat code combo box is enabled.
+        /// </summary>
         public bool PrimaryEnabled
         {
             get
@@ -1353,6 +1386,10 @@ namespace HLU.UI.ViewModel
             get { return _primaryCodes; }
         }
 
+        /// <summary>
+        /// Gets or sets the primary habitat code. When setting, it also updates the list of secondary
+        /// habitat codes and tips based on the current primary code and habitat type.
+        /// </summary>
         public string IncidPrimary
         {
             get { return _incidPrimary; }
@@ -1441,6 +1478,11 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets the primary habitat category that relates to the selected primary habitat code.
+        /// It is used to show the category of the selected primary habitat code and to validate that the
+        /// selected primary habitat code is valid.
+        /// </summary>
         public string IncidPrimaryCategory
         {
             get { return _incidPrimaryCategory; }
@@ -1547,6 +1589,9 @@ namespace HLU.UI.ViewModel
 
         #region Properties - Secondary Habitats
 
+        /// <summary>
+        /// Gets the header for the secondary habitats group box. It is only shown if the option to show group headers is set.
+        /// </summary>
         public string SecondaryHabitatsHeader
         {
             get
@@ -1558,6 +1603,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether the secondary habitat group box is enabled. It is only enabled if there is a primary habitat code selected.
+        /// </summary>
         public bool SecondaryGroupEnabled
         {
             get
@@ -1566,6 +1614,11 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether the secondary habitat controls are enabled. They are enabled if
+        /// there is a primary habitat code selected and there are secondary groups that relate to the
+        /// selected primary habitat code.
+        /// </summary>
         public bool SecondaryHabitatEnabled
         {
             get
@@ -1574,6 +1627,11 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether the secondary habitat code combo box is enabled. It is enabled if
+        /// there is a primary habitat code selected and there are secondary groups that relate to the
+        /// selected primary habitat code.
+        /// </summary>
         public bool SecondaryHabitatsEnabled
         {
             get
@@ -1582,49 +1640,23 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        public HluDataSet.lut_secondary_groupRow[] SecondaryGroupCodes
+        /// <summary>
+        /// Gets the list of valid local secondary groups that relate to the selected primary habitat code.
+        /// </summary>
+        public HluDataSet.lut_secondary_groupRow[] SecondaryGroupCodesValid
         {
             get
             {
                 if (HluDataset == null)
                     return null;
 
-                // Define the <ALL> group row
-                HluDataSet.lut_secondary_groupRow allRow = HluDataset.lut_secondary_group.Newlut_secondary_groupRow();
-                allRow.code = "<All>";
-                allRow.description = "<All>";
-                allRow.sort_order = -1;
-
-                // Define the <ALL Essentials> group row
-                HluDataSet.lut_secondary_groupRow allEssRow = HluDataset.lut_secondary_group.Newlut_secondary_groupRow();
-                allEssRow.code = "<All Essentials>";
-                allEssRow.description = "<All Essentials>";
-                allEssRow.sort_order = -1;
-
-                // Set the public and static variables
-                if (SecondaryGroupsAll == null || SecondaryGroupsAll.Length == 0)
-                {
-                    // Set the full list of local secondary groups.
-                    _secondaryGroups = (from sg in _lutSecondaryGroup
-                                        select sg).OrderBy(r => r.sort_order).ThenBy(r => r.description).Distinct().ToArray();
-
-                    // Set the full list of secondary groups including any <All> groups.
-                    HluDataSet.lut_secondary_groupRow[] secondaryGroupsAll;
-                    secondaryGroupsAll = _secondaryGroups;
-                    if (secondaryGroupsAll != null)
-                    {
-                        // Add the <ALL> groups containing all and all essential secondary codes.
-                        secondaryGroupsAll = new HluDataSet.lut_secondary_groupRow[] { allRow, allEssRow }.Concat(secondaryGroupsAll).ToArray();
-                    }
-
-                    // Set the static variable
-                    SecondaryGroupsAll = secondaryGroupsAll;
-
-                    // Set the dictionary of local secondary group codes.
+                // Set the dictionary of local secondary group codes.
+                if (SecondaryHabitat.SecondaryGroupCodes == null || SecondaryHabitat.SecondaryGroupCodes.Count == 0)
                     SecondaryHabitat.SecondaryGroupCodes = (from sg in _lutSecondary
-                                                            select sg).OrderBy(r => r.code).ThenBy(r => r.code_group).ToDictionary(r => r.code, r => r.code_group);
-                }
+                                                        select sg).OrderBy(r => r.code).ThenBy(r => r.code_group).ToDictionary(r => r.code, r => r.code_group);
 
+                // If there is a primary habitat code selected, set the list of valid secondary groups to
+                // those that relate to the primary code, otherwise set to all secondary groups.
                 if (!String.IsNullOrEmpty(IncidPrimary))
                 {
                     // Set the valid list of secondary groups for the primary code.
@@ -1637,16 +1669,13 @@ namespace HLU.UI.ViewModel
                     if (_secondaryGroupsValid != null)
                     {
                         // Add the <ALL> groups containing all and all essential secondary codes.
-                        _secondaryGroupsValid = new HluDataSet.lut_secondary_groupRow[] { allRow, allEssRow }.Concat(_secondaryGroupsValid).ToArray();
+                        _secondaryGroupsValid = new HluDataSet.lut_secondary_groupRow[] { _allRow, _allEssRow }.Concat(_secondaryGroupsValid).ToArray();
                     }
                 }
                 else
                 {
-                    // Set the valid list of secondary codes to all codes (rather than clearing the list)
-                    _secondaryGroupsValid = _secondaryGroups;
-
-                    // Add the <ALL> groups containing all and all essential secondary codes.
-                    _secondaryGroupsValid = new HluDataSet.lut_secondary_groupRow[] { allRow, allEssRow }.Concat(_secondaryGroupsValid).ToArray();
+                    // Set the valid list of secondary codes to all codes including any <All> groups.
+                    _secondaryGroupsValid = SecondaryGroupCodesWithAll;
 
                     // Set the combo box list to null (it will also be disabled).
                     return null;
@@ -1656,11 +1685,14 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets the list of all local secondary groups that have at least one secondary habitat code that is local.
+        /// </summary>
         public HluDataSet.lut_secondary_groupRow[] SecondaryGroupCodesAll
         {
             get
             {
-                // Set the public and static variables
+                // Set the full list of local secondary groups.
                 if (_secondaryGroups == null || _secondaryGroups.Length == 0)
                 {
                     // Set the full list of local secondary groups.
@@ -1672,10 +1704,35 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        public static HluDataSet.lut_secondary_groupRow[] SecondaryGroupsAll
+        /// <summary>
+        /// Gets the list of secondary groups to be used in the options window.
+        /// </summary>
+        public HluDataSet.lut_secondary_groupRow[] SecondaryGroupCodesWithAll
         {
-            get => _secondaryGroupsAll;
-            set => _secondaryGroupsAll = value;
+            get
+            {
+                // Set the full list of secondary groups including any <All> groups.
+                if (_secondaryGroupsWithAll == null || _secondaryGroupsWithAll.Length == 0)
+                {
+                    // Set the full list of local secondary groups.
+                    _secondaryGroups = SecondaryGroupCodesAll;
+
+                    // Set the full list of secondary groups including any <All> groups.
+                    HluDataSet.lut_secondary_groupRow[] secondaryGroupsWithAll;
+                    secondaryGroupsWithAll = _secondaryGroups;
+                    if (secondaryGroupsWithAll != null)
+                    {
+                        // Add the <ALL> groups containing all and all essential secondary codes.
+                        secondaryGroupsWithAll = new HluDataSet.lut_secondary_groupRow[] { _allRow, _allEssRow }.Concat(secondaryGroupsWithAll).ToArray();
+                    }
+
+                    // Set the full list of secondary groups (used in the options window).
+                    _secondaryGroupsWithAll = secondaryGroupsWithAll;
+
+                }
+
+                return _secondaryGroupsWithAll;
+            }
         }
 
         /// <summary>
@@ -1697,6 +1754,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets the list of valid local secondary habitat codes that relate to the selected primary habitat code and secondary group.
+        /// </summary>
         public HluDataSet.lut_secondaryRow[] SecondaryHabitatCodes
         {
             get
@@ -1757,6 +1817,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets the list of all local secondary habitat codes that are related to any habitat type or primary habitat.
+        /// </summary>
         public HluDataSet.lut_secondaryRow[] SecondaryHabitatCodesAll
         {
             get
@@ -1772,7 +1835,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets or sets the secondary habitat.
+        /// Gets or sets the secondary habitat code which will then be added to the list of secondary habitats for the current incid.
         /// </summary>
         /// <value>
         /// The secondary habitat.
@@ -1862,6 +1925,9 @@ namespace HLU.UI.ViewModel
 
         #region Properties - Habitat Summary
 
+        /// <summary>
+        /// Gets the habitat summary header text. It is only shown if the option to show group headers is set.
+        /// </summary>
         public string HabitatSummaryHeader
         {
             get
@@ -1922,6 +1988,9 @@ namespace HLU.UI.ViewModel
 
         #region Properties - Legacy Habitat
 
+        /// <summary>
+        ///  Gets the legacy habitat group header. It is only shown if the option to show group headers is set.
+        /// </summary>
         public string LegacyHeader
         {
             get
@@ -2052,7 +2121,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets the IHS habitat group header.
+        /// Gets the IHS habitat group header. It is only shown if the option to show group headers is set.
         /// </summary>
         /// <value>
         /// The IHS habitat header.
@@ -2112,7 +2181,7 @@ namespace HLU.UI.ViewModel
         #region Properties - IHS Matrix
 
         /// <summary>
-        /// Gets the ihs matrix group header.
+        /// Gets the ihs matrix group header. It is only shown if the option to show group headers is set.
         /// </summary>
         /// <value>
         /// The ihs matrix group header.
@@ -2263,7 +2332,7 @@ namespace HLU.UI.ViewModel
         #region Properties - IHS Formation
 
         /// <summary>
-        /// Gets the ihs formation group header.
+        /// Gets the ihs formation group header. It is only shown if the option to show group headers is set.
         /// </summary>
         /// <value>
         /// The ihs formation group header.
@@ -2371,7 +2440,7 @@ namespace HLU.UI.ViewModel
         #region Properties - IHS Management
 
         /// <summary>
-        /// Gets the ihs management group header.
+        /// Gets the ihs management group header. It is only shown if the option to show group headers is set.
         /// </summary>
         /// <value>
         /// The ihs management group header.
@@ -2479,7 +2548,7 @@ namespace HLU.UI.ViewModel
         #region Properties - IHS Complex
 
         /// <summary>
-        /// Gets the ihs complex group header.
+        /// Gets the ihs complex group header. It is only shown if the option to show group headers is set.
         /// </summary>
         /// <value>
         /// The ihs complex group header.
@@ -2587,7 +2656,7 @@ namespace HLU.UI.ViewModel
         #region Properties - IHS Summary
 
         /// <summary>
-        /// Gets the ihs summary group header.
+        /// Gets the ihs summary group header. It is only shown if the option to show group headers is set.
         /// </summary>
         /// <value>
         /// The ihs summary group header.
@@ -2831,7 +2900,7 @@ namespace HLU.UI.ViewModel
         #region Properties - Details General Comments
 
         /// <summary>
-        /// Gets the details general comments group header.
+        /// Gets the details general comments group header. It is only shown if the option to show group headers is set.
         /// </summary>
         public string DetailsCommentsHeader
         {
@@ -2873,7 +2942,7 @@ namespace HLU.UI.ViewModel
         #region Properties - Details Maps
 
         /// <summary>
-        /// Gets the details maps group header.
+        /// Gets the details maps group header. It is only shown if the option to show group headers is set.
         /// </summary>
         public string DetailsMapsHeader
         {
@@ -2968,7 +3037,7 @@ namespace HLU.UI.ViewModel
         #region Properties - Details Site
 
         /// <summary>
-        /// Gets the details site group header.
+        /// Gets the details site group header. It is only shown if the option to show group headers is set.
         /// </summary>
         public string DetailsSiteHeader
         {
@@ -3034,11 +3103,8 @@ namespace HLU.UI.ViewModel
         #region Properties - Details Condition
 
         /// <summary>
-        /// Gets the details condition group header.
+        /// Gets the details condition group header. It is only shown if the option to show group headers is set.
         /// </summary>
-        /// <value>
-        /// The details condition group header.
-        /// </value>
         public string DetailsConditionHeader
         {
             get
@@ -3256,11 +3322,8 @@ namespace HLU.UI.ViewModel
         #region Properties - Details Quality
 
         /// <summary>
-        /// Gets the details quality group header.
+        /// Gets the details quality group header. It is only shown if the option to show group headers is set.
         /// </summary>
-        /// <value>
-        /// The details quality group header.
-        /// </value>
         public string DetailsQualityHeader
         {
             get
@@ -3553,6 +3616,9 @@ namespace HLU.UI.ViewModel
 
         #region Properties - Source 1
 
+        /// <summary>
+        /// Gets the source 1 group header. It is only shown if the option to show group headers is set.
+        /// </summary>
         public string Source1Header
         {
             get
@@ -3564,6 +3630,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets the visibility of the source numbers field. It is only shown when group headers are not shown
+        /// as the source number is included in the group header when group headers are shown.
+        /// </summary>
         public Visibility ShowSourceNumbers
         {
             get
@@ -3575,6 +3645,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets the list of source names to be shown in the source 1 name drop-down list. It includes
+        /// the <Clear> row if a source is currently selected, but excludes the <Clear> row in bulk update mode.
+        /// </summary>
         public HluDataSet.lut_sourcesRow[] Source1Names
         {
             get
@@ -3613,6 +3687,12 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets the source 1 name by source_id. Setting this property will update the source_id field
+        /// in the incid_sources table and will also set default values for the other source 1 fields if a
+        /// new source is selected. If the value is set to -1 then the source will be cleared (i.e. the row
+        /// will be deleted) and all source 1 fields will be cleared.
+        /// </summary>
         public Nullable<int> IncidSource1Id
         {
             get
@@ -3669,12 +3749,21 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets a boolean value indicating whether the source 1 fields should be enabled.
+        /// This is determined by whether a source name has been selected for source 1.
+        /// </summary>
         public bool IncidSource1Enabled
         {
             // Disable remaining source fields when source name is blank
             get { return (IncidSource1Id != null); }
         }
 
+        /// <summary>
+        /// Gets or sets the source 1 date as a VagueDateInstance. Setting this property will
+        /// update the source_date_start, source_date_end and source_date_type fields
+        /// in the incid_sources table for source 1.
+        /// </summary>
         public Date.VagueDateInstance IncidSource1Date
         {
             get
@@ -3706,6 +3795,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets the source 1 habitat class code. Setting this property will update the source_habitat_class field
+        /// in the incid_sources table for source 1.
+        /// </summary>
         public string IncidSource1HabitatClass
         {
             get
@@ -3728,6 +3821,11 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets the list of source 1 habitat type codes to be shown in the source 1 habitat type drop-down list.
+        /// The list is filtered based on the selected source 1 habitat class code. It includes the <Clear> row
+        /// if a habitat type is currently selected, but excludes the <Clear> row in bulk update mode.
+        /// </summary>
         public HluDataSet.lut_habitat_typeRow[] Source1HabitatTypeCodes
         {
             get
@@ -3753,6 +3851,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets the source 1 habitat type code. Setting this property will update the source_habitat_type field
+        /// in the incid_sources table for source 1.
+        /// </summary>
         public string IncidSource1HabitatType
         {
             get
@@ -3773,6 +3875,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets the source 1 boundary importance code. Setting this property will update the source_boundary_importance field
+        /// in the incid_sources table for source 1.
+        /// </summary>
         public string IncidSource1BoundaryImportance
         {
             get
@@ -3796,6 +3902,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets the source 1 habitat importance code. Setting this property will update the source_habitat_importance field
+        /// in the incid_sources table for source 1.
+        /// </summary>
         public string IncidSource1HabitatImportance
         {
             get
@@ -3823,6 +3933,9 @@ namespace HLU.UI.ViewModel
 
         #region Properties - Source 2
 
+        /// <summary>
+        /// Gets the source 2 group header. It is only shown if the option to show group headers is set.
+        /// </summary>
         public string Source2Header
         {
             get
@@ -3834,6 +3947,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets the list of source names to be shown in the source 2 name drop-down list. It includes
+        /// the <Clear> row if a habitat type is currently selected, but excludes the <Clear> row in bulk update mode.
+        /// </summary>
         public HluDataSet.lut_sourcesRow[] Source2Names
         {
             get
@@ -3858,6 +3975,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets the source 2 name by source_id. Setting this property will update the source_id field
+        /// in the incid_sources table for source 2.
+        /// </summary>
         public Nullable<int> IncidSource2Id
         {
             get
@@ -3913,12 +4034,20 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets a boolean value indicating whether the source 2 fields should be enabled.
+        /// This is determined by whether a source name has been selected for source 2.
+        /// </summary>
         public bool IncidSource2Enabled
         {
             // Disable remaining source fields when source name is blank
             get { return (IncidSource2Id != null); }
         }
 
+        /// <summary>
+        /// Gets or sets the source 2 date as a VagueDateInstance. Setting this property will
+        /// update the source_date_start, source_date_end, and source_date_type fields in the incid_sources table for source 2.
+        /// </summary>
         public Date.VagueDateInstance IncidSource2Date
         {
             get
@@ -3950,6 +4079,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets the source 2 habitat class code. Setting this property will update the source_habitat_class field
+        /// in the incid_sources table for source 2.
+        /// </summary>
         public string IncidSource2HabitatClass
         {
             get
@@ -3972,6 +4105,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets the list of source 2 habitat type codes to be shown in the source 2 habitat type drop-down list.
+        /// </summary>
         public HluDataSet.lut_habitat_typeRow[] Source2HabitatTypeCodes
         {
             get
@@ -3997,6 +4133,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets the source 2 habitat type code. Setting this property will update the source_habitat_type field
+        /// in the incid_sources table for source 2.
+        /// </summary>
         public string IncidSource2HabitatType
         {
             get
@@ -4017,6 +4157,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets the source 2 boundary importance code. Setting this property will update the source_boundary_importance field
+        /// in the incid_sources table for source 2.
+        /// </summary>
         public string IncidSource2BoundaryImportance
         {
             get
@@ -4040,6 +4184,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets the source 2 habitat importance code. Setting this property will update the source_habitat_importance field
+        /// in the incid_sources table for source 2.
+        /// </summary>
         public string IncidSource2HabitatImportance
         {
             get
@@ -4067,6 +4215,9 @@ namespace HLU.UI.ViewModel
 
         #region Properties - Source 3
 
+        /// <summary>
+        /// Gets the source 3 group header. It is only shown if the option to show group headers is set.
+        /// </summary>
         public string Source3Header
         {
             get
@@ -4078,6 +4229,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets the list of source names to be shown in the source 3 name drop-down list. It includes
+        /// the <Clear> row if applicable, but excludes the <Clear> row in bulk update mode.
+        /// </summary>
         public HluDataSet.lut_sourcesRow[] Source3Names
         {
             get
@@ -4102,6 +4257,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets the source 3 name by source_id. Setting this property will update the source_id field
+        /// in the incid_sources table for source 3.
+        /// </summary>
         public Nullable<int> IncidSource3Id
         {
             get
@@ -4157,12 +4316,20 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets a boolean value indicating whether the source 3 fields should be enabled.
+        /// This is determined by whether a source name has been selected for source 3.
+        /// </summary>
         public bool IncidSource3Enabled
         {
             // Disable remaining source fields when source name is blank
             get { return (IncidSource3Id != null); }
         }
 
+        /// <summary>
+        /// Gets or sets the source 3 date as a VagueDateInstance. Setting this property will
+        /// update the source_date_start, source_date_end, and source_date_type fields in the incid_sources table for source 3.
+        /// </summary>
         public Date.VagueDateInstance IncidSource3Date
         {
             get
@@ -4194,6 +4361,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets the source 3 habitat class code. Setting this property will update the source_habitat_class field
+        /// in the incid_sources table for source 3.
+        /// </summary>
         public string IncidSource3HabitatClass
         {
             get
@@ -4216,6 +4387,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets the list of source 3 habitat type codes to be shown in the source 3 habitat type drop-down list.
+        /// </summary>
         public string IncidSource3HabitatType
         {
             get
@@ -4236,6 +4410,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets the list of source 3 habitat type codes to be shown in the source 3 habitat type drop-down list.
+        /// </summary>
         public HluDataSet.lut_habitat_typeRow[] Source3HabitatTypeCodes
         {
             get
@@ -4261,6 +4438,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets the source 3 boundary importance code. Setting this property will update the source_boundary_importance field
+        /// in the incid_sources table for source 3.
+        /// </summary>
         public string IncidSource3BoundaryImportance
         {
             get
@@ -4284,6 +4465,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets the source 3 habitat importance code. Setting this property will update the source_habitat_importance field
+        /// in the incid_sources table for source 3.
+        /// </summary>
         public string IncidSource3HabitatImportance
         {
             get
@@ -4402,8 +4587,14 @@ namespace HLU.UI.ViewModel
 
         #region Properties - Site Info
 
+        /// <summary>
+        /// Gets the Site ID for the current record.
+        /// </summary>
         public string SiteID { get { return _recIDs.SiteID; } }
 
+        /// <summary>
+        /// Gets the Habitat Version for the current record.
+        /// </summary>
         public string HabitatVersion { get { return _recIDs.HabitatVersion; } }
 
         #endregion Properties - Site Info
@@ -5909,7 +6100,7 @@ namespace HLU.UI.ViewModel
 
             // Clear the secondary groups list and disable the drop-down.
             _secondaryGroupsValid = null;
-            OnPropertyChanged(nameof(SecondaryGroupCodes));
+            OnPropertyChanged(nameof(SecondaryGroupCodesValid));
             OnPropertyChanged(nameof(SecondaryGroupEnabled));
 
             // Get a new condition row.
@@ -5988,12 +6179,15 @@ namespace HLU.UI.ViewModel
         /// selection to keep the user interface in sync.</remarks>
         internal void RefreshAll()
         {
-            // Update toolbar and menu command states.
-            OnPropertyChanged(nameof(CanCopy));
-            OnPropertyChanged(nameof(CanPaste));
+            // Refresh the tab control enabled state.
+            OnPropertyChanged(nameof(TabControlDataEnabled));
 
             // Update tab control states.
             OnPropertyChanged(nameof(TabItemSelected));
+
+            // Update toolbar and menu command states.
+            OnPropertyChanged(nameof(CanCopy));
+            OnPropertyChanged(nameof(CanPaste));
 
             // Update all other controls.
             RefreshBulkUpdateControls();
@@ -6007,6 +6201,18 @@ namespace HLU.UI.ViewModel
             RefreshDetailsTab();
             RefreshSources();
             RefreshHistory();
+        }
+        private void RefreshComboBoxSources()
+        {
+            OnPropertyChanged(nameof(BoundaryMapCodes));
+            OnPropertyChanged(nameof(ConditionCodes));
+            OnPropertyChanged(nameof(ConditionQualifierCodes));
+            OnPropertyChanged(nameof(HabitatClassCodes));
+            OnPropertyChanged(nameof(SourceHabitatClassCodes));
+            OnPropertyChanged(nameof(HabitatTypeCodes));
+            OnPropertyChanged(nameof(BapHabitatCodes));
+            OnPropertyChanged(nameof(SourceImportanceCodes));
+            OnPropertyChanged(nameof(LegacyHabitatCodes));
         }
 
         /// <summary>
@@ -6206,6 +6412,7 @@ namespace HLU.UI.ViewModel
         /// updates multiplexed values as needed.</remarks>
         private void RefreshIHSTab()
         {
+            OnPropertyChanged(nameof(ShowIHSTab));
             OnPropertyChanged(nameof(TabItemIHSEnabled));
             OnPropertyChanged(nameof(TabIhsControlsEnabled));
             OnPropertyChanged(nameof(IHSTabLabel));

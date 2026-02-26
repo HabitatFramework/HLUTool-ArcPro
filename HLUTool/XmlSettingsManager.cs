@@ -26,6 +26,9 @@ public class XmlSettingsManager
         // Get the directory where the add-in file is loaded from.
         string addInDirectory = Path.GetDirectoryName(addinPath);
 
+        //TODO: Set to fixed path for testing purposes, remove later
+        addInDirectory = @"D:\HLUTool\Config";
+
         // Get the full path to the settings file.
         _settingsFile = Path.Combine(addInDirectory, "HLUTool.xml");
     }

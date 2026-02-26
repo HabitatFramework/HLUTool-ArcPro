@@ -338,39 +338,47 @@ namespace HLU.UI.ViewModel
         /// Event when the active map view changes. Checks that there is an active map view and
         /// that it contains a valid HLU layer, then shows or hides the UI controls as appropriate.
         /// </summary>
-        /// <param name="obj"></param>
+        /// <param name="obj">An object that contains event data for the active map view change event.</param>
         private async void OnActiveMapViewChanged(ActiveMapViewChangedEventArgs obj)
         {
             // If there is no active map view.
             if (MapView.Active == null)
             {
-                // Reset the active map view.
-                _activeMapView = null;
-
                 // Make the UI controls hidden.
                 GridMainVisibility = Visibility.Hidden;
 
                 // Display a warning message.
                 ShowMessage("No active map.", MessageType.Warning);
-
                 return;
             }
 
-            // If there is an active map view and it has changed, check it is valid.
-            if (MapView.Active != _activeMapView)
+            // Determine if this is truly a new map by comparing the map itself, not just the MapView instance
+            bool isNewMap = _activeMapView == null ||
+                            MapView.Active.Map != _activeMapView.Map;
+
+            // If it's the same map, just update the reference and continue
+            if (!isNewMap && MapView.Active != _activeMapView)
             {
-                // Check that there is an active map and that it contains a valid HLU map.
-                if (!await CheckActiveMapAsync())
-                {
-                    //TODO: Is this needed?
-                    // Clear the active map view.
-                    //_activeMapView = null;
+                // Update the MapView reference but don't treat it as a new map
+                _activeMapView = MapView.Active;
 
-                    // Make the UI controls hidden.
-                    GridMainVisibility = Visibility.Hidden;
+                // Clear any messages and show UI
+                ClearMessage();
 
-                    return;
-                }
+                // Make the UI controls visible.
+                GridMainVisibility = Visibility.Visible;
+                return;
+            }
+
+            // If we get here, it's truly a new map, so check it
+            if (!await CheckActiveMapAsync(forceReset: isNewMap))
+            {
+                // Only clear _activeMapView if the check failed
+                _activeMapView = null;
+
+                // Make the UI controls hidden.
+                GridMainVisibility = Visibility.Hidden;
+                return;
             }
 
             // Clear any messages.
@@ -384,12 +392,13 @@ namespace HLU.UI.ViewModel
         /// Handles the event that occurs when new layers are added to the map.
         /// </summary>
         /// <remarks>This method verifies that there is an active map with a valid HLU map before
-        /// proceeding with further operations.</remarks>
+        /// proceeding with further operations. Does not force reset to preserve active layer.</remarks>
         /// <param name="args">An object that contains event data for the layers added event.</param>
         private async void OnLayersAdded(LayerEventsArgs args)
         {
             // Check that there is an active map and that it contains a valid HLU map.
-            if (!await CheckActiveMapAsync())
+            // Don't force reset - preserve the current active layer
+            if (!await CheckActiveMapAsync(forceReset: false))
             {
                 _activeMapView = null;
                 return;
@@ -401,25 +410,32 @@ namespace HLU.UI.ViewModel
         /// layer is removed, it forces the creation of a new GIS functions object. It also
         /// checks for an active map with a valid HLU map and refreshes the layer name if necessary.
         /// </summary>
-        /// <param name="args"></param>
+        /// <param name="args">An object that contains event data for the layers removed event.</param>
         private async void OnLayersRemoved(LayerEventsArgs args)
         {
+            bool activeLayerRemoved = false;
+
             foreach (var layer in args.Layers)
             {
-                // If the active layer has been removed force
-                // a new GIS functions object to be created.
+                // If the active layer has been removed, flag it
                 if (layer.Name == ActiveLayerName)
-                    _gisApp = null;
+                {
+                    activeLayerRemoved = true;
+                    // Clear the active layer name since it no longer exists
+                    ActiveLayerName = null;
+                    break;
+                }
             }
 
             // Check that there is an active map and that it contains a valid HLU map.
-            if (!await CheckActiveMapAsync())
+            // Force reset only if the active layer was removed
+            if (!await CheckActiveMapAsync(forceReset: activeLayerRemoved))
             {
                 _activeMapView = null;
                 return;
             }
 
-            // Refresh the layer name (in case it has changed).
+            // Refresh the layer name property changed notification
             OnPropertyChanged(nameof(ActiveLayerName));
         }
 

@@ -65,8 +65,9 @@
                         IsReadOnly="False"
                         ItemsSource="{Binding Path=DsnList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                         SelectedValue="{Binding Dsn}"
-                        Tag="ErrorContent"
-                        Text="{Binding Path=Dsn, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" />
+                        Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                        Text="{Binding Path=Dsn, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                        ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}" />
                     <Button
                         Name="ButtonManageDsn"
                         Grid.Row="0"
@@ -121,8 +122,9 @@
                     IsReadOnly="False"
                     ItemsSource="{Binding Path=Schemata, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                     SelectedItem="{Binding DefaultSchema}"
-                    Tag="ErrorContent"
-                    Text="{Binding Path=DefaultSchema, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}" />
+                    Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                    Text="{Binding Path=DefaultSchema, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}" />
             </GroupBox>
 
             <Button

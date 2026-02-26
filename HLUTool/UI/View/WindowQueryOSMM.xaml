@@ -267,7 +267,8 @@
                                     ItemsSource="{Binding IncidOSMMUpdatesProcessFlags, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                     SelectedValue="{Binding IncidOSMMUpdatesProcessFlag, ValidatesOnDataErrors=True}"
                                     SelectedValuePath="code"
-                                    Tag="ErrorContent"
+                                    Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                     ToolTipService.ShowOnDisabled="True" />
                                 <Label
                                     x:Name="LabelOSMMUpdatesChange"
@@ -288,7 +289,8 @@
                                     ItemsSource="{Binding IncidOSMMUpdatesChangeFlags, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                     SelectedValue="{Binding IncidOSMMUpdatesChangeFlag, ValidatesOnDataErrors=True}"
                                     SelectedValuePath="code"
-                                    Tag="ErrorContent"
+                                    Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                     ToolTipService.ShowOnDisabled="True" />
                                 <Label
                                     x:Name="LabelOSMMUpdatesSpatial"
@@ -309,7 +311,8 @@
                                     ItemsSource="{Binding IncidOSMMUpdatesSpatialFlags, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                     SelectedValue="{Binding IncidOSMMUpdatesSpatialFlag, ValidatesOnDataErrors=True}"
                                     SelectedValuePath="code"
-                                    Tag="ErrorContent"
+                                    Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                     ToolTipService.ShowOnDisabled="True" />
                                 <Label
                                     x:Name="LabelOSMMUpdatesStatus"
@@ -328,7 +331,8 @@
                                     IsReadOnly="False"
                                     ItemsSource="{Binding IncidOSMMUpdatesStatuses, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                     SelectedValue="{Binding IncidOSMMUpdatesStatus, ValidatesOnDataErrors=True}"
-                                    Tag="ErrorContent"
+                                    Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                     ToolTipService.ShowOnDisabled="True" />
                             </Grid>
 

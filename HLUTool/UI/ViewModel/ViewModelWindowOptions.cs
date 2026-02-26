@@ -73,6 +73,9 @@ namespace HLU.UI.ViewModel
         private HluDataSet.incid_mm_polygonsDataTable _incidMMPolygonsTable = new();
         private List<int> _gisIDColumnOrdinals;
 
+        private readonly HluDataSet.lut_habitat_classRow[] _habitatClasses;
+        private readonly HluDataSet.lut_secondary_groupRow[] _secondaryGroupsAll;
+
         // Application Database options
         private int? _dbConnectionTimeout;
         private int? _incidTablePageSize;
@@ -157,7 +160,9 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Initializes a new instance of the ViewModelWindowOptions class and loads the settings from the main window ViewModel.
         /// </summary>
-        public ViewModelWindowOptions()
+        public ViewModelWindowOptions(
+        HluDataSet.lut_habitat_classRow[] habitatClasses,
+        HluDataSet.lut_secondary_groupRow[] secondaryGroupsAll)
         {
            // Get the dockpane DAML id.
            DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
@@ -173,6 +178,10 @@ namespace HLU.UI.ViewModel
             // Get the GIS ID Column Ordinals.
             _gisIDColumnOrdinals = Settings.Default.GisIDColumnOrdinals.Cast<string>()
                 .Select(s => Int32.Parse(s)).ToList();
+
+            // Set the readonly collections from the constructor parameters.
+            _habitatClasses = habitatClasses;
+            _secondaryGroupsAll = secondaryGroupsAll;
 
             // Set the application database options
             _dbConnectionTimeout = _addInSettings.DbConnectionTimeout;
@@ -263,6 +272,7 @@ namespace HLU.UI.ViewModel
                 new () { Name = "Interface", Category = "User", Content = new UserInterfaceOptions() },
                 new () { Name = "GIS", Category = "User", Content = new UserGISOptions() },
                 new () { Name = "Updates", Category = "User", Content = new UserUpdatesOptions() },
+                new () { Name = "SQL", Category = "User", Content = new UserSQLOptions() },
                 new () { Name = "History", Category = "User", Content = new UserHistoryOptions() },
                 new () { Name = "Export", Category = "User", Content = new UserExportOptions() }
             ];
@@ -1024,8 +1034,7 @@ namespace HLU.UI.ViewModel
         /// </value>
         public HluDataSet.lut_habitat_classRow[] HabitatClassCodes
         {
-            get { return ViewModelWindowMain.HabitatClasses; }
-            set { }
+            get { return _habitatClasses; }
         }
 
         /// <summary>
@@ -1038,7 +1047,6 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                //TODO: Bug here?
                 var q = HabitatClassCodes.Where(h => h.code == _preferredHabitatClass);
                 if (q.Any())
                     return _preferredHabitatClass;
@@ -1167,7 +1175,7 @@ namespace HLU.UI.ViewModel
         /// </value>
         public HluDataSet.lut_secondary_groupRow[] SecondaryGroupCodes
         {
-            get { return ViewModelWindowMain.SecondaryGroupsAll; }
+            get { return _viewModelMain.SecondaryGroupCodesWithAll; }
             set { }
         }
 

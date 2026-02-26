@@ -57,7 +57,7 @@ namespace HLU.UI.ViewModel
     /// Core infrastructure partial for ViewModelWindowMain.
     /// Contains: Fields, Properties, Constructor, Lifecycle management, Shared state.
     /// </summary>
-    partial class ViewModelWindowMain : PanelViewModelBase
+    partial class ViewModelWindowMain : PanelViewModelBase, IDataErrorInfo
     {
         #region Fields
 
@@ -254,6 +254,9 @@ namespace HLU.UI.ViewModel
         private string _codeAnyRow;
         private bool _suppressUserNotifications;
         private string _codeDeleteRow;
+        private HluDataSet.lut_secondary_groupRow _allRow;
+        private HluDataSet.lut_secondary_groupRow _allEssRow;
+
         private string _processingMsg = "Processing ...";
         private bool _saved = false;
         private bool _savingAttempted;
@@ -1448,10 +1451,6 @@ namespace HLU.UI.ViewModel
         {
             // Ensure the DockPane is initialised.
             await EnsureInitializedAsync();
-
-            //TODO: Needed? Done during initialisation above.
-            // Check that there is an active map and that it contains a valid HLU map.
-            //await CheckActiveMapAsync();
         }
 
         /// <summary>
@@ -1499,17 +1498,17 @@ namespace HLU.UI.ViewModel
                 // Upgrade the user settings if necessary.
                 UpgradeUserSettings();
 
-                // Create the working geodatabase for exports and queries.
-                await CreateWorkingGeodatabaseAsync();
-
                 // Initialise the main view (start the tool).
                 await InitializeToolPaneAsync();
+
+                // Create the working geodatabase for exports and queries.
+                await CreateWorkingGeodatabaseAsync();
 
                 // Flag the initialisation as complete.
                 Initialised = true;
 
-                // Refresh the tab control enabled state.
-                OnPropertyChanged(nameof(TabControlDataEnabled));
+                // Refresh all controls
+                RefreshAll();
 
                 // Clear any messages.
                 ClearMessage();
@@ -1623,9 +1622,9 @@ namespace HLU.UI.ViewModel
             HistoryGeometry1ColumnName = Settings.Default.HistoryGeometry1ColumnName;
             HistoryGeometry2ColumnName = Settings.Default.HistoryGeometry2ColumnName;
 
+            // Open the database connection and test whether it points to a valid HLU database.
             try
             {
-                // Open database connection and test whether it points to a valid HLU database
                 while (true)
                 {
                     if ((_db = DbFactory.CreateConnection(DbConnectionTimeout)) == null)
@@ -1678,6 +1677,12 @@ namespace HLU.UI.ViewModel
                 // Fill lookup tables (at least lut_site_id must be filled at this point)
                 _hluTableAdapterMgr.Fill(_hluDS, TableAdapterManager.Scope.Lookup, false);
 
+                // Load all of the lookup tables
+                LoadLookupTables();
+
+                // Refresh combo box sources that depend on lookup tables
+                RefreshComboBoxSources();
+
                 // Create RecordIds object for the db
                 _recIDs = new RecordIds(_db, _hluDS, _hluTableAdapterMgr, GisLayerType);
 
@@ -1685,6 +1690,24 @@ namespace HLU.UI.ViewModel
                 // minimum required dataset application version.
                 if (!CheckVersion())
                     return false;
+
+                // Set the <ALL> group row
+                if (_allRow == null)
+                {
+                    _allRow = HluDataset.lut_secondary_group.Newlut_secondary_groupRow();
+                    _allRow.code = "<All>";
+                    _allRow.description = "<All>";
+                    _allRow.sort_order = -1;
+                }
+
+                // Set the <ALL Essentials> group row
+                if (_allEssRow == null)
+                {
+                    _allEssRow = HluDataset.lut_secondary_group.Newlut_secondary_groupRow();
+                    _allEssRow.code = "<All Essentials>";
+                    _allEssRow.description = "<All Essentials>";
+                    _allEssRow.sort_order = -1;
+                }
 
                 // Wire up event handler for copy switches
                 _copySwitches.PropertyChanged += new PropertyChangedEventHandler(copySwitches_PropertyChanged);
@@ -1700,15 +1723,8 @@ namespace HLU.UI.ViewModel
                 // Columns to be displayed in history (always includes _gisIDColumns)
                 _historyColumns = InitializeHistoryColumns(_historyColumns);
 
-                //TODO: Needed?
-                // Create scratch database
-                ScratchDb.CreateScratchMdb(_hluDS.incid, _hluDS.incid_mm_polygons, DbConnectionTimeout);
-
                 // Count rows of incid table
                 IncidRowCount(true);
-
-                // Load all of the lookup tables
-                LoadLookupTables();
 
                 // Check for any pending OSMM updates.
                 await CheckAnyOSMMUpdatesAsync();
@@ -1816,8 +1832,9 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Check that there is an active map and that it contains a valid HLU map.
         /// </summary>
+        /// <param name="forceReset">Forces creation of a new GIS functions instance, discarding cached layer.</param>
         /// <returns>Returns a task that resolves to true if there is a valid active map; false otherwise.</returns>
-        internal async Task<bool> CheckActiveMapAsync()
+        internal async Task<bool> CheckActiveMapAsync(bool forceReset = false)
         {
             // Check the GIS map
             ChangeCursor(Cursors.Wait, "Checking GIS map ...");
@@ -1825,23 +1842,33 @@ namespace HLU.UI.ViewModel
             // Store the current active layer name before validation
             string currentActiveLayerName = ActiveLayerName;
 
-            // Create a new GIS functions instance (so that it will use the new active layer to set any cached variables).
-            _gisApp = new();
+            // Determine if we need to create a new GIS functions instance
+            bool needsNewGisApp = _gisApp == null || forceReset;
 
-            bool mapChanged = false;
+            // Check if the map has actually changed (not just focus change)
+            bool mapChanged = MapView.Active == null ||
+                              _activeMapView == null ||
+                              MapView.Active != _activeMapView ||
+                              (_gisApp != null && MapView.Active?.Map.Name != _gisApp.MapName);
 
-            // If the active map view is null or the map name has changed
-            if (MapView.Active is null || MapView.Active.Map.Name != _gisApp.MapName)
+            // Only create new GIS app if forced, doesn't exist, or map changed
+            if (needsNewGisApp || mapChanged)
             {
-                // Flag that the map has changed.
-                mapChanged = true;
+                // Create a new GIS functions instance
+                _gisApp = new();
 
-                // Get the active map view.
-                _activeMapView = _gisApp.GetActiveMapView();
+                // If map changed, update the cached view
+                if (mapChanged)
+                {
+                    _activeMapView = _gisApp.GetActiveMapView();
 
-                // Clear the active layer name.
-                ActiveLayerName = null;
-                currentActiveLayerName = null;
+                    // Only clear layer name if this is truly a different map
+                    if (_activeMapView != null && _gisApp.MapName != null)
+                    {
+                        // Map changed - clear the active layer name so a new one is selected
+                        currentActiveLayerName = null;
+                    }
+                }
             }
 
             // Check if there is no active map.
@@ -1856,7 +1883,8 @@ namespace HLU.UI.ViewModel
                 // Display a warning message.
                 ShowMessage("No active map.", MessageType.Warning);
 
-                // Clear the active map view.
+                // Clear the active map view and layer name.
+                _activeMapView = null;
                 ActiveLayerName = null;
 
                 return false;
@@ -1894,7 +1922,7 @@ namespace HLU.UI.ViewModel
             // Set the list of valid HLU layer names.
             AvailableHLULayerNames = new ObservableCollection<string>(_gisApp.ValidHluLayerNames);
 
-            // Preserve the current active HLU layer name if it's still valid, otherwise use the default
+            // Preserve the current active HLU layer name if it's still valid
             if (!string.IsNullOrEmpty(currentActiveLayerName) &&
                 _gisApp.ValidHluLayerNames.Contains(currentActiveLayerName))
             {
@@ -1914,8 +1942,8 @@ namespace HLU.UI.ViewModel
             // Recomputes whether editing is currently possible.
             RefreshEditCapability();
 
-            // If the active HLU layer is valid, refresh the map selection.
-            if (isActiveHluLayer)
+            // If the active HLU layer is valid, refresh the map selection only if map changed.
+            if (isActiveHluLayer && mapChanged)
             {
                 // Refresh selection stats.
                 await GetMapSelectionAsync(true);
@@ -1927,11 +1955,10 @@ namespace HLU.UI.ViewModel
                 // If the map has changed, reinitialize the ComboBox.
                 if (mapChanged)
                 {
-                    // Only keep Initialize() if you need to rebuild items on map change.
                     _activeLayerComboBox.Initialize();
                 }
 
-                // This should *only* select, not to activate/switch the layer.
+                // This should *only* select, not activate/switch the layer.
                 _activeLayerComboBox.SetSelectedItem(ActiveLayerName, true);
             }
 
@@ -2057,8 +2084,7 @@ namespace HLU.UI.ViewModel
         #region Load Lookup Tables
 
         /// <summary>
-        /// Loads all of the lookup tables (with the exception of a few
-        /// loaded elsewhere).
+        /// Loads all of the lookup tables (with the exception of a few loaded elsewhere).
         /// </summary>
         public void LoadLookupTables()
         {
@@ -2710,6 +2736,10 @@ namespace HLU.UI.ViewModel
                 // Clear any messages.
                 ClearMessage();
 
+                //TODO: Needed here or at end of initialisation?
+                // Refresh all controls
+                //RefreshAll();
+
                 // Make the UI controls visible.
                 GridMainVisibility = Visibility.Visible;
             }
@@ -2846,7 +2876,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(ShowIHSTab));
             OnPropertyChanged(nameof(ShowIncidOSMMPendingGroup));
 
-            OnPropertyChanged(nameof(SecondaryGroupCodes));
+            OnPropertyChanged(nameof(SecondaryGroupCodesValid));
             SecondaryGroup = _preferredSecondaryGroup;
             OnPropertyChanged(nameof(SecondaryGroup));
 
@@ -2955,6 +2985,7 @@ namespace HLU.UI.ViewModel
             if (_moving)
                 return;
 
+            //TODO: Somehow/Sometime this is being set but not reset
             // Flag that we are moving
             _moving = true;
 

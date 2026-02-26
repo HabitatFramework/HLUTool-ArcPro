@@ -68,7 +68,8 @@
                             BorderThickness="1"
                             ItemsSource="{Binding HabitatSecondaryCodeValidationOptions}"
                             SelectedValue="{Binding HabitatSecondaryCodeValidation, ValidatesOnDataErrors=True}"
-                            Tag="ErrorContent" />
+                            Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                            ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}" />
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
@@ -96,7 +97,8 @@
                             BorderThickness="1"
                             ItemsSource="{Binding PrimarySecondaryCodeValidationOptions}"
                             SelectedValue="{Binding PrimarySecondaryCodeValidation, ValidatesOnDataErrors=True}"
-                            Tag="ErrorContent" />
+                            Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                            ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}" />
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
@@ -124,7 +126,8 @@
                             BorderThickness="1"
                             ItemsSource="{Binding QualityValidationOptions}"
                             SelectedValue="{Binding QualityValidation, ValidatesOnDataErrors=True}"
-                            Tag="ErrorContent" />
+                            Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                            ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}" />
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
@@ -151,7 +154,8 @@
                             BorderThickness="1"
                             ItemsSource="{Binding PotentialPriorityDetermQtyValidationOptions}"
                             SelectedValue="{Binding PotentialPriorityDetermQtyValidation, ValidatesOnDataErrors=True}"
-                            Tag="ErrorContent" />
+                            Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                            ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}" />
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"

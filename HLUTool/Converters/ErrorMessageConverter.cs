@@ -31,35 +31,42 @@ namespace HLU.Converters
     /// <seealso cref="System.Windows.Data.IValueConverter" />
     class ErrorMessageConverter : IValueConverter
     {
-         #region IValueConverter Members
+        #region IValueConverter Members
 
-         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-         {
-             // Input as String
-             var val = (string)value;
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            // Handle null or non-string input
+            if (value == null)
+                return string.Empty;
 
-             // Attempt to split input message by colon
-             string[] parts = ((string)val).Split(':');
+            // Ensure value is a string
+            if (value is not string val)
+                return string.Empty;
 
-             // Invalid input message format, return full string
-             if (parts == null || parts.Length == 0)
-                 return null;
+            // Handle empty strings
+            if (string.IsNullOrWhiteSpace(val))
+                return string.Empty;
 
-             // Return input message before first colon
-             if (parts.Length == 1)
-                 return val;
-             else
-             {
-                 //int colonPos = int.Parse(parts[0]);
-                 //return val.Substring(0, colonPos - 1).Trim();
-                 return parts[0].Trim();
-             }
-         }
+            // Attempt to split input message by colon
+            string[] parts = val.Split(':');
 
-         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-         {
-             return null;
-         }
+            // Invalid input message format
+            if (parts == null || parts.Length == 0)
+                return string.Empty;
+
+            // Return input message before first colon (trimmed)
+            if (parts.Length == 1)
+                return val.Trim();
+            else
+            {
+                return parts[0].Trim();
+            }
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return null;
+        }
 
         #endregion IValueConverter Members
     }

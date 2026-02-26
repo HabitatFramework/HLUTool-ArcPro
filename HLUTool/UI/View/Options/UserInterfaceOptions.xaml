@@ -221,7 +221,9 @@
                             Grid.Column="1"
                             MinWidth="135"
                             ItemsSource="{Binding ShowOSMMUpdatesOptions}"
-                            SelectedValue="{Binding ShowOSMMUpdatesOption, ValidatesOnDataErrors=True}" />
+                            SelectedValue="{Binding ShowOSMMUpdatesOption, ValidatesOnDataErrors=True}"
+                            Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                            ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}" />
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
@@ -270,7 +272,9 @@
                             DisplayMemberPath="description"
                             ItemsSource="{Binding HabitatClassCodes}"
                             SelectedValue="{Binding PreferredHabitatClass, ValidatesOnDataErrors=True}"
-                            SelectedValuePath="code" />
+                            SelectedValuePath="code"
+                            Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                            ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}" />
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
@@ -299,7 +303,9 @@
                             DisplayMemberPath="description"
                             ItemsSource="{Binding SecondaryGroupCodes}"
                             SelectedValue="{Binding PreferredSecondaryGroup, ValidatesOnDataErrors=True}"
-                            SelectedValuePath="code" />
+                            SelectedValuePath="code"
+                            Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                            ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}" />
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
@@ -329,7 +335,9 @@
                             Grid.Row="0"
                             Grid.Column="1"
                             ItemsSource="{Binding SecondaryCodeOrderOptions}"
-                            SelectedValue="{Binding SecondaryCodeOrder, ValidatesOnDataErrors=True}" />
+                            SelectedValue="{Binding SecondaryCodeOrder, ValidatesOnDataErrors=True}"
+                            Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                            ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}" />
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"

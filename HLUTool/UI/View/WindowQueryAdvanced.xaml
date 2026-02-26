@@ -262,10 +262,11 @@
                                 Margin="4,0,4,4"
                                 BorderThickness="1"
                                 IsEnabled="True"
-                                Tag="ErrorContent"
+                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
                                 Text="{Binding Path=SqlFromTables, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
                                 TextAlignment="Left"
                                 TextWrapping="Wrap"
+                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                 VerticalScrollBarVisibility="Auto" />
 
                             <Label
@@ -286,10 +287,11 @@
                                 VerticalAlignment="Stretch"
                                 BorderThickness="1"
                                 IsEnabled="True"
-                                Tag="ErrorContent"
+                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
                                 Text="{Binding Path=SqlWhereClause, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
                                 TextAlignment="Left"
                                 TextWrapping="Wrap"
+                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                 VerticalScrollBarVisibility="Auto" />
 
                         </Grid>

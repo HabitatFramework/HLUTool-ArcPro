@@ -1148,6 +1148,26 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
+        /// Counts all of the features on the active HLU layer.
+        /// </summary>
+        /// <returns>A task that returns the number of features.</returns>
+        public async Task<long> CountMapFeaturesAsync()
+        {
+            // Check the parameters.
+            if (_hluLayer == null)
+                throw new GisSelectionException("No active HLU layer is set.");
+
+            return await QueuedTask.Run(() =>
+            {
+                // Get the underlying table/feature class from the layer.
+                using Table table = _hluLayer.GetTable();
+
+                // Return the total feature count.
+                return table.GetCount();
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Checks whether the selected rows are unique by (incid,toid,toidfragid) in the active HLU layer.
         /// </summary>
         /// <remarks>

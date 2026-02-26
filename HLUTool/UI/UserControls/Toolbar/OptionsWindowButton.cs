@@ -1,15 +1,17 @@
-﻿using HLU.UI.View;
+﻿using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Framework.Contracts;
+using HLU.Data.Model;
+using HLU.UI;
+using HLU.UI.View;
 using HLU.UI.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Contracts;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using HLU.UI;
 using Xceed.Wpf.Toolkit.Primitives;
+using static HLU.Data.Model.HluDataSet;
 
 namespace HLU.UI.UserControls.Toolbar
 {
@@ -22,6 +24,9 @@ namespace HLU.UI.UserControls.Toolbar
 
         private WindowOptions _windowOptions;
         private ViewModelWindowOptions _viewModelOptions;
+
+        private HluDataSet.lut_habitat_classRow[] _habitatClasses;
+        private HluDataSet.lut_secondary_groupRow[] _secondaryGroupsAll;
 
         private ViewModelWindowMain _viewModel;
 
@@ -41,6 +46,10 @@ namespace HLU.UI.UserControls.Toolbar
 
             // Get the ViewModel by casting the dockpane.
             _viewModel = pane as ViewModelWindowMain;
+
+            // Get the habitat classes and secondary groups for the options window.
+            _habitatClasses = _viewModel.HabitatClasses;
+            _secondaryGroupsAll = _viewModel.SecondaryGroupCodesWithAll;
         }
 
         #endregion Constructor
@@ -64,8 +73,11 @@ namespace HLU.UI.UserControls.Toolbar
                         Topmost = true
                     };
 
-                    // create ViewModel to which window binds
-                    _viewModelOptions = new()
+                    // Create ViewModel to which window binds and pass in necessary data
+                    _viewModelOptions = new(
+                        habitatClasses: _habitatClasses,
+                        secondaryGroupsAll: _secondaryGroupsAll
+                    )
                     {
                         DisplayName = "Options"
                     };

@@ -62,8 +62,8 @@ namespace HLU.UI.View
             //this.DataContext = _viewModel;
 
             //// Assign items source to the combo box columns in the secondary habitat data grid
-            //DataGridComboBoxSecondaryGroup.ItemsSource = _viewModel.SecondaryGroupCodesAll;
-            //DataGridComboBoxSecondaryCode.ItemsSource = _viewModel.SecondaryHabitatCodesAll;
+            //DataGridComboBoxSecondaryGroup.ItemsSource = _viewModel.SecondaryGroupCodesWithAll;
+            //DataGridComboBoxSecondaryCode.ItemsSource = _viewModel.SecondaryHabitatCodesWithAll;
 
             //// Assign items source to the combo box columns in the primary BAP data grid
             //DataGridComboBoxPrimaryBapHabitatCodes.ItemsSource = _viewModel.BapHabitatCodes;

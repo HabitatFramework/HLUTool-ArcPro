@@ -146,7 +146,6 @@ namespace HLU.UI.ViewModel
         /// </summary>
         ~PanelViewModelBase()
         {
-            //TODO: DEBUG
             string msg = string.Format("{0} ({1}) ({2}) Finalized", this.GetType().Name, this.DisplayName, this.GetHashCode());
             System.Diagnostics.Debug.WriteLine(msg);
         }

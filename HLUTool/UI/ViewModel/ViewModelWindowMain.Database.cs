@@ -1062,8 +1062,11 @@ namespace HLU.UI.ViewModel
             string[] split = propNamePat.Split([propNamePatWildcard], StringSplitOptions.None);
             string errMsg = String.Format("Error: {0}", split[split.Length - 1]);
 
-            errMsg = string.Join(" ", StringHelper.GetCapitalisedRegex().Matches(errMsg).Cast<Match>().Select(m => errMsg.Substring(m.Index, m.Length)
-                .Concat(string.Format(" must be applied in the order {0}, {1} then {2}", ord1val, ord2val, ord3val))));
+            string extractedWords = string.Join(" ",
+                StringHelper.GetCapitalisedRegex().Matches(errMsg).Cast<Match>()
+                .Select(m => errMsg.Substring(m.Index, m.Length)));
+
+            errMsg = extractedWords + string.Format(" must be applied in the order {0}, {1} then {2}", ord1val, ord2val, ord3val);
 
             if (!String.IsNullOrEmpty(ord1val))
             {
@@ -1121,8 +1124,11 @@ namespace HLU.UI.ViewModel
             string[] split = propNamePat.Split([propNamePatWildcard], StringSplitOptions.None);
             string errMsg = String.Format("Error: {0}", split[split.Length - 1]);
 
-            errMsg = string.Join(" ", StringHelper.GetCapitalisedRegex().Matches(errMsg).Cast<Match>().Select(m => errMsg.Substring(m.Index, m.Length)
-                .Concat(" of two sources cannot be equal for the same INCID")));
+            string extractedWords = string.Join(" ",
+                StringHelper.GetCapitalisedRegex().Matches(errMsg).Cast<Match>()
+                    .Select(m => errMsg.Substring(m.Index, m.Length)));
+
+            errMsg = extractedWords + " of two sources cannot be equal for the same INCID";
 
             foreach (PropertyInfo pi in this.GetType().GetProperties().Where(pn => pn.Name != propNameCheck && Regex.IsMatch(pn.Name, propNamePat)))
             {
@@ -1276,7 +1282,7 @@ namespace HLU.UI.ViewModel
             // Refresh the related fields
             OnPropertyChanged(nameof(NvcCodes));
 
-            OnPropertyChanged(nameof(SecondaryGroupCodes));
+            OnPropertyChanged(nameof(SecondaryGroupCodesValid));
             OnPropertyChanged(nameof(SecondaryGroupEnabled));
             SecondaryGroup = _preferredSecondaryGroup;
             OnPropertyChanged(nameof(SecondaryGroup));

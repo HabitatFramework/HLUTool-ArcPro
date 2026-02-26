@@ -90,7 +90,8 @@
                         ItemsSource="{Binding Path=ExportFormats, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                         SelectedValue="{Binding Path=ExportID, ValidatesOnDataErrors=True}"
                         SelectedValuePath="export_id"
-                        Tag="ErrorContent" />
+                        Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                        ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}" />
                     <Label
                         Name="LabelSelectedOnly"
                         Grid.Row="2"
@@ -118,12 +119,12 @@
                             IsChecked="{Binding SelectedOnly}"
                             IsEnabled="{Binding HaveSelection}" />
                         <Label
-                            Name="LabelSelectedNumber"
+                            Name="LabelSelectionText"
                             Grid.Column="1"
                             Margin="0,0,8,8"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center"
-                            Content="{Binding SelectedNumber}"
+                            Content="{Binding SelectionText}"
                             IsEnabled="{Binding HaveSelection}" />
                     </Grid>
                 </Grid>

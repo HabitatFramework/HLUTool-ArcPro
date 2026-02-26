@@ -152,11 +152,13 @@ namespace HLU.UI.ViewModel
             // Display the export interface to prompt the user
             // to select which export format they want to use.
             int fragCount = await _viewModelMain.GISApplication.CountMapSelectionAsync();
+            long totalCount = await _viewModelMain.GISApplication.CountMapFeaturesAsync();
+
             //_viewModelExport = new ViewModelExport(_viewModelMain.GisSelection == null ? 0 :
             //_viewModelMain.GisSelection.Rows.Count, _viewModelMain.GISApplication.HluLayerName,
             //_viewModelMain.GISApplication.ApplicationType, _viewModelMain.HluDataset.exports);
             _viewModelExport = new(_viewModelMain.GisSelection == null ? 0 :
-                fragCount, _viewModelMain.GISApplication.HluLayerName,
+                fragCount, totalCount, _viewModelMain.GISApplication.HluLayerName,
                 _viewModelMain.HluDataset.exports)
             {
                 DisplayName = "Export"

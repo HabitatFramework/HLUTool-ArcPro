@@ -164,9 +164,10 @@
                                 VerticalAlignment="Center"
                                 IsEnabled="False"
                                 IsReadOnly="True"
-                                Tag="ErrorContent"
+                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
                                 Text="{Binding NumIncidSelectedMap, Mode=OneWay, ValidatesOnDataErrors=True}"
                                 TextAlignment="Left"
+                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                 ToolTipService.ShowOnDisabled="True" />
 
                             <Label
@@ -185,9 +186,10 @@
                                 VerticalAlignment="Center"
                                 IsEnabled="False"
                                 IsReadOnly="True"
-                                Tag="ErrorContent"
+                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
                                 Text="{Binding NumToidSelectedMap, Mode=OneWay, ValidatesOnDataErrors=True}"
                                 TextAlignment="Left"
+                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                 ToolTipService.ShowOnDisabled="True" />
                             <Label
                                 x:Name="LabelBulkUpdateStatusFragMap"
@@ -205,9 +207,10 @@
                                 VerticalAlignment="Center"
                                 IsEnabled="False"
                                 IsReadOnly="True"
-                                Tag="ErrorContent"
+                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
                                 Text="{Binding NumFragmentsSelectedMap, Mode=OneWay, ValidatesOnDataErrors=True}"
                                 TextAlignment="Left"
+                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                 ToolTipService.ShowOnDisabled="True" />
                         </Grid>
                     </Grid>
@@ -423,6 +426,7 @@
                                     FontSize="12"
                                     FontWeight="Medium"
                                     Tag="{Binding (Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}, Mode=OneWay, RelativeSource={RelativeSource Self}}"
+                                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                     ToolTipService.ShowOnDisabled="True" />
                             </StackPanel>
                         </TabItem.Header>
@@ -509,7 +513,8 @@
                                                 ItemsSource="{Binding HabitatTypeCodes, ConverterParameter=code^name^description^sort_order, Converter={StaticResource codeNameDescriptionConverter}}"
                                                 SelectedValue="{Binding HabitatType, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                         </Grid>
                                     </GroupBox>
@@ -554,9 +559,10 @@
                                                 ItemsSource="{Binding PrimaryCodes}"
                                                 SelectedValue="{Binding IncidPrimary, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
                                                 Text="{Binding SelectedPrimaryDisplay, Mode=OneWay}"
-                                                TextSearch.TextPath="display">
+                                                TextSearch.TextPath="display"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}">
                                                 <ComboBox.ItemTemplate>
                                                     <DataTemplate>
                                                         <TextBlock Text="{Binding display}">
@@ -657,8 +663,9 @@
                                                 VerticalAlignment="Center"
                                                 IsEnabled="False"
                                                 IsReadOnly="True"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
                                                 Text="{Binding HabitatSecondariesMandatory, Mode=OneWay, ValidatesOnDataErrors=True}"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True"
                                                 Visibility="Visible" />
 
@@ -711,7 +718,7 @@
                                                     IsEditable="True"
                                                     IsEnabled="{Binding SecondaryGroupEnabled}"
                                                     IsReadOnly="False"
-                                                    ItemsSource="{Binding SecondaryGroupCodes}"
+                                                    ItemsSource="{Binding SecondaryGroupCodesValid}"
                                                     SelectedValue="{Binding SecondaryGroup}"
                                                     SelectedValuePath="code"
                                                     ToolTipService.ShowOnDisabled="True" />
@@ -737,8 +744,8 @@
                                                     ItemsSource="{Binding SecondaryHabitatCodes, ConverterParameter=code^description^sort_order, Converter={StaticResource codeDescriptionConverter}}"
                                                     SelectedValue="{Binding SecondaryHabitatCode, ValidatesOnDataErrors=True}"
                                                     SelectedValuePath="code"
-                                                    Tag="ErrorContent"
-                                                    ToolTip="{Binding Path=SelectedItem.description, RelativeSource={RelativeSource Self}}"
+                                                    Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                     ToolTipService.ShowOnDisabled="True" />
                                             </Grid>
 
@@ -819,13 +826,13 @@
                                                         <DataGridComboBoxColumn.EditingElementStyle>
                                                             <Style TargetType="ComboBox">
                                                                 <Setter Property="VerticalContentAlignment" Value="Center" />
-                                                                <Setter Property="ItemsSource" Value="{Binding DataContext.SecondaryGroupCodesAll, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                                                <Setter Property="ItemsSource" Value="{Binding DataContext.SecondaryGroupCodesWithAll, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                             </Style>
                                                         </DataGridComboBoxColumn.EditingElementStyle>
                                                         <DataGridComboBoxColumn.ElementStyle>
                                                             <Style TargetType="ComboBox">
                                                                 <Setter Property="VerticalContentAlignment" Value="Center" />
-                                                                <Setter Property="ItemsSource" Value="{Binding DataContext.SecondaryGroupCodesAll, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                                                <Setter Property="ItemsSource" Value="{Binding DataContext.SecondaryGroupCodesWithAll, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                             </Style>
                                                         </DataGridComboBoxColumn.ElementStyle>
                                                     </DataGridComboBoxColumn>
@@ -843,13 +850,13 @@
                                                         <DataGridComboBoxColumn.EditingElementStyle>
                                                             <Style TargetType="ComboBox">
                                                                 <Setter Property="VerticalContentAlignment" Value="Center" />
-                                                                <Setter Property="ItemsSource" Value="{Binding DataContext.SecondaryHabitatCodesAll, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                                                <Setter Property="ItemsSource" Value="{Binding DataContext.SecondaryHabitatCodesAll, ConverterParameter=code^description^sort_order, Converter={StaticResource codeDescriptionConverter}, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                             </Style>
                                                         </DataGridComboBoxColumn.EditingElementStyle>
                                                         <DataGridComboBoxColumn.ElementStyle>
                                                             <Style TargetType="ComboBox">
                                                                 <Setter Property="VerticalContentAlignment" Value="Center" />
-                                                                <Setter Property="ItemsSource" Value="{Binding DataContext.SecondaryHabitatCodesAll, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                                                <Setter Property="ItemsSource" Value="{Binding DataContext.SecondaryHabitatCodesAll, ConverterParameter=code^description^sort_order, Converter={StaticResource codeDescriptionConverter}, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                             </Style>
                                                         </DataGridComboBoxColumn.ElementStyle>
                                                     </DataGridComboBoxColumn>
@@ -971,7 +978,8 @@
                                                 ItemsSource="{Binding LegacyHabitatCodes}"
                                                 SelectedValue="{Binding IncidLegacyHabitat, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
                                                 x:Name="CheckBoxCopyLegacyHabitat"
@@ -1005,6 +1013,7 @@
                                     FontSize="12"
                                     FontWeight="Medium"
                                     Tag="{Binding (Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}, Mode=OneWay, RelativeSource={RelativeSource Self}}"
+                                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                     ToolTipService.ShowOnDisabled="True" />
                             </StackPanel>
                         </TabItem.Header>
@@ -1380,6 +1389,7 @@
                                     FontSize="12"
                                     FontWeight="Medium"
                                     Tag="{Binding (Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}, Mode=OneWay, RelativeSource={RelativeSource Self}}"
+                                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                     ToolTipService.ShowOnDisabled="True" />
                             </StackPanel>
                         </TabItem.Header>
@@ -1785,6 +1795,7 @@
                                     FontSize="12"
                                     FontWeight="Medium"
                                     Tag="{Binding (Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}, Mode=OneWay, RelativeSource={RelativeSource Self}}"
+                                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                     ToolTipService.ShowOnDisabled="True" />
                             </StackPanel>
                         </TabItem.Header>
@@ -1830,9 +1841,10 @@
                                                 MinHeight="52"
                                                 BorderThickness="1"
                                                 MaxLength="254"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
                                                 Text="{Binding IncidGeneralComments, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
                                                 TextWrapping="Wrap"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
                                                 x:Name="CheckBoxCopyGeneralComments"
@@ -1881,7 +1893,8 @@
                                                 ItemsSource="{Binding BoundaryMapCodes}"
                                                 SelectedValue="{Binding IncidBoundaryBaseMap, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
                                                 x:Name="CheckBoxCopyBoundaryBaseMap"
@@ -1909,7 +1922,8 @@
                                                 ItemsSource="{Binding BoundaryMapCodes}"
                                                 SelectedValue="{Binding IncidDigitisationBaseMap, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
 
                                             <CheckBox
@@ -1957,8 +1971,9 @@
                                                 VerticalAlignment="Center"
                                                 BorderThickness="1"
                                                 MaxLength="16"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
                                                 Text="{Binding IncidSiteRef, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
                                                 x:Name="CheckBoxCopyIncidSiteRef"
@@ -1983,9 +1998,10 @@
                                                 VerticalAlignment="Center"
                                                 BorderThickness="1"
                                                 MaxLength="100"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
                                                 Text="{Binding IncidSiteName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
                                                 TextWrapping="Wrap"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
                                                 x:Name="CheckBoxCopyIncidSiteName"
@@ -2036,7 +2052,8 @@
                                                 ItemsSource="{Binding ConditionCodes}"
                                                 SelectedValue="{Binding IncidCondition, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
                                                 x:Name="CheckBoxCopyCondition"
@@ -2066,7 +2083,8 @@
                                                 ItemsSource="{Binding ConditionQualifierCodes}"
                                                 SelectedValue="{Binding IncidConditionQualifier, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
 
                                             <CheckBox
@@ -2093,8 +2111,9 @@
                                                 VerticalAlignment="Center"
                                                 BorderThickness="1"
                                                 IsEnabled="{Binding IncidConditionEnabled, Mode=OneWay}"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
                                                 Text="{Binding IncidConditionDate, ConverterParameter=source_date_start^source_date_end^source_date_type, Converter={StaticResource vagueDateConverter}, Mode=TwoWay, UpdateSourceTrigger=LostFocus, ValidatesOnDataErrors=True}"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
                                                 x:Name="CheckBoxCopyConditionDate"
@@ -2145,7 +2164,8 @@
                                                 ItemsSource="{Binding QualityDeterminationCodes}"
                                                 SelectedValue="{Binding IncidQualityDetermination, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
                                                 x:Name="CheckBoxCopyQualityDetermination"
@@ -2173,7 +2193,8 @@
                                                 ItemsSource="{Binding QualityInterpretationCodes}"
                                                 SelectedValue="{Binding IncidQualityInterpretation, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
                                                 x:Name="CheckBoxCopyQualityInterpretation"
@@ -2198,9 +2219,10 @@
                                                 MinHeight="52"
                                                 BorderThickness="1"
                                                 MaxLength="254"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
                                                 Text="{Binding IncidQualityComments, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
                                                 TextWrapping="Wrap"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
                                                 x:Name="CheckBoxCopyQualityComments"
@@ -2230,7 +2252,8 @@
                                     Content="{Binding SourcesTabLabel, ValidatesOnDataErrors=True}"
                                     FontSize="12"
                                     FontWeight="Medium"
-                                    Tag="{Binding (Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}, Mode=OneWay, RelativeSource={RelativeSource Self}}"
+                                    Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                     ToolTipService.ShowOnDisabled="True" />
                             </StackPanel>
                         </TabItem.Header>
@@ -2301,7 +2324,8 @@
                                                 ItemsSource="{Binding Source1Names}"
                                                 SelectedValue="{Binding IncidSource1Id, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="source_id"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
                                                 x:Name="CheckBoxCopyIncidSource1Name"
@@ -2326,8 +2350,9 @@
                                                 VerticalAlignment="Center"
                                                 BorderThickness="1"
                                                 IsEnabled="{Binding IncidSource1Enabled, Mode=OneWay}"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
                                                 Text="{Binding IncidSource1Date, ConverterParameter=source_date_start^source_date_end^source_date_type, Converter={StaticResource vagueDateConverter}, Mode=TwoWay, UpdateSourceTrigger=LostFocus, ValidatesOnDataErrors=True}"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
                                                 x:Name="CheckBoxCopySource1Date"
@@ -2358,7 +2383,8 @@
                                                 ItemsSource="{Binding SourceHabitatClassCodes}"
                                                 SelectedValue="{Binding IncidSource1HabitatClass, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
                                                 x:Name="CheckBoxCopySource1HabitatClass"
@@ -2390,7 +2416,8 @@
                                                 ItemsSource="{Binding Source1HabitatTypeCodes, ConverterParameter=code^name^description^sort_order, Converter={StaticResource codeNameDescriptionConverter}}"
                                                 SelectedValue="{Binding IncidSource1HabitatType, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
                                                 x:Name="CheckBoxCopyIncidSource1HabitatType"
@@ -2433,8 +2460,8 @@
                                                     ItemsSource="{Binding SourceImportanceCodes}"
                                                     SelectedValue="{Binding IncidSource1BoundaryImportance, ValidatesOnDataErrors=True}"
                                                     SelectedValuePath="code"
-                                                    Tag="ErrorContent"
-                                                    ToolTipService.ShowOnDisabled="True" />
+                                                    Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}" />
                                                 <CheckBox
                                                     x:Name="CheckBoxCopySource1BoundaryImportance"
                                                     Grid.Row="0"
@@ -2451,7 +2478,7 @@
                                                     Content="Habitat Imp." />
                                                 <ComboBox
                                                     x:Name="ComboBoxIncidSource1HabitatImportance"
-                                                    Grid.Row="3"
+                                                    Grid.Row="0"
                                                     Grid.Column="4"
                                                     VerticalAlignment="Center"
                                                     DisplayMemberPath="description"
@@ -2462,7 +2489,8 @@
                                                     ItemsSource="{Binding SourceImportanceCodes}"
                                                     SelectedValue="{Binding IncidSource1HabitatImportance, ValidatesOnDataErrors=True}"
                                                     SelectedValuePath="code"
-                                                    Tag="ErrorContent"
+                                                    Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                     ToolTipService.ShowOnDisabled="True" />
                                             </Grid>
                                             <CheckBox
@@ -2528,7 +2556,8 @@
                                                 ItemsSource="{Binding Source2Names}"
                                                 SelectedValue="{Binding IncidSource2Id, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="source_id"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
                                                 x:Name="CheckBoxCopyIncidSource2Name"
@@ -2553,8 +2582,9 @@
                                                 VerticalAlignment="Center"
                                                 BorderThickness="1"
                                                 IsEnabled="{Binding IncidSource2Enabled, Mode=OneWay}"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
                                                 Text="{Binding IncidSource2Date, ConverterParameter=source_date_start^source_date_end^source_date_type, Converter={StaticResource vagueDateConverter}, Mode=TwoWay, UpdateSourceTrigger=LostFocus, ValidatesOnDataErrors=True}"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
                                                 x:Name="CheckBoxCopySource2Date"
@@ -2585,7 +2615,8 @@
                                                 ItemsSource="{Binding SourceHabitatClassCodes}"
                                                 SelectedValue="{Binding IncidSource2HabitatClass, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
                                                 x:Name="CheckBoxCopySource2HabitatClass"
@@ -2617,7 +2648,8 @@
                                                 ItemsSource="{Binding Source2HabitatTypeCodes, ConverterParameter=code^name^description^sort_order, Converter={StaticResource codeNameDescriptionConverter}}"
                                                 SelectedValue="{Binding IncidSource2HabitatType, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
                                                 x:Name="CheckBoxCopyIncidSource2HabitatType"
@@ -2660,7 +2692,8 @@
                                                     ItemsSource="{Binding SourceImportanceCodes}"
                                                     SelectedValue="{Binding IncidSource2BoundaryImportance, ValidatesOnDataErrors=True}"
                                                     SelectedValuePath="code"
-                                                    Tag="ErrorContent"
+                                                    Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                     ToolTipService.ShowOnDisabled="True" />
                                                 <CheckBox
                                                     x:Name="CheckBoxCopySource2BoundaryImportance"
@@ -2678,7 +2711,7 @@
                                                     Content="Habitat Imp." />
                                                 <ComboBox
                                                     x:Name="ComboBoxIncidSource2HabitatImportance"
-                                                    Grid.Row="3"
+                                                    Grid.Row="0"
                                                     Grid.Column="4"
                                                     VerticalAlignment="Center"
                                                     DisplayMemberPath="description"
@@ -2689,7 +2722,8 @@
                                                     ItemsSource="{Binding SourceImportanceCodes}"
                                                     SelectedValue="{Binding IncidSource2HabitatImportance, ValidatesOnDataErrors=True}"
                                                     SelectedValuePath="code"
-                                                    Tag="ErrorContent"
+                                                    Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                     ToolTipService.ShowOnDisabled="True" />
                                             </Grid>
                                             <CheckBox
@@ -2755,7 +2789,8 @@
                                                 ItemsSource="{Binding Source3Names}"
                                                 SelectedValue="{Binding IncidSource3Id, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="source_id"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
                                                 x:Name="CheckBoxCopyIncidSource3Name"
@@ -2780,8 +2815,9 @@
                                                 VerticalAlignment="Center"
                                                 BorderThickness="1"
                                                 IsEnabled="{Binding IncidSource3Enabled, Mode=OneWay}"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
                                                 Text="{Binding IncidSource3Date, ConverterParameter=source_date_start^source_date_end^source_date_type, Converter={StaticResource vagueDateConverter}, Mode=TwoWay, UpdateSourceTrigger=LostFocus, ValidatesOnDataErrors=True}"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
                                                 x:Name="CheckBoxCopySource3Date"
@@ -2812,7 +2848,8 @@
                                                 ItemsSource="{Binding SourceHabitatClassCodes}"
                                                 SelectedValue="{Binding IncidSource3HabitatClass, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
                                                 x:Name="CheckBoxCopySource3HabitatClass"
@@ -2844,7 +2881,8 @@
                                                 ItemsSource="{Binding Source3HabitatTypeCodes, ConverterParameter=code^name^description^sort_order, Converter={StaticResource codeNameDescriptionConverter}}"
                                                 SelectedValue="{Binding IncidSource3HabitatType, ValidatesOnDataErrors=True}"
                                                 SelectedValuePath="code"
-                                                Tag="ErrorContent"
+                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
                                                 x:Name="CheckBoxCopyIncidSource3HabitatType"
@@ -2887,7 +2925,8 @@
                                                     ItemsSource="{Binding SourceImportanceCodes}"
                                                     SelectedValue="{Binding IncidSource3BoundaryImportance, ValidatesOnDataErrors=True}"
                                                     SelectedValuePath="code"
-                                                    Tag="ErrorContent"
+                                                    Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                     ToolTipService.ShowOnDisabled="True" />
                                                 <CheckBox
                                                     x:Name="CheckBoxCopySource3BoundaryImportance"
@@ -2906,7 +2945,7 @@
                                                     Content="Habitat Imp." />
                                                 <ComboBox
                                                     x:Name="ComboBoxIncidSource3HabitatImportance"
-                                                    Grid.Row="3"
+                                                    Grid.Row="0"
                                                     Grid.Column="4"
                                                     VerticalAlignment="Center"
                                                     DisplayMemberPath="description"
@@ -2917,7 +2956,8 @@
                                                     ItemsSource="{Binding SourceImportanceCodes}"
                                                     SelectedValue="{Binding IncidSource3HabitatImportance, ValidatesOnDataErrors=True}"
                                                     SelectedValuePath="code"
-                                                    Tag="ErrorContent"
+                                                    Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                     ToolTipService.ShowOnDisabled="True" />
                                             </Grid>
                                             <CheckBox
@@ -3088,9 +3128,10 @@
                             Margin="2,0,2,0"
                             VerticalAlignment="Center"
                             IsEnabled="{Binding TabControlDataEnabled}"
-                            Tag="ErrorContent"
+                            Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
                             Text="{Binding IncidCurrentRowIndex, Mode=TwoWay, UpdateSourceTrigger=Explicit, ValidatesOnDataErrors=True}"
-                            TextAlignment="Center">
+                            TextAlignment="Center"
+                            ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}">
                             <TextBox.InputBindings>
                                 <KeyBinding
                                     Key="Enter"
