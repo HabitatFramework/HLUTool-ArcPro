@@ -21,6 +21,7 @@ using ArcGIS.Desktop.Internal.KnowledgeGraph;
 using HLU.Data.Model;
 using HLU.Properties;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -28,7 +29,7 @@ using System.Text;
 
 namespace HLU.Data
 {
-    public class SecondaryHabitat : IDataErrorInfo, ICloneable
+    public class SecondaryHabitat : INotifyDataErrorInfo, INotifyPropertyChanged, ICloneable
     {
         #region Fields
 
@@ -41,7 +42,7 @@ namespace HLU.Data
         private bool _bulkUpdateMode;
         private string _incid_bak;
 
-        string _error;
+        private readonly Dictionary<string, List<string>> _errors = new Dictionary<string, List<string>>();
         private static IEnumerable<SecondaryHabitat> _secondaryHabitatList;
         private static IEnumerable<string> _validSecondaryCodes;
         private static Dictionary<string, String> _secondaryGroupCodes;
@@ -152,6 +153,126 @@ namespace HLU.Data
 
         #endregion
 
+        #region INotifyPropertyChanged
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        #endregion
+
+        #region INotifyDataErrorInfo
+
+        public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
+
+        public bool HasErrors => _errors.Any();
+
+        public IEnumerable GetErrors(string propertyName)
+        {
+            if (string.IsNullOrEmpty(propertyName))
+            {
+                // Return all errors for row-level validation
+                var allErrors = _errors.Values.SelectMany(e => e).ToList();
+                return allErrors.Any() ? allErrors : null;
+            }
+
+            if (_errors.ContainsKey(propertyName))
+                return _errors[propertyName];
+
+            return null;
+        }
+
+        private void SetErrors(string propertyName, List<string> errors)
+        {
+            bool errorsChanged = false;
+
+            if (errors != null && errors.Any())
+            {
+                // Add or update errors
+                if (!_errors.ContainsKey(propertyName) || !_errors[propertyName].SequenceEqual(errors))
+                {
+                    _errors[propertyName] = errors;
+                    errorsChanged = true;
+                }
+            }
+            else
+            {
+                // Remove errors if they existed
+                if (_errors.Remove(propertyName))
+                {
+                    errorsChanged = true;
+                }
+            }
+
+            // Only raise ErrorsChanged if something actually changed
+            if (errorsChanged)
+            {
+                OnErrorsChanged(propertyName);
+            }
+        }
+
+        private void OnErrorsChanged(string propertyName)
+        {
+            ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
+
+            // Also notify for empty string to trigger row-level validation update
+            if (!string.IsNullOrEmpty(propertyName))
+            {
+                ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(string.Empty));
+            }
+
+            // Notify that HasErrors property itself has changed
+            OnPropertyChanged(nameof(HasErrors));
+        }
+
+        private void ValidateProperty(string propertyName)
+        {
+            List<string> errors = new List<string>();
+
+            switch (propertyName)
+            {
+                case nameof(incid):
+                    if ((secondary_id != -1) && String.IsNullOrEmpty(incid))
+                    {
+                        errors.Add("Error: INCID is a mandatory field");
+                    }
+                    break;
+
+                case nameof(secondary_habitat):
+                    // Only validate if not in bulk update mode and errors are to be shown
+                    if (!_bulkUpdateMode)
+                    {
+                        if (String.IsNullOrEmpty(secondary_habitat))
+                        {
+                            errors.Add("Error: Secondary habitat is a mandatory field");
+                        }
+                        else if (_validSecondaryCodes == null)
+                        {
+                            errors.Add("Error: Secondary habitat is not valid without primary habitat");
+                        }
+                        else if ((_secondaryHabitatList != null) && (_secondaryHabitatList.Count(b => b.secondary_habitat == secondary_habitat) > 1))
+                        {
+                            errors.Add("Error: Duplicate secondary habitat");
+                        }
+                        else if (_primarySecondaryCodeValidation > 0)
+                        {
+                            if ((_validSecondaryCodes != null) && (!_validSecondaryCodes.Contains(secondary_habitat)))
+                            {
+                                errors.Add("Error: Secondary habitat is not valid for primary habitat");
+                            }
+                        }
+                    }
+                    break;
+            }
+
+            SetErrors(propertyName, errors.Any() ? errors : null);
+        }
+
+        #endregion
+
         #region Properties
 
         public static IEnumerable<SecondaryHabitat> SecondaryHabitatList
@@ -200,7 +321,15 @@ namespace HLU.Data
         public string incid
         {
             get { return _incid; }
-            set { _incid = value; }
+            set
+            {
+                if (_incid != value)
+                {
+                    _incid = value;
+                    OnPropertyChanged(nameof(incid));
+                    ValidateProperty(nameof(incid));
+                }
+            }
         }
 
         public string secondary_habitat
@@ -208,11 +337,16 @@ namespace HLU.Data
             get { return _secondary_habitat; }
             set
             {
-                _secondary_habitat = value;
+                if (_secondary_habitat != value)
+                {
+                    _secondary_habitat = value;
+                    OnPropertyChanged(nameof(secondary_habitat));
+                    ValidateProperty(nameof(secondary_habitat));
 
-                // Flag that the current record has changed so that the apply button
-                // will appear.
-                this.DataChanged?.Invoke(true);
+                    // Flag that the current record has changed so that the apply button
+                    // will appear.
+                    this.DataChanged?.Invoke(true);
+                }
             }
         }
 
@@ -258,7 +392,10 @@ namespace HLU.Data
 
         public bool IsValid()
         {
-            return ValidateRow();
+            ValidateProperty(nameof(incid));
+            ValidateProperty(nameof(secondary_habitat));
+
+            return !HasErrors;
         }
 
         public bool IsValid(bool bulkUpdateMode)
@@ -273,7 +410,16 @@ namespace HLU.Data
                 r.incid, r.secondary, r.secondary_group));
         }
 
-        public string ErrorMessages { get { return _error.ToString(); } }
+        public string ErrorMessages
+        {
+            get
+            {
+                var allErrors = GetErrors(string.Empty);
+                if (allErrors == null) return string.Empty;
+
+                return string.Join(Environment.NewLine, allErrors.Cast<string>());
+            }
+        }
 
         public static bool ValidateRow(bool bulkUpdateMode, HluDataSet.incid_secondaryRow r)
         {
@@ -298,86 +444,18 @@ namespace HLU.Data
                     sbError.Append(Environment.NewLine).Append("Error: Secondary habitat is not valid without primary habitat");
 
                 if ((_secondaryHabitatList != null) && (_secondaryHabitatList.Count(b => b.secondary_habitat == secondary_habitat) > 1))
-                    sbError.Append(Environment.NewLine).Append("Warning: Duplicate secondary habitat");
+                    sbError.Append(Environment.NewLine).Append("Error: Duplicate secondary habitat");
 
                 if (_primarySecondaryCodeValidation > 0)
                 {
                     if ((_validSecondaryCodes != null) && (!_validSecondaryCodes.Contains(secondary_habitat)))
-                        sbError.Append(Environment.NewLine).Append("Warning: Secondary habitat is not valid for primary habitat");
+                        sbError.Append(Environment.NewLine).Append("Error: Secondary habitat is not valid for primary habitat");
                 }
             }
 
             return sbError.Length > 0 ? sbError.Remove(0, Environment.NewLine.Length).ToString() : null;
         }
 
-        private bool ValidateRow()
-        {
-            _error = ValidateRow(_bulkUpdateMode, secondary_id, incid, secondary_habitat, secondary_group);
-            return _error == null;
-        }
-
         #endregion
-
-        #region IDataErrorInfo Members
-
-        string IDataErrorInfo.Error
-        {
-            get
-            {
-                ValidateRow();
-                return _error;
-            }
-        }
-
-        string IDataErrorInfo.this[string columnName]
-        {
-            get
-            {
-                string error = null;
-
-                switch (columnName)
-                {
-                    case "incid":
-                        if ((secondary_id != -1) && String.IsNullOrEmpty(incid))
-                        {
-                            _incid = _incid_bak;
-                            return "Error: INCID is a mandatory field";
-                        }
-                        _incid_bak = _incid;
-                        break;
-                    case "secondary_habitat":
-                        // Only validate if not in bulk update mode and errors are to be shown
-                        if (!_bulkUpdateMode)
-                        {
-                            if (String.IsNullOrEmpty(secondary_habitat))
-                            {
-                                return "Error: Secondary habitat is a mandatory field";
-                            }
-                            else if (_validSecondaryCodes == null)
-                            {
-                                return "Error: Secondary habitat is not valid without primary habitat";
-                            }
-                            else if ((_secondaryHabitatList != null) && (_secondaryHabitatList.Count(b => b.secondary_habitat == secondary_habitat) > 1))
-                            {
-                                return "Warning: Duplicate secondary habitat";
-                            }
-
-                            if (_primarySecondaryCodeValidation > 0)
-                            {
-                                if ((_validSecondaryCodes != null) && (!_validSecondaryCodes.Contains(secondary_habitat)))
-                                {
-                                    return "Warning: Secondary habitat is not valid for primary habitat";
-                                }
-                            }
-
-                        }
-                        break;
-                }
-
-                return error;
-            }
-        }
-
-        #endregion IDataErrorInfo Members
     }
 }
