@@ -82,7 +82,6 @@
                 CanUserReorderColumns="False"
                 CanUserResizeColumns="True"
                 CanUserSortColumns="True"
-                CellStyle="{StaticResource DataGridCellErrorStyle}"
                 HeadersVisibility="All"
                 IsEnabled="{Binding BapHabitatsUserEnabled}"
                 IsReadOnly="False"

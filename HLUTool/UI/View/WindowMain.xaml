@@ -798,6 +798,7 @@
                                                 RowDetailsVisibilityMode="Visible"
                                                 RowHeaderWidth="20"
                                                 RowHeight="24"
+                                                RowStyle="{StaticResource DataGridRowWithValidation}"
                                                 Style="{DynamicResource Esri_DataGrid}"
                                                 VerticalScrollBarVisibility="Auto">
                                                 <DataGrid.RowValidationRules>
@@ -1439,13 +1440,14 @@
                                                 CanUserReorderColumns="False"
                                                 CanUserResizeColumns="True"
                                                 CanUserSortColumns="True"
-                                                HeadersVisibility="Column"
+                                                HeadersVisibility="All"
                                                 IsEnabled="{Binding BapHabitatsAutoEnabled}"
                                                 ItemsSource="{Binding IncidBapHabitatsAuto}"
                                                 MinRowHeight="24"
                                                 RowDetailsVisibilityMode="Visible"
                                                 RowHeaderWidth="20"
                                                 RowHeight="24"
+                                                RowStyle="{StaticResource DataGridRowWithValidation}"
                                                 Style="{DynamicResource Esri_DataGridRowHeaderless}">
 
                                                 <DataGrid.Resources>
@@ -1628,12 +1630,9 @@
                                                 RowDetailsVisibilityMode="Visible"
                                                 RowHeaderWidth="20"
                                                 RowHeight="24"
+                                                RowStyle="{StaticResource DataGridRowWithValidation}"
                                                 Style="{DynamicResource Esri_DataGrid}"
                                                 VirtualizingStackPanel.IsVirtualizing="False">
-
-                                                <DataGrid.RowStyle>
-                                                    <Style BasedOn="{StaticResource Esri_DataGridRow}" TargetType="DataGridRow" />
-                                                </DataGrid.RowStyle>
 
                                                 <DataGrid.RowValidationRules>
                                                     <DataErrorValidationRule />
@@ -2981,7 +2980,7 @@
                             <StackPanel>
                                 <Label
                                     Margin="0"
-                                       Padding="4,1,4,1"
+                                    Padding="4,1,4,1"
                                     VerticalAlignment="Bottom"
                                     Content="History"
                                     FontSize="12"

@@ -87,6 +87,7 @@
                                         RowDetailsVisibilityMode="Visible"
                                         RowHeaderWidth="0"
                                         RowHeight="24"
+                                        RowStyle="{StaticResource DataGridRowWithValidation}"
                                         ScrollViewer.CanContentScroll="True"
                                         ScrollViewer.VerticalScrollBarVisibility="Auto"
                                         SelectionChanged="OSMMUpdates_SelectionChanged"
@@ -167,6 +168,7 @@
                                         RowDetailsVisibilityMode="Collapsed"
                                         RowHeaderWidth="0"
                                         RowHeight="26"
+                                        RowStyle="{StaticResource DataGridRowWithValidation}"
                                         ScrollViewer.CanContentScroll="True"
                                         ScrollViewer.VerticalScrollBarVisibility="Auto"
                                         SelectionMode="Single">

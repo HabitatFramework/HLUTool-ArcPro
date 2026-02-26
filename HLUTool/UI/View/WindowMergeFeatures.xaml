@@ -62,6 +62,7 @@
                 RowDetailsVisibilityMode="Visible"
                 RowHeaderWidth="20"
                 RowHeight="24"
+                RowStyle="{StaticResource DataGridRowWithValidation}"
                 SelectedIndex="{Binding Path=SelectedIndex, NotifyOnTargetUpdated=True}"
                 SelectedItem="{Binding Path=ResultFeature, UpdateSourceTrigger=PropertyChanged}"
                 SelectionMode="Single"

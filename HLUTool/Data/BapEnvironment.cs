@@ -363,10 +363,10 @@ namespace HLU.Data
             StringBuilder sbError = new();
 
             if ((bap_id != -1) && String.IsNullOrEmpty(incid))
-                sbError.Append(Environment.NewLine).Append("INCID is a mandatory field");
+                sbError.Append(Environment.NewLine).Append("Error: INCID is a mandatory field");
 
             if (String.IsNullOrEmpty(bap_habitat))
-                sbError.Append(Environment.NewLine).Append("Priority habitat is a mandatory field");
+                sbError.Append(Environment.NewLine).Append("Error: Priority habitat is a mandatory field");
 
             //if ((_bapEnvironmentList != null) && (_bapEnvironmentList.Count(b => b.bap_habitat == bap_habitat) > 1))
             //    sbError.Append(Environment.NewLine).Append("Duplicate priority environment");
@@ -374,7 +374,7 @@ namespace HLU.Data
             if (String.IsNullOrEmpty(quality_determination))
             {
                 if (!_bulkUpdateMode)
-                    sbError.Append(Environment.NewLine).Append("Determination quality is a mandatory field");
+                    sbError.Append(Environment.NewLine).Append("Error: Determination quality is a mandatory field");
             }
             else
             {
@@ -392,7 +392,7 @@ namespace HLU.Data
                         && (quality_determination != BAPDetQltyPrevious))
                         {
                             sbError.Append(Environment.NewLine)
-                                .Append(String.Format("Determination quality for potential priority habitats can only be '{0}' or '{1}'",
+                                .Append(String.Format("Error: Determination quality for potential priority habitats can only be '{0}' or '{1}'",
                                 BAPDetQltyUserAddedDesc, BAPDetQltyPreviousDesc));
                         }
                     }
@@ -407,20 +407,20 @@ namespace HLU.Data
                     if (quality_determination == BAPDetQltyUserAdded)
                     {
                         sbError.Append(Environment.NewLine)
-                            .Append(String.Format("Determination quality cannot be '{0}' for 'primary' priority habitats", BAPDetQltyUserAddedDesc));
+                            .Append(String.Format("Error: Determination quality cannot be '{0}' for 'primary' priority habitats", BAPDetQltyUserAddedDesc));
                     }
                     else if (quality_determination == BAPDetQltyPrevious)
                     {
                         sbError.Append(Environment.NewLine)
-                            .Append(String.Format("Determination quality cannot be '{0}' for 'primary' priority habitats", BAPDetQltyPreviousDesc));
+                            .Append(String.Format("Error: Determination quality cannot be '{0}' for 'primary' priority habitats", BAPDetQltyPreviousDesc));
                     }
                 }
             }
 
             if (!_bulkUpdateMode && String.IsNullOrEmpty(quality_interpretation))
-                sbError.Append(Environment.NewLine).Append("Interpretation quality is a mandatory field");
+                sbError.Append(Environment.NewLine).Append("Error: Interpretation quality is a mandatory field");
 
-            return sbError.Length > 0 ? sbError.Remove(0, 1).ToString() : null;
+            return sbError.Length > 0 ? sbError.Remove(0, Environment.NewLine.Length).ToString() : null;
         }
 
         private bool ValidateRow()

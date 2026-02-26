@@ -289,25 +289,25 @@ namespace HLU.Data
             if (!_bulkUpdateMode)
             {
                 if ((secondary_id != -1) && String.IsNullOrEmpty(incid))
-                    sbError.Append(Environment.NewLine).Append("INCID is a mandatory field");
+                    sbError.Append(Environment.NewLine).Append("Error: INCID is a mandatory field");
 
                 if (String.IsNullOrEmpty(secondary_habitat))
-                    sbError.Append(Environment.NewLine).Append("Secondary habitat is a mandatory field");
+                    sbError.Append(Environment.NewLine).Append("Error: Secondary habitat is a mandatory field");
 
                 if (_validSecondaryCodes == null)
-                    sbError.Append(Environment.NewLine).Append("Secondary habitat is not valid without primary habitat");
+                    sbError.Append(Environment.NewLine).Append("Error: Secondary habitat is not valid without primary habitat");
 
                 if ((_secondaryHabitatList != null) && (_secondaryHabitatList.Count(b => b.secondary_habitat == secondary_habitat) > 1))
-                    sbError.Append(Environment.NewLine).Append("Duplicate secondary habitat");
+                    sbError.Append(Environment.NewLine).Append("Warning: Duplicate secondary habitat");
 
                 if (_primarySecondaryCodeValidation > 0)
                 {
                     if ((_validSecondaryCodes != null) && (!_validSecondaryCodes.Contains(secondary_habitat)))
-                        sbError.Append(Environment.NewLine).Append("Secondary habitat is not valid for primary habitat");
+                        sbError.Append(Environment.NewLine).Append("Warning: Secondary habitat is not valid for primary habitat");
                 }
             }
 
-            return sbError.Length > 0 ? sbError.Remove(0, 1).ToString() : null;
+            return sbError.Length > 0 ? sbError.Remove(0, Environment.NewLine.Length).ToString() : null;
         }
 
         private bool ValidateRow()
@@ -355,11 +355,11 @@ namespace HLU.Data
                             }
                             else if (_validSecondaryCodes == null)
                             {
-                                return "Warning: Secondary habitat is not valid without primary habitat";
+                                return "Error: Secondary habitat is not valid without primary habitat";
                             }
                             else if ((_secondaryHabitatList != null) && (_secondaryHabitatList.Count(b => b.secondary_habitat == secondary_habitat) > 1))
                             {
-                                return "Error: Duplicate secondary habitat";
+                                return "Warning: Duplicate secondary habitat";
                             }
 
                             if (_primarySecondaryCodeValidation > 0)
@@ -378,6 +378,6 @@ namespace HLU.Data
             }
         }
 
-        #endregion
+        #endregion IDataErrorInfo Members
     }
 }
