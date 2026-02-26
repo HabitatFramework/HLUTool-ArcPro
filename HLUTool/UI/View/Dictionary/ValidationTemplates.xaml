@@ -63,24 +63,21 @@
             Width="16"
             Height="16"
             Margin="2,0,0,0"
-            ToolTip="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type DataGridRow}}, Path=(Validation.Errors)[0].ErrorContent}">
+            ToolTip="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type DataGridRow}}, Path=(Validation.Errors).CurrentItem.ErrorContent}">
             <Ellipse
                 Width="14"
                 Height="14"
                 Fill="Red"
                 Stroke="Black"
                 StrokeThickness="0.5" />
-            <TextBlock HorizontalAlignment="Center"
-                       VerticalAlignment="Center"
-                       FontSize="12"
-                       FontWeight="Bold"
-                       Foreground="White"
-                       Text="!">
-                <TextBlock.RenderTransform>
-                    <TranslateTransform X="0"
-                                        Y="0" />
-                </TextBlock.RenderTransform>
-            </TextBlock>
+            <TextBlock
+                Margin="0,0,0,1"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                FontSize="10"
+                FontWeight="Bold"
+                Foreground="White"
+                Text="!" />
         </Grid>
     </ControlTemplate>
 
@@ -90,39 +87,33 @@
             Width="16"
             Height="18"
             Margin="2,0,0,0"
-            ToolTip="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type DataGridRow}}, Path=(Validation.Errors)[0].ErrorContent}">
+            ToolTip="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type DataGridRow}}, Path=(Validation.Errors).CurrentItem.ErrorContent}">
             <Polygon
                 Fill="Orange"
                 Points="0,17 14,17, 7,1"
                 Stroke="Black"
                 StrokeThickness="0.5" />
             <TextBlock
+                Margin="-2,4,0,0"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
-                FontSize="12"
+                FontSize="10"
                 FontWeight="Bold"
                 Foreground="White"
-                Text="!">
-                <TextBlock.RenderTransform>
-                    <TranslateTransform X="-1" Y="2" />
-                </TextBlock.RenderTransform>
-            </TextBlock>
+                Text="!" />
         </Grid>
     </ControlTemplate>
 
-    <!--  DataGrid Row Style with Validation - Shows error/warning icon in row header based on message  -->
+    <!--  DataGrid Row Style with Validation - Shows error/warning icon in row header based on INotifyDataErrorInfo.HasErrors  -->
     <Style
         x:Key="DataGridRowWithValidation"
         BasedOn="{StaticResource Esri_DataGridRow}"
         TargetType="DataGridRow">
-        <Setter Property="ValidationErrorTemplate" Value="{StaticResource DataGridRowErrorTemplate}" />
+        <Setter Property="ValidationErrorTemplate" Value="{x:Null}" />
         <Style.Triggers>
-            <Trigger Property="Validation.HasError" Value="True">
-                <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)[0].ErrorContent}" />
-            </Trigger>
-            <!--  Check if error message prefix is "Warning" to use warning template  -->
-            <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)[0].ErrorContent, Converter={StaticResource errorMessageConverter}}" Value="Warning">
-                <Setter Property="ValidationErrorTemplate" Value="{StaticResource DataGridRowWarningTemplate}" />
+            <!--  Trigger on HasErrors property of the data item (INotifyDataErrorInfo)  -->
+            <DataTrigger Binding="{Binding HasErrors}" Value="True">
+                <Setter Property="ValidationErrorTemplate" Value="{StaticResource DataGridRowErrorTemplate}" />
             </DataTrigger>
         </Style.Triggers>
     </Style>

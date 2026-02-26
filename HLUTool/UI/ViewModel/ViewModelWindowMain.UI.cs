@@ -8426,6 +8426,10 @@ namespace HLU.UI.ViewModel
                         !SecondaryHabitat.SecondaryHabitatList.Any(sh => sh.secondary_habitat == _secondaryHabitat))
                         AddSecondaryHabitat(false, -1, Incid, _secondaryHabitat, secondaryGroup);
 
+                    // Clear the secondary habitat selection to reset the combo box display.
+                    _secondaryHabitat = null;
+                    OnPropertyChanged(nameof(SecondaryHabitatCode));
+
                     // Refresh secondary table and summary.
                     RefreshSecondaryHabitats();
                     OnPropertyChanged(nameof(IncidSecondarySummary));

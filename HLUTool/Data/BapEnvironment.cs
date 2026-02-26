@@ -1,23 +1,5 @@
-﻿// HLUTool is used to view and maintain habitat and land use GIS data.
-// Copyright © 2011 Hampshire Biodiversity Information Centre
-// Copyright © 2013 Thames Valley Environmental Records Centre
-//
-// This file is part of HLUTool.
-//
-// HLUTool is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// HLUTool is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
-
-using System;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -27,7 +9,7 @@ using HLU.Properties;
 
 namespace HLU.Data
 {
-    public class BapEnvironment : IDataErrorInfo, ICloneable
+    public class BapEnvironment : INotifyDataErrorInfo, INotifyPropertyChanged, ICloneable
     {
         #region Fields
 
@@ -40,7 +22,7 @@ namespace HLU.Data
         private string _quality_interpretation;
         private string _interpretation_comments;
         private string _incid_bak;
-        string _error;
+        private readonly Dictionary<string, List<string>> _errors = new Dictionary<string, List<string>>();
         private static IEnumerable<BapEnvironment> _bapEnvironmentList;
         private static int _potentialPriorityDetermQtyValidation;
 
@@ -172,6 +154,169 @@ namespace HLU.Data
 
         #endregion
 
+        #region INotifyPropertyChanged
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        #endregion
+
+        #region INotifyDataErrorInfo
+
+        public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
+
+        public bool HasErrors => _errors.Any();
+
+        public IEnumerable GetErrors(string propertyName)
+        {
+            if (string.IsNullOrEmpty(propertyName))
+            {
+                // Return all errors for row-level validation
+                var allErrors = _errors.Values.SelectMany(e => e).ToList();
+                return allErrors.Any() ? allErrors : null;
+            }
+
+            if (_errors.ContainsKey(propertyName))
+                return _errors[propertyName];
+
+            return null;
+        }
+
+        private void SetErrors(string propertyName, List<string> errors)
+        {
+            bool errorsChanged = false;
+
+            if (errors != null && errors.Any())
+            {
+                // Add or update errors
+                if (!_errors.ContainsKey(propertyName) || !_errors[propertyName].SequenceEqual(errors))
+                {
+                    _errors[propertyName] = errors;
+                    errorsChanged = true;
+                }
+            }
+            else
+            {
+                // Remove errors if they existed
+                if (_errors.Remove(propertyName))
+                {
+                    errorsChanged = true;
+                }
+            }
+
+            // Only raise ErrorsChanged if something actually changed
+            if (errorsChanged)
+            {
+                OnErrorsChanged(propertyName);
+            }
+        }
+
+        private void OnErrorsChanged(string propertyName)
+        {
+            //TODO: Debug
+            System.Diagnostics.Debug.WriteLine($"ErrorsChanged fired for property={propertyName}, bap_id={_bap_id}, HasErrors={HasErrors}");
+
+            ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
+
+            // Also notify for empty string to trigger row-level validation update
+            if (!string.IsNullOrEmpty(propertyName))
+            {
+                ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(string.Empty));
+            }
+
+            // THIS IS THE KEY FIX: Notify that HasErrors property itself has changed
+            OnPropertyChanged(nameof(HasErrors));
+        }
+
+        private void ValidateProperty(string propertyName)
+        {
+            List<string> errors = new List<string>();
+
+            switch (propertyName)
+            {
+                case nameof(incid):
+                    if ((bap_id != -1) && String.IsNullOrEmpty(incid))
+                    {
+                        errors.Add("Error: INCID is a mandatory field");
+                    }
+                    break;
+
+                case nameof(bap_habitat):
+                    if (String.IsNullOrEmpty(bap_habitat))
+                    {
+                        errors.Add("Error: Priority habitat is a mandatory field");
+                    }
+                    else if ((_bapEnvironmentList != null) && (_bapEnvironmentList.Count(b => b.bap_habitat == bap_habitat) > 1))
+                    {
+                        errors.Add("Error: Duplicate priority habitat");
+                    }
+                    break;
+
+                case nameof(quality_determination):
+                    if (String.IsNullOrEmpty(quality_determination))
+                    {
+                        if (!_bulkUpdateMode)
+                        {
+                            errors.Add("Error: Determination quality is a mandatory field");
+                        }
+                    }
+                    else
+                    {
+                        // If this is a user-added priority habitat (i.e. in the secondary list).
+                        if (_secondaryPriorityHabitat)
+                        {
+                            // If potential priority habitat determination quality is
+                            // to be validated.
+                            if (_potentialPriorityDetermQtyValidation == 1)
+                            {
+                                // Validate that the determination quality can ONLY be
+                                // 'Not present but close to definition' or
+                                // 'Previously present, but may no longer exist'.
+                                if ((quality_determination != BAPDetQltyUserAdded)
+                                && (quality_determination != BAPDetQltyPrevious))
+                                {
+                                    errors.Add(String.Format("Error: Determination quality for potential priority habitats can only be '{0}' or '{1}'",
+                                        BAPDetQltyUserAddedDesc, BAPDetQltyPreviousDesc));
+                                }
+                            }
+                        }
+                        // If this is an automatic priority habitat.
+                        else
+                        {
+                            // Validate that the determination quality can be anything EXCEPT
+                            // 'Not present but close to definition' or
+                            // 'Previously present, but may no longer exist'.
+                            if ((quality_determination == BAPDetQltyUserAdded))
+                            {
+                                errors.Add(String.Format("Error: Determination quality cannot be '{0}' for priority habitats",
+                                    BAPDetQltyUserAddedDesc));
+                            }
+                            else if ((quality_determination == BAPDetQltyPrevious))
+                            {
+                                errors.Add(String.Format("Error: Determination quality cannot be '{0}' for priority habitats",
+                                    BAPDetQltyPreviousDesc));
+                            }
+                        }
+                    }
+                    break;
+
+                case nameof(quality_interpretation):
+                    if (!_bulkUpdateMode && String.IsNullOrEmpty(quality_interpretation))
+                    {
+                        errors.Add("Error: Interpretation quality is a mandatory field");
+                    }
+                    break;
+            }
+
+            SetErrors(propertyName, errors.Any() ? errors : null);
+        }
+
+        #endregion
+
         #region Properties
 
         public static IEnumerable<BapEnvironment> BapEnvironmentList
@@ -211,7 +356,15 @@ namespace HLU.Data
         public string incid
         {
             get { return _incid; }
-            set { _incid = value; }
+            set
+            {
+                if (_incid != value)
+                {
+                    _incid = value;
+                    OnPropertyChanged(nameof(incid));
+                    ValidateProperty(nameof(incid));
+                }
+            }
         }
 
         public string bap_habitat
@@ -219,11 +372,15 @@ namespace HLU.Data
             get { return _bap_habitat; }
             set
             {
-                _bap_habitat = value;
-                // Flag that the current record has changed so that the apply button
-                // will appear.
-                if (DataChanged != null)
-                    this.DataChanged(true);
+                if (_bap_habitat != value)
+                {
+                    _bap_habitat = value;
+                    OnPropertyChanged(nameof(bap_habitat));
+                    ValidateProperty(nameof(bap_habitat));
+                    // Flag that the current record has changed so that the apply button
+                    // will appear.
+                    DataChanged?.Invoke(true);
+                }
             }
         }
 
@@ -232,11 +389,15 @@ namespace HLU.Data
             get { return _quality_determination; }
             set
             {
-                _quality_determination = value;
-                // Flag that the current record has changed so that the apply button
-                // will appear.
-                if (this.DataChanged != null)
-                    this.DataChanged(true);
+                if (_quality_determination != value)
+                {
+                    _quality_determination = value;
+                    OnPropertyChanged(nameof(quality_determination));
+                    ValidateProperty(nameof(quality_determination));
+                    // Flag that the current record has changed so that the apply button
+                    // will appear.
+                    DataChanged?.Invoke(true);
+                }
             }
         }
 
@@ -245,11 +406,15 @@ namespace HLU.Data
             get { return _quality_interpretation; }
             set
             {
-                _quality_interpretation = value;
-                // Flag that the current record has changed so that the apply button
-                // will appear.
-                if (this.DataChanged != null)
-                    this.DataChanged(true);
+                if (_quality_interpretation != value)
+                {
+                    _quality_interpretation = value;
+                    OnPropertyChanged(nameof(quality_interpretation));
+                    ValidateProperty(nameof(quality_interpretation));
+                    // Flag that the current record has changed so that the apply button
+                    // will appear.
+                    DataChanged?.Invoke(true);
+                }
             }
         }
 
@@ -258,11 +423,16 @@ namespace HLU.Data
             get { return _interpretation_comments; }
             set
             {
-                _interpretation_comments = value == null || value.Length <= 254 ? value : value.Substring(0, 254);
-                // Flag that the current record has changed so that the apply button
-                // will appear.
-                if (this.DataChanged != null)
-                    this.DataChanged(true);
+                string newValue = value == null || value.Length <= 254 ? value : value.Substring(0, 254);
+                if (_interpretation_comments != newValue)
+                {
+                    _interpretation_comments = newValue;
+                    OnPropertyChanged(nameof(interpretation_comments));
+                    ValidateProperty(nameof(interpretation_comments));
+                    // Flag that the current record has changed so that the apply button
+                    // will appear.
+                    DataChanged?.Invoke(true);
+                }
             }
         }
 
@@ -334,7 +504,14 @@ namespace HLU.Data
 
         public bool IsValid()
         {
-            return ValidateRow();
+            // Validate all properties
+            ValidateProperty(nameof(incid));
+            ValidateProperty(nameof(bap_habitat));
+            ValidateProperty(nameof(quality_determination));
+            ValidateProperty(nameof(quality_interpretation));
+            ValidateProperty(nameof(interpretation_comments));
+
+            return !HasErrors;
         }
 
         public bool IsValid(bool bulkUpdateMode, bool isSecondary)
@@ -349,7 +526,16 @@ namespace HLU.Data
                 r.incid, r.bap_habitat, r.quality_determination, r.quality_interpretation));
         }
 
-        public string ErrorMessages { get { return _error.ToString(); } }
+        public string ErrorMessages
+        {
+            get
+            {
+                var allErrors = GetErrors(string.Empty);
+                if (allErrors == null) return string.Empty;
+
+                return string.Join(Environment.NewLine, allErrors.Cast<string>());
+            }
+        }
 
         public static bool ValidateRow(bool bulkUpdateMode, bool isSecondary, HluDataSet.incid_bapRow r)
         {
@@ -367,9 +553,6 @@ namespace HLU.Data
 
             if (String.IsNullOrEmpty(bap_habitat))
                 sbError.Append(Environment.NewLine).Append("Error: Priority habitat is a mandatory field");
-
-            //if ((_bapEnvironmentList != null) && (_bapEnvironmentList.Count(b => b.bap_habitat == bap_habitat) > 1))
-            //    sbError.Append(Environment.NewLine).Append("Duplicate priority environment");
 
             if (String.IsNullOrEmpty(quality_determination))
             {
@@ -421,116 +604,6 @@ namespace HLU.Data
                 sbError.Append(Environment.NewLine).Append("Error: Interpretation quality is a mandatory field");
 
             return sbError.Length > 0 ? sbError.Remove(0, Environment.NewLine.Length).ToString() : null;
-        }
-
-        private bool ValidateRow()
-        {
-            _error = ValidateRow(_bulkUpdateMode, _secondaryPriorityHabitat, bap_id, incid, bap_habitat, quality_determination, quality_interpretation);
-            return _error == null;
-        }
-
-        #endregion
-
-        #region IDataErrorInfo Members
-
-        string IDataErrorInfo.Error
-        {
-            get
-            {
-                ValidateRow();
-                return _error;
-            }
-        }
-
-        string IDataErrorInfo.this[string columnName]
-        {
-            get
-            {
-                string error = null;
-
-                switch (columnName)
-                {
-                    case "incid":
-                        if ((bap_id != -1) && String.IsNullOrEmpty(incid))
-                        {
-                            _incid = _incid_bak;
-                            return "Error: INCID is a mandatory field";
-                        }
-                        _incid_bak = _incid;
-                        break;
-                    case "bap_habitat":
-                        if (String.IsNullOrEmpty(bap_habitat))
-                        {
-                            //_bap_habitat = _bap_habitat_bak;
-                            return "Error: Priority habitat is a mandatory field";
-                        }
-                        else if ((_bapEnvironmentList != null) && (_bapEnvironmentList.Count(b => b.bap_habitat == bap_habitat) > 1))
-                        {
-                            return "Error: Duplicate priority habitat";
-                        }
-
-                        break;
-                    case "quality_determination":
-                        if (String.IsNullOrEmpty(quality_determination))
-                        {
-                            if (!_bulkUpdateMode)
-                            {
-                                return "Error: Determination quality is a mandatory field";
-                            }
-                        }
-                        else
-                        {
-                            // If this is a user-added priority habitat (i.e. in the secondary list).
-                            if (_secondaryPriorityHabitat)
-                            {
-                                // If potential priority habitat determination quality is
-                                // to be validated.
-                                if (_potentialPriorityDetermQtyValidation == 1)
-                                {
-                                    // Validate that the determination quality can ONLY be
-                                    // 'Not present but close to definition' or
-                                    // 'Previously present, but may no longer exist'.
-                                    if ((quality_determination != BAPDetQltyUserAdded)
-                                    && (quality_determination != BAPDetQltyPrevious))
-                                    {
-                                        return String.Format("Error: Determination quality for potential priority habitats can only be '{0}' or '{1}'",
-                                            BAPDetQltyUserAddedDesc, BAPDetQltyPreviousDesc);
-                                    }
-                                }
-                            }
-                            // If this is an automatic priority habitat.
-                            else
-                            {
-                                // Validate that the determination quality can be anything EXCEPT
-                                // 'Not present but close to definition' or
-                                // 'Previously present, but may no longer exist'.
-                                if ((quality_determination == BAPDetQltyUserAdded))
-                                {
-                                    return String.Format("Error: Determination quality cannot be '{0}' for priority habitats",
-                                        BAPDetQltyUserAddedDesc);
-                                }
-                                else if ((quality_determination == BAPDetQltyPrevious))
-                                {
-                                    return String.Format("Error: Determination quality cannot be '{0}' for priority habitats",
-                                        BAPDetQltyPreviousDesc);
-                                }
-                            }
-                        }
-
-                        break;
-                    case "quality_interpretation":
-                        if (!_bulkUpdateMode && String.IsNullOrEmpty(quality_interpretation))
-                        {
-                            return "Error: Interpretation quality is a mandatory field";
-                        }
-
-                        break;
-                    case "interpretation_comments":
-                        break;
-                }
-
-                return error;
-            }
         }
 
         #endregion
