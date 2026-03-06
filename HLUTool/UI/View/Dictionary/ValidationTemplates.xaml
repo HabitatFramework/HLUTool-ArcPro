@@ -70,15 +70,15 @@
                 Fill="Red"
                 Stroke="Black"
                 StrokeThickness="0.5" />
-            <TextBlock HorizontalAlignment="Center"
-                       VerticalAlignment="Center"
-                       FontSize="12"
-                       FontWeight="Bold"
-                       Foreground="White"
-                       Text="!">
+            <TextBlock
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                FontSize="12"
+                FontWeight="Bold"
+                Foreground="White"
+                Text="!">
                 <TextBlock.RenderTransform>
-                    <TranslateTransform X="0"
-                                        Y="0" />
+                    <TranslateTransform X="0" Y="0" />
                 </TextBlock.RenderTransform>
             </TextBlock>
         </Grid>
@@ -110,29 +110,29 @@
         </Grid>
     </ControlTemplate>
 
-	<!--  DataGrid Row Style with Validation - Shows error/warning icon in row header based on INotifyDataErrorInfo.HasErrors  -->
-	<Style
+    <!--  DataGrid Row Style with Validation - Shows error/warning icon in row header based on INotifyDataErrorInfo.HasErrors  -->
+    <Style
         x:Key="DataGridRowWithValidation"
         BasedOn="{StaticResource Esri_DataGridRow}"
         TargetType="DataGridRow">
-		<Setter Property="ValidationErrorTemplate" Value="{StaticResource DataGridRowErrorTemplate}" />
-		<Style.Triggers>
-			<!--  Default: No validation template when no errors  -->
-			<DataTrigger Binding="{Binding HasErrors}" Value="False">
-				<Setter Property="ValidationErrorTemplate" Value="{x:Null}" />
-			</DataTrigger>
+        <Setter Property="ValidationErrorTemplate" Value="{StaticResource DataGridRowErrorTemplate}" />
+        <Style.Triggers>
+            <!--  Default: No validation template when no errors  -->
+            <DataTrigger Binding="{Binding HasErrors}" Value="False">
+                <Setter Property="ValidationErrorTemplate" Value="{x:Null}" />
+            </DataTrigger>
 
-			<!--  Show error icon when there are errors  -->
-			<DataTrigger Binding="{Binding HasErrors}" Value="True">
-				<Setter Property="ToolTip" Value="{Binding ErrorMessages}" />
-			</DataTrigger>
+            <!--  Show error icon when there are errors  -->
+            <DataTrigger Binding="{Binding HasErrors}" Value="True">
+                <Setter Property="ToolTip" Value="{Binding ErrorMessages}" />
+            </DataTrigger>
 
-			<!--  Check if error message starts with "Warning:" to use warning template  -->
-			<DataTrigger Binding="{Binding ErrorMessages, Converter={StaticResource errorMessageConverter}}" Value="Warning">
-				<Setter Property="ValidationErrorTemplate" Value="{StaticResource DataGridRowWarningTemplate}" />
-			</DataTrigger>
-		</Style.Triggers>
-	</Style>
+            <!--  Check if error message starts with "Warning:" to use warning template  -->
+            <DataTrigger Binding="{Binding ErrorMessages, Converter={StaticResource errorMessageConverter}}" Value="Warning">
+                <Setter Property="ValidationErrorTemplate" Value="{StaticResource DataGridRowWarningTemplate}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
 
     <!--  Global TextBox Style - Based on default, adds validation template triggers  -->
     <Style BasedOn="{StaticResource {x:Type TextBox}}" TargetType="{x:Type TextBox}">

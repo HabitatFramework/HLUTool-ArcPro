@@ -804,7 +804,7 @@ namespace HLU.UI.ViewModel
         /// _osmmBulkUpdateMode) in sync for backward compatibility and then
         /// refreshes all dependent UI state.
         /// </summary>
-        private WorkMode WorkMode
+        public WorkMode WorkMode
         {
             get => _workMode;
             set
@@ -1301,7 +1301,7 @@ namespace HLU.UI.ViewModel
 
                     case "IncidOSMMUpdateStatus":
                         if (_incidOSMMUpdatesStatus != null & _incidOSMMUpdatesStatus >= 0)
-                            error = "Warning: OSMM UpdateAsync is outstanding";
+                            error = "Warning: OSMM Update is outstanding";
                         break;
                 }
 
@@ -1745,6 +1745,12 @@ namespace HLU.UI.ViewModel
                 // Set the validation option for potential priority habitats
                 BapEnvironment.PotentialPriorityDetermQtyValidation = _potentialPriorityDetermQtyValidation;
 
+                // Initialize the WorkMode button to show the default mode
+                await InitializeWorkModeButtonAsync();
+
+                // Force all ribbon controls to re-evaluate their enabled state
+                RefreshRibbonControls();
+
                 // Clear the status bar (or reset the cursor to an arrow)
                 ChangeCursor(Cursors.Arrow, null);
 
@@ -2077,6 +2083,40 @@ namespace HLU.UI.ViewModel
             catch
             {
             }
+        }
+
+        /// <summary>
+        /// Initializes the WorkMode button to display the current (default) mode.
+        /// Called during tool initialization to ensure the button shows the correct state.
+        /// </summary>
+        private async Task InitializeWorkModeButtonAsync()
+        {
+            // Force the button to be created by the framework
+            await FrameworkApplication.Current.Dispatcher.InvokeAsync(() =>
+            {
+                WorkModeButton.EnsureInitialized();
+            });
+
+            // Small delay to ensure button is fully initialized
+            await Task.Delay(100);
+
+            // Default mode is Edit (Update Mode)
+            WorkModeButton.UpdateWorkModeDisplay(
+                "Update Mode",
+                "pack://application:,,,/HLUTool;component/Images/Update16.png",
+                "pack://application:,,,/HLUTool;component/Images/Update32.png");
+        }
+
+        /// <summary>
+        /// Forces all ribbon controls to re-evaluate their enabled/disabled state.
+        /// Call this after changing WorkMode or other state that affects button availability.
+        /// </summary>
+        private void RefreshRibbonControls()
+        {
+            FrameworkApplication.Current.Dispatcher.BeginInvoke(() =>
+            {
+                CommandManager.InvalidateRequerySuggested();
+            });
         }
 
         #endregion Initialization
@@ -2760,6 +2800,71 @@ namespace HLU.UI.ViewModel
 
             // Recomputes whether editing is currently possible.
             RefreshEditCapability();
+
+            // Refresh ribbon controls to reflect the new work mode.
+            RefreshRibbonControls();
+        }
+
+        /// <summary>
+        /// Switches to the specified work mode, clearing conflicting flags as needed.
+        /// Also updates the work mode button to reflect the new mode.
+        /// </summary>
+        /// <param name="newMode">The target work mode flags to activate</param>
+        public void SetWorkMode(WorkMode newMode)
+        {
+            // If switching to normal Edit mode (Update Mode), clear all special modes
+            if (newMode == WorkMode.Edit)
+            {
+                // Clear all special mode flags
+                SetWorkModeFlag(WorkMode.Bulk, false);
+                SetWorkModeFlag(WorkMode.OSMMReview, false);
+                SetWorkModeFlag(WorkMode.OSMMBulk, false);
+
+                // Update the mode button
+                WorkModeButton.UpdateWorkModeDisplay(
+                    "Update Mode",
+                    "pack://application:,,,/HLUTool;component/Images/EditMode16.png",
+                    "pack://application:,,,/HLUTool;component/Images/EditMode32.png");
+
+                // Refresh the UI
+                RefreshAll();
+            }
+            // If switching to OSMM Review mode
+            else if (newMode.HasFlag(WorkMode.OSMMReview))
+            {
+                // Update the mode button BEFORE starting the mode
+                WorkModeButton.UpdateWorkModeDisplay(
+                    "OSMM Update Mode",
+                    "pack://application:,,,/HLUTool;component/Images/OSMMUpdate16.png",
+                    "pack://application:,,,/HLUTool;component/Images/OSMMUpdate32.png");
+
+                // Start OSMM Update mode (which will set the flags)
+                OSMMUpdateClicked(null);
+            }
+            // If switching to Bulk OSMM mode
+            else if (newMode.HasFlag(WorkMode.OSMMBulk))
+            {
+                // Update the mode button BEFORE starting the mode
+                WorkModeButton.UpdateWorkModeDisplay(
+                    "Bulk OSMM Update Mode",
+                    "pack://application:,,,/HLUTool;component/Images/OSMMBulkUpdate16.png",
+                    "pack://application:,,,/HLUTool;component/Images/OSMMBulkUpdate32.png");
+
+                // Start OSMM Bulk Update mode (which will set the flags)
+                StartOSMMBulkUpdateClicked(null);
+            }
+            // If switching to normal Bulk mode
+            else if (newMode.HasFlag(WorkMode.Bulk))
+            {
+                // Update the mode button BEFORE starting the mode
+                WorkModeButton.UpdateWorkModeDisplay(
+                    "Bulk Update Mode",
+                    "pack://application:,,,/HLUTool;component/Images/BulkUpdate16.png",
+                    "pack://application:,,,/HLUTool;component/Images/BulkUpdate32.png");
+
+                // Start Bulk Update mode (which will set the flags)
+                StartBulkUpdate();
+            }
         }
 
         #endregion Work Mode
@@ -2966,6 +3071,7 @@ namespace HLU.UI.ViewModel
                 !String.IsNullOrWhiteSpace(Reason) &&
                 !String.IsNullOrWhiteSpace(Process);
 
+            // Set the reason and process flag based on whether both reason and process have values.
             SetWorkModeFlag(WorkMode.HasReasonAndProcess, hasReasonAndProcess);
         }
 
@@ -3285,6 +3391,7 @@ namespace HLU.UI.ViewModel
         /// If loading of a new page fails, null is returned.</returns>
         private async Task<HluDataSet.incidRow> SeekIncidFiltered(int seekRowNumber)
         {
+            //TODO: Error in here sometimes (e.g. when moving to first/last water polygon when whole layer selected/filtered
             seekRowNumber--;
 
             if (seekRowNumber < 0)

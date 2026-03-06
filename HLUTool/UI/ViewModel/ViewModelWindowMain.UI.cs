@@ -168,6 +168,8 @@ namespace HLU.UI.ViewModel
         // ObservableCollection to hold HLU layers combo box items
         private ObservableCollection<string> _availableHLULayerNames = [];
 
+        private ActiveLayerComboBox _activeLayerComboBox;
+
         #endregion Fields - Ribbon Controls
 
         #region Fields - ComboBox Sources
@@ -206,12 +208,6 @@ namespace HLU.UI.ViewModel
 
         #endregion Fields - ComboBox Sources
 
-        #region Fields - Ribbon Controls
-
-        private ActiveLayerComboBox _activeLayerComboBox;
-
-        #endregion Fields - Ribbon Controls
-
         #region Fields - Progress
 
         private double _progressValue;
@@ -235,14 +231,11 @@ namespace HLU.UI.ViewModel
         private ICommand _addSecondaryHabitatCommand;
         private ICommand _addSecondaryHabitatListCommand;
         private ICommand _updateCommand;
-        private ICommand _cancelBulkUpdateCommand;
-        private ICommand _osmmUpdateCommandMenu;
         private ICommand _osmmUpdateAcceptCommandMenu;
         private ICommand _osmmUpdateRejectCommandMenu;
         private ICommand _osmmSkipCommand;
         private ICommand _osmmAcceptCommand;
         private ICommand _osmmRejectCommand;
-        private ICommand _osmmBulkUpdateCommandMenu;
 
         #endregion Fields - Commands
 
@@ -4585,6 +4578,21 @@ namespace HLU.UI.ViewModel
 
         #endregion Properties - History Tab
 
+        #region Properties - History Label/Header
+
+        /// <summary>
+        /// Gets the history tab group label.
+        /// </summary>
+        /// <value>
+        /// The history tab group label.
+        /// </value>
+        public string HistoryTabLabel
+        {
+            get { return "History"; }
+        }
+
+        #endregion Properties - History Label/Header
+
         #region Properties - Site Info
 
         /// <summary>
@@ -5187,25 +5195,6 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets the cancel bulk update command.
-        /// </summary>
-        /// <value>
-        /// The cancel bulk update command.
-        /// </value>
-        public ICommand CancelBulkUpdateCommand
-        {
-            get
-            {
-                if (_cancelBulkUpdateCommand == null)
-                {
-                    Action<object> cancelBulkUpdateAction = new(this.CancelBulkUpdateClicked);
-                    _cancelBulkUpdateCommand = new RelayCommand(cancelBulkUpdateAction, param => this.CanCancelBulkUpdate);
-                }
-                return _cancelBulkUpdateCommand;
-            }
-        }
-
-        /// <summary>
         /// Can the bulk update be cancelled.
         /// </summary>
         /// <value>
@@ -5260,15 +5249,6 @@ namespace HLU.UI.ViewModel
                     return Visibility.Hidden;
             }
             set { }
-        }
-
-        /// <summary>
-        /// Gets the header text for the bulk update command, which changes depending on whether bulk
-        /// update mode is active and whether OSMM bulk update mode is active.
-        /// </summary>
-        public string BulkUpdateCommandHeader
-        {
-            get { return (IsBulkMode && IsNotOsmmBulkMode) ? "Cancel _Bulk Apply Updates" : "_Bulk Apply Updates"; }
         }
 
         /// <summary>
@@ -5506,30 +5486,6 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Set the menu item text depending on whether in OSMM Update mode.
-        /// </summary>
-        public string OSMMUpdateCommandHeader
-        {
-            get { return IsOsmmReviewMode ? "Cancel Review OSMM Updates" : "Review OSMM Updates"; }
-        }
-
-        /// <summary>
-        /// OSMM Update menu command.
-        /// </summary>
-        public ICommand OSMMUpdateCommandMenu
-        {
-            get
-            {
-                if (_osmmUpdateCommandMenu == null)
-                {
-                    Action<object> osmmUpdateMenuAction = new(this.OSMMUpdateCommandMenuClicked);
-                    _osmmUpdateCommandMenu = new RelayCommand(osmmUpdateMenuAction);
-                }
-                return _osmmUpdateCommandMenu;
-            }
-        }
-
-        /// <summary>
         /// Whether to create incid history for processing OSMM Updates.
         /// </summary>
         public bool OSMMUpdateCreateHistory
@@ -5698,30 +5654,6 @@ namespace HLU.UI.ViewModel
 
                 // Otherwise clear the OSMM Bulk flag (but leave the Bulk flag to be cleared directly).
                 SetWorkModeFlag(WorkMode.OSMMBulk, value);
-            }
-        }
-
-        /// <summary>
-        /// Set the menu item text depending on whether in OSMM Bulk Update mode.
-        /// </summary>
-        public string OSMMBulkUpdateCommandHeader
-        {
-            get { return IsOsmmBulkMode ? "Cancel Bulk Apply OSMM Updates" : "Bulk Apply OSMM Updates"; }
-        }
-
-        /// <summary>
-        /// OSMM Bulk Update menu command.
-        /// </summary>
-        public ICommand OSMMBulkUpdateCommandMenu
-        {
-            get
-            {
-                if (_osmmBulkUpdateCommandMenu == null)
-                {
-                    Action<object> osmmBulkUpdateMenuAction = new(this.OSMMBulkUpdateCommandMenuClicked);
-                    _osmmBulkUpdateCommandMenu = new RelayCommand(osmmBulkUpdateMenuAction);
-                }
-                return _osmmBulkUpdateCommandMenu;
             }
         }
 
@@ -6226,8 +6158,7 @@ namespace HLU.UI.ViewModel
         {
             OnPropertyChanged(nameof(ShowInBulkUpdateMode));
             OnPropertyChanged(nameof(HideInBulkUpdateMode));
-            OnPropertyChanged(nameof(BulkUpdateCommandHeader));
-            OnPropertyChanged(nameof(OSMMBulkUpdateCommandHeader));
+
             OnPropertyChanged(nameof(TopControlsGroupHeader));
             OnPropertyChanged(nameof(TabItemHistoryEnabled));
 
@@ -6252,7 +6183,7 @@ namespace HLU.UI.ViewModel
         {
             OnPropertyChanged(nameof(ShowInOSMMUpdateMode));
             OnPropertyChanged(nameof(HideInOSMMUpdateMode));
-            OnPropertyChanged(nameof(OSMMUpdateCommandHeader));
+
             OnPropertyChanged(nameof(TopControlsGroupHeader));
         }
 
@@ -6945,8 +6876,10 @@ namespace HLU.UI.ViewModel
             // Update the WorkMode.CanEdit flag only if it changes.
             bool oldCanEdit = WorkMode.HasAny(WorkMode.CanEdit);
 
+            // If the edit capability has changed then update the WorkMode.CanEdit flag and raise
             if (oldCanEdit != canEdit)
             {
+                // Set the WorkMode.CanEdit flag to the new value.
                 SetWorkModeFlag(WorkMode.CanEdit, canEdit);
 
                 OnPropertyChanged(nameof(WindowTitle));
@@ -7158,7 +7091,8 @@ namespace HLU.UI.ViewModel
                 // Refreshes the status-related properties and notifies listeners of property changes.
                 RefreshStatus();
 
-                _viewModelBulkUpdate = null;
+                // Reset to normal Edit mode (clears flags and updates button)
+                SetWorkMode(WorkMode.Edit);
             }
         }
 
@@ -7245,7 +7179,7 @@ namespace HLU.UI.ViewModel
                     // Clear all the form fields (except the habitat class
                     // and habitat type).
                     ClearForm();
-
+                    
                     // Open the OSMM Updates query window.
                     OpenWindowQueryOSMM(true);
                 }
@@ -7268,9 +7202,13 @@ namespace HLU.UI.ViewModel
                 await _viewModelOSMMUpdate.CancelOSMMUpdateAsync();
 
                 _viewModelOSMMUpdate = null;
+
                 // Prevent OSMM updates being actioned too quickly.
                 _osmmUpdating = false;
             }
+
+            // Reset to normal Edit mode (clears flags and updates button)
+            SetWorkMode(WorkMode.Edit);
         }
 
         /// <summary>
@@ -7548,6 +7486,9 @@ namespace HLU.UI.ViewModel
                 await _viewModelBulkUpdate.CancelOSMMBulkUpdateAsync();
                 _viewModelBulkUpdate = null;
             }
+
+            // Reset to normal Edit mode (clears flags and updates button)
+            SetWorkMode(WorkMode.Edit);
         }
 
         /// <summary>
@@ -8030,7 +7971,7 @@ namespace HLU.UI.ViewModel
                 _windowQueryOSMM.DataContext = _viewModelWinQueryOSMM;
 
                 // show window
-                _windowQueryOSMM.ShowDialog();
+                _windowQueryOSMM.Show();
             }
             catch (Exception ex)
             {

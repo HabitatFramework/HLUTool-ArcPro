@@ -48,6 +48,7 @@
 
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -108,7 +109,7 @@
                                 VerticalAlignment="Center"
                                 IsEnabled="False"
                                 IsReadOnly="True"
-                                Text="{Binding NumIncidSelectedDB, Mode=OneWay}"
+                                Text="{Binding SelectedIncidsInDBCount, Mode=OneWay}"
                                 TextAlignment="Left" />
 
                             <Label
@@ -127,7 +128,7 @@
                                 VerticalAlignment="Center"
                                 IsEnabled="False"
                                 IsReadOnly="True"
-                                Text="{Binding NumToidSelectedDB, Mode=OneWay}"
+                                Text="{Binding SelectedToidsInDBCount, Mode=OneWay}"
                                 TextAlignment="Left" />
 
                             <Label
@@ -146,7 +147,7 @@
                                 VerticalAlignment="Center"
                                 IsEnabled="False"
                                 IsReadOnly="True"
-                                Text="{Binding NumFragmentsSelectedDB, Mode=OneWay}"
+                                Text="{Binding SelectedFragsInDBCount, Mode=OneWay}"
                                 TextAlignment="Left" />
 
                             <Label
@@ -166,7 +167,7 @@
                                 IsEnabled="False"
                                 IsReadOnly="True"
                                 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
-                                Text="{Binding NumIncidSelectedMap, Mode=OneWay, ValidatesOnDataErrors=True}"
+                                Text="{Binding SelectedIncidsInGISCount, Mode=OneWay, ValidatesOnDataErrors=True}"
                                 TextAlignment="Left"
                                 ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                 ToolTipService.ShowOnDisabled="True" />
@@ -188,7 +189,7 @@
                                 IsEnabled="False"
                                 IsReadOnly="True"
                                 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
-                                Text="{Binding NumToidSelectedMap, Mode=OneWay, ValidatesOnDataErrors=True}"
+                                Text="{Binding SelectedToidsInGISCount, Mode=OneWay, ValidatesOnDataErrors=True}"
                                 TextAlignment="Left"
                                 ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                 ToolTipService.ShowOnDisabled="True" />
@@ -209,7 +210,7 @@
                                 IsEnabled="False"
                                 IsReadOnly="True"
                                 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
-                                Text="{Binding NumFragmentsSelectedMap, Mode=OneWay, ValidatesOnDataErrors=True}"
+                                Text="{Binding SelectedFragsInGISCount, Mode=OneWay, ValidatesOnDataErrors=True}"
                                 TextAlignment="Left"
                                 ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                 ToolTipService.ShowOnDisabled="True" />
@@ -400,21 +401,188 @@
                     </Grid>
                 </GroupBox>
 
+                <!--  GroupBoxOSMMPending  -->
+                <GroupBox
+                    x:Name="GroupBoxOSMMPending"
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Margin="2,0,2,0"
+                    Header="OSMM Updates"
+                    IsHitTestVisible="True"
+                    Visibility="{Binding ShowIncidOSMMPendingGroup}">
+
+                    <Grid x:Name="GridOSMMPending" Margin="0,4,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Margin="0,0,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" MinWidth="45" />
+                                <ColumnDefinition Width="*" MinWidth="30" />
+                                <ColumnDefinition Width="Auto" MinWidth="40" />
+                                <ColumnDefinition Width="*" MinWidth="15" />
+                                <ColumnDefinition Width="Auto" MinWidth="40" />
+                                <ColumnDefinition Width="*" MinWidth="15" />
+                                <ColumnDefinition Width="Auto" MinWidth="35" />
+                                <ColumnDefinition Width="*" MinWidth="15" />
+                                <ColumnDefinition Width="Auto" MinWidth="30" />
+                                <ColumnDefinition Width="2*" MinWidth="90" />
+                            </Grid.ColumnDefinitions>
+
+                            <Label
+                                x:Name="LabelOSMMXRefID"
+                                Grid.Column="0"
+                                Margin="0,0,0,4"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Content="XRef ID" />
+                            <TextBox
+                                x:Name="TextBoxOSMMXRefID"
+                                Grid.Column="1"
+                                Margin="0,0,0,4"
+                                Padding="2,2,2,2"
+                                VerticalAlignment="Center"
+                                IsEnabled="False"
+                                IsReadOnly="True"
+                                Text="{Binding IncidOSMMXRefID, Mode=OneWay, ValidatesOnDataErrors=False}"
+                                TextAlignment="Left" />
+
+                            <Label
+                                x:Name="LabelOSMMProcessFlag"
+                                Grid.Column="2"
+                                Margin="6,0,0,4"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Content="Process" />
+                            <TextBox
+                                x:Name="TextBoxOSMMProcessFlag"
+                                Grid.Column="3"
+                                Margin="0,0,0,4"
+                                Padding="2,2,2,2"
+                                VerticalAlignment="Center"
+                                IsEnabled="False"
+                                IsReadOnly="True"
+                                Text="{Binding IncidOSMMProcessFlag, Mode=OneWay, ValidatesOnDataErrors=False}"
+                                TextAlignment="Center" />
+
+                            <Label
+                                x:Name="LabelOSMMChangeFlag"
+                                Grid.Column="4"
+                                Margin="6,0,0,4"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Content="Change" />
+                            <TextBox
+                                x:Name="TextBoxOSMMChangeFlag"
+                                Grid.Column="5"
+                                Margin="0,0,0,4"
+                                Padding="2,2,2,2"
+                                VerticalAlignment="Center"
+                                IsEnabled="False"
+                                IsReadOnly="True"
+                                Text="{Binding IncidOSMMChangeFlag, Mode=OneWay, ValidatesOnDataErrors=False}"
+                                TextAlignment="Center" />
+
+                            <Label
+                                x:Name="LabelOSMMSpatialFlag"
+                                Grid.Column="6"
+                                Margin="6,0,0,4"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Content="Spatial" />
+                            <TextBox
+                                x:Name="TextBoxOSMMSpatialFlag"
+                                Grid.Column="7"
+                                Margin="0,0,0,4"
+                                Padding="2,2,2,2"
+                                VerticalAlignment="Center"
+                                IsEnabled="False"
+                                IsReadOnly="True"
+                                Text="{Binding IncidOSMMSpatialFlag, Mode=OneWay, ValidatesOnDataErrors=False}"
+                                TextAlignment="Center" />
+
+                            <Label
+                                x:Name="LabelOSMMStatus"
+                                Grid.Column="8"
+                                Margin="6,0,0,4"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Content="Status" />
+                            <TextBox
+                                x:Name="TextBoxOSMMStatus"
+                                Grid.Column="9"
+                                Margin="0,0,2,4"
+                                Padding="2,2,2,2"
+                                VerticalAlignment="Center"
+                                IsEnabled="False"
+                                IsReadOnly="True"
+                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                Text="{Binding IncidOSMMUpdateStatus, Mode=OneWay, ValidatesOnDataErrors=True}"
+                                TextAlignment="Left"
+                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
+                                ToolTipService.ShowOnDisabled="True" />
+                        </Grid>
+
+                        <Grid Grid.Row="1" Margin="0,2,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" MinWidth="45" />
+                                <ColumnDefinition Width="Auto" MinWidth="60" />
+                                <ColumnDefinition Width="Auto" MinWidth="40" />
+                                <ColumnDefinition Width="*" MinWidth="100" />
+                            </Grid.ColumnDefinitions>
+
+                            <Label
+                                x:Name="LabelOSMMPrimary"
+                                Grid.Column="0"
+                                Margin="0,2,0,0"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Content="Primary" />
+                            <TextBox
+                                x:Name="TextBoxOSMMPrimary"
+                                Grid.Column="1"
+                                Margin="0,2,0,0"
+                                Padding="2,2,2,2"
+                                VerticalAlignment="Center"
+                                IsEnabled="False"
+                                IsReadOnly="True"
+                                Text="{Binding IncidOSMMHabitatPrimary, Mode=OneWay, ValidatesOnDataErrors=False}"
+                                TextAlignment="Left" />
+
+                            <Label
+                                x:Name="LabelOSMMSecondaries"
+                                Grid.Column="2"
+                                Margin="6,2,0,0"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Content="Secondaries" />
+                            <TextBox
+                                x:Name="TextBoxOSMMSecondaries"
+                                Grid.Column="3"
+                                Margin="0,2,2,0"
+                                Padding="2,2,2,2"
+                                VerticalAlignment="Center"
+                                IsEnabled="False"
+                                IsReadOnly="True"
+                                Text="{Binding IncidOSMMHabitatSecondaries, Mode=OneWay, ValidatesOnDataErrors=False}"
+                                TextAlignment="Left" />
+                        </Grid>
+                    </Grid>
+                </GroupBox>
+
                 <!--  TabControlData  -->
                 <TabControl
                     x:Name="TabControlData"
-                    Grid.Row="1"
+                    Grid.Row="2"
                     Grid.Column="0"
                     Margin="0,0,0,0"
                     IsEnabled="{Binding TabControlDataEnabled}"
                     SelectedIndex="{Binding TabItemSelected, Mode=TwoWay}">
 
                     <!--  TabItemHabitat  -->
-                    <TabItem
-                        x:Name="TabItemHabitat"
-                        Height="24"
-                        VerticalAlignment="Bottom"
-                        IsEnabled="{Binding TabItemHabitatEnabled}">
+                    <TabItem x:Name="TabItemHabitat" IsEnabled="{Binding TabItemHabitatEnabled}">
 
                         <TabItem.Header>
                             <StackPanel>
@@ -2979,10 +3147,11 @@
                         <TabItem.Header>
                             <StackPanel>
                                 <Label
+                                    x:Name="HistoryTabLabel"
                                     Margin="0"
                                     Padding="4,1,4,1"
                                     VerticalAlignment="Bottom"
-                                    Content="History"
+                                    Content="{Binding HistoryTabLabel, ValidatesOnDataErrors=True}"
                                     FontSize="12"
                                     FontWeight="Medium" />
                             </StackPanel>
@@ -3034,7 +3203,7 @@
                 <!--  ButtonGetMapSelection  -->
                 <Button
                     x:Name="ButtonGetMapSelection"
-                    Grid.Row="1"
+                    Grid.Row="2"
                     Grid.Column="1"
                     Width="20"
                     Height="20"
@@ -3057,7 +3226,7 @@
                 <!--  GridStatus  -->
                 <Grid
                     x:Name="GridStatus"
-                    Grid.Row="2"
+                    Grid.Row="3"
                     Margin="0,4,0,4"
                     Visibility="{Binding HideInOSMMUpdateMode}">
                     <Grid.ColumnDefinitions>
@@ -3210,7 +3379,7 @@
                 <!--  GridStatusOSMM  -->
                 <Grid
                     x:Name="GridStatusOSMM"
-                    Grid.Row="2"
+                    Grid.Row="3"
                     Margin="0,4,0,4"
                     Visibility="{Binding ShowInOSMMUpdateMode}">
                     <Grid.ColumnDefinitions>
@@ -3304,9 +3473,10 @@
                     </Grid>
                 </Grid>
 
+                <!--  GridActiveLayer  -->
                 <Grid
                     x:Name="GridActiveLayer"
-                    Grid.Row="3"
+                    Grid.Row="4"
                     Margin="0,0,0,0"
                     VerticalAlignment="Top"
                     Visibility="Collapsed">
@@ -3334,11 +3504,12 @@
                     </Grid>
                 </Grid>
 
-                <!-- <Separator Grid.Row="4" /> -->
+                <!-- <Separator Grid.Row="5" /> -->
 
+                <!--  GridProcessStatus  -->
                 <Grid
                     Name="GridProcessStatus"
-                    Grid.Row="5"
+                    Grid.Row="6"
                     Margin="6,6,6,6"
                     Visibility="Visible">
 
@@ -3365,9 +3536,10 @@
                         Text="{Binding ProcessStatus}" />
                 </Grid>
 
+                <!--  GridProgressAnimation  -->
                 <Grid
                     Name="GridProgressAnimation"
-                    Grid.Row="6"
+                    Grid.Row="7"
                     Margin="6,6,6,6"
                     Visibility="{Binding ProgressAnimating}">
 

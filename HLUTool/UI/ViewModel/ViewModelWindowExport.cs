@@ -245,7 +245,7 @@ namespace HLU.UI.ViewModel
         /// This property is used to display the selection information in the export window.
         public string SelectionText
         {
-            get { return HaveSelection ? String.Format("({0} of {1} feature{2})", _selectedNumber.ToString("N0"), _totalCount.ToString("N0"), _selectedNumber > 1 ? "s" : String.Empty) : String.Empty; }
+            get { return HaveSelection ? String.Format("({0} of {1} feature{2})", _selectedNumber.ToString("N0"), _totalCount.ToString("N0"), _totalCount > 1 ? "s" : String.Empty) : String.Empty; }
         }
 
         #endregion Control Properties

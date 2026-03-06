@@ -47,14 +47,16 @@
     <None Remove="Images\AddRow16.png" />
     <None Remove="Images\AddRowSquare16.png" />
     <None Remove="Images\AddScript16.png" />
+    <None Remove="Images\BulkUpdate16.png" />
+    <None Remove="Images\BulkUpdate32.png" />
     <None Remove="Images\ClearFilter16.png" />
     <None Remove="Images\ClearFilter32.png" />
     <None Remove="Images\Copy16.png" />
     <None Remove="Images\Copy32.png" />
-    <None Remove="Images\EditCopy16.png" />
-    <None Remove="Images\EditCopy32.png" />
-    <None Remove="Images\EditPaste16.png" />
-    <None Remove="Images\EditPaste32.png" />
+    <None Remove="Images\EditMode16.png" />
+    <None Remove="Images\EditMode32.png" />
+    <None Remove="Images\EditOSMM16.png" />
+    <None Remove="Images\EditOSMM32.png" />
     <None Remove="Images\Error32.png" />
     <None Remove="Images\Export16.png" />
     <None Remove="Images\Export32.png" />
@@ -72,6 +74,10 @@
     <None Remove="Images\Options32.png" />
     <None Remove="Images\OptionsB16.png" />
     <None Remove="Images\OptionsB32.png" />
+    <None Remove="Images\OSMMBulkUpdate16.png" />
+    <None Remove="Images\OSMMBulkUpdate32.png" />
+    <None Remove="Images\OSMMUpdate16.png" />
+    <None Remove="Images\OSMMUpdate32.png" />
     <None Remove="Images\Paste16.png" />
     <None Remove="Images\Paste32.png" />
     <None Remove="Images\PhysicalMerge16.png" />
@@ -85,6 +91,8 @@
     <None Remove="Images\Split16.png" />
     <None Remove="Images\Split32.png" />
     <None Remove="Images\Success32.png" />
+    <None Remove="Images\Update16.png" />
+    <None Remove="Images\Update32.png" />
     <None Remove="Images\Warning32.png" />
     <None Remove="Images\ZoomTable16.png" />
   </ItemGroup>
@@ -143,6 +151,12 @@
     <Resource Include="Images\AddScript16.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="Images\BulkUpdate16.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\BulkUpdate32.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Images\ClearFilter16.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
@@ -155,16 +169,16 @@
     <Resource Include="Images\Copy32.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Images\EditCopy16.png">
+    <Resource Include="Images\EditMode16.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Images\EditCopy32.png">
+    <Resource Include="Images\EditMode32.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Images\EditPaste16.png">
+    <Resource Include="Images\EditOSMM16.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="Images\EditPaste32.png">
+    <Resource Include="Images\EditOSMM32.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Images\Export16.png">
@@ -224,6 +238,18 @@
 	<Resource Include="Images\OptionsB32.png">
 	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	</Resource>
+	<Resource Include="Images\OSMMBulkUpdate16.png">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Resource>
+	<Resource Include="Images\OSMMBulkUpdate32.png">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Resource>
+	<Resource Include="Images\OSMMUpdate16.png">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Resource>
+	<Resource Include="Images\OSMMUpdate32.png">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Resource>
 	<Resource Include="Images\Paste16.png">
 	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	</Resource>
@@ -267,6 +293,12 @@
 	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	</Resource>
 	<Resource Include="Images\Success32.png">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Resource>
+	<Resource Include="Images\Update16.png">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Resource>
+	<Resource Include="Images\Update32.png">
 	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	</Resource>
 	<Resource Include="Images\Warning32.png">
