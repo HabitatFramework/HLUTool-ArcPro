@@ -62,7 +62,7 @@
 
 				<!-- Mode group -->
 				<group id="HLUTool_Group_Mode" caption="Work Mode" keytip="G1">
-					<button refID="HLUTool_btnWorkModeMenu" size="large" />
+					<button refID="HLUTool_btnWorkMode" size="large" />
 					<dynamicMenu refID="HLUTool_WorkModeMenu" size="large" />
 				</group>
 

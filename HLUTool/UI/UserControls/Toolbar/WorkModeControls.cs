@@ -168,8 +168,6 @@ namespace HLU.UI.UserControls.Toolbar
 
                 // Force ribbon to re-evaluate all button states
                 CommandManager.InvalidateRequerySuggested();
-
-                var button2 = GetInstance();
             });
         }
     }
