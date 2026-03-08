@@ -232,12 +232,6 @@
 	<Resource Include="Images\Options32.png">
 	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	</Resource>
-	<Resource Include="Images\OptionsB16.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\OptionsB32.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
 	<Resource Include="Images\OSMMBulkUpdate16.png">
 	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	</Resource>

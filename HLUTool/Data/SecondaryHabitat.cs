@@ -168,7 +168,7 @@ namespace HLU.Data
 
         public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
 
-        public bool HasErrors => _errors.Any();
+        public bool HasErrors => _errors.Count != 0;
 
         public IEnumerable GetErrors(string propertyName)
         {
@@ -176,7 +176,7 @@ namespace HLU.Data
             {
                 // Return all errors for row-level validation
                 var allErrors = _errors.Values.SelectMany(e => e).ToList();
-                return allErrors.Any() ? allErrors : null;
+                return allErrors.Count != 0 ? allErrors : null;
             }
 
             if (_errors.ContainsKey(propertyName))
@@ -189,7 +189,7 @@ namespace HLU.Data
         {
             bool errorsChanged = false;
 
-            if (errors != null && errors.Any())
+            if (errors != null && errors.Count != 0)
             {
                 // Add or update errors
                 if (!_errors.ContainsKey(propertyName) || !_errors[propertyName].SequenceEqual(errors))
@@ -268,7 +268,7 @@ namespace HLU.Data
                     break;
             }
 
-            SetErrors(propertyName, errors.Any() ? errors : null);
+            SetErrors(propertyName, errors.Count != 0 ? errors : null);
         }
 
         #endregion
