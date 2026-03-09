@@ -48,6 +48,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using CommandType = System.Data.CommandType;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
 {
@@ -487,9 +488,8 @@ namespace HLU.UI.ViewModel
             }
             finally
             {
-                //TODO: DEBUG - Commented out
-                // Clean up all tables and feature classes after export
-                //await ArcGISProHelpers.CleanupGeodatabaseAsync(workingFileGDBpath);
+               // Clean up all tables and feature classes after export
+               await ArcGISProHelpers.CleanupGeodatabaseAsync(workingFileGDBpath);
 
                 _viewModelMain.ChangeCursor(Cursors.Arrow, null);
             }

@@ -107,10 +107,8 @@ namespace HLU.UI.UserControls.Toolbar
         /// <param name="largeImagePath">The pack URI path to the large (32x32) image.</param>
         public void UpdateDisplay(string caption, string smallImagePath, string largeImagePath)
         {
-            System.Diagnostics.Debug.WriteLine($"UpdateDisplay called: {caption}");
-
+            // Set the properties based on parameters
             Caption = caption;
-            System.Diagnostics.Debug.WriteLine($"Caption set to: {Caption}");
 
             if (!string.IsNullOrEmpty(smallImagePath))
                 SmallImage = new BitmapImage(new Uri(smallImagePath));
@@ -118,12 +116,11 @@ namespace HLU.UI.UserControls.Toolbar
             if (!string.IsNullOrEmpty(largeImagePath))
                 LargeImage = new BitmapImage(new Uri(largeImagePath));
 
-            System.Diagnostics.Debug.WriteLine($"About to call NotifyPropertyChanged...");
+            // Notify of changes to update the UI
             NotifyPropertyChanged(nameof(Caption));
             NotifyPropertyChanged(nameof(SmallImage));
             NotifyPropertyChanged(nameof(LargeImage));
             NotifyPropertyChanged(nameof(Tooltip));
-            System.Diagnostics.Debug.WriteLine($"NotifyPropertyChanged called");
         }
 
         /// <summary>
@@ -142,7 +139,7 @@ namespace HLU.UI.UserControls.Toolbar
                 if (button != null)
                 {
                     // CRITICAL: Update Tooltip to force UI refresh
-                    button.Tooltip = $"{caption} - Current work mode";
+                    button.Tooltip = caption;
 
                     // Update the button properties
                     button.Caption = caption;
@@ -195,7 +192,7 @@ namespace HLU.UI.UserControls.Toolbar
             AddReference("HLUTool_OSMMBulkUpdateModeButton");
 
             // Force all buttons to refresh their state
-            System.Windows.Input.CommandManager.InvalidateRequerySuggested();
+            CommandManager.InvalidateRequerySuggested();
         }
     }
 

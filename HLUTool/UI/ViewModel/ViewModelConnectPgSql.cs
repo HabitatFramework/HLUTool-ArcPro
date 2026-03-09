@@ -26,6 +26,7 @@ using System.Windows;
 using System.Windows.Input;
 using HLU.Data.Connection;
 using Npgsql;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
 {

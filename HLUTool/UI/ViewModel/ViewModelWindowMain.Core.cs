@@ -2812,7 +2812,7 @@ namespace HLU.UI.ViewModel
         /// <param name="newMode">The target work mode flags to activate</param>
         public void SetWorkMode(WorkMode newMode)
         {
-            // If switching to normal Edit mode (Update Mode), clear all special modes
+            // If switching to normal Edit mode (Update Mode)
             if (newMode == WorkMode.Edit)
             {
                 // Clear all special mode flags
@@ -2820,50 +2820,50 @@ namespace HLU.UI.ViewModel
                 SetWorkModeFlag(WorkMode.OSMMReview, false);
                 SetWorkModeFlag(WorkMode.OSMMBulk, false);
 
+                // Refresh the UI
+                RefreshAll();
+
                 // Update the mode button
                 WorkModeButton.UpdateWorkModeDisplay(
                     "Update Mode",
-                    "pack://application:,,,/HLUTool;component/Images/EditMode16.png",
-                    "pack://application:,,,/HLUTool;component/Images/EditMode32.png");
-
-                // Refresh the UI
-                RefreshAll();
+                    "pack://application:,,,/HLUTool;component/Images/Update16.png",
+                    "pack://application:,,,/HLUTool;component/Images/Update32.png");
             }
             // If switching to OSMM Review mode
             else if (newMode.HasFlag(WorkMode.OSMMReview))
             {
+                // Start OSMM Update mode (which will set the flags)
+                OSMMUpdateClicked(null);
+
                 // Update the mode button BEFORE starting the mode
                 WorkModeButton.UpdateWorkModeDisplay(
                     "OSMM Update Mode",
                     "pack://application:,,,/HLUTool;component/Images/OSMMUpdate16.png",
                     "pack://application:,,,/HLUTool;component/Images/OSMMUpdate32.png");
-
-                // Start OSMM Update mode (which will set the flags)
-                OSMMUpdateClicked(null);
             }
             // If switching to Bulk OSMM mode
             else if (newMode.HasFlag(WorkMode.OSMMBulk))
             {
+                // Start OSMM Bulk Update mode (which will set the flags)
+                StartOSMMBulkUpdateClicked(null);
+
                 // Update the mode button BEFORE starting the mode
                 WorkModeButton.UpdateWorkModeDisplay(
                     "Bulk OSMM Update Mode",
                     "pack://application:,,,/HLUTool;component/Images/OSMMBulkUpdate16.png",
                     "pack://application:,,,/HLUTool;component/Images/OSMMBulkUpdate32.png");
-
-                // Start OSMM Bulk Update mode (which will set the flags)
-                StartOSMMBulkUpdateClicked(null);
             }
             // If switching to normal Bulk mode
             else if (newMode.HasFlag(WorkMode.Bulk))
             {
+                // Start Bulk Update mode (which will set the flags)
+                StartBulkUpdate();
+
                 // Update the mode button BEFORE starting the mode
                 WorkModeButton.UpdateWorkModeDisplay(
                     "Bulk Update Mode",
                     "pack://application:,,,/HLUTool;component/Images/BulkUpdate16.png",
                     "pack://application:,,,/HLUTool;component/Images/BulkUpdate32.png");
-
-                // Start Bulk Update mode (which will set the flags)
-                StartBulkUpdate();
             }
         }
 

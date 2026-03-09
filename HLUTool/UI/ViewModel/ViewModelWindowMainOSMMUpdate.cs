@@ -33,6 +33,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
 {
@@ -99,9 +100,6 @@ namespace HLU.UI.ViewModel
             try
             {
                 _viewModelMain.ChangeCursor(Cursors.Wait, "Updating ...");
-
-                // Let WPF render the cursor/message before heavy work begins.
-                //await Dispatcher.Yield(DispatcherPriority.Background);
 
                 // Only update DateTime fields to whole seconds.
                 // Fractions of a second can cause rounding differences when
@@ -174,10 +172,6 @@ namespace HLU.UI.ViewModel
         {
             _viewModelMain.ChangeCursor(Cursors.Wait, "Updating all ...");
 
-            //TODO: Needed?
-            // Let WPF render the cursor/message before heavy work begins.
-            //await Dispatcher.Yield(DispatcherPriority.Background);
-
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
             try
@@ -188,8 +182,10 @@ namespace HLU.UI.ViewModel
                 _viewModelMain.DataBase.CommitTransaction();
                 _viewModelMain.HluDataset.AcceptChanges();
 
-                MessageBox.Show("OSMM update succeeded.", "HLU: OSMM Update",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                // Don't message now as there will another message to show no more
+                // records are found.
+                //MessageBox.Show("OSMM update succeeded.", "HLU: OSMM Update",
+                //    MessageBoxButton.OK, MessageBoxImage.Information);
 
                 // Move beyond the end of the Incids (to show they have
                 // all been processed)

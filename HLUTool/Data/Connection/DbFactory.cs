@@ -24,6 +24,7 @@ using HLU.UI.ViewModel;
 using System;
 using System.Windows;
 using ArcGIS.Desktop.Framework;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.Data.Connection
 {

@@ -140,10 +140,11 @@
 						className="HLU.UI.UserControls.Toolbar.WorkModeButton"
 						loadOnClick="false"
 						keytip="M"
-						smallImage="pack://application:,,,/HLUTool;component/Images/EditMode16.png"
-						largeImage="pack://application:,,,/HLUTool;component/Images/EditMode32.png">
-					<tooltip heading="Work Mode">
-						Current work mode. Click the adjacent dropdown to change modes.
+						isChecked="true"
+						smallImage="pack://application:,,,/HLUTool;component/Images/Update16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/Update32.png">
+					<tooltip heading="Current work mode">
+						Click the adjacent dropdown to change modes.
 					</tooltip>
 				</button>
 

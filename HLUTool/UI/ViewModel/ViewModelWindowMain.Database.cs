@@ -40,6 +40,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
 {
@@ -2339,10 +2340,6 @@ namespace HLU.UI.ViewModel
             {
                 ChangeCursor(Cursors.Wait, "Validating ...");
 
-                //TODO: Needed?
-                // Let WPF render the cursor/message before heavy work begins.
-                //await Dispatcher.Yield(DispatcherPriority.Background);
-
                 // Select only the incid database table to use in the query.
                 List<DataTable> whereTables = [];
                 whereTables.Add(IncidTable);
@@ -2486,15 +2483,12 @@ namespace HLU.UI.ViewModel
         /// <param name="spatialFlag">The spatial flag.</param>
         /// <param name="changeFlag">The change flag.</param>
         /// <param name="status">The status.</param>
-        public async Task ApplyOSMMUpdatesFilterAsync(string processFlag, string spatialFlag, string changeFlag, string status)
+        /// <param name="selectInGIS">if set to <c>true</c> select the filtered records in GIS.</param>
+        public async Task ApplyOSMMUpdatesFilterAsync(string processFlag, string spatialFlag, string changeFlag, string status, bool selectInGIS)
         {
             try
             {
                 ChangeCursor(Cursors.Wait, "Validating ...");
-
-                //TODO: Needed?
-                // Let WPF render the cursor/message before heavy work begins.
-                //await Dispatcher.Yield(DispatcherPriority.Background);
 
                 // Select only the incid_osmm_updates database table to use in the query.
                 List<DataTable> whereTables = [];
@@ -2558,9 +2552,9 @@ namespace HLU.UI.ViewModel
                 // Backup the current selection (filter).
                 DataTable incidSelectionBackup = _incidSelection;
 
-                // If there are any records in the selection (and the tool is
-                // not currently in bulk update mode).
-                if (IsFiltered)
+                // If there are any records in the selection (and the tool is not currently in bulk
+                // bulk update mode), and the caller has requested to select the records in GIS.
+                if (IsFiltered && selectInGIS)
                 {
                     // Find the expected number of features to be selected in GIS.
                     _selectedFragsInDBCount = await ExpectedSelectionFeatures(whereTables, newWhereClause);
@@ -2678,8 +2672,10 @@ namespace HLU.UI.ViewModel
                     // Reset the cursor back to normal.
                     ChangeCursor(Cursors.Arrow, null);
 
-                    // Warn the user that no records were found.
-                    MessageBox.Show("No records found in database.", "HLU: Apply Query",
+                    // Warn the user that no records were found (if the caller has requested to
+                    // select the records in GIS).
+                    if (selectInGIS)
+                        MessageBox.Show("No records found in database.", "HLU: Apply Query",
                         MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
@@ -2712,12 +2708,13 @@ namespace HLU.UI.ViewModel
             // Reset the OSMM Updates filter when in OSMM Update mode.
             if (IsOsmmReviewMode)
             {
-                await ApplyOSMMUpdatesFilterAsync(null, null, null, null);
+                await ApplyOSMMUpdatesFilterAsync(null, null, null, null, false);
                 return;
             }
             else if (IsOsmmBulkMode)
             {
-                await ApplyOSMMUpdatesFilterAsync(null, null, null, "Pending");
+                //TODO: Should SelectInGIS be true here?
+                await ApplyOSMMUpdatesFilterAsync(null, null, null, "Pending", true);
                 return;
             }
 

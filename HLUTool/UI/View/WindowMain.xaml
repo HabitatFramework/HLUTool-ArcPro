@@ -12,6 +12,10 @@
     d:DataContext="{d:DesignInstance Type=local:ViewModelWindowMain}"
     d:DesignHeight="600"
     d:DesignWidth="300"
+    Focusable="True"
+    Loaded="Window_Loaded"
+    PreviewKeyDown="Window_PreviewKeyDown"
+    PreviewKeyUp="Window_PreviewKeyUp"
     mc:Ignorable="d">
 
     <UserControl.Resources>
@@ -422,13 +426,13 @@
                                 <ColumnDefinition Width="Auto" MinWidth="45" />
                                 <ColumnDefinition Width="*" MinWidth="30" />
                                 <ColumnDefinition Width="Auto" MinWidth="40" />
-                                <ColumnDefinition Width="*" MinWidth="15" />
+                                <ColumnDefinition Width="*" MinWidth="30" />
                                 <ColumnDefinition Width="Auto" MinWidth="40" />
                                 <ColumnDefinition Width="*" MinWidth="15" />
                                 <ColumnDefinition Width="Auto" MinWidth="35" />
                                 <ColumnDefinition Width="*" MinWidth="15" />
                                 <ColumnDefinition Width="Auto" MinWidth="30" />
-                                <ColumnDefinition Width="2*" MinWidth="90" />
+                                <ColumnDefinition Width="*" MinWidth="65" />
                             </Grid.ColumnDefinitions>
 
                             <Label
@@ -447,7 +451,7 @@
                                 IsEnabled="False"
                                 IsReadOnly="True"
                                 Text="{Binding IncidOSMMXRefID, Mode=OneWay, ValidatesOnDataErrors=False}"
-                                TextAlignment="Left" />
+                                TextAlignment="Right" />
 
                             <Label
                                 x:Name="LabelOSMMProcessFlag"
@@ -465,7 +469,7 @@
                                 IsEnabled="False"
                                 IsReadOnly="True"
                                 Text="{Binding IncidOSMMProcessFlag, Mode=OneWay, ValidatesOnDataErrors=False}"
-                                TextAlignment="Center" />
+                                TextAlignment="Right" />
 
                             <Label
                                 x:Name="LabelOSMMChangeFlag"
@@ -520,7 +524,7 @@
                                 IsReadOnly="True"
                                 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
                                 Text="{Binding IncidOSMMUpdateStatus, Mode=OneWay, ValidatesOnDataErrors=True}"
-                                TextAlignment="Left"
+                                TextAlignment="Center"
                                 ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                 ToolTipService.ShowOnDisabled="True" />
                         </Grid>
@@ -3436,9 +3440,9 @@
                         HorizontalAlignment="Right"
                         VerticalAlignment="Bottom">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="70" />
-                            <ColumnDefinition Width="70" />
-                            <ColumnDefinition Width="70" />
+                            <ColumnDefinition Width="80" />
+                            <ColumnDefinition Width="80" />
+                            <ColumnDefinition Width="80" />
                         </Grid.ColumnDefinitions>
                         <Button
                             x:Name="ButtonOSMMSkip"
@@ -3447,7 +3451,8 @@
                             Background="#FF939393"
                             Command="{Binding OSMMSkipCommand}"
                             Content="_Skip"
-                            Foreground="White" />
+                            Foreground="White"
+                            Style="{DynamicResource Esri_Button}" />
                         <Button
                             x:Name="ButtonOSMMReject"
                             Grid.Column="1"
@@ -3456,6 +3461,7 @@
                             Command="{Binding OSMMRejectCommand}"
                             Content="{Binding OSMMRejectText}"
                             Foreground="White"
+                            Style="{DynamicResource Esri_Button}"
                             Tag="{Binding OSMMRejectTag, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                             ToolTip="Hold down 'Ctrl' key to reject all remaining records in filter"
                             ToolTipService.ShowOnDisabled="True" />
@@ -3467,6 +3473,7 @@
                             Command="{Binding OSMMAcceptCommand}"
                             Content="{Binding OSMMAcceptText}"
                             Foreground="White"
+                            Style="{DynamicResource Esri_Button}"
                             Tag="{Binding OSMMAcceptTag, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                             ToolTip="Hold down 'Ctrl' key to accept all remaining records in filter"
                             ToolTipService.ShowOnDisabled="True" />

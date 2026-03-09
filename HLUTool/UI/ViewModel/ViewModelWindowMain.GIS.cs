@@ -941,10 +941,6 @@ namespace HLU.UI.ViewModel
                 // Set the status to processing and the cursor to wait.
                 ChangeCursor(Cursors.Wait, "Selecting in GIS ...");
 
-                //TODO: Needed?
-                // Let WPF render the cursor/message before heavy work begins.
-                //await Dispatcher.Yield(DispatcherPriority.Background);
-
                 // Backup the current selection (filter).
                 DataTable incidSelectionBackup = _incidSelection;
 

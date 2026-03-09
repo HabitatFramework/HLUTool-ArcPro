@@ -42,6 +42,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using CommandType = System.Data.CommandType;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
 {
@@ -232,10 +233,6 @@ namespace HLU.UI.ViewModel
         public async Task ApplyBulkUpdateAsync()
         {
             _viewModelMain.ChangeCursor(Cursors.Wait, "Bulk updating ...");
-
-            //TODO: Needed?
-            // Let WPF render the cursor/message before heavy work begins.
-            //await Dispatcher.Yield(DispatcherPriority.Background);
 
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
@@ -513,10 +510,6 @@ namespace HLU.UI.ViewModel
         public async Task ApplyOSMMBulkUpdateAsync()
         {
             _viewModelMain.ChangeCursor(Cursors.Wait, "OSMM Bulk updating ...");
-
-            //TODO: Needed?
-            // Let WPF render the cursor/message before heavy work begins.
-            //await Dispatcher.Yield(DispatcherPriority.Background);
 
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 

@@ -5285,7 +5285,6 @@ namespace HLU.UI.ViewModel
 
         #region Properties - OSMM Update
 
-        //TODO: Change or get this working
         /// <summary>
         /// Gets or sets the OSMM Accept button tag (which controls
         /// the text on the button (and whether the <Ctrl> button is
@@ -5305,7 +5304,6 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        //TODO: Change or get this working
         /// <summary>
         /// Gets or sets the OSMM Reject button tag (which controls
         /// the text on the button (and whether the <Ctrl> button is
@@ -6204,6 +6202,8 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(CanZoomToSelection));
             //OnPropertyChanged(nameof(CanUserBulkUpdate)); // Not needed as this is cached.
             OnPropertyChanged(nameof(CanUpdate));
+            OnPropertyChanged(nameof(CanOSMMAccept));
+            OnPropertyChanged(nameof(CanOSMMSkip));
             OnPropertyChanged(nameof(CanBulkUpdate)); //TODO: Check if needed (previously commented out)
             OnPropertyChanged(nameof(CanOSMMUpdateMode));
             OnPropertyChanged(nameof(CanOSMMBulkUpdateMode));
@@ -6605,10 +6605,6 @@ namespace HLU.UI.ViewModel
             // whilst moving to the new Incid.
             ChangeCursor(Cursors.Wait, "Selecting record ...");
 
-            //TODO: Needed?
-            // Let WPF render the cursor/message before heavy work begins.
-            //await Dispatcher.Yield(DispatcherPriority.Background);
-
             // Move to the first record.
             await MoveIncidCurrentRowIndexAsync(value);
 
@@ -6658,10 +6654,6 @@ namespace HLU.UI.ViewModel
                 {
                     // Set the status to processing and the cursor to wait.
                     ChangeCursor(Cursors.Wait, "Selecting in GIS ...");
-
-                    //TODO: Needed?
-                    // Let WPF render the cursor/message before heavy work begins.
-                    //await Dispatcher.Yield(DispatcherPriority.Background);
 
                     // Select all features for current incid
                     await SelectOnMapAsync(false);
@@ -6826,6 +6818,7 @@ namespace HLU.UI.ViewModel
                         }
 
                     }
+
                     // Apply the updates on the current incid.
                     _saving = true;
                     _savingAttempted = false;
@@ -7179,7 +7172,7 @@ namespace HLU.UI.ViewModel
                     // Clear all the form fields (except the habitat class
                     // and habitat type).
                     ClearForm();
-                    
+
                     // Open the OSMM Updates query window.
                     OpenWindowQueryOSMM(true);
                 }
@@ -7253,6 +7246,12 @@ namespace HLU.UI.ViewModel
                     await MoveIncidCurrentRowIndexAsync(_incidCurrentRowIndex + 1);
                 }
 
+                // Refresh all the status type fields.
+                RefreshStatus();
+
+                // Reset the cursor back to normal.
+                ChangeCursor(Cursors.Arrow, null);
+
                 // Check if the GIS and database are in sync.
                 CheckInSync("Selection", "Map");
             }
@@ -7287,6 +7286,12 @@ namespace HLU.UI.ViewModel
                     // Reset the button tags
                     OSMMAcceptTag = "";
                     OSMMRejectTag = "";
+
+                    // Refresh all the status type fields.
+                    RefreshStatus();
+
+                    // Reset the cursor back to normal.
+                    ChangeCursor(Cursors.Arrow, null);
                 }
                 else
                 {
@@ -7295,15 +7300,15 @@ namespace HLU.UI.ViewModel
 
                     // Move to the next Incid
                     await MoveIncidCurrentRowIndexAsync(_incidCurrentRowIndex + 1);
+
+                    // Check if the GIS and database are in sync.
+                    CheckInSync("Selection", "Map");
                 }
 
                 _osmmUpdating = false;
 
                 OnPropertyChanged(nameof(CanOSMMAccept));
                 OnPropertyChanged(nameof(CanOSMMSkip));
-
-                // Check if the GIS and database are in sync.
-                CheckInSync("Selection", "Map");
             }
         }
 
@@ -7336,6 +7341,12 @@ namespace HLU.UI.ViewModel
                     // Reset the button tags
                     OSMMAcceptTag = "";
                     OSMMRejectTag = "";
+
+                    // Refresh all the status type fields.
+                    RefreshStatus();
+
+                    // Reset the cursor back to normal.
+                    ChangeCursor(Cursors.Arrow, null);
                 }
                 else
                 {
@@ -7681,10 +7692,6 @@ namespace HLU.UI.ViewModel
             {
                 ChangeCursor(Cursors.Wait, "Validating ...");
 
-                //TODO: Needed?
-                // Let WPF render the cursor/message before heavy work begins.
-                //await Dispatcher.Yield(DispatcherPriority.Background);
-
                 // Get a list of all the possible query tables.
                 List<DataTable> tables = [];
                 if ((ViewModelWindowQueryAdvanced.HluDatasetStatic != null))
@@ -7971,7 +7978,7 @@ namespace HLU.UI.ViewModel
                 _windowQueryOSMM.DataContext = _viewModelWinQueryOSMM;
 
                 // show window
-                _windowQueryOSMM.Show();
+                _windowQueryOSMM.ShowDialog();
             }
             catch (Exception ex)
             {
@@ -7995,7 +8002,7 @@ namespace HLU.UI.ViewModel
             _windowQueryOSMM.Close();
 
             // If applying the query
-            if (apply == true)
+            if ((apply == true) && (processFlag != null || spatialFlag != null || changeFlag != null || status != null))
             {
                 // If in OSMM Bulk Update mode then set the default source details
                 if (IsOsmmBulkMode)
@@ -8014,8 +8021,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Apply the OSMM Updates filter
-                if (processFlag != null || spatialFlag != null || changeFlag != null || status != null)
-                    await ApplyOSMMUpdatesFilterAsync(processFlag, spatialFlag, changeFlag, status);
+                await ApplyOSMMUpdatesFilterAsync(processFlag, spatialFlag, changeFlag, status, true);
             }
         }
 
@@ -8124,10 +8130,6 @@ namespace HLU.UI.ViewModel
             try
             {
                 ChangeCursor(Cursors.Wait, "Validating ...");
-
-                //TODO: Needed?
-                // Let WPF render the cursor/message before heavy work begins.
-                //await Dispatcher.Yield(DispatcherPriority.Background);
 
                 // Get a list of all the possible query tables.
                 List<DataTable> tables = [];

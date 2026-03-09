@@ -37,6 +37,7 @@ using System.Threading.Tasks;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework;
 using CommandType = System.Data.CommandType;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
 {

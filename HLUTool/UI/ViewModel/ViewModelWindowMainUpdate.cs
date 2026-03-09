@@ -35,6 +35,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
 {
@@ -83,10 +84,6 @@ namespace HLU.UI.ViewModel
             try
             {
                 _viewModelMain.ChangeCursor(Cursors.Wait, "Saving ...");
-
-                //TODO: Needed?
-                // Let WPF render the cursor/message before heavy work begins.
-                //await Dispatcher.Yield(DispatcherPriority.Background);
 
                 // Store row index for reloading the row after the update
                 int incidCurrRowIx = _viewModelMain.IncidCurrentRowIndex;

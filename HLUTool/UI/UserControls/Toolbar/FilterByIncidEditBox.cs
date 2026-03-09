@@ -13,6 +13,7 @@ using HLU.UI;
 using Xceed.Wpf.Toolkit.Primitives;
 using System.Windows.Controls;
 using Azure.Core;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.UserControls.Toolbar
 {

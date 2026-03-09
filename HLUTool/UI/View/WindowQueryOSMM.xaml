@@ -37,12 +37,12 @@
 
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
                 <RowDefinition Height="4" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <AdornerDecorator>
+            <AdornerDecorator Grid.Row="0">
                 <Grid VerticalAlignment="Stretch">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" MinHeight="250" />
@@ -56,7 +56,7 @@
                         Header="OSMM Updates Summary">
 
                         <AdornerDecorator>
-                            <ScrollViewer Margin="-4,0,-4,0" VerticalScrollBarVisibility="Auto">
+                            <ScrollViewer Margin="0,0,0,0" VerticalScrollBarVisibility="Auto">
 
                                 <Grid x:Name="GridOSMMUpdatesSummary" Margin="0">
                                     <Grid.RowDefinitions>
@@ -68,9 +68,9 @@
                                         x:Name="DataGridOSMMUpdatesSummary"
                                         Grid.Row="0"
                                         Grid.Column="0"
-                                        Margin="0,0,0,0"
+                                        Margin="0,2,0,0"
                                         Padding="0,0"
-                                        HorizontalAlignment="Right"
+                                        HorizontalAlignment="Stretch"
                                         VerticalContentAlignment="Center"
                                         AutoGenerateColumns="False"
                                         BorderBrush="Black"
@@ -91,7 +91,8 @@
                                         ScrollViewer.CanContentScroll="True"
                                         ScrollViewer.VerticalScrollBarVisibility="Auto"
                                         SelectionChanged="OSMMUpdates_SelectionChanged"
-                                        SelectionMode="Single">
+                                        SelectionMode="Single"
+                                        Style="{DynamicResource Esri_DataGrid}">
                                         <!--  SelectedItem="{Binding OSMMUpdatesSelected, Mode=TwoWay}"  -->
                                         <!--  SelectionChanged="{Binding OSMMUpdates_SelectionChanged}"  -->
                                         <DataGrid.Columns>
@@ -149,7 +150,7 @@
                                         Grid.Column="0"
                                         Margin="0,0,0,0"
                                         Padding="0,0"
-                                        HorizontalAlignment="Right"
+                                        HorizontalAlignment="Stretch"
                                         VerticalContentAlignment="Center"
                                         AutoGenerateColumns="False"
                                         BorderBrush="Black"
@@ -171,7 +172,8 @@
                                         RowStyle="{StaticResource DataGridRowWithValidation}"
                                         ScrollViewer.CanContentScroll="True"
                                         ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                        SelectionMode="Single">
+                                        SelectionMode="Single"
+                                        Style="{DynamicResource Esri_DataGrid}">
                                         <DataGrid.Columns>
                                             <DataGridTextColumn
                                                 Width="0"
@@ -233,9 +235,8 @@
                         Grid.Row="1"
                         Header="Filter by OSMM Updates">
 
-                        <Grid x:Name="GridOSMMUpdates" Margin="2,8,2,8">
+                        <Grid x:Name="GridOSMMUpdates" Margin="2,4,2,2">
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
@@ -441,7 +442,7 @@
 
             <Grid
                 x:Name="GridOSMMUpdatesFilterButtons"
-                Grid.Row="4"
+                Grid.Row="2"
                 Margin="4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -456,6 +457,7 @@
                     Margin="0,0,2,0"
                     Command="{Binding ApplyOSMMFilterCommand}"
                     Content="_Ok"
+                    IsDefault="True"
                     Style="{DynamicResource Esri_Button}" />
                 <!--
                     Background="Orange"
@@ -474,6 +476,7 @@
                     Margin="2,0,0,0"
                     Command="{Binding CancelOSMMFilterCommand}"
                     Content="_Cancel"
+                    IsCancel="True"
                     IsEnabled="True"
                     Style="{DynamicResource Esri_Button}" />
                 <!--  Background="Gray"  -->

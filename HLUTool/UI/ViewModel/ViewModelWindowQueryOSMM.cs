@@ -38,11 +38,13 @@ using HLU.GISApplication;
 using HLU.Properties;
 using HLU.UI.UserControls;
 using HLU.Helpers;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
 {
     /// <summary>
-    /// Contains the view model for the OSMM Updates Query window.
+    /// Represents a summary of the OSMM Updates in the database for the selected flags. This will be used
+    /// to display the counts of updates in different statuses (Rejected, Ignored, Proposed, Pending, Applied, Total).
     /// </summary>
     public class OSMMUpdates
     {
@@ -57,17 +59,16 @@ namespace HLU.UI.ViewModel
         public int Pending { get; set; }
         public int Applied { get; set; }
         public int Total { get; set; }
+
+        #endregion Fields
     }
 
-    #endregion Fields
-
+    /// <summary>
+    /// Contains the view model for the OSMM Updates Query window.
+    /// </summary>
     class ViewModelWindowQueryOSMM : ViewModelBase, INotifyPropertyChanged
     {
         #region Fields
-
-        //public delegate void SelectionChangedEventHandler(object sender, SelectionChangedEventArgs e);
-
-        //public event SelectionChangedEventHandler SelectionChanged;
 
         ViewModelWindowMain _viewModelMain;
 
@@ -92,8 +93,6 @@ namespace HLU.UI.ViewModel
 
         private string _osmmUpdatesStatus;
 
-        //private DataRow _osmmUpdatesSelected;
-
         private HluDataSet.lut_osmm_updates_processRow[] _osmmProcessFlags;
         private HluDataSet.lut_osmm_updates_spatialRow[] _osmmSpatialFlags;
         private HluDataSet.lut_osmm_updates_changeRow[] _osmmChangeFlags;
@@ -107,14 +106,18 @@ namespace HLU.UI.ViewModel
 
         List<OSMMUpdates> _tableTotal;
 
-        #endregion
+        #endregion Fields
 
         #region Constructor
 
         /// <summary>
-        /// Get the default values from settings.
+        /// Initializes a new instance of the <see cref="ViewModelWindowQueryOSMM"/> class. This will set the
+        /// initial values for the OSMM Updates filter and count the updates in the database.
         /// </summary>
         /// <remarks></remarks>
+        /// <param name="hluDataset">The HLU dataset.</param>
+        /// <param name="hluDatabase">The HLU database.</param>
+        /// <param name="viewModelMain">The main view model.</param>
         public ViewModelWindowQueryOSMM(HluDataSet hluDataset, DbBase hluDatabase, ViewModelWindowMain viewModelMain)
         {
             HluDatasetStatic = hluDataset;
@@ -137,6 +140,11 @@ namespace HLU.UI.ViewModel
             CountOSMMUpdates();
         }
 
+        /// <summary>
+        /// Set the filter fields to the selected row values and count the number of OSMM
+        /// Updates in the database for the selected flags.
+        /// </summary>
+        /// <param name="selectedRow">The selected OSMM updates row.</param>
         public void OSMMUpdatesSelectedRow(OSMMUpdates selectedRow)
         {
             // Set the filter fields to the selected row values
@@ -155,22 +163,30 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Constructor
 
         #region ViewModelBase Members
 
+        /// <summary>
+        /// Gets or sets the display name for this view model. This is used when a view binds to this view model.
+        /// </summary>
+        /// <value>The display name for this view model.</value>
         public override string DisplayName
         {
             get { return _displayName; }
             set { _displayName = value; }
         }
 
+        /// <summary>
+        /// Gets the window title for this view model. This is used when a view binds to this view model.
+        /// </summary>
+        /// <value>The window title for this view model.</value>
         public override string WindowTitle
         {
             get { return _displayName; }
         }
 
-        #endregion
+        #endregion ViewModelBase Members
 
         #region RequestClose
 
@@ -180,13 +196,16 @@ namespace HLU.UI.ViewModel
         // declare the event
         public event RequestCloseEventHandler RequestClose;
 
-        #endregion
+        #endregion RequestClose
 
         #region Apply Command
 
         /// <summary>
-        /// OSMM Updates Apply Filter command.
+        /// Gets the command to apply the OSMM Updates filter. This will set the filter
+        /// fields to the selected values and count the number of OSMM Updates in the
+        /// database for the selected flags.
         /// </summary>
+        /// <value>The command to apply the OSMM Updates filter.</value>
         public ICommand ApplyOSMMFilterCommand
         {
             get
@@ -203,15 +222,20 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles event when Apply button is clicked
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void ApplyOSMMFilterClicked(object param)
         {
             HluDatasetStatic = null;
 
+            // Close the window and apply the filter with the selected flags.
             RequestClose?.Invoke(IncidOSMMUpdatesProcessFlag, IncidOSMMUpdatesSpatialFlag, IncidOSMMUpdatesChangeFlag, IncidOSMMUpdatesStatus, true);
         }
 
+        /// <summary>
+        /// Gets a value indicating whether the OSMM Updates filter can be applied. This will
+        /// be true if there are any OSMM Updates in the database for the selected flags.
+        /// </summary>
+        /// <value><c>true</c> if the OSMM Updates filter can be applied; otherwise, <c>false</c>.</value>
         public bool CanApplyOSMMFilter
         {
             get
@@ -220,13 +244,16 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Apply Command
 
         #region Reset Command
 
         /// <summary>
-        /// OSMM Updates Reset Filter command.
+        /// Gets the command to reset the OSMM Updates filter. This will set the filter fields
+        /// to the default values and count the number of OSMM Updates in the database for the
+        /// initial values.
         /// </summary>
+        /// <value>The command to reset the OSMM Updates filter.</value>
         public ICommand ResetOSMMFilterCommand
         {
             get
@@ -241,10 +268,11 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Handles event when Reset button is clicked
+        /// Handles event when Reset button is clicked. This will set the filter fields to
+        /// the default values and count the number of OSMM Updates in the database for
+        /// the initial values.
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void ResetOSMMFilterClicked(object param)
         {
             // Reset all the filter fields.
@@ -267,6 +295,11 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(IncidOSMMUpdatesStatus));
         }
 
+        /// <summary>
+        /// Gets a value indicating whether the OSMM Updates filter can be reset. This will be
+        /// true if there are any OSMM Updates in the database for the initial values.
+        /// </summary>
+        /// <value><c>true</c> if the OSMM Updates filter can be reset; otherwise, <c>false</c>.</value>
         public bool CanResetOSMMFilter
         {
             get
@@ -275,13 +308,16 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Reset Command
 
         #region Cancel Command
 
         /// <summary>
-        /// OSMM Updates Cancel Filter command.
+        /// Gets the command to cancel the OSMM Updates filter. This will set the filter fields to
+        /// the default values and count the number of OSMM Updates in the database for the
+        /// initial values.
         /// </summary>
+        /// <value>The command to cancel the OSMM Updates filter.</value>
         public ICommand CancelOSMMFilterCommand
         {
             get
@@ -299,12 +335,12 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles event when Cancel button is clicked
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void CancelCommandClicked(object param)
         {
             HluDatasetStatic = null;
 
+            // Close the window without applying any filter.
             RequestClose?.Invoke(null, null, null, null, false);
         }
 
@@ -312,16 +348,23 @@ namespace HLU.UI.ViewModel
 
         #region Flags
 
+        /// <summary>
+        /// Gets or sets the list of available process flag options from the class. This will include
+        /// an "Any" option to show all OSMM Updates regardless of the process flag value.
+        /// </summary>
+        /// <value>The list of available process flag options.</value>
         public HluDataSet.lut_osmm_updates_processRow[] IncidOSMMUpdatesProcessFlags
         {
             get
             {
+                // Load the process flag options from the dataset if they haven't already been loaded.
                 if ((_osmmProcessFlags == null) || (_osmmProcessFlags.Length == 0))
                 {
                     _osmmProcessFlags = (from m in _hluDataset.lut_osmm_updates_process
                                          select m).OrderBy(m => m.sort_order).ThenBy(m => m.description).ToArray();
                 }
 
+                // Add an "Any" option to show all OSMM Updates regardless of the process flag value.
                 HluDataSet.lut_osmm_updates_processRow[] osmmProcessFlags;
                 osmmProcessFlags = AnyRowOSMMUpdatesProcess(-3).Concat(_osmmProcessFlags).OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
 
@@ -330,6 +373,11 @@ namespace HLU.UI.ViewModel
             set { }
         }
 
+        /// <summary>
+        /// Gets or sets the preferred process flag option. This will be used to filter the OSMM
+        /// Updates in the database and count the number of OSMM Updates for the selected flags.
+        /// </summary>
+        /// <value>The preferred process flag option.</value>
         public string IncidOSMMUpdatesProcessFlag
         {
             get { return _osmmProcessFlag; }
@@ -342,16 +390,23 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets the list of available spatial flag options from the class. This will include
+        /// an "Any" option to show all OSMM Updates regardless of the spatial flag value.
+        /// </summary>
+        /// <value>The list of available spatial flag options.</value>
         public HluDataSet.lut_osmm_updates_spatialRow[] IncidOSMMUpdatesSpatialFlags
         {
             get
             {
+                // If the spatial flag options haven't already been loaded, load them from the dataset.
                 if ((_osmmSpatialFlags == null) || (_osmmSpatialFlags.Length == 0))
                 {
                     _osmmSpatialFlags = (from m in _hluDataset.lut_osmm_updates_spatial
                                          select m).OrderBy(m => m.sort_order).ThenBy(m => m.description).ToArray();
                 }
 
+                // Add an "Any" option to show all OSMM Updates regardless of the spatial flag value.
                 HluDataSet.lut_osmm_updates_spatialRow[] osmmSpatialFlags;
                 osmmSpatialFlags = AnyRowOSMMUpdatesSpatial(-3).Concat(_osmmSpatialFlags).OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
 
@@ -360,6 +415,11 @@ namespace HLU.UI.ViewModel
             set { }
         }
 
+        /// <summary>
+        /// Gets or sets the preferred spatial flag option. This will be used to filter the OSMM
+        /// Updates in the database and count the number of OSMM Updates for the selected flags.
+        /// </summary>
+        /// <value>The preferred spatial flag option.</value>
         public string IncidOSMMUpdatesSpatialFlag
         {
             get { return _osmmSpatialFlag; }
@@ -372,16 +432,23 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets the list of available change flag options from the class. This will include
+        /// an "Any" option to show all OSMM Updates regardless of the change flag value.
+        /// </summary>
+        /// <value>The list of available change flag options.</value>
         public HluDataSet.lut_osmm_updates_changeRow[] IncidOSMMUpdatesChangeFlags
         {
             get
             {
+                // If the change flag options haven't already been loaded, load them from the dataset.
                 if ((_osmmChangeFlags == null) || (_osmmChangeFlags.Length == 0))
                 {
                     _osmmChangeFlags = (from m in _hluDataset.lut_osmm_updates_change
                                         select m).OrderBy(m => m.sort_order).ThenBy(m => m.description).ToArray();
                 }
 
+                // Add an "Any" option to show all OSMM Updates regardless of the change flag value.
                 HluDataSet.lut_osmm_updates_changeRow[] osmmChangeFlags;
                 osmmChangeFlags = AnyRowOSMMUpdatesChange(-3).Concat(_osmmChangeFlags).OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
 
@@ -390,6 +457,11 @@ namespace HLU.UI.ViewModel
             set { }
         }
 
+        /// <summary>
+        /// Gets or sets the preferred change flag option. This will be used to filter the OSMM
+        /// Updates in the database and count the number of OSMM Updates for the selected flags.
+        /// </summary>
+        /// <value>The preferred change flag option.</value>
         public string IncidOSMMUpdatesChangeFlag
         {
             get { return _osmmChangeFlag; }
@@ -417,6 +489,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                // If the show OSMM Update options haven't already been loaded, load them from the settings.
                 string[] osmmUpdateStatuses;
                 if (_viewModelMain.IsOsmmBulkMode)
                     osmmUpdateStatuses = ["Pending"];
@@ -450,6 +523,12 @@ namespace HLU.UI.ViewModel
 
         #region Any Rows
 
+        /// <summary>
+        /// Gets a row with the code for "Any" to show all OSMM Updates regardless of the process
+        /// flag value. This will be used to add an "Any" option to the list of process flag options.
+        /// </summary>
+        /// <param name="sortOrder">The sort order for the "Any" row.</param>
+        /// <returns>An array containing the "Any" row.</returns>
         private HluDataSet.lut_osmm_updates_processRow[] AnyRowOSMMUpdatesProcess(int sortOrder)
         {
             HluDataSet.lut_osmm_updates_processRow anyRow = _hluDataset.lut_osmm_updates_process.Newlut_osmm_updates_processRow();
@@ -459,6 +538,12 @@ namespace HLU.UI.ViewModel
             return [anyRow];
         }
 
+        /// <summary>
+        /// Gets a row with the code for "Any" to show all OSMM Updates regardless of the spatial
+        /// flag value. This will be used to add an "Any" option to the list of spatial flag options.
+        /// </summary>
+        /// <param name="sortOrder">The sort order for the "Any" row.</param>
+        /// <returns>An array containing the "Any" row.</returns>
         private HluDataSet.lut_osmm_updates_spatialRow[] AnyRowOSMMUpdatesSpatial(int sortOrder)
         {
             HluDataSet.lut_osmm_updates_spatialRow anyRow = _hluDataset.lut_osmm_updates_spatial.Newlut_osmm_updates_spatialRow();
@@ -468,6 +553,12 @@ namespace HLU.UI.ViewModel
             return [anyRow];
         }
 
+        /// <summary>
+        /// Gets a row with the code for "Any" to show all OSMM Updates regardless of the change
+        /// flag value. This will be used to add an "Any" option to the list of change flag options.
+        /// </summary>
+        /// <param name="sortOrder">The sort order for the "Any" row.</param>
+        /// <returns>An array containing the "Any" row.</returns>
         private HluDataSet.lut_osmm_updates_changeRow[] AnyRowOSMMUpdatesChange(int sortOrder)
         {
             HluDataSet.lut_osmm_updates_changeRow anyRow = _hluDataset.lut_osmm_updates_change.Newlut_osmm_updates_changeRow();
@@ -481,26 +572,56 @@ namespace HLU.UI.ViewModel
 
         #region Counts
 
+        /// <summary>
+        /// Gets the count of OSMM Updates in the database for the selected flags and rejected status.
+        /// This will be used to show the number of rejected OSMM Updates for the selected flags and
+        /// determine whether the filter can be applied.
+        /// </summary>
+        /// <value>The count of rejected OSMM Updates for the selected flags.</value>
         public string IncidOSMMUpdatesRejectedCount
         {
             get { return String.Format("{0:n0}", _osmmUpdatesCountRejected); }
         }
 
+        /// <summary>
+        /// Gets the count of OSMM Updates in the database for the selected flags and ignored status.
+        /// This will be used to show the number of ignored OSMM Updates for the selected flags and
+        /// determine whether the filter can be applied.
+        /// </summary>
+        /// <value>The count of ignored OSMM Updates for the selected flags.</value>
         public string IncidOSMMUpdatesIgnoredCount
         {
             get { return String.Format("{0:n0}", _osmmUpdatesCountIgnored); }
         }
 
+        /// <summary>
+        /// Gets the count of OSMM Updates in the database for the selected flags and pending status.
+        /// This will be used to show the number of pending OSMM Updates for the selected flags and
+        /// determine whether the filter can be applied.
+        /// </summary>
+        /// <value>The count of pending OSMM Updates for the selected flags.</value>
         public string IncidOSMMUpdatesPendingCount
         {
             get { return String.Format("{0:n0}", _osmmUpdatesCountPending); }
         }
 
+        /// <summary>
+        /// Gets the count of OSMM Updates in the database for the selected flags and proposed status.
+        /// This will be used to show the number of proposed OSMM Updates for the selected flags and
+        /// determine whether the filter can be applied.
+        /// </summary>
+        /// <value>The count of proposed OSMM Updates for the selected flags.</value>
         public string IncidOSMMUpdatesProposedCount
         {
             get { return String.Format("{0:n0}", _osmmUpdatesCountProposed); }
         }
 
+        /// <summary>
+        /// Gets the count of OSMM Updates in the database for the selected flags and applied status.
+        /// This will be used to show the number of applied OSMM Updates for the selected flags and
+        /// determine whether the filter can be applied.
+        /// </summary>
+        /// <value>The count of applied OSMM Updates for the selected flags.</value>
         public string IncidOSMMUpdatesAppliedCount
         {
             get { return String.Format("{0:n0}", _osmmUpdatesCountApplied); }
@@ -627,8 +748,10 @@ namespace HLU.UI.ViewModel
         #region OSMM Updates Summary
 
         /// <summary>
-        /// Summarise the OSMM Updates in the database.
+        /// Gets a summary of the OSMM Updates in the database for the selected flags. This will be used
+        /// to show the number of OSMM Updates for each status and determine whether the filter can be applied.
         /// </summary>
+        /// <value>A list of OSMM Updates summary for the selected flags.</value>
         public List<OSMMUpdates> OSMMUpdatesSummary
         {
             get
@@ -676,26 +799,6 @@ namespace HLU.UI.ViewModel
                         _db.QualifyTableName(_hluDataset.incid_osmm_updates.TableName),
                         _db.QualifyTableName(_hluDataset.lut_osmm_habitat_xref.TableName),
                         sqlGroupBy);
-                    //string sqlColumns = String.Format("{0}, {1}, {2}, {3}, {4}, COUNT(*) As RecCount",
-                    //    _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.process_flagColumn.ColumnName),
-                    //    _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.spatial_flagColumn.ColumnName),
-                    //    _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.change_flagColumn.ColumnName),
-                    //    _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.statusColumn.ColumnName),
-                    //    _db.QuoteIdentifier(_hluDataset.lut_osmm_habitat_xref.ihs_summaryColumn.ColumnName));
-                    //string sqlGroupBy = String.Format("{0}, {1}, {2}, {3}, {4}",
-                    //    _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.process_flagColumn.ColumnName),
-                    //    _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.spatial_flagColumn.ColumnName),
-                    //    _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.change_flagColumn.ColumnName),
-                    //    _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.statusColumn.ColumnName),
-                    //    _db.QuoteIdentifier(_hluDataset.lut_osmm_habitat_xref.ihs_summaryColumn.ColumnName));
-                    //String sql = String.Format(
-                    //    "SELECT DISTINCT {0} FROM {1},{2} WHERE {1}.{4} = {2}.{5} GROUP BY {3} ORDER BY {3}",
-                    //    sqlColumns,
-                    //    _db.QualifyTableName(_hluDataset.incid_osmm_updates.TableName),
-                    //    _db.QualifyTableName(_hluDataset.lut_osmm_habitat_xref.TableName),
-                    //    sqlGroupBy,
-                    //    _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.osmm_xref_idColumn.ColumnName),
-                    //    _db.QuoteIdentifier(_hluDataset.lut_osmm_habitat_xref.osmm_xref_idColumn.ColumnName));
 
                     dataReader = _db.ExecuteReader(sql,
                         _db.Connection.ConnectionTimeout, CommandType.Text);
@@ -706,7 +809,6 @@ namespace HLU.UI.ViewModel
                     string spatialFlag, lastSpatialFlag = null;
                     string changeFlag, lastChangeFlag = null;
                     int status;
-                    //string summary;
                     int recs;
                     OSMMUpdates dataRow;
 
@@ -846,8 +948,10 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Count the total number of OSMM Updates in the database.
+        /// Gets a summary of the OSMM Updates in the database for the selected flags. This will be used
+        /// to show the number of OSMM Updates for each status and determine whether the filter can be applied.
         /// </summary>
+        /// <value>A list of OSMM Updates summary for the selected flags.</value>
         public List<OSMMUpdates> OSMMUpdatesSummaryTotal
         {
             get
@@ -868,6 +972,11 @@ namespace HLU.UI.ViewModel
         /// </value>
         public Cursor WindowCursor { get { return _windowCursor; } }
 
+        /// <summary>
+        /// Changes the cursor type to use when the cursor is over the window. This will be used to show a
+        /// wait cursor during long-running operations.
+        /// </summary>
+        /// <param name="cursorType">The cursor type to set.</param>
         public void ChangeCursor(Cursor cursorType)
         {
             _windowCursor = cursorType;
@@ -876,7 +985,7 @@ namespace HLU.UI.ViewModel
                 DispatcherHelper.DoEvents(); //TODO: Replace with modern equivalent?
         }
 
-        #endregion
+        #endregion Cursor
 
     }
 }

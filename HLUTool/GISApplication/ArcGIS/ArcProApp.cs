@@ -65,6 +65,7 @@ using Geometry = ArcGIS.Core.Geometry.Geometry;
 using LinearUnit = ArcGIS.Core.Geometry.LinearUnit;
 using QueryFilter = ArcGIS.Core.Data.QueryFilter;
 using SpatialReference = ArcGIS.Core.Geometry.SpatialReference;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 //using ArcGIS.Core.Internal.CIM;
 
 namespace HLU.GISApplication

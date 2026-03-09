@@ -35,6 +35,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
 {
@@ -1245,7 +1246,7 @@ namespace HLU.UI.ViewModel
             {
                 errorMessage = ex.Message;
 
-                //TODO: Move message box outside of if block.
+                //TODO: Move message box outside of if block?
                 // If a transaction was started, roll it back.
                 if (startTransaction)
                 {
