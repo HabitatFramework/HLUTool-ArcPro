@@ -86,14 +86,14 @@
 					<toolPalette refID="esri_mapping_selectToolPalette" />
 					<button refID="esri_mapping_clearSelectionButton" size="middle" />
 					<button refID="esri_editing_SplitCommand" size ="middle" />
+					<button refID="HLUTool_btnGetMapSelection" size="large" />
 				</group>
 
 				<!-- Filter Incids group -->
-				<group id="HLUTool_Group_FilterIncids" caption="Filter INCIDs" keytip="G5">
+				<group id="HLUTool_Group_FilterIncids" caption="Filter INCIDs" keytip="G5" launcherButtonID="HLUTool_btnFilterIncidsOptionsLauncher">
 					<button refID="HLUTool_btnFilterByAttributes" size="large" />
+					<button refID="HLUTool_btnClearFilter" size="large" />
 					<editBox refID="HLUTool_edbFilterByIncid" size="large" />
-					<button refID="HLUTool_btnClearFilter" size="middle" />
-					<button refID="HLUTool_btnGetMapSelection" size="large" />
 				</group>
 
 				<!-- INCID Selection group -->
@@ -104,7 +104,7 @@
 				</group>
 
 				<!-- Split/Merge group -->
-				<group id="HLUTool_Group_SplitMerge" caption="Split/Merge" keytip="G7">
+				<group id="HLUTool_Group_SplitMerge" caption="Split/Merge" keytip="G7" launcherButtonID="HLUTool_btnSplitMergeOptionsLauncher">
 					<dynamicMenu refID="HLUTool_SplitMenu" size="large" />
 					<dynamicMenu refID="HLUTool_MergeMenu" size="large" />
 				</group>
@@ -299,6 +299,19 @@
 					</tooltip>
 				</button>
 
+				<!-- Launcher button for Filter INCIDs options -->
+				<button id="HLUTool_btnFilterIncidsOptionsLauncher"
+						caption="Filter INCIDs Options"
+						className="HLU.UI.UserControls.Toolbar.FilterIncidsOptionsLauncherButton"
+						loadOnClick="true"
+						keytip="EO"
+						smallImage="pack://application:,,,/HLUTool;component/Images/Options16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/Options32.png">
+					<tooltip heading="Filter INCIDs Options">
+						Open Options window to configure filter INCIDs settings
+					</tooltip>
+				</button>
+
 				<button id="HLUTool_btnFilterByAttributes"
 						caption="Filter by Attributes"
 						className="HLU.UI.UserControls.Toolbar.FilterByAttributesButton"
@@ -388,6 +401,19 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/AutoSelect32.png">
 					<tooltip heading="Auto Select">
 						Automatically select the features associated with the current INCID record in the active GIS layer.
+					</tooltip>
+				</button>
+
+				<!-- Launcher button for Split/Merge group options -->
+				<button id="HLUTool_btnSplitMergeOptionsLauncher"
+						caption="Export Options"
+						className="HLU.UI.UserControls.Toolbar.SplitMergeOptionsLauncherButton"
+						loadOnClick="true"
+						keytip="EO"
+						smallImage="pack://application:,,,/HLUTool;component/Images/Options16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/Options32.png">
+					<tooltip heading="Export Split/Merge">
+						Open Options window to configure split/merge settings
 					</tooltip>
 				</button>
 

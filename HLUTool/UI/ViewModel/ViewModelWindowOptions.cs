@@ -281,7 +281,7 @@ namespace HLU.UI.ViewModel
                 new () { Name = "Bulk Update", Category = "Application", Content = new AppBulkUpdateOptions() },
                 new () { Name = "Interface", Category = "User", Content = new UserInterfaceOptions() },
                 new () { Name = "GIS", Category = "User", Content = new UserGISOptions() },
-                new () { Name = "Updates", Category = "User", Content = new UserUpdatesOptions() },
+                new () { Name = "Updates", Category = "User", Content = new UserSplitMergeOptions() },
                 new () { Name = "SQL", Category = "User", Content = new UserSQLOptions() },
                 new () { Name = "History", Category = "User", Content = new UserHistoryOptions() },
                 new () { Name = "Export", Category = "User", Content = new UserExportOptions() }
@@ -485,15 +485,15 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets the hyperlink for the user updates help page, which is constructed from
-        /// the base help URL and the specific help page for the user updates options.
+        /// Gets the hyperlink for the user split/merge help page, which is constructed from
+        /// the base help URL and the specific help page for the user split/merge options.
         /// </summary>
-        /// <value>The hyperlink for the user updates help page.</value>
-        public Uri Hyperlink_UserUpdatesHelp
+        /// <value>The hyperlink for the user split/merge help page.</value>
+        public Uri Hyperlink_UserSplitMergeHelp
         {
             get
             {
-                if (Uri.TryCreate(string.Format("{0}/{1}", _addInSettings.HelpURL, _addInSettings.HelpPages.UserUpdates), UriKind.Absolute, out Uri uri))
+                if (Uri.TryCreate(string.Format("{0}/{1}", _addInSettings.HelpURL, _addInSettings.HelpPages.UserSplitMerge), UriKind.Absolute, out Uri uri))
                     return uri;
                 else
                     return null;
@@ -2449,12 +2449,12 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets the error messages related to user update settings.
+        /// Gets the error messages related to user split/merge settings.
         /// </summary>
-        /// <returns>A string containing all user update-related error messages.</returns>
-        private string GetUserUpdatesErrorMessages()
+        /// <returns>A string containing all user split/merge-related error messages.</returns>
+        private string GetUserSplitMergeErrorMessages()
         {
-            var errors = GetErrorsForCategory("User", "Updates");
+            var errors = GetErrorsForCategory("User", "Split/Merge");
             return string.Join(Environment.NewLine, errors);
         }
 

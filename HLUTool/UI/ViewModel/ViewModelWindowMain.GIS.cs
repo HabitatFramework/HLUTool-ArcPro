@@ -103,6 +103,7 @@ namespace HLU.UI.ViewModel
 
         #region Fields - Split/Merge
 
+        // Can the current selection be split or merged (set in RefreshSplitMergeStatus).
         private bool _canPhysicallySplit;
         private bool _canLogicallySplit;
         private bool _canPhysicallyMerge;
@@ -122,22 +123,41 @@ namespace HLU.UI.ViewModel
         /// <remarks>Use this property to determine the spatial data type (such as point, line, or
         /// polygon) associated with the GIS layer. The value can be used to guide rendering, analysis, or data
         /// processing operations that depend on the layer's geometry.</remarks>
+        /// <value>The geometry type of the GIS layer.</value>
         public GeometryTypes GisLayerType { get { return _gisLayerType; } }
 
         #endregion Properties - GIS Info
 
         #region Properties - Selection State
 
+        /// <summary>
+        /// Gets the IDs of the incids currently selected in the map. These are set in
+        /// AnalyzeGisSelectionSet when the GIS selection is analyzed and can be used for
+        /// status display and selection logic.
+        /// </summary>
+        /// <value>The IDs of the incids currently selected in the map.</value>
         internal IEnumerable<string> IncidsSelectedMap
         {
             get { return _incidsSelectedMap; }
         }
 
+        /// <summary>
+        /// Gets the IDs of the toids currently selected in the map. These are set in
+        /// AnalyzeGisSelectionSet when the GIS selection is analyzed and can be used for
+        /// status display and selection logic.
+        /// </summary>
+        /// <value>The IDs of the toids currently selected in the map.</value>
         internal IEnumerable<string> ToidsSelectedMap
         {
             get { return _toidsSelectedMap; }
         }
 
+        /// <summary>
+        /// Gets the IDs of the fragments currently selected in the map. These are set in
+        /// AnalyzeGisSelectionSet when the GIS selection is analyzed and can be used for
+        /// status display and selection logic.
+        /// </summary>
+        /// <value>The IDs of the fragments currently selected in the map.</value>
         internal IEnumerable<string> FragsSelectedMap
         {
             get { return _fragsSelectedMap; }
@@ -179,6 +199,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Can the GIS layer be switched?
         /// </summary>
+        /// <value><c>true</c> if the GIS layer can be switched; otherwise, <c>false</c>.</value>
         public bool CanSwitchGISLayer
         {
             get
@@ -241,6 +262,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets or sets the count of selected Incids in the database, which is used for status display and selection logic.
         /// </summary>
+        /// <value>The count of selected Incids in the database.</value>
         public int SelectedIncidsInDBCount
         {
             get { return _selectedIncidsInDBCount; }
@@ -250,6 +272,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets or sets the count of selected Frags in the database, which is used for status display and selection logic.
         /// </summary>
+        /// <value>The count of selected Frags in the database.</value>
         public int SelectedFragsInDBCount
         {
             get { return _selectedFragsInDBCount; }
@@ -259,6 +282,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets or sets the count of selected Incids in GIS, which is used for status display and selection logic.
         /// </summary>
+        /// <value><c>true</c> if the count of selected Incids in GIS can be retrieved; otherwise, <c>false</c>.</value>
         public int SelectedIncidsInGISCount
         {
             get { return _selectedIncidsInGISCount; }
@@ -268,6 +292,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets or sets the count of selected Toids in GIS, which is used for status display and selection logic.
         /// </summary>
+        /// <value><c>true</c> if the count of selected Toids in GIS can be retrieved; otherwise, <c>false</c>.</value>
         public int SelectedToidsInGISCount
         {
             get { return _selectedToidsInGISCount; }
@@ -277,6 +302,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets or sets the count of selected Frags in GIS, which is used for status display and selection logic.
         /// </summary>
+        /// <value><c>true</c> if the count of selected Frags in GIS can be retrieved; otherwise, <c>false</c>.</value>
         public int SelectedFragsInGISCount
         {
             get { return _selectedFragsInGISCount; }
@@ -290,6 +316,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Can the map be zoomed to the current selection?
         /// </summary>
+        /// <value><c>true</c> if the map can be zoomed to the current selection; otherwise, <c>false</c>.</value>
         public bool CanZoomToSelection { get { return _gisSelection != null; } }
 
         #endregion Properties - Map Zoom
@@ -299,31 +326,37 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Can a physical split operation be performed?
         /// </summary>
+        /// <value><c>true</c> if a physical split operation can be performed; otherwise, <c>false</c>.</value>
         public bool CanPhysicallySplit => _canPhysicallySplit;
 
         /// <summary>
         /// Can a logical split operation be performed?
         /// </summary>
+        /// <value><c>true</c> if a logical split operation can be performed; otherwise, <c>false</c>.</value>
         public bool CanLogicallySplit => _canLogicallySplit;
 
         /// <summary>
         /// Can a physical merge operation be performed?
         /// </summary>
+        /// <value><c>true</c> if a physical merge operation can be performed; otherwise, <c>false</c>.</value>
         public bool CanPhysicallyMerge => _canPhysicallyMerge;
 
         /// <summary>
         /// Can a logical merge operation be performed?
         /// </summary>
+        /// <value><c>true</c> if a logical merge operation can be performed; otherwise, <c>false</c>.</value>
         public bool CanLogicallyMerge => _canLogicallyMerge;
 
         /// <summary>
         ///  Can a split operation (physical or logical) be performed?
         /// </summary>
+        /// <value><c>true</c> if a split operation can be performed; otherwise, <c>false</c>.</value>
         public bool CanSplit => _canPhysicallySplit || _canLogicallySplit;
 
         /// <summary>
         ///  Can a merge operation (physical or logical) be performed?
         /// </summary>
+        /// <value><c>true</c> if a merge operation can be performed; otherwise, <c>false</c>.</value>
         public bool CanMerge => _canPhysicallyMerge || _canLogicallyMerge;
 
         #endregion Properies - Split/Merge Commands
@@ -338,7 +371,7 @@ namespace HLU.UI.ViewModel
         /// Event when the active map view changes. Checks that there is an active map view and
         /// that it contains a valid HLU layer, then shows or hides the UI controls as appropriate.
         /// </summary>
-        /// <param name="obj">An object that contains event data for the active map view change event.</param>
+        /// <param name="obj">Event arguments containing details about the active map view change.</param>
         private async void OnActiveMapViewChanged(ActiveMapViewChangedEventArgs obj)
         {
             // If there is no active map view.
@@ -393,7 +426,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <remarks>This method verifies that there is an active map with a valid HLU map before
         /// proceeding with further operations. Does not force reset to preserve active layer.</remarks>
-        /// <param name="args">An object that contains event data for the layers added event.</param>
+        /// <param name="args">Event arguments containing details about the layers that were added.</param>
         private async void OnLayersAdded(LayerEventsArgs args)
         {
             // Check that there is an active map and that it contains a valid HLU map.
@@ -410,7 +443,7 @@ namespace HLU.UI.ViewModel
         /// layer is removed, it forces the creation of a new GIS functions object. It also
         /// checks for an active map with a valid HLU map and refreshes the layer name if necessary.
         /// </summary>
-        /// <param name="args">An object that contains event data for the layers removed event.</param>
+        /// <param name="args">Event arguments containing details about the layers that were removed.</param>
         private async void OnLayersRemoved(LayerEventsArgs args)
         {
             bool activeLayerRemoved = false;
@@ -442,7 +475,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Event when the project is closed. Recomputes whether editing is currently possible and makes the UI controls hidden.
         /// </summary>
-        /// <param name="obj"></param>
+        /// <param name="obj">Event arguments containing details about the project that was closed.</param>
         private void OnProjectClosed(ProjectEventArgs obj)
         {
             // Recomputes whether editing is currently possible.
@@ -464,40 +497,6 @@ namespace HLU.UI.ViewModel
         /// </summary>
         protected override void OnHidden()
         {
-            //TODO: Needed?
-            if (_mapEventsSubscribed)
-            {
-                _mapEventsSubscribed = false;
-
-                // Unsubscribe from ActiveMapViewChangedEvent events
-                // (in case the tool is never shown again).
-                ActiveMapViewChangedEvent.Unsubscribe(OnActiveMapViewChanged);
-            }
-
-            //TODO: Needed?
-            if (_layersChangedEventsSubscribed)
-            {
-                _layersChangedEventsSubscribed = false;
-
-                // Unsubscribe from the LayersAddedEvents
-                // (in case the tool is never shown again).
-                LayersAddedEvent.Unsubscribe(OnLayersAdded);
-
-                // Unsubscribe from the LayersRemovedEvents
-                // (in case the tool is never shown again).
-                LayersRemovedEvent.Unsubscribe(OnLayersRemoved);
-            }
-
-            //TODO: Needed?
-            if (_projectClosedEventsSubscribed)
-            {
-                _projectClosedEventsSubscribed = false;
-
-                // Unsubscribe from the OnProjectClosed events
-                // (in case the tool is never shown again).
-                ProjectClosedEvent.Unsubscribe(OnProjectClosed);
-            }
-
             // Toggle the tab state to hidden.
             ToggleState("HLUTool_tab_state", false);
         }
@@ -540,6 +539,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles map member property changes and refreshes edit capability if the active HLU layer is affected.
         /// </summary>
+        /// <param name="args">Event arguments containing details about the map member properties that changed.</param>
         private void OnMapMemberPropertiesChanged(MapMemberPropertiesChangedEventArgs args)
         {
             if (_gisApp?.ActiveHluLayer == null)
@@ -570,6 +570,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Selects the current incid on the map and refreshes internal selection state.
         /// </summary>
+        /// <returns>A task representing the asynchronous operation.</returns>
         internal async Task SelectCurrentOnMapAsync()
         {
             if (_gisApp == null)
@@ -622,7 +623,6 @@ namespace HLU.UI.ViewModel
                     return;
                 }
 
-                //TODO: Remove minZoom if not needed
                 // Zoom to the GIS selection (if auto zoom configured).
                 await _gisApp.ZoomSelectedAsync(_minZoom, _autoZoomToSelection);
             }
@@ -649,6 +649,7 @@ namespace HLU.UI.ViewModel
         /// Select the current incid record on the map.
         /// </summary>
         /// <param name="updateIncidSelection">Should the incid selection be updated afterwards?</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         public async Task SelectOnMapAsync(bool updateIncidSelection)
         {
             if (IncidCurrentRow == null) return;
@@ -792,7 +793,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the map selection. Called when the command is invoked.
         /// </summary>
-        /// <param name="param"></param>
+        /// <param name="param">The parameter passed to the command.</param>
         internal async void GetMapSelectionClicked(object param)
         {
             // Get the GIS layer selection and warn the user if no
@@ -803,8 +804,8 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the map selection from the GIS application.
         /// </summary>
-        /// <param name="showMessage"></param>
-        /// <returns></returns>
+        /// <param name="showMessage">Indicates whether to show a message if no features are found.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         internal async Task GetMapSelectionAsync(bool showMessage)
         {
             try
@@ -929,6 +930,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Select all the incids in the active filter in GIS.
         /// </summary>
+        /// <returns>A task representing the asynchronous operation.</returns>
         internal async Task SelectAllOnMapAsync()
         {
             // If there are any records in the selection (and the tool is
@@ -1021,7 +1023,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Initialise the GIS selection table.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A new DataTable for GIS selection.</returns>
         private DataTable NewGisSelectionTable()
         {
             DataTable outTable = new();
@@ -1039,7 +1041,7 @@ namespace HLU.UI.ViewModel
         /// by the sql query based upon a list of conditions.
         /// </summary>
         /// <param name="whereClause">The list of where clause conditions.</param>
-        /// <returns>A tuple of integers of the number of toids and fragments expected to be selected.</returns>
+        /// <returns>A task of an integer of the number of fragments expected to be selected.</returns>
         private async Task<int> ExpectedSelectionFeatures(List<List<SqlFilterCondition>> whereClause)
         {
             int numFragments = 0;
@@ -1127,7 +1129,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="sqlFromTables">The list of data tables.</param>
         /// <param name="sqlWhereClause">The where clause string.</param>
-        /// <returns>An integer of the number of GIS features expected to be selected.</returns>
+        /// <returns>A task of an integer of the number of fragments expected to be selected.</returns>
         private async Task<int> ExpectedSelectionFeatures(List<DataTable> sqlFromTables, string sqlWhereClause)
         {
             int numFragments = 0;
@@ -1372,6 +1374,7 @@ namespace HLU.UI.ViewModel
         /// Computes whether a logical split operation can be performed based on the current state.
         /// At least one feature in selection that share the same incid, but *not* toid and toidfragid.
         /// </summary>
+        /// <returns><c>true</c> if a logical split can be performed; otherwise, <c>false</c>.</returns>
         private bool ComputeCanLogicallySplit()
         {
             WorkMode currentMode = WorkMode;
@@ -1392,6 +1395,7 @@ namespace HLU.UI.ViewModel
         /// Computes whether a logical merge operation can be performed based on the current state.
         /// At least one feature in selection that do not share the same incid or toidfragid.
         /// </summary>
+        /// <returns><c>true</c> if a logical merge can be performed; otherwise, <c>false</c>.</returns>
         private bool ComputeCanLogicallyMerge()
         {
             // Must be in a mode that allows edits and ready for edit operations (includes CanEdit + Reason/Process selection).
@@ -1407,6 +1411,7 @@ namespace HLU.UI.ViewModel
         /// Computes whether a physical split operation can be performed based on the current state.
         /// At least two features in selection that share the same incid, toid and toidfragid.
         /// </summary>
+        /// <returns><c>true</c> if a physical split can be performed; otherwise, <c>false</c>.</returns>
         public bool ComputeCanPhysicallySplit()
         {
             // Must be in a mode that allows edits and ready for edit operations (includes CanEdit + Reason/Process selection).
@@ -1422,6 +1427,7 @@ namespace HLU.UI.ViewModel
         /// Computes whether a physical merge operation can be performed based on the current state.
         /// At least one feature in selection that share the same incid and toid but *not* the same toidfragid.
         /// </summary>
+        /// <returns><c>true</c> if a physical merge operation can be performed; otherwise, <c>false</c>.</returns>
         public bool ComputeCanPhysicallyMerge()
         {
             // Must be in a mode that allows edits and ready for edit operations (includes CanEdit + Reason/Process selection).
@@ -1511,14 +1517,8 @@ namespace HLU.UI.ViewModel
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task LogicalSplitAsync()
         {
-            //TODO: Needed?
-            _autoSplit = false;
-
             // Get the GIS layer selection again (just in case).
             await GetMapSelectionAsync(false);
-
-            //TODO: Needed?
-            _autoSplit = true;
 
             // Check the selected rows are unique before attempting to split them.
             if (!await _gisApp.SelectedRowsUniqueAsync())
@@ -1548,14 +1548,8 @@ namespace HLU.UI.ViewModel
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task PhysicalSplitAsync()
         {
-            //TODO: Needed?
-            _autoSplit = false;
-
             // Get the GIS layer selection again (just in case).
             await GetMapSelectionAsync(false);
-
-            //TODO: Needed?
-            _autoSplit = true;
 
             // Create ViewModel for split class.
             ViewModelWindowMainSplit vmSplit = new(this);

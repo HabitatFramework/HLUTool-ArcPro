@@ -94,24 +94,55 @@ namespace HLU.UI.ViewModel
 
         #region Properties - Selection State
 
+        /// <summary>
+        /// Gets or sets the DataTable representing the current selection in GIS for the toid table.
+        /// This DataTable is used to determine which records in the database correspond to the
+        /// features currently selected in GIS. It is built based on the current selection in GIS
+        /// and is used to filter database queries to only include records that correspond to the
+        /// selected features in GIS.
+        /// </summary>
+        /// <value>The DataTable representing the current selection in GIS for the toid table.</value>
         internal DataTable GisSelection
         {
             get { return _gisSelection; }
             set { _gisSelection = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the DataTable representing the current selection in GIS for the incid table.
+        /// This DataTable is used to determine which records in the database correspond to the
+        /// features currently selected in GIS. It is built based on the current selection in GIS
+        /// and is used to filter database queries to only include records that correspond to the
+        /// selected features in GIS.
+        /// </summary>
+        /// <value>The DataTable representing the current selection in GIS for the incid table.</value>
         internal DataTable IncidSelection
         {
             get { return _incidSelection; }
             set { _incidSelection = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the where clause conditions for the current selection in GIS, organized
+        /// by table type. This is built based on the current selection in GIS and is used to
+        /// filter database queries to only include records that correspond to the selected
+        /// features in GIS. Each entry in the list corresponds to a set of conditions for a
+        /// specific table type, allowing for complex filtering based on multiple related tables.
+        /// </summary>
+        /// <value>The where clause conditions for the current selection in GIS, organized by table type.</value>
         internal List<List<SqlFilterCondition>> IncidSelectionWhereClause
         {
             get { return _incidSelectionWhereClause; }
             set { _incidSelectionWhereClause = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the where clause used to filter the osmm_updates table for updates
+        /// to be applied in bulk update mode. This is built based on the current selection
+        /// in GIS and is used to determine which records in the osmm_updates table should be
+        /// updated when applying changes in bulk update mode.
+        /// </summary>
+        /// <value>The where clause used to filter the osmm_updates table for bulk updates.</value>
         internal string OSMMUpdateWhereClause
         {
             get { return _osmmUpdateWhereClause; }
@@ -126,6 +157,7 @@ namespace HLU.UI.ViewModel
         /// Are there any filters applied to the Incid table and
         /// is the tool currently not in bulk update mode?
         /// </summary>
+        /// <returns><c>true</c> if there are filters applied and the tool is not in bulk update mode; otherwise, <c>false</c>.</returns>
         public bool IsFiltered
         {
             get
@@ -239,7 +271,7 @@ namespace HLU.UI.ViewModel
         /// <param name="itemType">The type of item being checked.</param>
         /// <param name="itemTypes">The plural form of the item type, used for user messaging.</param>
         /// <param name="showMessage">Indicates whether to show a message if the items are not in sync.</param>
-        /// <returns>True if the GIS and database are in sync; otherwise, false.</returns>
+        /// <returns><c>true</c> if the GIS and database are in sync; otherwise, <c>false</c>.</returns>
         public bool CheckInSync(string action, string itemType, string itemTypes = "", bool showMessage = true)
         {
             // Set plural item types if not provided.
@@ -281,7 +313,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Checks if there are any valid ihs matrix rows.
         /// </summary>
-        /// <returns>True if there are valid ihs matrix rows; otherwise, false.</returns>
+        /// <returns><c>true</c> if there are valid ihs matrix rows; otherwise, <c>false</c>.</returns>
         private bool CheckIhsMatrix()
         {
             if (_hluDS == null) return false;
@@ -319,7 +351,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Checks if there are any valid ihs formation rows.
         /// </summary>
-        /// <returns>True if there are valid ihs formation rows; otherwise, false.</returns>
+        /// <returns><c>true</c> if there are valid ihs formation rows; otherwise, <c>false</c>.</returns>
         private bool CheckIhsFormation()
         {
             if (_hluDS == null) return false;
@@ -355,7 +387,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Checks if there are any valid ihs management rows.
         /// </summary>
-        /// <returns>True if there are valid ihs management rows; otherwise, false.</returns>
+        /// <returns><c>true</c> if there are valid ihs management rows; otherwise, <c>false</c>.</returns>
         private bool CheckIhsManagement()
         {
             if (_hluDS == null) return false;
@@ -392,7 +424,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Checks if there are any valid ihs complex rows.
         /// </summary>
-        /// <returns>True if there are valid ihs complex rows; otherwise, false.</returns>
+        /// <returns><c>true</c> if there are valid ihs complex rows; otherwise, <c>false</c>.</returns>
         private bool CheckIhsComplex()
         {
             if (_hluDS == null) return false;
@@ -658,7 +690,7 @@ namespace HLU.UI.ViewModel
         /// added but is invalid, or any of its values differ from the corresponding stored row. This method ignores
         /// rows marked as deleted.</remarks>
         /// <param name="sh">The secondary habitat row to evaluate for changes.</param>
-        /// <returns>true if the row is new or has unsaved changes; otherwise, false.</returns>
+        /// <returns><c>true</c> if the row is new or has unsaved changes; otherwise, <c>false</c>.</returns>
         private bool IncidSecondaryRowDirty(SecondaryHabitat sh)
         {
             // deleted secondary habitat row
@@ -694,7 +726,7 @@ namespace HLU.UI.ViewModel
         /// unsaved changes compared to the current data set.
         /// </summary>
         /// <param name="be">The BAP environment row to evaluate for changes.</param>
-        /// <returns>true if the row is new or has unsaved changes; otherwise, false.</returns>
+        /// <returns><c>true</c> if the row is new or has unsaved changes; otherwise, <c>false</c>.</returns>
         private bool IncidBapRowDirty(BapEnvironment be)
         {
             // deleted user BAP row
@@ -739,7 +771,7 @@ namespace HLU.UI.ViewModel
         /// <remarks>Columns that allow null values are not considered when determining completeness. If
         /// the DataRow is null, the method returns false.</remarks>
         /// <param name="r">The DataRow to evaluate for completeness. Cannot be null.</param>
-        /// <returns>true if all columns in the row that do not allow nulls contain non-null values; otherwise, false.</returns>
+        /// <returns><c>true</c> if all columns in the row that do not allow nulls contain non-null values; otherwise, <c>false</c>.</returns>
         internal bool IsCompleteRow(DataRow r)
         {
             if (r == null) return false;
@@ -1366,7 +1398,7 @@ namespace HLU.UI.ViewModel
         /// <param name="incid">The incid associated with the secondary habitat.</param>
         /// <param name="secondary_habitat">The name of the secondary habitat.</param>
         /// <param name="secondary_group">The group of the secondary habitat.</param>
-        /// <returns>True if the secondary habitat was added successfully; otherwise, false.</returns>
+        /// <returns><c>true</c> if the secondary habitat was added successfully; otherwise, <c>false</c>.</returns>
         public bool AddSecondaryHabitat(bool bulkUpdateMode, int secondary_id, string incid, string secondary_habitat, string secondary_group)
         {
             // Store old secondary habitats list
@@ -1841,7 +1873,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="primaryHabitat">The primary habitat.</param>
         /// <param name="secondaryHabitats">The secondary habitats.</param>
-        /// <returns></returns>
+        /// <returns>An enumerable of the mandatory BAP habitats.</returns>
         internal IEnumerable<string> MandatoryBapEnvironments(string primaryHabitat, ObservableCollection<SecondaryHabitat> secondaryHabitats)
         {
             IEnumerable<string> primaryBap = null;
@@ -1981,7 +2013,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Check if there are any valid condition rows.
         /// </summary>
-        /// <returns>True if there are valid condition rows, otherwise false.</returns>
+        /// <returns><c>true</c> if there are valid condition rows; otherwise, <c>false</c>.</returns>
         private bool CheckCondition()
         {
             if (_hluDS == null) return false;
@@ -2296,6 +2328,8 @@ namespace HLU.UI.ViewModel
         /// Queries the database OSMM updates <see cref="AnyOSMMUpdates"/>.
         /// <paramref name="cancellationToken"/>
         /// </summary>
+        /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         internal async Task CheckAnyOSMMUpdatesAsync(CancellationToken cancellationToken = default)
         {
             // Count the number of OSMM updates.
@@ -2309,8 +2343,8 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Counts incid OSMM updates in the database
         /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the count of OSMM updates.</returns>
         internal async Task<int> CountOSMMUpdatesAsync(CancellationToken cancellationToken = default)
         {
             object result = await _db.ExecuteScalarAsync(String.Format(
@@ -2331,6 +2365,7 @@ namespace HLU.UI.ViewModel
         /// Select the required incid.
         /// </summary>
         /// <param name="queryIncid">The query incid.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         public async Task FilterByIncidAsync(String queryIncid)
         {
             if (String.IsNullOrEmpty(queryIncid))
@@ -2484,6 +2519,7 @@ namespace HLU.UI.ViewModel
         /// <param name="changeFlag">The change flag.</param>
         /// <param name="status">The status.</param>
         /// <param name="selectInGIS">if set to <c>true</c> select the filtered records in GIS.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         public async Task ApplyOSMMUpdatesFilterAsync(string processFlag, string spatialFlag, string changeFlag, string status, bool selectInGIS)
         {
             try
@@ -2703,6 +2739,7 @@ namespace HLU.UI.ViewModel
         /// Clears any active incid filter and optionally moves to the first incid in the index.
         /// </summary>
         /// <param name="resetRowIndex">If set to <c>true</c> the first incid in the index is loaded.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         public async Task ClearFilterAsync(bool resetRowIndex)
         {
             // Reset the OSMM Updates filter when in OSMM Update mode.

@@ -50,15 +50,27 @@ namespace HLU.Data
 
         #region Constructor
 
+        /// <summary>
+        /// Initialise a new instance of the HLULayer class.
+        /// </summary>
         public HLULayer()
         {
         }
 
+        /// <summary>
+        /// Initialise a new instance of the HLULayer class with the specified layer name.
+        /// </summary>
+        /// <param name="layerName">The name of the layer.</param>
         public HLULayer(string layerName)
         {
             _layerName = layerName;
         }
 
+        /// <summary>
+        /// Initialise a new instance of the HLULayer class with the specified layer name and editability.
+        /// </summary>
+        /// <param name="layerName">The name of the layer.</param>
+        /// <param name="isEditable">A value indicating whether the layer is editable.</param>
         public HLULayer(string layerName, bool isEditable)
         {
             _layerName = layerName;
@@ -69,18 +81,30 @@ namespace HLU.Data
 
         #region Properties
 
+        /// <summary>
+        /// Gets or sets the name of the layer.
+        /// </summary>
+        /// <value>The name of the layer.</value>
         public string LayerName
         {
             get { return _layerName; }
             set { _layerName = value; }
         }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether the layer is editable.
+        /// </summary>
+        /// <value><c>true</c> if the layer is editable; otherwise, <c>false</c>.</value>
         public bool IsEditable
         {
             get { return _isEditable; }
             set { _isEditable = value; }
         }
 
+        /// <summary>
+        /// Gets the display name of the layer, which is currently the same as the layer name.
+        /// </summary>
+        /// <value>The display name of the layer.</value>
         public string DisplayName
         {
             get { return _layerName; }
@@ -88,7 +112,7 @@ namespace HLU.Data
 
         #endregion Properties
 
-        #region Methods
+        #region Overrides
 
         public override string ToString()
         {
@@ -114,7 +138,7 @@ namespace HLU.Data
             return Equals(obj as HLULayer);
         }
 
-        #endregion Methods
+        #endregion Overrides
 
     }
 }

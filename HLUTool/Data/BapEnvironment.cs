@@ -9,6 +9,9 @@ using HLU.Properties;
 
 namespace HLU.Data
 {
+    /// <summary>
+    /// Class representing a BAP record, with validation and change notification for use in the UI.
+    /// </summary>
     public class BapEnvironment : INotifyDataErrorInfo, INotifyPropertyChanged, ICloneable
     {
         #region Fields
@@ -21,8 +24,7 @@ namespace HLU.Data
         private string _quality_determination;
         private string _quality_interpretation;
         private string _interpretation_comments;
-        private string _incid_bak;
-        private readonly Dictionary<string, List<string>> _errors = new Dictionary<string, List<string>>();
+        private readonly Dictionary<string, List<string>> _errors = [];
         private static IEnumerable<BapEnvironment> _bapEnvironmentList;
         private static int _potentialPriorityDetermQtyValidation;
 
@@ -31,10 +33,13 @@ namespace HLU.Data
         public readonly static string BAPDetQltyPrevious = Settings.Default.BAPDeterminationQualityPrevious;
         public readonly static string BAPDetQltyPreviousDesc = Settings.Default.BAPDeterminationQualityPreviousDesc;
 
-        #endregion
+        #endregion Fields
 
         #region ctor
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BapEnvironment"/> class with default values.
+        /// </summary>
         public BapEnvironment()
         {
             _bulkUpdateMode = false;
@@ -42,6 +47,12 @@ namespace HLU.Data
             _bap_id = -1; // arbitrary PK for a new row
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BapEnvironment"/> class with specified bulk update
+        /// mode and secondary priority habitat flag.
+        /// </summary>
+        /// <param name="bulkUpdateMode">Indicates whether the instance is in bulk update mode.</param>
+        /// <param name="isSecondary">Indicates whether the instance represents a secondary priority habitat.</param>
         public BapEnvironment(bool bulkUpdateMode, bool isSecondary)
         {
             _bulkUpdateMode = bulkUpdateMode;
@@ -49,6 +60,13 @@ namespace HLU.Data
             _bap_id = -1; // arbitrary PK for a new row
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BapEnvironment"/> class based on the specified data row,
+        /// bulk update mode, and secondary priority habitat flag.
+        /// </summary>
+        /// <param name="bulkUpdateMode">Indicates whether the instance is in bulk update mode.</param>
+        /// <param name="isSecondary">Indicates whether the instance represents a secondary priority habitat.</param>
+        /// <param name="dataRow">The data row containing the BAP information.</param>
         public BapEnvironment(bool bulkUpdateMode, bool isSecondary, HluDataSet.incid_bapRow dataRow)
         {
             _bulkUpdateMode = bulkUpdateMode;
@@ -67,6 +85,14 @@ namespace HLU.Data
                 _interpretation_comments = dataRow.interpretation_comments.Length <= 254 ? dataRow.interpretation_comments : dataRow.interpretation_comments.Substring(0, 254);
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BapEnvironment"/> class based on the specified data row,
+        /// bulk update mode, secondary priority habitat flag, and BapEnvironment list.
+        /// </summary>
+        /// <param name="bulkUpdateMode">Indicates whether the instance is in bulk update mode.</param>
+        /// <param name="isSecondary">Indicates whether the instance represents a secondary priority habitat.</param>
+        /// <param name="dataRow">The data row containing the BAP information.</param>
+        /// <param name="beList">The list of BapEnvironment instances.</param>
         public BapEnvironment(bool bulkUpdateMode, bool isSecondary, HluDataSet.incid_bapRow dataRow, IEnumerable<BapEnvironment> beList)
         {
             _bulkUpdateMode = bulkUpdateMode;
@@ -87,11 +113,18 @@ namespace HLU.Data
             _bapEnvironmentList = beList;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BapEnvironment"/> class based on the specified bulk update mode,
+        /// secondary priority habitat flag, and item array.
+        /// </summary>
+        /// <param name="bulkUpdateMode">Indicates whether the instance is in bulk update mode.</param>
+        /// <param name="isSecondary">Indicates whether the instance represents a secondary priority habitat.</param>
+        /// <param name="itemArray">The array of items containing the BAP information.</param>
         public BapEnvironment(bool bulkUpdateMode, bool isSecondary, object[] itemArray)
         {
             _bulkUpdateMode = bulkUpdateMode;
             _secondaryPriorityHabitat = isSecondary;
-            Int32.TryParse(itemArray[0].ToString(), out _bap_id);
+            bool bapIdSuccess = Int32.TryParse(itemArray[0].ToString(), out _bap_id);
             _incid = itemArray[1].ToString();
             _bap_habitat = itemArray[2].ToString();
             _quality_determination = itemArray[3].ToString();
@@ -104,6 +137,18 @@ namespace HLU.Data
                 _interpretation_comments = itemArray[5].ToString().Length <= 254 ? itemArray[5].ToString() : itemArray[5].ToString().Substring(0, 254);
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BapEnvironment"/> class based on the specified bulk update mode,
+        /// secondary priority habitat flag, and BAP information.
+        /// </summary>
+        /// <param name="bulkUpdateMode">Indicates whether the instance is in bulk update mode.</param>
+        /// <param name="isSecondary">Indicates whether the instance represents a secondary priority habitat.</param>
+        /// <param name="bap_id">The BAP ID.</param>
+        /// <param name="incid">The incid.</param>
+        /// <param name="bap_habitat"></param>
+        /// <param name="quality_determination"></param>
+        /// <param name="quality_interpretation"></param>
+        /// <param name="interpretation_comments"></param>
         public BapEnvironment(bool bulkUpdateMode, bool isSecondary, int bap_id, string incid, string bap_habitat,
             string quality_determination, string quality_interpretation, string interpretation_comments)
         {
@@ -122,55 +167,85 @@ namespace HLU.Data
                 _interpretation_comments = interpretation_comments.Length <= 254 ? interpretation_comments : interpretation_comments.Substring(0, 254);
         }
 
-        public BapEnvironment(BapEnvironment inBH)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BapEnvironment"/> class by copying the values from another instance.
+        /// </summary>
+        /// <param name="inputBE">The instance to copy values from.</param>
+        public BapEnvironment(BapEnvironment inputBE)
         {
-            _bulkUpdateMode = inBH.BulkUpdateMode;
-            _secondaryPriorityHabitat = inBH.SecondaryPriorityHabitat;
+            _bulkUpdateMode = inputBE.BulkUpdateMode;
+            _secondaryPriorityHabitat = inputBE.SecondaryPriorityHabitat;
             _bap_id = -1; // arbitrary PK for a new row
             _incid = null;
-            _bap_habitat = inBH.bap_habitat;
-            _quality_determination = inBH.quality_determination;
-            _quality_interpretation = inBH.quality_interpretation;
-            _interpretation_comments = inBH.interpretation_comments;
+            _bap_habitat = inputBE.bap_habitat;
+            _quality_determination = inputBE.quality_determination;
+            _quality_interpretation = inputBE.quality_interpretation;
+            _interpretation_comments = inputBE.interpretation_comments;
         }
 
+        /// <summary>
+        /// Creates a new object that is a copy of the current instance.
+        /// </summary>
+        /// <returns>A new <see cref="BapEnvironment"/> object that is a copy of the current instance.</returns>
         public object Clone()
         {
             return new BapEnvironment(this);
         }
 
-        #endregion
+        #endregion ctor
 
         #region DataChanged
 
-        // Create a handler so that updates to the BAP records can be picked
-        // up back in the main window.
-        //
-        // declare the delegate since using the generic pattern
+        /// <summary>
+        /// Delegate for the <see cref="DataChanged"/> event, which is raised when data in the BAP record changes.
+        /// </summary>
+        /// <param name="Changed">Indicates whether the data has changed.</param>
         public delegate void DataChangedEventHandler(bool Changed);
 
-        // declare the event
+        /// <summary>
+        /// Event that is raised when data in the BAP record changes, allowing subscribers to
+        /// react to changes (e.g., by enabling an "Apply" button).
+        /// </summary>
         public event DataChangedEventHandler DataChanged;
 
-        #endregion
+        #endregion DataChanged
 
         #region INotifyPropertyChanged
 
+        /// <summary>
+        /// Occurs when a property value changes, allowing the UI to update accordingly.
+        /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
+        /// <summary>
+        /// Raises the <see cref="PropertyChanged"/> event for the specified property name, indicating that the property's value has changed.
+        /// </summary>
+        /// <param name="propertyName">The name of the property that changed.</param>
         protected virtual void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        #endregion
+        #endregion INotifyPropertyChanged
 
-        #region INotifyDataErrorInfo
+        #region Validation
 
         public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
 
+        /// <summary>
+        /// Gets a value indicating whether the BAP record has any validation errors. This is determined
+        /// by checking if there are any entries in the _errors dictionary.
+        /// </summary>
+        /// <value><c>true</c> if the BAP record has validation errors; otherwise, <c>false</c>.</value>
         public bool HasErrors => _errors.Count != 0;
 
+        /// <summary>
+        /// Gets the validation errors for a specified property. If the property name is null or empty,
+        /// returns all errors for row-level validation.
+        /// </summary>
+        /// <param name="propertyName">The name of the property to retrieve validation errors for.</param>
+        /// <returns>An enumerable collection of validation errors for the specified property, or null if
+        /// there are no errors.</returns>
         public IEnumerable GetErrors(string propertyName)
         {
             if (string.IsNullOrEmpty(propertyName))
@@ -186,6 +261,13 @@ namespace HLU.Data
             return null;
         }
 
+        /// <summary>
+        /// Sets the validation errors for a specified property and raises the ErrorsChanged event if
+        /// the errors have changed. If the errors list is null or empty, removes any existing errors
+        /// for the property.
+        /// </summary>
+        /// <param name="propertyName">The name of the property to set validation errors for.</param>
+        /// <param name="errors">The list of validation errors to set for the property.</param>
         private void SetErrors(string propertyName, List<string> errors)
         {
             bool errorsChanged = false;
@@ -215,6 +297,11 @@ namespace HLU.Data
             }
         }
 
+        /// <summary>
+        /// Raises the <see cref="ErrorsChanged"/> event for the specified property name, indicating that the
+        /// validation errors for that property have changed.
+        /// </summary>
+        /// <param name="propertyName">The name of the property for which the validation errors have changed.</param>
         private void OnErrorsChanged(string propertyName)
         {
             //TODO: Debug
@@ -228,10 +315,15 @@ namespace HLU.Data
                 ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(string.Empty));
             }
 
-            // THIS IS THE KEY FIX: Notify that HasErrors property itself has changed
+            // Notify that HasErrors property itself has changed
             OnPropertyChanged(nameof(HasErrors));
         }
 
+        /// <summary>
+        /// Validates the specified property and updates the validation errors for that property. The validation
+        /// errors are stored in the internal dictionary and the ErrorsChanged event is raised if the errors have changed.
+        /// </summary>
+        /// <param name="propertyName">The name of the property to validate.</param>
         private void ValidateProperty(string propertyName)
         {
             List<string> errors = [];
@@ -312,47 +404,79 @@ namespace HLU.Data
                     break;
             }
 
+            // Update the errors for the property
             SetErrors(propertyName, errors.Count != 0 ? errors : null);
         }
 
-        #endregion
+        #endregion Validation
 
         #region Properties
 
+        /// <summary>
+        /// Sets the list of BapEnvironment instances, which is used for validation (e.g., to check for
+        /// duplicate habitats).
+        /// </summary>
+        /// <value>The list of BapEnvironment instances.</value>
         public static IEnumerable<BapEnvironment> BapEnvironmentList
         {
             set { _bapEnvironmentList = value; }
         }
 
+        /// <summary>
+        /// Sets the flag indicating whether potential priority habitat determination quality should be
+        /// validated. If set to 1, validation will be performed to ensure that the determination quality
+        /// for potential priority habitats can only be 'Not present but close to definition' or
+        /// 'Previously present, but may no longer exist'.
+        /// </summary>
+        /// <value>The flag indicating whether potential priority habitat determination quality should be validated.</value>
         public static int PotentialPriorityDetermQtyValidation
         {
             set { _potentialPriorityDetermQtyValidation = value; }
         }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether the instance is in bulk update mode. When in bulk update mode,
+        /// validation is temporarily disabled to improve performance.
+        /// </summary>
+        /// <value><c>true</c> if the instance is in bulk update mode; otherwise, <c>false</c>.</value>
         public bool BulkUpdateMode
         {
             get { return _bulkUpdateMode; }
             set { _bulkUpdateMode = value; }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether the BAP record is a new record that has been added but not yet saved to the database.
+        /// </summary>
+        /// <value><c>true</c> if the BAP record is a new record that has been added but not yet saved to the database; otherwise, <c>false</c>.</value>
         public bool IsAdded
         {
             get { return _bap_id == -1; }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether the BAP record is a secondary priority habitat.
+        /// </summary>
+        /// <value><c>true</c> if the BAP record is a secondary priority habitat; otherwise, <c>false</c>.</value>
         public bool SecondaryPriorityHabitat
         {
             get { return _secondaryPriorityHabitat; }
         }
 
-        #region incid_bapRow
-
+        /// <summary>
+        /// Gets or sets the BAP ID.
+        /// </summary>
+        /// <value>The BAP ID.</value>
         public int bap_id
         {
             get { return _bap_id; }
             set { _bap_id = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the incid associated with the BAP record. This is a mandatory field when bap_id is not -1.
+        /// </summary>
+        /// <value>The incid associated with the BAP record.</value>
         public string incid
         {
             get { return _incid; }
@@ -367,6 +491,11 @@ namespace HLU.Data
             }
         }
 
+        /// <summary>
+        /// Gets or sets the priority habitat associated with the BAP record. This is a mandatory field
+        /// and must be unique within the list of BAP records.
+        /// </summary>
+        /// <value>The priority habitat associated with the BAP record.</value>
         public string bap_habitat
         {
             get { return _bap_habitat; }
@@ -384,6 +513,11 @@ namespace HLU.Data
             }
         }
 
+        /// <summary>
+        /// Gets or sets the quality of the determination for the priority habitat. This is a
+        /// mandatory field when not in bulk update mode.
+        /// </summary>
+        /// <value>The quality of the determination for the priority habitat.</value>
         public string quality_determination
         {
             get { return _quality_determination; }
@@ -401,6 +535,11 @@ namespace HLU.Data
             }
         }
 
+        /// <summary>
+        /// Gets or sets the quality of the interpretation for the priority habitat. This is a
+        /// mandatory field when not in bulk update mode.
+        /// </summary>
+        /// <value>The quality of the interpretation for the priority habitat.</value>
         public string quality_interpretation
         {
             get { return _quality_interpretation; }
@@ -418,6 +557,12 @@ namespace HLU.Data
             }
         }
 
+        /// <summary>
+        /// Gets or sets the interpretation comments for the priority habitat. This field is
+        /// optional and has a maximum length of 254 characters. If a longer string is set,
+        /// it will be truncated to 254 characters.
+        /// </summary>
+        /// <value>The interpretation comments for the priority habitat.</value>
         public string interpretation_comments
         {
             get { return _interpretation_comments; }
@@ -436,24 +581,49 @@ namespace HLU.Data
             }
         }
 
-        #endregion
+        #endregion Properties
 
-        #endregion
+        #region ToItemArray
 
-        #region Public methods
-
+        /// <summary>
+        /// Converts the BAP record to an array of objects, which can be used for data binding or other purposes.
+        /// The array contains the following elements:
+        /// <list type="bullet">
+        /// <item><description>BAP ID</description></item>
+        /// <item><description>Incid</description></item>
+        /// <item><description>BAP Habitat</description></item>
+        /// <item><description>Quality Determination</description></item>
+        /// <item><description>Quality Interpretation</description></item>
+        /// <item><description>Interpretation Comments</description></item>
+        /// </list>
+        /// </summary>
+        /// <returns>An array of objects representing the BAP record.</returns>
         public object[] ToItemArray()
         {
             return [ _bap_id, _incid, _bap_habitat, _quality_determination,
                 _quality_interpretation, _interpretation_comments ];
         }
 
+        /// <summary>
+        /// Converts the BAP record to an array of objects, which can be used for data binding or other purposes.
+        /// </summary>
+        /// <param name="bapID">The BAP ID.</param>
+        /// <param name="incid">The incident ID.</param>
+        /// <returns>An array of objects representing the BAP record.</returns>
         public object[] ToItemArray(int bapID, string incid)
         {
             return [ bapID, incid, _bap_habitat, _quality_determination,
                 _quality_interpretation, _interpretation_comments ];
         }
 
+        /// <summary>
+        /// Converts the BAP record to an array of objects, which can be used for data binding or other purposes. If the isSecondary
+        /// parameter is true, the record will be marked as a secondary priority habitat.
+        /// </summary>
+        /// <param name="bapID">The BAP ID.</param>
+        /// <param name="incid">The incid.</param>
+        /// <param name="isSecondary">Indicates whether the record is a secondary priority habitat.</param>
+        /// <returns>An array of objects representing the BAP record.</returns>
         public object[] ToItemArray(int bapID, string incid, bool isSecondary)
         {
             if (isSecondary) MakeSecondary();
@@ -461,10 +631,19 @@ namespace HLU.Data
                 _quality_interpretation, _interpretation_comments ];
         }
 
+        /// <summary>
+        /// Marks the BAP record as a secondary priority habitat by setting the internal flag.
+        /// This can be used to indicate that the record
+        /// is a secondary priority habitat.
+        /// </summary>
         public void MakeSecondary()
         {
             _secondaryPriorityHabitat = true;
         }
+
+        #endregion ToItemArray
+
+        #region Static Methods
 
         /// <summary>
         /// Determines whether the specified row is a secondary priority habitat.
@@ -482,7 +661,7 @@ namespace HLU.Data
         /// Makes the row a secondary priority habitat.
         /// </summary>
         /// <param name="r">The priority habitat row.</param>
-        /// <returns></returns>
+        /// <returns>The updated priority habitat row marked as secondary.</returns>
         public static HluDataSet.incid_bapRow MakeSecondary(HluDataSet.incid_bapRow r)
         {
             // Set the determination quality to 'Previously present, but may no longer exist'
@@ -490,10 +669,16 @@ namespace HLU.Data
             return r;
         }
 
-        #endregion
+        #endregion Static Methods
 
         #region Validation
 
+        /// <summary>
+        /// Gets a value indicating whether the BAP habitat is a duplicate within the list of
+        /// BAP environments. This is determined by checking if any other BAP environment in
+        /// the list has the same habitat.
+        /// </summary>
+        /// <value><c>true</c> if the BAP habitat is a duplicate; otherwise, <c>false</c>.</value>
         public bool IsDuplicate
         {
             get
@@ -502,6 +687,11 @@ namespace HLU.Data
             }
         }
 
+        /// <summary>
+        /// Determines whether the BAP record is valid by validating all properties and checking
+        /// for any validation errors. The method returns <c>true</c> if the record is valid; otherwise, <c>false</c>.
+        /// </summary>
+        /// <returns><c>true</c> if the BAP record is valid; otherwise, <c>false</c>.</returns>
         public bool IsValid()
         {
             // Validate all properties
@@ -514,18 +704,38 @@ namespace HLU.Data
             return !HasErrors;
         }
 
+        /// <summary>
+        /// Determines whether the BAP record is valid by performing row-level validation based
+        /// on the current values of the properties.
+        /// </summary>
+        /// <param name="bulkUpdateMode">Indicates whether the validation is being performed in bulk update mode.</param>
+        /// <param name="isSecondary">Indicates whether the BAP record is a secondary priority habitat.</param>
+        /// <returns><c>true</c> if the BAP record is valid; otherwise, <c>false</c>.</returns>
         public bool IsValid(bool bulkUpdateMode, bool isSecondary)
         {
             return String.IsNullOrEmpty(ValidateRow(bulkUpdateMode, isSecondary, _bap_id,
                 _incid, _bap_habitat, _quality_determination, _quality_interpretation));
         }
 
+        /// <summary>
+        /// Determines whether the specified row is valid by performing row-level validation based
+        /// on the current values of the properties.
+        /// </summary>
+        /// <param name="bulkUpdateMode">Indicates whether the validation is being performed in bulk update mode.</param>
+        /// <param name="isSecondary">Indicates whether the BAP record is a secondary priority habitat.</param>
+        /// <param name="r">The BAP row to validate.</param>
+        /// <returns><c>true</c> if the BAP row is valid; otherwise, <c>false</c>.</returns>
         public bool IsValid(bool bulkUpdateMode, bool isSecondary, HluDataSet.incid_bapRow r)
         {
             return String.IsNullOrEmpty(ValidateRow(bulkUpdateMode, isSecondary, r.bap_id,
                 r.incid, r.bap_habitat, r.quality_determination, r.quality_interpretation));
         }
 
+        /// <summary>
+        /// Gets a string containing all validation error messages for the BAP record, concatenated together
+        /// with newlines. This is useful for displaying validation errors to the user in a readable format.
+        /// </summary>
+        /// <value>A string containing all validation error messages for the BAP record.</value>
         public string ErrorMessages
         {
             get
@@ -537,12 +747,32 @@ namespace HLU.Data
             }
         }
 
+        /// <summary>
+        /// Validates the specified row by performing row-level validation based on the current values of the properties. The method returns
+        /// a string containing all validation error messages for the row, or <c>null</c> if the row is valid.
+        /// </summary>
+        /// <param name="bulkUpdateMode">Indicates whether the validation is being performed in bulk update mode.</param>
+        /// <param name="isSecondary">Indicates whether the BAP record is a secondary priority habitat.</param>
+        /// <param name="r">The BAP row to validate.</param>
+        /// <returns><c>true</c> if the BAP row is valid; otherwise, <c>false</c>.</returns>
         public static bool ValidateRow(bool bulkUpdateMode, bool isSecondary, HluDataSet.incid_bapRow r)
         {
             return ValidateRow(bulkUpdateMode, isSecondary, r.bap_id, r.incid, r.bap_habitat,
                 r.quality_determination, r.quality_interpretation) == null;
         }
 
+        /// <summary>
+        /// Validates the specified row by performing row-level validation based on the current values of the properties. The method returns
+        /// a string containing all validation error messages for the row, or <c>null</c> if the row is valid.
+        /// </summary>
+        /// <param name="_bulkUpdateMode">Indicates whether the validation is being performed in bulk update mode.</param>
+        /// <param name="isSecondary">Indicates whether the BAP record is a secondary priority habitat.</param>
+        /// <param name="bap_id">The BAP ID of the row to validate.</param>
+        /// <param name="incid">The INCID of the row to validate.</param>
+        /// <param name="bap_habitat">The priority habitat of the row to validate.</param>
+        /// <param name="quality_determination">The determination quality of the row to validate.</param>
+        /// <param name="quality_interpretation">The quality interpretation of the row to validate.</param>
+        /// <returns>A string containing all validation error messages for the row, or <c>null</c> if the row is valid.</returns>
         private static string ValidateRow(bool _bulkUpdateMode, bool isSecondary, int bap_id, string incid,
             string bap_habitat, string quality_determination, string quality_interpretation)
         {
@@ -606,6 +836,6 @@ namespace HLU.Data
             return sbError.Length > 0 ? sbError.Remove(0, Environment.NewLine.Length).ToString() : null;
         }
 
-        #endregion
+        #endregion Validation
     }
 }

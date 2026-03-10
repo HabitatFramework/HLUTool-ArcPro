@@ -231,8 +231,6 @@ namespace HLU.UI.ViewModel
         private ICommand _addSecondaryHabitatCommand;
         private ICommand _addSecondaryHabitatListCommand;
         private ICommand _updateCommand;
-        private ICommand _osmmUpdateAcceptCommandMenu;
-        private ICommand _osmmUpdateRejectCommandMenu;
         private ICommand _osmmSkipCommand;
         private ICommand _osmmAcceptCommand;
         private ICommand _osmmRejectCommand;
@@ -270,8 +268,9 @@ namespace HLU.UI.ViewModel
         #region Properties - DockPane/View
 
         /// <summary>
-        /// Is the form loading?
+        /// Gets or sets a value indicating whether the form is loading.
         /// </summary>
+        /// <value><c>true</c> if the form is loading; otherwise, <c>false</c>.</value>
         public bool FormLoading
         {
             get { return _formLoading; }
@@ -279,14 +278,19 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// The URL of the help page.
+        /// Gets or sets the URL of the help page.
         /// </summary>
+        /// <value>The URL of the help page.</value>
         public string HelpURL
         {
             get { return _helpURL; }
             set { _helpURL = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the add-in settings.
+        /// </summary>
+        /// <value>The add-in settings.</value>
         public AddInSettings AddInSettings
         {
             get { return _addInSettings; }
@@ -301,16 +305,18 @@ namespace HLU.UI.ViewModel
         /// Gets the DockPane ID for this window, which is used to uniquely identify the DockPane within
         /// the ArcGIS Pro framework and to associate it with the correct view and view model.
         /// </summary>
+        /// <value>The DockPane ID for this window.</value>
         public static string DockPaneID
         {
             get => _dockPaneID;
         }
 
         /// <summary>
-        /// Returns the user-friendly name of this object.
+        /// Gets the user-friendly name of this object.
         /// Child classes can set this property to a new value,
         /// or override it to determine the value on-demand.
         /// </summary>
+        /// <value>The user-friendly name of this object.</value>
         public override string DisplayName
         {
             get { return _displayName; }
@@ -318,8 +324,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// The title of the main window.
+        /// Gets the title of the main window.
         /// </summary>
+        /// <value>The title of the main window.</value>
         public override string WindowTitle
         {
             get
@@ -329,10 +336,11 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// The visibility of the main grid containing the UI controls. This is toggled to visible
+        /// Gets the visibility of the main grid containing the UI controls. This is toggled to visible
         /// or hidden based on whether there is an active map view with a valid HLU layer, and
         /// also controls the state of the maingrid via DAML.
         /// </summary>
+        /// <value>The visibility of the main grid.</value>
         public Visibility GridMainVisibility
         {
             get
@@ -360,8 +368,9 @@ namespace HLU.UI.ViewModel
         #region Properties - Messages
 
         /// <summary>
-        /// The message to display on the form.
+        /// Gets or setsthe message to display on the form.
         /// </summary>
+        /// <value>The message to display on the form.</value>
         public string StatusMessage
         {
             get
@@ -377,8 +386,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// The type of message; Error, Warning, Confirmation, Information
+        /// Gets or sets the type of message; Error, Warning, Confirmation, Information
         /// </summary>
+        /// <value>The type of message.</value>
         public MessageType MessageLevel
         {
             get
@@ -393,8 +403,11 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Is there a message to display?
+        /// Gets the visibility of the message area based on whether there is a message to display.
+        /// If there is no message, or if the DockPane is not set, then the message area is collapsed;
+        /// otherwise, it is visible.
         /// </summary>
+        /// <value>Visibility indicating whether there is a message to display.</value>
         public Visibility HasMessage
         {
             get
@@ -413,8 +426,9 @@ namespace HLU.UI.ViewModel
         #region Properties - Ribbon Controls
 
         /// <summary>
-        /// The available HLU layers.
+        /// Gets or sets the available HLU layers.
         /// </summary>
+        /// <value>The available HLU layers.</value>
         public ObservableCollection<string> AvailableHLULayerNames
         {
             get { return _availableHLULayerNames; }
@@ -432,6 +446,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the current user's ID in the format "DOMAIN\username" if a domain is present, or just "username" if not.
         /// </summary>
+        /// <value>The current user's ID.</value>
         public string UserID
         {
             get
@@ -446,6 +461,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the current user's name from the database based on their user ID, or "(guest)" if not found or an error occurs.
         /// </summary>
+        /// <value>The current user's name.</value>
         public string UserName
         {
             get { return _userName; }
@@ -455,13 +471,20 @@ namespace HLU.UI.ViewModel
 
         #region Properties - Cursor
 
+        /// <summary>
+        /// Gets the cursor to use for the window, which can be set to indicate different states (e.g. waiting, default).
+        /// </summary>
+        /// <value>The cursor to use for the window.</value>
         public Cursor WindowCursor { get { return _windowCursor; } }
 
         #endregion Properties - Cursor
 
         #region Properties - Header / General
 
-        // Header / General Info
+        /// <summary>
+        /// Gets or sets the incid associated with the current row.
+        /// </summary>
+        /// <value>The incid associated with the current row</value>
         public string Incid
         {
             get
@@ -474,6 +497,10 @@ namespace HLU.UI.ViewModel
             set { if ((IncidCurrentRow != null) && (value != null)) IncidCurrentRow.incid = value; }
         }
 
+        /// <summary>
+        /// Gets the total area of the features for the current incid.
+        /// </summary>
+        /// <value>The total area of the features for the current incid.</value>
         public string IncidArea
         {
             get
@@ -490,9 +517,12 @@ namespace HLU.UI.ViewModel
                     return null;
                 }
             }
-            set { }
         }
 
+        /// <summary>
+        /// Gets the total perimieter length of the features for the current incid.
+        /// </summary>
+        /// <value>The total perimeter length of the features for the current incid.</value>
         public string IncidLength
         {
             get
@@ -511,6 +541,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets the created date of the current incid.
+        /// </summary>
+        /// <value>The created date of the current incid.</value>
         public string IncidCreatedDate
         {
             get
@@ -536,6 +570,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets the last modified date of the current incid.
+        /// </summary>
+        /// <value>The last modified date of the current incid.</value>
         public string IncidLastModifiedDate
         {
             get
@@ -561,6 +599,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets the created user's name of the current incid.
+        /// </summary>
+        /// <value>The created user's name of the current incid.</value>
         public string IncidCreatedUser
         {
             get
@@ -576,6 +618,10 @@ namespace HLU.UI.ViewModel
             set { if ((IncidCurrentRow != null) && (value != null)) IncidCurrentRow.created_user_id = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the last modified user's name of the current incid.
+        /// </summary>
+        /// <value>The last modified user's name of the current incid.</value>
         public string IncidLastModifiedUser
         {
             get
@@ -591,10 +637,10 @@ namespace HLU.UI.ViewModel
             set { if ((IncidCurrentRow != null) && (value != null)) _incidLastModifiedUser = value; }
         }
 
-        // OSMM Pending
         /// <summary>
         /// Only show the OSMM Updates group if required, otherwise collapse it.
         /// </summary>
+        /// <value>The visibility of the OSMM Updates group.</value>
         public Visibility ShowIncidOSMMPendingGroup
         {
             get
@@ -820,6 +866,10 @@ namespace HLU.UI.ViewModel
         }
 
         // Reason/Process
+        /// <summary>
+        /// Gets the list of reason codes.
+        /// </summary>
+        /// <value>The list of reason codes.</value>
         public HluDataSet.lut_reasonRow[] ReasonCodes
         {
             get
@@ -835,6 +885,10 @@ namespace HLU.UI.ViewModel
             set { }
         }
 
+        /// <summary>
+        /// Gets or sets the selected reason code.
+        /// </summary>
+        /// <value>The selected reason code.</value>
         public string Reason
         {
             get
@@ -854,6 +908,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets the list of process codes.
+        /// </summary>
+        /// <value>The list of process codes.</value>
         public HluDataSet.lut_processRow[] ProcessCodes
         {
             get
@@ -869,6 +927,10 @@ namespace HLU.UI.ViewModel
             set { }
         }
 
+        /// <summary>
+        /// Gets or sets the selected process code.
+        /// </summary>
+        /// <value>The selected process code.</value>
         public string Process
         {
             get
@@ -896,6 +958,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// If the reason and process code controls are enabled.
         /// </summary>
+        /// <value><see langword="true"/> if the reason and process code controls are enabled; otherwise, <see langword="false"/>.</value>
         public bool ReasonProcessEnabled
         {
             get
@@ -915,6 +978,7 @@ namespace HLU.UI.ViewModel
         /// <remarks>The property returns <see langword="false"/> if the control is not in bulk mode and
         /// there is no current row selected, regardless of the underlying value. Setting this property does not
         /// override these conditions.</remarks>
+        /// <value><see langword="true"/> if the data tab control is enabled; otherwise, <see langword="false"/>.</value>
         public bool TabControlDataEnabled
         {
             get
@@ -1013,6 +1077,7 @@ namespace HLU.UI.ViewModel
         // This will enable tooltips to be shown so that validation errors
         // in any fields in the tab can be highlighted by flagging the tab
         // label as in error.
+        /// <value>The label for the habitat tab.</value>
         public string HabitatTabLabel
         {
             get { return "Habitats"; }
@@ -1022,6 +1087,7 @@ namespace HLU.UI.ViewModel
         /// Gets the habitat header to be used in the habitat tab. It is shown only
         /// if the option to show group headers is set.
         /// </summary>
+        /// <value>The habitat header string if group headers are shown, otherwise null.</value>
         public string HabitatHeader
         {
             get
@@ -1040,6 +1106,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Only show the source habitat group if the option is set, otherwise collapse it.
         /// </summary>
+        /// <value>The visibility of the source habitat group.</value>
         public Visibility ShowSourceHabitatGroup
         {
             get
@@ -1094,6 +1161,7 @@ namespace HLU.UI.ViewModel
         /// window is used to set which habitat classes and types are flagged as local.
         /// </summary>
         /// <remarks>Used in the options window to display all local habitat classes with local habitat types.</remarks>
+        /// <value>The list of habitat classes.</value>
         public HluDataSet.lut_habitat_classRow[] HabitatClasses
         {
             get
@@ -1346,6 +1414,7 @@ namespace HLU.UI.ViewModel
         /// Gets the header for the primary habitat group box. It is only shown if
         /// the option to show group headers is set.
         /// </summary>
+        /// <value>The header for the primary habitat group box.</value>
         public string PrimaryHeader
         {
             get
@@ -1360,6 +1429,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets a value indicating whether the primary habitat code combo box is enabled.
         /// </summary>
+        /// <value>A value indicating whether the primary habitat code combo box is enabled.</value>
         public bool PrimaryEnabled
         {
             get
@@ -1383,6 +1453,7 @@ namespace HLU.UI.ViewModel
         /// Gets or sets the primary habitat code. When setting, it also updates the list of secondary
         /// habitat codes and tips based on the current primary code and habitat type.
         /// </summary>
+        /// <value>The primary habitat code.</value>
         public string IncidPrimary
         {
             get { return _incidPrimary; }
@@ -1476,6 +1547,7 @@ namespace HLU.UI.ViewModel
         /// It is used to show the category of the selected primary habitat code and to validate that the
         /// selected primary habitat code is valid.
         /// </summary>
+        /// <value>The primary habitat category that relates to the selected primary habitat code.</value>
         public string IncidPrimaryCategory
         {
             get { return _incidPrimaryCategory; }
@@ -1488,6 +1560,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Only show the mandatory habitat secondaries if required.
         /// </summary>
+        /// <value>The visibility of the mandatory habitat secondaries.</value>
         public Visibility ShowHabitatSecondariesMandatory
         {
             get
@@ -1524,6 +1597,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Only show the suggested habitat secondaries if the option is set, otherwise collapse it.
         /// </summary>
+        /// <value>The visibility of the suggested habitat secondaries.</value>
         public Visibility ShowHabitatSecondariesSuggested
         {
             get
@@ -1585,6 +1659,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the header for the secondary habitats group box. It is only shown if the option to show group headers is set.
         /// </summary>
+        /// <value>The header for the secondary habitats group box.</value>
         public string SecondaryHabitatsHeader
         {
             get
@@ -1599,6 +1674,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets a value indicating whether the secondary habitat group box is enabled. It is only enabled if there is a primary habitat code selected.
         /// </summary>
+        /// <value>A value indicating whether the secondary habitat group box is enabled.</value>
         public bool SecondaryGroupEnabled
         {
             get
@@ -1612,6 +1688,7 @@ namespace HLU.UI.ViewModel
         /// there is a primary habitat code selected and there are secondary groups that relate to the
         /// selected primary habitat code.
         /// </summary>
+        /// <value>A value indicating whether the secondary habitat controls are enabled.</value>
         public bool SecondaryHabitatEnabled
         {
             get
@@ -1625,6 +1702,7 @@ namespace HLU.UI.ViewModel
         /// there is a primary habitat code selected and there are secondary groups that relate to the
         /// selected primary habitat code.
         /// </summary>
+        /// <value>A value indicating whether the secondary habitat code combo box is enabled.</value>
         public bool SecondaryHabitatsEnabled
         {
             get
@@ -1636,6 +1714,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the list of valid local secondary groups that relate to the selected primary habitat code.
         /// </summary>
+        /// <value>The list of valid local secondary groups.</value>
         public HluDataSet.lut_secondary_groupRow[] SecondaryGroupCodesValid
         {
             get
@@ -1681,6 +1760,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the list of all local secondary groups that have at least one secondary habitat code that is local.
         /// </summary>
+        /// <value>The list of all local secondary groups.</value>
         public HluDataSet.lut_secondary_groupRow[] SecondaryGroupCodesAll
         {
             get
@@ -1700,6 +1780,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the list of secondary groups to be used in the options window.
         /// </summary>
+        /// <value>The list of secondary groups including any <All> groups.</value>
         public HluDataSet.lut_secondary_groupRow[] SecondaryGroupCodesWithAll
         {
             get
@@ -1750,6 +1831,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the list of valid local secondary habitat codes that relate to the selected primary habitat code and secondary group.
         /// </summary>
+        /// <value>The list of valid local secondary habitat codes.</value>
         public HluDataSet.lut_secondaryRow[] SecondaryHabitatCodes
         {
             get
@@ -1813,6 +1895,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the list of all local secondary habitat codes that are related to any habitat type or primary habitat.
         /// </summary>
+        /// <value>The list of all local secondary habitat codes.</value>
         public HluDataSet.lut_secondaryRow[] SecondaryHabitatCodesAll
         {
             get
@@ -1846,6 +1929,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// The collection of secondary habitats.
         /// </summary>
+        /// <value>The collection of secondary habitats.</value>
         public ObservableCollection<SecondaryHabitat> IncidSecondaryHabitats
         {
             get { return _incidSecondaryHabitats; }
@@ -1881,6 +1965,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Only show the NVC Codes if the option is set, otherwise collapse it.
         /// </summary>
+        /// <value>The visibility of the NVC codes.</value>
         public Visibility ShowNVCCodes
         {
             get
@@ -1921,6 +2006,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the habitat summary header text. It is only shown if the option to show group headers is set.
         /// </summary>
+        /// <value>The habitat summary header text.</value>
         public string HabitatSummaryHeader
         {
             get
@@ -1960,6 +2046,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Only show the contatenated habitat summary if the option is set, otherwise collapse it.
         /// </summary>
+        /// <value>The visibility of the habitat summary.</value>
         public Visibility ShowHabitatSummary
         {
             get
@@ -1984,6 +2071,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         ///  Gets the legacy habitat group header. It is only shown if the option to show group headers is set.
         /// </summary>
+        /// <value>The legacy habitat group header.</value>
         public string LegacyHeader
         {
             get
@@ -2855,11 +2943,23 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether the bap habitats auto is enabled.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if bap habitats auto is enabled; otherwise, <c>false</c>.
+        /// </value>
         public bool BapHabitatsAutoEnabled
         {
             get { return IncidBapHabitatsAuto != null && IncidBapHabitatsAuto.Count > 0; } // return IsNotBulkMode; }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether the bap habitats user is enabled.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if bap habitats user is enabled; otherwise, <c>false</c>.
+        /// </value>
         public bool BapHabitatsUserEnabled
         {
             get
@@ -2879,10 +2979,10 @@ namespace HLU.UI.ViewModel
 
         #region Properties - Details Label/Header
 
-        // Set the Details tab label from here so that validation can be done.
-        // This will enable tooltips to be shown so that validation errors
-        // in any fields in the tab can be highlighted by flagging the tab
-        // label as in error.
+        /// <summary>
+        /// Gets the Details tab label.
+        /// </summary>
+        /// <value>The Details tab label.</value>
         public string DetailsTabLabel
         {
             get { return "Details"; }
@@ -2895,6 +2995,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the details general comments group header. It is only shown if the option to show group headers is set.
         /// </summary>
+        /// <value>The details general comments group header.</value>
         public string DetailsCommentsHeader
         {
             get
@@ -2909,6 +3010,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets or sets the incid general comments.
         /// </summary>
+        /// <value>The incid general comments.</value>
         public string IncidGeneralComments
         {
             get
@@ -2937,6 +3039,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the details maps group header. It is only shown if the option to show group headers is set.
         /// </summary>
+        /// <value>The details maps group header.</value>
         public string DetailsMapsHeader
         {
             get
@@ -3032,6 +3135,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the details site group header. It is only shown if the option to show group headers is set.
         /// </summary>
+        /// <value>The details site group header.</value>
         public string DetailsSiteHeader
         {
             get
@@ -3046,6 +3150,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Display the site reference with the site name in the interface.
         /// </summary>
+        /// <value>The site reference.</value>
         public string IncidSiteRef
         {
             get
@@ -3070,6 +3175,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets or sets the site name to be displayed in the interface.
         /// </summary>
+        /// <value>The site name.</value>
         public string IncidSiteName
         {
             get
@@ -3098,6 +3204,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the details condition group header. It is only shown if the option to show group headers is set.
         /// </summary>
+        /// <value>The details condition group header.</value>
         public string DetailsConditionHeader
         {
             get
@@ -3304,6 +3411,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Checks if the incid condition is non-null and not blank to determine whether the other condition fields should be enabled.
         /// </summary>
+        /// <value><c>true</c> if the incid condition fields should be enabled; otherwise, <c>false</c>.</value>
         public bool IncidConditionEnabled
         {
             // Disable remaining condition fields when condition is blank
@@ -3317,6 +3425,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the details quality group header. It is only shown if the option to show group headers is set.
         /// </summary>
+        /// <value>The details quality group header.</value>
         public string DetailsQualityHeader
         {
             get
@@ -3612,6 +3721,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the source 1 group header. It is only shown if the option to show group headers is set.
         /// </summary>
+        /// <value>The source 1 group header.</value>
         public string Source1Header
         {
             get
@@ -3627,6 +3737,7 @@ namespace HLU.UI.ViewModel
         /// Gets the visibility of the source numbers field. It is only shown when group headers are not shown
         /// as the source number is included in the group header when group headers are shown.
         /// </summary>
+        /// <value>The visibility of the source numbers field.</value>
         public Visibility ShowSourceNumbers
         {
             get
@@ -3642,6 +3753,7 @@ namespace HLU.UI.ViewModel
         /// Gets the list of source names to be shown in the source 1 name drop-down list. It includes
         /// the <Clear> row if a source is currently selected, but excludes the <Clear> row in bulk update mode.
         /// </summary>
+        /// <value>An array of source rows for source 1.</value>
         public HluDataSet.lut_sourcesRow[] Source1Names
         {
             get
@@ -3686,6 +3798,7 @@ namespace HLU.UI.ViewModel
         /// new source is selected. If the value is set to -1 then the source will be cleared (i.e. the row
         /// will be deleted) and all source 1 fields will be cleared.
         /// </summary>
+        /// <value>The source 1 ID.</value>
         public Nullable<int> IncidSource1Id
         {
             get
@@ -3746,6 +3859,7 @@ namespace HLU.UI.ViewModel
         /// Gets a boolean value indicating whether the source 1 fields should be enabled.
         /// This is determined by whether a source name has been selected for source 1.
         /// </summary>
+        /// <value><c>true</c> if the source 1 fields should be enabled; otherwise, <c>false</c>.</value>
         public bool IncidSource1Enabled
         {
             // Disable remaining source fields when source name is blank
@@ -3757,6 +3871,7 @@ namespace HLU.UI.ViewModel
         /// update the source_date_start, source_date_end and source_date_type fields
         /// in the incid_sources table for source 1.
         /// </summary>
+        /// <value>The source 1 date as a VagueDateInstance.</value>
         public Date.VagueDateInstance IncidSource1Date
         {
             get
@@ -3792,6 +3907,7 @@ namespace HLU.UI.ViewModel
         /// Gets or sets the source 1 habitat class code. Setting this property will update the source_habitat_class field
         /// in the incid_sources table for source 1.
         /// </summary>
+        /// <value>The source 1 habitat class code.</value>
         public string IncidSource1HabitatClass
         {
             get
@@ -3819,6 +3935,7 @@ namespace HLU.UI.ViewModel
         /// The list is filtered based on the selected source 1 habitat class code. It includes the <Clear> row
         /// if a habitat type is currently selected, but excludes the <Clear> row in bulk update mode.
         /// </summary>
+        /// <value>An array of habitat type rows for source 1.</value>
         public HluDataSet.lut_habitat_typeRow[] Source1HabitatTypeCodes
         {
             get
@@ -3848,6 +3965,7 @@ namespace HLU.UI.ViewModel
         /// Gets or sets the source 1 habitat type code. Setting this property will update the source_habitat_type field
         /// in the incid_sources table for source 1.
         /// </summary>
+        /// <value>The source 1 habitat type code.</value>
         public string IncidSource1HabitatType
         {
             get
@@ -3872,6 +3990,7 @@ namespace HLU.UI.ViewModel
         /// Gets or sets the source 1 boundary importance code. Setting this property will update the source_boundary_importance field
         /// in the incid_sources table for source 1.
         /// </summary>
+        /// <value>The source 1 boundary importance code.</value>
         public string IncidSource1BoundaryImportance
         {
             get
@@ -3899,6 +4018,7 @@ namespace HLU.UI.ViewModel
         /// Gets or sets the source 1 habitat importance code. Setting this property will update the source_habitat_importance field
         /// in the incid_sources table for source 1.
         /// </summary>
+        /// <value>The source 1 habitat importance code.</value>
         public string IncidSource1HabitatImportance
         {
             get
@@ -3929,6 +4049,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the source 2 group header. It is only shown if the option to show group headers is set.
         /// </summary>
+        /// <value>The source 2 group header.</value>
         public string Source2Header
         {
             get
@@ -3944,6 +4065,7 @@ namespace HLU.UI.ViewModel
         /// Gets the list of source names to be shown in the source 2 name drop-down list. It includes
         /// the <Clear> row if a habitat type is currently selected, but excludes the <Clear> row in bulk update mode.
         /// </summary>
+        /// <value>An array of source rows for source 2.</value>
         public HluDataSet.lut_sourcesRow[] Source2Names
         {
             get
@@ -3972,6 +4094,7 @@ namespace HLU.UI.ViewModel
         /// Gets or sets the source 2 name by source_id. Setting this property will update the source_id field
         /// in the incid_sources table for source 2.
         /// </summary>
+        /// <value>The source 2 ID.</value>
         public Nullable<int> IncidSource2Id
         {
             get
@@ -4031,6 +4154,7 @@ namespace HLU.UI.ViewModel
         /// Gets a boolean value indicating whether the source 2 fields should be enabled.
         /// This is determined by whether a source name has been selected for source 2.
         /// </summary>
+        /// <value><c>true</c> if the source 2 fields should be enabled; otherwise, <c>false</c>.</value>
         public bool IncidSource2Enabled
         {
             // Disable remaining source fields when source name is blank
@@ -4041,6 +4165,7 @@ namespace HLU.UI.ViewModel
         /// Gets or sets the source 2 date as a VagueDateInstance. Setting this property will
         /// update the source_date_start, source_date_end, and source_date_type fields in the incid_sources table for source 2.
         /// </summary>
+        /// <value>The source 2 date as a VagueDateInstance.</value>
         public Date.VagueDateInstance IncidSource2Date
         {
             get
@@ -4076,6 +4201,7 @@ namespace HLU.UI.ViewModel
         /// Gets or sets the source 2 habitat class code. Setting this property will update the source_habitat_class field
         /// in the incid_sources table for source 2.
         /// </summary>
+        /// <value>The source 2 habitat class code.</value>
         public string IncidSource2HabitatClass
         {
             get
@@ -4101,6 +4227,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the list of source 2 habitat type codes to be shown in the source 2 habitat type drop-down list.
         /// </summary>
+        /// <value>An array of habitat type rows for source 2.</value>
         public HluDataSet.lut_habitat_typeRow[] Source2HabitatTypeCodes
         {
             get
@@ -4130,6 +4257,7 @@ namespace HLU.UI.ViewModel
         /// Gets or sets the source 2 habitat type code. Setting this property will update the source_habitat_type field
         /// in the incid_sources table for source 2.
         /// </summary>
+        /// <value>The source 2 habitat type code.</value>
         public string IncidSource2HabitatType
         {
             get
@@ -4154,6 +4282,7 @@ namespace HLU.UI.ViewModel
         /// Gets or sets the source 2 boundary importance code. Setting this property will update the source_boundary_importance field
         /// in the incid_sources table for source 2.
         /// </summary>
+        /// <value>The source 2 boundary importance code.</value>
         public string IncidSource2BoundaryImportance
         {
             get
@@ -4181,6 +4310,7 @@ namespace HLU.UI.ViewModel
         /// Gets or sets the source 2 habitat importance code. Setting this property will update the source_habitat_importance field
         /// in the incid_sources table for source 2.
         /// </summary>
+        /// <value>The source 2 habitat importance code.</value>
         public string IncidSource2HabitatImportance
         {
             get
@@ -4211,6 +4341,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the source 3 group header. It is only shown if the option to show group headers is set.
         /// </summary>
+        /// <value>The source 3 group header.</value>
         public string Source3Header
         {
             get
@@ -4224,8 +4355,9 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Gets the list of source names to be shown in the source 3 name drop-down list. It includes
-        /// the <Clear> row if applicable, but excludes the <Clear> row in bulk update mode.
+        /// the '<Clear>' row if applicable, but excludes the '<Clear>' row in bulk update mode.
         /// </summary>
+        /// <value>The list of source 3 names.</value>
         public HluDataSet.lut_sourcesRow[] Source3Names
         {
             get
@@ -4254,6 +4386,7 @@ namespace HLU.UI.ViewModel
         /// Gets or sets the source 3 name by source_id. Setting this property will update the source_id field
         /// in the incid_sources table for source 3.
         /// </summary>
+        /// <value>The source 3 ID.</value>
         public Nullable<int> IncidSource3Id
         {
             get
@@ -4313,6 +4446,7 @@ namespace HLU.UI.ViewModel
         /// Gets a boolean value indicating whether the source 3 fields should be enabled.
         /// This is determined by whether a source name has been selected for source 3.
         /// </summary>
+        /// <value><c>true</c> if the source 3 fields should be enabled; otherwise, <c>false</c>.</value>
         public bool IncidSource3Enabled
         {
             // Disable remaining source fields when source name is blank
@@ -4323,6 +4457,7 @@ namespace HLU.UI.ViewModel
         /// Gets or sets the source 3 date as a VagueDateInstance. Setting this property will
         /// update the source_date_start, source_date_end, and source_date_type fields in the incid_sources table for source 3.
         /// </summary>
+        /// <value>The source 3 date as a VagueDateInstance.</value>
         public Date.VagueDateInstance IncidSource3Date
         {
             get
@@ -4358,6 +4493,7 @@ namespace HLU.UI.ViewModel
         /// Gets or sets the source 3 habitat class code. Setting this property will update the source_habitat_class field
         /// in the incid_sources table for source 3.
         /// </summary>
+        /// <value>The source 3 habitat class code.</value>
         public string IncidSource3HabitatClass
         {
             get
@@ -4383,6 +4519,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the list of source 3 habitat type codes to be shown in the source 3 habitat type drop-down list.
         /// </summary>
+        /// <value>The source 3 habitat type codes.</value>
         public string IncidSource3HabitatType
         {
             get
@@ -4406,6 +4543,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the list of source 3 habitat type codes to be shown in the source 3 habitat type drop-down list.
         /// </summary>
+        /// <value>The source 3 habitat type codes.</value>
         public HluDataSet.lut_habitat_typeRow[] Source3HabitatTypeCodes
         {
             get
@@ -4435,6 +4573,7 @@ namespace HLU.UI.ViewModel
         /// Gets or sets the source 3 boundary importance code. Setting this property will update the source_boundary_importance field
         /// in the incid_sources table for source 3.
         /// </summary>
+        /// <value>The source 3 boundary importance code.</value>
         public string IncidSource3BoundaryImportance
         {
             get
@@ -4462,6 +4601,7 @@ namespace HLU.UI.ViewModel
         /// Gets or sets the source 3 habitat importance code. Setting this property will update the source_habitat_importance field
         /// in the incid_sources table for source 3.
         /// </summary>
+        /// <value>The source 3 habitat importance code.</value>
         public string IncidSource3HabitatImportance
         {
             get
@@ -4495,7 +4635,14 @@ namespace HLU.UI.ViewModel
         /// Gets the incid history and formats it ready for display in the form.
         /// </summary>
         /// <value>
-        /// The incid history.
+        /// The incid history for the current record, formatted as a list of strings with each
+        /// string representing a history entry. The history entries are ordered from most recent
+        /// to least recent, and grouped by history_id to avoid duplicate entries when multiple
+        /// columns were modified in the same update. Each history entry includes the modified
+        /// date and time, user, process, reason, operation, and any modified values that are
+        /// configured to be displayed based on the user options. The modified length and area
+        /// values are shown in kilometres and hectares respectively in the history. If there
+        /// is no history for the current record, this property returns null.
         /// </value>
         public IEnumerable<string> IncidHistory
         {
@@ -4598,11 +4745,13 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the Site ID for the current record.
         /// </summary>
+        /// <value>The Site ID for the current record.</value>
         public string SiteID { get { return _recIDs.SiteID; } }
 
         /// <summary>
         /// Gets the Habitat Version for the current record.
         /// </summary>
+        /// <value>The Habitat Version for the current record.</value>
         public string HabitatVersion { get { return _recIDs.HabitatVersion; } }
 
         #endregion Properties - Site Info
@@ -4610,8 +4759,9 @@ namespace HLU.UI.ViewModel
         #region Properties - Status Bar
 
         /// <summary>
-        /// Get the status string for the current Incid selection.
+        /// Gets the status string for the current Incid selection.
         /// </summary>
+        /// <value>The status string for the current Incid selection.</value>
         public string StatusIncid
         {
             get
@@ -4676,6 +4826,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the status string for the current map selection, which is shown in the status bar.
         /// </summary>
+        /// <value>The status string for the current map selection.</value>
         public string StatusBar
         {
             get { return _windowCursor == Cursors.Wait ? _processingMsg : String.Empty; }
@@ -4686,8 +4837,9 @@ namespace HLU.UI.ViewModel
         #region Properties - Priority Habitats
 
         /// <summary>
-        /// EditPriorityHabitats command.
+        /// Gets the command to edit priority habitats.
         /// </summary>
+        /// <value>The command to edit priority habitats.</value>
         public ICommand EditPriorityHabitatsCommand
         {
             get
@@ -4702,16 +4854,18 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Can the priority habitats be edited.
+        /// Gets a value indicating whether the priority habitats can be edited.
         /// </summary>
+        /// <value><c>true</c> if the priority habitats can be edited; otherwise, <c>false</c>.</value>
         public bool CanEditPriorityHabitats
         {
             get { return IsNotBulkMode && IsNotOsmmReviewMode && BapHabitatsAutoEnabled; }
         }
 
         /// <summary>
-        /// EditPotentialHabitats command.
+        /// Gets the command to edit potential habitats.
         /// </summary>
+        /// <value>The command to edit potential habitats.</value>
         public ICommand EditPotentialHabitatsCommand
         {
             get
@@ -4726,16 +4880,18 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        ///  Can the potential priority habitats be edited.
+        /// Gets a value indicating whether the potential priority habitats can be edited.
         /// </summary>
+        /// <value><c>true</c> if the potential priority habitats can be edited; otherwise, <c>false</c>.</value>
         public bool CanEditPotentialHabitats
         {
             get { return IsNotBulkMode && IsNotOsmmReviewMode && BapHabitatsUserEnabled; }
         }
 
         /// <summary>
-        /// AddSecondaryHabitat command.
+        /// Gets the command to add a secondary habitat.
         /// </summary>
+        /// <value>The command to add a secondary habitat.</value>
         public ICommand AddSecondaryHabitatCommand
         {
             get
@@ -4750,8 +4906,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Can a secondary habitat be added.
+        /// Gets a value indicating whether a secondary habitat can be added.
         /// </summary>
+        /// <value><c>true</c> if a secondary habitat can be added; otherwise, <c>false</c>.</value>
         public bool CanAddSecondaryHabitat
         {
             get
@@ -4764,8 +4921,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// AddSecondaryHabitatList command.
+        /// Gets the command to add a list of secondary habitats.
         /// </summary>
+        /// <value>The command to add a list of secondary habitats.</value>
         public ICommand AddSecondaryHabitatListCommand
         {
             get
@@ -4780,8 +4938,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Can a list of secondary habitats be added.
+        /// Gets a value indicating whether a list of secondary habitats can be added.
         /// </summary>
+        /// <value><c>true</c> if a list of secondary habitats can be added; otherwise, <c>false</c>.</value>
         public bool CanAddSecondaryHabitatList
         {
             get
@@ -4798,8 +4957,10 @@ namespace HLU.UI.ViewModel
         #region Properties - Export
 
         /// <summary>
-        /// Can an export be performed?
+        /// Gets a value indicating whether an export can be performed, which is used to
+        /// enable or disable the export command.
         /// </summary>
+        /// <value><c>true</c> if an export can be performed; otherwise, <c>false</c>.</value>
         public bool CanExport { get { return IsNotBulkMode && IsNotOsmmReviewMode && _hluDS != null; } }
 
         #endregion Properties - Export
@@ -4836,8 +4997,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// FilterByAttributesOSMM command.
+        /// Gets the command to filter by attributes OSMM.
         /// </summary>
+        /// <value>The command to filter by attributes OSMM.</value>
         public ICommand FilterByAttributesOSMMCommand
         {
             get
@@ -4870,6 +5032,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets a value indicating whether the filter can be cleared.
         /// </summary>
+        /// <value><c>true</c> if the filter can be cleared; otherwise, <c>false</c>.</value>
         public bool CanClearFilter
         {
             get
@@ -4887,8 +5050,9 @@ namespace HLU.UI.ViewModel
         #region Properties - Progress/Status
 
         /// <summary>
-        /// Is the form processing?
+        /// Gets a value indicating whether the form is processing.
         /// </summary>
+        /// <value><c>true</c> if the form is processing; otherwise, <c>false</c>.</value>
         public Visibility IsProcessing
         {
             get
@@ -4901,8 +5065,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets the value to set on the progress
+        /// Gets or sets the value to set on the progress bar.
         /// </summary>
+        /// <value>The value to set on the progress bar.</value>
         public double ProgressValue
         {
             get
@@ -4918,8 +5083,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets the max value to set on the progress
+        /// Gets or sets the maximum value for the progress bar.
         /// </summary>
+        /// <value>The maximum value for the progress bar.</value>
         public double MaxProgressValue
         {
             get
@@ -4935,8 +5101,10 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// ProgressStatus Text
+        /// Gets or sets the process status text to be shown in the status bar when processing.
+        /// Setting this property will also update the visibility of the progress bar and status text.
         /// </summary>
+        /// <value>The text to display for the process status.</value>
         public string ProcessStatus
         {
             get
@@ -4955,8 +5123,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Progress bar Text
+        /// Gets or sets the text to display on the progress bar.
         /// </summary>
+        /// <value>The text to display on the progress bar.</value>
         public string ProgressText
         {
             get
@@ -4972,8 +5141,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Is the progress wheel animating?
+        /// Gets a value indicating whether the progress wheel is animating.
         /// </summary>
+        /// <value><c>true</c> if the progress wheel is animating; otherwise, <c>false</c>.</value>
         public Visibility ProgressAnimating
         {
             get
@@ -4990,8 +5160,9 @@ namespace HLU.UI.ViewModel
         #region Properties - Navigation
 
         /// <summary>
-        /// Navigate to first record command.
+        /// Gets the command to navigate to the first record.
         /// </summary>
+        /// <value>The command to navigate to the first record.</value>
         public ICommand NavigateFirstCommand
         {
             get
@@ -5006,8 +5177,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Navigate to previous record command.
+        /// Gets the command to navigate to the previous record.
         /// </summary>
+        /// <value>The command to navigate to the previous record.</value>
         public ICommand NavigatePreviousCommand
         {
             get
@@ -5022,16 +5194,18 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Can the user navigate backward?
+        /// Gets a value indicating whether the user can navigate backward.
         /// </summary>
+        /// <value><c>true</c> if the user can navigate backward; otherwise, <c>false</c>.</value>
         public bool CanNavigateBackward
         {
             get { return IncidCurrentRowIndex > 1; }
         }
 
         /// <summary>
-        /// Navigate to next record command.
+        /// Gets the command to navigate to the next record.
         /// </summary>
+        /// <value>The command to navigate to the next record.</value>
         public ICommand NavigateNextCommand
         {
             get
@@ -5046,8 +5220,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Navigate to last record command.
+        /// Gets the command to navigate to the last record.
         /// </summary>
+        /// <value>The command to navigate to the last record.</value>
         public ICommand NavigateLastCommand
         {
             get
@@ -5062,8 +5237,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Can the user navigate forward?
+        /// Gets a value indicating whether the user can navigate forward.
         /// </summary>
+        /// <value><c>true</c> if the user can navigate forward; otherwise, <c>false</c>.</value>
         public bool CanNavigateForward
         {
             get
@@ -5074,8 +5250,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Navigate to the specified record command.
+        /// Gets the command to navigate to the specified record.
         /// </summary>
+        /// <value>The command to navigate to the specified record.</value>
         public ICommand NavigateIncidCommand
         {
             get
@@ -5090,8 +5267,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Can the user navigate to the specified record?
+        /// Gets a value indicating whether the user can navigate to the specified record.
         /// </summary>
+        /// <value><c>true</c> if the user can navigate to the specified record; otherwise, <c>false</c>.</value>
         private bool CanNavigateIncid
         {
             get
@@ -5109,8 +5287,9 @@ namespace HLU.UI.ViewModel
         #region Properties - Update/Edit
 
         /// <summary>
-        /// Update command.
+        /// Gets the command to update the current record.
         /// </summary>
+        /// <value>The command to update the current record.</value>
         public ICommand UpdateCommand
         {
             get
@@ -5129,6 +5308,7 @@ namespace HLU.UI.ViewModel
         /// made by the user, if we're not currently in bulk update mode with no records
         /// selected, or if the current record is in error.
         /// </summary>
+        /// <value><c>true</c> if the update can be performed; otherwise, <c>false</c>.</value>
         public bool CanUpdate
         {
             get
@@ -5151,6 +5331,7 @@ namespace HLU.UI.ViewModel
         /// but EditMode remains the authoritative source for whether the user can
         /// actually edit features.
         /// </summary>
+        /// <value><c>true</c> if the user can edit features; otherwise, <c>false</c>.</value>
         public bool CanEdit
         {
             get
@@ -5166,6 +5347,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Is the user authorised for bulk updates?
         /// </summary>
+        /// <value><c>true</c> if the user is authorised for bulk updates; otherwise, <c>false</c>.</value>
         public bool CanUserBulkUpdate
         {
             get
@@ -5179,6 +5361,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Can bulk update mode be started?
         /// </summary>
+        /// <value><c>true</c> if bulk update mode can be started; otherwise, <c>false</c>.</value>
         public bool CanBulkUpdate
         {
             get
@@ -5208,6 +5391,7 @@ namespace HLU.UI.ViewModel
         /// This is a thin wrapper over WorkMode that toggles the HluEditMode.Bulk
         /// flag while leaving other flags unchanged.
         /// </summary>
+        /// <value><c>true</c> if bulk update mode is active; otherwise, <c>false</c>.</value>
         internal bool BulkUpdateMode
         {
             get
@@ -5224,6 +5408,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the visibility of controls that should be hidden when in bulk update mode.
         /// </summary>
+        /// <value>The visibility of controls that should be hidden when in bulk update mode.</value>
         public Visibility HideInBulkUpdateMode
         {
             get
@@ -5239,6 +5424,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the visibility of controls that should be shown when in bulk update mode.
         /// </summary>
+        /// <value>The visibility of controls that should be shown when in bulk update mode.</value>
         public Visibility ShowInBulkUpdateMode
         {
             get
@@ -5255,6 +5441,7 @@ namespace HLU.UI.ViewModel
         /// Gets the header for the group of controls related to bulk update, which is shown when in bulk
         /// update mode if the option to show group headers is enabled.
         /// </summary>
+        /// <value>The header for the group of controls related to bulk update.</value>
         public string TopControlsGroupHeader
         {
             get
@@ -5270,6 +5457,7 @@ namespace HLU.UI.ViewModel
         /// Gets the header for the group of controls related to bulk update, which is shown when in bulk
         /// update mode if the option to show group headers is enabled.
         /// </summary>
+        /// <value>The header for the bulk update group of controls.</value>
         public string TopControlsBulkUpdateGroupHeader
         {
             get
@@ -5326,6 +5514,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Can OSMM Update mode be started?
         /// </summary>
+        /// <value><c>true</c> if this instance can OSMM update mode; otherwise, <c>false</c>.</value>
         public bool CanOSMMUpdateMode
         {
             get
@@ -5344,11 +5533,13 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Can the OSMM Update be cancelled.
         /// </summary>
+        /// <value><c>true</c> if this instance can cancel OSMM update; otherwise, <c>false</c>.</value>
         public bool CanCancelOSMMUpdate { get { return IsOsmmReviewMode; } }
 
         /// <summary>
         /// OSMM Skip command.
         /// </summary>
+        /// <value>The command to skip the proposed OSMM Update for the current incid.</value>
         public ICommand OSMMSkipCommand
         {
             get
@@ -5366,6 +5557,7 @@ namespace HLU.UI.ViewModel
         /// Can the proposed OSMM Update for the current incid
         /// be skipped?
         /// </summary>
+        /// <value><c>true</c> if the proposed OSMM Update for the current incid can be skipped; otherwise, <c>false</c>.</value>
         public bool CanOSMMSkip
         {
             get
@@ -5382,6 +5574,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// OSMM Accept command.
         /// </summary>
+        /// <value>The command to accept the proposed OSMM Update for the current incid.</value>
         public ICommand OSMMAcceptCommand
         {
             get
@@ -5398,6 +5591,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// OSMM Reject command.
         /// </summary>
+        /// <value>The command to reject the proposed OSMM Update for the current incid.</value>
         public ICommand OSMMRejectCommand
         {
             get
@@ -5415,6 +5609,7 @@ namespace HLU.UI.ViewModel
         /// Can the proposed OSMM Update for the current incid
         /// be processed?
         /// </summary>
+        /// <value><c>true</c> if the proposed OSMM Update for the current incid can be processed; otherwise, <c>false</c>.</value>
         public bool CanOSMMAccept
         {
             get
@@ -5435,6 +5630,7 @@ namespace HLU.UI.ViewModel
         /// This toggles the HluEditMode.OsmmReview flag while leaving other flags
         /// (Edit, Bulk, OsmmBulk) unchanged.
         /// </summary>
+        /// <value><c>true</c> if OSMM Update mode is active; otherwise, <c>false</c>.</value>
         internal bool OSMMUpdateMode
         {
             get
@@ -5451,6 +5647,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Hide some controls when in OSMM Update mode.
         /// </summary>
+        /// <value>The visibility of controls when in OSMM Update mode.</value>
         public Visibility HideInOSMMUpdateMode
         {
             get
@@ -5466,6 +5663,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Show some controls when in OSMM Update mode.
         /// </summary>
+        /// <value>The visibility of controls in OSMM Update mode.</value>
         public Visibility ShowInOSMMUpdateMode
         {
             get
@@ -5486,6 +5684,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Whether to create incid history for processing OSMM Updates.
         /// </summary>
+        /// <value><c>true</c> to create incid history for processing OSMM Updates; otherwise, <c>false</c>.</value>
         public bool OSMMUpdateCreateHistory
         {
             get { return _osmmUpdateCreateHistory; }
@@ -5496,6 +5695,7 @@ namespace HLU.UI.ViewModel
         /// Set the Accept button caption depending on whether the Ctrl button
         /// is held down.
         /// </summary>
+        /// <value>The text for the OSMM Accept button.</value>
         public string OSMMAcceptText
         {
             get { return OSMMAcceptTag == "Ctrl" ? "A_ccept All" : "A_ccept"; }
@@ -5505,46 +5705,16 @@ namespace HLU.UI.ViewModel
         /// Set the Reject button caption depending on whether the Ctrl button
         /// is held down.
         /// </summary>
+        /// <value>The text for the OSMM Reject button.</value>
         public string OSMMRejectText
         {
             get { return OSMMRejectTag == "Ctrl" ? "Re_ject All" : "Re_ject"; }
         }
 
         /// <summary>
-        /// OSMM Update Accept menu command.
-        /// </summary>
-        public ICommand OSMMUpdateAcceptCommandMenu
-        {
-            get
-            {
-                if (_osmmUpdateAcceptCommandMenu == null)
-                {
-                    Action<object> osmmUpdateAcceptMenuAction = new(this.OSMMUpdateAcceptCommandMenuClicked);
-                    _osmmUpdateAcceptCommandMenu = new RelayCommand(osmmUpdateAcceptMenuAction);
-                }
-                return _osmmUpdateAcceptCommandMenu;
-            }
-        }
-
-        /// <summary>
-        /// OSMM Update Reject menu command.
-        /// </summary>
-        public ICommand OSMMUpdateRejectCommandMenu
-        {
-            get
-            {
-                if (_osmmUpdateRejectCommandMenu == null)
-                {
-                    Action<object> osmmUpdateRejectMenuAction = new(this.OSMMUpdateRejectCommandMenuClicked);
-                    _osmmUpdateRejectCommandMenu = new RelayCommand(osmmUpdateRejectMenuAction);
-                }
-                return _osmmUpdateRejectCommandMenu;
-            }
-        }
-
-        /// <summary>
         /// Can OSMM Update be accepted?
         /// </summary>
+        /// <value><c>true</c> if OSMM Update can be accepted; otherwise, <c>false</c>.</value>
         public bool CanOSMMUpdateAccept
         {
             get
@@ -5564,6 +5734,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Can OSMM Update be rejected?
         /// </summary>
+        /// <value><c>true</c> if OSMM Update can be rejected; otherwise, <c>false</c>.</value>
         public bool CanOSMMUpdateReject
         {
             get
@@ -5583,6 +5754,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Are there any OSMM updates in the database?
         /// </summary>
+        /// <value><c>true</c> if there are any OSMM updates in the database; otherwise, <c>false</c>.</value>
         public bool AnyOSMMUpdates
         {
             get
@@ -5592,8 +5764,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Get the row counter for the current incid.
+        /// Gets the row counter for the current incid.
         /// </summary>
+        /// <value>The row counter for the current incid.</value>
         public int OSMMIncidCurrentRowIndex
         {
             get { return _osmmUpdatesEmpty ? 0 : _incidCurrentRowIndex; }
@@ -5606,6 +5779,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Can OSMM Bulk Update mode be started?
         /// </summary>
+        /// <value><c>true</c> if OSMM Bulk Update mode can be started; otherwise, <c>false</c>.</value>
         public bool CanOSMMBulkUpdateMode
         {
             get
@@ -5625,15 +5799,17 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Can the OSMM Bulk Update be cancelled.
         /// </summary>
+        /// <value><c>true</c> if the OSMM Bulk Update can be cancelled; otherwise, <c>false</c>.</value>
         public bool CanCancelOSMMBulkUpdate { get { return IsOsmmBulkMode; } }
 
         /// <summary>
-        /// Indicates whether the OSMM bulk apply workflow is active.
+        /// Gets or sets a value indicating whether the OSMM bulk apply workflow is active.
         ///
         /// This toggles the WorkMode.OSMMBulk flag and, if required by your
         /// rules, also ensures that Bulk mode is active whenever OSMM bulk mode
         /// is enabled.
         /// </summary>
+        /// <value><c>true</c> if the OSMM bulk apply workflow is active; otherwise, <c>false</c>.</value>
         internal bool OSMMBulkUpdateMode
         {
             get
@@ -5659,12 +5835,20 @@ namespace HLU.UI.ViewModel
 
         #region Properties - Display Values
 
+        /// <summary>
+        /// Gets and sets the value for the last modified date for the current Incid, which is displayed on the form.
+        /// </summary>
+        /// <value>The last modified date for the current Incid.</value>
         internal DateTime IncidLastModifiedDateVal
         {
             get { return _incidLastModifiedDate; }
             set { _incidLastModifiedDate = value; }
         }
 
+        /// <summary>
+        /// Gets and sets the value for the last modified user for the current Incid, which is displayed on the form.
+        /// </summary>
+        /// <value>The last modified user for the current Incid.</value>
         internal string IncidLastModifiedUserId
         {
             get { return _incidLastModifiedUser; }
@@ -5675,6 +5859,10 @@ namespace HLU.UI.ViewModel
 
         #region Properties - Copy/Paste
 
+        /// <summary>
+        /// Gets or sets the copy switches for the window.
+        /// </summary>
+        /// <value>The copy switches for the window.</value>
         public WindowMainCopySwitches CopySwitches
         {
             get { return _copySwitches; }
@@ -5684,6 +5872,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Can the user copy attribute values from the current Incid row?
         /// </summary>
+        /// <value>Indicates whether the user can copy attribute values from the current Incid row.</value>
         public bool CanCopy
         {
             get
@@ -5698,6 +5887,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Can the user paste attribute values to the current Incid row?
         /// </summary>
+        /// <value>Indicates whether the user can paste attribute values to the current Incid row.</value>
         public bool CanPaste
         {
             get
@@ -5715,9 +5905,10 @@ namespace HLU.UI.ViewModel
 
         //TODO: Fix AssemblyCopyright
         /// <summary>
-        /// Retrieve the copyright notice for the assembly to display with the
+        /// Gets the copyright notice for the assembly to display with the
         /// current userid and name in the 'About' box.
         /// </summary>
+        /// <value>The assembly copyright notice with the current user info.</value>
         public string AssemblyCopyright
         {
             get
@@ -5743,8 +5934,9 @@ namespace HLU.UI.ViewModel
         #region Properties - Static Images
 
         /// <summary>
-        /// Get the image for the AddSecondaryHabitat button.
+        /// Gets the image for the AddSecondaryHabitat button.
         /// </summary>
+        /// <value>The image source for the AddSecondaryHabitat button.</value>
         public static ImageSource ButtonAddSecondaryHabitatImg
         {
             get
@@ -5755,8 +5947,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Get the image for the AddSecondaryHabitatList button.
+        /// Gets the image for the AddSecondaryHabitatList button.
         /// </summary>
+        /// <value>The image source for the AddSecondaryHabitatList button.</value>
         public static ImageSource ButtonAddSecondaryHabitatListImg
         {
             get
@@ -5767,8 +5960,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Get the image for the GetMapSelection button.
+        /// Gets the image for the GetMapSelection button.
         /// </summary>
+        /// <value>The image source for the GetMapSelection button.</value>
         public static ImageSource ButtonGetMapSelectionImg
         {
             get
@@ -5779,8 +5973,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Get the image for the EditPriorityHabitats button.
+        /// Gets the image for the EditPriorityHabitats button.
         /// </summary>
+        /// <value>The image source for the EditPriorityHabitats button.</value>
         public static ImageSource ButtonEditPriorityHabitatsImg
         {
             get
@@ -5791,8 +5986,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Get the image for the EditPotentialHabitats button.
+        /// Gets the image for the EditPotentialHabitats button.
         /// </summary>
+        /// <value>The image source for the EditPotentialHabitats button.</value>
         public static ImageSource ButtonEditPotentialHabitatsImg
         {
             get
@@ -5813,8 +6009,8 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Show the message with the required icon (message type).
         /// </summary>
-        /// <param name="msg"></param>
-        /// <param name="messageLevel"></param>
+        /// <param name="msg">The message to display.</param>
+        /// <param name="messageLevel">The level of the message (e.g., Info, Warning, Error).</param>
         public void ShowMessage(string msg, MessageType messageLevel)
         {
             MessageLevel = messageLevel;
@@ -5856,7 +6052,8 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Switch the active layer.
         /// </summary>
-        /// <param name="selectedValue"></param>
+        /// <param name="selectedValue">The name of the layer to switch to.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         public async Task SwitchGISLayerAsync(string selectedValue)
         {
             // Check if the layer name has actually changed.
@@ -5892,7 +6089,8 @@ namespace HLU.UI.ViewModel
         /// Activate or Deactivate the specified state. State is identified via
         /// its name. Listen for state changes via the DAML <b>condition</b> attribute
         /// </summary>
-        /// <param name="stateID"></param>
+        /// <param name="stateID">The ID of the state to toggle.</param>
+        /// <param name="activate">A boolean value indicating whether to activate or deactivate the state.</param>
         public static void ToggleState(string stateID, bool activate)
         {
             if (FrameworkApplication.State.Contains(stateID))
@@ -5941,9 +6139,9 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Update the progress bar.
         /// </summary>
-        /// <param name="processText"></param>
-        /// <param name="progressValue"></param>
-        /// <param name="maxProgressValue"></param>
+        /// <param name="processText">The text to display for the current process.</param>
+        /// <param name="progressValue">The current progress value.</param>
+        /// <param name="maxProgressValue">The maximum progress value.</param>
         public void ProgressUpdate(string processText = null, int progressValue = -1, int maxProgressValue = -1)
         {
             if (Application.Current.Dispatcher.CheckAccess())
@@ -6132,6 +6330,11 @@ namespace HLU.UI.ViewModel
             RefreshSources();
             RefreshHistory();
         }
+        /// <summary>
+        /// Refreshes the state of combo box sources, ensuring that any bound user interface elements reflect the current data.
+        /// </summary>
+        /// <remarks>Call this method after changes that may affect the available options in combo boxes. This method raises
+        /// property change notifications for multiple properties, which can trigger UI updates in data-bound scenarios.</remarks>
         private void RefreshComboBoxSources()
         {
             OnPropertyChanged(nameof(BoundaryMapCodes));
@@ -6200,11 +6403,10 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(StatusBar));
             OnPropertyChanged(nameof(ActiveLayerName));
             OnPropertyChanged(nameof(CanZoomToSelection));
-            //OnPropertyChanged(nameof(CanUserBulkUpdate)); // Not needed as this is cached.
             OnPropertyChanged(nameof(CanUpdate));
             OnPropertyChanged(nameof(CanOSMMAccept));
             OnPropertyChanged(nameof(CanOSMMSkip));
-            OnPropertyChanged(nameof(CanBulkUpdate)); //TODO: Check if needed (previously commented out)
+            OnPropertyChanged(nameof(CanBulkUpdate));
             OnPropertyChanged(nameof(CanOSMMUpdateMode));
             OnPropertyChanged(nameof(CanOSMMBulkUpdateMode));
             OnPropertyChanged(nameof(CanOSMMUpdateAccept));
@@ -6226,7 +6428,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <remarks>Call this method to ensure that UI elements or other listeners are notified when
         /// header properties have changed. This is typically used in data-binding scenarios to refresh displayed values
-        /// after underlying data is modified.</remarks>e
+        /// after underlying data is modified.</remarks>
         public void RefreshReasonProcess()
         {
             OnPropertyChanged(nameof(Reason));
@@ -6500,7 +6702,7 @@ namespace HLU.UI.ViewModel
         /// Refreshes all properties related to the history tab and notifies listeners of property changes.
         /// </summary>
         /// <remarks>Call this method to ensure that all UI elements and data bindings associated with the
-        /// history tab are updated to reflect the current state of the underlying data.</
+        /// history tab are updated to reflect the current state of the underlying data.</remarks>
         private void RefreshHistory()
         {
             OnPropertyChanged(nameof(TabItemHistoryEnabled));
@@ -6511,6 +6713,10 @@ namespace HLU.UI.ViewModel
 
         #region Navigation Handlers
 
+        /// <summary>
+        /// NavigateFirstCommand event handler. Moves to the first record.
+        /// </summary>
+        /// <param name="param">The parameter passed to the command.</param>
         private async void NavigateFirstClicked(object param)
         {
             if (_isNavigating)
@@ -6533,6 +6739,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// NavigatePreviousCommand event handler. Moves to the previous record.
+        /// </summary>
+        /// <param name="param">The parameter passed to the command.</param>
         private async void NavigatePreviousClicked(object param)
         {
             if (_isNavigating)
@@ -6555,6 +6765,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// NavigateNextCommand event handler. Moves to the next record.
+        /// </summary>
+        /// <param name="param">The parameter passed to the command.</param>
         private async void NavigateNextClicked(object param)
         {
             if (_isNavigating)
@@ -6577,6 +6791,12 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// NavigateLastCommand event handler. Moves to the last record, which is either the last
+        /// record in the current filter (if a filter is active) or the last record in the
+        /// dataset (if no filter is active).
+        /// </summary>
+        /// <param name="param">The parameter passed to the command.</param>
         private async void NavigateLastClicked(object param)
         {
             if (_isNavigating)
@@ -6599,6 +6819,11 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Moves to the specified record index, updating the current record and synchronizing the GIS selection as needed.
+        /// </summary>
+        /// <param name="value">The index of the record to navigate to.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         private async Task NavigateToRecordAsync(int value)
         {
             // Show the wait cursor and processing message in the status area
@@ -6614,6 +6839,10 @@ namespace HLU.UI.ViewModel
             CheckInSync("Selection", "Map");
         }
 
+        /// <summary>
+        /// NavigateIncidCommand event handler.
+        /// </summary>
+        /// <param name="param">The parameter passed to the command.</param>
         private async void NavigateIncidClicked(object param)
         {
             if (param is string newText && Int32.TryParse(newText, out int value))
@@ -6627,6 +6856,10 @@ namespace HLU.UI.ViewModel
 
         #region Update Handler
 
+        /// <summary>
+        /// UpdateCommand event handler.
+        /// </summary>
+        /// <param name="param">The parameter passed to the command.</param>
         private async void UpdateClicked(object param)
         {
             // Update the attributes (don't wait).
@@ -6636,7 +6869,8 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// UpdateCommand event handler.
         /// </summary>
-        /// <param name="param"></param>
+        /// <param name="param">The parameter passed to the command.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         private async Task UpdateAsync(object param)
         {
             // Check if the GIS and database are in sync.
@@ -6888,6 +7122,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Refreshes the edit capability state for the active HLU layer.
         /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         private async Task RefreshIsLayerEditableAsync()
         {
             // Check if the GIS application and active HLU layer are available before trying to access them.
@@ -6911,7 +7146,7 @@ namespace HLU.UI.ViewModel
         /// or updates all the incid features.
         /// </summary>
         /// <returns>
-        /// True if the update is to go ahead, or false if it is cancelled.
+        /// <c>true</c> if the update is to go ahead, or <c>false</c> if it is cancelled.
         /// </returns>
         private bool ConfirmSubsetUpdate()
         {
@@ -7052,7 +7287,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Action the bulk update.
         /// </summary>
-        /// <param name="param">The parameter.</param>
+        /// <param name="param">The parameter passed to the command.</param>
         private void ApplyBulkUpdate(object param)
         {
             _saving = false;
@@ -7067,7 +7302,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Cancel the bulk update.
         /// </summary>
-        /// <param name="param">The parameter.</param>
+        /// <param name="param">The parameter passed to the command.</param>
         private async void CancelBulkUpdateClicked(object param)
         {
             if (_viewModelBulkUpdate != null)
@@ -7089,15 +7324,6 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        //TODO: Remove?
-        private void BulkUpdateCommandMenuClicked(object param)
-        {
-            //if (IsBulkMode)
-            //    CancelBulkUpdateClicked(param);
-            //else
-            //    BulkUpdateClicked(param);
-        }
-
         #endregion Bulk Update Handler
 
         #region OSMM Update Handler
@@ -7105,7 +7331,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Start or cancel the OSMM Update mode (as appropriate).
         /// </summary>
-        /// <param name="param"></param>
+        /// <param name="param">The parameter passed to the command.</param>
         private void OSMMUpdateCommandMenuClicked(object param)
         {
             // If already in OSMM update mode
@@ -7124,7 +7350,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Start the OSMM Update mode.
         /// </summary>
-        /// <param name="param"></param>
+        /// <param name="param">The parameter passed to the command.</param>
         private void OSMMUpdateClicked(object param)
         {
             // Can't start OSMM Update mode if the bulk OSMM source hasn't been set.
@@ -7185,7 +7411,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Cancel the OSMM Update mode.
         /// </summary>
-        /// <param name="param"></param>
+        /// <param name="param">The parameter passed to the command.</param>
         private async void CancelOSMMUpdateClicked(object param)
         {
             if (_viewModelOSMMUpdate != null)
@@ -7207,7 +7433,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Skip the OSMM Update for the current incid.
         /// </summary>
-        /// <param name="param"></param>
+        /// <param name="param">The parameter passed to the command.</param>
         private async void OSMMSkipClicked(object param)
         {
 
@@ -7218,6 +7444,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Skip the OSMM Update for the current incid.
         /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         private async Task OSMMSkipAsync()
         {
             // Prevent OSMM updates being actioned too quickly.
@@ -7260,7 +7487,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Accept the OSMM Update for the current incid.
         /// </summary>
-        /// <param name="param"></param>
+        /// <param name="param">The parameter passed to the command.</param>
         private async void OSMMAcceptClicked(object param)
         {
             // Accept the OSMM Update for the current incid. (don't wait).
@@ -7270,7 +7497,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Accept the OSMM Update for the current incid.
         /// </summary>
-        /// <param name="param"></param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         private async Task OSMMAcceptAsync()
         {
             // Prevent OSMM updates being actioned too quickly.
@@ -7315,7 +7542,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Reject the OSMM Update for the current incid.
         /// </summary>
-        /// <param name="param"></param>
+        /// <param name="param">The parameter passed to the command.</param>
         private async void OSMMRejectClicked(object param)
         {
             // Reject the OSMM Update for the current incid (don't wait).
@@ -7325,7 +7552,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Reject the OSMM Update for the current incid.
         /// </summary>
-        /// <param name="param"></param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         private async Task OSMMRejectAsync()
         {
             // Prevent OSMM updates being actioned too quickly.
@@ -7374,7 +7601,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Accept the proposed OSMM Update.
         /// </summary>
-        /// <param name="param"></param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         private async Task OSMMUpdateAcceptClickedAsync()
         {
             //Accept the proposed OSMM Update (don't wait).
@@ -7384,7 +7611,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Accept the proposed OSMM Update.
         /// </summary>
-        /// <param name="param"></param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         private async Task OSMMUpdateAcceptAsync()
         {
             if (_viewModelOSMMUpdate == null)
@@ -7406,6 +7633,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Reject the proposed OSMM Update.
         /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         private async Task OSMMUpdateRejectClickedAsync()
         {
             //Reject the proposed OSMM Update (don't wait).
@@ -7415,7 +7643,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Reject the proposed OSMM Update.
         /// </summary>
-        /// <param name="param"></param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         private async Task OSMMUpdateRejectAsync()
         {
             if (_viewModelOSMMUpdate == null)
@@ -7441,7 +7669,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Start or cancel the OSMM Bulk Update mode (as appropriate).
         /// </summary>
-        /// <param name="param"></param>
+        /// <param name="param">The parameter passed to the command.</param>
         private void OSMMBulkUpdateCommandMenuClicked(object param)
         {
             // If already in OSMM Bulk update mode
@@ -7456,7 +7684,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Start the OSMM Bulk Update mode.
         /// </summary>
-        /// <param name="param"></param>
+        /// <param name="param">The parameter passed to the command.</param>
         private void StartOSMMBulkUpdateClicked(object param)
         {
             _saving = false;
@@ -7489,7 +7717,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Cancel the OSMM Bulk Update mode.
         /// </summary>
-        /// <param name="param"></param>
+        /// <param name="param">The parameter passed to the command.</param>
         private async void CancelOSMMBulkUpdateClicked(object param)
         {
             if (_viewModelBulkUpdate != null)
@@ -7500,26 +7728,6 @@ namespace HLU.UI.ViewModel
 
             // Reset to normal Edit mode (clears flags and updates button)
             SetWorkMode(WorkMode.Edit);
-        }
-
-        /// <summary>
-        /// Accept the OSMM proposed update.
-        /// </summary>
-        /// <param name="param"></param>
-        private async void OSMMUpdateAcceptCommandMenuClicked(object param)
-        {
-            // Accept the OSMM proposed update
-            await OSMMUpdateAcceptClickedAsync();
-        }
-
-        /// <summary>
-        /// Reject the OSMM proposed update.
-        /// </summary>
-        /// <param name="param"></param>
-        private async void OSMMUpdateRejectCommandMenuClicked(object param)
-        {
-            // Reject the OSMM proposed update
-            await OSMMUpdateRejectClickedAsync();
         }
 
         #endregion OSMM Bulk Update Handlers
@@ -7581,9 +7789,8 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Closes about window and removes close window handler
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        /// <remarks></remarks>
+        /// <param name="sender">The sender of the event.</param>
+        /// <param name="e">The event arguments.</param>
         private void viewModelAbout_RequestClose()
         {
             // Remove the event handler and close the window.
@@ -7849,7 +8056,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="expectedNumFeatures">The expected number features.</param>
         /// <param name="expectedNumIncids">The expected number incids.</param>
-        /// <returns></returns>
+        /// <returns><c>true</c> if the user confirms the selection; otherwise, <c>false</c>.</returns>
         /// <exception cref="Exception">No parent window loaded</exception>
         private bool ConfirmGISSelect(int expectedNumFeatures, int expectedNumIncids)
         {
@@ -7892,7 +8099,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Closes the warning gis on selection window.
         /// </summary>
-        /// <param name="proceed">if set to <c>true</c> [proceed].</param>
+        /// <param name="proceed">If set to <c>true</c> [proceed].</param>
         private void viewModelWinWarnGISSelect_RequestClose(bool proceed)
         {
             // Remove the event handler and close the window.
@@ -7919,7 +8126,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Open the OSMM Updates query window when in OSMM Update mode.
         /// </summary>
-        /// <param name="initialise"></param>
+        /// <param name="initialise">Whether to initialise the window.</param>
         public void OpenWindowQueryOSMM(bool initialise)
         {
             if (initialise)

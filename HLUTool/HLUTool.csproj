@@ -10,6 +10,9 @@
     <NoWarn>CA1416</NoWarn>
     <RootNamespace>HLU</RootNamespace>
   </PropertyGroup>
+	<ItemGroup>
+		<CodeAnalysisDictionary Include="CustomDictionary.xml" />
+	</ItemGroup>
   <ItemGroup>
     <Compile Remove="ArcGISFunctions OLD.cs" />
     <Compile Remove="Converters\BoolToColorConverter.cs" />
@@ -55,8 +58,6 @@
     <None Remove="Images\ClearFilter32.png" />
     <None Remove="Images\Copy16.png" />
     <None Remove="Images\Copy32.png" />
-    <None Remove="Images\EditMode16.png" />
-    <None Remove="Images\EditMode32.png" />
     <None Remove="Images\EditOSMM16.png" />
     <None Remove="Images\EditOSMM32.png" />
     <None Remove="Images\Error32.png" />
@@ -93,8 +94,6 @@
     <None Remove="Images\Split16.png" />
     <None Remove="Images\Split32.png" />
     <None Remove="Images\Success32.png" />
-    <None Remove="Images\Update16.png" />
-    <None Remove="Images\Update32.png" />
     <None Remove="Images\Warning32.png" />
     <None Remove="Images\ZoomTable16.png" />
   </ItemGroup>
@@ -175,12 +174,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Images\Copy32.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\EditMode16.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\EditMode32.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Images\EditOSMM16.png">
@@ -297,12 +290,6 @@
 	<Resource Include="Images\Success32.png">
 	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	</Resource>
-	<Resource Include="Images\Update16.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\Update32.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
 	<Resource Include="Images\Warning32.png">
 	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	</Resource>
@@ -348,7 +335,7 @@
     <Compile Update="UI\View\Options\UserExportOptions.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Update="UI\View\Options\UserUpdatesOptions.xaml.cs">
+    <Compile Update="UI\View\Options\UserSplitMergeOptions.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Update="UI\View\Options\AppBulkUpdateOptions.xaml.cs">

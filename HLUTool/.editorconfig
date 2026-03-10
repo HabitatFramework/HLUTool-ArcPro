@@ -67,6 +67,15 @@ dotnet_diagnostic.IDE1006.severity = silent
 
 
 [*.{cs,vb}]
+# XML documentation formatting
+csharp_wrap_xml_documentation_comments_on_new_line = true
+
+# Maximum line length
+max_line_length = 80
+
+# Force wrapping for XML doc comments
+csharp_max_line_length = 80
+
 #### Naming styles ####
 
 # Naming rules
@@ -96,6 +105,9 @@ dotnet_naming_symbols.types.required_modifiers =
 dotnet_naming_symbols.non_field_members.applicable_kinds = property, event, method
 dotnet_naming_symbols.non_field_members.applicable_accessibilities = public, internal, private, protected, protected_internal, private_protected
 dotnet_naming_symbols.non_field_members.required_modifiers = 
+
+# Documentation standards
+# INCID should always be written as "incid" or "Incid", never "incident ID"
 
 # Naming styles
 

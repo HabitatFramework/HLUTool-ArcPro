@@ -107,17 +107,17 @@ namespace HLU.GISApplication
         /// <summary>
         /// Workspace-dependent prefix added to date values in SQL queries.
         /// </summary>
-        private string _dateLiteralPrefix;
+        private string _dateLiteralPrefix = null;
 
         /// <summary>
         /// Workspace-dependent suffix added to date values in SQL queries.
         /// </summary>
-        private string _dateLiteralSuffix;
+        private string _dateLiteralSuffix = null;
 
         /// <summary>
         /// Workspace-dependent format string passed to the ToString() method when adding date values to SQL queries.
         /// </summary>
-        private string _dateFormatString;
+        private string _dateFormatString = null;
 
         /// <summary>
         /// Number format to the ToString() method when adding floating point numbers to SQL queries.
@@ -1451,6 +1451,7 @@ namespace HLU.GISApplication
         /// <param name="validScales">
         /// Optional list of valid scales used to snap to the next scale up instead of applying the ratio directly.
         /// </param>
+        /// <returns>A task representing the asynchronous operation.</returns>
         public async Task ZoomSelectedAsync(
             int minZoom,
             int autoZoomToSelection,

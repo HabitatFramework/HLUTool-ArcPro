@@ -30,6 +30,7 @@ using HLU.UI.ViewModel;
 
 namespace HLU.Data
 {
+    //TODO: Is this class used?
     //public class QueryItem : ViewModelBase, IDataErrorInfo
     //{
     //    #region Fields

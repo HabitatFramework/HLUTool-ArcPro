@@ -16,11 +16,11 @@ using System.Windows.Shapes;
 namespace HLU.UI.View
 {
     /// <summary>
-    /// Interaction logic for UserUpdatesOptions.xaml
+    /// Interaction logic for UserSplitMergeOptions.xaml
     /// </summary>
-    public partial class UserUpdatesOptions : UserControl
+    public partial class UserSplitMergeOptions : UserControl
     {
-        public UserUpdatesOptions()
+        public UserSplitMergeOptions()
         {
             InitializeComponent();
         }

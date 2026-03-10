@@ -110,7 +110,6 @@ namespace HLU.UI.ViewModel
         private bool _readingMap = false;
         private bool _moving = false;
         private bool _saving = false;
-        private bool _autoSplit = true;
         private bool _splitting = false;
         private bool _filteredByMap = false;
         private bool _osmmUpdating = false;
@@ -238,7 +237,6 @@ namespace HLU.UI.ViewModel
 
         #region Fields - User/Version Info
 
-        private List<string> _exportMdbs = [];
         private string _userName;
         private string _appVersion;
         private bool _betaVersion;
@@ -294,50 +292,98 @@ namespace HLU.UI.ViewModel
 
         #region Properties - Core Infrastructure
 
+        /// <summary>
+        /// Gets the ArcPro application instance, to be used for accessing GIS operations. The specific application type may vary.
+        /// </summary>
+        /// <value>The ArcPro application instance, to be used for accessing GIS operations.</value>
         internal ArcProApp GISApplication
         {
             get { return _gisApp; }
         }
 
+        /// <summary>
+        /// Gets the database instance, to be used for accessing database operations. The specific database type may vary.
+        /// </summary>
+        /// <value>The database instance, to be used for accessing database operations.</value>
         internal DbBase DataBase
         {
             get { return _db; }
         }
 
+        /// <summary>
+        /// Gets the HLU dataset, to be used for accessing data tables. The specific tables included may vary based on the database type.
+        /// </summary>
+        /// <value>The HLU dataset, to be used for accessing data tables.</value>
         internal HluDataSet HluDataset
         {
             get { return _hluDS; }
         }
 
+        /// <summary>
+        /// Gets the collection of DataRelations in the HLU dataset, to be used for navigating between related tables. The
+        /// specific DataRelations included may vary based on the database type.
+        /// </summary>
+        /// <value>The collection of DataRelations in the HLU dataset, to be used for navigating between related tables.</value>
         internal IEnumerable<DataRelation> HluDataRelations
         {
             get { return _hluDataRelations; }
         }
 
+        /// <summary>
+        /// Gets the TableAdapterManager for the HLU dataset, to be used for loading/saving data tables. The
+        /// specific TableAdapters included may vary based on the database type.
+        /// </summary>
+        /// <value>The TableAdapterManager for the HLU dataset, to be used for loading/saving data tables.</value>
         internal TableAdapterManager HluTableAdapterManager
         {
             get { return _hluTableAdapterMgr; }
         }
 
+        /// <summary>
+        /// Gets the GIS ID column ordinals for the current database type, to be used for identifying GIS features.
+        /// </summary>
+        /// <value>The GIS ID column ordinals for the current database type, to be used for identifying GIS features.</value>
         internal int[] GisIDColumnOrdinals
         {
             get { return _gisIDColumnOrdinals; }
         }
 
+        /// <summary>
+        /// Gets the GIS ID columns for the current database type, to be used for identifying GIS features.
+        /// </summary>
+        /// <value>The GIS ID columns for the current database type, to be used for identifying GIS features.</value>
         internal DataColumn[] GisIDColumns
         {
             get { return _gisIDColumns; }
         }
 
+        /// <summary>
+        /// Gets the history columns (geometry and date) for the current database type, to be used
+        /// for displaying Incid history in the UI. The specific columns included may vary based
+        /// on the database type (e.g. Oracle may have additional geometry columns).
+        /// </summary>
+        /// <value>The history columns (geometry and date) for the current database type, to be
+        /// used for displaying Incid history in the UI.</value>
         internal DataColumn[] HistoryColumns
         {
             get { return _historyColumns; }
         }
 
+        /// <summary>
+        /// Gets and sets the name of the first history geometry column, to be used for displaying Incid history in the UI.
+        /// <value>The name of the first history geometry column.</value>
         public static string HistoryGeometry1ColumnName { get => _historyGeometry1ColumnName; set => _historyGeometry1ColumnName = value; }
 
+        /// <summary>
+        /// Gets and sets the name of the second history geometry column, to be used for displaying Incid history in the UI.
+        /// </summary>
+        /// <value>The name of the second history geometry column.</value>
         public static string HistoryGeometry2ColumnName { get => _historyGeometry2ColumnName; set => _historyGeometry2ColumnName = value; }
 
+        /// <summary>
+        /// Gets and sets the Incid page size, to be used for displaying Incid history in the UI.
+        /// </summary>
+        /// <value>The Incid page size.</value>
         public static int IncidPageSize { get => _incidPageSize; set => _incidPageSize = value; }
 
         #endregion Properties - Core Infrastructure
@@ -347,6 +393,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Has the DockPane been initialised?
         /// </summary>
+        /// <value><c>true</c> if initialised; otherwise, <c>false</c>.</value>
         public bool Initialised
         {
             get { return _initialised; }
@@ -359,6 +406,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Is the DockPane in error?
         /// </summary>
+        /// <value><c>true</c> if in error; otherwise, <c>false</c>.</value>
         public bool InError
         {
             get { return _inError; }
@@ -375,11 +423,11 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the Incid data table, loading it if necessary.
         /// </summary>
+        /// <value>The Incid data table.</value>
         public HluDataSet.incidDataTable IncidTable
         {
             get
             {
-                //TODO: Is this ever true?
                 // Load the data table if not already loaded.
                 if (HluDataset.incid.IsInitialized && (HluDataset.incid.Rows.Count == 0))
                 {
@@ -399,6 +447,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the Incid MM Polygons data table, loading it if necessary.
         /// </summary>
+        /// <value>The Incid MM Polygons data table.</value>
         public HluDataSet.incid_mm_polygonsDataTable IncidMMPolygonsTable
         {
             get
@@ -416,6 +465,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the Incid IHS Matrix data table, loading it if necessary.
         /// </summary>
+        /// <value>The Incid IHS Matrix data table.</value>
         public HluDataSet.incid_ihs_matrixDataTable IncidIhsMatrixTable
         {
             get
@@ -435,6 +485,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the Incid IHS Formation data table, loading it if necessary.
         /// </summary>
+        /// <value>The Incid IHS Formation data table.</value>
         public HluDataSet.incid_ihs_formationDataTable IncidIhsFormationTable
         {
             get
@@ -454,6 +505,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the Incid IHS Management data table, loading it if necessary.
         /// </summary>
+        /// <value>The Incid IHS Management data table.</value>
         public HluDataSet.incid_ihs_managementDataTable IncidIhsManagementTable
         {
             get
@@ -473,6 +525,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the Incid IHS Complex data table, loading it if necessary.
         /// </summary>
+        /// <value>The Incid IHS Complex data table.</value>
         public HluDataSet.incid_ihs_complexDataTable IncidIhsComplexTable
         {
             get
@@ -492,6 +545,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the Incid BAP data table, loading it if necessary.
         /// </summary>
+        /// <value>The Incid BAP data table.</value>
         public HluDataSet.incid_bapDataTable IncidBapTable
         {
             get
@@ -511,6 +565,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the Incid Sources data table, loading it if necessary.
         /// </summary>
+        /// <value>The Incid Sources data table.</value>
         public HluDataSet.incid_sourcesDataTable IncidSourcesTable
         {
             get
@@ -530,6 +585,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the Incid Secondary data table, loading it if necessary.
         /// </summary>
+        /// <value>The Incid Secondary data table.</value>
         public HluDataSet.incid_secondaryDataTable IncidSecondaryTable
         {
             get
@@ -549,6 +605,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the Incid Condition data table, loading it if necessary.
         /// </summary>
+        /// <value>The Incid Condition data table.</value>
         public HluDataSet.incid_conditionDataTable IncidConditionTable
         {
             get
@@ -568,6 +625,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the Incid OSMM Updates data table, loading it if necessary.
         /// </summary>
+        /// <value>The Incid OSMM Updates data table.</value>
         public HluDataSet.incid_osmm_updatesDataTable IncidOSMMUpdatesTable
         {
             get
@@ -586,18 +644,12 @@ namespace HLU.UI.ViewModel
 
         #endregion Properties - Data Tables
 
-        #region Properties - Export
-
-        internal List<string> ExportMdbs
-        {
-            get { return _exportMdbs; }
-            set { _exportMdbs = value; }
-        }
-
-        #endregion Properties - Export
-
         #region Properties - Temp GDB
 
+        /// <summary>
+        /// Gets or sets the path to the working file geodatabase.
+        /// </summary>
+        /// <value>The path to the working file geodatabase.</value>
         public string WorkingFileGDBPath
         {
             get { return _workingFileGDBPath; }
@@ -608,16 +660,31 @@ namespace HLU.UI.ViewModel
 
         #region Properties - Configuration
 
+        /// <summary>
+        /// Gets or sets the database connection timeout in seconds. See configuration setting "DbConnectionTimeout" for details.
+        /// </summary>
+        /// <value>The database connection timeout in seconds.</value>
         public int DbConnectionTimeout
         {
             get { return _dbConnectionTimeout; }
         }
 
+        /// <summary>
+        /// Gets or sets the action to take regarding clearing IHS updates when updating an Incid
+        /// from the GIS. See configuration setting "ClearIHSUpdateAction" for details.
+        /// </summary>
+        /// <value>The action to take regarding clearing IHS updates when updating an Incid from the GIS.</value>
         internal string ClearIHSUpdateAction
         {
             get { return _clearIHSUpdateAction; }
         }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether the system should automatically select features
+        /// on the GIS.
+        /// </summary>
+        /// <value><c>true</c> if the system should automatically select features on the GIS;
+        /// otherwise, <c>false</c>.</value>
         internal bool AutoSelectOnGis
         {
             get { return _autoSelectOnGis; }
@@ -627,66 +694,132 @@ namespace HLU.UI.ViewModel
 
         #region Properties - Child Rows
 
+        /// <summary>
+        /// Gets or sets the collection of Incid IHS Matrix rows related to the current Incid, that have been
+        /// automatically added/edited by the system and not yet saved to the database.
+        /// </summary>
+        /// <value>The collection of Incid IHS Matrix rows related to the current Incid, that have been
+        /// automatically added/edited by the system and not yet saved to the database.</value>
         internal HluDataSet.incid_ihs_matrixRow[] IncidIhsMatrixRows
         {
             get { return _incidIhsMatrixRows; }
             set { _incidIhsMatrixRows = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the collection of Incid IHS Formation rows related to the current Incid, that have been
+        /// automatically added/edited by the system and not yet saved to the database.
+        /// </summary>
+        /// <value>The collection of Incid IHS Formation rows related to the current Incid, that have been
+        /// automatically added/edited by the system and not yet saved to the database.</value>
         internal HluDataSet.incid_ihs_formationRow[] IncidIhsFormationRows
         {
             get { return _incidIhsFormationRows; }
             set { _incidIhsFormationRows = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the collection of Incid IHS Management rows related to the current Incid, that have been
+        /// automatically added/edited by the system and not yet saved to the database.
+        /// </summary>
+        /// <value>The collection of Incid IHS Management rows related to the current Incid, that have been
+        /// automatically added/edited by the system and not yet saved to the database.</value>
         internal HluDataSet.incid_ihs_managementRow[] IncidIhsManagementRows
         {
             get { return _incidIhsManagementRows; }
             set { _incidIhsManagementRows = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the collection of Incid IHS Complex rows related to the current Incid, that have been
+        /// automatically added/edited by the system and not yet saved to the database.
+        /// </summary>
+        /// <value>The collection of Incid IHS Complex rows related to the current Incid, that have been
+        /// automatically added/edited by the system and not yet saved to the database.</value>
         internal HluDataSet.incid_ihs_complexRow[] IncidIhsComplexRows
         {
             get { return _incidIhsComplexRows; }
             set { _incidIhsComplexRows = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the collection of Incid Secondary rows related to the current Incid, that have been
+        /// automatically added/edited by the system and not yet saved to the database.
+        /// </summary>
+        /// <value>The collection of Incid Secondary rows related to the current Incid, that have been
+        /// automatically added/edited by the system and not yet saved to the database.</value>
         internal HluDataSet.incid_secondaryRow[] IncidSecondaryRows
         {
             get { return _incidSecondaryRows; }
             set { _incidSecondaryRows = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the collection of Incid Condition rows related to the current Incid, that have been
+        /// automatically added/edited by the system and not yet saved to the database.
+        /// </summary>
+        /// <value>The collection of Incid Condition rows related to the current Incid, that have been
+        /// automatically added/edited by the system and not yet saved to the database.</value>
         internal HluDataSet.incid_conditionRow[] IncidConditionRows
         {
             get { return _incidConditionRows; }
             set { _incidConditionRows = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the collection of BAP rows related to the current Incid, that have been
+        /// automatically added/edited by the system and not yet saved to the database.
+        /// </summary>
+        /// <value>The collection of BAP rows related to the current Incid, that have been
+        /// automatically added/edited by the system and not yet saved to the database.</value>
         internal HluDataSet.incid_bapRow[] IncidBapRows
         {
             get { return _incidBapRows; }
             set { _incidBapRows = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the collection of Incid Sources rows related to the current Incid, that have been
+        /// automatically added/edited by the system and not yet saved to the database.
+        /// </summary>
+        /// <value>The collection of Incid Sources rows related to the current Incid, that have been
+        /// automatically added/edited by the system and not yet saved to the database.</value>
         internal HluDataSet.incid_sourcesRow[] IncidSourcesRows
         {
             get { return _incidSourcesRows; }
             set { _incidSourcesRows = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the collection of Incid OSMM Updates rows related to the current Incid, that
+        /// have been automatically added/edited by the system and not yet saved to the database.
+        /// </summary>
+        /// <value>The collection of Incid OSMM Updates rows related to the current Incid, that have
+        /// been automatically added/edited by the system and not yet saved to the database.</value>
         internal HluDataSet.incid_osmm_updatesRow[] IncidOSMMUpdatesRows
         {
             get { return _incidOSMMUpdatesRows; }
             set { _incidOSMMUpdatesRows = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the collection of BAP rows that have been automatically added/edited by the
+        /// system and not yet saved to the database.
+        /// </summary>
+        /// <value>The collection of BAP rows that have been automatically added/edited by the system
+        /// and not yet saved to the database.</value>
         internal ObservableCollection<BapEnvironment> IncidBapRowsAuto
         {
             get { return _incidBapRowsAuto; }
             set { _incidBapRowsAuto = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the collection of BAP rows that have been added/edited by the user and not
+        /// yet saved to the database.
+        /// </summary>
+        /// <value>The collection of BAP rows that have been added/edited by the user and not yet
+        /// saved to the database.</value>
         internal ObservableCollection<BapEnvironment> IncidBapRowsUser
         {
             get { return _incidBapRowsUser; }
@@ -697,6 +830,10 @@ namespace HLU.UI.ViewModel
 
         #region Properties - Record IDs
 
+        /// <summary>
+        /// Gets or sets the record IDs.
+        /// </summary>
+        /// <value>The record IDs.</value>
         internal RecordIds RecIDs
         {
             get { return _recIDs; }
@@ -724,6 +861,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets or sets a value indicating whether the current state has been saved.
         /// </summary>
+        /// <value><c>true</c> if the current state has been saved; otherwise, <c>false</c>.</value>
         internal bool Saved
         {
             get { return _saved; }
@@ -733,6 +871,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets or sets a value indicating whether data is currently being pasted from the clipboard.
         /// </summary>
+        /// <value><c>true</c> if data is currently being pasted; otherwise, <c>false</c>.</value>
         internal bool Pasting
         {
             get { return _pasting; }
@@ -742,6 +881,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Indicates whether changes have been made to the data by the user that have not yet been saved.
         /// </summary>
+        /// <value><c>true</c> if changes have been made; otherwise, <c>false</c>.</value>
         internal bool Changed
         {
             get { return _changed; }
@@ -762,6 +902,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets or sets a value indicating whether the data is currently being saved to the database.
         /// </summary>
+        /// <value><c>true</c> if the data is currently being saved; otherwise, <c>false</c>.</value>
         internal bool Saving
         {
             get { return _saving; }
@@ -771,6 +912,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets or sets a value indicating whether an attempt to save the data has been made.
         /// </summary>
+        /// <value><c>true</c> if an attempt to save the data has been made; otherwise, <c>false</c>.</value>
         internal bool SavingAttempted
         {
             get { return _savingAttempted; }
@@ -781,6 +923,10 @@ namespace HLU.UI.ViewModel
 
         #region Properties - Workflow Controllers
 
+        /// <summary>
+        /// Gets the ViewModel for the Bulk Update workflow, which is lazily initialised when first accessed.
+        /// </summary>
+        /// <value>The ViewModel for the Bulk Update workflow.</value>
         internal ViewModelWindowMainUpdate ViewModelUpdate
         {
             get { return _viewModelUpd; }
@@ -804,6 +950,7 @@ namespace HLU.UI.ViewModel
         /// _osmmBulkUpdateMode) in sync for backward compatibility and then
         /// refreshes all dependent UI state.
         /// </summary>
+        /// <value>The current work mode of the tool.</value>
         public WorkMode WorkMode
         {
             get => _workMode;
@@ -826,61 +973,64 @@ namespace HLU.UI.ViewModel
         /// Returns true when the tool is in a state where edit operations (add, update, delete)
         /// are allowed, based on the current WorkMode.
         /// </summary>
+        /// <value><c>true</c> if the tool is in a state where edit operations are allowed; otherwise, <c>false</c>.</value>
         private bool IsEditOperationModeReady =>
             !WorkMode.HasAny(DisallowEditOperationsMask) &&
             WorkMode.HasAll(WorkMode.EditReady);
 
         /// <summary>
-        /// Returns true when the tool is in a state where any “special workflow” that should block normal edit operations.
-        /// </summary>
-        private bool IsInDisallowedEditOperationMode =>
-            WorkMode.HasAny(DisallowEditOperationsMask);
-
-        /// <summary>
         /// Returns true when the tool is in a generally editable state, regardless of Reason/Process.
         /// </summary>
+        /// <value><c>true</c> if the tool is in edit mode; otherwise, <c>false</c>.</value>
         private bool IsEditMode =>
             WorkMode.HasAll(WorkMode.CanEdit);
 
         /// <summary>
         /// Returns true when the tool is in a generally editable state and both a reason and process have been selected.
         /// </summary>
+        /// <value><c>true</c> if the tool is in edit ready mode; otherwise, <c>false</c>.</value>
         private bool IsEditReady =>
             WorkMode.HasAll(WorkMode.EditReady);
 
         /// <summary>
         /// Returns true when the tool is in bulk update mode, which disables normal edit operations and enables bulk update functionality.
         /// </summary>
+        /// <value><c>true</c> if the tool is in bulk update mode; otherwise, <c>false</c>.</value>
         private bool IsBulkMode =>
             WorkMode.HasFlag(WorkMode.Bulk);
 
         /// <summary>
         /// Returns true when the tool is not in bulk update mode.
         /// </summary>
+        /// <value><c>true</c> if the tool is not in bulk update mode; otherwise, <c>false</c>.</value>
         private bool IsNotBulkMode =>
             !IsBulkMode;
 
         /// <summary>
         /// Returns true when the tool is in OSMM review mode.
         /// </summary>
+        /// <value><c>true</c> if the tool is in OSMM review mode; otherwise, <c>false</c>.</value>
         private bool IsOsmmReviewMode =>
             WorkMode.HasFlag(WorkMode.OSMMReview);
 
         /// <summary>
         /// Returns true when the tool is not in OSMM review mode.
         /// </summary>
+        /// <value><c>true</c> if the tool is not in OSMM review mode; otherwise, <c>false</c>.</value>
         private bool IsNotOsmmReviewMode =>
             !IsOsmmReviewMode;
 
         /// <summary>
         /// Returns true when the tool is in OSMM bulk update mode, which disables normal edit operations and enables OSMM-specific bulk update functionality.
         /// </summary>
+        /// <value><c>true</c> if the tool is in OSMM bulk update mode; otherwise, <c>false</c>.</value>
         internal bool IsOsmmBulkMode =>
             WorkMode.HasFlag(WorkMode.OSMMBulk);
 
         /// <summary>
         /// Returns true when the tool is not in OSMM bulk update mode.
         /// </summary>
+        /// <value><c>true</c> if the tool is not in OSMM bulk update mode; otherwise, <c>false</c>.</value>
         private bool IsNotOsmmBulkMode =>
             !IsOsmmBulkMode;
 
@@ -892,6 +1042,7 @@ namespace HLU.UI.ViewModel
         /// Returns true if the current user is found in the database lut_user table and has bulk update authority,
         /// false if not found or does not have authority, and null if an error occurs during the check.
         /// </summary>
+        /// <value><c>true</c> if the current user is authorised; otherwise, <c>false</c>.</value>
         public bool IsAuthorisedUser
         {
             get
@@ -908,6 +1059,9 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets or sets the current incid row.
         /// </summary>
+        /// <value>
+        /// The current incid row.
+        /// </value>
         public HluDataSet.incidRow IncidCurrentRow
         {
             get { return _incidCurrentRow; }
@@ -943,6 +1097,7 @@ namespace HLU.UI.ViewModel
         /// <remarks>Use this property to determine if there are unsaved changes in any of the associated
         /// tables. Accessing this property may reset its value to false if a save operation was recently
         /// performed.</remarks>
+        /// <value><c>true</c> if any tracked data has been modified; otherwise, <c>false</c>.</value>
         public bool IsDirty
         {
             get
@@ -963,6 +1118,9 @@ namespace HLU.UI.ViewModel
         /// Suppresses the dirty checks and user notifications when moving
         /// between records (after changing mode).
         /// </summary>
+        /// <value>
+        /// <c>true</c> if user notifications are suppressed; otherwise, <c>false</c>.
+        /// </value>
         public bool SuppressUserNotifications
         {
             get { return _suppressUserNotifications; }
@@ -976,6 +1134,9 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets a string of all of the errors.
         /// </summary>
+        /// <value>
+        /// A string containing all error messages, or null if there are no errors.
+        /// </value>
         public string Error
         {
             get
@@ -1084,8 +1245,8 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the error message for the property with the given column name.
         /// </summary>
-        /// <param name="columnName"></param>
-        /// <returns></returns>
+        /// <param name="columnName">The name of the column for which to retrieve the error message.</param>
+        /// <returns>The error message for the specified column, or null if there is no error.</returns>
         public string this[string columnName]
         {
             get
@@ -1405,6 +1566,11 @@ namespace HLU.UI.ViewModel
 
         #region Properties - Refresh Control
 
+        /// <summary>
+        /// Gets or sets a value indicating whether the incid table needs to be refreshed. This is set to true
+        /// whenever the table needs to be refilled with data.
+        /// </summary>
+        /// <value><c>true</c> if the incid table needs to be refreshed; otherwise, <c>false</c>.</value>
         internal bool RefillIncidTable
         {
             get { return _refillIncidTable; }
@@ -1420,24 +1586,17 @@ namespace HLU.UI.ViewModel
         #region Constructor
 
         /// <summary>
-        /// Set the global variables.
+        /// Constructs the ViewModel for the main window of the HLU tool. This constructor
+        /// should not perform any long-running operations or operations that require the
+        /// ArcGIS Pro SDK to be initialized, as it may be called on a background thread
+        /// during DockPane initialization. Any such operations should be performed in the
+        /// InitializeAndCheckAsync method instead, which will be called on the UI thread
+        /// after construction and is allowed to perform asynchronous operations.
         /// </summary>
         internal ViewModelWindowMain()
         {
             // Initialise the DockPane components (don't wait for it to complete).
             //_ = EnsureInitializedAsync();
-        }
-
-        //TODO: Needed?
-        /// <summary>
-        /// Set the global variables for just the combo box sources.
-        /// </summary>
-        internal ViewModelWindowMain(bool minimal)
-        {
-            ViewModelWindowMain temp = this;
-            //TODO: Catch exceptions?
-            // Load the data grid combo box sources.
-            LoadComboBoxSources();
         }
 
         #endregion Constructor
@@ -1447,6 +1606,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Ensures the tool is initialised, then checks that the active map/layers are suitable.
         /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         internal async Task InitializeAndCheckAsync()
         {
             // Ensure the DockPane is initialised.
@@ -1566,6 +1726,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Creates the working geodatabase for exports and advanced queries.
         /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         private async Task CreateWorkingGeodatabaseAsync()
         {
             try
@@ -1767,7 +1928,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Load the sources for the data grid combo boxes.
         /// </summary>
-        /// <returns>Returns true if the combo box sources were loaded successfully; false otherwise.</returns>
+        /// <returns><c>true</c> if the combo box sources were loaded successfully; <c>false</c> otherwise.</returns>
         internal bool LoadComboBoxSources()
         {
             try
@@ -1994,7 +2155,8 @@ namespace HLU.UI.ViewModel
         /// Check the addin version is greater than or equal to the
         /// application version from the lut_version table in the database.
         /// </summary>
-        /// <returns>Returns true if the addin version is compatible with the database; false if there was an error checking the version.</returns>
+        /// <returns><c>true</c> if the addin version is compatible with the database; <c>false</c>
+        /// if there was an error checking the version.</returns>
         private bool CheckVersion()
         {
             // Get the addin version.
@@ -2615,6 +2777,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Show the DockPane.
         /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         internal static Task ShowDockPane()
         {
             // Get the dockpane DAML id.
@@ -2640,7 +2803,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Called when the DockPane is shown or hidden.
         /// </summary>
-        /// <param name="isVisible"></param>
+        /// <param name="isVisible">A value indicating whether the DockPane is visible.</param>
         protected override void OnShow(bool isVisible)
         {
             // Make the UI controls hidden if there is no active map.
@@ -2700,44 +2863,6 @@ namespace HLU.UI.ViewModel
                         "The HLU Tool encountered an error initialising or checking the active map.");
                 }
             }
-            else
-            {
-                // Unsubscribe from events when the dockpane is hidden.
-                if (_mapEventsSubscribed)
-                {
-                    _mapEventsSubscribed = false;
-
-                    // Unsubscribe from ActiveMapViewChangedEvent events.
-                    ActiveMapViewChangedEvent.Unsubscribe(OnActiveMapViewChanged);
-                }
-
-                // Unsubscribe from map member property changes to track editability changes.
-                if (_mapMemberEventsSubscribed)
-                {
-                    _mapMemberEventsSubscribed = false;
-
-                    // Unsubscribe from map member property changes to track editability changes.
-                    MapMemberPropertiesChangedEvent.Unsubscribe(OnMapMemberPropertiesChanged);
-                }
-
-                if (_layersChangedEventsSubscribed)
-                {
-                    _layersChangedEventsSubscribed = false;
-
-                    // Unsubscribe from the LayersAddedEvents.
-                    LayersAddedEvent.Unsubscribe(OnLayersAdded);
-
-                    // Unsubscribe from the LayersRemovedEvents.
-                    LayersRemovedEvent.Unsubscribe(OnLayersRemoved);
-                }
-
-                if (_projectClosedEventsSubscribed)
-                {
-                    // Unsubscribe from OnProjectClosed events.
-                    _projectClosedEventsSubscribed = false;
-                    ProjectClosedEvent.Unsubscribe(OnProjectClosed);
-                }
-            }
 
             // If the dockpane is visible.
             if (isVisible == true)
@@ -2767,6 +2892,8 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Sets or clears a <see cref="ViewModel.WorkMode"/> flag on <see cref="WorkMode"/>.
         /// </summary>
+        /// <param name="flag">The work mode flag to set or clear.</param>
+        /// <param name="isEnabled">A value indicating whether to set or clear the flag.</param>
         private void SetWorkModeFlag(WorkMode flag, bool isEnabled)
         {
             WorkMode = isEnabled
@@ -2874,6 +3001,10 @@ namespace HLU.UI.ViewModel
 
         #region Settings Management
 
+        /// <summary>
+        /// Sets the auto select on GIS option.
+        /// </summary>
+        /// <param name="autoSelectOnGis">The new value for the auto select on GIS option.</param>
         public void SetAutoSelectOnGis(bool autoSelectOnGis)
         {
             // Update the auto select on GIS option.
@@ -2888,7 +3019,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Save the add-in settings.
         /// </summary>
-        /// <param name="addInSettings"></param>
+        /// <param name="addInSettings">The add-in settings to be saved.</param>
         public void SaveAddInSettings(AddInSettings addInSettings)
         {
             // Save the application settings.
@@ -2955,11 +3086,14 @@ namespace HLU.UI.ViewModel
             //OnPropertyChanged(nameof(CanUserBulkUpdate)); // Not needed as this is cached.
         }
 
+        /// <summary>
+        /// Applies the add-in settings to the application.
+        /// </summary>
         private void ApplyAddInSettings()
         {
             // Get add-in database options
             _dbConnectionTimeout = _addInSettings.DbConnectionTimeout;
-            //TODO - Is IncidPageSize too dangerous to change on the fly?
+            //IncidPageSize is too dangerous to change on the fly.
 
             // Get add-in dates options
             VagueDate.Delimiter = _addInSettings.VagueDateDelimiter; // Set in the vague date class
@@ -2983,6 +3117,9 @@ namespace HLU.UI.ViewModel
             //None - done in bulk update class.
         }
 
+        /// <summary>
+        /// Applies the user settings to the application.
+        /// </summary>
         private void ApplyUserSettings()
         {
             // Get user GIS options
@@ -3034,9 +3171,8 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Sets the index of the incid current row.
         /// </summary>
-        /// <value>
-        /// The index of the incid current row.
-        /// </value>
+        /// <param name="value">The new index for the incid current row.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         public async Task MoveIncidCurrentRowIndexAsync(int value)
         {
             // Check if already moving
@@ -3338,7 +3474,8 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="seekRowNumber">Row number in the _incidSelection DataTable whose
         /// corresponding row in in-memory DataTable HluDataset.incid is sought.</param>
-        /// <returns>The row of in-memory DataTable HluDataset.incid that corresponds to
+        /// <returns>A task that represents the asynchronous operation. The task result contains the
+        /// row of in-memory DataTable HluDataset.incid that corresponds to
         /// row number seekRowNumber in the _incidSelection DataTable.
         /// If loading of a new page fails, null is returned.</returns>
         private async Task<HluDataSet.incidRow> SeekIncidFiltered(int seekRowNumber)
@@ -3512,6 +3649,9 @@ namespace HLU.UI.ViewModel
 
         #region Row Management
 
+        /// <summary>
+        /// Retrieves the derived values from the current row and updates the corresponding properties.
+        /// </summary>
         private void IncidCurrentRowDerivedValuesRetrieve()
         {
             _incidLastModifiedUser = _incidCurrentRow.last_modified_user_id;
@@ -3521,6 +3661,9 @@ namespace HLU.UI.ViewModel
             _incidIhsHabitat = _incidCurrentRow.Isihs_habitatNull() ? null : _incidCurrentRow.ihs_habitat;
         }
 
+        /// <summary>
+        /// Creates a clone of the current row, which can be used to restore the original values if needed.
+        /// </summary>
         private void CloneIncidCurrentRow()
         {
             _incidCurrentRowClone = _hluDS.incid.NewincidRow(); // IncidTable.NewincidRow();
@@ -3528,6 +3671,10 @@ namespace HLU.UI.ViewModel
                 _incidCurrentRowClone[i] = _incidCurrentRow[i];
         }
 
+        /// <summary>
+        /// Restores the values in the current row to those in the clone of the current row, which should be the
+        /// original values before any edits were made.
+        /// </summary>
         private void RestoreIncidCurrentRow()
         {
             if (_incidCurrentRowClone != null)
@@ -3537,6 +3684,11 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Compares the current row with the clone of the current row and returns true if they are
+        /// the same and false if they are different.
+        /// </summary>
+        /// <returns><c>true</c> if the current row and its clone are the same; otherwise, <c>false</c>.</returns>
         private bool CompareIncidCurrentRowClone()
         {
             if (_incidCurrentRowClone != null)
