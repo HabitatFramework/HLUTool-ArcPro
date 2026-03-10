@@ -45,12 +45,12 @@
 					<group refID="HLUTool_Group_Mode" />
 					<group refID="HLUTool_Group_Edit" />
 					<group refID="HLUTool_Group_CopyPaste" />
+					<group refID="HLUTool_Group_MapTools" />
 					<group refID="HLUTool_Group_FilterIncids" />
-					<group refID="HLUTool_Group_GISSelection" />
+					<group refID="HLUTool_Group_SelectIncids" />
 					<group refID="HLUTool_Group_SplitMerge" />
-					<group refID="HLUTool_Group_OSMMUpdates" />
-					<group refID="HLUTool_Group_Options" />
-					<group refID="HLUTool_Group_Help" />
+					<group refID="HLUTool_Group_Export" />
+					<group refID="HLUTool_Group_Info" />
 				</tab>
 			</tabs>
 
@@ -63,7 +63,7 @@
 				<!-- Mode group -->
 				<group id="HLUTool_Group_Mode" caption="Work Mode" keytip="G1">
 					<button refID="HLUTool_btnWorkMode" size="large" />
-					<dynamicMenu refID="HLUTool_WorkModeMenu" size="large" />
+					<dynamicMenu refID="HLUTool_WorkModeMenu" size="middle" />
 				</group>
 
 				<!-- Edit group -->
@@ -79,42 +79,42 @@
 					<button refID="HLUTool_btnPaste" size="middle" />
 				</group>
 
+				<!-- Map Tools group -->
+				<group id="HLUTool_Group_MapTools" caption="Map Tools" keytip="G4">
+					<toolPalette refID="esri_mapping_selectToolPalette" />
+					<button refID="esri_mapping_clearSelectionButton" size="middle" />
+					<button refID="esri_editing_SplitCommand" size ="middle" />
+				</group>
+
 				<!-- Filter Incids group -->
-				<group id="HLUTool_Group_FilterIncids" caption="Filter Incids" keytip="G4">
-					<button refID="HLUTool_btnFilterByAttributes" size="middle" />
+				<group id="HLUTool_Group_FilterIncids" caption="Filter INCIDs" keytip="G5">
+					<button refID="HLUTool_btnFilterByAttributes" size="large" />
 					<button refID="HLUTool_btnClearFilter" size="middle" />
 					<editBox refID="HLUTool_edbFilterByIncid" size="large" />
 					<button refID="HLUTool_btnGetMapSelection" size="large" />
 				</group>
 
-				<!-- GIS Selection group -->
-				<group id="HLUTool_Group_GISSelection" caption="GIS Selection" keytip="G5">
-					<toolPalette refID="esri_mapping_selectToolPalette" />
+				<!-- INCID Selection group -->
+				<group id="HLUTool_Group_SelectIncids" caption="Select INCIDs" keytip="G6">
 					<button refID="HLUTool_btnSelectCurrentIncid" size="middle" />
 					<button refID="HLUTool_btnSelectFilteredIncids" size="middle" />
-					<button refID="esri_mapping_clearSelectionButton" size="middle" />
 					<button refID="HLUTool_btnAutoSelectOnGis" size="middle" />
 				</group>
 
 				<!-- Split/Merge group -->
-				<group id="HLUTool_Group_SplitMerge" caption="Split/Merge" keytip="G6">
-					<button refID="esri_editing_SplitCommand" size ="large" />
+				<group id="HLUTool_Group_SplitMerge" caption="Split/Merge" keytip="G7">
 					<dynamicMenu refID="HLUTool_SplitMenu" size="large" />
 					<dynamicMenu refID="HLUTool_MergeMenu" size="large" />
 				</group>
 
-				<!-- OSMM Updates group -->
-				<group id="HLUTool_Group_OSMMUpdates" caption="OSMM Updates" keytip="G7">
+				<!-- Export group -->
+				<group id="HLUTool_Group_Export" caption="Export" keytip="G8">
+					<button refID="HLUTool_btnExport" size="large" />
 				</group>
 
-				<!-- Options group -->
-				<group id="HLUTool_Group_Options" caption="Options" keytip="G8">
+				<!-- Info group -->
+				<group id="HLUTool_Group_Info" caption="Info" keytip="G9">
 					<button refID="HLUTool_btnOptions" size="middle" />
-					<button refID="HLUTool_btnExport" size="middle" />
-				</group>
-
-				<!-- Help group -->
-				<group id="HLUTool_Group_Help" caption="Help" keytip="G9">
 					<button refID="HLUTool_btnAbout" size="middle" />
 				</group>
 			</groups>
@@ -134,6 +134,20 @@
 			</subgroups>
 
 			<controls>
+				<!-- Launch tool button -->
+				<button id="HLUTool_btnHLUToolDockPane"
+						caption="HLU Tool"
+						className="HLU.UI.UserControls.Toolbar.MainWindowButton"
+						loadOnClick="true"
+						keytip="DY"
+						smallImage="pack://application:,,,/HLUTool;component/Images/HLUTool16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/HLUTool32.png">
+					<tooltip heading="HLU Tool"
+							 image="pack://application:,,,/HLUTool;component/Images/HLUTool16.png">
+						Manage habitat and land use data.<disabledText />
+					</tooltip>
+				</button>
+
 				<!-- Work Mode Button (shows current mode) -->
 				<button id="HLUTool_btnWorkMode"
 						caption="Update Mode"
@@ -233,7 +247,7 @@
 						  caption=" Active Layer:"
 						  extendedCaption="Select Active Layer"
 						  className="HLU.UI.UserControls.Toolbar.ActiveLayerComboBox"
-						  itemWidth="140"
+						  itemWidth="200"
 						  isEditable="true"
 						  condition="esri_mapping_mapPane"
 						  isReadOnly="true"
@@ -243,19 +257,6 @@
 						Select the active feature layer.<disabledText />
 					</tooltip>
 				</comboBox>
-
-				<button id="HLUTool_btnBulkUpdate"
-						caption="Bulk Update"
-						className="HLU.UI.UserControls.Toolbar.BulkUpdateButton"
-						loadOnClick="false"
-						keytip="BU"
-						smallImage="pack://application:,,,/HLUTool;component/Images/BulkUpdate16.png"
-						largeImage="pack://application:,,,/HLUTool;component/Images/BulkUpdate32.png">
-					<tooltip heading="Bulk Update">
-						Enable updates to attributes of multiple selected features simultaneously.
-						<disabledText>Available only when not in a bulk or OSMM update mode and a filter is active.</disabledText>
-					</tooltip>
-				</button>
 
 				<comboBox id="HLUTool_cmbReason"
 						  caption=" Reason:"
@@ -288,19 +289,6 @@
 						<disabledText>Available only when not in a bulk or OSMM update mode.</disabledText>
 					</tooltip>
 				</comboBox>
-
-				<button id="HLUTool_btnHLUToolDockPane"
-						caption="HLU Tool"
-						className="HLU.UI.UserControls.Toolbar.MainWindowButton"
-						loadOnClick="true"
-						keytip="DY"
-						smallImage="pack://application:,,,/HLUTool;component/Images/HLUTool16.png"
-						largeImage="pack://application:,,,/HLUTool;component/Images/HLUTool32.png">
-					<tooltip heading="HLU Tool"
-							 image="pack://application:,,,/HLUTool;component/Images/HLUTool16.png">
-						Manage habitat and land use data.<disabledText />
-					</tooltip>
-				</button>
 
 				<button id="HLUTool_btnCopy"
 						caption="Copy"
@@ -342,6 +330,19 @@
 					</tooltip>
 				</button>
 
+				<button id="HLUTool_btnClearFilter"
+						caption="Clear Filter"
+						className="HLU.UI.UserControls.Toolbar.ClearFilterButton"
+						loadOnClick="false"
+						keytip="Pa"
+						smallImage="pack://application:,,,/HLUTool;component/Images/ClearFilter16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/ClearFilter32.png">
+					<tooltip heading="Clear Filter">
+						Clear the current filter so that all INCID records are available for viewing using the record selectors.
+						<disabledText>Available only when not in a bulk or OSMM update mode and a filter is active."</disabledText>
+					</tooltip>
+				</button>
+
 				<editBox id="HLUTool_edbFilterByIncid"
 						 caption="Find Incid:"
 						 className="HLU.UI.UserControls.Toolbar.FilterByIncidEditBox"
@@ -356,16 +357,16 @@
 					</tooltip>
 				</editBox>
 
-				<button id="HLUTool_btnClearFilter"
-						caption="Clear Filter"
-						className="HLU.UI.UserControls.Toolbar.ClearFilterButton"
+				<button id="HLUTool_btnGetMapSelection"
+						caption="Get Map Selection"
+						className="HLU.UI.UserControls.Toolbar.GetMapSelectionButton"
 						loadOnClick="false"
-						keytip="Pa"
-						smallImage="pack://application:,,,/HLUTool;component/Images/ClearFilter16.png"
-						largeImage="pack://application:,,,/HLUTool;component/Images/ClearFilter32.png">
-					<tooltip heading="Clear Filter">
-						Clear the current filter so that all INCID records are available for viewing using the record selectors.
-						<disabledText>Available only when not in a bulk or OSMM update mode and a filter is active."</disabledText>
+						keytip="GM"
+						smallImage="pack://application:,,,/HLUTool;component/Images/GetMapSelection16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/GetMapSelection32.png">
+					<tooltip heading="Get Map Selection">
+						Filter the Incid records associated with the selected features in the active GIS layer.
+						<disabledText>Available only when not in bulk update mode.</disabledText>
 					</tooltip>
 				</button>
 
@@ -395,18 +396,15 @@
 					</tooltip>
 				</button>
 
-				<button id="HLUTool_btnGetMapSelection"
-						caption="Get Map Selection"
-						className="HLU.UI.UserControls.Toolbar.GetMapSelectionButton"
+				<checkBox id="HLUTool_btnAutoSelectOnGis"
+						caption="Auto Select"
+						className="HLU.UI.UserControls.Toolbar.AutoSelectOnGisButton"
 						loadOnClick="false"
-						keytip="GM"
-						smallImage="pack://application:,,,/HLUTool;component/Images/GetMapSelection16.png"
-						largeImage="pack://application:,,,/HLUTool;component/Images/GetMapSelection32.png">
-					<tooltip heading="Get Map Selection">
-						Filter the Incid records associated with the selected features in the active GIS layer.
-						<disabledText>Available only when not in bulk update mode.</disabledText>
+						keytip="AS">
+					<tooltip heading="Auto Select">
+						Automatically select the features associated with the current INCID record in the active GIS layer.<disabledText />
 					</tooltip>
-				</button>
+				</checkBox>
 
 				<button id="HLUTool_btnLogicalSplit"
 						caption="Logical Split"
@@ -460,19 +458,6 @@
 					</tooltip>
 				</button>
 
-				<button id="HLUTool_btnExport"
-						caption="Export"
-						className="HLU.UI.UserControls.Toolbar.ExportWindowButton"
-						loadOnClick="false"
-						keytip="Ex"
-						smallImage="pack://application:,,,/HLUTool;component/Images/Export16.png"
-						largeImage="pack://application:,,,/HLUTool;component/Images/Export32.png">
-					<tooltip heading="Export">
-						Export data using a pre-defined format.
-						<disabledText>Available only when not in a bulk or OSMM update mode.</disabledText>
-					</tooltip>
-				</button>
-
 				<button id="HLUTool_btnOptions"
 						caption="Options"
 						className="HLU.UI.UserControls.Toolbar.OptionsWindowButton"
@@ -485,15 +470,18 @@
 					</tooltip>
 				</button>
 
-				<checkBox id="HLUTool_btnAutoSelectOnGis"
-						caption="Auto Select"
-						className="HLU.UI.UserControls.Toolbar.AutoSelectOnGisButton"
+				<button id="HLUTool_btnExport"
+						caption="Export"
+						className="HLU.UI.UserControls.Toolbar.ExportWindowButton"
 						loadOnClick="false"
-						keytip="AS">
-					<tooltip heading="Auto Select">
-						Automatically select the features associated with the current INCID record in the active GIS layer.<disabledText />
+						keytip="Ex"
+						smallImage="pack://application:,,,/HLUTool;component/Images/Export16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/Export32.png">
+					<tooltip heading="Export">
+						Export data using a pre-defined format.
+						<disabledText>Available only when not in a bulk or OSMM update mode.</disabledText>
 					</tooltip>
-				</checkBox>
+				</button>
 
 				<button id="HLUTool_btnAbout"
 						caption="About"

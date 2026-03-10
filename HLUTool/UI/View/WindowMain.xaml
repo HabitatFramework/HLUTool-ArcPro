@@ -3387,7 +3387,6 @@
                     Margin="0,4,0,4"
                     Visibility="{Binding ShowInOSMMUpdateMode}">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="100" />
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
@@ -3399,13 +3398,14 @@
                         VerticalAlignment="Bottom"
                         Visibility="{Binding HideInBulkUpdateMode}">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="40" />
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="60" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <Label
                             x:Name="LabelOSMMNavigation"
                             Grid.Column="0"
-                            Margin="0,0,4,0"
+                            Margin="0,0,0,0"
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center"
                             Content="INCID:" />
@@ -3413,21 +3413,14 @@
                         <TextBox
                             x:Name="TextBoxOSMMRecordNumber"
                             Grid.Column="1"
-                            Margin="2,0,0,0"
+                            Margin="0,0,0,0"
                             IsReadOnly="True"
                             Text="{Binding OSMMIncidCurrentRowIndex, Mode=OneWay}"
                             TextAlignment="Center" />
-                    </Grid>
-
-                    <Grid
-                        x:Name="GridOSMMLabelStatusIncid"
-                        Grid.Column="1"
-                        Height="Auto"
-                        VerticalAlignment="Bottom">
                         <Label
                             x:Name="LabelOSMMStatusIncid"
-                            Grid.Column="0"
-                            Margin="8,0,4,0"
+                            Grid.Column="2"
+                            Margin="0,0,4,0"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center"
                             Content="{Binding StatusIncid}" />

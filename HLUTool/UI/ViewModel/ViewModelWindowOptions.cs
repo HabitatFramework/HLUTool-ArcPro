@@ -155,16 +155,18 @@ namespace HLU.UI.ViewModel
         public ObservableCollection<NavigationItem> NavigationItems { get; }
         public ICollectionView GroupedNavigationItems { get; set; }
 
-        #endregion
+        #endregion Fields
 
         #region Constructor
 
         /// <summary>
         /// Initializes a new instance of the ViewModelWindowOptions class and loads the settings from the main window ViewModel.
         /// </summary>
+        /// <param name="habitatClasses">The habitat classes to be used in the options window.</param>
+        /// <param name="secondaryGroupsAll">The secondary groups to be used in the options window.</param>
         public ViewModelWindowOptions(
-        HluDataSet.lut_habitat_classRow[] habitatClasses,
-        HluDataSet.lut_secondary_groupRow[] secondaryGroupsAll)
+            HluDataSet.lut_habitat_classRow[] habitatClasses,
+            HluDataSet.lut_secondary_groupRow[] secondaryGroupsAll)
         {
            // Get the dockpane DAML id.
            DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
@@ -224,20 +226,26 @@ namespace HLU.UI.ViewModel
             _maxFeaturesGISSelect = Settings.Default.MaxFeaturesGISSelect;
             _workingFileGDBPath = Settings.Default.WorkingFileGDBPath;
 
-            // User History options
+            // Get the history column ordinals from the settings, excluding the GIS ID columns and
+            // shape columns.
+            List<int> historyColumnOrdinals = Settings.Default.HistoryColumnOrdinals.Cast<string>()
+                .Select(s => Int32.Parse(s)).Where(i => !_gisIDColumnOrdinals.Contains(i) &&
+                    !_incidMMPolygonsTable.Columns[i].ColumnName.StartsWith("shape_")).ToList();
+
+            // Get the history columns for the options window by getting the column names from the incid table,
+            // excluding the GIS ID columns and shape columns.
             _historyColumns = new SelectionList<string>(_incidMMPolygonsTable.Columns.Cast<DataColumn>()
                 .Where(c => !_gisIDColumnOrdinals.Contains(c.Ordinal)
                     && !c.ColumnName.StartsWith("shape_"))
                 .Select(c => EscapeAccessKey(c.ColumnName)).ToArray());
 
-            List<int> historyColumnOrdinals = Settings.Default.HistoryColumnOrdinals.Cast<string>()
-                .Select(s => Int32.Parse(s)).Where(i => !_gisIDColumnOrdinals.Contains(i) &&
-                    !_incidMMPolygonsTable.Columns[i].ColumnName.StartsWith("shape_")).ToList();
-
+            // Set the IsSelected property of the history columns based on whether their ordinals
+            // are in the history column ordinals list.
             foreach (SelectionItem<string> si in _historyColumns)
                 si.IsSelected = historyColumnOrdinals.Contains(
                     _incidMMPolygonsTable.Columns[UnescapeAccessKey(si.Item)].Ordinal);
 
+            // Set the history display last number of records option.
             _historyDisplayLastN = Settings.Default.HistoryDisplayLastN;
 
             // Set the user interface options
@@ -300,8 +308,8 @@ namespace HLU.UI.ViewModel
         /// underscores to indicate access keys, and some column names have underscores which would
         /// be incorrectly interpreted as access keys.
         /// </summary>
-        /// <param name="s"></param>
-        /// <returns></returns>
+        /// <param name="s">The string to escape.</param>
+        /// <returns>The escaped string.</returns>
         private string EscapeAccessKey(string s)
         {
             return s.Replace("_", "__");
@@ -313,20 +321,21 @@ namespace HLU.UI.ViewModel
         /// underscores to indicate access keys, and some column names have underscores which would
         /// be incorrectly interpreted as access keys.
         /// </summary>
-        /// <param name="s"></param>
-        /// <returns></returns>
+        /// <param name="s">The string to unescape.</param>
+        /// <returns>The unescaped string.</returns>
         private string UnescapeAccessKey(string s)
         {
             return s.Replace("__", "_");
         }
 
-        #endregion
+        #endregion Constructor
 
         #region ViewModelBase Members
 
         /// <summary>
         /// Gets or sets the display name for the view model.
         /// </summary>
+        /// <value>The display name for the view model.</value>
         public override string DisplayName
         {
             get { return _displayName; }
@@ -336,18 +345,20 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the window title for the options window, which is the same as the display name.
         /// </summary>
+        /// <value>The window title for the options window.</value>
         public override string WindowTitle
         {
             get { return _displayName; }
         }
 
-        #endregion
+        #endregion ViewModelBase Members
 
         #region Button Images
 
         /// <summary>
         /// Get the image for the ButtonBrowse button.
         /// </summary>
+        /// <value>The image for the ButtonBrowse button.</value>
         public static ImageSource ButtonOpenFolderImg
         {
             get
@@ -365,6 +376,7 @@ namespace HLU.UI.ViewModel
         /// Gets the hyperlink for the application database help page, which is constructed from
         /// the base help URL and the specific help page for the application database options.
         /// </summary>
+        /// <value>The hyperlink for the application database help page.</value>
         public Uri Hyperlink_AppDatabaseHelp
         {
             get
@@ -380,6 +392,7 @@ namespace HLU.UI.ViewModel
         /// Gets the hyperlink for the application dates help page, which is constructed from
         /// the base help URL and the specific help page for the application dates options.
         /// </summary>
+        /// <value>The hyperlink for the application dates help page.</value>
         public Uri Hyperlink_AppDatesHelp
         {
             get
@@ -395,6 +408,7 @@ namespace HLU.UI.ViewModel
         /// Gets the hyperlink for the application bulk update help page, which is constructed from
         /// the base help URL and the specific help page for the application bulk update options.
         /// </summary>
+        /// <value>The hyperlink for the application bulk update help page.</value>
         public Uri Hyperlink_AppBulkUpdatesHelp
         {
             get
@@ -410,6 +424,7 @@ namespace HLU.UI.ViewModel
         /// Gets the hyperlink for the application updates help page, which is constructed from
         /// the base help URL and the specific help page for the application updates options.
         /// </summary>
+        /// <value>The hyperlink for the application updates help page.</value>
         public Uri Hyperlink_AppUpdatesHelp
         {
             get
@@ -425,6 +440,7 @@ namespace HLU.UI.ViewModel
         /// Gets the hyperlink for the application validation help page, which is constructed from
         /// the base help URL and the specific help page for the application validation options.
         /// </summary>
+        /// <value>The hyperlink for the application validation help page.</value>
         public Uri Hyperlink_AppValidationHelp
         {
             get
@@ -440,6 +456,7 @@ namespace HLU.UI.ViewModel
         /// Gets the hyperlink for the user GIS help page, which is constructed from
         /// the base help URL and the specific help page for the user GIS options.
         /// </summary>
+        /// <value>The hyperlink for the user GIS help page.</value>
         public Uri Hyperlink_UserGISHelp
         {
             get
@@ -455,6 +472,7 @@ namespace HLU.UI.ViewModel
         /// Gets the hyperlink for the user interface help page, which is constructed from
         /// the base help URL and the specific help page for the user interface options.
         /// </summary>
+        /// <value>The hyperlink for the user interface help page.</value>
         public Uri Hyperlink_UserInterfaceHelp
         {
             get
@@ -470,6 +488,7 @@ namespace HLU.UI.ViewModel
         /// Gets the hyperlink for the user updates help page, which is constructed from
         /// the base help URL and the specific help page for the user updates options.
         /// </summary>
+        /// <value>The hyperlink for the user updates help page.</value>
         public Uri Hyperlink_UserUpdatesHelp
         {
             get
@@ -485,6 +504,7 @@ namespace HLU.UI.ViewModel
         /// Gets the hyperlink for the user SQL help page, which is constructed from
         /// the base help URL and the specific help page for the user SQL options.
         /// </summary>
+        /// <value>The hyperlink for the user SQL help page.</value>
         public Uri Hyperlink_UserSQLHelp
         {
             get
@@ -500,6 +520,7 @@ namespace HLU.UI.ViewModel
         /// Gets the hyperlink for the user export help page, which is constructed from
         /// the base help URL and the specific help page for the user export options.
         /// </summary>
+        /// <value>The hyperlink for the user export help page.</value>
         public Uri Hyperlink_UserExportHelp
         {
             get
@@ -515,6 +536,7 @@ namespace HLU.UI.ViewModel
         /// Gets the hyperlink for the user history help page, which is constructed from
         /// the base help URL and the specific help page for the user history options.
         /// </summary>
+        /// <value>The hyperlink for the user history help page.</value>
         public Uri Hyperlink_UserHistoryHelp
         {
             get
@@ -526,7 +548,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Hyperlinks
 
         #region RequestClose
 
@@ -536,7 +558,7 @@ namespace HLU.UI.ViewModel
         // declare the event
         public event RequestCloseEventHandler RequestClose;
 
-        #endregion
+        #endregion RequestClose
 
         #region Navigation Items
 
@@ -545,6 +567,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets or sets the currently selected navigation view.
         /// </summary>
+        /// <value>The currently selected navigation view.</value>
         public NavigationItem SelectedView
         {
             get => _selectedView;
@@ -591,11 +614,9 @@ namespace HLU.UI.ViewModel
         #region Save Command
 
         /// <summary>
-        /// Create the Save button command.
+        /// Gets the command to save the current settings. This command will save the add-in settings to the XML file
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command to save the current settings.</value>
         public ICommand SaveCommand
         {
             get
@@ -614,7 +635,6 @@ namespace HLU.UI.ViewModel
         /// Handles event when Save button is clicked.
         /// </summary>
         /// <param name="param">The parameter passed to the command.</param>
-        /// <remarks></remarks>
         private void SaveCommandClick(object param)
         {
             // Save add-in settings.
@@ -681,13 +701,14 @@ namespace HLU.UI.ViewModel
             Settings.Default.MaxFeaturesGISSelect = (int)_maxFeaturesGISSelect;
             Settings.Default.WorkingFileGDBPath = _workingFileGDBPath;
 
-            // Update user history options
-            //TOOO: Fix this
-            //Settings.Default.HistoryColumnOrdinals =
-            //[
-            //    .. _historyColumns.Where(c => c.IsSelected)
-            //        .Select(c => _incidMMPolygonsTable.Columns[UnescapeAccessKey(c.Item)].Ordinal.ToString()).ToArray(),
-            //];
+            // Update which history columns to display in the history tab.
+            Settings.Default.HistoryColumnOrdinals =
+            [
+                .. _historyColumns.Where(c => c.IsSelected)
+                    .Select(c => _incidMMPolygonsTable.Columns[UnescapeAccessKey(c.Item)].Ordinal.ToString()).ToArray(),
+            ];
+
+            // Update the history display last number of records option.
             Settings.Default.HistoryDisplayLastN = (int)_historyDisplayLastN;
 
             // Update user interface options
@@ -733,7 +754,6 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <value>Indicates whether the Cancel button can be clicked.</value>
         /// <returns>True if the Cancel button can be clicked, otherwise false.</returns>
-        /// <remarks></remarks>
         public ICommand CancelCommand
         {
             get
@@ -752,7 +772,6 @@ namespace HLU.UI.ViewModel
         /// Handles event when Cancel button is clicked.
         /// </summary>
         /// <param name="param">The parameter passed to the command.</param>
-        /// <remarks></remarks>
         private void CancelCommandClick(object param)
         {
             // Don't save the changes.
@@ -768,7 +787,6 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <value>Indicates whether the OpenHyperlink button can be clicked.</value>
         /// <returns>True if the OpenHyperlink button can be clicked, otherwise false.</returns>
-        /// <remarks></remarks>
         public ICommand OpenHyperlinkCommand
         {
             get
@@ -787,7 +805,6 @@ namespace HLU.UI.ViewModel
         /// Handles event when OpenHyperlink is clicked.
         /// </summary>
         /// <param name="param">The parameter passed to the command.</param>
-        /// <remarks></remarks>
         private void OpenHyperlinkClick(object parameter)
         {
             if (parameter is Uri uri && uri != null)
@@ -804,6 +821,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets or sets the database connection timeout.
         /// </summary>
+        /// <value>The database connection timeout in seconds.</value>
         public int? DbConnectionTimeout
         {
             get { return _dbConnectionTimeout; }
@@ -826,6 +844,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets or sets the incident table page size.
         /// </summary>
+        /// <value>The incident table page size.</value>
         public int? IncidTablePageSize
         {
             get { return _incidTablePageSize; }
@@ -840,6 +859,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the maximum incident table page size.
         /// </summary>
+        /// <value>The maximum incident table page size.</value>
         public int MaxIncidTablePageSize
         {
             get { return 1000; }
@@ -963,6 +983,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets or sets the maximum number of features at which to warn the user before selecting.
         /// </summary>
+        /// <value>The maximum number of features at which to warn the user before selecting.</value>
         public int? MaxFeaturesGISSelect
         {
             get { return _maxFeaturesGISSelect; }
@@ -1063,6 +1084,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets or sets the list of history columns.
         /// </summary>
+        /// <value>The list of history columns.</value>
         public SelectionList<string> HistoryColumns
         {
             get { return _historyColumns; }
@@ -1077,6 +1099,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets or sets the number of history entries to display.
         /// </summary>
+        /// <value>The number of history entries to display.</value>
         public int? HistoryDisplayLastN
         {
             get { return _historyDisplayLastN; }
@@ -1091,6 +1114,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the maximum number of history entries to display.
         /// </summary>
+        /// <value>The maximum number of history entries to display.</value>
         public int MaxHistoryDisplayLastN
         {
             get { return 50; }
@@ -1657,7 +1681,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Action when the browse SQL path button is clicked.
         /// </summary>
-        /// <param name="param"></param>
+        /// <param name="param">The parameter passed to the command.</param>
         private void BrowseSQLPathClicked(object param)
         {
             _bakSQLPath = _sqlPath;
@@ -1691,7 +1715,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Prompt the user to set the default SQL path.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The selected SQL path, or null if no path was selected.</returns>
         public static string GetSQLPath()
         {
             try
@@ -1743,7 +1767,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Action when the browse export path button is clicked.
         /// </summary>
-        /// <param name="param"></param>
+        /// <param name="param">The parameter passed to the command.</param>
         private void BrowseExportPathClicked(object param)
         {
             _bakExportPath = _exportPath;
@@ -1777,7 +1801,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Prompt the user to set the default export path.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The selected export path, or null if no path was selected.</returns>
         public static string GetExportPath()
         {
             try
@@ -1808,6 +1832,9 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets or sets the season name for spring.
         /// </summary>
+        /// <value></value>
+        /// The season name for spring.
+        /// </value>
         public string SeasonSpring
         {
             get { return _seasonSpring; }
@@ -1822,6 +1849,9 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets or sets the season name for summer.
         /// </summary>
+        /// <value></valiue>
+        /// The season name for summer.
+        /// </value>
         public string SeasonSummer
         {
             get { return _seasonSummer; }
@@ -1836,6 +1866,9 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets or sets the season name for autumn.
         /// </summary>
+        /// <value></value>
+        /// The season name for autumn.
+        /// </value>
         public string SeasonAutumn
         {
             get { return _seasonAutumn; }
@@ -1850,6 +1883,9 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets or sets the season name for winter.
         /// </summary>
+        /// <value></value>
+        /// The season name for winter.
+        /// </value>
         public string SeasonWinter
         {
             get { return _seasonWinter; }
@@ -1864,6 +1900,9 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets or sets the delimiter used for vague dates.
         /// </summary>
+        /// <value></value>
+        /// The delimiter used for vague dates.
+        /// </value>
         public string VagueDateDelimiter
         {
             get { return _vagueDateDelimiter; }
@@ -1879,8 +1918,11 @@ namespace HLU.UI.ViewModel
         #region Application Bulk Update
 
         /// <summary>
-        /// Checks if the user has bulk update authority.
+        /// Gets whether the user has authority to perform bulk updates.
         /// </summary>
+        /// <value>
+        /// True if the user has bulk update authority; otherwise, false.
+        /// </value>
         public bool CanBulkUpdate
         {
             get
@@ -2079,6 +2121,8 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Validates a specific property and returns its error message.
         /// </summary>
+        /// <param name="propertyName">The name of the property to validate.</param>
+        /// <returns>The error message for the specified property, or null if there are no errors.</returns>
         private string ValidateProperty(string propertyName)
         {
             return propertyName switch
@@ -2185,6 +2229,9 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets all validation errors for properties in a specific tab/category.
         /// </summary>
+        /// <param name="category">The category of the tab.</param>
+        /// <param name="tabName">The name of the tab.</param>
+        /// <returns>A list of error messages for the specified tab/category.</returns>
         private List<string> GetErrorsForCategory(string category, string tabName)
         {
             var errors = new List<string>();
@@ -2207,6 +2254,9 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Maps tab names to their relevant property names.
         /// </summary>
+        /// <param name="category">The category of the tab.</param>
+        /// <param name="tabName">The name of the tab.</param>
+        /// <returns>An array of property names associated with the specified tab.</returns>
         private string[] GetPropertiesForTab(string category, string tabName)
         {
             return (category, tabName) switch
@@ -2229,6 +2279,9 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Are there any errors in the settings?
         /// </summary>
+        /// <value></value>
+        /// A string containing all error messages, or null if there are no errors.
+        /// </value>
         public string Error
         {
             get
@@ -2257,6 +2310,9 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Get the error message for the specified property.
         /// </summary>
+        /// <value>
+        /// The error message for the specified property, or null if there are no errors.
+        /// </value>
         public string this[string columnName]
         {
             get
@@ -2322,66 +2378,110 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets the error messages related to database settings.
+        /// </summary>
+        /// <returns>A string containing all database-related error messages.</returns>
         private string GetDatabaseErrorMessages()
         {
             var errors = GetErrorsForCategory("Application", "Database");
             return string.Join(Environment.NewLine, errors);
         }
 
+        /// <summary>
+        /// Gets the error messages related to date settings.
+        /// </summary>
+        /// <returns>A string containing all date-related error messages.</returns>
         private string GetDatesErrorMessages()
         {
             var errors = GetErrorsForCategory("Application", "Dates");
             return string.Join(Environment.NewLine, errors);
         }
 
+        /// <summary>
+        /// Gets the error messages related to validation settings.
+        /// </summary>
+        /// <returns>A string containing all validation-related error messages.</returns>
         private string GetValidationErrorMessages()
         {
             var errors = GetErrorsForCategory("Application", "Validation");
             return string.Join(Environment.NewLine, errors);
         }
 
+        /// <summary>
+        /// Gets the error messages related to update settings.
+        /// </summary>
+        /// <returns>A string containing all update-related error messages.</returns>
         private string GetUpdatesErrorMessages()
         {
             var errors = GetErrorsForCategory("Application", "Updates");
             return string.Join(Environment.NewLine, errors);
         }
 
+        /// <summary>
+        /// Gets the error messages related to bulk update settings.
+        /// </summary>
+        /// <returns>A string containing all bulk update-related error messages.</returns>
         private string GetBulkUpdateErrorMessages()
         {
             var errors = GetErrorsForCategory("Application", "Bulk Update");
             return string.Join(Environment.NewLine, errors);
         }
 
+        /// <summary>
+        /// Gets the error messages related to user interface settings.
+        /// </summary>
+        /// <returns>A string containing all user interface-related error messages.</returns>
         private string GetInterfaceErrorMessages()
         {
             var errors = GetErrorsForCategory("User", "Interface");
             return string.Join(Environment.NewLine, errors);
         }
 
+        /// <summary>
+        /// Gets the error messages related to GIS settings.
+        /// </summary>
+        /// <returns>A string containing all GIS-related error messages.</returns>
         private string GetGISErrorMessages()
         {
             var errors = GetErrorsForCategory("User", "GIS");
             return string.Join(Environment.NewLine, errors);
         }
 
+        /// <summary>
+        /// Gets the error messages related to user update settings.
+        /// </summary>
+        /// <returns>A string containing all user update-related error messages.</returns>
         private string GetUserUpdatesErrorMessages()
         {
             var errors = GetErrorsForCategory("User", "Updates");
             return string.Join(Environment.NewLine, errors);
         }
 
+        /// <summary>
+        /// Gets the error messages related to user SQL settings.
+        /// </summary>
+        /// <returns>A string containing all user SQL-related error messages.</returns>
         private string GetSQLErrorMessages()
         {
             var errors = GetErrorsForCategory("User", "SQL");
             return string.Join(Environment.NewLine, errors);
         }
 
+        /// <summary>
+        /// Gets the error messages related to history settings.
+        /// </summary>
+        /// <returns>A string containing all history-related error messages.</returns>
         private string GetHistoryErrorMessages()
         {
             var errors = GetErrorsForCategory("User", "History");
             return string.Join(Environment.NewLine, errors);
         }
 
+        /// <summary>
+        /// Gets the error messages related to export settings.
+        /// </summary>
+        /// <returns>A string containing all export-related error messages.</returns>
         private string GetExportErrorMessages()
         {
             var errors = GetErrorsForCategory("User", "Export");

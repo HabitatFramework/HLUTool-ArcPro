@@ -1720,7 +1720,7 @@ namespace HLU.UI.ViewModel
                                         select Int32.Parse(s)).ToArray();
                 _gisIDColumns = _gisIDColumnOrdinals.Select(i => _hluDS.incid_mm_polygons.Columns[i]).ToArray();
 
-                // Columns to be displayed in history (always includes _gisIDColumns)
+                // Columns to be saved in the history table when records are updated.
                 _historyColumns = InitializeHistoryColumns(_historyColumns);
 
                 // Count rows of incid table
@@ -2820,50 +2820,50 @@ namespace HLU.UI.ViewModel
                 SetWorkModeFlag(WorkMode.OSMMReview, false);
                 SetWorkModeFlag(WorkMode.OSMMBulk, false);
 
-                // Refresh the UI
-                RefreshAll();
-
                 // Update the mode button
                 WorkModeButton.UpdateWorkModeDisplay(
                     "Update Mode",
                     "pack://application:,,,/HLUTool;component/Images/Update16.png",
                     "pack://application:,,,/HLUTool;component/Images/Update32.png");
+
+                // Refresh the UI
+                RefreshAll();
             }
             // If switching to OSMM Review mode
             else if (newMode.HasFlag(WorkMode.OSMMReview))
             {
-                // Start OSMM Update mode (which will set the flags)
-                OSMMUpdateClicked(null);
-
                 // Update the mode button BEFORE starting the mode
                 WorkModeButton.UpdateWorkModeDisplay(
                     "OSMM Update Mode",
                     "pack://application:,,,/HLUTool;component/Images/OSMMUpdate16.png",
                     "pack://application:,,,/HLUTool;component/Images/OSMMUpdate32.png");
+
+                // Start OSMM Update mode (which will set the flags)
+                OSMMUpdateClicked(null);
             }
             // If switching to Bulk OSMM mode
             else if (newMode.HasFlag(WorkMode.OSMMBulk))
             {
-                // Start OSMM Bulk Update mode (which will set the flags)
-                StartOSMMBulkUpdateClicked(null);
-
                 // Update the mode button BEFORE starting the mode
                 WorkModeButton.UpdateWorkModeDisplay(
                     "Bulk OSMM Update Mode",
                     "pack://application:,,,/HLUTool;component/Images/OSMMBulkUpdate16.png",
                     "pack://application:,,,/HLUTool;component/Images/OSMMBulkUpdate32.png");
+
+                // Start OSMM Bulk Update mode (which will set the flags)
+                StartOSMMBulkUpdateClicked(null);
             }
             // If switching to normal Bulk mode
             else if (newMode.HasFlag(WorkMode.Bulk))
             {
-                // Start Bulk Update mode (which will set the flags)
-                StartBulkUpdate();
-
                 // Update the mode button BEFORE starting the mode
                 WorkModeButton.UpdateWorkModeDisplay(
                     "Bulk Update Mode",
                     "pack://application:,,,/HLUTool;component/Images/BulkUpdate16.png",
                     "pack://application:,,,/HLUTool;component/Images/BulkUpdate32.png");
+
+                // Start Bulk Update mode (which will set the flags)
+                StartBulkUpdate();
             }
         }
 
@@ -2958,8 +2958,9 @@ namespace HLU.UI.ViewModel
             // Apply user settings.
             ApplyUserSettings();
 
-            // Get columns to be saved to history when altering GIS layer.
-            _historyColumns = InitializeHistoryColumns(_historyColumns);
+            //TODO: Not needed - done in initialisation and doesn't change on the fly?
+            // Get columns to be saved in the history table when records are updated.
+            //_historyColumns = InitializeHistoryColumns(_historyColumns);
 
             // If the show source habitat group value has changed and
             // is now true, set the habitat class to null to force
