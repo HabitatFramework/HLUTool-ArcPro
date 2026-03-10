@@ -39,9 +39,12 @@ namespace HLU.UI.UserControls.Toolbar
 
         #endregion Constructor
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Called periodically by the framework to update button state.
+        /// </summary>
         protected override void OnUpdate()
         {
+            // If the main ViewModel is not available, disable the button and show a tooltip indicating that the main window is not available.
             if (_viewModel == null)
             {
                 Enabled = false;
@@ -57,7 +60,12 @@ namespace HLU.UI.UserControls.Toolbar
             DisabledTooltip = "Available only when a physical or logical merge is possible.";
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Handles the popup event for the control, adding references to related merge buttons.
+        /// </summary>
+        /// <remarks>Override this method to customize the behavior when the control is displayed as a
+        /// popup. This method is typically called by the framework when the control becomes visible. Derived classes
+        /// can extend or modify the referenced controls as needed.</remarks>
         protected override void OnPopup()
         {
             AddReference("HLUTool_btnPhysicalMerge");

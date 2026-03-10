@@ -1745,9 +1745,6 @@ namespace HLU.UI.ViewModel
                 // Set the validation option for potential priority habitats
                 BapEnvironment.PotentialPriorityDetermQtyValidation = _potentialPriorityDetermQtyValidation;
 
-                // Initialize the WorkMode button to show the default mode
-                await InitializeWorkModeButtonAsync();
-
                 // Force all ribbon controls to re-evaluate their enabled state
                 RefreshRibbonControls();
 
@@ -2083,28 +2080,6 @@ namespace HLU.UI.ViewModel
             catch
             {
             }
-        }
-
-        /// <summary>
-        /// Initializes the WorkMode button to display the current (default) mode.
-        /// Called during tool initialization to ensure the button shows the correct state.
-        /// </summary>
-        private async Task InitializeWorkModeButtonAsync()
-        {
-            // Force the button to be created by the framework
-            await FrameworkApplication.Current.Dispatcher.InvokeAsync(() =>
-            {
-                WorkModeButton.EnsureInitialized();
-            });
-
-            // Small delay to ensure button is fully initialized
-            await Task.Delay(100);
-
-            // Default mode is Edit (Update Mode)
-            WorkModeButton.UpdateWorkModeDisplay(
-                "Update Mode",
-                "pack://application:,,,/HLUTool;component/Images/Update16.png",
-                "pack://application:,,,/HLUTool;component/Images/Update32.png");
         }
 
         /// <summary>
@@ -2820,48 +2795,24 @@ namespace HLU.UI.ViewModel
                 SetWorkModeFlag(WorkMode.OSMMReview, false);
                 SetWorkModeFlag(WorkMode.OSMMBulk, false);
 
-                // Update the mode button
-                WorkModeButton.UpdateWorkModeDisplay(
-                    "Update Mode",
-                    "pack://application:,,,/HLUTool;component/Images/Update16.png",
-                    "pack://application:,,,/HLUTool;component/Images/Update32.png");
-
                 // Refresh the UI
                 RefreshAll();
             }
             // If switching to OSMM Review mode
             else if (newMode.HasFlag(WorkMode.OSMMReview))
             {
-                // Update the mode button BEFORE starting the mode
-                WorkModeButton.UpdateWorkModeDisplay(
-                    "OSMM Update Mode",
-                    "pack://application:,,,/HLUTool;component/Images/OSMMUpdate16.png",
-                    "pack://application:,,,/HLUTool;component/Images/OSMMUpdate32.png");
-
                 // Start OSMM Update mode (which will set the flags)
                 OSMMUpdateClicked(null);
             }
             // If switching to Bulk OSMM mode
             else if (newMode.HasFlag(WorkMode.OSMMBulk))
             {
-                // Update the mode button BEFORE starting the mode
-                WorkModeButton.UpdateWorkModeDisplay(
-                    "Bulk OSMM Update Mode",
-                    "pack://application:,,,/HLUTool;component/Images/OSMMBulkUpdate16.png",
-                    "pack://application:,,,/HLUTool;component/Images/OSMMBulkUpdate32.png");
-
                 // Start OSMM Bulk Update mode (which will set the flags)
                 StartOSMMBulkUpdateClicked(null);
             }
             // If switching to normal Bulk mode
             else if (newMode.HasFlag(WorkMode.Bulk))
             {
-                // Update the mode button BEFORE starting the mode
-                WorkModeButton.UpdateWorkModeDisplay(
-                    "Bulk Update Mode",
-                    "pack://application:,,,/HLUTool;component/Images/BulkUpdate16.png",
-                    "pack://application:,,,/HLUTool;component/Images/BulkUpdate32.png");
-
                 // Start Bulk Update mode (which will set the flags)
                 StartBulkUpdate();
             }
@@ -3840,12 +3791,12 @@ namespace HLU.UI.ViewModel
         #region Child Row Retrieval
 
         /// <summary>
-        /// Retrieves and updates all child data rows related to the specified incident row within the dataset.
+        /// Retrieves and updates all child data rows related to the specified incid row within the dataset.
         /// </summary>
-        /// <remarks>This method populates various child row collections for the given incident, including
+        /// <remarks>This method populates various child row collections for the given incid, including
         /// secondary, condition, IHS matrix, IHS formation, IHS management, IHS complex, BAP, sources, history, and
-        /// OSMM updates rows. If the provided incident row is null, no action is taken.</remarks>
-        /// <param name="incidRow">The incident row for which to load associated child rows. Cannot be null.</param>
+        /// OSMM updates rows. If the provided incid row is null, no action is taken.</remarks>
+        /// <param name="incidRow">The incid row for which to load associated child rows. Cannot be null.</param>
         private void GetIncidChildRows(HluDataSet.incidRow incidRow)
         {
             if (incidRow == null) return;

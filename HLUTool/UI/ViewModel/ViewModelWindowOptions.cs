@@ -842,9 +842,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets or sets the incident table page size.
+        /// Gets or sets the incid table page size.
         /// </summary>
-        /// <value>The incident table page size.</value>
+        /// <value>The incid table page size.</value>
         public int? IncidTablePageSize
         {
             get { return _incidTablePageSize; }
@@ -857,9 +857,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets the maximum incident table page size.
+        /// Gets the maximum incid table page size.
         /// </summary>
-        /// <value>The maximum incident table page size.</value>
+        /// <value>The maximum incid table page size.</value>
         public int MaxIncidTablePageSize
         {
             get { return 1000; }

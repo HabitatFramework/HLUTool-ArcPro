@@ -8727,30 +8727,29 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        #endregion Active GIS Layer
+
+        #region Dock Pane Caption
+
         /// <summary>
-        /// Updates the dock pane caption to include the active GIS layer name.
+        /// Updates the dock pane caption to show if read-only or not.
         /// </summary>
         private void UpdateDockPaneCaption()
         {
-            string layerPart = string.Empty;
             string readonlyPart = string.Empty;
-
-            // Set the active layer name part.
-            if (!String.IsNullOrWhiteSpace(ActiveLayerName))
-                layerPart = $" : [{ActiveLayerName}]";
 
             // Set the read-only part.
             if ((_gisApp != null) && (_gisApp.ActiveHluLayer != null) && (!(bool)_gisApp?.ActiveHluLayer?.IsEditable))
                 readonlyPart = $" [READONLY]";
 
-            Caption = _dockPaneBaseCaption + layerPart + readonlyPart;
+            Caption = _dockPaneBaseCaption + readonlyPart;
             OnPropertyChanged(nameof(Caption));
 
             // Only show the title when the pane is tabbed with other panes.
             TabText = _dockPaneBaseCaption;
         }
 
-        #endregion Active GIS Layer
+        #endregion Dock Pane Caption
 
         #region Copy/Paste
 
@@ -8795,16 +8794,18 @@ namespace HLU.UI.ViewModel
         #region Formatting Helpers
 
         /// <summary>
-        /// Calculates and updates the area and length measures for the current incident based on associated polygon
+        /// Calculates and updates the area and length measures for the current incid based on associated polygon
         /// data.
         /// </summary>
-        /// <remarks>This method retrieves polygon records related to the current incident and computes
+        /// <remarks>This method retrieves polygon records related to the current incid and computes
         /// the total area and length, storing the results in internal fields. The calculation is performed only if the
-        /// measures have not already been set and a current incident row is available.</remarks>
+        /// measures have not already been set and a current incid row is available.</remarks>
         private void GetIncidMeasures()
         {
+            // If the measures have already been calculated or there is no current incid, exit the method.
             if (((_incidArea != -1) && (_incidLength != -1)) || (IncidCurrentRow == null)) return;
 
+            // Calculate the area and length measures for the current incid based on associated polygon data.
             _incidMMPolygonsIncidFilter.Value = Incid;
             HluDataSet.incid_mm_polygonsDataTable table = HluDataset.incid_mm_polygons;
 

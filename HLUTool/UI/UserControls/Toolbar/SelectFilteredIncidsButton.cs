@@ -49,13 +49,6 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override async void OnClick()
         {
-            if (_viewModel == null)
-            {
-                Enabled = false;
-                DisabledTooltip = "HLU main window is not available.";
-                return;
-            }
-
             // Select all incid features on the map.
             try
             {
@@ -72,6 +65,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override void OnUpdate()
         {
+            // If the main ViewModel is not available, disable the button and show a tooltip indicating that the main window is not available.
             if (_viewModel == null)
             {
                 Enabled = false;

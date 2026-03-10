@@ -39,9 +39,12 @@ namespace HLU.UI.UserControls.Toolbar
 
         #endregion Constructor
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Called periodically by the framework to update button state.
+        /// </summary>
         protected override void OnUpdate()
         {
+            // If the main ViewModel is not available, disable the button and show a tooltip indicating that the main window is not available.
             if (_viewModel == null)
             {
                 Enabled = false;
@@ -57,7 +60,12 @@ namespace HLU.UI.UserControls.Toolbar
             DisabledTooltip = "Available only when a physical or logical split is possible.";
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Handles initialization logic when the popup is displayed. Adds references to UI elements required for the
+        /// popup's functionality.
+        /// </summary>
+        /// <remarks>Override this method to customize the setup of UI components when the popup appears.
+        /// This method is called automatically as part of the popup lifecycle.</remarks>
         protected override void OnPopup()
         {
             AddReference("HLUTool_btnPhysicalSplit");

@@ -52,6 +52,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override async void OnEnter()
         {
+            // If the ViewModel is not available, disable the button and show a tooltip indicating why.
             if (_viewModel == null)
             {
                 Enabled = false;
@@ -59,6 +60,7 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
+            // Get the text from the edit box and trim whitespace.
             string incidText = Text?.Trim();
             if (String.IsNullOrEmpty(incidText))
             {
@@ -85,6 +87,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override void OnUpdate()
         {
+            // If the main ViewModel is not available, disable the button and show a tooltip indicating that the main window is not available.
             if (_viewModel == null)
             {
                 Enabled = false;
@@ -99,6 +102,7 @@ namespace HLU.UI.UserControls.Toolbar
 
         #region Regex
 
+        // Regular expression to validate Incid format nnnn:nnnnnnn.
         [GeneratedRegex(@"^\d{4}:\d{7}$")]
         private static partial Regex IncidRegex();
 

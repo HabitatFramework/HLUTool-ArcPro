@@ -47,6 +47,8 @@
     <None Remove="Images\AddRow16.png" />
     <None Remove="Images\AddRowSquare16.png" />
     <None Remove="Images\AddScript16.png" />
+    <None Remove="Images\AutoSelect16.png" />
+    <None Remove="Images\AutoSelect16b.png" />
     <None Remove="Images\BulkUpdate16.png" />
     <None Remove="Images\BulkUpdate32.png" />
     <None Remove="Images\ClearFilter16.png" />
@@ -149,6 +151,12 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Images\AddScript16.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\AutoSelect16.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Images\AutoSelect16b.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
     <Resource Include="Images\BulkUpdate16.png">

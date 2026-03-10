@@ -73,6 +73,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override void OnUpdate()
         {
+            // If the ViewModel is not available, disable the ComboBox and show a tooltip indicating why.
             if (_viewModel == null)
             {
                 Enabled = false;

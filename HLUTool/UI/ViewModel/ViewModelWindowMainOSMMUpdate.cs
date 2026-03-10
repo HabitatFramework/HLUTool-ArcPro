@@ -161,13 +161,13 @@ namespace HLU.UI.ViewModel
         /// Writes changes made to all the remaining selected incid_osmm_updates back to the database.
         /// </summary>
         /// <remarks>This method performs a bulk update operation on the dataset, applying the specified
-        /// OSMM status to the current incident and all subsequent incidents. The operation is performed within a
+        /// OSMM status to the current incid and all subsequent incids. The operation is performed within a
         /// database transaction to ensure atomicity. If the operation succeeds, the changes are committed  and the
         /// dataset is updated. If an error occurs, the transaction is rolled back, and an error  message is displayed
         /// to the user.  The method temporarily changes the cursor to indicate a long-running operation and restores it
-        /// upon completion. After a successful update, the current incident index is moved beyond the end  of the
-        /// dataset to indicate that all incidents have been processed.</remarks>
-        /// <param name="updateStatus">The new OSMM status to apply. This value is used to update the relevant incidents.</param>
+        /// upon completion. After a successful update, the current incid index is moved beyond the end  of the
+        /// dataset to indicate that all incids have been processed.</remarks>
+        /// <param name="updateStatus">The new OSMM status to apply. This value is used to update the relevant incids.</param>
         internal async Task OSMMUpdateAllAsync(int updateStatus)
         {
             _viewModelMain.ChangeCursor(Cursors.Wait, "Updating all ...");
@@ -210,17 +210,17 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Updates the status and metadata for records in the "incid_osmm_updates" table based on the specified status
-        /// and starting incident identifier.
+        /// and starting incid identifier.
         /// </summary>
         /// <remarks>This method constructs and executes an SQL UPDATE statement to modify the
         /// "incid_osmm_updates" table. If a custom WHERE clause is defined in the
         /// <c>_viewModelMain.OSMMUpdateWhereClause</c>, it will be used to filter the records to update. Otherwise,
         /// the method will iterate through the selected rows in <c>_viewModelMain.IncidSelection</c> and update
-        /// records individually based on the incident identifier. The method ensures that the "last_modified_date"
+        /// records individually based on the incid identifier. The method ensures that the "last_modified_date"
         /// field is updated to the current date and time (rounded to the nearest second) and the
         /// "last_modified_user_id" field is updated to the current user ID.</remarks>
         /// <param name="updateStatus">The new status value to be applied to the records.</param>
-        /// <param name="fromIncid">The starting incident identifier. Records with an incident identifier greater than  or equal to this value
+        /// <param name="fromIncid">The starting incid identifier. Records with an incid identifier greater than  or equal to this value
         /// will be updated.</param>
         /// <exception cref="Exception">Thrown if the update operation fails for any record in the "incid_osmm_updates" table.</exception>
         private void BulkIncidOSMMUpdates(int updateStatus, string fromIncid)
@@ -342,7 +342,7 @@ namespace HLU.UI.ViewModel
         /// Resets the controls and state related to the OSMM update mode.
         /// </summary>
         /// <remarks>This method performs the following actions: <list type="bullet"> <item>Resets the
-        /// incident filter and sets the current row index to 1.</item> <item>Disables the bulk update mode.</item>
+        /// incid filter and sets the current row index to 1.</item> <item>Disables the bulk update mode.</item>
         /// <item>Enables all tabs in the user interface.</item> <item>Refreshes all controls to reflect the updated
         /// state.</item> <item>Resets the cursor to the default arrow.</item> </list> This method is typically called
         /// to exit the OSMM update mode and restore the default application state.</remarks>

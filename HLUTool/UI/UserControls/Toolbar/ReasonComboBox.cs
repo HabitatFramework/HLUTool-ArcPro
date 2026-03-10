@@ -73,23 +73,17 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override void OnUpdate()
         {
+            // If the main ViewModel is not available, disable the ComboBox and show a tooltip indicating that the main window is not available.
+            if (_viewModel == null)
+            {
+                Enabled = false;
+                DisabledTooltip = "HLU main window is not available.";
+                return;
+            }
+
             // Initialize the ComboBox if it's not already.
             if (!_isInitialized)
                 Initialize();
-
-            //// Select the reason if it hasn't been selected.
-            //if (SelectedItem == null && _viewModel?.Reason != null)
-            //{
-            //    SelectedItem = _viewModel.Reason;
-            //    OnSelectionChange(SelectedItem);
-            //}
-
-            //if (_viewModel == null)
-            //{
-            //    Enabled = false;
-            //    DisabledTooltip = "HLU main window is not available.";
-            //    return;
-            //}
 
             // Enable or disable the ComboBox based on ReasonProcessEnabled and main grid visibility.
             bool reasonProcessEnabled = _viewModel.ReasonProcessEnabled && _viewModel.GridMainVisibility == Visibility.Visible;
@@ -156,6 +150,10 @@ namespace HLU.UI.UserControls.Toolbar
             _isEnabled = enabled;
         }
 
+        /// <summary>
+        /// Gets the currently selected reason.
+        /// </summary>
+        /// <value>The currently selected reason.</value>
         public string Reason
         {
             get { return (SelectedItem as ComboBoxItem)?.Text; }

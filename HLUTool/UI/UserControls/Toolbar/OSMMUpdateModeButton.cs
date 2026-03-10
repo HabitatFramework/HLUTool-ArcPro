@@ -16,25 +16,18 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using HLU.UI.View;
-using HLU.UI.ViewModel;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using HLU.UI;
-using Xceed.Wpf.Toolkit.Primitives;
+using HLU.UI.ViewModel;
+using System;
 
 namespace HLU.UI.UserControls.Toolbar
 {
     /// <summary>
-    /// Button implementation to open the about window.
+    /// Toggle button to switch to OSMM Update mode.
+    /// Allows review and acceptance/rejection of OSMM updates for individual incids.
     /// </summary>
-    internal class AboutWindowButton : Button
+    internal sealed class OSMMUpdateModeButton : Button
     {
         #region Fields
 
@@ -47,12 +40,10 @@ namespace HLU.UI.UserControls.Toolbar
         /// <summary>
         /// Constructor gets the main view model from the dockpane.
         /// </summary>
-        public AboutWindowButton()
+        public OSMMUpdateModeButton()
         {
             // Get the dockpane DAML id.
             DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
-            if (pane == null)
-                return;
 
             // Get the ViewModel by casting the dockpane.
             _viewModel = pane as ViewModelWindowMain;
@@ -63,22 +54,23 @@ namespace HLU.UI.UserControls.Toolbar
         #region Overrides
 
         /// <summary>
-        /// Show the about window. Called when the button is clicked.
+        /// Override OnClick to toggle the work mode in the main view model.
         /// </summary>
         protected override void OnClick()
         {
-            // Show the about window.
+            // Set the work mode to OSMM Review.
             try
-            {   _viewModel.ShowAbout();
+            {
+                _viewModel.SetWorkMode(WorkMode.Edit | WorkMode.OSMMReview);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine(ex);
+                System.Diagnostics.Debug.WriteLine($"Error setting OSMM Update Mode: {ex}");
             }
         }
 
         /// <summary>
-        /// Called periodically by the framework to update button state.
+        /// Called by framework to update button state.
         /// </summary>
         protected override void OnUpdate()
         {
@@ -90,8 +82,11 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            // Enable or disable the button based on the main grid visibility.
-            Enabled = _viewModel.GridMainVisibility == Visibility.Visible;
+            // Update checked state based on current work mode
+            IsChecked = _viewModel.WorkMode.HasFlag(WorkMode.OSMMReview);
+
+            // Enable or disable the button if OSMM Update mode can be activated.
+            Enabled = _viewModel.CanOSMMUpdateMode;
         }
 
         #endregion Overrides

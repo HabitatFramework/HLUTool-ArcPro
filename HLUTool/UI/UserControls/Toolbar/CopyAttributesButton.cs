@@ -48,7 +48,13 @@ namespace HLU.UI.UserControls.Toolbar
         protected override void OnClick()
         {
             // Copy attribute values.
-            _viewModel.CopyAttributes();
+            try
+            {   _viewModel.CopyAttributes();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+            }
         }
 
         /// <summary>
@@ -56,6 +62,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override void OnUpdate()
         {
+            // If the main ViewModel is not available, disable the button and show a tooltip indicating that the main window is not available.
             if (_viewModel == null)
             {
                 Enabled = false;

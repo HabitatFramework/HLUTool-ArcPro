@@ -16,25 +16,19 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using HLU.UI.View;
-using HLU.UI.ViewModel;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
-using System.Text;
-using System.Threading.Tasks;
+using HLU.UI.ViewModel;
+using System;
 using System.Windows;
-using HLU.UI;
-using Xceed.Wpf.Toolkit.Primitives;
 
 namespace HLU.UI.UserControls.Toolbar
 {
     /// <summary>
-    /// Button implementation to open the about window.
+    /// Toggle button to switch to normal Update mode.
+    /// This is the default mode for editing individual incids.
     /// </summary>
-    internal class AboutWindowButton : Button
+    internal sealed class UpdateModeButton : Button
     {
         #region Fields
 
@@ -47,12 +41,10 @@ namespace HLU.UI.UserControls.Toolbar
         /// <summary>
         /// Constructor gets the main view model from the dockpane.
         /// </summary>
-        public AboutWindowButton()
+        public UpdateModeButton()
         {
             // Get the dockpane DAML id.
             DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
-            if (pane == null)
-                return;
 
             // Get the ViewModel by casting the dockpane.
             _viewModel = pane as ViewModelWindowMain;
@@ -63,22 +55,23 @@ namespace HLU.UI.UserControls.Toolbar
         #region Overrides
 
         /// <summary>
-        /// Show the about window. Called when the button is clicked.
+        /// Override OnClick to toggle the work mode in the main view model.
         /// </summary>
         protected override void OnClick()
         {
-            // Show the about window.
+            // Set the work mode to Edit.
             try
-            {   _viewModel.ShowAbout();
+            {
+                _viewModel.SetWorkMode(WorkMode.Edit);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine(ex);
+                System.Diagnostics.Debug.WriteLine($"Error setting Update Mode: {ex}");
             }
         }
 
         /// <summary>
-        /// Called periodically by the framework to update button state.
+        /// Called by framework to update button state.
         /// </summary>
         protected override void OnUpdate()
         {
@@ -90,8 +83,11 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
+            // Update checked state based on current work mode
+            IsChecked = (_viewModel.WorkMode == WorkMode.Edit);
+
             // Enable or disable the button based on the main grid visibility.
-            Enabled = _viewModel.GridMainVisibility == Visibility.Visible;
+            Enabled = (_viewModel.GridMainVisibility == Visibility.Visible);
         }
 
         #endregion Overrides

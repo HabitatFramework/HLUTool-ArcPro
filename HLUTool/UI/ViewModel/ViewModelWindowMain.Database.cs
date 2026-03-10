@@ -1363,7 +1363,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="bulkUpdateMode">Whether the application is in bulk update mode.</param>
         /// <param name="secondary_id">The ID of the secondary habitat.</param>
-        /// <param name="incid">The incident associated with the secondary habitat.</param>
+        /// <param name="incid">The incid associated with the secondary habitat.</param>
         /// <param name="secondary_habitat">The name of the secondary habitat.</param>
         /// <param name="secondary_group">The group of the secondary habitat.</param>
         /// <returns>True if the secondary habitat was added successfully; otherwise, false.</returns>

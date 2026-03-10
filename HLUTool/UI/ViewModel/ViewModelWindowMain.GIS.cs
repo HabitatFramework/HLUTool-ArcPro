@@ -171,7 +171,7 @@ namespace HLU.UI.ViewModel
                 _activeLayerName = value;
                 OnPropertyChanged(nameof(ActiveLayerName));
 
-                // Update the dock pane caption.
+                // Update the dock pane caption (to show 'Read-only' or not).
                 UpdateDockPaneCaption();
             }
         }

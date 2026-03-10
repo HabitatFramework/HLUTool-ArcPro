@@ -1,20 +1,22 @@
-﻿using HLU.UI.View;
+﻿using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Framework.Contracts;
+using HLU.Properties;
+using HLU.UI;
+using HLU.UI.View;
 using HLU.UI.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Contracts;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using HLU.UI;
 using Xceed.Wpf.Toolkit.Primitives;
 
 namespace HLU.UI.UserControls.Toolbar
 {
     /// <summary>
-    ///     /// Checkbox implementation to select if auto zoom is on or off.
+    /// Button implementation to toggle auto select on GIS. When enabled, selecting a record in the
+    /// UI will automatically select the corresponding feature on the map.
     /// </summary>
     internal class AutoSelectOnGisButton : CheckBox
     {
@@ -60,13 +62,6 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override void OnClick()
         {
-            if (_viewModel == null)
-            {
-                Enabled = false;
-                DisabledTooltip = "HLU main window is not available.";
-                return;
-            }
-
             // Toggle the auto select state.
             AutoSelectOnGisEnabled = !AutoSelectOnGisEnabled;
 
@@ -82,12 +77,16 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override void OnUpdate()
         {
+            // If the main ViewModel is not available, disable the button and show a tooltip indicating that the main window is not available.
             if (_viewModel == null)
             {
                 Enabled = false;
                 DisabledTooltip = "HLU main window is not available.";
                 return;
             }
+
+            //// Update checked state based on setting
+            //IsChecked = Settings.Default.AutoSelectOnGis;
 
             // Enable or disable the button based on the main grid visibility.
             bool isEnabled = _viewModel.GridMainVisibility == Visibility.Visible;

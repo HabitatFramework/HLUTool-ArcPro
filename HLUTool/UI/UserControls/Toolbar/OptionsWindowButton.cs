@@ -106,6 +106,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override void OnUpdate()
         {
+            // If the ViewModel is not set, attempt to get it from the dockpane.
             if (_viewModel == null)
             {
                 Enabled = false;

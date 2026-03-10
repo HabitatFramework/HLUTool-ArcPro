@@ -119,14 +119,14 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Converts a list of incident identifiers into structured SQL WHERE clause conditions,
+        /// Converts a list of incid identifiers into structured SQL WHERE clause conditions,
         /// grouped into blocks of a specified size.
         /// </summary>
         /// <typeparam name="T">A type that derives from <see cref="DataTable"/> representing the target table.</typeparam>
         /// <param name="incidPageSize">The maximum number of conditions per block to prevent excessively large queries.</param>
-        /// <param name="incidOrdinal">The column index of the incident identifier within the target table.</param>
+        /// <param name="incidOrdinal">The column index of the incid identifier within the target table.</param>
         /// <param name="incidTable">The target table to which the conditions should be applied.</param>
-        /// <param name="incidList">A collection of incident identifiers to be converted into SQL filter conditions.</param>
+        /// <param name="incidList">A collection of incid identifiers to be converted into SQL filter conditions.</param>
         /// <returns>
         /// A list of lists, where each inner list represents a block of <see cref="SqlFilterCondition"/> objects
         /// that together form a structured WHERE clause segment. Returns <c>null</c> if the input list is empty or null.
@@ -143,19 +143,19 @@ namespace HLU.UI.ViewModel
         public static List<List<SqlFilterCondition>> IncidSelectionToWhereClause<T>(int incidPageSize,
             int incidOrdinal, T incidTable, IEnumerable<string> incidList) where T : DataTable
         {
-            // If the incident list is null or empty, return null.
+            // If the incid list is null or empty, return null.
             if ((incidList == null) || (!incidList.Any())) return null;
 
             // Sort incids to provide consistent UI ordering and stable paging.
             IEnumerable<string> orderedIncids = incidList.OrderBy(i => i);
 
-            // Group the incident identifiers into blocks of `incidPageSize` conditions.
+            // Group the incid identifiers into blocks of `incidPageSize` conditions.
             return (from b in incidList.Select((i, index) => new
             {
                 // Determine the block number based on the index and page size.
                 Block = index / incidPageSize,
 
-                // Create a new filter condition for each incident identifier.
+                // Create a new filter condition for each incid identifier.
                 Condition = new SqlFilterCondition("OR", incidTable, incidTable.Columns[incidOrdinal], i)
             })
                     // Group the conditions by block number.

@@ -47,7 +47,7 @@ namespace HLU
         Edit = CanEdit, // Alias for CanEdit
 
         /// <summary>
-        /// Bulk update mode is active, which allows the user to update a subset of features for an incident.
+        /// Bulk update mode is active, which allows the user to update a subset of features for an incid.
         /// This mode may be active simultaneously with Edit mode and OsmmBulk modes.
         /// </summary>
         Bulk = 1 << 1, // Previously _bulkUpdateMode.

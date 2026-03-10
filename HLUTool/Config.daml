@@ -60,10 +60,12 @@
 					<button refID="HLUTool_btnHLUToolDockPane" size="large" />
 				</group>
 
-				<!-- Mode group -->
-				<group id="HLUTool_Group_Mode" caption="Work Mode" keytip="G1">
-					<button refID="HLUTool_btnWorkMode" size="large" />
-					<dynamicMenu refID="HLUTool_WorkModeMenu" size="middle" />
+				<!-- Mode group with 4 toggle buttons -->
+				<group id="HLUTool_Group_Mode" caption="Mode" keytip="G1">
+					<button refID="HLUTool_btnUpdateMode" size="large" />
+					<button refID="HLUTool_btnOSMMUpdateMode" size="middle" />
+					<button refID="HLUTool_btnBulkUpdateMode" size="middle" />
+					<button refID="HLUTool_btnOSMMBulkUpdateMode" size="middle" />
 				</group>
 
 				<!-- Edit group -->
@@ -89,8 +91,8 @@
 				<!-- Filter Incids group -->
 				<group id="HLUTool_Group_FilterIncids" caption="Filter INCIDs" keytip="G5">
 					<button refID="HLUTool_btnFilterByAttributes" size="large" />
-					<button refID="HLUTool_btnClearFilter" size="middle" />
 					<editBox refID="HLUTool_edbFilterByIncid" size="large" />
+					<button refID="HLUTool_btnClearFilter" size="middle" />
 					<button refID="HLUTool_btnGetMapSelection" size="large" />
 				</group>
 
@@ -108,7 +110,7 @@
 				</group>
 
 				<!-- Export group -->
-				<group id="HLUTool_Group_Export" caption="Export" keytip="G8">
+				<group id="HLUTool_Group_Export" caption="Export" keytip="G8" launcherButtonID="HLUTool_btnExportOptionsLauncher">
 					<button refID="HLUTool_btnExport" size="large" />
 				</group>
 
@@ -148,37 +150,12 @@
 					</tooltip>
 				</button>
 
-				<!-- Work Mode Button (shows current mode) -->
-				<button id="HLUTool_btnWorkMode"
-						caption="Update Mode"
-						className="HLU.UI.UserControls.Toolbar.WorkModeButton"
-						loadOnClick="false"
-						keytip="M"
-						isChecked="true"
-						smallImage="pack://application:,,,/HLUTool;component/Images/Update16.png"
-						largeImage="pack://application:,,,/HLUTool;component/Images/Update32.png">
-					<tooltip heading="Current work mode">
-						Click the adjacent dropdown to change modes.
-					</tooltip>
-				</button>
-
-				<!-- Work Mode Dynamic Menu (dropdown to select mode) -->
-				<dynamicMenu id="HLUTool_WorkModeMenu"
-							 caption="Mode"
-							 className="HLU.UI.UserControls.Toolbar.WorkModeDynamicMenu"
-							 smallImage="pack://application:,,,/HLUTool;component/Images/EditMode16.png"
-							 largeImage="pack://application:,,,/HLUTool;component/Images/EditMode32.png"
-							 loadOnClick="false">
-					<tooltip heading="Select Work Mode">
-						Choose a work mode
-					</tooltip>
-				</dynamicMenu>
-
-				<!-- Individual Mode Buttons -->
-				<button id="HLUTool_UpdateModeButton"
-						caption="Update Mode"
-						keytip="UM"
+				<!-- Update mode button -->
+				<button id="HLUTool_btnUpdateMode"
+						caption="Update"
 						className="HLU.UI.UserControls.Toolbar.UpdateModeButton"
+						loadOnClick="false"
+						keytip="U"
 						smallImage="pack://application:,,,/HLUTool;component/Images/Update16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/Update32.png">
 					<tooltip heading="Update Mode">
@@ -186,10 +163,12 @@
 					</tooltip>
 				</button>
 
-				<button id="HLUTool_OSMMUpdateModeButton"
-						caption="OSMM Update Mode"
-						keytip="OM"
+				<!-- OSMM Update mode button -->
+				<button id="HLUTool_btnOSMMUpdateMode"
+						caption="OSMM Update"
 						className="HLU.UI.UserControls.Toolbar.OSMMUpdateModeButton"
+						loadOnClick="false"
+						keytip="O"
 						smallImage="pack://application:,,,/HLUTool;component/Images/OSMMUpdate16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/OSMMUpdate32.png">
 					<tooltip heading="OSMM Update Mode">
@@ -197,10 +176,12 @@
 					</tooltip>
 				</button>
 
-				<button id="HLUTool_BulkUpdateModeButton"
-						caption="Bulk Update Mode"
-						keytip="BM"
+				<!-- Bulk Update mode button -->
+				<button id="HLUTool_btnBulkUpdateMode"
+						caption="Bulk Update"
 						className="HLU.UI.UserControls.Toolbar.BulkUpdateModeButton"
+						loadOnClick="false"
+						keytip="B"
 						smallImage="pack://application:,,,/HLUTool;component/Images/BulkUpdate16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/BulkUpdate32.png">
 					<tooltip heading="Bulk Update Mode">
@@ -208,10 +189,12 @@
 					</tooltip>
 				</button>
 
-				<button id="HLUTool_OSMMBulkUpdateModeButton"
-						caption="Bulk OSMM Update Mode"
-						keytip="OBM"
+				<!-- OSMM Bulk Update mode button -->
+				<button id="HLUTool_btnOSMMBulkUpdateMode"
+						caption="OSMM Bulk Update"
 						className="HLU.UI.UserControls.Toolbar.OSMMBulkUpdateModeButton"
+						loadOnClick="false"
+						keytip="M"
 						smallImage="pack://application:,,,/HLUTool;component/Images/OSMMBulkUpdate16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/OSMMBulkUpdate32.png">
 					<tooltip heading="Bulk OSMM Update Mode">
@@ -396,15 +379,17 @@
 					</tooltip>
 				</button>
 
-				<checkBox id="HLUTool_btnAutoSelectOnGis"
+				<button id="HLUTool_btnAutoSelectOnGis"
 						caption="Auto Select"
 						className="HLU.UI.UserControls.Toolbar.AutoSelectOnGisButton"
 						loadOnClick="false"
-						keytip="AS">
+						keytip="AS"
+						smallImage="pack://application:,,,/HLUTool;component/Images/AutoSelect16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/AutoSelect32.png">
 					<tooltip heading="Auto Select">
-						Automatically select the features associated with the current INCID record in the active GIS layer.<disabledText />
+						Automatically select the features associated with the current INCID record in the active GIS layer.
 					</tooltip>
-				</checkBox>
+				</button>
 
 				<button id="HLUTool_btnLogicalSplit"
 						caption="Logical Split"
@@ -480,6 +465,19 @@
 					<tooltip heading="Export">
 						Export data using a pre-defined format.
 						<disabledText>Available only when not in a bulk or OSMM update mode.</disabledText>
+					</tooltip>
+				</button>
+
+				<!-- Launcher button for Export group options -->
+				<button id="HLUTool_btnExportOptionsLauncher"
+						caption="Export Options"
+						className="HLU.UI.UserControls.Toolbar.ExportOptionsLauncherButton"
+						loadOnClick="true"
+						keytip="EO"
+						smallImage="pack://application:,,,/HLUTool;component/Images/Options16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/Options32.png">
+					<tooltip heading="Export Options">
+						Open Options window to configure export settings
 					</tooltip>
 				</button>
 

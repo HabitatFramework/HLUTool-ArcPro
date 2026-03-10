@@ -51,7 +51,14 @@ namespace HLU.UI.UserControls.Toolbar
             var viewModelExport = new ViewModelWindowMainExport(_viewModel);
 
             // Initiate the export process.
-            viewModelExport.InitiateExport();
+            try
+            {
+                viewModelExport.InitiateExport();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex);
+            }
         }
 
         /// <summary>
@@ -59,6 +66,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override void OnUpdate()
         {
+            // If the main ViewModel is not available, disable the button and show a tooltip indicating that the main window is not available.
             if (_viewModel == null)
             {
                 Enabled = false;
