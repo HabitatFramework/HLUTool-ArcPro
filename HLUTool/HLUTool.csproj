@@ -30,6 +30,10 @@
 		<Compile Remove="UI\View\WindowMain_OLD.xaml.cs" />
 		<Compile Remove="UI\View\WindowSelectGIS.xaml.cs" />
 	</ItemGroup>
+	<ItemGroup>
+	  <None Remove="Images\Update16.png" />
+	  <None Remove="Images\Update32.png" />
+	</ItemGroup>
 
 	<!-- Explicitly excluded XAML files -->
 	<ItemGroup>
@@ -215,6 +219,12 @@
 		<Resource Include="Images\Success32.png">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Resource>
+		<Resource Include="Images\Update16.png">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\Update32.png">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
 		<Resource Include="Images\Warning32.png">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Resource>
@@ -264,7 +274,7 @@
 		<Compile Update="UI\View\Options\UserExportOptions.xaml.cs">
 			<SubType>Code</SubType>
 		</Compile>
-		<Compile Update="UI\View\Options\UserSplitMergeOptions.xaml.cs">
+		<Compile Update="UI\View\Options\UserUpdatesOptions.xaml.cs">
 			<SubType>Code</SubType>
 		</Compile>
 		<Compile Update="UI\View\Options\AppBulkUpdateOptions.xaml.cs">

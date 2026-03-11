@@ -855,6 +855,7 @@ namespace HLU.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public string WorkingFileGDBPath {
             get {
                 return ((string)(this["WorkingFileGDBPath"]));
@@ -867,6 +868,7 @@ namespace HLU.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
         public string ExportPath {
             get {
                 return ((string)(this["ExportPath"]));
@@ -882,6 +884,32 @@ namespace HLU.Properties {
         public int BatchProcessingSize {
             get {
                 return ((int)(this["BatchProcessingSize"]));
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
+        public string DefaultReason {
+            get {
+                return ((string)(this["DefaultReason"]));
+            }
+            set {
+                this["DefaultReason"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
+        public string DefaultProcess {
+            get {
+                return ((string)(this["DefaultProcess"]));
+            }
+            set {
+                this["DefaultProcess"] = value;
             }
         }
     }

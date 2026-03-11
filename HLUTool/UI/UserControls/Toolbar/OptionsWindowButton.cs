@@ -74,11 +74,8 @@ namespace HLU.UI.UserControls.Toolbar
                         Topmost = true
                     };
 
-                    // Create ViewModel to which window binds and pass in necessary data
-                    _viewModelOptions = new(
-                        habitatClasses: _habitatClasses,
-                        secondaryGroupsAll: _secondaryGroupsAll
-                    )
+                    // Initialize the ViewModel for the options window
+                    _viewModelOptions = new()
                     {
                         DisplayName = "Options"
                     };

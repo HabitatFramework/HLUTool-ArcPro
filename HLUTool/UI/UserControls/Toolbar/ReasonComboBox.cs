@@ -25,7 +25,7 @@ namespace HLU.UI.UserControls.Toolbar
         private ViewModelWindowMain _viewModel;
 
         private bool _isInitialized;
-        private bool _isEnabled;
+        private bool _isEnabled; //TODO: Needed?
 
         private string _previousReason;
 
@@ -52,11 +52,20 @@ namespace HLU.UI.UserControls.Toolbar
 
             // Initialize the ComboBox (if it's not already).
             Initialize();
+
+            // Sync with ViewModel's current Reason value (if it's already set)
+            if (!string.IsNullOrEmpty(_viewModel?.Reason))
+            {
+                SetSelectedItem(_viewModel.Reason);
+            }
+
+            // Update error state on initialization
+            UpdateErrorState();
         }
 
         #endregion Constructor
 
-        #region Methods
+        #region Overrides and Public Methods
 
         /// <summary>
         /// Gets the instance of the ReasonComboBox.
@@ -88,6 +97,9 @@ namespace HLU.UI.UserControls.Toolbar
             // Enable or disable the ComboBox based on ReasonProcessEnabled and main grid visibility.
             bool reasonProcessEnabled = _viewModel.ReasonProcessEnabled && _viewModel.GridMainVisibility == Visibility.Visible;
             Enabled = reasonProcessEnabled;
+
+            // Update error state periodically to catch any changes
+            UpdateErrorState();
         }
 
         /// <summary>
@@ -116,6 +128,7 @@ namespace HLU.UI.UserControls.Toolbar
             SelectedItem = null;
             OnSelectionChange(null);
 
+            //TODO: Needed?
             _isEnabled = false;
 
             // Load the reasons into the ComboBox list.
@@ -137,6 +150,7 @@ namespace HLU.UI.UserControls.Toolbar
                     Add(new ComboBoxItem(reasonCode.description));
                 }
 
+                //TODO: Needed?
                 _isEnabled = true;
             }
         }
@@ -182,6 +196,102 @@ namespace HLU.UI.UserControls.Toolbar
             _viewModel?.RefreshReasonProcess();
         }
 
-        #endregion Methods
+        /// <summary>
+        /// Sets the selected item in the ComboBox based on the reason code.
+        /// </summary>
+        /// <param name="reasonCode">The code of the reason to select.</param>
+        public void SetSelectedItem(string reasonCode)
+        {
+            if (string.IsNullOrEmpty(reasonCode))
+            {
+                SelectedItem = null;
+
+                // Update error state when clearing selection
+                UpdateErrorState();
+
+                return;
+            }
+
+            // Find the matching reason code in the ViewModel
+            var matchingReason = _viewModel?.ReasonCodes?.FirstOrDefault(r =>
+                string.Equals(r.code, reasonCode, StringComparison.Ordinal));
+
+            // If the reason code matches one of the options
+            if (matchingReason != null)
+            {
+                // Find the ComboBox item by matching the description
+                var item = ItemCollection.FirstOrDefault(i =>
+                    string.Equals((i as ComboBoxItem)?.Text, matchingReason.description, StringComparison.Ordinal));
+
+                if (item != null)
+                {
+                    // Temporarily store the previous value to prevent circular updates
+                    string temp = _previousReason;
+                    _previousReason = matchingReason.description;
+
+                    // Set the selected item
+                    SelectedItem = item;
+
+                    // Restore if the selection failed
+                    if (SelectedItem != item)
+                        _previousReason = temp;
+                }
+            }
+
+            // Update error state when clearing selection
+            UpdateErrorState();
+        }
+
+        /// <summary>
+        /// Updates the error state and tooltip for the ComboBox.
+        /// </summary>
+        private void UpdateErrorState()
+        {
+            // Set the tooltip based on error state
+            if (HasError)
+            {
+                Tooltip = ErrorMessage;
+            }
+            else
+            {
+                Tooltip = "Select the reason for attribute updates";
+            }
+        }
+
+        #endregion Overrides and Public Methods
+
+        #region Validation
+
+        /// <summary>
+        /// Gets the error message for the current reason selection, if any.
+        /// </summary>
+        /// <value>The error message, or null if there is no error.</value>
+        public string ErrorMessage
+        {
+            get
+            {
+                // Check if the reason is required but not set
+                if (_viewModel != null && _viewModel.ReasonProcessEnabled)
+                {
+                    if (string.IsNullOrEmpty(_viewModel.Reason))
+                        return "Reason is required for updates";
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether there is an error with the current reason selection.
+        /// </summary>
+        /// <value><c>true</c> if there is an error; otherwise, <c>false</c>.</value>
+        public bool HasError
+        {
+            get
+            {
+                return !string.IsNullOrEmpty(ErrorMessage);
+            }
+        }
+
+        #endregion Validation
     }
 }

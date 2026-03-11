@@ -865,7 +865,6 @@ namespace HLU.UI.ViewModel
             set { _resetOSMMUpdatesStatus = value; }
         }
 
-        // Reason/Process
         /// <summary>
         /// Gets the list of reason codes.
         /// </summary>
@@ -882,7 +881,30 @@ namespace HLU.UI.ViewModel
 
                 return _reasonCodes;
             }
-            set { }
+        }
+
+        /// <summary>
+        /// Gets the list of reason codes with a "<None>" option added at the beginning of the list.
+        /// </summary>
+        /// <value>The list of reason codes with a "<None>" option.</value>
+        public HluDataSet.lut_reasonRow[] ReasonCodesWithNone
+        {
+            get
+            {
+                if (_reasonCodes == null)
+                {
+                    // Get the list of values from the lookup table.
+                    _reasonCodes = _lutReason.OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
+                }
+
+                if (_reasonCodesWithNone == null)
+                {
+                    // Add the <None> code to the beginning of the list.
+                    _reasonCodesWithNone = new HluDataSet.lut_reasonRow[] { _noneReasonRow }.Concat(_reasonCodes).ToArray();
+                }
+
+                return _reasonCodesWithNone;
+            }
         }
 
         /// <summary>
@@ -897,14 +919,21 @@ namespace HLU.UI.ViewModel
             }
             set
             {
-                // Return if the value hasn't changed.
-                if (String.Equals(_reason, value, StringComparison.Ordinal))
-                    return;
+                // If the reason has changed
+                if (_reason != value)
+                {
+                    _reason = value;
+                    OnPropertyChanged(nameof(Reason));
 
-                _reason = value;
+                    // Update the toolbar combo box
+                    ReasonComboBox.GetInstance()?.SetSelectedItem(_reason);
 
-                // Update the WorkMode flag for whether reason and process have been selected.
-                UpdateReasonAndProcessFlag();
+                    // Refresh both the cached split and merge enablement values.
+                    RefreshSplitMergeEnablement();
+
+                    // Update the work mode flag
+                    UpdateReasonAndProcessFlag();
+                }
             }
         }
 
@@ -924,7 +953,30 @@ namespace HLU.UI.ViewModel
 
                 return _processCodes;
             }
-            set { }
+        }
+
+        /// <summary>
+        /// Gets the list of process codes with a "<None>" option added at the beginning of the list.
+        /// </summary>
+        /// <value>The list of process codes with a "<None>" option.</value>
+        public HluDataSet.lut_processRow[] ProcessCodesWithNone
+        {
+            get
+            {
+                if (_processCodes == null)
+                {
+                    // Get the list of values from the lookup table.
+                    _processCodes = _lutProcess.OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
+                }
+
+                if (_processCodesWithNone == null)
+                {
+                    // Add the <None> code to the beginning of the list.
+                    _processCodesWithNone = new HluDataSet.lut_processRow[] { _noneProcessRow }.Concat(_processCodes).ToArray();
+                }
+
+                return _processCodesWithNone;
+            }
         }
 
         /// <summary>
@@ -940,14 +992,21 @@ namespace HLU.UI.ViewModel
             }
             set
             {
-                // Return if the value hasn't changed.
-                if (String.Equals(_process, value, StringComparison.Ordinal))
-                    return;
+                // If the process hs changed
+                if (_process != value)
+                {
+                    _process = value;
+                    OnPropertyChanged(nameof(Process));
 
-                _process = value;
+                    // Update the toolbar combo box
+                    ProcessComboBox.GetInstance()?.SetSelectedItem(_process);
 
-                // Update the WorkMode flag for whether reason and process have been selected.
-                UpdateReasonAndProcessFlag();
+                    // Refresh both the cached split and merge enablement values.
+                    RefreshSplitMergeEnablement();
+
+                    // Update the work mode flag
+                    UpdateReasonAndProcessFlag();
+                }
             }
         }
 
@@ -963,13 +1022,17 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                //TODO: value never reset to true once false.
-                if ((IsNotBulkMode && IsNotOsmmReviewMode) && IncidCurrentRow == null)
-                    _reasonProcessEnabled = false;
+                // Enable when not in bulk/OSMM mode AND there is a current row
+                // Disable when not in bulk/OSMM mode AND there is NO current row
+                if (IsNotBulkMode && IsNotOsmmReviewMode)
+                    _reasonProcessEnabled = IncidCurrentRow != null;
 
                 return _reasonProcessEnabled;
             }
-            set { _reasonProcessEnabled = value; }
+            set
+            {
+                _reasonProcessEnabled = value;
+            }
         }
 
         /// <summary>
@@ -6424,11 +6487,14 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Raises property change notifications for reason and process-related properties to update data bindings.
+        /// Raises property change notifications for reason and process-related properties to update
+        /// data bindings.
         /// </summary>
-        /// <remarks>Call this method to ensure that UI elements or other listeners are notified when
-        /// header properties have changed. This is typically used in data-binding scenarios to refresh displayed values
-        /// after underlying data is modified.</remarks>
+        /// <remarks>
+        /// Call this method to ensure that UI elements or other listeners are notified when reason
+        /// or process properties have changed. This is typically used in data-binding scenarios to
+        /// refresh displayed values after underlying data is modified.
+        /// </remarks>
         public void RefreshReasonProcess()
         {
             OnPropertyChanged(nameof(Reason));
@@ -6436,14 +6502,39 @@ namespace HLU.UI.ViewModel
 
             // Refresh both the cached split and merge enablement values.
             RefreshSplitMergeEnablement();
+
+            // Check for errors in the toolbar combo boxes
+            var reasonComboBox = ReasonComboBox.GetInstance();
+            var processComboBox = ProcessComboBox.GetInstance();
+
+            // Show the error if either is found
+            if (reasonComboBox?.HasError == true || processComboBox?.HasError == true)
+            {
+                string errorMsg = "";
+                if (reasonComboBox?.HasError == true)
+                    errorMsg += reasonComboBox.ErrorMessage;
+                if (processComboBox?.HasError == true)
+                {
+                    if (!string.IsNullOrEmpty(errorMsg))
+                        errorMsg += "; ";
+                    errorMsg += processComboBox.ErrorMessage;
+                }
+                ShowMessage(errorMsg, MessageType.Warning);
+            }
+            else
+            {
+                ClearMessage();
+            }
         }
 
         /// <summary>
         /// Raises property change notifications for header-related properties to update data bindings.
         /// </summary>
-        /// <remarks>Call this method to ensure that UI elements or other listeners are notified when
-        /// header properties have changed. This is typically used in data-binding scenarios to refresh displayed values
-        /// after underlying data is modified.</remarks>
+        /// <remarks>
+        /// Call this method to ensure that UI elements or other listeners are notified when header
+        /// properties have changed. This is typically used in data-binding scenarios to refresh
+        /// displayed values after underlying data is modified.
+        /// </remarks>
         private void RefreshHeader()
         {
             OnPropertyChanged(nameof(Incid));

@@ -69,7 +69,7 @@
 				</group>
 
 				<!-- Edit group -->
-				<group id="HLUTool_Group_Edit" caption="Edit" keytip="G2">
+				<group id="HLUTool_Group_Edit" caption="Edit" keytip="G2" launcherButtonID="HLUTool_btnUpdatesOptionsLauncher">
 					<comboBox refID="HLUTool_cmbActiveLayer" size="middle" />
 					<comboBox refID="HLUTool_cmbReason" size="middle" />
 					<comboBox refID="HLUTool_cmbProcess" size="middle" />
@@ -104,7 +104,7 @@
 				</group>
 
 				<!-- Split/Merge group -->
-				<group id="HLUTool_Group_SplitMerge" caption="Split/Merge" keytip="G7" launcherButtonID="HLUTool_btnSplitMergeOptionsLauncher">
+				<group id="HLUTool_Group_SplitMerge" caption="Split/Merge" keytip="G7" launcherButtonID="HLUTool_btnUpdatesOptionsLauncher">
 					<dynamicMenu refID="HLUTool_SplitMenu" size="large" />
 					<dynamicMenu refID="HLUTool_MergeMenu" size="large" />
 				</group>
@@ -252,7 +252,7 @@
 						  resizable="true"
 						  keytip="RC">
 					<tooltip heading="Reason">
-						Select the reason for upcoming updates.
+						Select the reason for attribute updates.
 						<disabledText>Available only when not in a bulk or OSMM update mode.</disabledText>
 					</tooltip>
 				</comboBox>
@@ -268,7 +268,7 @@
 						  resizable="true"
 						  keytip="PC">
 					<tooltip heading="Process">
-						Select the process for upcoming updates.
+						Select the process for attribute updates.
 						<disabledText>Available only when not in a bulk or OSMM update mode.</disabledText>
 					</tooltip>
 				</comboBox>
@@ -404,16 +404,16 @@
 					</tooltip>
 				</button>
 
-				<!-- Launcher button for Split/Merge group options -->
-				<button id="HLUTool_btnSplitMergeOptionsLauncher"
-						caption="Export Options"
-						className="HLU.UI.UserControls.Toolbar.SplitMergeOptionsLauncherButton"
+				<!-- Launcher button for updates group options -->
+				<button id="HLUTool_btnUpdatesOptionsLauncher"
+						caption="Updates Options"
+						className="HLU.UI.UserControls.Toolbar.UpdatesOptionsLauncherButton"
 						loadOnClick="true"
-						keytip="EO"
+						keytip="UO"
 						smallImage="pack://application:,,,/HLUTool;component/Images/Options16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/Options32.png">
-					<tooltip heading="Export Split/Merge">
-						Open Options window to configure split/merge settings
+					<tooltip heading="Updates Options">
+						Open Options window to configure updates settings
 					</tooltip>
 				</button>
 

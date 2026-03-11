@@ -10,9 +10,9 @@ using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 namespace HLU.UI.UserControls.Toolbar
 {
     /// <summary>
-    /// Launcher button to open the Options window on the Split/Merge tab.
+    /// Launcher button to open the Options window on the updates tab.
     /// </summary>
-    internal class SplitMergeOptionsLauncherButton : Button
+    internal class UpdatesOptionsLauncherButton : Button
     {
         private WindowOptions _windowOptions;
         private ViewModelWindowOptions _viewModelOptions;
@@ -42,6 +42,8 @@ namespace HLU.UI.UserControls.Toolbar
 
                     // Initialize the ViewModel for the options window, passing necessary data from the main ViewModel
                     _viewModelOptions = new(
+                        reasonCodes: _viewModel.ReasonCodes,
+                        processCodes: _viewModel.ProcessCodes,
                         habitatClasses: _viewModel.HabitatClasses,
                         secondaryGroupsAll: _viewModel.SecondaryGroupCodesWithAll
                     )
@@ -49,13 +51,13 @@ namespace HLU.UI.UserControls.Toolbar
                         DisplayName = "Options"
                     };
 
-                    // Set the selected tab to "Split/Merge" in the User category
-                    var splitMergeTab = _viewModelOptions.NavigationItems
-                        .FirstOrDefault(n => n.Category == "User" && n.Name == "Split/Merge");
+                    // Set the selected tab to "Updates" in the User category
+                    var updatesTab = _viewModelOptions.NavigationItems
+                        .FirstOrDefault(n => n.Category == "User" && n.Name == "Updates");
 
-                    // If the Split/Merge tab is found, set it as the selected view
-                    if (splitMergeTab != null)
-                        _viewModelOptions.SelectedView = splitMergeTab;
+                    // If the Updates tab is found, set it as the selected view
+                    if (updatesTab != null)
+                        _viewModelOptions.SelectedView = updatesTab;
 
                     // Subscribe to the RequestClose event to handle closing the options window and applying settings if needed
                     _viewModelOptions.RequestClose += (applySettings) =>

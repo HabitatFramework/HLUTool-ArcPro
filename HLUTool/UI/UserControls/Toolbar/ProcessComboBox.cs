@@ -52,11 +52,20 @@ namespace HLU.UI.UserControls.Toolbar
 
             // Initialize the ComboBox (if it's not already).
             Initialize();
+
+            // Sync with ViewModel's current Process value (if it's already set)
+            if (!string.IsNullOrEmpty(_viewModel?.Process))
+            {
+                SetSelectedItem(_viewModel.Process);
+            }
+
+            // Update error state on initialization
+            UpdateErrorState();
         }
 
         #endregion Constructor
 
-        #region Methods
+        #region Overrides and Public Methods
 
         /// <summary>
         /// Gets the instance of the ProcessComboBox.
@@ -88,6 +97,9 @@ namespace HLU.UI.UserControls.Toolbar
             // Enable or disable the ComboBox based on ReasonProcessEnabled and main grid visibility.
             bool reasonProcessEnabled = _viewModel.ReasonProcessEnabled && _viewModel.GridMainVisibility == Visibility.Visible;
             Enabled = reasonProcessEnabled;
+
+            // Update error state periodically to catch any changes
+            UpdateErrorState();
         }
 
         /// <summary>
@@ -182,6 +194,100 @@ namespace HLU.UI.UserControls.Toolbar
             _viewModel?.RefreshReasonProcess();
         }
 
-        #endregion Methods
+        /// <summary>
+        /// Sets the selected item in the ComboBox based on the process code.
+        /// </summary>
+        /// <param name="processCode">The code of the process to select.</param>
+        public void SetSelectedItem(string processCode)
+        {
+            if (string.IsNullOrEmpty(processCode))
+            {
+                SelectedItem = null;
+
+                // Update error state when clearing selection
+                UpdateErrorState();
+
+                return;
+            }
+
+            // Find the matching process code in the ViewModel
+            var matchingProcess = _viewModel?.ProcessCodes?.FirstOrDefault(p =>
+                string.Equals(p.code, processCode, StringComparison.Ordinal));
+
+            if (matchingProcess != null)
+            {
+                // Find the ComboBox item by matching the description
+                var item = ItemCollection.FirstOrDefault(i =>
+                    string.Equals((i as ComboBoxItem)?.Text, matchingProcess.description, StringComparison.Ordinal));
+
+                if (item != null)
+                {
+                    // Temporarily store the previous value to prevent circular updates
+                    string temp = _previousProcess;
+                    _previousProcess = matchingProcess.description;
+
+                    // Set the selected item
+                    SelectedItem = item;
+
+                    // Restore if the selection failed
+                    if (SelectedItem != item)
+                        _previousProcess = temp;
+                }
+            }
+
+            // Update error state when clearing selection
+            UpdateErrorState();
+        }
+
+        /// <summary>
+        /// Updates the error state and tooltip for the ComboBox.
+        /// </summary>
+        private void UpdateErrorState()
+        {
+            // Set the tooltip based on error state
+            if (HasError)
+            {
+                Tooltip = ErrorMessage;
+            }
+            else
+            {
+                Tooltip = "Select the process for attribute updates";
+            }
+        }
+
+        #endregion Overrides and Public Methods
+
+        #region Validation
+
+        /// <summary>
+        /// Gets the error message for the current process selection, if any.
+        /// </summary>
+        /// <value>The error message, or null if there is no error.</value>
+        public string ErrorMessage
+        {
+            get
+            {
+                // Check if the process is required but not set
+                if (_viewModel != null && _viewModel.ReasonProcessEnabled)
+                {
+                    if (string.IsNullOrEmpty(_viewModel.Process))
+                        return "Process is required for updates";
+                }
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether there is an error with the current process selection.
+        /// </summary>
+        /// <value><c>true</c> if there is an error; otherwise, <c>false</c>.</value>
+        public bool HasError
+        {
+            get
+            {
+                return !string.IsNullOrEmpty(ErrorMessage);
+            }
+        }
+        #endregion Validation
     }
 }

@@ -168,6 +168,8 @@ namespace HLU.UI.ViewModel
         // Updates options
         private int _subsetUpdateAction;
         private string _clearIHSUpdateAction;
+        private string _defaultReason;
+        private string _defaultProcess;
         private bool _notifyOnSplitMerge;
         private bool _resetOSMMUpdatesStatus;
         private int _habitatSecondaryCodeValidation;
@@ -186,7 +188,9 @@ namespace HLU.UI.ViewModel
         #region Fields - Lookup Tables
 
         private HluDataSet.lut_reasonRow[] _reasonCodes;
+        private HluDataSet.lut_reasonRow[] _reasonCodesWithNone;
         private HluDataSet.lut_processRow[] _processCodes;
+        private HluDataSet.lut_processRow[] _processCodesWithNone;
         private HluDataSet.lut_quality_determinationRow[] _qualityDeterminationCodes;
         private HluDataSet.lut_quality_interpretationRow[] _qualityInterpretationCodes;
 
@@ -254,6 +258,9 @@ namespace HLU.UI.ViewModel
         private string _codeDeleteRow;
         private HluDataSet.lut_secondary_groupRow _allRow;
         private HluDataSet.lut_secondary_groupRow _allEssRow;
+
+        private HluDataSet.lut_reasonRow _noneReasonRow;
+        private HluDataSet.lut_processRow _noneProcessRow;
 
         private string _processingMsg = "Processing ...";
         private bool _saved = false;
@@ -1857,6 +1864,7 @@ namespace HLU.UI.ViewModel
                 {
                     _allRow = HluDataset.lut_secondary_group.Newlut_secondary_groupRow();
                     _allRow.code = "<All>";
+                    _allRow.is_local = true;
                     _allRow.description = "<All>";
                     _allRow.sort_order = -1;
                 }
@@ -1866,8 +1874,27 @@ namespace HLU.UI.ViewModel
                 {
                     _allEssRow = HluDataset.lut_secondary_group.Newlut_secondary_groupRow();
                     _allEssRow.code = "<All Essentials>";
+                    _allEssRow.is_local = true;
                     _allEssRow.description = "<All Essentials>";
                     _allEssRow.sort_order = -1;
+                }
+
+                // Set the <None> reason row
+                if (_noneReasonRow == null)
+                {
+                    _noneReasonRow = HluDataset.lut_reason.Newlut_reasonRow();
+                    _noneReasonRow.code = "<None>";
+                    _noneReasonRow.description = "<None>";
+                    _noneReasonRow.sort_order = -1;
+                }
+
+                // Set the <None> process row
+                if (_noneProcessRow == null)
+                {
+                    _noneProcessRow = HluDataset.lut_process.Newlut_processRow();
+                    _noneProcessRow.code = "<None>";
+                    _noneProcessRow.description = "<None>";
+                    _noneProcessRow.sort_order = -1;
                 }
 
                 // Wire up event handler for copy switches
@@ -1905,6 +1932,13 @@ namespace HLU.UI.ViewModel
 
                 // Set the validation option for potential priority habitats
                 BapEnvironment.PotentialPriorityDetermQtyValidation = _potentialPriorityDetermQtyValidation;
+
+                // Set default reason and process from settings and update toolbar combo boxes
+                if (!String.IsNullOrWhiteSpace(_defaultReason) && _defaultReason != "<None>")
+                    Reason = _defaultReason;
+
+                if (!String.IsNullOrWhiteSpace(_defaultProcess) && _defaultProcess != "<None>")
+                    Process = _defaultProcess;
 
                 // Force all ribbon controls to re-evaluate their enabled state
                 RefreshRibbonControls();
@@ -3054,6 +3088,14 @@ namespace HLU.UI.ViewModel
                 OnPropertyChanged(nameof(HabitatClass));
             }
 
+            // Set the default reason for updates if not already set.
+            if ((String.IsNullOrWhiteSpace(Reason)) && (_defaultReason != "<None>"))
+                Reason = _defaultReason;
+
+            // Set the default process for updates if not already set.
+            if ((String.IsNullOrWhiteSpace(Process)) && (_defaultProcess != "<None>"))
+                Process = _defaultProcess;
+
             // Refresh the user interface
             RefreshGroupHeaders();
 
@@ -3144,6 +3186,8 @@ namespace HLU.UI.ViewModel
             _secondaryCodeOrder = Settings.Default.SecondaryCodeOrder;
 
             // Get user updates options
+            _defaultReason = Settings.Default.DefaultReason;
+            _defaultProcess = Settings.Default.DefaultProcess;
             _notifyOnSplitMerge = Settings.Default.NotifyOnSplitMerge;
         }
 

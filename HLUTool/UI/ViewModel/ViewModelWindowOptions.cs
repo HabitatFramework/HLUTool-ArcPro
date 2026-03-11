@@ -75,9 +75,6 @@ namespace HLU.UI.ViewModel
         private HluDataSet.incid_mm_polygonsDataTable _incidMMPolygonsTable = new();
         private List<int> _gisIDColumnOrdinals;
 
-        private readonly HluDataSet.lut_habitat_classRow[] _habitatClasses;
-        private readonly HluDataSet.lut_secondary_groupRow[] _secondaryGroupsAll;
-
         // Application Database options
         private int? _dbConnectionTimeout;
         private int? _incidTablePageSize;
@@ -89,11 +86,13 @@ namespace HLU.UI.ViewModel
         private string _seasonWinter;
         private string _vagueDateDelimiter;
 
-        // Application Updates options
+        // Application Validation options
         private int _habitatSecondaryCodeValidation;
         private int _primarySecondaryCodeValidation;
         private int _qualityValidation;
         private int _potentialPriorityDetermQtyValidation;
+
+        // Application Updates options
         private int? _subsetUpdateAction;
         private string[] _clearIHSUpdateActions;
         private string _clearIHSUpdateAction;
@@ -136,7 +135,9 @@ namespace HLU.UI.ViewModel
         private string[] _secondaryCodeOrderOptions;
         private string _secondaryCodeOrder;
 
-        // User Split/MErge options
+        // User Update options
+        private string _defaultReason;
+        private string _defaultProcess;
         private bool _notifyOnSplitMerge;
 
         // User SQL options
@@ -164,9 +165,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="habitatClasses">The habitat classes to be used in the options window.</param>
         /// <param name="secondaryGroupsAll">The secondary groups to be used in the options window.</param>
-        public ViewModelWindowOptions(
-            HluDataSet.lut_habitat_classRow[] habitatClasses,
-            HluDataSet.lut_secondary_groupRow[] secondaryGroupsAll)
+        public ViewModelWindowOptions()
         {
            // Get the dockpane DAML id.
            DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
@@ -183,10 +182,6 @@ namespace HLU.UI.ViewModel
             _gisIDColumnOrdinals = Settings.Default.GisIDColumnOrdinals.Cast<string>()
                 .Select(s => Int32.Parse(s)).ToList();
 
-            // Set the readonly collections from the constructor parameters.
-            _habitatClasses = habitatClasses;
-            _secondaryGroupsAll = secondaryGroupsAll;
-
             // Set the application database options
             _dbConnectionTimeout = _addInSettings.DbConnectionTimeout;
             _incidTablePageSize = _addInSettings.IncidTablePageSize;
@@ -198,11 +193,13 @@ namespace HLU.UI.ViewModel
             _seasonWinter = _addInSettings.SeasonNames[3];
             _vagueDateDelimiter = _addInSettings.VagueDateDelimiter;
 
-            // Set the application updates options
+            // Set the application validation options
             _habitatSecondaryCodeValidation = _addInSettings.HabitatSecondaryCodeValidation;
             _primarySecondaryCodeValidation = _addInSettings.PrimarySecondaryCodeValidation;
             _qualityValidation = _addInSettings.QualityValidation;
             _potentialPriorityDetermQtyValidation = _addInSettings.PotentialPriorityDetermQtyValidation;
+
+            // Set the application updates options
             _subsetUpdateAction = _addInSettings.SubsetUpdateAction;
             _clearIHSUpdateAction = _addInSettings.ClearIHSUpdateAction;
             _secondaryCodeDelimiter = _addInSettings.SecondaryCodeDelimiter;
@@ -260,7 +257,9 @@ namespace HLU.UI.ViewModel
             _preferredSecondaryGroup = Settings.Default.PreferredSecondaryGroup;
             _secondaryCodeOrder = Settings.Default.SecondaryCodeOrder;
 
-            // Set the user Split/Merge options
+            // Set the user update options
+            _defaultReason = Settings.Default.DefaultReason;
+            _defaultProcess = Settings.Default.DefaultProcess;
             _notifyOnSplitMerge = Settings.Default.NotifyOnSplitMerge;
 
             // Set the user SQL options
@@ -281,7 +280,7 @@ namespace HLU.UI.ViewModel
                 new () { Name = "Bulk Update", Category = "Application", Content = new AppBulkUpdateOptions() },
                 new () { Name = "Interface", Category = "User", Content = new UserInterfaceOptions() },
                 new () { Name = "GIS", Category = "User", Content = new UserGISOptions() },
-                new () { Name = "Split/Merge", Category = "User", Content = new UserSplitMergeOptions() },
+                new () { Name = "Updates", Category = "User", Content = new UserUpdatesOptions() },
                 new () { Name = "SQL", Category = "User", Content = new UserSQLOptions() },
                 new () { Name = "History", Category = "User", Content = new UserHistoryOptions() },
                 new () { Name = "Export", Category = "User", Content = new UserExportOptions() }
@@ -485,15 +484,15 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets the hyperlink for the user split/merge help page, which is constructed from
-        /// the base help URL and the specific help page for the user split/merge options.
+        /// Gets the hyperlink for the user updates help page, which is constructed from
+        /// the base help URL and the specific help page for the user updates options.
         /// </summary>
-        /// <value>The hyperlink for the user split/merge help page.</value>
-        public Uri Hyperlink_UserSplitMergeHelp
+        /// <value>The hyperlink for the user updates help page.</value>
+        public Uri Hyperlink_UserUpdatesHelp
         {
             get
             {
-                if (Uri.TryCreate(string.Format("{0}/{1}", _addInSettings.HelpURL, _addInSettings.HelpPages.UserSplitMerge), UriKind.Absolute, out Uri uri))
+                if (Uri.TryCreate(string.Format("{0}/{1}", _addInSettings.HelpURL, _addInSettings.HelpPages.UserUpdates), UriKind.Absolute, out Uri uri))
                     return uri;
                 else
                     return null;
@@ -663,11 +662,13 @@ namespace HLU.UI.ViewModel
             _addInSettings.SeasonNames[3] = _seasonWinter;
             _addInSettings.VagueDateDelimiter = _vagueDateDelimiter;
 
-            // Update add-in updates options
+            // Update add-in validation options
             _addInSettings.HabitatSecondaryCodeValidation = _habitatSecondaryCodeValidation;
             _addInSettings.PrimarySecondaryCodeValidation = _primarySecondaryCodeValidation;
             _addInSettings.QualityValidation = _qualityValidation;
             _addInSettings.PotentialPriorityDetermQtyValidation = _potentialPriorityDetermQtyValidation;
+
+            // Update add-in updates options
             _addInSettings.SubsetUpdateAction = (int)_subsetUpdateAction;
             _addInSettings.ClearIHSUpdateAction = _clearIHSUpdateAction;
             _addInSettings.SecondaryCodeDelimiter = _secondaryCodeDelimiter;
@@ -731,7 +732,9 @@ namespace HLU.UI.ViewModel
             // Update user export options
             Settings.Default.ExportPath = _exportPath;
 
-            // Update user split/merge options
+            // Update user update options
+            Settings.Default.DefaultReason = _defaultReason;
+            Settings.Default.DefaultProcess = _defaultProcess;
             Settings.Default.NotifyOnSplitMerge = _notifyOnSplitMerge;
 
             // Save changes to the settings.
@@ -867,528 +870,379 @@ namespace HLU.UI.ViewModel
 
         #endregion Application Database
 
-        #region User GIS
+        #region Application Date
 
         /// <summary>
-        /// Gets the auto zoom selection options.
+        /// Gets or sets the season name for spring.
         /// </summary>
-        /// <value>
-        /// The auto zoom selection options.
+        /// <value></value>
+        /// The season name for spring.
         /// </value>
-        public string[] AutoZoomToSelectionOptions
+        public string SeasonSpring
         {
             get
             {
-                if (_autoZoomToSelectionOptions == null)
-                {
-                    _autoZoomToSelectionOptions = Settings.Default.AutoZoomToSelectionOptions.Cast<string>().ToArray();
-                }
-
-                return _autoZoomToSelectionOptions;
+                return _seasonSpring;
             }
-        }
-
-        /// <summary>
-        /// Gets or sets the auto zoom selection choice.
-        /// </summary>
-        /// <value>
-        /// The auto zoom selection choice.
-        /// </value>
-        public string AutoZoomToSelectionOption
-        {
-            get { return _autoZoomToSelection; }
             set
             {
-                _autoZoomToSelection = value;
-                OnPropertyChanged(nameof(AutoZoomToSelectionOption));
+                _seasonSpring = value;
+                OnPropertyChanged(nameof(SeasonSpring));
                 NotifyNavigationItemErrorsChanged();
             }
         }
 
         /// <summary>
-        /// Converts an AutoZooToSelection enum to the display string.
+        /// Gets or sets the season name for summer.
         /// </summary>
-        /// <param name="value">The AutoZoomToSelection enum value.</param>
-        /// <returns>The display string corresponding to the enum value.</returns>
-        private string AutoZoomToSelectionString(AutoZoomToSelection value)
-        {
-            return value switch
-            {
-                AutoZoomToSelection.Off => "Off",
-                AutoZoomToSelection.When => "When out of view",
-                AutoZoomToSelection.Always => "Always",
-                _ => "Off"
-            };
-        }
-
-        /// <summary>
-        /// Converts a display string to an AutoZoomToSelection enum.
-        /// </summary>
-        /// <param name="value">The display string value.</param>
-        /// <returns>The corresponding AutoZoomToSelection enum value.</returns>
-        private static AutoZoomToSelection AutoZoomToSelectionEnum(string value)
-        {
-            return value switch
-            {
-                "Off" => AutoZoomToSelection.Off,
-                "When out of view" => AutoZoomToSelection.When,
-                "Always" => AutoZoomToSelection.Always,
-                _ => AutoZoomToSelection.Off
-            };
-        }
-
-        /// <summary>
-        /// Gets the default minimum auto zoom scale text.
-        /// </summary>
-        /// <value>
-        /// The Minimum auto zoom scale text.
+        /// <value></valiue>
+        /// The season name for summer.
         /// </value>
-        public string MinAutoZoomText
+        public string SeasonSummer
         {
             get
             {
-                string distUnits = Settings.Default.MapDistanceUnits;
-                return string.Format("Minimum Auto Zoom [{0}]", distUnits);
+                return _seasonSummer;
             }
-        }
-
-        /// <summary>
-        /// Gets or sets the default minimum auto zoom scale.
-        /// </summary>
-        /// <value>
-        /// The Minimum auto zoom scale.
-        /// </value>
-        public int? MinAutoZoom
-        {
-            get { return _minAutoZoom; }
             set
             {
-                _minAutoZoom = value;
-                OnPropertyChanged(nameof(MinAutoZoom));
+                _seasonSummer = value;
+                OnPropertyChanged(nameof(SeasonSummer));
                 NotifyNavigationItemErrorsChanged();
             }
         }
 
         /// <summary>
-        /// Gets the default maximum auto zoom scale.
+        /// Gets or sets the season name for autumn.
         /// </summary>
-        /// <value>
-        /// The Maximum auto zoom scale.
+        /// <value></value>
+        /// The season name for autumn.
         /// </value>
-        public int MaxAutoZoom
-        {
-            get { return _maxAutoZoom; }
-        }
-
-        /// <summary>
-        /// Gets or sets the maximum number of features at which to warn the user before selecting.
-        /// </summary>
-        /// <value>The maximum number of features at which to warn the user before selecting.</value>
-        public int? MaxFeaturesGISSelect
-        {
-            get { return _maxFeaturesGISSelect; }
-            set
-            {
-                _maxFeaturesGISSelect = value;
-                OnPropertyChanged(nameof(MaxFeaturesGISSelect));
-                NotifyNavigationItemErrorsChanged();
-            }
-        }
-
-        /// <summary>
-        /// Get the working File GDB path command.
-        /// </summary>
-        /// <value>
-        /// The browse working File GDB path command.
-        /// </value>
-        public ICommand BrowseWorkingFileGDBPathCommand
+        public string SeasonAutumn
         {
             get
             {
-                if (_browseWorkingFileGDBPathCommand == null)
-                {
-                    Action<object> browseWorkingFileGDBPathAction = new(this.BrowseWorkingFileGDBPathClicked);
-                    _browseWorkingFileGDBPathCommand = new RelayCommand(browseWorkingFileGDBPathAction);
-                }
-
-                return _browseWorkingFileGDBPathCommand;
+                return _seasonAutumn;
             }
-        }
-
-        /// <summary>
-        /// Action when the browse working File GDB path button is clicked.
-        /// </summary>
-        /// <param name="param">The parameter passed to the command.</param>
-        private void BrowseWorkingFileGDBPathClicked(object param)
-        {
-            _bakWorkingFileGDBPath = _workingFileGDBPath;
-            WorkingFileGDBPath = String.Empty;
-            WorkingFileGDBPath = GetWorkingFileGDBPath();
-
-            if (String.IsNullOrEmpty(WorkingFileGDBPath))
-            {
-                WorkingFileGDBPath = _bakWorkingFileGDBPath;
-            }
-            OnPropertyChanged(nameof(WorkingFileGDBPath));
-        }
-
-        /// <summary>
-        /// Gets or sets the working File GDB path.
-        /// </summary>
-        /// <value>
-        /// The working File GDB path.
-        /// </value>
-        public string WorkingFileGDBPath
-        {
-            get { return _workingFileGDBPath; }
             set
             {
-                _workingFileGDBPath = value;
-                OnPropertyChanged(nameof(WorkingFileGDBPath));
+                _seasonAutumn = value;
+                OnPropertyChanged(nameof(SeasonAutumn));
                 NotifyNavigationItemErrorsChanged();
             }
         }
 
         /// <summary>
-        /// Prompt the user to set the working File GDB path.
+        /// Gets or sets the season name for winter.
         /// </summary>
-        /// <returns>The selected working File GDB path, or null if no path was selected.</returns>
-        public static string GetWorkingFileGDBPath()
-        {
-            try
-            {
-                string workingFileGDBPath = Settings.Default.WorkingFileGDBPath;
-
-                FolderBrowserDialog openFolderDlg = new()
-                {
-                    Description = "Select Working File GDB Directory",
-                    UseDescriptionForTitle = true,
-                    SelectedPath = workingFileGDBPath,
-                    ShowNewFolderButton = true
-                };
-                if (openFolderDlg.ShowDialog() == DialogResult.OK)
-                {
-                    if (Directory.Exists(openFolderDlg.SelectedPath))
-                        return openFolderDlg.SelectedPath;
-                }
-            }
-            catch { }
-
-            return null;
-        }
-
-        #endregion User GIS
-
-        #region User History
-
-        /// <summary>
-        /// Gets or sets the list of history columns.
-        /// </summary>
-        /// <value>The list of history columns.</value>
-        public SelectionList<string> HistoryColumns
-        {
-            get { return _historyColumns; }
-            set
-            {
-                _historyColumns = value;
-                OnPropertyChanged(nameof(HistoryColumns));
-                NotifyNavigationItemErrorsChanged();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the number of history entries to display.
-        /// </summary>
-        /// <value>The number of history entries to display.</value>
-        public int? HistoryDisplayLastN
-        {
-            get { return _historyDisplayLastN; }
-            set
-            {
-                _historyDisplayLastN = value;
-                OnPropertyChanged(nameof(HistoryDisplayLastN));
-                NotifyNavigationItemErrorsChanged();
-            }
-        }
-
-        /// <summary>
-        /// Gets the maximum number of history entries to display.
-        /// </summary>
-        /// <value>The maximum number of history entries to display.</value>
-        public int MaxHistoryDisplayLastN
-        {
-            get { return 50; }
-        }
-
-        #endregion User History
-
-        #region User Interface
-
-        /// <summary>
-        /// Gets the list of possible habitat class codes.
-        /// </summary>
-        /// <value>
-        /// The list of possible habitat class codes.
+        /// <value></value>
+        /// The season name for winter.
         /// </value>
-        public HluDataSet.lut_habitat_classRow[] HabitatClassCodes
-        {
-            get { return _habitatClasses; }
-        }
-
-        /// <summary>
-        /// Gets or sets the preferred habitat class.
-        /// </summary>
-        /// <value>
-        /// The preferred habitat class.
-        /// </value>
-        public string PreferredHabitatClass
+        public string SeasonWinter
         {
             get
             {
-                var q = HabitatClassCodes.Where(h => h.code == _preferredHabitatClass);
-                if (q.Any())
-                    return _preferredHabitatClass;
-                else
-                    return null;
+                return _seasonWinter;
             }
             set
             {
-                _preferredHabitatClass = value;
-                OnPropertyChanged(nameof(PreferredHabitatClass ));
+                _seasonWinter = value;
+                OnPropertyChanged(nameof(SeasonWinter));
                 NotifyNavigationItemErrorsChanged();
             }
         }
 
         /// <summary>
-        /// Gets or sets the preferred option to show or hide group headers.
+        /// Gets or sets the delimiter used for vague dates.
+        /// </summary>
+        /// <value></value>
+        /// The delimiter used for vague dates.
+        /// </value>
+        public string VagueDateDelimiter
+        {
+            get
+            {
+                return _vagueDateDelimiter;
+            }
+            set
+            {
+                if (value != CultureInfo.CurrentCulture.DateTimeFormat.DateSeparator)
+                    _vagueDateDelimiter = value;
+            }
+        }
+
+        #endregion Application Date
+
+        #region Application Bulk Update
+
+        /// <summary>
+        /// Gets whether the user has authority to perform bulk updates.
         /// </summary>
         /// <value>
-        /// The preferred option for showing or hidding group headers.
+        /// True if the user has bulk update authority; otherwise, false.
         /// </value>
-        public bool ShowGroupHeaders
+        public bool CanBulkUpdate
         {
-            get { return _showGroupHeaders; }
-            set
+            get
             {
-                _showGroupHeaders = value;
-                OnPropertyChanged(nameof(ShowGroupHeaders));
-                NotifyNavigationItemErrorsChanged();
+                return _viewModelMain.CanUserBulkUpdate;
             }
         }
 
         /// <summary>
-        /// Gets or sets the preferred option to show or hide the IHS tab.
+        /// Gets or sets the default option to delete invalid secondary
+        /// codes when applying bulk updates.
         /// </summary>
         /// <value>
-        /// The preferred option for showing or hiding the IHS tab.
+        /// The default option for deleting invalid secondary codes.
         /// </value>
-        public bool ShowIHSTab
+        public bool BulkDeleteSecondaryCodes
         {
-            get { return _showIHSTab; }
+            get
+            {
+                return _bulkDeleteSecondaryCodes;
+            }
             set
             {
-                _showIHSTab = value;
-                OnPropertyChanged(nameof(ShowIHSTab));
+                _bulkDeleteSecondaryCodes = value;
+                OnPropertyChanged(nameof(BulkDeleteSecondaryCodes));
                 NotifyNavigationItemErrorsChanged();
             }
         }
 
         /// <summary>
-        /// Gets or sets the preferred option to show or hide habitat categories.
+        /// Gets or sets the default option to delete orphan bap habitats
+        /// when applying bulk updates.
         /// </summary>
         /// <value>
-        /// The preferred option for showing or hidding habitat categories.
+        /// The default option for deleting orphan bap habitats.
         /// </value>
-        public bool ShowSourceHabitatGroup
+        public bool BulkDeleteOrphanBapHabitats
         {
-            get { return _showSourceHabitatGroup; }
+            get
+            {
+                return _bulkDeleteOrphanBapHabitats;
+            }
             set
             {
-                _showSourceHabitatGroup = value;
-                OnPropertyChanged(nameof(ShowSourceHabitatGroup));
+                _bulkDeleteOrphanBapHabitats = value;
+                OnPropertyChanged(nameof(BulkDeleteOrphanBapHabitats));
                 NotifyNavigationItemErrorsChanged();
             }
         }
 
         /// <summary>
-        /// Gets or sets the preferred option to show or hide habitat suggestions.
+        /// Gets or sets the default option to delete potential bap habitats
+        /// when applying bulk updates.
         /// </summary>
         /// <value>
-        /// The preferred option for showing or hidding habitat suggestions.
+        /// The default option for deleting potential bap habitats.
         /// </value>
-        public bool ShowHabitatSecondariesSuggested
+        public bool BulkDeletePotentialBapHabitats
         {
-            get { return _showHabitatSecondariesSuggested; }
+            get
+            {
+                return _bulkDeletePotentialBapHabitats;
+            }
             set
             {
-                _showHabitatSecondariesSuggested = value;
-                OnPropertyChanged(nameof(ShowHabitatSecondariesSuggested));
+                _bulkDeletePotentialBapHabitats = value;
+                OnPropertyChanged(nameof(BulkDeletePotentialBapHabitats));
                 NotifyNavigationItemErrorsChanged();
             }
         }
 
         /// <summary>
-        /// Gets or sets the preferred option to show or hide NVC Codes.
+        /// Gets or sets the default option to create history records
+        /// when applying bulk updates.
         /// </summary>
         /// <value>
-        /// The preferred option for showing or hidding NVC Codes.
+        /// The default option for creating history records.
         /// </value>
-        public bool ShowNVCCodes
+        public bool BulkCreateHistoryRecords
         {
-            get { return _showNVCCodes; }
+            get
+            {
+                return _bulkCreateHistoryRecords;
+            }
             set
             {
-                _showNVCCodes = value;
-                OnPropertyChanged(nameof(ShowNVCCodes));
+                _bulkCreateHistoryRecords = value;
+                OnPropertyChanged(nameof(BulkCreateHistoryRecords));
                 NotifyNavigationItemErrorsChanged();
             }
         }
 
         /// <summary>
-        /// Gets or sets the preferred option to show or hide habitat summary.
+        /// Gets or sets the default option to delete IHS codes
+        /// when applying bulk updates.
         /// </summary>
         /// <value>
-        /// The preferred option for showing or hidding habitat summary.
+        /// The default option for deleting IHS codes.
         /// </value>
-        public bool ShowHabitatSummary
+        public bool BulkDeleteIHSCodes
         {
-            get { return _showHabitatSummary; }
+            get
+            {
+                return _bulkDeleteIHSCodes;
+            }
             set
             {
-                _showHabitatSummary = value;
-                OnPropertyChanged(nameof(ShowHabitatSummary));
+                _bulkDeleteIHSCodes = value;
+                OnPropertyChanged(nameof(BulkDeleteIHSCodes));
                 NotifyNavigationItemErrorsChanged();
             }
         }
 
         /// <summary>
-        /// Gets the list of available show OSMM Update options from
-        /// the class.
+        /// Gets the list of determination qualities that
+        /// can be used when adding BAP habitats during an OSMM bulk
+        /// update.
+        /// </summary>
+        /// <value>
+        /// The list of determination qualities.
+        /// </value>
+        public HluDataSet.lut_quality_determinationRow[] BulkDeterminationQualityCodes
+        {
+            get
+            {
+                return _viewModelMain.BapDeterminationQualityCodesAuto;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the default option for the determination
+        /// quality when adding BAP habitats during an OSMM bulk
+        /// update.
+        /// </summary>
+        /// <value>
+        /// The default option for determination quality.
+        /// </value>
+        public string BulkDeterminationQuality
+        {
+            get
+            {
+                return _bulkDeterminationQuality;
+            }
+            set
+            {
+                _bulkDeterminationQuality = value;
+                OnPropertyChanged(nameof(BulkDeterminationQuality));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
+        /// Gets the list of interpretation qualities that
+        /// can be used when adding BAP habitats during an OSMM bulk
+        /// update.
+        /// </summary>
+        /// <value>
+        /// The list of interpretation qualities.
+        /// </value>
+        public HluDataSet.lut_quality_interpretationRow[] BulkInterpretationQualityCodes
+        {
+            get
+            {
+                return _viewModelMain.InterpretationQualityCodes;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the default option for the interpretation
+        /// quality when adding BAP habitats during an OSMM bulk
+        /// update.
+        /// </summary>
+        /// <value>
+        /// The default option for interpretation quality.
+        /// </value>
+        public string BulkInterpretationQuality
+        {
+            get
+            {
+                return _bulkInterpretationQuality;
+            }
+            set
+            {
+                _bulkInterpretationQuality = value;
+                OnPropertyChanged(nameof(BulkInterpretationQuality));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
+        /// Gets the list of source names.
+        /// </summary>
+        /// <value>
+        /// The list of source names.
+        /// </value>
+        public HluDataSet.lut_sourcesRow[] SourceNames
+        {
+            get
+            {
+                return _viewModelMain.SourceNames;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the default option for the OSMM
+        /// source name when performing OSMM bulk updates.
+        /// </summary>
+        /// <value>
+        /// The default option for the OSMM source name.
+        /// </value>
+        public int? OSMMSourceId
+        {
+            get
+            {
+                return _bulkOSMMSourceId;
+            }
+            set
+            {
+                _bulkOSMMSourceId = value;
+                OnPropertyChanged(nameof(OSMMSourceId));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        #endregion Application Bulk Update
+
+        #region Application Updates
+
+        /// <summary>
+        /// Gets the list of available subset update actions from the enum.
         /// </summary>
         /// <value>
         /// The list of subset update actions.
         /// </value>
-        public string[] ShowOSMMUpdatesOptions
+        public SubsetUpdateActions[] SubsetUpdateActions
         {
             get
             {
-                if (_showOSMMUpdatesOptions == null)
-                {
-                    _showOSMMUpdatesOptions = Settings.Default.ShowOSMMUpdatesOptions.Cast<string>().ToArray();
-                }
-
-                return _showOSMMUpdatesOptions;
+                return Enum.GetValues(typeof(SubsetUpdateActions)).Cast<SubsetUpdateActions>()
+                    .ToArray();
             }
         }
 
         /// <summary>
-        /// Gets or sets the preferred show OSMM Update option.
+        /// Gets or sets the preferred subset update action.
         /// </summary>
         /// <value>
-        /// The preferred show OSMM Update option.
+        /// The preferred subset update action.
         /// </value>
-        public string ShowOSMMUpdatesOption
-        {
-            get { return _showOSMMUpdatesOption; }
-            set
-            {
-                _showOSMMUpdatesOption = value;
-                OnPropertyChanged(nameof(ShowOSMMUpdatesOption));
-                NotifyNavigationItemErrorsChanged();
-            }
-        }
-
-        /// <summary>
-        /// Gets the list of secondary group codes.
-        /// </summary>
-        /// <value>
-        /// The list of secondary group codes.
-        /// </value>
-        public HluDataSet.lut_secondary_groupRow[] SecondaryGroupCodes
-        {
-            get { return _viewModelMain.SecondaryGroupCodesWithAll; }
-        }
-
-        /// <summary>
-        /// Gets or sets the preferred secondary group.
-        /// </summary>
-        /// <value>
-        /// The preferred secondary group.
-        /// </value>
-        public string PreferredSecondaryGroup
+        public SubsetUpdateActions? SubsetUpdateAction
         {
             get
             {
-                var q = SecondaryGroupCodes.Where(h => h.code == _preferredSecondaryGroup);
-                if (q.Any())
-                    return _preferredSecondaryGroup;
-                else
-                    return null;
+                return (SubsetUpdateActions)_subsetUpdateAction;
             }
             set
             {
-                _preferredSecondaryGroup = value;
-                OnPropertyChanged(nameof(PreferredSecondaryGroup));
+                _subsetUpdateAction = (int)value;
+                OnPropertyChanged(nameof(SubsetUpdateAction));
                 NotifyNavigationItemErrorsChanged();
             }
         }
-
-        /// <summary>
-        /// Gets the secondary code order options.
-        /// </summary>
-        /// <value>
-        /// The secondary code order options.
-        /// </value>
-        public string[] SecondaryCodeOrderOptions
-        {
-            get
-            {
-                if (_secondaryCodeOrderOptions == null)
-                {
-                    _secondaryCodeOrderOptions = Settings.Default.SecondaryCodeOrderOptions.Cast<string>().ToArray();
-                }
-
-                return _secondaryCodeOrderOptions;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the secondary code order choice.
-        /// </summary>
-        /// <value>
-        /// The secondary code order choice.
-        /// </value>
-        public string SecondaryCodeOrder
-        {
-            get { return _secondaryCodeOrder; }
-            set
-            {
-                _secondaryCodeOrder = value;
-                OnPropertyChanged(nameof(SecondaryCodeOrder));
-                NotifyNavigationItemErrorsChanged();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the secondary code delimiter.
-        /// </summary>
-        /// <value>
-        /// The secondary code delimiter.
-        /// </value>
-        public string SecondaryCodeDelimiter
-        {
-            get { return _secondaryCodeDelimiter; }
-            set
-            {
-                _secondaryCodeDelimiter = value;
-                OnPropertyChanged(nameof(SecondaryCodeDelimiter));
-                NotifyNavigationItemErrorsChanged();
-            }
-        }
-
-        #endregion User Interface
-
-        #region Application Updates
 
         /// <summary>
         /// Gets the clear IHS update actions.
@@ -1422,24 +1276,6 @@ namespace HLU.UI.ViewModel
             {
                 _clearIHSUpdateAction = value;
                 OnPropertyChanged(nameof(ClearIHSUpdateAction));
-                NotifyNavigationItemErrorsChanged();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the choice of whether the user will
-        /// be notified when a split or merge has completed.
-        /// </summary>
-        /// <value>
-        /// If the user will be notified after a split or merge.
-        /// </value>
-        public bool NotifyOnSplitMerge
-        {
-            get { return _notifyOnSplitMerge; }
-            set
-            {
-                _notifyOnSplitMerge = value;
-                OnPropertyChanged(nameof(NotifyOnSplitMerge));
                 NotifyNavigationItemErrorsChanged();
             }
         }
@@ -1592,41 +1428,621 @@ namespace HLU.UI.ViewModel
         }
         #endregion Application Updates
 
-        #region User Split/Merge
+        #region User Interface
 
         /// <summary>
-        /// Gets the list of available subset update actions from the enum.
+        /// Gets or sets the preferred option to show or hide group headers.
         /// </summary>
         /// <value>
-        /// The list of subset update actions.
+        /// The preferred option for showing or hidding group headers.
         /// </value>
-        public SubsetUpdateActions[] SubsetUpdateActions
+        public bool ShowGroupHeaders
         {
             get
             {
-                return Enum.GetValues(typeof(SubsetUpdateActions)).Cast<SubsetUpdateActions>()
-                    .ToArray();
+                return _showGroupHeaders;
             }
-        }
-
-        /// <summary>
-        /// Gets or sets the preferred subset update action.
-        /// </summary>
-        /// <value>
-        /// The preferred subset update action.
-        /// </value>
-        public SubsetUpdateActions? SubsetUpdateAction
-        {
-            get { return (SubsetUpdateActions)_subsetUpdateAction; }
             set
             {
-                _subsetUpdateAction = (int)value;
-                OnPropertyChanged(nameof(SubsetUpdateAction));
+                _showGroupHeaders = value;
+                OnPropertyChanged(nameof(ShowGroupHeaders));
                 NotifyNavigationItemErrorsChanged();
             }
         }
 
-        #endregion User Split/Merge
+        /// <summary>
+        /// Gets or sets the preferred option to show or hide the IHS tab.
+        /// </summary>
+        /// <value>
+        /// The preferred option for showing or hiding the IHS tab.
+        /// </value>
+        public bool ShowIHSTab
+        {
+            get
+            {
+                return _showIHSTab;
+            }
+            set
+            {
+                _showIHSTab = value;
+                OnPropertyChanged(nameof(ShowIHSTab));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the preferred option to show or hide habitat categories.
+        /// </summary>
+        /// <value>
+        /// The preferred option for showing or hidding habitat categories.
+        /// </value>
+        public bool ShowSourceHabitatGroup
+        {
+            get
+            {
+                return _showSourceHabitatGroup;
+            }
+            set
+            {
+                _showSourceHabitatGroup = value;
+                OnPropertyChanged(nameof(ShowSourceHabitatGroup));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the preferred option to show or hide habitat suggestions.
+        /// </summary>
+        /// <value>
+        /// The preferred option for showing or hidding habitat suggestions.
+        /// </value>
+        public bool ShowHabitatSecondariesSuggested
+        {
+            get
+            {
+                return _showHabitatSecondariesSuggested;
+            }
+            set
+            {
+                _showHabitatSecondariesSuggested = value;
+                OnPropertyChanged(nameof(ShowHabitatSecondariesSuggested));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the preferred option to show or hide NVC Codes.
+        /// </summary>
+        /// <value>
+        /// The preferred option for showing or hidding NVC Codes.
+        /// </value>
+        public bool ShowNVCCodes
+        {
+            get
+            {
+                return _showNVCCodes;
+            }
+            set
+            {
+                _showNVCCodes = value;
+                OnPropertyChanged(nameof(ShowNVCCodes));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the preferred option to show or hide habitat summary.
+        /// </summary>
+        /// <value>
+        /// The preferred option for showing or hidding habitat summary.
+        /// </value>
+        public bool ShowHabitatSummary
+        {
+            get
+            {
+                return _showHabitatSummary;
+            }
+            set
+            {
+                _showHabitatSummary = value;
+                OnPropertyChanged(nameof(ShowHabitatSummary));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
+        /// Gets the list of available show OSMM Update options from
+        /// the class.
+        /// </summary>
+        /// <value>
+        /// The list of subset update actions.
+        /// </value>
+        public string[] ShowOSMMUpdatesOptions
+        {
+            get
+            {
+                if (_showOSMMUpdatesOptions == null)
+                {
+                    _showOSMMUpdatesOptions = Settings.Default.ShowOSMMUpdatesOptions.Cast<string>().ToArray();
+                }
+
+                return _showOSMMUpdatesOptions;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the preferred show OSMM Update option.
+        /// </summary>
+        /// <value>
+        /// The preferred show OSMM Update option.
+        /// </value>
+        public string ShowOSMMUpdatesOption
+        {
+            get
+            {
+                return _showOSMMUpdatesOption;
+            }
+            set
+            {
+                _showOSMMUpdatesOption = value;
+                OnPropertyChanged(nameof(ShowOSMMUpdatesOption));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
+        /// Gets the list of possible habitat class codes.
+        /// </summary>
+        /// <value>
+        /// The list of possible habitat class codes.
+        /// </value>
+        public HluDataSet.lut_habitat_classRow[] HabitatClassCodes
+        {
+            get
+            {
+                return _viewModelMain.HabitatClassCodes;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the preferred habitat class.
+        /// </summary>
+        /// <value>
+        /// The preferred habitat class.
+        /// </value>
+        public string PreferredHabitatClass
+        {
+            get
+            {
+                var q = HabitatClassCodes.Where(h => h.code == _preferredHabitatClass);
+                if (q.Any())
+                    return _preferredHabitatClass;
+                else
+                    return null;
+            }
+            set
+            {
+                _preferredHabitatClass = value;
+                OnPropertyChanged(nameof(PreferredHabitatClass));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
+        /// Gets the list of secondary group codes.
+        /// </summary>
+        /// <value>
+        /// The list of secondary group codes.
+        /// </value>
+        public HluDataSet.lut_secondary_groupRow[] SecondaryGroupCodes
+        {
+            get
+            {
+                return _viewModelMain.SecondaryGroupCodesWithAll;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the preferred secondary group.
+        /// </summary>
+        /// <value>
+        /// The preferred secondary group.
+        /// </value>
+        public string PreferredSecondaryGroup
+        {
+            get
+            {
+                var q = SecondaryGroupCodes.Where(h => h.code == _preferredSecondaryGroup);
+                if (q.Any())
+                    return _preferredSecondaryGroup;
+                else
+                    return null;
+            }
+            set
+            {
+                _preferredSecondaryGroup = value;
+                OnPropertyChanged(nameof(PreferredSecondaryGroup));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
+        /// Gets the secondary code order options.
+        /// </summary>
+        /// <value>
+        /// The secondary code order options.
+        /// </value>
+        public string[] SecondaryCodeOrderOptions
+        {
+            get
+            {
+                if (_secondaryCodeOrderOptions == null)
+                {
+                    _secondaryCodeOrderOptions = Settings.Default.SecondaryCodeOrderOptions.Cast<string>().ToArray();
+                }
+
+                return _secondaryCodeOrderOptions;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the secondary code order choice.
+        /// </summary>
+        /// <value>
+        /// The secondary code order choice.
+        /// </value>
+        public string SecondaryCodeOrder
+        {
+            get
+            {
+                return _secondaryCodeOrder;
+            }
+            set
+            {
+                _secondaryCodeOrder = value;
+                OnPropertyChanged(nameof(SecondaryCodeOrder));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the secondary code delimiter.
+        /// </summary>
+        /// <value>
+        /// The secondary code delimiter.
+        /// </value>
+        public string SecondaryCodeDelimiter
+        {
+            get
+            {
+                return _secondaryCodeDelimiter;
+            }
+            set
+            {
+                _secondaryCodeDelimiter = value;
+                OnPropertyChanged(nameof(SecondaryCodeDelimiter));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        #endregion User Interface
+
+        #region User GIS
+
+        /// <summary>
+        /// Gets the auto zoom selection options.
+        /// </summary>
+        /// <value>
+        /// The auto zoom selection options.
+        /// </value>
+        public string[] AutoZoomToSelectionOptions
+        {
+            get
+            {
+                if (_autoZoomToSelectionOptions == null)
+                {
+                    _autoZoomToSelectionOptions = Settings.Default.AutoZoomToSelectionOptions.Cast<string>().ToArray();
+                }
+
+                return _autoZoomToSelectionOptions;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the auto zoom selection choice.
+        /// </summary>
+        /// <value>
+        /// The auto zoom selection choice.
+        /// </value>
+        public string AutoZoomToSelectionOption
+        {
+            get
+            {
+                return _autoZoomToSelection;
+            }
+            set
+            {
+                _autoZoomToSelection = value;
+                OnPropertyChanged(nameof(AutoZoomToSelectionOption));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
+        /// Converts an AutoZooToSelection enum to the display string.
+        /// </summary>
+        /// <param name="value">The AutoZoomToSelection enum value.</param>
+        /// <returns>The display string corresponding to the enum value.</returns>
+        private string AutoZoomToSelectionString(AutoZoomToSelection value)
+        {
+            return value switch
+            {
+                AutoZoomToSelection.Off => "Off",
+                AutoZoomToSelection.When => "When out of view",
+                AutoZoomToSelection.Always => "Always",
+                _ => "Off"
+            };
+        }
+
+        /// <summary>
+        /// Converts a display string to an AutoZoomToSelection enum.
+        /// </summary>
+        /// <param name="value">The display string value.</param>
+        /// <returns>The corresponding AutoZoomToSelection enum value.</returns>
+        private static AutoZoomToSelection AutoZoomToSelectionEnum(string value)
+        {
+            return value switch
+            {
+                "Off" => AutoZoomToSelection.Off,
+                "When out of view" => AutoZoomToSelection.When,
+                "Always" => AutoZoomToSelection.Always,
+                _ => AutoZoomToSelection.Off
+            };
+        }
+
+        /// <summary>
+        /// Gets the default minimum auto zoom scale text.
+        /// </summary>
+        /// <value>
+        /// The Minimum auto zoom scale text.
+        /// </value>
+        public string MinAutoZoomText
+        {
+            get
+            {
+                string distUnits = Settings.Default.MapDistanceUnits;
+                return string.Format("Minimum Auto Zoom [{0}]", distUnits);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the default minimum auto zoom scale.
+        /// </summary>
+        /// <value>
+        /// The Minimum auto zoom scale.
+        /// </value>
+        public int? MinAutoZoom
+        {
+            get
+            {
+                return _minAutoZoom;
+            }
+            set
+            {
+                _minAutoZoom = value;
+                OnPropertyChanged(nameof(MinAutoZoom));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
+        /// Gets the default maximum auto zoom scale.
+        /// </summary>
+        /// <value>
+        /// The Maximum auto zoom scale.
+        /// </value>
+        public int MaxAutoZoom
+        {
+            get
+            {
+                return _maxAutoZoom;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum number of features at which to warn the user before selecting.
+        /// </summary>
+        /// <value>The maximum number of features at which to warn the user before selecting.</value>
+        public int? MaxFeaturesGISSelect
+        {
+            get
+            {
+                return _maxFeaturesGISSelect;
+            }
+            set
+            {
+                _maxFeaturesGISSelect = value;
+                OnPropertyChanged(nameof(MaxFeaturesGISSelect));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
+        /// Get the working File GDB path command.
+        /// </summary>
+        /// <value>
+        /// The browse working File GDB path command.
+        /// </value>
+        public ICommand BrowseWorkingFileGDBPathCommand
+        {
+            get
+            {
+                if (_browseWorkingFileGDBPathCommand == null)
+                {
+                    Action<object> browseWorkingFileGDBPathAction = new(this.BrowseWorkingFileGDBPathClicked);
+                    _browseWorkingFileGDBPathCommand = new RelayCommand(browseWorkingFileGDBPathAction);
+                }
+
+                return _browseWorkingFileGDBPathCommand;
+            }
+        }
+
+        /// <summary>
+        /// Action when the browse working File GDB path button is clicked.
+        /// </summary>
+        /// <param name="param">The parameter passed to the command.</param>
+        private void BrowseWorkingFileGDBPathClicked(object param)
+        {
+            _bakWorkingFileGDBPath = _workingFileGDBPath;
+            WorkingFileGDBPath = String.Empty;
+            WorkingFileGDBPath = GetWorkingFileGDBPath();
+
+            if (String.IsNullOrEmpty(WorkingFileGDBPath))
+            {
+                WorkingFileGDBPath = _bakWorkingFileGDBPath;
+            }
+            OnPropertyChanged(nameof(WorkingFileGDBPath));
+        }
+
+        /// <summary>
+        /// Gets or sets the working File GDB path.
+        /// </summary>
+        /// <value>
+        /// The working File GDB path.
+        /// </value>
+        public string WorkingFileGDBPath
+        {
+            get
+            {
+                return _workingFileGDBPath;
+            }
+            set
+            {
+                _workingFileGDBPath = value;
+                OnPropertyChanged(nameof(WorkingFileGDBPath));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
+        /// Prompt the user to set the working File GDB path.
+        /// </summary>
+        /// <returns>The selected working File GDB path, or null if no path was selected.</returns>
+        public static string GetWorkingFileGDBPath()
+        {
+            try
+            {
+                string workingFileGDBPath = Settings.Default.WorkingFileGDBPath;
+
+                FolderBrowserDialog openFolderDlg = new()
+                {
+                    Description = "Select Working File GDB Directory",
+                    UseDescriptionForTitle = true,
+                    SelectedPath = workingFileGDBPath,
+                    ShowNewFolderButton = true
+                };
+                if (openFolderDlg.ShowDialog() == DialogResult.OK)
+                {
+                    if (Directory.Exists(openFolderDlg.SelectedPath))
+                        return openFolderDlg.SelectedPath;
+                }
+            }
+            catch { }
+
+            return null;
+        }
+
+        #endregion User GIS
+
+        #region User Updates
+
+        /// <summary>
+        /// Gets the reason codes that can be used for attribute updates.
+        /// </summary>
+        /// <value>The reason codes for attribute updates.</value>
+        public HluDataSet.lut_reasonRow[] ReasonCodes
+        {
+            get
+            {
+                return _viewModelMain.ReasonCodesWithNone;
+            }
+        }
+
+        /// <summary>
+        /// Gets the process codes that can be used for attribute updates.
+        /// </summary>
+        /// <value>The process codes for attribute updates.</value>
+        public HluDataSet.lut_processRow[] ProcessCodes
+        {
+            get
+            {
+                return _viewModelMain.ProcessCodesWithNone;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the default reason code for attribute updates.
+        /// </summary>
+        /// <value>The default reason code.</value>
+        public string DefaultReason
+        {
+            get
+            {
+                var q = ReasonCodes.Where(h => h.code == _defaultReason);
+                if (q.Any())
+                    return _defaultReason;
+                else
+                    return null;
+            }
+            set
+            {
+                _defaultReason = value;
+                OnPropertyChanged(nameof(DefaultReason));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the default process code for attribute updates.
+        /// </summary>
+        /// <value>The default process code.</value>
+        public string DefaultProcess
+        {
+            get
+            {
+                var q = ProcessCodes.Where(h => h.code == _defaultProcess);
+                if (q.Any())
+                    return _defaultProcess;
+                else
+                    return null;
+            }
+            set
+            {
+                _defaultProcess = value;
+                OnPropertyChanged(nameof(DefaultProcess));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to notify the user of split/merge updates when applying updates.
+        /// </summary>
+        /// <value><c>true</c> if the user should be notified; otherwise, <c>false</c>.</value>
+        public bool NotifyOnSplitMerge
+        {
+            get
+            {
+                return _notifyOnSplitMerge;
+            }
+            set
+            {
+                _notifyOnSplitMerge = value;
+                OnPropertyChanged(nameof(NotifyOnSplitMerge));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        #endregion User Updates
 
         #region User SQL
 
@@ -1638,7 +2054,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public int? GetValueRows
         {
-            get { return _getValueRows; }
+            get
+            {
+                return _getValueRows;
+            }
             set
             {
                 _getValueRows = value;
@@ -1655,7 +2074,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public int MaxGetValueRows
         {
-            get { return _maxGetValueRows; }
+            get
+            {
+                return _maxGetValueRows;
+            }
         }
 
         /// <summary>
@@ -1703,7 +2125,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public string SQLPath
         {
-            get { return _sqlPath; }
+            get
+            {
+                return _sqlPath;
+            }
             set
             {
                 _sqlPath = value;
@@ -1741,6 +2166,58 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion User SQL
+
+        #region User History
+
+        /// <summary>
+        /// Gets or sets the list of history columns.
+        /// </summary>
+        /// <value>The list of history columns.</value>
+        public SelectionList<string> HistoryColumns
+        {
+            get
+            {
+                return _historyColumns;
+            }
+            set
+            {
+                _historyColumns = value;
+                OnPropertyChanged(nameof(HistoryColumns));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the number of history entries to display.
+        /// </summary>
+        /// <value>The number of history entries to display.</value>
+        public int? HistoryDisplayLastN
+        {
+            get
+            {
+                return _historyDisplayLastN;
+            }
+            set
+            {
+                _historyDisplayLastN = value;
+                OnPropertyChanged(nameof(HistoryDisplayLastN));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
+        /// Gets the maximum number of history entries to display.
+        /// </summary>
+        /// <value>The maximum number of history entries to display.</value>
+        public int MaxHistoryDisplayLastN
+        {
+            get
+            {
+                return 50;
+            }
+        }
+
+        #endregion User History
 
         #region User Export
 
@@ -1827,295 +2304,6 @@ namespace HLU.UI.ViewModel
 
         #endregion User Export
 
-        #region Application Date
-
-        /// <summary>
-        /// Gets or sets the season name for spring.
-        /// </summary>
-        /// <value></value>
-        /// The season name for spring.
-        /// </value>
-        public string SeasonSpring
-        {
-            get { return _seasonSpring; }
-            set
-            {
-                _seasonSpring = value;
-                OnPropertyChanged(nameof(SeasonSpring));
-                NotifyNavigationItemErrorsChanged();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the season name for summer.
-        /// </summary>
-        /// <value></valiue>
-        /// The season name for summer.
-        /// </value>
-        public string SeasonSummer
-        {
-            get { return _seasonSummer; }
-            set
-            {
-                _seasonSummer = value;
-                OnPropertyChanged(nameof(SeasonSummer));
-                NotifyNavigationItemErrorsChanged();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the season name for autumn.
-        /// </summary>
-        /// <value></value>
-        /// The season name for autumn.
-        /// </value>
-        public string SeasonAutumn
-        {
-            get { return _seasonAutumn; }
-            set
-            {
-                _seasonAutumn = value;
-                OnPropertyChanged(nameof(SeasonAutumn));
-                NotifyNavigationItemErrorsChanged();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the season name for winter.
-        /// </summary>
-        /// <value></value>
-        /// The season name for winter.
-        /// </value>
-        public string SeasonWinter
-        {
-            get { return _seasonWinter; }
-            set
-            {
-                _seasonWinter = value;
-                OnPropertyChanged(nameof(SeasonWinter));
-                NotifyNavigationItemErrorsChanged();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the delimiter used for vague dates.
-        /// </summary>
-        /// <value></value>
-        /// The delimiter used for vague dates.
-        /// </value>
-        public string VagueDateDelimiter
-        {
-            get { return _vagueDateDelimiter; }
-            set
-            {
-                if (value != CultureInfo.CurrentCulture.DateTimeFormat.DateSeparator)
-                    _vagueDateDelimiter = value;
-            }
-        }
-
-        #endregion Application Date
-
-        #region Application Bulk Update
-
-        /// <summary>
-        /// Gets whether the user has authority to perform bulk updates.
-        /// </summary>
-        /// <value>
-        /// True if the user has bulk update authority; otherwise, false.
-        /// </value>
-        public bool CanBulkUpdate
-        {
-            get
-            {
-                return _viewModelMain.CanUserBulkUpdate;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the default option to delete invalid secondary
-        /// codes when applying bulk updates.
-        /// </summary>
-        /// <value>
-        /// The default option for deleting invalid secondary codes.
-        /// </value>
-        public bool BulkDeleteSecondaryCodes
-        {
-            get { return _bulkDeleteSecondaryCodes; }
-            set
-            {
-                _bulkDeleteSecondaryCodes = value;
-                OnPropertyChanged(nameof(BulkDeleteSecondaryCodes));
-                NotifyNavigationItemErrorsChanged();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the default option to delete orphan bap habitats
-        /// when applying bulk updates.
-        /// </summary>
-        /// <value>
-        /// The default option for deleting orphan bap habitats.
-        /// </value>
-        public bool BulkDeleteOrphanBapHabitats
-        {
-            get { return _bulkDeleteOrphanBapHabitats; }
-            set
-            {
-                _bulkDeleteOrphanBapHabitats = value;
-                OnPropertyChanged(nameof(BulkDeleteOrphanBapHabitats));
-                NotifyNavigationItemErrorsChanged();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the default option to delete potential bap habitats
-        /// when applying bulk updates.
-        /// </summary>
-        /// <value>
-        /// The default option for deleting potential bap habitats.
-        /// </value>
-        public bool BulkDeletePotentialBapHabitats
-        {
-            get { return _bulkDeletePotentialBapHabitats; }
-            set
-            {
-                _bulkDeletePotentialBapHabitats = value;
-                OnPropertyChanged(nameof(BulkDeletePotentialBapHabitats));
-                NotifyNavigationItemErrorsChanged();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the default option to create history records
-        /// when applying bulk updates.
-        /// </summary>
-        /// <value>
-        /// The default option for creating history records.
-        /// </value>
-        public bool BulkCreateHistoryRecords
-        {
-            get { return _bulkCreateHistoryRecords; }
-            set
-            {
-                _bulkCreateHistoryRecords = value;
-                OnPropertyChanged(nameof(BulkCreateHistoryRecords));
-                NotifyNavigationItemErrorsChanged();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the default option to delete IHS codes
-        /// when applying bulk updates.
-        /// </summary>
-        /// <value>
-        /// The default option for deleting IHS codes.
-        /// </value>
-        public bool BulkDeleteIHSCodes
-        {
-            get { return _bulkDeleteIHSCodes; }
-            set
-            {
-                _bulkDeleteIHSCodes = value;
-                OnPropertyChanged(nameof(BulkDeleteIHSCodes));
-                NotifyNavigationItemErrorsChanged();
-            }
-        }
-
-        /// <summary>
-        /// Gets the list of determination qualities that
-        /// can be used when adding BAP habitats during an OSMM bulk
-        /// update.
-        /// </summary>
-        /// <value>
-        /// The list of determination qualities.
-        /// </value>
-        public HluDataSet.lut_quality_determinationRow[] BulkDeterminationQualityCodes
-        {
-            get { return _viewModelMain.BapDeterminationQualityCodesAuto; }
-        }
-
-        /// <summary>
-        /// Gets or sets the default option for the determination
-        /// quality when adding BAP habitats during an OSMM bulk
-        /// update.
-        /// </summary>
-        /// <value>
-        /// The default option for determination quality.
-        /// </value>
-        public string BulkDeterminationQuality
-        {
-            get { return _bulkDeterminationQuality; }
-            set
-            {
-                _bulkDeterminationQuality = value;
-                OnPropertyChanged(nameof(BulkDeterminationQuality));
-                NotifyNavigationItemErrorsChanged();
-            }
-        }
-
-        /// <summary>
-        /// Gets the list of interpretation qualities that
-        /// can be used when adding BAP habitats during an OSMM bulk
-        /// update.
-        /// </summary>
-        /// <value>
-        /// The list of interpretation qualities.
-        /// </value>
-        public HluDataSet.lut_quality_interpretationRow[] BulkInterpretationQualityCodes
-        {
-            get { return _viewModelMain.InterpretationQualityCodes; }
-        }
-
-        /// <summary>
-        /// Gets or sets the default option for the interpretation
-        /// quality when adding BAP habitats during an OSMM bulk
-        /// update.
-        /// </summary>
-        /// <value>
-        /// The default option for interpretation quality.
-        /// </value>
-        public string BulkInterpretationQuality
-        {
-            get { return _bulkInterpretationQuality; }
-            set
-            {
-                _bulkInterpretationQuality = value;
-                OnPropertyChanged(nameof(BulkInterpretationQuality));
-                NotifyNavigationItemErrorsChanged();
-            }
-        }
-
-        /// <summary>
-        /// Gets the list of source names.
-        /// </summary>
-        /// <value>
-        /// The list of source names.
-        /// </value>
-        public HluDataSet.lut_sourcesRow[] SourceNames
-        {
-            get { return _viewModelMain.SourceNames; }
-        }
-
-        /// <summary>
-        /// Gets or sets the default option for the OSMM
-        /// source name when performing OSMM bulk updates.
-        /// </summary>
-        /// <value>
-        /// The default option for the OSMM source name.
-        /// </value>
-        public int? OSMMSourceId
-        {
-            get { return _bulkOSMMSourceId; }
-            set
-            {
-                _bulkOSMMSourceId = value;
-                OnPropertyChanged(nameof(OSMMSourceId));
-                NotifyNavigationItemErrorsChanged();
-            }
-        }
-
-        #endregion Application Bulk Update
-
         #region Error Handling
 
         /// <summary>
@@ -2127,7 +2315,7 @@ namespace HLU.UI.ViewModel
         {
             return propertyName switch
             {
-                // Database options
+                // Application - Database options
                 "DbConnectionTimeout" when (Convert.ToInt32(DbConnectionTimeout) <= 0 || DbConnectionTimeout == null)
                     => "Error: Enter a database timeout greater than 0 seconds.",
 
@@ -2136,68 +2324,7 @@ namespace HLU.UI.ViewModel
                 "IncidTablePageSize" when Convert.ToInt32(IncidTablePageSize) > 1000
                     => "Error: Enter a database page size no more than 1000 rows.",
 
-                // GIS options
-                "AutoZoomToSelectionOption" when AutoZoomToSelectionOption == null
-                    => "Select option of when to auto zoom to selected feature(s).",
-                "MinAutoZoom" when (Convert.ToInt32(MinAutoZoom) < 100 || MinAutoZoom == null)
-                    => "Error: Minimum auto zoom scale must be at least 100.",
-                "MinAutoZoom" when Convert.ToInt32(MinAutoZoom) > Settings.Default.MaxAutoZoom
-                    => $"Error: Minimum auto zoom scale must not be greater than {Settings.Default.MaxAutoZoom}.",
-                "MaxFeaturesGISSelect" when (Convert.ToInt32(MaxFeaturesGISSelect) < 0 || MaxFeaturesGISSelect == null)
-                    => "Error: Maximum features expected before warning on select must be zero or greater.",
-                "MaxFeaturesGISSelect" when Convert.ToInt32(MaxFeaturesGISSelect) > 100000
-                    => "Error: Maximum features expected before warning on select must not be greater than 10000. Otherwise set to zero to disable warning",
-                "WorkingFileGDBPath" when String.IsNullOrEmpty(WorkingFileGDBPath)
-                    => "Error: You must enter a working File Geodatabase path.",
-
-                // History options
-                "HistoryDisplayLastN" when (Convert.ToInt32(HistoryDisplayLastN) <= 0 || HistoryDisplayLastN == null)
-                    => "Error: Number of history rows to be displayed must be greater than 0.",
-
-                // Validation options
-                "HabitatSecondaryCodeValidation" when HabitatSecondaryCodeValidation == null
-                    => "Error: Select option of when to validate habitat/secondary codes.",
-                "PrimarySecondaryCodeValidation" when PrimarySecondaryCodeValidation == null
-                    => "Error: Select option of when to validate primary/secondary codes.",
-                "QualityValidation" when QualityValidation == null
-                    => "Error: Select option of when to validate determination and interpretation quality.",
-                "PotentialPriorityDetermQtyValidation" when PotentialPriorityDetermQtyValidation == null
-                    => "Error: Select option of when to validate potential priority habitat determination quality.",
-
-                // Update options
-                "SubsetUpdateAction" when SubsetUpdateAction == null
-                    => "Error: Select the action to take when updating an incid subset.",
-                "ClearIHSUpdateAction" when ClearIHSUpdateAction == null
-                    => "Error: Select when to clear IHS codes after an update.",
-
-                // Interface options
-                "PreferredHabitatClass" when PreferredHabitatClass == null
-                    => "Error: Select your preferred habitat class.",
-                "ShowOSMMUpdatesOption" when ShowOSMMUpdatesOption == null
-                    => "Error: Select option of when to display any OSMM Updates.",
-                "PreferredSecondaryGroup" when PreferredSecondaryGroup == null
-                    => "Error: Select your preferred secondary group.",
-
-                "SecondaryCodeDelimiter" when String.IsNullOrEmpty(SecondaryCodeDelimiter)
-                    => "Error: You must enter a secondary code delimiter character.",
-                "SecondaryCodeDelimiter" when SecondaryCodeDelimiter.Length > 2
-                    => "Error: Secondary code delimiter must be one or two characters.",
-                "SecondaryCodeDelimiter" when SecondaryCodeDelimeterRegex().IsMatch(SecondaryCodeDelimiter)
-                    => "Error: Secondary code delimiter cannot contain letters or numbers.",
-
-                // SQL options
-                "GetValueRows" when (Convert.ToInt32(GetValueRows) <= 0 || GetValueRows == null)
-                    => "Error: Number of value rows to be retrieved must be greater than 0.",
-                "GetValueRows" when Convert.ToInt32(GetValueRows) > Settings.Default.MaxGetValueRows
-                    => $"Error: Number of value rows to be retrieved must not be greater than {Settings.Default.MaxGetValueRows}.",
-                "SQLPath" when String.IsNullOrEmpty(SQLPath)
-                    => "Error: You must enter a default SQL path.",
-
-                // Export options
-                "ExportPath" when String.IsNullOrEmpty(ExportPath)
-                    => "Error: You must enter a default export path.",
-
-                // Date options
+                // Application - Date options
                 "SeasonSpring" when String.IsNullOrEmpty(SeasonSpring)
                     => "Error: You must enter a season name for spring.",
                 "SeasonSummer" when String.IsNullOrEmpty(SeasonSummer)
@@ -2214,13 +2341,83 @@ namespace HLU.UI.ViewModel
                 "VagueDateDelimiter" when VagueDateDelimeterRegex().IsMatch(VagueDateDelimiter)
                     => "Error: Vague date delimiter cannot contain letters or numbers.",
 
-                // Bulk Update options
+                // Application - Validation options
+                "HabitatSecondaryCodeValidation" when HabitatSecondaryCodeValidation == null
+                    => "Error: Select option of when to validate habitat/secondary codes.",
+                "PrimarySecondaryCodeValidation" when PrimarySecondaryCodeValidation == null
+                    => "Error: Select option of when to validate primary/secondary codes.",
+                "QualityValidation" when QualityValidation == null
+                    => "Error: Select option of when to validate determination and interpretation quality.",
+                "PotentialPriorityDetermQtyValidation" when PotentialPriorityDetermQtyValidation == null
+                    => "Error: Select option of when to validate potential priority habitat determination quality.",
+
+                // Application - Update options
+                "SubsetUpdateAction" when SubsetUpdateAction == null
+                    => "Error: Select the action to take when updating an incid subset.",
+                "ClearIHSUpdateAction" when ClearIHSUpdateAction == null
+                    => "Error: Select when to clear IHS codes after an update.",
+
+                "SecondaryCodeDelimiter" when String.IsNullOrEmpty(SecondaryCodeDelimiter)
+                    => "Error: You must enter a secondary code delimiter character.",
+                "SecondaryCodeDelimiter" when SecondaryCodeDelimiter.Length > 2
+                    => "Error: Secondary code delimiter must be one or two characters.",
+                "SecondaryCodeDelimiter" when SecondaryCodeDelimeterRegex().IsMatch(SecondaryCodeDelimiter)
+                    => "Error: Secondary code delimiter cannot contain letters or numbers.",
+
+                // Application - Bulk Update options
                 "BulkDeterminationQuality" when BulkDeterminationQuality == null
                     => "Error: Select the default determination quality for new priority habitats.",
                 "BulkInterpretationQuality" when BulkInterpretationQuality == null
                     => "Error: Select the default interpretation quality for new priority habitats.",
                 "OSMMSourceId" when OSMMSourceId == null
                     => "Error: Select the default source name for OS MasterMap.",
+
+                // User - Interface options
+                "ShowOSMMUpdatesOption" when ShowOSMMUpdatesOption == null
+                    => "Error: Select option of when to display any OSMM Updates.",
+                "PreferredHabitatClass" when PreferredHabitatClass == null
+                    => "Error: Select your preferred habitat class.",
+                "PreferredSecondaryGroup" when PreferredSecondaryGroup == null
+                    => "Error: Select your preferred secondary group.",
+                "SecondaryCodeOrder" when SecondaryCodeOrder == null
+                    => "Error: Select display order of secondary codes.",
+
+                // User - GIS options
+                "AutoZoomToSelectionOption" when AutoZoomToSelectionOption == null
+                    => "Error: Select option of when to auto zoom to selected feature(s).",
+                "MinAutoZoom" when (Convert.ToInt32(MinAutoZoom) < 100 || MinAutoZoom == null)
+                    => "Error: Minimum auto zoom scale must be at least 100.",
+                "MinAutoZoom" when Convert.ToInt32(MinAutoZoom) > Settings.Default.MaxAutoZoom
+                    => $"Error: Minimum auto zoom scale must not be greater than {Settings.Default.MaxAutoZoom}.",
+                "MaxFeaturesGISSelect" when (Convert.ToInt32(MaxFeaturesGISSelect) < 0 || MaxFeaturesGISSelect == null)
+                    => "Error: Maximum features expected before warning on select must be zero or greater.",
+                "MaxFeaturesGISSelect" when Convert.ToInt32(MaxFeaturesGISSelect) > 100000
+                    => "Error: Maximum features expected before warning on select must not be greater than 10000. Otherwise set to zero to disable warning",
+                "WorkingFileGDBPath" when String.IsNullOrEmpty(WorkingFileGDBPath)
+                    => "Error: You must enter a working File Geodatabase path.",
+
+
+                // User - Updates
+                "DefaultReason" when DefaultReason == null
+                    => "Error: Select default reason for attribute updates.",
+                "DefaultProcess" when DefaultProcess == null
+                    => "Error: Select default process for attribute updates.",
+
+                // User - SQL options
+                "GetValueRows" when (Convert.ToInt32(GetValueRows) <= 0 || GetValueRows == null)
+                    => "Error: Number of value rows to be retrieved must be greater than 0.",
+                "GetValueRows" when Convert.ToInt32(GetValueRows) > Settings.Default.MaxGetValueRows
+                    => $"Error: Number of value rows to be retrieved must not be greater than {Settings.Default.MaxGetValueRows}.",
+                "SQLPath" when String.IsNullOrEmpty(SQLPath)
+                    => "Error: You must enter a default SQL path.",
+
+                // User - History options
+                "HistoryDisplayLastN" when (Convert.ToInt32(HistoryDisplayLastN) <= 0 || HistoryDisplayLastN == null)
+                    => "Error: Number of history rows to be displayed must be greater than 0.",
+
+                // User - Export options
+                "ExportPath" when String.IsNullOrEmpty(ExportPath)
+                    => "Error: You must enter a default export path.",
 
                 _ => null
             };
@@ -2264,11 +2461,11 @@ namespace HLU.UI.ViewModel
                 ("Application", "Database") => ["DbConnectionTimeout", "IncidTablePageSize"],
                 ("Application", "Dates") => ["SeasonSpring", "SeasonSummer", "SeasonAutumn", "SeasonWinter", "VagueDateDelimiter"],
                 ("Application", "Validation") => ["HabitatSecondaryCodeValidation", "PrimarySecondaryCodeValidation", "QualityValidation", "PotentialPriorityDetermQtyValidation"],
-                ("Application", "Updates") => ["ClearIHSUpdateAction", "SecondaryCodeDelimiter"],
+                ("Application", "Updates") => ["SubsetUpdateAction", "ClearIHSUpdateAction", "SecondaryCodeDelimiter"],
                 ("Application", "Bulk Update") => ["BulkDeterminationQuality", "BulkInterpretationQuality", "OSMMSourceId"],
                 ("User", "Interface") => ["PreferredHabitatClass", "ShowOSMMUpdatesOption", "PreferredSecondaryGroup"],
                 ("User", "GIS") => ["AutoZoomToSelectionOption", "MinAutoZoom", "MaxFeaturesGISSelect", "WorkingFileGDBPath"],
-                ("User", "Split/Merge") => ["SubsetUpdateAction"],
+                ("User", "Updates") => ["DefaultReason", "DefaultProcess", "NotifyOnSplitMerge"],
                 ("User", "SQL") => ["GetValueRows", "SQLPath"],
                 ("User", "History") => ["HistoryDisplayLastN"],
                 ("User", "Export") => ["ExportPath"],
@@ -2449,12 +2646,12 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets the error messages related to user split/merge settings.
+        /// Gets the error messages related to user updates settings.
         /// </summary>
-        /// <returns>A string containing all user split/merge-related error messages.</returns>
-        private string GetUserSplitMergeErrorMessages()
+        /// <returns>A string containing all user updates-related error messages.</returns>
+        private string GetUserUpdatesErrorMessages()
         {
-            var errors = GetErrorsForCategory("User", "Split/Merge");
+            var errors = GetErrorsForCategory("User", "Updates");
             return string.Join(Environment.NewLine, errors);
         }
 

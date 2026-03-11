@@ -142,7 +142,7 @@ public class AddInSettings
     public string BulkUpdateDeterminationQuality { get; set; } = @"PI";
     public string BulkUpdateInterpretationQuality { get; set; } = @"M2";
 
-    //    [XmlElement("BulkOSMMSourceId")]
+    // Application GIS export options
     public int? BulkOSMMSourceId { get; set; } = null;
 }
 
@@ -159,7 +159,7 @@ public class HelpPages
     public string AppValidation { get; set; } = "interface/interface.html#updates-options";
     public string UserGIS { get; set; } = "interface/interface.html#gis-export-options";
     public string UserInterface { get; set; } = "interface/interface.html#interface-options";
-    public string UserSplitMerge { get; set; } = "interface/interface.html#split-merge-options";
+    public string UserUpdates { get; set; } = "interface/interface.html#updates-options";
     public string UserSQL { get; set; } = "interface/interface.html#filter-options";
     public string UserExport { get; set; } = "interface/interface.html#export-options";
     public string UserHistory { get; set; } = "interface/interface.html#history-options";
