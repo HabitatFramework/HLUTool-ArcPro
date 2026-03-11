@@ -136,7 +136,7 @@ namespace HLU.UI.ViewModel
         private string[] _secondaryCodeOrderOptions;
         private string _secondaryCodeOrder;
 
-        // User Updates options
+        // User Split/MErge options
         private bool _notifyOnSplitMerge;
 
         // User SQL options
@@ -260,7 +260,7 @@ namespace HLU.UI.ViewModel
             _preferredSecondaryGroup = Settings.Default.PreferredSecondaryGroup;
             _secondaryCodeOrder = Settings.Default.SecondaryCodeOrder;
 
-            // Set the user updates options
+            // Set the user Split/Merge options
             _notifyOnSplitMerge = Settings.Default.NotifyOnSplitMerge;
 
             // Set the user SQL options
@@ -281,7 +281,7 @@ namespace HLU.UI.ViewModel
                 new () { Name = "Bulk Update", Category = "Application", Content = new AppBulkUpdateOptions() },
                 new () { Name = "Interface", Category = "User", Content = new UserInterfaceOptions() },
                 new () { Name = "GIS", Category = "User", Content = new UserGISOptions() },
-                new () { Name = "Updates", Category = "User", Content = new UserSplitMergeOptions() },
+                new () { Name = "Split/Merge", Category = "User", Content = new UserSplitMergeOptions() },
                 new () { Name = "SQL", Category = "User", Content = new UserSQLOptions() },
                 new () { Name = "History", Category = "User", Content = new UserHistoryOptions() },
                 new () { Name = "Export", Category = "User", Content = new UserExportOptions() }
@@ -731,7 +731,7 @@ namespace HLU.UI.ViewModel
             // Update user export options
             Settings.Default.ExportPath = _exportPath;
 
-            // Update user updates options
+            // Update user split/merge options
             Settings.Default.NotifyOnSplitMerge = _notifyOnSplitMerge;
 
             // Save changes to the settings.
@@ -1592,7 +1592,7 @@ namespace HLU.UI.ViewModel
         }
         #endregion Application Updates
 
-        #region User Updates
+        #region User Split/Merge
 
         /// <summary>
         /// Gets the list of available subset update actions from the enum.
@@ -1626,7 +1626,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion User Updates
+        #endregion User Split/Merge
 
         #region User SQL
 
@@ -2268,7 +2268,7 @@ namespace HLU.UI.ViewModel
                 ("Application", "Bulk Update") => ["BulkDeterminationQuality", "BulkInterpretationQuality", "OSMMSourceId"],
                 ("User", "Interface") => ["PreferredHabitatClass", "ShowOSMMUpdatesOption", "PreferredSecondaryGroup"],
                 ("User", "GIS") => ["AutoZoomToSelectionOption", "MinAutoZoom", "MaxFeaturesGISSelect", "WorkingFileGDBPath"],
-                ("User", "Updates") => ["SubsetUpdateAction"],
+                ("User", "Split/Merge") => ["SubsetUpdateAction"],
                 ("User", "SQL") => ["GetValueRows", "SQLPath"],
                 ("User", "History") => ["HistoryDisplayLastN"],
                 ("User", "Export") => ["ExportPath"],

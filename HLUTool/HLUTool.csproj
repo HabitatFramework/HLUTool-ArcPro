@@ -1,378 +1,310 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net8.0-windows7.0</TargetFramework>
-    <UseWPF>true</UseWPF>
-	<UseWindowsForms>true</UseWindowsForms>
-    <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
-    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
-    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <NoWarn>CA1416</NoWarn>
-    <RootNamespace>HLU</RootNamespace>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows7.0</TargetFramework>
+		<UseWPF>true</UseWPF>
+		<UseWindowsForms>true</UseWindowsForms>
+		<RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+		<NoWarn>CA1416</NoWarn>
+		<RootNamespace>HLU</RootNamespace>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<CodeAnalysisDictionary Include="CustomDictionary.xml" />
 	</ItemGroup>
-  <ItemGroup>
-    <Compile Remove="ArcGISFunctions OLD.cs" />
-    <Compile Remove="Converters\BoolToColorConverter.cs" />
-    <Compile Remove="GISApplication\GISApp.cs" />
-    <Compile Remove="GISApplication\GISAppFactory.cs" />
-    <Compile Remove="GISApplication\WinAPI.cs" />
-    <Compile Remove="HluArcMapExtension.cs" />
-    <Compile Remove="PipeList.cs" />
-    <Compile Remove="UI\ViewModel\PaneHeader1ViewModel.cs" />
-    <Compile Remove="UI\ViewModel\PaneHeader2ViewModel.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelConnectOleDb.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowMain_NEW.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowQueryIncid.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowSelectGIS.cs" />
-    <Compile Remove="UI\ViewModel\ViewModelWindowSplash.cs" />
-    <Compile Remove="UI\View\Connection\ViewConnectOleDb.xaml.cs" />
-    <Compile Remove="UI\View\PaneHeader1View.xaml.cs" />
-    <Compile Remove="UI\View\PaneHeader2View.xaml.cs" />
-    <Compile Remove="UI\View\WindowMain_OLD.xaml.cs" />
-    <Compile Remove="UI\View\WindowQueryIncid.xaml.cs" />
-    <Compile Remove="UI\View\WindowSelectGIS.xaml.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="DarkImages\AddInDesktop16.png" />
-    <None Remove="DarkImages\AddInDesktop32.png" />
-    <None Remove="DarkImages\HLUTool16.png" />
-    <None Remove="DarkImages\HLUTool32.png" />
-    <None Remove="DarkImages\Error32.png" />
-    <None Remove="DarkImages\Success32.png" />
-    <None Remove="DarkImages\Warning32.png" />
-    <None Remove="Images\About16.png" />
-    <None Remove="Images\About32.png" />
-    <None Remove="Images\AddInDesktop16.png" />
-    <None Remove="Images\AddInDesktop32.png" />
-    <None Remove="Images\AddRow16.png" />
-    <None Remove="Images\AddRowSquare16.png" />
-    <None Remove="Images\AddScript16.png" />
-    <None Remove="Images\AutoSelect16.png" />
-    <None Remove="Images\AutoSelect16b.png" />
-    <None Remove="Images\BulkUpdate16.png" />
-    <None Remove="Images\BulkUpdate32.png" />
-    <None Remove="Images\ClearFilter16.png" />
-    <None Remove="Images\ClearFilter32.png" />
-    <None Remove="Images\Copy16.png" />
-    <None Remove="Images\Copy32.png" />
-    <None Remove="Images\EditOSMM16.png" />
-    <None Remove="Images\EditOSMM32.png" />
-    <None Remove="Images\Error32.png" />
-    <None Remove="Images\Export16.png" />
-    <None Remove="Images\Export32.png" />
-    <None Remove="Images\Filter16.png" />
-    <None Remove="Images\Filter32.png" />
-    <None Remove="Images\HLUIcon16.png" />
-    <None Remove="Images\HLUIcon32.png" />
-    <None Remove="Images\LogicalMerge16.png" />
-    <None Remove="Images\LogicalMerge32.png" />
-    <None Remove="Images\LogicalSplit16.png" />
-    <None Remove="Images\LogicalSplit32.png" />
-    <None Remove="Images\Merge16.png" />
-    <None Remove="Images\Merge32.png" />
-    <None Remove="Images\Options16.png" />
-    <None Remove="Images\Options32.png" />
-    <None Remove="Images\OptionsB16.png" />
-    <None Remove="Images\OptionsB32.png" />
-    <None Remove="Images\OSMMBulkUpdate16.png" />
-    <None Remove="Images\OSMMBulkUpdate32.png" />
-    <None Remove="Images\OSMMUpdate16.png" />
-    <None Remove="Images\OSMMUpdate32.png" />
-    <None Remove="Images\Paste16.png" />
-    <None Remove="Images\Paste32.png" />
-    <None Remove="Images\PhysicalMerge16.png" />
-    <None Remove="Images\PhysicalMerge32.png" />
-    <None Remove="Images\PhysicalSplit16.png" />
-    <None Remove="Images\PhysicalSplit32.png" />
-    <None Remove="Images\SelectAllOnMap16.png" />
-    <None Remove="Images\SelectAllOnMap32.png" />
-    <None Remove="Images\SelectOnMap16.png" />
-    <None Remove="Images\SelectOnMap32.png" />
-    <None Remove="Images\Split16.png" />
-    <None Remove="Images\Split32.png" />
-    <None Remove="Images\Success32.png" />
-    <None Remove="Images\Warning32.png" />
-    <None Remove="Images\ZoomTable16.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Page Remove="UI\View\Connection\ViewConnectOleDb.xaml" />
-    <Page Remove="UI\View\Dictionary\BoolToColorConverterDictionary.xaml" />
-    <Page Remove="UI\View\Dictionary\FeatureClassAdminResources.xaml" />
-    <Page Remove="UI\View\Dictionary\GeometryTypeConverterDictionary.xaml" />
-    <Page Remove="UI\View\Dictionary\LayerConverterDictionary.xaml" />
-    <Page Remove="UI\View\Dictionary\MergeFeaturesWindowDictionary.xaml" />
-    <Page Remove="UI\View\Dictionary\MultiEqualityConverterDictionary.xaml" />
-    <Page Remove="UI\View\Dictionary\SpatialReferenceConverterDictionary.xaml" />
-    <Page Remove="UI\View\PaneHeader1View.xaml" />
-    <Page Remove="UI\View\PaneHeader2View.xaml" />
-    <Page Remove="UI\View\WindowMain_OLD.xaml" />
-    <Page Remove="UI\View\WindowQueryIncid.xaml" />
-    <Page Remove="UI\View\WindowSelectGIS.xaml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Config.daml" />
-    <Content Include="DarkImages\AddInDesktop16.png" />
-    <Content Include="DarkImages\AddInDesktop32.png" />
-    <Resource Include="Images\AddInDesktop16.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\AddInDesktop32.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="DarkImages\HLUTool16.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="DarkImages\HLUTool32.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="DarkImages\Error32.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="DarkImages\Success32.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="DarkImages\Warning32.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\About16.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\About32.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\AddRow16.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\AddRowSquare16.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\AddScript16.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\AutoSelect16.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\AutoSelect16b.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\BulkUpdate16.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\BulkUpdate32.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\ClearFilter16.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\ClearFilter32.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\Copy16.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\Copy32.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\EditOSMM16.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\EditOSMM32.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\Export16.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\Export32.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\Filter16.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\Filter32.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\HLUIcon16.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\HLUIcon32.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Images\HLUTool16.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-	<Resource Include="Images\HLUTool32.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\Error32.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\LogicalMerge16.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\LogicalMerge32.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\LogicalSplit16.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\LogicalSplit32.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\Merge16.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\Merge32.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\Options16.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\Options32.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\OSMMBulkUpdate16.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\OSMMBulkUpdate32.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\OSMMUpdate16.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\OSMMUpdate32.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\Paste16.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\Paste32.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\PhysicalMerge16.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\PhysicalMerge32.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\PhysicalSplit16.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\PhysicalSplit32.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\GetMapSelection16.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\GetMapSelection32.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\SelectAllOnMap16.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\SelectAllOnMap32.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\SelectOnMap16.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\SelectOnMap32.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\Split16.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\Split32.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\Success32.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\Warning32.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-	<Resource Include="Images\ZoomTable16.png">
-	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	</Resource>
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Azure.Identity" Version="1.11.4" />
-    <PackageReference Include="Esri.ArcGISPro.Extensions30" Version="3.3.0.52636" />
-    <PackageReference Include="Extended.Wpf.Toolkit" Version="4.7.25103.5738" />
-    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.0" />
-    <PackageReference Include="Microsoft.Identity.Client" Version="4.61.3" />
-    <PackageReference Include="Microsoft.Office.Interop.Access.Dao" Version="15.0.4420.1018" />
-    <PackageReference Include="Npgsql" Version="9.0.2" />
-    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.6.1" />
-    <PackageReference Include="System.Collections" Version="4.3.0" />
-    <PackageReference Include="System.Data.Odbc" Version="9.0.1" />
-    <PackageReference Include="System.Data.OleDb" Version="8.0.0" />
-    <PackageReference Include="System.Linq" Version="4.3.0" />
-    <PackageReference Include="System.Runtime" Version="4.3.1" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Update="Data\Model\HluDataSet.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>HluDataSet.xsd</DependentUpon>
-    </Compile>
-    <Compile Update="Data\Model\HluGISLayer.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>HluGISLayer.xsd</DependentUpon>
-    </Compile>
-    <Compile Update="Properties\Settings.Designer.cs">
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-    </Compile>
-    <Compile Update="UI\View\Options\AppValidationOptions.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="UI\View\Options\UserExportOptions.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="UI\View\Options\UserSplitMergeOptions.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="UI\View\Options\AppBulkUpdateOptions.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="UI\View\Options\AppDatesOptions.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="UI\View\Options\UserSQLOptions.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="UI\View\Options\AppUpdatesOptions.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="UI\View\Options\UserInterfaceOptions.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="UI\View\Options\UserHistoryOptions.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="UI\View\Options\UserGISOptions.xaml.cs">
-      <SubType>Code</SubType>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="Data\Model\HluDataSet.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>HluDataSet.Designer.cs</LastGenOutput>
-    </None>
-    <None Update="Data\Model\HluGISLayer.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>HluGISLayer.Designer.cs</LastGenOutput>
-    </None>
-    <None Update="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-  </ItemGroup>
-  <Import Project="C:\Program Files\ArcGIS\Pro\bin\Esri.ProApp.SDK.Desktop.targets" Condition="Exists('C:\Program Files\ArcGIS\Pro\bin\Esri.ProApp.SDK.Desktop.targets') AND !Exists('Esri.ArcGISPro.Extensions.targets')" />
+
+	<!-- Explicitly excluded source files -->
+	<ItemGroup>
+		<Compile Remove="ArcGISFunctions OLD.cs" />
+		<Compile Remove="GISApplication\GISApp.cs" />
+		<Compile Remove="GISApplication\GISAppFactory.cs" />
+		<Compile Remove="GISApplication\WinAPI.cs" />
+		<Compile Remove="HluArcMapExtension.cs" />
+		<Compile Remove="UI\ViewModel\ViewModelConnectOleDb.cs" />
+		<Compile Remove="UI\ViewModel\ViewModelWindowMain_NEW.cs" />
+		<Compile Remove="UI\ViewModel\ViewModelWindowQueryIncid.cs" />
+		<Compile Remove="UI\ViewModel\ViewModelWindowSelectGIS.cs" />
+		<Compile Remove="UI\View\Connection\ViewConnectOleDb.xaml.cs" />
+		<Compile Remove="UI\View\WindowMain_OLD.xaml.cs" />
+		<Compile Remove="UI\View\WindowSelectGIS.xaml.cs" />
+	</ItemGroup>
+
+	<!-- Explicitly excluded XAML files -->
+	<ItemGroup>
+		<Page Remove="UI\View\Dictionary\FeatureClassAdminResources.xaml" />
+		<Page Remove="UI\View\Dictionary\GeometryTypeConverterDictionary.xaml" />
+		<Page Remove="UI\View\Dictionary\LayerConverterDictionary.xaml" />
+		<Page Remove="UI\View\Dictionary\MergeFeaturesWindowDictionary.xaml" />
+		<Page Remove="UI\View\Dictionary\MultiEqualityConverterDictionary.xaml" />
+		<Page Remove="UI\View\Dictionary\SpatialReferenceConverterDictionary.xaml" />
+		<Page Remove="UI\View\WindowMain_OLD.xaml" />
+	</ItemGroup>
+
+	<!-- Config and DarkImages content -->
+	<ItemGroup>
+		<Content Include="Config.daml" />
+		<Content Include="DarkImages\AddInDesktop16.png" />
+		<Content Include="DarkImages\AddInDesktop32.png" />
+		<Content Include="DarkImages\HLUTool16.png" />
+		<Content Include="DarkImages\HLUTool32.png" />
+		<Content Include="DarkImages\Error32.png" />
+		<Content Include="DarkImages\Success32.png" />
+		<Content Include="DarkImages\Warning32.png" />
+	</ItemGroup>
+
+	<!-- Image resources -->
+	<ItemGroup>
+		<Resource Include="Images\About16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\About32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\AddInDesktop16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\AddInDesktop32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\AddRow16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\AddRowSquare16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\AddScript16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\AutoSelect16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\AutoSelect16b.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\BulkUpdate16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\BulkUpdate32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\ClearFilter16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\ClearFilter32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\Copy16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\Copy32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\EditOSMM16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\EditOSMM32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\Error32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\Export16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\Export32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\Filter16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\Filter32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\GetMapSelection16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\GetMapSelection32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\HLUIcon16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\HLUIcon32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\HLUTool16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\HLUTool32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\LogicalMerge16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\LogicalMerge32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\LogicalSplit16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\LogicalSplit32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\Merge16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\Merge32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\Options16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\Options32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\OSMMBulkUpdate16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\OSMMBulkUpdate32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\OSMMUpdate16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\OSMMUpdate32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\Paste16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\Paste32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\PhysicalMerge16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\PhysicalMerge32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\PhysicalSplit16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\PhysicalSplit32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\SelectAllOnMap16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\SelectAllOnMap32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\SelectOnMap16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\SelectOnMap32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\Split16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\Split32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\Success32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\Warning32.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="Images\ZoomTable16.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
+	</ItemGroup>
+
+	<!-- Package references -->
+	<ItemGroup>
+		<PackageReference Include="Azure.Identity" Version="1.11.4" />
+		<PackageReference Include="Esri.ArcGISPro.Extensions30" Version="3.3.0.52636" />
+		<PackageReference Include="Extended.Wpf.Toolkit" Version="4.7.25103.5738" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Identity.Client" Version="4.61.3" />
+		<PackageReference Include="Microsoft.Office.Interop.Access.Dao" Version="15.0.4420.1018" />
+		<PackageReference Include="Npgsql" Version="9.0.2" />
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.6.1" />
+		<PackageReference Include="System.Collections" Version="4.3.0" />
+		<PackageReference Include="System.Data.Odbc" Version="9.0.1" />
+		<PackageReference Include="System.Data.OleDb" Version="8.0.0" />
+		<PackageReference Include="System.Linq" Version="4.3.0" />
+		<PackageReference Include="System.Runtime" Version="4.3.1" />
+	</ItemGroup>
+
+	<!-- Designer files -->
+	<ItemGroup>
+		<Compile Update="Data\Model\HluDataSet.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>HluDataSet.xsd</DependentUpon>
+		</Compile>
+		<Compile Update="Data\Model\HluGISLayer.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>HluGISLayer.xsd</DependentUpon>
+		</Compile>
+		<Compile Update="Properties\Settings.Designer.cs">
+			<DesignTimeSharedInput>True</DesignTimeSharedInput>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Settings.settings</DependentUpon>
+		</Compile>
+		<Compile Update="UI\View\Options\AppValidationOptions.xaml.cs">
+			<SubType>Code</SubType>
+		</Compile>
+		<Compile Update="UI\View\Options\UserExportOptions.xaml.cs">
+			<SubType>Code</SubType>
+		</Compile>
+		<Compile Update="UI\View\Options\UserSplitMergeOptions.xaml.cs">
+			<SubType>Code</SubType>
+		</Compile>
+		<Compile Update="UI\View\Options\AppBulkUpdateOptions.xaml.cs">
+			<SubType>Code</SubType>
+		</Compile>
+		<Compile Update="UI\View\Options\AppDatesOptions.xaml.cs">
+			<SubType>Code</SubType>
+		</Compile>
+		<Compile Update="UI\View\Options\UserSQLOptions.xaml.cs">
+			<SubType>Code</SubType>
+		</Compile>
+		<Compile Update="UI\View\Options\AppUpdatesOptions.xaml.cs">
+			<SubType>Code</SubType>
+		</Compile>
+		<Compile Update="UI\View\Options\UserInterfaceOptions.xaml.cs">
+			<SubType>Code</SubType>
+		</Compile>
+		<Compile Update="UI\View\Options\UserHistoryOptions.xaml.cs">
+			<SubType>Code</SubType>
+		</Compile>
+		<Compile Update="UI\View\Options\UserGISOptions.xaml.cs">
+			<SubType>Code</SubType>
+		</Compile>
+	</ItemGroup>
+
+	<!-- XSD schema files -->
+	<ItemGroup>
+		<None Update="Data\Model\HluDataSet.xsd">
+			<Generator>MSDataSetGenerator</Generator>
+			<LastGenOutput>HluDataSet.Designer.cs</LastGenOutput>
+		</None>
+		<None Update="Data\Model\HluGISLayer.xsd">
+			<Generator>MSDataSetGenerator</Generator>
+			<LastGenOutput>HluGISLayer.Designer.cs</LastGenOutput>
+		</None>
+		<None Update="Properties\Settings.settings">
+			<Generator>SettingsSingleFileGenerator</Generator>
+			<LastGenOutput>Settings.Designer.cs</LastGenOutput>
+		</None>
+	</ItemGroup>
+
+	<Import Project="C:\Program Files\ArcGIS\Pro\bin\Esri.ProApp.SDK.Desktop.targets" Condition="Exists('C:\Program Files\ArcGIS\Pro\bin\Esri.ProApp.SDK.Desktop.targets') AND !Exists('Esri.ArcGISPro.Extensions.targets')" />
 </Project>
