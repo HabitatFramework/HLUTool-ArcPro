@@ -28,6 +28,7 @@ using HLU.Data;
 using HLU.Data.Model;
 using HLU.GISApplication;
 using HLU.Properties;
+using HLU.UI.Model;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -380,8 +381,8 @@ namespace HLU.UI.ViewModel
                 // Make the UI controls hidden.
                 GridMainVisibility = Visibility.Hidden;
 
-                // Display a warning message.
-                ShowMessage("No active map.", MessageType.Warning);
+                // Display an error message.
+                ShowError("No active map.", MessageCategory.GIS);
                 return;
             }
 
@@ -532,6 +533,14 @@ namespace HLU.UI.ViewModel
                 _mapMemberEventsSubscribed = false;
             }
 
+            // Clean up all message timers
+            foreach (var timer in _messageTimers.Values)
+            {
+                timer?.Stop();
+                timer?.Dispose();
+            }
+            _messageTimers.Clear();
+
             // Call base to allow parent cleanup
             base.OnDispose();
         }
@@ -593,8 +602,8 @@ namespace HLU.UI.ViewModel
                 // Select the current incid on the map.
                 if (!await _gisApp.SelectIncidOnMapAsync(_incidCurrentRow.incid))
                 {
-                    // Display a warning message.
-                    ShowMessage("Error selecting current incid in GIS.", MessageType.Warning);
+                    // Display an error message.
+                    ShowError("Error selecting current incid in GIS.", MessageCategory.GIS);
 
                     return;
                 }
@@ -616,9 +625,8 @@ namespace HLU.UI.ViewModel
                 // Warn the user that no features were found in GIS.
                 if (_gisSelection == null || _gisSelection.Rows.Count == 0)
                 {
-                    //MessageBox.Show("No features for incid found in active layer.", "HLU: Selection", MessageBoxButton.OK, MessageBoxImage.Information);
                     // Display a warning message.
-                    ShowMessage("No features for incid found in active layer.", MessageType.Warning);
+                    ShowWarning("No features for incid found in active layer.", MessageCategory.GIS);
 
                     return;
                 }
@@ -761,9 +769,8 @@ namespace HLU.UI.ViewModel
                 // Warn the user that no features were found in GIS.
                 if (_gisSelection == null || _gisSelection.Rows.Count == 0)
                 {
-                    //MessageBox.Show("No features for incid found in active layer.", "HLU: Selection", MessageBoxButton.OK, MessageBoxImage.Information);
                     // Display a warning message.
-                    ShowMessage("No features for incid found in active layer.", MessageType.Warning);
+                    ShowWarning("No features for incid found in active layer.", MessageCategory.GIS);
                     return;
                 }
                 else
@@ -906,7 +913,7 @@ namespace HLU.UI.ViewModel
                     ChangeCursor(Cursors.Arrow, null);
 
                     // Display a warning message.
-                    ShowMessage("No map features selected in active layer.", MessageType.Warning);
+                    ShowWarning("No map features selected in active layer.", MessageCategory.GIS);
                 }
             }
             catch (Exception ex)
@@ -1222,8 +1229,8 @@ namespace HLU.UI.ViewModel
             // Select all INCIDs in _incidSelection on the active layer
             if (!await _gisApp.SelectIncidsOnMapAsync(_incidSelection))
             {
-                // Display a warning message.
-                ShowMessage("Error selecting current incid in GIS.", MessageType.Warning);
+                // Display an error message.
+                ShowError("Error selecting current incid in GIS.", MessageCategory.GIS);
 
                 return false;
             }

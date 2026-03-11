@@ -52,6 +52,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using HLU.UI.Model;
+using System.Timers;
 using ComboBox = ArcGIS.Desktop.Framework.Contracts.ComboBox;
 using CommandType = System.Data.CommandType;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
@@ -129,6 +131,12 @@ namespace HLU.UI.ViewModel
         #endregion Fields - Display
 
         #region Fields - Messages
+
+        // Queue to hold messages to display on the form
+        private ObservableCollection<MessageItem> _messageQueue = [];
+
+        // Dictionary to track auto-dismiss timers per message
+        private Dictionary<string, System.Timers.Timer> _messageTimers = [];
 
         private string _statusMessage;
         private MessageType _messageLevel;
@@ -6067,28 +6075,383 @@ namespace HLU.UI.ViewModel
 
         #region Methods
 
-        #region Messages
+        #region Message Queue
 
         /// <summary>
-        /// Show the message with the required icon (message type).
+        /// Gets the collection of messages to display.
+        /// </summary>
+        /// <value>The collection of messages to display.</value>
+        public ObservableCollection<MessageItem> MessageQueue
+        {
+            get
+            {
+                return _messageQueue;
+            }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether there are any messages to display.
+        /// </summary>
+        /// <value><c>true</c> if there are messages to display; otherwise, <c>false</c>.</value>
+        public bool HasMessages
+        {
+            get
+            {
+                return _messageQueue.Count > 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets the visibility for the message queue area.
+        /// </summary>
+        /// <value>The visibility for the message queue area.</value>
+        public Visibility MessageQueueVisibility
+        {
+            get
+            {
+                return HasMessages ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
+        /// <summary>
+        /// Shows a message in the message queue with optional categorization and auto-dismiss.
+        /// If a message with the same text, level, and category already exists, it will be replaced
+        /// and its auto-dismiss timer will be refreshed.
         /// </summary>
         /// <param name="msg">The message to display.</param>
         /// <param name="messageLevel">The level of the message (e.g., Info, Warning, Error).</param>
-        public void ShowMessage(string msg, MessageType messageLevel)
+        /// <param name="category">Optional category for the message (e.g., "Navigation", "Validation").</param>
+        /// <param name="isDismissible">Whether the user can manually dismiss this message.</param>
+        /// <param name="autoDismissSeconds">Auto-dismiss after this many seconds (0 = no auto-dismiss).</param>
+        /// <returns>The unique ID of the created or updated message.</returns>
+        public string ShowMessage(string msg, MessageType messageLevel, string category = null,
+            bool isDismissible = true, int autoDismissSeconds = 0)
         {
-            MessageLevel = messageLevel;
-            StatusMessage = msg;
+            if (string.IsNullOrWhiteSpace(msg))
+                return null;
+
+            string messageId = null;
+
+            // Execute on UI thread
+            System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+            {
+                // Normalize category
+                string normalizedCategory = category ?? MessageCategory.General;
+
+                // Check if an identical message already exists (same text, level, and category)
+                var existingMessage = _messageQueue.FirstOrDefault(m =>
+                    string.Equals(m.Message, msg, StringComparison.Ordinal) &&
+                    m.Level == messageLevel &&
+                    string.Equals(m.Category, normalizedCategory, StringComparison.OrdinalIgnoreCase));
+
+                if (existingMessage != null)
+                {
+                    // Cancel the existing auto-dismiss timer
+                    CancelAutoDismiss(existingMessage.Id);
+
+                    // Update the existing message's timestamp and auto-dismiss setting
+                    existingMessage.Timestamp = DateTime.Now;
+                    existingMessage.IsDismissible = isDismissible;
+                    existingMessage.AutoDismissSeconds = autoDismissSeconds;
+
+                    // Use the existing message ID
+                    messageId = existingMessage.Id;
+
+                    // Re-sort the queue since the timestamp changed
+                    SortMessages();
+                }
+                else
+                {
+                    // Create a new message item
+                    var messageItem = new MessageItem
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        Message = msg,
+                        Level = messageLevel,
+                        Timestamp = DateTime.Now,
+                        Category = normalizedCategory,
+                        IsDismissible = isDismissible,
+                        AutoDismissSeconds = autoDismissSeconds
+                    };
+
+                    messageId = messageItem.Id;
+
+                    // Add to queue
+                    _messageQueue.Add(messageItem);
+                    SortMessages();
+                }
+
+                OnPropertyChanged(nameof(HasMessages));
+                OnPropertyChanged(nameof(MessageQueueVisibility));
+            });
+
+            // Set up auto-dismiss if requested
+            if (autoDismissSeconds > 0)
+            {
+                SetupAutoDismiss(messageId, autoDismissSeconds);
+            }
+            // Default auto-dismiss for informational messages
+            else if (messageLevel == MessageType.Information && isDismissible)
+            {
+                SetupAutoDismiss(messageId, 5); // 5 seconds default
+            }
+
+            return messageId;
         }
 
         /// <summary>
-        /// Clear the form messages.
+        /// Clears messages from the queue based on ID or category.
         /// </summary>
-        public void ClearMessage()
+        /// <param name="id">The unique ID of a specific message to clear.</param>
+        /// <param name="category">The category of messages to clear.</param>
+        /// <param name="level">The level of messages to clear.</param>
+        public void ClearMessage(string id = null, string category = null, MessageType? level = null)
         {
-            StatusMessage = "";
+            System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+            {
+                List<MessageItem> messagesToRemove = new();
+
+                // Clear by ID
+                if (!string.IsNullOrEmpty(id))
+                {
+                    var message = _messageQueue.FirstOrDefault(m => m.Id == id);
+                    if (message != null)
+                    {
+                        messagesToRemove.Add(message);
+                        CancelAutoDismiss(id);
+                    }
+                }
+                // Clear by category
+                else if (!string.IsNullOrEmpty(category))
+                {
+                    messagesToRemove = _messageQueue
+                        .Where(m => string.Equals(m.Category, category, StringComparison.OrdinalIgnoreCase))
+                        .ToList();
+                }
+                // Clear by level
+                else if (level.HasValue)
+                {
+                    messagesToRemove = _messageQueue.Where(m => m.Level == level.Value).ToList();
+                }
+                // Clear all
+                else
+                {
+                    messagesToRemove = _messageQueue.ToList();
+                }
+
+                // Remove the messages
+                foreach (var msg in messagesToRemove)
+                {
+                    _messageQueue.Remove(msg);
+                    CancelAutoDismiss(msg.Id);
+                }
+
+                OnPropertyChanged(nameof(HasMessages));
+                OnPropertyChanged(nameof(MessageQueueVisibility));
+            });
         }
 
-        #endregion Messages
+        /// <summary>
+        /// Clears all messages from the queue.
+        /// </summary>
+        public void ClearAllMessages()
+        {
+            ClearMessage();
+        }
+
+        /// <summary>
+        /// Sorts messages in required order.
+        /// </summary>
+        private void SortMessages()
+        {
+            var now = DateTime.Now;
+
+            var sorted = _messageQueue
+                // First: dismissible messages ordered by expiration time (soonest to expire first)
+                .OrderBy(m =>
+                {
+                    if (m.AutoDismissSeconds > 0)
+                    {
+                        // Calculate actual expiration time
+                        return m.Timestamp.AddSeconds(m.AutoDismissSeconds);
+                    }
+                    else if (m.IsDismissible)
+                    {
+                        // Manually dismissible but not auto-dismiss: show after auto-dismiss messages
+                        return DateTime.MaxValue.AddDays(-1);
+                    }
+                    else
+                    {
+                        // Non-dismissible: show last
+                        return DateTime.MaxValue;
+                    }
+                })
+                // Then by priority (Error > Warning > Information)
+                .ThenByDescending(m => m.Priority)
+                // Then by timestamp (newest first)
+                .ThenByDescending(m => m.Timestamp)
+                .ToList();
+
+            _messageQueue.Clear();
+            foreach (var item in sorted)
+            {
+                _messageQueue.Add(item);
+            }
+        }
+
+        /// <summary>
+        /// Sets up auto-dismiss for a message after the specified number of seconds.
+        /// </summary>
+        /// <param name="messageId">The ID of the message to auto-dismiss.</param>
+        /// <param name="seconds">Number of seconds before auto-dismiss.</param>
+        private void SetupAutoDismiss(string messageId, int seconds)
+        {
+            // Cancel any existing timer for this message
+            CancelAutoDismiss(messageId);
+
+            // Create a new timer
+            var timer = new System.Timers.Timer(seconds * 1000);
+            timer.AutoReset = false;
+            timer.Elapsed += (sender, e) =>
+            {
+                ClearMessage(id: messageId);
+                CancelAutoDismiss(messageId);
+            };
+
+            _messageTimers[messageId] = timer;
+            timer.Start();
+        }
+
+        /// <summary>
+        /// Cancels the auto-dismiss timer for a message.
+        /// </summary>
+        /// <param name="messageId">The ID of the message.</param>
+        private void CancelAutoDismiss(string messageId)
+        {
+            if (_messageTimers.TryGetValue(messageId, out var timer))
+            {
+                timer.Stop();
+                timer.Dispose();
+                _messageTimers.Remove(messageId);
+            }
+        }
+
+        /// <summary>
+        /// Gets the count of messages by category.
+        /// </summary>
+        /// <param name="category">The category to count.</param>
+        /// <returns>The number of messages in that category.</returns>
+        public int GetMessageCountByCategory(string category)
+        {
+            return _messageQueue.Count(m => string.Equals(m.Category, category, StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        /// Gets the count of messages by level.
+        /// </summary>
+        /// <param name="level">The level to count.</param>
+        /// <returns>The number of messages at that level.</returns>
+        public int GetMessageCountByLevel(MessageType level)
+        {
+            return _messageQueue.Count(m => m.Level == level);
+        }
+
+        /// <summary>
+        /// Checks if there are any error messages in the queue.
+        /// </summary>
+        /// <value><c>true</c> if there are error messages in the queue; otherwise, <c>false</c>.</value>
+        public bool HasErrors
+        {
+            get
+            {
+                return _messageQueue.Any(m => m.Level == MessageType.Error);
+            }
+        }
+
+        /// <summary>
+        /// Checks if there are any warning messages in the queue.
+        /// </summary>
+        /// <value><c>true</c> if there are warning messages in the queue; otherwise, <c>false</c>.</value>
+        public bool HasWarnings
+        {
+            get
+            {
+                return _messageQueue.Any(m => m.Level == MessageType.Warning);
+            }
+        }
+
+        /// <summary>
+        /// Shows an error message.
+        /// </summary>
+        public string ShowError(string message, string category = null, bool isDismissible = true)
+        {
+            return ShowMessage(message, MessageType.Error, category ?? MessageCategory.General, isDismissible);
+        }
+
+        /// <summary>
+        /// Shows a warning message.
+        /// </summary>
+        public string ShowWarning(string message, string category = null, bool isDismissible = true, int autoDismissSeconds = 5)
+        {
+            return ShowMessage(message, MessageType.Warning, category ?? MessageCategory.General, isDismissible, autoDismissSeconds);
+        }
+
+        /// <summary>
+        /// Shows an informational message with auto-dismiss.
+        /// </summary>
+        public string ShowInfo(string message, string category = null, bool isDismissible = true, int autoDismissSeconds = 5)
+        {
+            return ShowMessage(message, MessageType.Information, category ?? MessageCategory.General, isDismissible, autoDismissSeconds);
+        }
+
+        /// <summary>
+        /// Shows a success message with auto-dismiss.
+        /// </summary>
+        public string ShowSuccess(string message, string category = null, bool isDismissible = true, int autoDismissSeconds = 5)
+        {
+            return ShowMessage(message, MessageType.Information, category ?? MessageCategory.General, isDismissible, autoDismissSeconds);
+        }
+
+        #endregion Message Queue
+
+        #region ShowMessage
+
+        /// <summary>
+        /// Show the message with the required icon (message type).
+        /// Legacy method - redirects to new message queue system.
+        /// </summary>
+        /// <param name="msg">The message to display.</param>
+        /// <param name="messageLevel">The level of the message (e.g., Info, Warning, Error).</param>
+        [Obsolete("Use ShowMessage with category parameter instead")]
+        public void ShowMessage(string msg, MessageType messageLevel)
+        {
+            ShowMessage(msg, messageLevel, MessageCategory.General, true, 0);
+        }
+
+        #endregion ShowMessage
+
+        #region Message Dismss
+
+        private ICommand _dismissMessageCommand;
+
+        /// <summary>
+        /// Command to dismiss a message by ID.
+        /// </summary>
+        public ICommand DismissMessageCommand
+        {
+            get
+            {
+                if (_dismissMessageCommand == null)
+                {
+                    _dismissMessageCommand = new RelayCommand(
+                        param => ClearMessage(id: param?.ToString()),
+                        param => true);
+                }
+                return _dismissMessageCommand;
+            }
+        }
+
+        #endregion Message Dismss
 
         #region Help
 
@@ -6519,7 +6882,8 @@ namespace HLU.UI.ViewModel
                         errorMsg += "; ";
                     errorMsg += processComboBox.ErrorMessage;
                 }
-                ShowMessage(errorMsg, MessageType.Warning);
+
+                ShowError(errorMsg, MessageCategory.GIS);
             }
             else
             {
@@ -6822,7 +7186,8 @@ namespace HLU.UI.ViewModel
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Error);
+                //MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowError(ex.Message, MessageCategory.Navigation);
             }
             finally
             {
@@ -6848,7 +7213,8 @@ namespace HLU.UI.ViewModel
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Error);
+                //MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowError(ex.Message, MessageCategory.Navigation);
             }
             finally
             {
@@ -6874,7 +7240,8 @@ namespace HLU.UI.ViewModel
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Error);
+                //MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowError(ex.Message, MessageCategory.Navigation);
             }
             finally
             {
@@ -6902,7 +7269,8 @@ namespace HLU.UI.ViewModel
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Error);
+                //MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowError(ex.Message, MessageCategory.Navigation);
             }
             finally
             {

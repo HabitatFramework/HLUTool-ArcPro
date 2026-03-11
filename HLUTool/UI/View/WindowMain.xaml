@@ -23,6 +23,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <extensions:DesignOnlyResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
                 <ResourceDictionary Source="Dictionary\ValidationTemplates.xaml" />
+                <ResourceDictionary Source="Dictionary\BoolToVisibilityConverter.xaml" />
                 <ResourceDictionary Source="Dictionary\CodeDescriptionConverterDictionary.xaml" />
                 <ResourceDictionary Source="Dictionary\CodeDescriptionBoolConverterDictionary.xaml" />
                 <ResourceDictionary Source="Dictionary\CodeNameDescriptionConverterDictionary.xaml" />
@@ -3565,18 +3566,52 @@
                 </Grid>
             </Grid>
 
-            <controls:MessageLabel
+            <ScrollViewer
                 Grid.Row="1"
-                Height="Auto"
+                MaxHeight="100"
                 Margin="0,4,0,0"
-                CanClose="False"
-                Content="{Binding StatusMessage}"
-                MessageType="{Binding MessageLevel}"
-                Severity="High"
-                ShowHelp="False"
-                ToolTip="{Binding StatusMessage}"
-                Visibility="{Binding HasMessage}" />
+                HorizontalScrollBarVisibility="Disabled"
+                VerticalScrollBarVisibility="Auto"
+                Visibility="{Binding MessageQueueVisibility}">
+                <ItemsControl ItemsSource="{Binding MessageQueue}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="2,0,2,2">
+                                <controls:MessageLabel
+                                    CanClose="False"
+                                    Content="{Binding Message}"
+                                    MessageType="{Binding Level}"
+                                    Severity="High"
+                                    ShowHelp="False"
+                                    Tag="{Binding Id}"
+                                    ToolTip="{Binding Message}" />
 
+                                <Button
+                                    Width="20"
+                                    Height="20"
+                                    Margin="4,0,-20,0"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    Command="{Binding DataContext.DismissMessageCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                    CommandParameter="{Binding Id}"
+                                    Style="{DynamicResource Esri_ButtonBorderless}"
+                                    ToolTip="Dismiss"
+                                    Visibility="{Binding IsDismissible, Converter={StaticResource boolToVisibilityConverter}}">
+                                    <TextBlock
+                                        FontFamily="Segoe MDL2 Assets"
+                                        FontSize="10"
+                                        Text="&#xE711;" />
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Vertical" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </ScrollViewer>
 
         </Grid>
     </DockPanel>

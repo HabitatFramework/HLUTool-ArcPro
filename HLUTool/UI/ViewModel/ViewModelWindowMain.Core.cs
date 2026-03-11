@@ -34,6 +34,7 @@ using HLU.Date;
 using HLU.GISApplication;
 using HLU.Helpers;
 using HLU.Properties;
+using HLU.UI.Model;
 using HLU.UI.UserControls.Toolbar;
 using System;
 using System.Collections.Generic;
@@ -2078,8 +2079,8 @@ namespace HLU.UI.ViewModel
                 // Recomputes whether editing is currently possible.
                 RefreshEditCapability();
 
-                // Display a warning message.
-                ShowMessage("No active map.", MessageType.Warning);
+                // Display an error message.
+                ShowError("No active map.", MessageCategory.GIS);
 
                 // Clear the active map view and layer name.
                 _activeMapView = null;
@@ -2111,8 +2112,8 @@ namespace HLU.UI.ViewModel
                 // to match the current active layer.
                 _activeLayerComboBox?.SetSelectedItem(ActiveLayerName, true);
 
-                // Display a warning message.
-                ShowMessage("Active map does not contain valid HLU layers.", MessageType.Warning);
+                // Display an error message.
+                ShowError("Active map does not contain valid HLU layers.", MessageCategory.GIS);
 
                 return false;
             }

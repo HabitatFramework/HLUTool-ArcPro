@@ -175,7 +175,8 @@ namespace HLU.UI.View
 
             // Ignore keyup if any comboboxes are currently open
             foreach (ComboBox cbx in _comboBoxes)
-                if (cbx.IsDropDownOpen) return;
+                if (cbx.IsDropDownOpen)
+                    return;
 
             // Clear the Ctrl flag when Ctrl key is released
             if (e.Key == Key.LeftCtrl || e.Key == Key.RightCtrl)
@@ -205,7 +206,8 @@ namespace HLU.UI.View
                     }
                     break;
                 case Key.Home:
-                    if ((focusedControl != null) && (focusedControl is TextBox)) return;
+                    if ((focusedControl != null) && (focusedControl is TextBox))
+                        return;
                     if (this.ButtonFirstRecord.Command.CanExecute(null))
                         this.ButtonFirstRecord.Command.Execute(null);
                     break;
@@ -222,7 +224,8 @@ namespace HLU.UI.View
                         this.ButtonNextRecord.Command.Execute(null);
                     break;
                 case Key.End:
-                    if ((focusedControl != null) && (focusedControl is TextBox)) return;
+                    if ((focusedControl != null) && (focusedControl is TextBox))
+                        return;
                     if (this.ButtonLastRecord.Command.CanExecute(null))
                         this.ButtonLastRecord.Command.Execute(null);
                     break;

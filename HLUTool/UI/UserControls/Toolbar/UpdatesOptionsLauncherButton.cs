@@ -41,12 +41,7 @@ namespace HLU.UI.UserControls.Toolbar
                     };
 
                     // Initialize the ViewModel for the options window, passing necessary data from the main ViewModel
-                    _viewModelOptions = new(
-                        reasonCodes: _viewModel.ReasonCodes,
-                        processCodes: _viewModel.ProcessCodes,
-                        habitatClasses: _viewModel.HabitatClasses,
-                        secondaryGroupsAll: _viewModel.SecondaryGroupCodesWithAll
-                    )
+                    _viewModelOptions = new()
                     {
                         DisplayName = "Options"
                     };
