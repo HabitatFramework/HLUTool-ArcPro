@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2022 Greenspace Information for Greater London CIC
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -41,7 +42,7 @@ namespace HLU.Data
 
         private bool _bulkUpdateMode;
 
-        private readonly Dictionary<string, List<string>> _errors = new Dictionary<string, List<string>>();
+        private readonly Dictionary<string, List<string>> _errors = [];
         private static IEnumerable<SecondaryHabitat> _secondaryHabitatList;
         private static IEnumerable<string> _validSecondaryCodes;
         private static Dictionary<string, String> _secondaryGroupCodes;
@@ -50,7 +51,7 @@ namespace HLU.Data
 
         #endregion Fields
 
-        #region ctor
+        #region Constructor
 
         /// <summary>
         /// Default constructor for a new SecondaryHabitat record. Sets bulk update mode to false and
@@ -58,6 +59,7 @@ namespace HLU.Data
         /// </summary>
         public SecondaryHabitat()
         {
+            // Set bulk update mode to false by default, which means that validation will be performed and errors will be shown for this record.
             _bulkUpdateMode = false;
 
             _secondary_id = -1; // arbitrary PK for a new row
@@ -72,6 +74,7 @@ namespace HLU.Data
         /// <param name="dataRow">The data row from which to initialize the SecondaryHabitat.</param>
         public SecondaryHabitat(bool bulkUpdateMode, HluDataSet.incid_secondaryRow dataRow)
         {
+            // Set the bulk update mode from the parameter, which can affect validation behavior.
             _bulkUpdateMode = bulkUpdateMode;
 
             HluDataSet.incid_secondaryDataTable table = (HluDataSet.incid_secondaryDataTable)dataRow.Table;
@@ -96,6 +99,7 @@ namespace HLU.Data
         /// <param name="shList">The list of existing secondary habitats for duplicate validation.</param>
         public SecondaryHabitat(bool bulkUpdateMode, HluDataSet.incid_secondaryRow dataRow, IEnumerable<SecondaryHabitat> shList)
         {
+            // Set the bulk update mode from the parameter, which can affect validation behavior.
             _bulkUpdateMode = bulkUpdateMode;
 
             HluDataSet.incid_secondaryDataTable table = (HluDataSet.incid_secondaryDataTable)dataRow.Table;
@@ -119,16 +123,26 @@ namespace HLU.Data
         /// <param name="itemArray">The object array from which to initialize the SecondaryHabitat.</param>
         public SecondaryHabitat(bool bulkUpdateMode, object[] itemArray)
         {
+            // Set the bulk update mode from the parameter, which can affect validation behavior.
             _bulkUpdateMode = bulkUpdateMode;
 
-            Int32.TryParse(itemArray[0].ToString(), out _secondary_id);
+            // Try to parse the secondary_id from the first element of the array. If parsing fails, default to 0.
+            if (Int32.TryParse(itemArray[0].ToString(), out int secondary_id))
+                _secondary_id = secondary_id;
+            else
+                _secondary_id = 0;
+
+            // Get the incid and secondary_habitat values from the array, converting to string.
             _incid = itemArray[1].ToString();
             _secondary_habitat = itemArray[2].ToString();
-            int secondary_habitat_int;
-            if (Int32.TryParse(_secondary_habitat, out secondary_habitat_int))
+
+            // Try to parse the secondary_habitat_int from the secondary_habitat string. If parsing fails, default to 0.
+            if (Int32.TryParse(_secondary_habitat, out int secondary_habitat_int))
                 _secondary_habitat_int = secondary_habitat_int;
             else
                 _secondary_habitat_int = 0;
+
+            // Get the secondary_group value from the array, converting to string.
             _secondary_group = itemArray[3].ToString();
         }
 
@@ -143,6 +157,7 @@ namespace HLU.Data
         /// <param name="secondary_group">The group to which the secondary habitat belongs.</param>
         public SecondaryHabitat(bool bulkUpdateMode, int secondary_id, string incid, string secondary_habitat, string secondary_group)
         {
+            // Set the bulk update mode from the parameter, which can affect validation behavior.
             _bulkUpdateMode = bulkUpdateMode;
 
             _secondary_id = secondary_id;
@@ -163,13 +178,15 @@ namespace HLU.Data
         /// <param name="inputSH">The existing SecondaryHabitat to copy.</param>
         public SecondaryHabitat(SecondaryHabitat inputSH)
         {
+            // Set bulk update mode to false by default for the new instance, which means that
+            // validation will be performed and errors will be shown for this record.
             _bulkUpdateMode = false;
 
             _secondary_id = -1; // arbitrary PK for a new row
             _incid = null;
-            _secondary_habitat = inputSH.secondary_habitat;
-            _secondary_habitat_int = inputSH.secondary_habitat_int;
-            _secondary_group = inputSH.secondary_group;
+            _secondary_habitat = inputSH.Secondary_habitat;
+            _secondary_habitat_int = inputSH.Secondary_habitat_int;
+            _secondary_group = inputSH.Secondary_group;
         }
 
         /// <summary>
@@ -181,10 +198,11 @@ namespace HLU.Data
         /// <returns>A new instance of SecondaryHabitat with the same values as the current instance.</returns>
         public object Clone()
         {
+            // Use the copy constructor to create a new instance of SecondaryHabitat with the same values as the current instance.
             return new SecondaryHabitat(this);
         }
 
-        #endregion ctor
+        #endregion Constructor
 
         #region DataChanged
 
@@ -255,8 +273,8 @@ namespace HLU.Data
                 return allErrors.Count != 0 ? allErrors : null;
             }
 
-            if (_errors.ContainsKey(propertyName))
-                return _errors[propertyName];
+            if (_errors.TryGetValue(propertyName, out List<string> value))
+                return value;
 
             return null;
         }
@@ -276,9 +294,10 @@ namespace HLU.Data
             if (errors != null && errors.Count != 0)
             {
                 // Add or update errors
-                if (!_errors.ContainsKey(propertyName) || !_errors[propertyName].SequenceEqual(errors))
+                if (!_errors.TryGetValue(propertyName, out List<string> value) || !value.SequenceEqual(errors))
                 {
-                    _errors[propertyName] = errors;
+                    value = errors;
+                    _errors[propertyName] = value;
                     errorsChanged = true;
                 }
             }
@@ -324,22 +343,22 @@ namespace HLU.Data
         /// <param name="propertyName">The name of the property to validate.</param>
         private void ValidateProperty(string propertyName)
         {
-            List<string> errors = new List<string>();
+            List<string> errors = [];
 
             switch (propertyName)
             {
-                case nameof(incid):
-                    if ((secondary_id != -1) && String.IsNullOrEmpty(incid))
+                case nameof(Incid):
+                    if ((Secondary_id != -1) && String.IsNullOrEmpty(Incid))
                     {
                         errors.Add("Error: INCID is a mandatory field");
                     }
                     break;
 
-                case nameof(secondary_habitat):
+                case nameof(Secondary_habitat):
                     // Only validate if not in bulk update mode and errors are to be shown
                     if (!_bulkUpdateMode)
                     {
-                        if (String.IsNullOrEmpty(secondary_habitat))
+                        if (String.IsNullOrEmpty(Secondary_habitat))
                         {
                             errors.Add("Error: Secondary habitat is a mandatory field");
                         }
@@ -347,13 +366,13 @@ namespace HLU.Data
                         {
                             errors.Add("Error: Secondary habitat is not valid without primary habitat");
                         }
-                        else if ((_secondaryHabitatList != null) && (_secondaryHabitatList.Count(b => b.secondary_habitat == secondary_habitat) > 1))
+                        else if ((_secondaryHabitatList != null) && (_secondaryHabitatList.Count(b => b.Secondary_habitat == Secondary_habitat) > 1))
                         {
                             errors.Add("Error: Duplicate secondary habitat");
                         }
                         else if (_primarySecondaryCodeValidation > 0)
                         {
-                            if ((_validSecondaryCodes != null) && (!_validSecondaryCodes.Contains(secondary_habitat)))
+                            if ((_validSecondaryCodes != null) && (!_validSecondaryCodes.Contains(Secondary_habitat)))
                             {
                                 errors.Add("Error: Secondary habitat is not valid for primary habitat");
                             }
@@ -480,7 +499,7 @@ namespace HLU.Data
         /// -1 to indicate that it has not yet been saved to the database.
         /// </summary>
         /// <value>The ID of the secondary habitat record.</value>
-        public int secondary_id
+        public int Secondary_id
         {
             get
             {
@@ -499,7 +518,7 @@ namespace HLU.Data
         /// the record's validity may have changed.
         /// </summary>
         /// <value>The incid associated with the secondary habitat record.</value>
-        public string incid
+        public string Incid
         {
             get
             {
@@ -510,8 +529,8 @@ namespace HLU.Data
                 if (_incid != value)
                 {
                     _incid = value;
-                    OnPropertyChanged(nameof(incid));
-                    ValidateProperty(nameof(incid));
+                    OnPropertyChanged(nameof(Incid));
+                    ValidateProperty(nameof(Incid));
                 }
             }
         }
@@ -522,7 +541,7 @@ namespace HLU.Data
         /// triggers validation and raises the DataChanged event to indicate that the record's validity may have changed.
         /// </summary>
         /// <value>The secondary habitat code or description.</value>
-        public string secondary_habitat
+        public string Secondary_habitat
         {
             get
             {
@@ -533,8 +552,8 @@ namespace HLU.Data
                 if (_secondary_habitat != value)
                 {
                     _secondary_habitat = value;
-                    OnPropertyChanged(nameof(secondary_habitat));
-                    ValidateProperty(nameof(secondary_habitat));
+                    OnPropertyChanged(nameof(Secondary_habitat));
+                    ValidateProperty(nameof(Secondary_habitat));
 
                     // Flag that the current record has changed so that the apply button
                     // will appear.
@@ -549,7 +568,7 @@ namespace HLU.Data
         /// changes, this property is updated accordingly.
         /// </summary>
         /// <value>The integer representation of the secondary habitat code.</value>
-        public int secondary_habitat_int
+        public int Secondary_habitat_int
         {
             get
             {
@@ -567,7 +586,7 @@ namespace HLU.Data
         /// value of this property changes, it does not trigger validation or raise the DataChanged event.
         /// </summary>
         /// <value>The secondary group associated with the secondary habitat.</value>
-        public string secondary_group
+        public string Secondary_group
         {
             get
             {
@@ -627,7 +646,7 @@ namespace HLU.Data
         {
             get
             {
-                return _secondaryHabitatList != null && _secondaryHabitatList.Any(sh => sh.secondary_habitat == this.secondary_habitat);
+                return _secondaryHabitatList != null && _secondaryHabitatList.Any(sh => sh.Secondary_habitat == this.Secondary_habitat);
             }
         }
 
@@ -638,8 +657,8 @@ namespace HLU.Data
         /// <returns><c>true</c> if the current record is valid; otherwise, <c>false</c>.</returns>
         public bool IsValid()
         {
-            ValidateProperty(nameof(incid));
-            ValidateProperty(nameof(secondary_habitat));
+            ValidateProperty(nameof(Incid));
+            ValidateProperty(nameof(Secondary_habitat));
 
             return !HasErrors;
         }
@@ -705,6 +724,16 @@ namespace HLU.Data
             return ValidateRow(bulkUpdateMode, r.secondary_id, r.incid, r.secondary, r.secondary_group) == null;
         }
 
+        /// <summary>
+        /// Determines whether the specified data is valid based on the validation rules defined in
+        /// the class.
+        /// </summary>
+        /// <param name="_bulkUpdateMode">A value indicating whether the validation is being performed in bulk update mode.</param>
+        /// <param name="secondary_id">The secondary ID of the data.</param>
+        /// <param name="incid">The INCID of the data.</param>
+        /// <param name="secondary_habitat">The secondary habitat of the data.</param>
+        /// <param name="secondary_group">The secondary group of the data.</param>
+        /// <returns>A string containing the validation error messages, or <c>null</c> if the data is valid.</returns>
         private static string ValidateRow(bool _bulkUpdateMode, int secondary_id, string incid,
             string secondary_habitat, string secondary_group)
         {
@@ -722,7 +751,7 @@ namespace HLU.Data
                 if (_validSecondaryCodes == null)
                     sbError.Append(Environment.NewLine).Append("Error: Secondary habitat is not valid without primary habitat");
 
-                if ((_secondaryHabitatList != null) && (_secondaryHabitatList.Count(b => b.secondary_habitat == secondary_habitat) > 1))
+                if ((_secondaryHabitatList != null) && (_secondaryHabitatList.Count(b => b.Secondary_habitat == secondary_habitat) > 1))
                     sbError.Append(Environment.NewLine).Append("Error: Duplicate secondary habitat");
 
                 if (_primarySecondaryCodeValidation > 0)

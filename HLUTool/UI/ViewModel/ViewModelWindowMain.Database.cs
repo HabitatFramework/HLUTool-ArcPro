@@ -3,6 +3,7 @@
 // Copyright © 2014 Sussex Biodiversity Record Centre
 // Copyright © 2019 London & South East Record Centres (LaSER)
 // Copyright © 2019-2022 Greenspace Information for Greater London CIC
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -22,7 +23,6 @@
 using HLU.Data;
 using HLU.Data.Connection;
 using HLU.Data.Model;
-using HLU.Data.Model.HluDataSetTableAdapters;
 using HLU.Date;
 using HLU.Helpers;
 using HLU.Properties;
@@ -694,7 +694,7 @@ namespace HLU.UI.ViewModel
         private bool IncidSecondaryRowDirty(SecondaryHabitat sh)
         {
             // deleted secondary habitat row
-            var q = _incidSecondaryRows.Where(r => r.RowState != DataRowState.Deleted && r.secondary_id == sh.secondary_id);
+            var q = _incidSecondaryRows.Where(r => r.RowState != DataRowState.Deleted && r.secondary_id == sh.Secondary_id);
             switch (q.Count())
             {
                 case 0:
@@ -730,7 +730,7 @@ namespace HLU.UI.ViewModel
         private bool IncidBapRowDirty(BapEnvironment be)
         {
             // deleted user BAP row
-            var q = _incidBapRows.Where(r => r.RowState != DataRowState.Deleted && r.bap_id == be.bap_id);
+            var q = _incidBapRows.Where(r => r.RowState != DataRowState.Deleted && r.bap_id == be.Bap_id);
             switch (q.Count())
             {
                 case 0:
@@ -1093,7 +1093,7 @@ namespace HLU.UI.ViewModel
             if ((checkVal == null) || checkVal.Equals(skipVal)) return;
 
             string[] split = propNamePat.Split([propNamePatWildcard], StringSplitOptions.None);
-            string errMsg = String.Format("Error: {0}", split[split.Length - 1]);
+            string errMsg = String.Format("Error: {0}", split[^1]);
 
             string extractedWords = string.Join(" ",
                 StringHelper.GetCapitalisedRegex().Matches(errMsg).Cast<Match>()
@@ -1155,7 +1155,7 @@ namespace HLU.UI.ViewModel
             if ((checkVal == null) || checkVal.Equals(skipVal)) return;
 
             string[] split = propNamePat.Split([propNamePatWildcard], StringSplitOptions.None);
-            string errMsg = String.Format("Error: {0}", split[split.Length - 1]);
+            string errMsg = String.Format("Error: {0}", split[^1]);
 
             string extractedWords = string.Join(" ",
                 StringHelper.GetCapitalisedRegex().Matches(errMsg).Cast<Match>()
@@ -1287,17 +1287,17 @@ namespace HLU.UI.ViewModel
                 _incidNVCCodes = null;
                 if (_primaryCodes != null)
                 {
-                    var q = _primaryCodes.Where(h => h.code == _incidPrimary);
+                    var q = _primaryCodes.Where(h => h.Code == _incidPrimary);
                     if (q.Any())
-                        _incidNVCCodes = q.ElementAt(0).nvc_codes;
+                        _incidNVCCodes = q.ElementAt(0).NVC_codes;
                 }
 
                 // Store all secondary habitat codes that are flagged as local for
                 // all secondary groups that relate to the primary habitat category.
-                _secondaryCodesValid = (from s in SecondaryHabitatCodesAll
+                _secondaryCodesValid = [.. (from s in SecondaryHabitatCodesAll
                                         join ps in _lutPrimarySecondary on s.code equals ps.code_secondary
                                         where ((ps.code_primary == _incidPrimary) || (ps.code_primary.EndsWith('*') && Regex.IsMatch(_incidPrimary, @"\A" + ps.code_primary.TrimEnd('*') + @"") == true))
-                                        select s).OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
+                                        select s).OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
                 // Store the list of valid secondary codes.
                 SecondaryHabitat.ValidSecondaryCodes = _secondaryCodesValid.Select(s => s.code);
@@ -1334,7 +1334,7 @@ namespace HLU.UI.ViewModel
         {
             // Remove any existing handlers before assigning a new collection.
             if (_incidSecondaryHabitats != null)
-                _incidSecondaryHabitats.CollectionChanged -= _incidSecondaryHabitats_CollectionChanged;
+                _incidSecondaryHabitats.CollectionChanged -= IncidSecondaryHabitats_CollectionChanged;
 
             // Identify any secondary habitat rows that have not been marked as deleted.
             IEnumerable<HluDataSet.incid_secondaryRow> incidSecondaryRowsUndel =
@@ -1364,7 +1364,7 @@ namespace HLU.UI.ViewModel
             }
 
             // Track any changes to the user rows collection.
-            _incidSecondaryHabitats.CollectionChanged += _incidSecondaryHabitats_CollectionChanged;
+            _incidSecondaryHabitats.CollectionChanged += IncidSecondaryHabitats_CollectionChanged;
 
             // Set the new list of secondary habitat rows for the class.
             SecondaryHabitat.SecondaryHabitatList = _incidSecondaryHabitats;
@@ -1406,7 +1406,7 @@ namespace HLU.UI.ViewModel
 
             // Remove any existing handlers before assigning a new collection.
             if (_incidSecondaryHabitats != null)
-                _incidSecondaryHabitats.CollectionChanged -= _incidSecondaryHabitats_CollectionChanged;
+                _incidSecondaryHabitats.CollectionChanged -= IncidSecondaryHabitats_CollectionChanged;
 
             // If there are any existing rows add the new row the collection
             // and then sort them.
@@ -1420,7 +1420,7 @@ namespace HLU.UI.ViewModel
             }
 
             // Track any changes to the user rows collection.
-            _incidSecondaryHabitats.CollectionChanged += _incidSecondaryHabitats_CollectionChanged;
+            _incidSecondaryHabitats.CollectionChanged += IncidSecondaryHabitats_CollectionChanged;
 
             // Set the new list of secondary habitat rows for the class.
             SecondaryHabitat.SecondaryHabitatList = _incidSecondaryHabitats;
@@ -1441,23 +1441,23 @@ namespace HLU.UI.ViewModel
             if (_incidSecondaryHabitats != null)
             {
                 // Remove any existing handlers before assigning a new collection.
-                _incidSecondaryHabitats.CollectionChanged -= _incidSecondaryHabitats_CollectionChanged;
+                _incidSecondaryHabitats.CollectionChanged -= IncidSecondaryHabitats_CollectionChanged;
 
                 // Order the secondary codes as required
                 _incidSecondaryHabitats = _secondaryCodeOrder switch
                 {
                     "As entered" => new ObservableCollection<SecondaryHabitat>(
-                            _incidSecondaryHabitats.OrderBy(r => r.secondary_id)),
+                            _incidSecondaryHabitats.OrderBy(r => r.Secondary_id)),
                     "By group then code" => new ObservableCollection<SecondaryHabitat>(
-                            _incidSecondaryHabitats.OrderBy(r => r.secondary_group).ThenBy(r => r.secondary_habitat_int)),
+                            _incidSecondaryHabitats.OrderBy(r => r.Secondary_group).ThenBy(r => r.Secondary_habitat_int)),
                     "By code" => new ObservableCollection<SecondaryHabitat>(
-                            _incidSecondaryHabitats.OrderBy(r => r.secondary_habitat_int)),
+                            _incidSecondaryHabitats.OrderBy(r => r.Secondary_habitat_int)),
                     _ => new ObservableCollection<SecondaryHabitat>(
-                            _incidSecondaryHabitats.OrderBy(r => r.secondary_id))
+                            _incidSecondaryHabitats.OrderBy(r => r.Secondary_id))
                 };
 
                 // Track any changes to the user rows collection.
-                _incidSecondaryHabitats.CollectionChanged += _incidSecondaryHabitats_CollectionChanged;
+                _incidSecondaryHabitats.CollectionChanged += IncidSecondaryHabitats_CollectionChanged;
 
                 // Check if there are any errors in the secondary habitat records to see
                 // if the Habitats tab label should be flagged as also in error.
@@ -1483,7 +1483,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The event data.</param>
-        private void _incidSecondaryHabitats_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void IncidSecondaryHabitats_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             OnPropertyChanged(nameof(Error));
 
@@ -1536,9 +1536,9 @@ namespace HLU.UI.ViewModel
         {
             // Remove any existing handlers before assigning a new collection.
             if (_incidBapRowsAuto != null)
-                _incidBapRowsAuto.CollectionChanged -= _incidBapRowsAuto_CollectionChanged;
+                _incidBapRowsAuto.CollectionChanged -= IncidBapRowsAuto_CollectionChanged;
             if (_incidBapRowsUser != null)
-                _incidBapRowsUser.CollectionChanged -= _incidBapRowsUser_CollectionChanged;
+                _incidBapRowsUser.CollectionChanged -= IncidBapRowsUser_CollectionChanged;
 
             IEnumerable<string> mandatoryBap = null;
             IEnumerable<HluDataSet.incid_bapRow> incidBapRowsUndel = null;
@@ -1580,14 +1580,14 @@ namespace HLU.UI.ViewModel
                     // rows as a result of changes to the IHS codes.
                     newBapRowsAuto = from r in incidBapRowsUndel
                                      join pot in mandatoryBap on r.bap_habitat equals pot
-                                     where !prevBapRowsAuto.Any(p => p.bap_habitat == r.bap_habitat)
+                                     where !prevBapRowsAuto.Any(p => p.Bap_habitat == r.bap_habitat)
                                      select new BapEnvironment(false, false, r);
                 }
 
                 // Determine if there are any potential BAP rows that should
                 // be added as a result of changes to the IHS codes.
                 var potBap = from p in mandatoryBap
-                             where !prevBapRowsAuto.Any(a => a.bap_habitat == p)
+                             where !prevBapRowsAuto.Any(a => a.Bap_habitat == p)
                              where !incidBapRowsUndel.Any(row => row.bap_habitat == p)
                              select new BapEnvironment(false, false, -1, Incid, p, null, null, null);
 
@@ -1596,7 +1596,7 @@ namespace HLU.UI.ViewModel
                 {
                     foreach (BapEnvironment be in _incidBapRowsAuto)
                     {
-                        be.DataChanged -= _incidBapRowsUser_DataChanged;
+                        be.DataChanged -= IncidBapRowsUser_DataChanged;
                     }
                 }
 
@@ -1612,7 +1612,7 @@ namespace HLU.UI.ViewModel
                 {
                     foreach (BapEnvironment be in _incidBapRowsAuto)
                     {
-                        be.DataChanged -= _incidBapRowsUser_DataChanged;
+                        be.DataChanged -= IncidBapRowsUser_DataChanged;
                     }
                 }
 
@@ -1628,7 +1628,7 @@ namespace HLU.UI.ViewModel
                 {
                     foreach (BapEnvironment be in _incidBapRowsAuto)
                     {
-                        be.DataChanged -= _incidBapRowsUser_DataChanged;
+                        be.DataChanged -= IncidBapRowsUser_DataChanged;
                     }
                 }
 
@@ -1645,7 +1645,7 @@ namespace HLU.UI.ViewModel
                 {
                     foreach (BapEnvironment be in _incidBapRowsAuto)
                     {
-                        be.DataChanged -= _incidBapRowsUser_DataChanged;
+                        be.DataChanged -= IncidBapRowsUser_DataChanged;
                     }
                 }
 
@@ -1656,13 +1656,13 @@ namespace HLU.UI.ViewModel
             }
 
             // Track any changes to the auto rows collection.
-            _incidBapRowsAuto.CollectionChanged += _incidBapRowsAuto_CollectionChanged;
+            _incidBapRowsAuto.CollectionChanged += IncidBapRowsAuto_CollectionChanged;
 
             // Track when the auto data has been changed so that the apply button
             // will appear.
             foreach (BapEnvironment be in _incidBapRowsAuto)
             {
-                be.DataChanged += _incidBapRowsAuto_DataChanged;
+                be.DataChanged += IncidBapRowsAuto_DataChanged;
             }
             ;
 
@@ -1697,10 +1697,10 @@ namespace HLU.UI.ViewModel
                 {
                     // If there were user added rows before then determine
                     // which of them have not been promoted to auto rows.
-                    prevBapRowsUser = (from r in _incidBapRowsUser
-                                       where _incidCurrentRow.incid != null && r.incid == _incidCurrentRow.incid
-                                       where !_incidBapRowsAuto.Any(row => row.bap_habitat == r.bap_habitat)
-                                       select r).ToList();
+                    prevBapRowsUser = [.. (from r in _incidBapRowsUser
+                                       where _incidCurrentRow.incid != null && r.Incid == _incidCurrentRow.incid
+                                       where !_incidBapRowsAuto.Any(row => row.Bap_habitat == r.Bap_habitat)
+                                       select r)];
                     prevBapRowsUser.ForEach(delegate (BapEnvironment be)
                     {
                         // Don't overwrite the determination quality value loaded from the
@@ -1717,7 +1717,7 @@ namespace HLU.UI.ViewModel
                 {
                     foreach (BapEnvironment be in _incidBapRowsUser)
                     {
-                        be.DataChanged -= _incidBapRowsUser_DataChanged;
+                        be.DataChanged -= IncidBapRowsUser_DataChanged;
                     }
                 }
 
@@ -1725,8 +1725,8 @@ namespace HLU.UI.ViewModel
                 // undeleted rows that are not auto rows.
                 _incidBapRowsUser = new ObservableCollection<BapEnvironment>(prevBapRowsUser.Concat(
                     from r in incidBapRowsUndel
-                    where !_incidBapRowsAuto.Any(a => a.bap_habitat == r.bap_habitat)
-                    where !prevBapRowsUser.Any(p => p.bap_habitat == r.bap_habitat)
+                    where !_incidBapRowsAuto.Any(a => a.Bap_habitat == r.bap_habitat)
+                    where !prevBapRowsUser.Any(p => p.Bap_habitat == r.bap_habitat)
                     select new BapEnvironment(IsBulkMode, true, r)));
             }
             // If thereare undeleted rows but no auto rows then all the
@@ -1738,7 +1738,7 @@ namespace HLU.UI.ViewModel
                 {
                     foreach (BapEnvironment be in _incidBapRowsUser)
                     {
-                        be.DataChanged -= _incidBapRowsUser_DataChanged;
+                        be.DataChanged -= IncidBapRowsUser_DataChanged;
                     }
                 }
 
@@ -1752,7 +1752,7 @@ namespace HLU.UI.ViewModel
                 {
                     foreach (BapEnvironment be in _incidBapRowsUser)
                     {
-                        be.DataChanged -= _incidBapRowsUser_DataChanged;
+                        be.DataChanged -= IncidBapRowsUser_DataChanged;
                     }
                 }
 
@@ -1761,13 +1761,13 @@ namespace HLU.UI.ViewModel
             }
 
             // Track any changes to the user rows collection.
-            _incidBapRowsUser.CollectionChanged += _incidBapRowsUser_CollectionChanged;
+            _incidBapRowsUser.CollectionChanged += IncidBapRowsUser_CollectionChanged;
 
             // Track when the user data has been changed so that the apply button
             // will appear.
             foreach (BapEnvironment be in _incidBapRowsUser)
             {
-                be.DataChanged += _incidBapRowsUser_DataChanged;
+                be.DataChanged += IncidBapRowsUser_DataChanged;
             }
             ;
 
@@ -1785,10 +1785,10 @@ namespace HLU.UI.ViewModel
                 // secondary BAP records.
                 if (_incidBapRowsAuto != null && _incidBapRowsAuto.Count > 0)
                 {
-                    List<string> beDups = (from be in _incidBapRowsAuto.Concat(_incidBapRowsUser)
-                                           group be by be.bap_habitat into g
+                    List<string> beDups = [.. (from be in _incidBapRowsAuto.Concat(_incidBapRowsUser)
+                                           group be by be.Bap_habitat into g
                                            where g.Count() > 1
-                                           select g.Key).ToList();
+                                           select g.Key)];
 
                     if (beDups.Count > 2)
                         AddToErrorList(_priorityErrors, "BapUserDup");
@@ -1813,7 +1813,7 @@ namespace HLU.UI.ViewModel
         /// button will appear.
         /// </summary>
         /// <param name="BapChanged">Indicates whether the BAP records have changed.</param>
-        private void _incidBapRowsAuto_DataChanged(bool BapChanged)
+        private void IncidBapRowsAuto_DataChanged(bool BapChanged)
         {
             Changed = true;
 
@@ -1835,7 +1835,7 @@ namespace HLU.UI.ViewModel
         /// button will appear.
         /// </summary>
         /// <param name="BapChanged">Indicates whether the BAP records have changed.</param>
-        private void _incidBapRowsUser_DataChanged(bool BapChanged)
+        private void IncidBapRowsUser_DataChanged(bool BapChanged)
         {
             Changed = true;
 
@@ -1853,10 +1853,10 @@ namespace HLU.UI.ViewModel
                 // secondary BAP records.
                 if (_incidBapRowsAuto != null && _incidBapRowsAuto.Count > 0)
                 {
-                    List<string> beDups = (from be in _incidBapRowsAuto.Concat(_incidBapRowsUser)
-                                           group be by be.bap_habitat into g
+                    List<string> beDups = [.. (from be in _incidBapRowsAuto.Concat(_incidBapRowsUser)
+                                           group be by be.Bap_habitat into g
                                            where g.Count() > 1
-                                           select g.Key).ToList();
+                                           select g.Key)];
 
                     if (beDups.Count > 2)
                         AddToErrorList(_priorityErrors, "BapUserDup");
@@ -1887,9 +1887,9 @@ namespace HLU.UI.ViewModel
                 {
                     // Enable multiple priority habitat types (from the same or different
                     // classifications) to be assigned
-                    q = (from pb in _lutPrimaryBapHabitat
+                    q = [.. (from pb in _lutPrimaryBapHabitat
                          where pb.code_primary == primaryHabitat
-                         select pb.bap_habitat).ToArray();
+                         select pb.bap_habitat)];
 
                     // If any primary bap habitats have been found
                     primaryBap = null;
@@ -1904,9 +1904,9 @@ namespace HLU.UI.ViewModel
             {
                 try
                 {
-                    q = (from sb in _lutSecondaryBapHabitat
-                         join s in secondaryHabitats on sb.code_secondary equals s.secondary_habitat
-                         select sb.bap_habitat).ToArray();
+                    q = [.. (from sb in _lutSecondaryBapHabitat
+                         join s in secondaryHabitats on sb.code_secondary equals s.Secondary_habitat
+                         select sb.bap_habitat)];
 
                     // If any secondary bap habitats have been found
                     secondaryBap = null;
@@ -1930,7 +1930,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The event data.</param>
-        private void _incidBapRowsAuto_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void IncidBapRowsAuto_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             OnPropertyChanged(nameof(Error));
 
@@ -1957,7 +1957,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The event data.</param>
-        private void _incidBapRowsUser_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void IncidBapRowsUser_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             OnPropertyChanged(nameof(Error));
 
@@ -1978,10 +1978,10 @@ namespace HLU.UI.ViewModel
                 // secondary BAP records.
                 if (_incidBapRowsAuto != null && _incidBapRowsAuto.Count > 0)
                 {
-                    List<string> beDups = (from be in _incidBapRowsAuto.Concat(_incidBapRowsUser)
-                                           group be by be.bap_habitat into g
+                    List<string> beDups = [.. (from be in _incidBapRowsAuto.Concat(_incidBapRowsUser)
+                                           group be by be.Bap_habitat into g
                                            where g.Count() > 1
-                                           select g.Key).ToList();
+                                           select g.Key)];
 
                     if (beDups.Count > 2)
                         AddToErrorList(_priorityErrors, "BapUserDup");
@@ -2000,9 +2000,9 @@ namespace HLU.UI.ViewModel
             foreach (BapEnvironment be in _incidBapRowsUser)
             {
                 if (be == null)
-                    be.DataChanged -= _incidBapRowsUser_DataChanged;
-                else if (be.bap_id == -1)
-                    be.DataChanged += _incidBapRowsUser_DataChanged;
+                    be.DataChanged -= IncidBapRowsUser_DataChanged;
+                else if (be.Bap_id == -1)
+                    be.DataChanged += IncidBapRowsUser_DataChanged;
             }
         }
 
@@ -2287,8 +2287,7 @@ namespace HLU.UI.ViewModel
         {
             if ((whereClause != null) && (whereClause.Count > 0))
             {
-                if (_hluTableAdapterMgr.incid_mm_polygonsTableAdapter == null)
-                    _hluTableAdapterMgr.incid_mm_polygonsTableAdapter =
+                _hluTableAdapterMgr.incid_mm_polygonsTableAdapter ??=
                         new HluTableAdapter<HluDataSet.incid_mm_polygonsDataTable,
                             HluDataSet.incid_mm_polygonsRow>(_db);
 
@@ -2311,8 +2310,7 @@ namespace HLU.UI.ViewModel
         {
             if ((whereClause != null) && (whereClause.Count > 0))
             {
-                if (_hluTableAdapterMgr.incid_osmm_updatesTableAdapter == null)
-                    _hluTableAdapterMgr.incid_osmm_updatesTableAdapter =
+                _hluTableAdapterMgr.incid_osmm_updatesTableAdapter ??=
                         new HluTableAdapter<HluDataSet.incid_osmm_updatesDataTable,
                             HluDataSet.incid_osmm_updatesRow>(_db);
 
@@ -2863,8 +2861,7 @@ namespace HLU.UI.ViewModel
                 {
                     // Set the Incid selection where clause to match the list of
                     // selected incids (for possible use later).
-                    if (_incidSelectionWhereClause == null)
-                        _incidSelectionWhereClause = ViewModelWindowMainHelpers.IncidSelectionToWhereClause(
+                    _incidSelectionWhereClause ??= ViewModelWindowMainHelpers.IncidSelectionToWhereClause(
                             IncidPageSize, IncidTable.incidColumn.Ordinal, IncidTable, _incidsSelectedMap);
 
                     // Update the database Incid selection to the Incids selected in the map.

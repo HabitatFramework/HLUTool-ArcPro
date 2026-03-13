@@ -1,6 +1,7 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2013 Thames Valley Environmental Records Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -39,6 +40,12 @@ namespace HLU.Date
 
         #region Constructors
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="VagueDateInstance"/> class with the specified start and end dates and date type.
+        /// </summary>
+        /// <param name="startDate">The start date of the vague date instance.</param>
+        /// <param name="endDate">The end date of the vague date instance.</param>
+        /// <param name="dateType">The type of the vague date instance.</param>
         public VagueDateInstance(int startDate, int endDate, string dateType)
         {
             StartDate = startDate;
@@ -47,6 +54,13 @@ namespace HLU.Date
             UserEntry = null;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="VagueDateInstance"/> class with the specified start and end dates, date type, and user entry.
+        /// </summary>
+        /// <param name="startDate">The start date of the vague date instance.</param>
+        /// <param name="endDate">The end date of the vague date instance.</param>
+        /// <param name="dateType">The type of the vague date instance.</param>
+        /// <param name="userEntry">The user entry associated with the vague date instance.</param>
         public VagueDateInstance(int startDate, int endDate, string dateType, string userEntry)
         {
             StartDate = startDate;
@@ -55,6 +69,9 @@ namespace HLU.Date
             UserEntry = userEntry;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="VagueDateInstance"/> class with default values indicating an unknown date.
+        /// </summary>
         public VagueDateInstance()
         {
             StartDate = -693593;
@@ -100,8 +117,6 @@ namespace HLU.Date
     {
         private static Dictionary<string, VagueDate.VagueDateTypes> _codeValueDictionary = Enum<VagueDate.VagueDateTypes>.ToCodeValueDictionary();
         private static Dictionary<VagueDate.VagueDateTypes, string> _valueCodeDictionary = Enum<VagueDate.VagueDateTypes>.ToValueCodeDictionary();
-        //private static Dictionary<string, string> _codeNameDictionary = Enum<VagueDate.VagueDateTypes>.ToCodeNameDictionary();
-        //private static Dictionary<string, string> _nameCodeDictionary = Enum<VagueDate.VagueDateTypes>.ToNameCodeDictionary();
 
         /// <summary>
         /// Base date for vague dates (COM base date).
@@ -179,6 +194,11 @@ namespace HLU.Date
 
         #region Methods
 
+        /// <summary>
+        /// Converts a VagueDateTypes enum value to its corresponding code string as specified in the EnumCode attribute.
+        /// </summary>
+        /// <param name="en">The VagueDateTypes enum value to convert.</param>
+        /// <returns>The corresponding code string for the VagueDateTypes enum value.</returns>
         public static string ToCode(VagueDateTypes en)
         {
             string outString;
@@ -186,6 +206,11 @@ namespace HLU.Date
             return outString ?? null;
         }
 
+        /// <summary>
+        /// Converts a code string to its corresponding VagueDateTypes enum value based on the EnumCode attribute.
+        /// </summary>
+        /// <param name="code">The code string to convert.</param>
+        /// <returns>The corresponding VagueDateTypes enum value.</returns>
         public static VagueDateTypes FromCode(string code)
         {
             VagueDateTypes vd;
@@ -270,7 +295,7 @@ namespace HLU.Date
                 else if ((formatString1 != VagueDate.ToCode(VagueDateTypes.Unknown)) && (formatString2 == VagueDate.ToCode(VagueDateTypes.Unknown)))
                     formatString2 = String.Empty;
 
-                // IF both parts are unknown return an unknown date
+                // If both parts are unknown return an unknown date
                 if ((formatString1 == VagueDate.ToCode(VagueDateTypes.Unknown)) && (formatString2 == VagueDate.ToCode(VagueDateTypes.Unknown)))
                 {
                     formattedDate = VagueDateTypes.Unknown.ToString();
@@ -434,9 +459,9 @@ namespace HLU.Date
         /// Creates a vague date string from a vague date instance containing a date type start and end dates
         /// expressed as days elapsed since 30/12/1899.
         /// </summary>
-        /// <param name="vd">a VagueDateInstance with the date to be converted.</param>
+        /// <param name="vd">A VagueDateInstance with the date to be converted.</param>
         /// <param name="outputFormat">A vague date string in the format specified in the dateType parameter.</param>
-        /// <returns></returns>
+        /// <returns>A vague date string representing the VagueDateInstance.</returns>
         public static string FromVagueDateInstance(VagueDateInstance vd, DateType outputFormat)
         {
             return FromTimeSpanDays(vd.StartDate, vd.EndDate, vd.DateType, outputFormat);
@@ -670,7 +695,7 @@ namespace HLU.Date
         /// <param name="dateString">Vague date string.</param>
         /// <param name="dateType">Two-letter date format code as generated by the GetFormat method.</param>
         /// <param name="outputFormat">One of the output formats in the HLU.Date.DateType enumeration.</param>
-        /// <returns></returns>
+        /// <returns>The timespan in days since 30/12/1899.</returns>
         public static int ToTimeSpanDays(string dateString, string dateType, DateType outputFormat)
         {
             string startDateString;
@@ -690,7 +715,7 @@ namespace HLU.Date
         /// <param name="endDateString">End date string.</param>
         /// <param name="dateType">Two-letter date format code as generated by the GetFormat method.</param>
         /// <param name="outputFormat">One of the output formats in the HLU.Date.DateType enumeration.</param>
-        /// <returns></returns>
+        /// <returns>The timespan in days since 30/12/1899.</returns>
         public static int ToTimeSpanDays(string startDateString, string endDateString,
             string dateType, DateType outputFormat)
         {
@@ -868,6 +893,15 @@ namespace HLU.Date
                 date.Year - 1 : date.Year).ToString());
         }
 
+        /// <summary>
+        /// Returns the season index number for a date. Seasons are defined as follows:
+        /// 0 - Spring
+        /// 1 - Summer
+        /// 2 - Autumn
+        /// 3 - Winter
+        /// </summary>
+        /// <param name="date">The date for which to determine the season index.</param>
+        /// <returns>The season index number for the given date.</returns>
         private static int SeasonIx(DateTime date)
         {
             int doy = date.DayOfYear -
@@ -883,6 +917,16 @@ namespace HLU.Date
                 return 2; // autumn
         }
 
+        /// <summary>
+        /// Returns the first day of the season for a given season and year. Seasons are defined as follows:
+        /// 0 - Spring
+        /// 1 - Summer
+        /// 2 - Autumn
+        /// 3 - Winter
+        /// </summary>
+        /// <param name="season">The season for which to determine the start date.</param>
+        /// <param name="year">The year for which to determine the start date of the season.</param>
+        /// <returns>The first day of the specified season in the given year.</returns>
         private static DateTime SeasonStart(string season, int year)
         {
             // If no season return first day of year
@@ -909,6 +953,16 @@ namespace HLU.Date
             };
         }
 
+        /// <summary>
+        /// Returns the last day of the season for a given season and year. Seasons are defined as follows:
+        /// 0 - Spring
+        /// 1 - Summer
+        /// 2 - Autumn
+        /// 3 - Winter
+        /// </summary>
+        /// <param name="season">The season for which to determine the end date.</param>
+        /// <param name="year">The year for which to determine the end date of the season.</param>
+        /// <returns>The last day of the specified season in the given year.</returns>
         private static DateTime SeasonEnd(string season, int year)
         {
             // If no season return first day of year
@@ -935,6 +989,13 @@ namespace HLU.Date
             };
         }
 
+        /// <summary>
+        /// Returns the last day of the month for a given month and year.
+        /// </summary>
+        /// <param name="season">The season in which the month is located.</param>
+        /// <param name="month">The month for which to determine the end date.</param>
+        /// <param name="year">The year for which to determine the end date of the month.</param>
+        /// <returns>The last day of the specified month in the given year.</returns>
         private static DateTime MonthEnd(string season, int month, int year)
         {
             // If not season return first day of year

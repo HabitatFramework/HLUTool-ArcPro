@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -81,12 +82,8 @@ namespace HLU.Converters
         private object FormatList(IEnumerable<CodeDescriptionBool> items)
         {
             return items
-                .Select(m => new CodeDescriptionBool(m.code, String.Format("{0} : {1}", m.code, m.description), m.preferred))
+                .Select(m => new CodeDescriptionBool(m.Code, String.Format("{0} : {1}", m.Code, m.Description), m.Preferred))
                 .ToList();
-            //return items
-            //    .OrderBy(m => m.code) // Ensure ordering is applied correctly
-            //    .Select(m => new CodeDescriptionBool(m.code, String.Format("{0} : {1}", m.code, m.description), m.preferred))
-            //    .ToList();
         }
 
         /// <summary>

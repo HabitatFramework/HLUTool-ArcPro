@@ -3,6 +3,7 @@
 // Copyright © 2014 Sussex Biodiversity Record Centre
 // Copyright © 2019 London & South East Record Centres (LaSER)
 // Copyright © 2019-2022 Greenspace Information for Greater London CIC
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -29,12 +30,10 @@ using ArcGIS.Desktop.Mapping.Events;
 using HLU.Data;
 using HLU.Data.Connection;
 using HLU.Data.Model;
-using HLU.Data.Model.HluDataSetTableAdapters;
 using HLU.Date;
 using HLU.GISApplication;
 using HLU.Helpers;
 using HLU.Properties;
-using HLU.UI.Model;
 using HLU.UI.UserControls.Toolbar;
 using System;
 using System.Collections.Generic;
@@ -244,7 +243,6 @@ namespace HLU.UI.ViewModel
 
         private string _userName;
         private string _appVersion;
-        private bool _betaVersion;
         private string _dbVersion;
         private string _dataVersion;
         private Nullable<bool> _isAuthorisedUser;
@@ -439,9 +437,8 @@ namespace HLU.UI.ViewModel
                 // Load the data table if not already loaded.
                 if (HluDataset.incid.IsInitialized && (HluDataset.incid.Rows.Count == 0))
                 {
-                    if (_hluTableAdapterMgr.incidTableAdapter == null)
-                        _hluTableAdapterMgr.incidTableAdapter =
-                            new HluTableAdapter<HluDataSet.incidDataTable, HluDataSet.incidRow>(_db);
+                    _hluTableAdapterMgr.incidTableAdapter ??=
+                        new HluTableAdapter<HluDataSet.incidDataTable, HluDataSet.incidRow>(_db);
 
                     //TODO: Commented out until it's determined this if clause is ever true.
                     // Go to the first incid in the table.
@@ -462,8 +459,7 @@ namespace HLU.UI.ViewModel
             {
                 if (HluDataset.incid_mm_polygons.IsInitialized && (HluDataset.incid_mm_polygons.Rows.Count == 0))
                 {
-                    if (_hluTableAdapterMgr.incid_mm_polygonsTableAdapter == null)
-                        _hluTableAdapterMgr.incid_mm_polygonsTableAdapter =
+                    _hluTableAdapterMgr.incid_mm_polygonsTableAdapter ??=
                             new HluTableAdapter<HluDataSet.incid_mm_polygonsDataTable, HluDataSet.incid_mm_polygonsRow>(_db);
                 }
                 return _hluDS.incid_mm_polygons;
@@ -481,8 +477,7 @@ namespace HLU.UI.ViewModel
                 // Load the data table if not already loaded.
                 if (HluDataset.incid_ihs_matrix.IsInitialized && (HluDataset.incid_ihs_matrix.Rows.Count == 0))
                 {
-                    if (_hluTableAdapterMgr.incid_ihs_matrixTableAdapter == null)
-                        _hluTableAdapterMgr.incid_ihs_matrixTableAdapter =
+                    _hluTableAdapterMgr.incid_ihs_matrixTableAdapter ??=
                             new HluTableAdapter<HluDataSet.incid_ihs_matrixDataTable, HluDataSet.incid_ihs_matrixRow>(_db);
                 }
 
@@ -501,8 +496,7 @@ namespace HLU.UI.ViewModel
                 // Load the data table if not already loaded.
                 if (HluDataset.incid_ihs_formation.IsInitialized && (HluDataset.incid_ihs_formation.Rows.Count == 0))
                 {
-                    if (_hluTableAdapterMgr.incid_ihs_formationTableAdapter == null)
-                        _hluTableAdapterMgr.incid_ihs_formationTableAdapter =
+                    _hluTableAdapterMgr.incid_ihs_formationTableAdapter ??=
                             new HluTableAdapter<HluDataSet.incid_ihs_formationDataTable, HluDataSet.incid_ihs_formationRow>(_db);
                 }
 
@@ -521,8 +515,7 @@ namespace HLU.UI.ViewModel
                 // Load the data table if not already loaded.
                 if (HluDataset.incid_ihs_management.IsInitialized && (HluDataset.incid_ihs_management.Rows.Count == 0))
                 {
-                    if (_hluTableAdapterMgr.incid_ihs_managementTableAdapter == null)
-                        _hluTableAdapterMgr.incid_ihs_managementTableAdapter =
+                    _hluTableAdapterMgr.incid_ihs_managementTableAdapter ??=
                             new HluTableAdapter<HluDataSet.incid_ihs_managementDataTable, HluDataSet.incid_ihs_managementRow>(_db);
                 }
 
@@ -541,8 +534,7 @@ namespace HLU.UI.ViewModel
                 // Load the lookup table if not already loaded.
                 if (HluDataset.incid_ihs_complex.IsInitialized && (HluDataset.incid_ihs_complex.Rows.Count == 0))
                 {
-                    if (_hluTableAdapterMgr.incid_ihs_complexTableAdapter == null)
-                        _hluTableAdapterMgr.incid_ihs_complexTableAdapter =
+                    _hluTableAdapterMgr.incid_ihs_complexTableAdapter ??=
                             new HluTableAdapter<HluDataSet.incid_ihs_complexDataTable, HluDataSet.incid_ihs_complexRow>(_db);
                 }
 
@@ -561,8 +553,7 @@ namespace HLU.UI.ViewModel
                 // Load the data table if not already loaded.
                 if (HluDataset.incid_bap.IsInitialized && (HluDataset.incid_bap.Rows.Count == 0))
                 {
-                    if (_hluTableAdapterMgr.incid_bapTableAdapter == null)
-                        _hluTableAdapterMgr.incid_bapTableAdapter =
+                    _hluTableAdapterMgr.incid_bapTableAdapter ??=
                             new HluTableAdapter<HluDataSet.incid_bapDataTable, HluDataSet.incid_bapRow>(_db);
                 }
 
@@ -581,8 +572,7 @@ namespace HLU.UI.ViewModel
                 // Load the data table if not already loaded.
                 if (HluDataset.incid_sources.IsInitialized && (HluDataset.incid_sources.Rows.Count == 0))
                 {
-                    if (_hluTableAdapterMgr.incid_sourcesTableAdapter == null)
-                        _hluTableAdapterMgr.incid_sourcesTableAdapter =
+                    _hluTableAdapterMgr.incid_sourcesTableAdapter ??=
                             new HluTableAdapter<HluDataSet.incid_sourcesDataTable, HluDataSet.incid_sourcesRow>(_db);
                 }
 
@@ -601,8 +591,7 @@ namespace HLU.UI.ViewModel
                 // Load the data table if not already loaded.
                 if (HluDataset.incid_secondary.IsInitialized && (HluDataset.incid_secondary.Rows.Count == 0))
                 {
-                    if (_hluTableAdapterMgr.incid_secondaryTableAdapter == null)
-                        _hluTableAdapterMgr.incid_secondaryTableAdapter =
+                    _hluTableAdapterMgr.incid_secondaryTableAdapter ??=
                             new HluTableAdapter<HluDataSet.incid_secondaryDataTable, HluDataSet.incid_secondaryRow>(_db);
                 }
 
@@ -621,9 +610,8 @@ namespace HLU.UI.ViewModel
                 // Load the data table if not already loaded.
                 if (HluDataset.incid_condition.IsInitialized && (HluDataset.incid_condition.Rows.Count == 0))
                 {
-                    if (_hluTableAdapterMgr.incid_conditionTableAdapter == null)
-                        _hluTableAdapterMgr.incid_conditionTableAdapter =
-                            new HluTableAdapter<HluDataSet.incid_conditionDataTable, HluDataSet.incid_conditionRow>(_db);
+                    _hluTableAdapterMgr.incid_conditionTableAdapter ??=
+                        new HluTableAdapter<HluDataSet.incid_conditionDataTable, HluDataSet.incid_conditionRow>(_db);
                 }
 
                 return _hluDS.incid_condition;
@@ -641,9 +629,8 @@ namespace HLU.UI.ViewModel
                 // Load the data table if not already loaded.
                 if (HluDataset.incid_osmm_updates.IsInitialized && (HluDataset.incid_osmm_updates.Rows.Count == 0))
                 {
-                    if (_hluTableAdapterMgr.incid_osmm_updatesTableAdapter == null)
-                        _hluTableAdapterMgr.incid_osmm_updatesTableAdapter =
-                            new HluTableAdapter<HluDataSet.incid_osmm_updatesDataTable, HluDataSet.incid_osmm_updatesRow>(_db);
+                    _hluTableAdapterMgr.incid_osmm_updatesTableAdapter ??=
+                        new HluTableAdapter<HluDataSet.incid_osmm_updatesDataTable, HluDataSet.incid_osmm_updatesRow>(_db);
                 }
 
                 return _hluDS.incid_osmm_updates;
@@ -1196,7 +1183,7 @@ namespace HLU.UI.ViewModel
                     // If there are any secondary codes that are mandatory.
                     if (_secondaryCodesMandatory != null && _secondaryCodesMandatory.Any())
                     {
-                        IEnumerable<string> secondaryCodes = _incidSecondaryHabitats.Select(c => c.secondary_habitat);
+                        IEnumerable<string> secondaryCodes = _incidSecondaryHabitats.Select(c => c.Secondary_habitat);
 
                         // If there aren't any secondary codes or there are some mandatory codes missing.
                         if ((secondaryCodes == null) ||
@@ -1317,7 +1304,7 @@ namespace HLU.UI.ViewModel
                             // If there are any secondary codes that are mandatory.
                             if (_secondaryCodesMandatory != null && _secondaryCodesMandatory.Any())
                             {
-                                IEnumerable<string> secondaryCodes = _incidSecondaryHabitats.Select(c => c.secondary_habitat);
+                                IEnumerable<string> secondaryCodes = _incidSecondaryHabitats.Select(c => c.Secondary_habitat);
 
                                 // If there aren't any secondary codes or there are some mandatory codes missing.
                                 if ((secondaryCodes == null) ||
@@ -1899,15 +1886,15 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Wire up event handler for copy switches
-                _copySwitches.PropertyChanged += new PropertyChangedEventHandler(copySwitches_PropertyChanged);
+                _copySwitches.PropertyChanged += new PropertyChangedEventHandler(CopySwitches_PropertyChanged);
 
                 int result;
                 // Columns that identify map polygons and are returned by GIS
-                _gisIDColumnOrdinals = (from s in Settings.Default.GisIDColumnOrdinals.Cast<string>()
+                _gisIDColumnOrdinals = [.. (from s in Settings.Default.GisIDColumnOrdinals.Cast<string>()
                                         where Int32.TryParse(s, out result) && (result >= 0) &&
                                         (result < _hluDS.incid_mm_polygons.Columns.Count)
-                                        select Int32.Parse(s)).ToArray();
-                _gisIDColumns = _gisIDColumnOrdinals.Select(i => _hluDS.incid_mm_polygons.Columns[i]).ToArray();
+                                        select Int32.Parse(s))];
+                _gisIDColumns = [.. _gisIDColumnOrdinals.Select(i => _hluDS.incid_mm_polygons.Columns[i])];
 
                 // Columns to be saved in the history table when records are updated.
                 _historyColumns = InitializeHistoryColumns(_historyColumns);
@@ -2090,8 +2077,7 @@ namespace HLU.UI.ViewModel
             }
 
             // Get the instance of the active layer ComboBox in the ribbon.
-            if (_activeLayerComboBox == null)
-                _activeLayerComboBox = ActiveLayerComboBox.GetInstance();
+            _activeLayerComboBox ??= ActiveLayerComboBox.GetInstance();
 
             // Check if the GIS map is valid (pass the current active layer name to validate)
             if (!await _gisApp.IsHluMapAsync(currentActiveLayerName))
@@ -2179,9 +2165,13 @@ namespace HLU.UI.ViewModel
             {
                 // Make sure that all the available history columns are updated when
                 // creating history even if the user only wants to display some of them.
-                return _gisIDColumns.Concat(_hluDS.incid_mm_polygons.Columns.Cast<DataColumn>()
-                    .Where(c => !_gisIDColumnOrdinals.Contains(c.Ordinal)
-                        && !c.ColumnName.StartsWith("shape_"))).ToArray();
+                return
+                [
+                    .. _gisIDColumns,
+                    .. _hluDS.incid_mm_polygons.Columns.Cast<DataColumn>()
+                        .Where(c => !_gisIDColumnOrdinals.Contains(c.Ordinal)
+                            && !c.ColumnName.StartsWith("shape_")),
+                ];
             }
             catch { return historyColumns; }
         }
@@ -2307,8 +2297,7 @@ namespace HLU.UI.ViewModel
                 if (HluDataset.lut_boundary_map.IsInitialized && HluDataset.lut_boundary_map.Count == 0)
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_boundary_mapTableAdapter == null)
-                        _hluTableAdapterMgr.lut_boundary_mapTableAdapter =
+                    _hluTableAdapterMgr.lut_boundary_mapTableAdapter ??=
                             new HluTableAdapter<HluDataSet.lut_boundary_mapDataTable, HluDataSet.lut_boundary_mapRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset,
                         [typeof(HluDataSet.lut_boundary_mapDataTable)], false);
@@ -2325,8 +2314,7 @@ namespace HLU.UI.ViewModel
                 if (HluDataset.lut_condition.IsInitialized && (HluDataset.lut_condition.Rows.Count == 0))
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_conditionTableAdapter == null)
-                        _hluTableAdapterMgr.lut_conditionTableAdapter =
+                    _hluTableAdapterMgr.lut_conditionTableAdapter ??=
                             new HluTableAdapter<HluDataSet.lut_conditionDataTable, HluDataSet.lut_conditionRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_conditionDataTable)], false);
                 }
@@ -2344,8 +2332,7 @@ namespace HLU.UI.ViewModel
                 if (HluDataset.lut_condition_qualifier.IsInitialized && (HluDataset.lut_condition_qualifier.Rows.Count == 0))
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_condition_qualifierTableAdapter == null)
-                        _hluTableAdapterMgr.lut_condition_qualifierTableAdapter =
+                    _hluTableAdapterMgr.lut_condition_qualifierTableAdapter ??=
                             new HluTableAdapter<HluDataSet.lut_condition_qualifierDataTable, HluDataSet.lut_condition_qualifierRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_condition_qualifierDataTable)], false);
                 }
@@ -2363,8 +2350,7 @@ namespace HLU.UI.ViewModel
                 if (HluDataset.lut_habitat_class.IsInitialized && HluDataset.lut_habitat_class.Count == 0)
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_habitat_classTableAdapter == null)
-                        _hluTableAdapterMgr.lut_habitat_classTableAdapter =
+                    _hluTableAdapterMgr.lut_habitat_classTableAdapter ??=
                             new HluTableAdapter<HluDataSet.lut_habitat_classDataTable, HluDataSet.lut_habitat_classRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_habitat_classDataTable)], false);
                 }
@@ -2382,8 +2368,7 @@ namespace HLU.UI.ViewModel
                 if (HluDataset.lut_habitat_type.IsInitialized && HluDataset.lut_habitat_type.Count == 0)
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_habitat_typeTableAdapter == null)
-                        _hluTableAdapterMgr.lut_habitat_typeTableAdapter =
+                    _hluTableAdapterMgr.lut_habitat_typeTableAdapter ??=
                             new HluTableAdapter<HluDataSet.lut_habitat_typeDataTable, HluDataSet.lut_habitat_typeRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_habitat_typeDataTable)], false);
                 }
@@ -2401,8 +2386,7 @@ namespace HLU.UI.ViewModel
                 if (HluDataset.lut_habitat_type_primary.IsInitialized && HluDataset.lut_habitat_type_primary.Count == 0)
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_habitat_type_primaryTableAdapter == null)
-                        _hluTableAdapterMgr.lut_habitat_type_primaryTableAdapter =
+                    _hluTableAdapterMgr.lut_habitat_type_primaryTableAdapter ??=
                             new HluTableAdapter<HluDataSet.lut_habitat_type_primaryDataTable, HluDataSet.lut_habitat_type_primaryRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_habitat_type_primaryDataTable)], false);
                 }
@@ -2420,8 +2404,7 @@ namespace HLU.UI.ViewModel
                 if (HluDataset.lut_habitat_type_secondary.IsInitialized && HluDataset.lut_habitat_type_secondary.Count == 0)
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_habitat_type_secondaryTableAdapter == null)
-                        _hluTableAdapterMgr.lut_habitat_type_secondaryTableAdapter =
+                    _hluTableAdapterMgr.lut_habitat_type_secondaryTableAdapter ??=
                             new HluTableAdapter<HluDataSet.lut_habitat_type_secondaryDataTable, HluDataSet.lut_habitat_type_secondaryRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_habitat_type_secondaryDataTable)], false);
                 }
@@ -2456,8 +2439,7 @@ namespace HLU.UI.ViewModel
                 if (HluDataset.lut_ihs_formation.IsInitialized && (HluDataset.lut_ihs_formation.Rows.Count == 0))
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_ihs_formationTableAdapter == null)
-                        _hluTableAdapterMgr.lut_ihs_formationTableAdapter =
+                    _hluTableAdapterMgr.lut_ihs_formationTableAdapter ??=
                             new HluTableAdapter<HluDataSet.lut_ihs_formationDataTable, HluDataSet.lut_ihs_formationRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_ihs_formationDataTable)], false);
                 }
@@ -2474,8 +2456,7 @@ namespace HLU.UI.ViewModel
                 if (HluDataset.lut_ihs_habitat.IsInitialized && HluDataset.lut_ihs_habitat.Count == 0)
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_ihs_habitatTableAdapter == null)
-                        _hluTableAdapterMgr.lut_ihs_habitatTableAdapter =
+                    _hluTableAdapterMgr.lut_ihs_habitatTableAdapter ??=
                             new HluTableAdapter<HluDataSet.lut_ihs_habitatDataTable, HluDataSet.lut_ihs_habitatRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_ihs_habitatDataTable)], false);
                 }
@@ -2493,8 +2474,7 @@ namespace HLU.UI.ViewModel
                 if (HluDataset.lut_ihs_management.IsInitialized && (HluDataset.lut_ihs_management.Rows.Count == 0))
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_ihs_managementTableAdapter == null)
-                        _hluTableAdapterMgr.lut_ihs_managementTableAdapter =
+                    _hluTableAdapterMgr.lut_ihs_managementTableAdapter ??=
                             new HluTableAdapter<HluDataSet.lut_ihs_managementDataTable, HluDataSet.lut_ihs_managementRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_ihs_managementDataTable)], false);
                 }
@@ -2511,8 +2491,7 @@ namespace HLU.UI.ViewModel
                 if (HluDataset.lut_ihs_matrix.IsInitialized && (HluDataset.lut_ihs_matrix.Rows.Count == 0))
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_ihs_matrixTableAdapter == null)
-                        _hluTableAdapterMgr.lut_ihs_matrixTableAdapter =
+                    _hluTableAdapterMgr.lut_ihs_matrixTableAdapter ??=
                             new HluTableAdapter<HluDataSet.lut_ihs_matrixDataTable, HluDataSet.lut_ihs_matrixRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_ihs_matrixDataTable)], false);
                 }
@@ -2530,8 +2509,7 @@ namespace HLU.UI.ViewModel
                     HluDataset.lut_importance.Count == 0)
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_importanceTableAdapter == null)
-                        _hluTableAdapterMgr.lut_importanceTableAdapter =
+                    _hluTableAdapterMgr.lut_importanceTableAdapter ??=
                             new HluTableAdapter<HluDataSet.lut_importanceDataTable,
                                 HluDataSet.lut_importanceRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset,
@@ -2549,9 +2527,8 @@ namespace HLU.UI.ViewModel
                 if (HluDataset.lut_legacy_habitat.IsInitialized && HluDataset.lut_legacy_habitat.Count == 0)
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_legacy_habitatTableAdapter == null)
-                        _hluTableAdapterMgr.lut_legacy_habitatTableAdapter =
-                            new HluTableAdapter<HluDataSet.lut_legacy_habitatDataTable, HluDataSet.lut_legacy_habitatRow>(_db);
+                    _hluTableAdapterMgr.lut_legacy_habitatTableAdapter ??=
+                        new HluTableAdapter<HluDataSet.lut_legacy_habitatDataTable, HluDataSet.lut_legacy_habitatRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset,
                         [typeof(HluDataSet.lut_legacy_habitatDataTable)], false);
                 }
@@ -2567,8 +2544,7 @@ namespace HLU.UI.ViewModel
                 if (HluDataset.lut_osmm_habitat_xref.IsInitialized && HluDataset.lut_osmm_habitat_xref.Count == 0)
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_osmm_habitat_xrefTableAdapter == null)
-                        _hluTableAdapterMgr.lut_osmm_habitat_xrefTableAdapter =
+                    _hluTableAdapterMgr.lut_osmm_habitat_xrefTableAdapter ??=
                             new HluTableAdapter<HluDataSet.lut_osmm_habitat_xrefDataTable, HluDataSet.lut_osmm_habitat_xrefRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_osmm_habitat_xrefDataTable)], false);
                 }
@@ -2586,9 +2562,8 @@ namespace HLU.UI.ViewModel
                 if (HluDataset.lut_primary.IsInitialized && HluDataset.lut_primary.Count == 0)
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_primaryTableAdapter == null)
-                        _hluTableAdapterMgr.lut_primaryTableAdapter =
-                            new HluTableAdapter<HluDataSet.lut_primaryDataTable, HluDataSet.lut_primaryRow>(_db);
+                    _hluTableAdapterMgr.lut_primaryTableAdapter ??=
+                        new HluTableAdapter<HluDataSet.lut_primaryDataTable, HluDataSet.lut_primaryRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_primaryDataTable)], false);
                 }
 
@@ -2605,8 +2580,7 @@ namespace HLU.UI.ViewModel
                 if (HluDataset.lut_primary_bap_habitat.IsInitialized && HluDataset.lut_primary_bap_habitat.Count == 0)
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_primary_bap_habitatTableAdapter == null)
-                        _hluTableAdapterMgr.lut_primary_bap_habitatTableAdapter =
+                    _hluTableAdapterMgr.lut_primary_bap_habitatTableAdapter ??=
                             new HluTableAdapter<HluDataSet.lut_primary_bap_habitatDataTable, HluDataSet.lut_primary_bap_habitatRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_primary_bap_habitatDataTable)], false);
                 }
@@ -2623,8 +2597,7 @@ namespace HLU.UI.ViewModel
                 if (HluDataset.lut_primary_category.IsInitialized && HluDataset.lut_primary_category.Count == 0)
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_primary_categoryTableAdapter == null)
-                        _hluTableAdapterMgr.lut_primary_categoryTableAdapter =
+                    _hluTableAdapterMgr.lut_primary_categoryTableAdapter ??=
                             new HluTableAdapter<HluDataSet.lut_primary_categoryDataTable, HluDataSet.lut_primary_categoryRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_primary_categoryDataTable)], false);
                 }
@@ -2642,8 +2615,7 @@ namespace HLU.UI.ViewModel
                 if (HluDataset.lut_primary_secondary.IsInitialized && HluDataset.lut_primary_secondary.Count == 0)
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_primary_secondaryTableAdapter == null)
-                        _hluTableAdapterMgr.lut_primary_secondaryTableAdapter =
+                    _hluTableAdapterMgr.lut_primary_secondaryTableAdapter ??=
                             new HluTableAdapter<HluDataSet.lut_primary_secondaryDataTable, HluDataSet.lut_primary_secondaryRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_primary_secondaryDataTable)], false);
                 }
@@ -2661,8 +2633,7 @@ namespace HLU.UI.ViewModel
                 if (HluDataset.lut_process.IsInitialized && (HluDataset.lut_process.Rows.Count == 0))
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_processTableAdapter == null)
-                        _hluTableAdapterMgr.lut_processTableAdapter =
+                    _hluTableAdapterMgr.lut_processTableAdapter ??=
                             new HluTableAdapter<HluDataSet.lut_processDataTable, HluDataSet.lut_processRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_processDataTable)], false);
                 }
@@ -2679,8 +2650,7 @@ namespace HLU.UI.ViewModel
                     HluDataset.lut_quality_determination.Count == 0)
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_quality_determinationTableAdapter == null)
-                        _hluTableAdapterMgr.lut_quality_determinationTableAdapter =
+                    _hluTableAdapterMgr.lut_quality_determinationTableAdapter ??=
                             new HluTableAdapter<HluDataSet.lut_quality_determinationDataTable,
                                 HluDataSet.lut_quality_determinationRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset,
@@ -2699,8 +2669,7 @@ namespace HLU.UI.ViewModel
                     HluDataset.lut_quality_interpretation.Count == 0)
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_quality_interpretationTableAdapter == null)
-                        _hluTableAdapterMgr.lut_quality_interpretationTableAdapter =
+                    _hluTableAdapterMgr.lut_quality_interpretationTableAdapter ??=
                             new HluTableAdapter<HluDataSet.lut_quality_interpretationDataTable,
                                 HluDataSet.lut_quality_interpretationRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset,
@@ -2718,8 +2687,7 @@ namespace HLU.UI.ViewModel
                 if (HluDataset.lut_reason.IsInitialized && (HluDataset.lut_reason.Rows.Count == 0))
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_reasonTableAdapter == null)
-                        _hluTableAdapterMgr.lut_reasonTableAdapter =
+                    _hluTableAdapterMgr.lut_reasonTableAdapter ??=
                             new HluTableAdapter<HluDataSet.lut_reasonDataTable, HluDataSet.lut_reasonRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_reasonDataTable)], false);
                 }
@@ -2735,8 +2703,7 @@ namespace HLU.UI.ViewModel
                 if (HluDataset.lut_secondary.IsInitialized && HluDataset.lut_secondary.Count == 0)
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_secondaryTableAdapter == null)
-                        _hluTableAdapterMgr.lut_secondaryTableAdapter =
+                    _hluTableAdapterMgr.lut_secondaryTableAdapter ??=
                             new HluTableAdapter<HluDataSet.lut_secondaryDataTable, HluDataSet.lut_secondaryRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_secondaryDataTable)], false);
                 }
@@ -2754,8 +2721,7 @@ namespace HLU.UI.ViewModel
                 if (HluDataset.lut_secondary_bap_habitat.IsInitialized && HluDataset.lut_secondary_bap_habitat.Count == 0)
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_secondary_bap_habitatTableAdapter == null)
-                        _hluTableAdapterMgr.lut_secondary_bap_habitatTableAdapter =
+                    _hluTableAdapterMgr.lut_secondary_bap_habitatTableAdapter ??=
                             new HluTableAdapter<HluDataSet.lut_secondary_bap_habitatDataTable, HluDataSet.lut_secondary_bap_habitatRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_secondary_bap_habitatDataTable)], false);
                 }
@@ -2772,8 +2738,7 @@ namespace HLU.UI.ViewModel
                 if (HluDataset.lut_secondary_group.IsInitialized && HluDataset.lut_secondary_group.Count == 0)
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_secondary_groupTableAdapter == null)
-                        _hluTableAdapterMgr.lut_secondary_groupTableAdapter =
+                    _hluTableAdapterMgr.lut_secondary_groupTableAdapter ??=
                             new HluTableAdapter<HluDataSet.lut_secondary_groupDataTable, HluDataSet.lut_secondary_groupRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset, [typeof(HluDataSet.lut_secondary_groupDataTable)], false);
                 }
@@ -2792,8 +2757,7 @@ namespace HLU.UI.ViewModel
                     HluDataset.lut_sources.Count == 0)
                 {
                     // Load the lookup table.
-                    if (_hluTableAdapterMgr.lut_sourcesTableAdapter == null)
-                        _hluTableAdapterMgr.lut_sourcesTableAdapter =
+                    _hluTableAdapterMgr.lut_sourcesTableAdapter ??=
                             new HluTableAdapter<HluDataSet.lut_sourcesDataTable,
                                 HluDataSet.lut_sourcesRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset,
@@ -3140,7 +3104,7 @@ namespace HLU.UI.ViewModel
 
             // Get add-in dates options
             VagueDate.Delimiter = _addInSettings.VagueDateDelimiter; // Set in the vague date class
-            VagueDate.SeasonNames = _addInSettings.SeasonNames.Cast<string>().ToArray(); // Set in the vague date class
+            VagueDate.SeasonNames = [.. _addInSettings.SeasonNames.Cast<string>()]; // Set in the vague date class
 
             // Get add-in validation options
             _habitatSecondaryCodeValidation = _addInSettings.HabitatSecondaryCodeValidation;
@@ -3557,7 +3521,7 @@ namespace HLU.UI.ViewModel
                 else
                 {
                     incidNumberPageMin = RecordIds.IncidNumber(_hluDS.incid[0].incid);
-                    incidNumberPageMax = RecordIds.IncidNumber(_hluDS.incid[_hluDS.incid.Count - 1].incid);
+                    incidNumberPageMax = RecordIds.IncidNumber(_hluDS.incid[^1].incid);
                 }
 
                 int start = _incidCurrentRowIndex > 0 ? _incidCurrentRowIndex - 1 : 0;
@@ -3605,7 +3569,7 @@ namespace HLU.UI.ViewModel
                         // is lower than the page minimum) and if the row number being
                         // sought is the first (i.e. zero) then return the lowest incid.
                         // Otherwise, return the lowest or highest as appropriate.
-                        return (moveForward || seekRowNumber == 0) ? _hluDS.incid[0] : _hluDS.incid[_hluDS.incid.Count - 1];
+                        return (moveForward || seekRowNumber == 0) ? _hluDS.incid[0] : _hluDS.incid[^1];
                     }
                 }
                 catch { return null; }

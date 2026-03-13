@@ -1,6 +1,7 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2013 Thames Valley Environmental Records Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -136,7 +137,7 @@ namespace HLU.UI.ViewModel
                 // a new history column named "<columnName>" will match both DB history columns named
                 // "<columnName>" *and* "modified_<columnName>" as long as there is no column named
                 // "modified_<columnName>" in the new history table
-                int[] newHistoryColumns = (from t in _viewModelMain.HluDataset.history.Columns.Cast<DataColumn>()
+                int[] newHistoryColumns = [.. (from t in _viewModelMain.HluDataset.history.Columns.Cast<DataColumn>()
                                            let gisCols = (from g in newHistoryRecords.Columns.Cast<DataColumn>()
                                                           select g.ColumnName).ToArray()
                                            let gisColsMod = (from g in newHistoryRecords.Columns.Cast<DataColumn>()
@@ -149,7 +150,7 @@ namespace HLU.UI.ViewModel
                                                gisModPos = !fixedValueDict.ContainsKey(t.Ordinal) ?
                                                         Array.IndexOf(gisColsMod, t.ColumnName) : -1
                                            })
-                                           .Select(a => a.gisPos != -1 ? a.gisPos : a.gisModPos).ToArray();
+                                           .Select(a => a.gisPos != -1 ? a.gisPos : a.gisModPos)];
 
                 // get the next available history_id
                 object objHistId = _viewModelMain.DataBase.ExecuteScalar(String.Format("SELECT MAX({0}) + 1 FROM {1}",
@@ -232,4 +233,5 @@ namespace HLU.UI.ViewModel
     }
 
     #endregion Methods
+
 }

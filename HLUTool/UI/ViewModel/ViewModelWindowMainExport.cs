@@ -3,6 +3,7 @@
 // Copyright © 2014, 2018 Sussex Biodiversity Record Centre
 // Copyright © 2019 London & South East Record Centres (LaSER)
 // Copyright © 2019-2022 Greenspace Information for Greater London CIC
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -166,8 +167,8 @@ namespace HLU.UI.ViewModel
             };
 
             // Subscribe to the export window request close event.
-            _viewModelExport.RequestClose -= _viewModelExport_RequestClose; // Safety: avoid double subscription.
-            _viewModelExport.RequestClose += new ViewModelWindowExport.RequestCloseEventHandler(_viewModelExport_RequestClose);
+            _viewModelExport.RequestClose -= ViewModelExport_RequestClose; // Safety: avoid double subscription.
+            _viewModelExport.RequestClose += new ViewModelWindowExport.RequestCloseEventHandler(ViewModelExport_RequestClose);
 
             // Set the data context for the export window.
             _windowExport.DataContext = _viewModelExport;
@@ -183,11 +184,11 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles the RequestClose event of the _viewModelExport control.
         /// </summary>
-        /// <param name="exportID"></param>
-        /// <param name="selectedOnly"></param>
-        private async void _viewModelExport_RequestClose(int exportID, bool selectedOnly)
+        /// <param name="exportID">The ID of the selected export format.</param>
+        /// <param name="selectedOnly">Indicates whether only selected features should be exported.</param>
+        private async void ViewModelExport_RequestClose(int exportID, bool selectedOnly)
         {
-            _viewModelExport.RequestClose -= _viewModelExport_RequestClose;
+            _viewModelExport.RequestClose -= ViewModelExport_RequestClose;
             _windowExport.Close();
 
             string exportPath = Settings.Default.ExportPath;
@@ -372,7 +373,7 @@ namespace HLU.UI.ViewModel
                     }
                     else
                     {
-                        exportFilter = [_viewModelMain.IncidSelectionWhereClause.SelectMany(l => l).ToList()];
+                        exportFilter = [[.. _viewModelMain.IncidSelectionWhereClause.SelectMany(l => l)]];
                     }
                 }
                 else
@@ -450,11 +451,10 @@ namespace HLU.UI.ViewModel
 
                 // Extract the list of GIS fields to include from exportFields
                 // Use ColumnName (source name in the GIS layer), not FieldName (export name)
-                List<string> gisFieldsToInclude = exportFields
+                List<string> gisFieldsToInclude = [.. exportFields
                     .Where(f => f.TableName != null && f.TableName.Equals("<gis>", StringComparison.OrdinalIgnoreCase))
                     .Select(f => f.ColumnName)  // Use ColumnName here
-                    .Distinct()
-                    .ToList();
+                    .Distinct()];
 
                 // Call the new export method with field filtering and ordering
                 bool exportSuccess = await _viewModelMain.GISApplication.ExportWithJoinAsync(
@@ -605,7 +605,7 @@ namespace HLU.UI.ViewModel
 
                         // Use simple chunking instead of range optimization
                         // The range optimization may not play well with complex joins
-                        exportFilter = whereCond.ChunkClause(240).ToList();
+                        exportFilter = [.. whereCond.ChunkClause(240)];
                     }
                     catch
                     {
@@ -1283,11 +1283,17 @@ namespace HLU.UI.ViewModel
             if (targetList.Length > 1) targetList.Remove(0, 1);
         }
 
+        #endregion Export Joins
+
+        #region ExportJoinContext class
+
         /// <summary>
         /// Context object to hold state during export join construction.
         /// </summary>
         private class ExportJoinContext
         {
+            #region Properties
+
             public string TableAlias { get; }
             public StringBuilder TargetList { get; }
             public StringBuilder FromClause { get; }
@@ -1312,10 +1318,14 @@ namespace HLU.UI.ViewModel
 
             public int SourceSortOrderOrdinal { get; set; }
 
+            #endregion Properties
+
+            #region Methods
+
             /// <summary>
             /// Initializes a new instance of the ExportJoinContext class with the specified main table alias.
             /// </summary>
-            /// <param name="tableAlias"></param>
+            /// <param name="tableAlias">The alias of the main table for the export query.</param>
             public ExportJoinContext(string tableAlias)
             {
                 TableAlias = tableAlias;
@@ -1342,6 +1352,8 @@ namespace HLU.UI.ViewModel
                 SourceSortOrderOrdinal = -1;
             }
         }
+
+        #endregion ExportJoinContext class
 
         /// <summary>
         /// Initializes all output data structures for the export.
@@ -1370,6 +1382,7 @@ namespace HLU.UI.ViewModel
             out int[] bapOrdinals,
             out int[] sourceOrdinals)
         {
+            // Initialize all output structures
             exportTable = new DataTable("HluExport");
             targetList = new StringBuilder();
             fromClause = new StringBuilder();
@@ -1917,7 +1930,7 @@ namespace HLU.UI.ViewModel
                 // Build field map
                 List<int> fieldMap;
                 if ((fieldMapTemplate[f.FieldOrdinal] != null) && (f.AutoNum != true))
-                    fieldMap = fieldMapTemplate[f.FieldOrdinal].ToList();
+                    fieldMap = [.. fieldMapTemplate[f.FieldOrdinal]];
                 else
                 {
                     fieldMap = [];
@@ -1925,7 +1938,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 fieldMap.Add(fieldTotal);
-                fieldMapTemplate[f.FieldOrdinal] = fieldMap.ToArray();
+                fieldMapTemplate[f.FieldOrdinal] = [.. fieldMap];
 
                 fieldTotal += 1;
             }
@@ -2362,14 +2375,14 @@ namespace HLU.UI.ViewModel
             out int[] formationOrdinals, out int[] managementOrdinals, out int[] complexOrdinals,
             out int[] bapOrdinals, out int[] sourceOrdinals)
         {
-            sortOrdinals = context.SortFields.ToArray();
-            conditionOrdinals = context.ConditionFields.ToArray();
-            matrixOrdinals = context.MatrixFields.ToArray();
-            formationOrdinals = context.FormationFields.ToArray();
-            managementOrdinals = context.ManagementFields.ToArray();
-            complexOrdinals = context.ComplexFields.ToArray();
-            bapOrdinals = context.BapFields.ToArray();
-            sourceOrdinals = context.SourceFields.ToArray();
+            sortOrdinals = [.. context.SortFields];
+            conditionOrdinals = [.. context.ConditionFields];
+            matrixOrdinals = [.. context.MatrixFields];
+            formationOrdinals = [.. context.FormationFields];
+            managementOrdinals = [.. context.ManagementFields];
+            complexOrdinals = [.. context.ComplexFields];
+            bapOrdinals = [.. context.BapFields];
+            sourceOrdinals = [.. context.SourceFields];
         }
 
         #endregion Export Joins
@@ -2389,8 +2402,8 @@ namespace HLU.UI.ViewModel
             // Get a list of all the incid related tables (including the
             // incid table itself.
             List<DataTable> tables;
-            tables = _viewModelMain.HluDataset.incid.ChildRelations
-                .Cast<DataRelation>().Select(r => r.ChildTable).ToList();
+            tables = [.. _viewModelMain.HluDataset.incid.ChildRelations
+                .Cast<DataRelation>().Select(r => r.ChildTable)];
             tables.Add(_viewModelMain.HluDataset.incid);
 
             foreach (DataTable t in tables)

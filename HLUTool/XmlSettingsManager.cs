@@ -1,4 +1,22 @@
-﻿using System;
+﻿// HLUTool is used to view and maintain habitat and land use GIS data.
+// Copyright © 2025-2026 Andy Foy Consulting
+//
+// This file is part of HLUTool.
+//
+// HLUTool is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// HLUTool is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
+
+using System;
 using System.IO;
 using System.Xml.Serialization;
 using System.Reflection;
@@ -36,7 +54,7 @@ public class XmlSettingsManager
     /// <summary>
     /// Get the full file path of the .esriAddInX file.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The full file path of the .esriAddInX file.</returns>
     public static string GetEsriAddinXPath()
     {
         // Get the collection of all installed add-ins.
@@ -56,7 +74,7 @@ public class XmlSettingsManager
     /// <summary>
     /// Load the settings from the settings file.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The settings loaded from the settings file.</returns>
     public AddInSettings LoadSettings()
     {
         // If the settings file exists, load the settings from the file.
@@ -74,7 +92,7 @@ public class XmlSettingsManager
     /// <summary>
     /// Save the settings to the settings file.
     /// </summary>
-    /// <param name="settings"></param>
+    /// <param name="settings">The settings to save to the settings file.</param>
     public void SaveSettings(AddInSettings settings)
     {
         XmlSerializer serializer = new(typeof(AddInSettings));
@@ -85,7 +103,7 @@ public class XmlSettingsManager
     /// <summary>
     /// Removes a specified node from the XML file.
     /// </summary>
-    /// <param name="nodeName"></param>
+    /// <param name="nodeName">The name of the node to remove.</param>
     public void RemoveNode(string nodeName)
     {
         if (File.Exists(_settingsFile))
@@ -108,7 +126,7 @@ public class XmlSettingsManager
 /// </summary>
 public class AddInSettings
 {
-    // Help URL.
+    // Help URL
     public string HelpURL { get; set; } = "https://hlutool-userguide.readthedocs.io/en/latest/";
 
     public HelpPages HelpPages { get; set; } = new();

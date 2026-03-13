@@ -1,4 +1,22 @@
-﻿using System;
+﻿// HLUTool is used to view and maintain habitat and land use GIS data.
+// Copyright © 2025-2026 Andy Foy Consulting
+//
+// This file is part of HLUTool.
+//
+// HLUTool is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// HLUTool is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -35,7 +53,7 @@ namespace HLU.Data
 
         #endregion Fields
 
-        #region ctor
+        #region Constructor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BapEnvironment"/> class with default values.
@@ -124,17 +142,21 @@ namespace HLU.Data
         {
             _bulkUpdateMode = bulkUpdateMode;
             _secondaryPriorityHabitat = isSecondary;
-            bool bapIdSuccess = Int32.TryParse(itemArray[0].ToString(), out _bap_id);
+
+            if (!Int32.TryParse(itemArray[0].ToString(), out _bap_id))
+            {
+                throw new ArgumentException("Invalid BAP ID: unable to parse as integer.", nameof(itemArray));
+            }
+
             _incid = itemArray[1].ToString();
             _bap_habitat = itemArray[2].ToString();
             _quality_determination = itemArray[3].ToString();
             _quality_interpretation = itemArray[4].ToString();
+
             // Update the _interpretation_comments string directly, rather than via the property,
             // so that the Changed flag is not set.
-            if (itemArray[5].ToString() == null)
-                _interpretation_comments = null;
-            else
-                _interpretation_comments = itemArray[5].ToString().Length <= 254 ? itemArray[5].ToString() : itemArray[5].ToString().Substring(0, 254);
+            string comments = itemArray[5]?.ToString();
+            _interpretation_comments = comments?.Length <= 254 ? comments : comments?.Substring(0, 254);
         }
 
         /// <summary>
@@ -177,10 +199,10 @@ namespace HLU.Data
             _secondaryPriorityHabitat = inputBE.SecondaryPriorityHabitat;
             _bap_id = -1; // arbitrary PK for a new row
             _incid = null;
-            _bap_habitat = inputBE.bap_habitat;
-            _quality_determination = inputBE.quality_determination;
-            _quality_interpretation = inputBE.quality_interpretation;
-            _interpretation_comments = inputBE.interpretation_comments;
+            _bap_habitat = inputBE.Bap_habitat;
+            _quality_determination = inputBE.Quality_determination;
+            _quality_interpretation = inputBE.Quality_interpretation;
+            _interpretation_comments = inputBE.Interpretation_comments;
         }
 
         /// <summary>
@@ -192,7 +214,7 @@ namespace HLU.Data
             return new BapEnvironment(this);
         }
 
-        #endregion ctor
+        #endregion Constructor
 
         #region DataChanged
 
@@ -255,8 +277,8 @@ namespace HLU.Data
                 return allErrors.Count != 0 ? allErrors : null;
             }
 
-            if (_errors.ContainsKey(propertyName))
-                return _errors[propertyName];
+            if (_errors.TryGetValue(propertyName, out List<string> value))
+                return value;
 
             return null;
         }
@@ -275,9 +297,10 @@ namespace HLU.Data
             if (errors != null && errors.Count != 0)
             {
                 // Add or update errors
-                if (!_errors.ContainsKey(propertyName) || !_errors[propertyName].SequenceEqual(errors))
+                if (!_errors.TryGetValue(propertyName, out List<string> value) || !value.SequenceEqual(errors))
                 {
-                    _errors[propertyName] = errors;
+                    value = errors;
+                    _errors[propertyName] = value;
                     errorsChanged = true;
                 }
             }
@@ -330,26 +353,26 @@ namespace HLU.Data
 
             switch (propertyName)
             {
-                case nameof(incid):
-                    if ((bap_id != -1) && String.IsNullOrEmpty(incid))
+                case nameof(Incid):
+                    if ((Bap_id != -1) && String.IsNullOrEmpty(Incid))
                     {
                         errors.Add("Error: INCID is a mandatory field");
                     }
                     break;
 
-                case nameof(bap_habitat):
-                    if (String.IsNullOrEmpty(bap_habitat))
+                case nameof(Bap_habitat):
+                    if (String.IsNullOrEmpty(Bap_habitat))
                     {
                         errors.Add("Error: Priority habitat is a mandatory field");
                     }
-                    else if ((_bapEnvironmentList != null) && (_bapEnvironmentList.Count(b => b.bap_habitat == bap_habitat) > 1))
+                    else if ((_bapEnvironmentList != null) && (_bapEnvironmentList.Count(b => b.Bap_habitat == Bap_habitat) > 1))
                     {
                         errors.Add("Error: Duplicate priority habitat");
                     }
                     break;
 
-                case nameof(quality_determination):
-                    if (String.IsNullOrEmpty(quality_determination))
+                case nameof(Quality_determination):
+                    if (String.IsNullOrEmpty(Quality_determination))
                     {
                         if (!_bulkUpdateMode)
                         {
@@ -368,8 +391,8 @@ namespace HLU.Data
                                 // Validate that the determination quality can ONLY be
                                 // 'Not present but close to definition' or
                                 // 'Previously present, but may no longer exist'.
-                                if ((quality_determination != BAPDetQltyUserAdded)
-                                && (quality_determination != BAPDetQltyPrevious))
+                                if ((Quality_determination != BAPDetQltyUserAdded)
+                                && (Quality_determination != BAPDetQltyPrevious))
                                 {
                                     errors.Add(String.Format("Error: Determination quality for potential priority habitats can only be '{0}' or '{1}'",
                                         BAPDetQltyUserAddedDesc, BAPDetQltyPreviousDesc));
@@ -382,12 +405,12 @@ namespace HLU.Data
                             // Validate that the determination quality can be anything EXCEPT
                             // 'Not present but close to definition' or
                             // 'Previously present, but may no longer exist'.
-                            if ((quality_determination == BAPDetQltyUserAdded))
+                            if ((Quality_determination == BAPDetQltyUserAdded))
                             {
                                 errors.Add(String.Format("Error: Determination quality cannot be '{0}' for priority habitats",
                                     BAPDetQltyUserAddedDesc));
                             }
-                            else if ((quality_determination == BAPDetQltyPrevious))
+                            else if ((Quality_determination == BAPDetQltyPrevious))
                             {
                                 errors.Add(String.Format("Error: Determination quality cannot be '{0}' for priority habitats",
                                     BAPDetQltyPreviousDesc));
@@ -396,8 +419,8 @@ namespace HLU.Data
                     }
                     break;
 
-                case nameof(quality_interpretation):
-                    if (!_bulkUpdateMode && String.IsNullOrEmpty(quality_interpretation))
+                case nameof(Quality_interpretation):
+                    if (!_bulkUpdateMode && String.IsNullOrEmpty(Quality_interpretation))
                     {
                         errors.Add("Error: Interpretation quality is a mandatory field");
                     }
@@ -467,7 +490,7 @@ namespace HLU.Data
         /// Gets or sets the BAP ID.
         /// </summary>
         /// <value>The BAP ID.</value>
-        public int bap_id
+        public int Bap_id
         {
             get { return _bap_id; }
             set { _bap_id = value; }
@@ -477,7 +500,7 @@ namespace HLU.Data
         /// Gets or sets the incid associated with the BAP record. This is a mandatory field when bap_id is not -1.
         /// </summary>
         /// <value>The incid associated with the BAP record.</value>
-        public string incid
+        public string Incid
         {
             get { return _incid; }
             set
@@ -485,8 +508,8 @@ namespace HLU.Data
                 if (_incid != value)
                 {
                     _incid = value;
-                    OnPropertyChanged(nameof(incid));
-                    ValidateProperty(nameof(incid));
+                    OnPropertyChanged(nameof(Incid));
+                    ValidateProperty(nameof(Incid));
                 }
             }
         }
@@ -496,7 +519,7 @@ namespace HLU.Data
         /// and must be unique within the list of BAP records.
         /// </summary>
         /// <value>The priority habitat associated with the BAP record.</value>
-        public string bap_habitat
+        public string Bap_habitat
         {
             get { return _bap_habitat; }
             set
@@ -504,8 +527,8 @@ namespace HLU.Data
                 if (_bap_habitat != value)
                 {
                     _bap_habitat = value;
-                    OnPropertyChanged(nameof(bap_habitat));
-                    ValidateProperty(nameof(bap_habitat));
+                    OnPropertyChanged(nameof(Bap_habitat));
+                    ValidateProperty(nameof(Bap_habitat));
                     // Flag that the current record has changed so that the apply button
                     // will appear.
                     DataChanged?.Invoke(true);
@@ -518,7 +541,7 @@ namespace HLU.Data
         /// mandatory field when not in bulk update mode.
         /// </summary>
         /// <value>The quality of the determination for the priority habitat.</value>
-        public string quality_determination
+        public string Quality_determination
         {
             get { return _quality_determination; }
             set
@@ -526,8 +549,8 @@ namespace HLU.Data
                 if (_quality_determination != value)
                 {
                     _quality_determination = value;
-                    OnPropertyChanged(nameof(quality_determination));
-                    ValidateProperty(nameof(quality_determination));
+                    OnPropertyChanged(nameof(Quality_determination));
+                    ValidateProperty(nameof(Quality_determination));
                     // Flag that the current record has changed so that the apply button
                     // will appear.
                     DataChanged?.Invoke(true);
@@ -540,7 +563,7 @@ namespace HLU.Data
         /// mandatory field when not in bulk update mode.
         /// </summary>
         /// <value>The quality of the interpretation for the priority habitat.</value>
-        public string quality_interpretation
+        public string Quality_interpretation
         {
             get { return _quality_interpretation; }
             set
@@ -548,8 +571,8 @@ namespace HLU.Data
                 if (_quality_interpretation != value)
                 {
                     _quality_interpretation = value;
-                    OnPropertyChanged(nameof(quality_interpretation));
-                    ValidateProperty(nameof(quality_interpretation));
+                    OnPropertyChanged(nameof(Quality_interpretation));
+                    ValidateProperty(nameof(Quality_interpretation));
                     // Flag that the current record has changed so that the apply button
                     // will appear.
                     DataChanged?.Invoke(true);
@@ -563,7 +586,7 @@ namespace HLU.Data
         /// it will be truncated to 254 characters.
         /// </summary>
         /// <value>The interpretation comments for the priority habitat.</value>
-        public string interpretation_comments
+        public string Interpretation_comments
         {
             get { return _interpretation_comments; }
             set
@@ -572,8 +595,8 @@ namespace HLU.Data
                 if (_interpretation_comments != newValue)
                 {
                     _interpretation_comments = newValue;
-                    OnPropertyChanged(nameof(interpretation_comments));
-                    ValidateProperty(nameof(interpretation_comments));
+                    OnPropertyChanged(nameof(Interpretation_comments));
+                    ValidateProperty(nameof(Interpretation_comments));
                     // Flag that the current record has changed so that the apply button
                     // will appear.
                     DataChanged?.Invoke(true);
@@ -683,7 +706,7 @@ namespace HLU.Data
         {
             get
             {
-                return _bapEnvironmentList != null && _bapEnvironmentList.Any(be => be.bap_habitat == this.bap_habitat);
+                return _bapEnvironmentList != null && _bapEnvironmentList.Any(be => be.Bap_habitat == this.Bap_habitat);
             }
         }
 
@@ -695,11 +718,11 @@ namespace HLU.Data
         public bool IsValid()
         {
             // Validate all properties
-            ValidateProperty(nameof(incid));
-            ValidateProperty(nameof(bap_habitat));
-            ValidateProperty(nameof(quality_determination));
-            ValidateProperty(nameof(quality_interpretation));
-            ValidateProperty(nameof(interpretation_comments));
+            ValidateProperty(nameof(Incid));
+            ValidateProperty(nameof(Bap_habitat));
+            ValidateProperty(nameof(Quality_determination));
+            ValidateProperty(nameof(Quality_interpretation));
+            ValidateProperty(nameof(Interpretation_comments));
 
             return !HasErrors;
         }

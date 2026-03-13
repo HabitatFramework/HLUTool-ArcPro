@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -31,6 +32,12 @@ using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
 {
+    /// <summary>
+    /// ViewModel for the Connect Oracle dialog. Builds an Oracle connection string based on user
+    /// input and tests the connection when the Ok button is clicked. If the connection is
+    /// successful then the connection string and default schema are passed back to the caller via
+    /// the RequestClose event.
+    /// </summary>
     class ViewModelConnectOracle : ViewModelBase, IDataErrorInfo
     {
         internal enum DBAPrivilege
@@ -53,6 +60,9 @@ namespace HLU.UI.ViewModel
 
         #region Constructor
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ViewModelConnectOracle"/> class.
+        /// </summary>
         public ViewModelConnectOracle()
         {
             _connStrBuilder = [];
@@ -62,12 +72,22 @@ namespace HLU.UI.ViewModel
 
         #region Connection String Builder
 
+        /// <summary>
+        /// Gets the OracleConnectionStringBuilder which is used to build the connection string
+        /// based on user input. The connection string is tested when the Ok button is clicked and
+        /// if successful is passed back to the caller via the RequestClose event.
+        /// </summary>
+        /// <value>The OracleConnectionStringBuilder used to build the connection string.</value>
         public OracleConnectionStringBuilder ConnectionStringBuilder { get { return _connStrBuilder; } }
 
         #endregion
 
         #region Display Name
 
+        /// <summary>
+        /// Gets or sets the display name for this ViewModel. This is used as the title of the dialog.
+        /// </summary>
+        /// <value>The display name.</value>
         public override string DisplayName
         {
             get { return _displayName; }
@@ -78,16 +98,21 @@ namespace HLU.UI.ViewModel
 
         #region Window Title
 
+        /// <summary>
+        /// Gets the window title for this ViewModel. This is used as the title of the dialog and is set to the same value as DisplayName.
+        /// </summary>
+        /// <value>The window title.</value>
         public override string WindowTitle { get { return DisplayName; } }
 
         #endregion
 
         #region RequestClose
 
-        // declare the delegate since using non-generic pattern
+        // Declare the delegate since using non-generic pattern
         public delegate void RequestCloseEventHandler(string connString, string defaultSchema, string errMsg);
 
-        // declare the event
+        // Declare the event that will be raised when the dialog should be closed. The event passes
+        // the connection string, default schema and any error message back to the caller.
         public event RequestCloseEventHandler RequestClose;
 
         #endregion
@@ -97,9 +122,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Create Ok button command
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command for the Ok button.</value>
         public ICommand OkCommand
         {
             get
@@ -117,29 +140,25 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles event when Ok button is clicked
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void OkCommandClick(object param)
         {
-            OracleConnection cn;
-
             try
             {
                 _connStrBuilder.PersistSecurityInfo = Settings.Default.DbConnectionPersistSecurityInfo;
 
-                cn = new OracleConnection(_connStrBuilder.ConnectionString);
+                using OracleConnection cn = new(_connStrBuilder.ConnectionString);
 
                 cn.Open();
-                cn.Close();
+                // Close() is automatic when using disposes
 
                 RequestClose?.Invoke(_connStrBuilder.ConnectionString, _defaultSchema, null);
             }
             catch (OracleException exOra)
             {
                 MessageBox.Show("Oracle Server responded with an error:\n\n" + exOra.Message,
-                     "Oracle Server Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    "Oracle Server Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally { cn = null; }
         }
 
         /// <summary>
@@ -147,9 +166,7 @@ namespace HLU.UI.ViewModel
         /// To be enabled the following must be true:
         /// server name and database must be set; if windows authentication is not set then a username and password are required.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>True if the Ok button can be enabled; otherwise, false.</value>
         private bool CanOk
         {
             get
@@ -169,9 +186,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Create Cancel button command
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command for the Cancel button.</value>
         public ICommand CancelCommand
         {
             get
@@ -189,8 +204,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles event when Cancel button is clicked
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void CancelCommandClick(object param)
         {
             RequestClose?.Invoke(null, null, null);
@@ -200,6 +214,12 @@ namespace HLU.UI.ViewModel
 
         #region View Events
 
+        /// <summary>
+        /// Handles events raised by the view. In this case the only event is when the DefaultSchema
+        /// combo box is dropped down, at which point the list of schemata is loaded from the database.
+        /// </summary>
+        /// <param name="windowHandle">The handle of the window raising the event.</param>
+        /// <param name="propertyName"></param>
         public void ViewEvents(IntPtr windowHandle, string propertyName)
         {
             switch (propertyName)
@@ -214,6 +234,11 @@ namespace HLU.UI.ViewModel
 
         #region Data Source
 
+        /// <summary>
+        /// Gets or sets the list of data sources. The list is retrieved using the OracleClientFactory's
+        /// CreateDataSourceEnumerator method.
+        /// </summary>
+        /// <value>The list of data sources.</value>
         public string[] DataSources
         {
             get
@@ -226,7 +251,7 @@ namespace HLU.UI.ViewModel
                         System.Data.Common.DbDataSourceEnumerator dataSourceEnumarator = factory.CreateDataSourceEnumerator();
                         DataTable dt = dataSourceEnumarator.GetDataSources();
                         _dataSourcesDic = DbOracle.GetConnectionStrings(dt);
-                        _dataSources = _dataSourcesDic.Keys.ToArray();
+                        _dataSources = [.. _dataSourcesDic.Keys];
                         OnPropertyChanged(nameof(DataSources));
                     }
                     else
@@ -239,6 +264,11 @@ namespace HLU.UI.ViewModel
             set { }
         }
 
+        /// <summary>
+        /// Gets or sets the data source. The data source is set by the user selecting a value from
+        /// the list of data sources or by entering a value manually.
+        /// </summary>
+        /// <value>The data source.</value>
         public string DataSource
         {
             get { return _connStrBuilder.DataSource; }
@@ -253,6 +283,10 @@ namespace HLU.UI.ViewModel
 
         #region Authentication
 
+        /// <summary>
+        /// Gets or sets the user ID. The user ID is set by the user entering a value manually.
+        /// </summary>
+        /// <value>The user ID.</value>
         public string UserID
         {
             get { return _connStrBuilder.UserID; }
@@ -275,12 +309,21 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets the list of DBA privilege options.
+        /// </summary>
+        /// <value>The list of DBA privilege options.</value>
         public DBAPrivilege[] DBAPrivilegeOptions
         {
             get { return (DBAPrivilege[])Enum.GetValues(typeof(DBAPrivilege)); }
             set { }
         }
 
+        /// <summary>
+        /// Gets or sets the DBA privilege option. The option is set by the user selecting a value from
+        /// the list of DBA privilege options.
+        /// </summary>
+        /// <value>The DBA privilege option.</value>
         public DBAPrivilege DBAPrivilegeOption
         {
             get
@@ -301,6 +344,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets the password. The password is set by the user entering a value manually.
+        /// </summary>
+        /// <value>The password.</value>
         public string Password
         {
             get { return _connStrBuilder.Password; }
@@ -315,18 +362,34 @@ namespace HLU.UI.ViewModel
 
         #region Default Schema
 
+        /// <summary>
+        /// Gets or sets the list of schemata. The list is loaded from the database when the user clicks
+        /// </summary>
+        /// <value>The list of schemata.</value>
         public string[] Schemata
         {
-            get { return _schemata.ToArray(); }
+            get
+            {
+                return [.. _schemata];
+            }
             set { }
         }
 
+        /// <summary>
+        /// Gets or sets the default schema. The default schema is set by the user selecting a value from
+        /// the list of schemata.
+        /// </summary>
+        /// <value>The default schema.</value>
         public string DefaultSchema
         {
             get { return _defaultSchema; }
             set { if (value != _defaultSchema) _defaultSchema = value; }
         }
 
+        /// <summary>
+        /// Loads the list of schemata from the database. The list is retrieved by opening a connection to the database
+        /// and executing a query to fetch all available schemata.
+        /// </summary>
         private void LoadSchemata()
         {
             List<String> schemaList = [];
@@ -348,9 +411,9 @@ namespace HLU.UI.ViewModel
                     try
                     {
                         adapter.Fill(dbTable);
-                        schemaList = (from r in dbTable.AsEnumerable()
+                        schemaList = [.. (from r in dbTable.AsEnumerable()
                                       let schemaName = r.Field<string>("username")
-                                      select schemaName).OrderBy(s => s).ToList();
+                                      select schemaName).OrderBy(s => s)];
                         _defaultSchema = DbBase.GetDefaultSchema(Backends.Oracle, _connStrBuilder, schemaList);
                     }
                     catch { }
@@ -379,6 +442,11 @@ namespace HLU.UI.ViewModel
 
         #region IDataErrorInfo Members
 
+        /// <summary>
+        /// Gets an error message indicating what is wrong with this object. The error message is
+        /// generated based on which required properties have not been set by the user.
+        /// </summary>
+        /// <value>The error message indicating what is wrong with this object.</value>
         string IDataErrorInfo.Error
         {
             get
@@ -399,6 +467,12 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets an error message for the property with the given name. The error message is generated based on
+        /// which required properties have not been set by the user.
+        /// </summary>
+        /// <param name="columnName">The name of the property for which to get the error message.</param>
+        /// <returns>The error message for the specified property.</returns>
         string IDataErrorInfo.this[string columnName]
         {
             get

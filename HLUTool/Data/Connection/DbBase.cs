@@ -1,6 +1,7 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -60,8 +61,14 @@ namespace HLU.Data.Connection
         UndeterminedOleDb = 128
     }
 
-    #endregion
+    #endregion Enums
 
+    /// <summary>
+    /// This abstract class provides the base for database connections and operations. It defines
+    /// common properties and methods for handling connection strings, schemas, data types, and
+    /// executing SQL commands. Specific database implementations (e.g., SQL Server, Oracle) will
+    /// inherit from this class and implement the necessary functionality for their respective backends.
+    /// </summary>
     abstract partial class DbBase : SqlBuilder
     {
         #region Fields
@@ -76,10 +83,29 @@ namespace HLU.Data.Connection
         private UI.View.Connection.ViewPassword _pwdWindow;
         private UI.ViewModel.ViewModelPassword _pwdViewModel;
 
-        #endregion
+        #endregion Fields
 
         #region Constructor
 
+        /// <summary>
+        /// Initializes a new instance of the DbBase class with the specified connection string,
+        /// default schema, and various configuration options. If the connection string is not
+        /// provided, it prompts the user to browse for a connection.
+        /// </summary>
+        /// <param name="connString">The connection string for the database.</param>
+        /// <param name="defaultSchema">The default schema for the database.</param>
+        /// <param name="promptPwd">Indicates whether to prompt for a password.</param>
+        /// <param name="pwdMask">The password mask string.</param>
+        /// <param name="useCommandBuilder">Indicates whether to use automatic command builders.</param>
+        /// <param name="useColumnNames">Indicates whether to use column names.</param>
+        /// <param name="isUnicode">Indicates whether to use Unicode encoding.</param>
+        /// <param name="useTimeZone">Indicates whether to use time zone information.</param>
+        /// <param name="textLength">The maximum length of text fields.</param>
+        /// <param name="binaryLength">The maximum length of binary fields.</param>
+        /// <param name="timePrecision">The precision of time fields.</param>
+        /// <param name="numericPrecision">The precision of numeric fields.</param>
+        /// <param name="numericScale">The scale of numeric fields.</param>
+        /// <param name="connectTimeOut">The timeout value for the database connection.</param>
         protected DbBase(ref string connString, ref string defaultSchema, ref bool promptPwd, string pwdMask,
             bool useCommandBuilder, bool useColumnNames, bool isUnicode, bool useTimeZone, uint textLength,
             uint binaryLength, uint timePrecision, uint numericPrecision, uint numericScale, int connectTimeOut)
@@ -110,10 +136,16 @@ namespace HLU.Data.Connection
             catch { throw; }
         }
 
-        #endregion
+        #endregion Constructor
 
         #region Public Static
 
+        /// <summary>
+        /// Determines the database backend type based on the provided connection string and connection type.
+        /// </summary>
+        /// <param name="connString">The connection string for the database.</param>
+        /// <param name="connType">The type of the database connection.</param>
+        /// <returns>The backend type of the database.</returns>
         public static Backends GetBackend(string connString, ConnectionTypes connType) => connType switch
         {
             ConnectionTypes.ODBC => DbOdbc.GetBackend(connString),
@@ -121,6 +153,13 @@ namespace HLU.Data.Connection
             _ => Backends.Undetermined,
         };
 
+        /// <summary>
+        /// Gets the default schema for the specified database backend based on the connection string and available schemata.
+        /// </summary>
+        /// <param name="backend">The backend type of the database.</param>
+        /// <param name="connStrBuilder">The connection string builder for the database.</param>
+        /// <param name="schemata">The list of available schemata.</param>
+        /// <returns>The default schema for the specified backend.</returns>
         public static string GetDefaultSchema(Backends backend,
             DbConnectionStringBuilder connStrBuilder, List<string> schemata)
         {
@@ -155,6 +194,12 @@ namespace HLU.Data.Connection
             }
         }
 
+        /// <summary>
+        /// Determines whether the provided connection string builder contains a password entry and
+        /// if it is not empty, indicating that a password is present.
+        /// </summary>
+        /// <param name="connStringBuilder">The connection string builder for the database.</param>
+        /// <returns><c>true</c> if the connection string contains a password; otherwise, <c>false</c>.</returns>
         public static bool HasPassword(DbConnectionStringBuilder connStringBuilder)
         {
             if ((connStringBuilder == null) || IsIntegratedSecurity(connStringBuilder) ||
@@ -164,6 +209,13 @@ namespace HLU.Data.Connection
             return !String.IsNullOrEmpty(pwd.ToString());
         }
 
+        /// <summary>
+        /// Returns a connection string with the password value masked by the specified mask string,
+        /// if a password is present.
+        /// </summary>
+        /// <param name="connStringBuilder">The connection string builder for the database.</param>
+        /// <param name="maskString">The string to use for masking the password.</param>
+        /// <returns>The connection string with the password masked.</returns>
         public static string MaskPassword(DbConnectionStringBuilder connStringBuilder, string maskString)
         {
             if (connStringBuilder == null) return String.Empty;
@@ -182,6 +234,12 @@ namespace HLU.Data.Connection
             return tmpConnStrBuilder.ConnectionString;
         }
 
+        /// <summary>
+        /// Determines whether the connection string builder indicates that integrated security is
+        /// being used, which would mean that a password is not required for authentication.
+        /// </summary>
+        /// <param name="connStringBuilder">The connection string builder for the database.</param>
+        /// <returns><c>true</c> if integrated security is being used; otherwise, <c>false</c>.</returns>
         private static bool IsIntegratedSecurity(DbConnectionStringBuilder connStringBuilder)
         {
             if (connStringBuilder == null) return false;
@@ -193,15 +251,21 @@ namespace HLU.Data.Connection
                     string s = integratedSecurity.ToString().ToLower();
                     return s == "true" || s == "yes" || s == "SSPI";
                 }
-                else if (integratedSecurity is bool)
+                else if (integratedSecurity is bool isIntegrated)
                 {
-                    return (bool)integratedSecurity;
+                    return isIntegrated;
                 }
             }
 
             return false;
         }
 
+        /// <summary>
+        /// Determines whether the connection string builder contains a "Password" key, which
+        /// indicates that a password can be specified in the connection string.
+        /// </summary>
+        /// <param name="connStringBuilder">The connection string builder for the database.</param>
+        /// <returns><c>true</c> if the connection string builder contains a "Password" key; otherwise, <c>false</c>.</returns>
         private static bool HasPasswordKey(DbConnectionStringBuilder connStringBuilder)
         {
             if (connStringBuilder == null)
@@ -210,6 +274,8 @@ namespace HLU.Data.Connection
                 return connStringBuilder.ContainsKey("Password");
         }
 
+        // Extracts the most relevant error message from an exception chain, specifically looking
+        // for SQL exceptions and returning a user-friendly message.
         /// <summary>
         /// Extracts the most relevant SQL Server error message from an exception chain.
         /// </summary>
@@ -229,7 +295,7 @@ namespace HLU.Data.Connection
             return exception.Message;
         }
 
-        #endregion
+        #endregion Public Static
 
         #region Public
 
@@ -269,11 +335,28 @@ namespace HLU.Data.Connection
 
         public string RestrictionNameColumn { get { return _restrictionNameColumn; } }
 
+        /// <summary>
+        /// Returns the backend data type as a string for a given .NET system type by first mapping
+        /// the system type to a database type code and then mapping that code to the corresponding
+        /// backend data type string. This allows for consistent translation of .NET types to the
+        /// appropriate database types when constructing SQL commands or defining table schemas.
+        /// </summary>
+        /// <param name="systemType">The .NET system type to be mapped to a backend data type.</param>
+        /// <returns>The corresponding backend data type as a string.</returns>
         public string BackendDataType(Type systemType)
         {
             return SqlToSqlCodeType(SystemToSqlType(systemType));
         }
 
+        /// <summary>
+        /// Returns the .NET system type corresponding to a given backend data type string by first
+        /// removing any size or precision information from the backend type string, then mapping it
+        /// to a database type code, and finally mapping that code to the corresponding .NET system
+        /// type. This allows for consistent translation of backend data types to .NET types when
+        /// reading data from the database or defining parameters for SQL commands.
+        /// </summary>
+        /// <param name="backendType">The backend data type string to be mapped to a .NET system type.</param>
+        /// <returns>The corresponding .NET system type.</returns>
         public Type SystemDataType(String backendType)
         {
             try
@@ -294,6 +377,15 @@ namespace HLU.Data.Connection
 
         public string ErrorMessage { get { return _errorMessage; } }
 
+        /// <summary>
+        /// Returns a qualified table name by combining the default schema (if specified) with the
+        /// provided table name, and properly quoting the identifiers to ensure they are correctly
+        /// interpreted by the database. If the default schema is not set, it simply returns the
+        /// quoted table name. If the default schema is set, it returns a string in the format
+        /// "schema.table", with both the schema and table names quoted.
+        /// </summary>
+        /// <param name="tableName">The name of the table to qualify.</param>
+        /// <returns>The qualified table name.</returns>
         public string QualifyTableName(string tableName)
         {
             if (String.IsNullOrEmpty(tableName))
@@ -304,18 +396,48 @@ namespace HLU.Data.Connection
                 return QuoteIdentifier(_defaultSchema) + "." + QuoteIdentifier(tableName);
         }
 
+        /// <summary>
+        /// Fills the provided DataTable with schema information from the database based on a SELECT
+        /// query that retrieves all records from the table specified in the DataTable's TableName property.
+        /// </summary>
+        /// <typeparam name="T">The type of the DataTable.</typeparam>
+        /// <param name="schemaType">The type of schema information to retrieve.</param>
+        /// <param name="table">The DataTable to be filled with schema information.</param>
+        /// <returns>True if the schema was successfully filled; otherwise, false.</returns>
         public bool FillSchema<T>(SchemaType schemaType, ref T table) where T : DataTable, new()
         {
             table ??= new T();
             return FillSchema<T>(schemaType, "SELECT * FROM " + table.TableName, ref table);
         }
 
+        /// <summary>
+        /// Fills the provided DataTable with data from the database based on a SELECT query that
+        /// retrieves all records from the table specified in the DataTable's TableName property.
+        /// The method uses a generic type parameter T, which must be a subclass of DataTable and
+        /// have a parameterless constructor. If the provided table is null, a new instance of T
+        /// will be created. The method returns an integer indicating the number of rows filled in
+        /// the DataTable.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="table">The DataTable to be filled with data.</param>
+        /// <returns>The number of rows filled in the DataTable.</returns>
         public int FillTable<T>(ref T table) where T : DataTable, new()
         {
             table ??= new T();
             return FillTable<T>("SELECT * FROM " + QuoteIdentifier(table.TableName), ref table);
         }
 
+        /// <summary>
+        /// Retrieves schema information from the database based on the specified collection name and a single restriction value.
+        /// </summary>
+        /// <typeparam name="C">The type of the database connection.</typeparam>
+        /// <typeparam name="T">The type of the database transaction.</typeparam>
+        /// <param name="collectionName">The name of the schema collection.</param>
+        /// <param name="restrictionName">The name of the restriction.</param>
+        /// <param name="restrictionValue">The value of the restriction.</param>
+        /// <param name="connection">The database connection.</param>
+        /// <param name="transaction">The database transaction.</param>
+        /// <returns>A <see cref="DataTable"/> containing the schema information.</returns>
         public DataTable GetSchema<C, T>(string collectionName, string restrictionName,
             string restrictionValue, C connection, T transaction)
             where C : DbConnection
@@ -335,6 +457,16 @@ namespace HLU.Data.Connection
             return null;
         }
 
+        /// <summary>
+        /// Retrieves schema information from the database based on the specified collection name and restriction values.
+        /// </summary>
+        /// <typeparam name="C">The type of the database connection.</typeparam>
+        /// <typeparam name="T">The type of the database transaction.</typeparam>
+        /// <param name="collectionName">The name of the schema collection.</param>
+        /// <param name="restrictionValues">The array of restriction values.</param>
+        /// <param name="connection">The database connection.</param>
+        /// <param name="transaction">The database transaction.</param>
+        /// <returns>A <see cref="DataTable"/> containing the schema information.</returns>
         public DataTable GetSchema<C, T>(string collectionName, string[] restrictionValues,
             C connection, T transaction)
             where C : DbConnection
@@ -511,7 +643,7 @@ namespace HLU.Data.Connection
             }
         }
 
-        #endregion
+        #endregion Public
 
         #region Protected
 
@@ -559,6 +691,10 @@ namespace HLU.Data.Connection
 
         protected Dictionary<string, string[]> _schemaRestrictions;
 
+
+        /// <summary>
+        /// Provides a mapping of data type strings that may be returned by the database metadata to more standard .NET type names.
+        /// </summary>
         protected Dictionary<string, string> ReplaceDataTypes
         {
             get
@@ -578,6 +714,21 @@ namespace HLU.Data.Connection
             }
         }
 
+        /// <summary>
+        /// Retrieves and processes database metadata to populate internal mappings of SQL data
+        /// types to .NET system types, as well as any synonyms for SQL data types. This method
+        /// queries the database for its metadata collections, restrictions, and data types, and
+        /// builds dictionaries that allow for translation between SQL type codes, SQL type names,
+        /// and .NET system types. It also identifies the restriction names for catalog, schema,
+        /// table, and column if they are available in the database metadata. This setup is
+        /// essential for the class to correctly interpret database schemas and construct
+        /// appropriate SQL commands based on .NET types.
+        /// </summary>
+        /// <typeparam name="C">The type of the database connection.</typeparam>
+        /// <typeparam name="T">The type of the database transaction.</typeparam>
+        /// <param name="enumType">The enumeration type representing SQL data types.</param>
+        /// <param name="connection">The database connection.</param>
+        /// <param name="transaction">The database transaction.</param>
         protected void GetMetaData<C, T>(Type enumType, C connection, T transaction)
             where C : DbConnection
             where T : DbTransaction
@@ -673,6 +824,13 @@ namespace HLU.Data.Connection
             }
         }
 
+        /// <summary>
+        /// Parses the provided type name string to its corresponding integer value based on the given enumeration type.
+        /// </summary>
+        /// <param name="enumType">The enumeration type representing SQL data types.</param>
+        /// <param name="typeName">The name of the type to parse.</param>
+        /// <param name="ignoreCase">Indicates whether to ignore case when parsing the type name.</param>
+        /// <returns>The integer value of the parsed type, or -1 if parsing fails.</returns>
         protected int EnumValue(Type enumType, string typeName, bool ignoreCase)
         {
             try
@@ -682,6 +840,15 @@ namespace HLU.Data.Connection
             catch { return -1; }
         }
 
+        /// <summary>
+        /// Cleans the provided data type string by checking if it exists in the ReplaceDataTypes
+        /// dictionary and returning the corresponding value if found, or returning the original
+        /// data type string if not found. This method is used to standardize data type strings that
+        /// may be returned by the database metadata to more consistent .NET type names, ensuring
+        /// that the type mapping logic can correctly interpret and map these types to .NET system types.
+        /// </summary>
+        /// <param name="dataType">The data type string to clean.</param>
+        /// <returns>The cleaned data type string.</returns>
         protected string CleanDataType(string dataType)
         {
             string test;
@@ -691,6 +858,15 @@ namespace HLU.Data.Connection
                 return dataType;
         }
 
+        /// <summary>
+        /// Maps a database type code to its corresponding backend data type string by looking up
+        /// the code in the _typeMapSQLToSQLCode dictionary. If the code is found, it returns the
+        /// associated type name; otherwise, it returns null. This method is used to translate
+        /// database type codes into the appropriate backend data type strings that can be used in
+        /// SQL commands or when defining table schemas.
+        /// </summary>
+        /// <param name="dbTypeCode">The database type code to map.</param>
+        /// <returns>The corresponding backend data type string, or null if not found.</returns>
         protected String DbTypeToString(int dbTypeCode)
         {
             string typeName;
@@ -700,6 +876,17 @@ namespace HLU.Data.Connection
                 return null;
         }
 
+        /// <summary>
+        /// Replaces the database type code associated with a given .NET system type in the provided
+        /// type dictionary if the system type exists in the dictionary and its current database
+        /// type code is different from the new database type code. This method is used to update
+        /// the type mapping for a specific .NET system type when necessary, ensuring that the
+        /// correct database type code is associated with it for accurate translation between .NET
+        /// types and database types.
+        /// </summary>
+        /// <param name="sysType">The .NET system type whose database type code is to be replaced.</param>
+        /// <param name="dbTypeNew">The new database type code to associate with the system type.</param>
+        /// <param name="typeDictionary">The dictionary containing the type mappings.</param>
         protected void ReplaceType(Type sysType, int dbTypeNew, Dictionary<Type, int> typeDictionary)
         {
             int dbTypeOld;
@@ -710,6 +897,17 @@ namespace HLU.Data.Connection
             }
         }
 
+        /// <summary>
+        /// Maps a SQL type name string to its corresponding database type code by looking up the
+        /// string in the _sqlSynonyms dictionary. The method first converts the input SQL type name
+        /// to lowercase to ensure case-insensitive matching. If the SQL type name is found in the
+        /// dictionary, it returns the associated database type code; otherwise, it returns -1 to
+        /// indicate that the type was not found. This method is used to translate SQL type names,
+        /// which may be returned by database metadata or used in SQL commands, into their
+        /// corresponding database type codes for accurate type mapping and handling within the class.
+        /// </summary>
+        /// <param name="sqlType">The SQL type name string to map.</param>
+        /// <returns>The corresponding database type code, or -1 if not found.</returns>
         protected int SQLCodeToSQLType(string sqlType)
         {
             sqlType = sqlType.ToLower();
@@ -723,6 +921,23 @@ namespace HLU.Data.Connection
 
         #region Login
 
+        /// <summary>
+        /// Handles the login process for connecting to a database by constructing a connection
+        /// string using a generic connection string builder and connection object. The method
+        /// checks if a password is required based on the provided connection string and prompts the
+        /// user for a password if necessary. It attempts to open a connection to the database using
+        /// the constructed connection string, and if the connection fails due to an error (other
+        /// than cancellation), it allows the user to retry entering the password up to three times
+        /// before throwing an exception. This method provides a flexible way to manage database
+        /// connections while securely handling sensitive information like passwords.
+        /// </summary>
+        /// <typeparam name="B">The type of the connection string builder.</typeparam>
+        /// <typeparam name="C">The type of the database connection.</typeparam>
+        /// <param name="userNameLabel">The label for the username field in the login prompt.</param>
+        /// <param name="connectionString">The initial connection string.</param>
+        /// <param name="promptPwd">A flag indicating whether to prompt for a password.</param>
+        /// <param name="connectionStringBuilder">The connection string builder instance.</param>
+        /// <param name="connection">The database connection instance.</param>
         protected void Login<B, C>(string userNameLabel, string connectionString,
             ref bool promptPwd, ref B connectionStringBuilder, ref C connection)
             where B : DbConnectionStringBuilder, new()
@@ -769,6 +984,20 @@ namespace HLU.Data.Connection
             }
         }
 
+        /// <summary>
+        /// Prompts the user for a password if the provided connection string builder does not
+        /// already contain a password. The method creates a password prompt window, sets up a
+        /// ViewModel for data binding, and displays the window to the user. If the user enters a
+        /// password and submits it, the method adds the password to the connection string builder.
+        /// If the user cancels the prompt or if there is an error during the connection attempt,
+        /// the method handles these cases appropriately by showing error messages or throwing
+        /// exceptions. This method ensures that sensitive information like passwords is handled
+        /// securely and that users have a clear interface for entering their credentials when
+        /// connecting to a database.
+        /// </summary>
+        /// <typeparam name="T">The type of the connection string builder.</typeparam>
+        /// <param name="userLabel">The label to display for the username field in the password prompt.</param>
+        /// <param name="connStrBuilder">The connection string builder to which the password will be added.</param>
         protected void PromptPassword<T>(string userLabel, ref T connStrBuilder)
             where T : DbConnectionStringBuilder
         {
@@ -812,9 +1041,9 @@ namespace HLU.Data.Connection
                 }
 
                 // when ViewModel asks to be closed, close window
-                _pwdViewModel.RequestClose -= _pwdViewModel_RequestClose; // Safety: avoid double subscription.
+                _pwdViewModel.RequestClose -= PwdViewModel_RequestClose; // Safety: avoid double subscription.
                 _pwdViewModel.RequestClose +=
-                    new UI.ViewModel.ViewModelPassword.RequestCloseEventHandler(_pwdViewModel_RequestClose);
+                    new UI.ViewModel.ViewModelPassword.RequestCloseEventHandler(PwdViewModel_RequestClose);
 
                 // allow all controls in window to bind to ViewModel by setting DataContext
                 _pwdWindow.DataContext = _pwdViewModel;
@@ -840,9 +1069,20 @@ namespace HLU.Data.Connection
             finally { _pwd = null; }
         }
 
-        protected void _pwdViewModel_RequestClose(string password, string errorMsg)
+        /// <summary>
+        /// Handles the event when the password prompt ViewModel requests to be closed, which occurs
+        /// after the user submits a password or cancels the prompt. The method unsubscribes from
+        /// the RequestClose event to prevent multiple subscriptions, closes the password prompt
+        /// window, and checks if there is an error message or a valid password returned from the
+        /// ViewModel. If there is an error message, it sets the _errorMessage field; if there is a
+        /// valid password, it sets the _pwd field. This method ensures that the results of the
+        /// password prompt are properly handled and that any errors are captured for display to the user.
+        /// </summary>
+        /// <param name="password">The password entered by the user.</param>
+        /// <param name="errorMsg">The error message returned by the ViewModel, if any.</param>
+        protected void PwdViewModel_RequestClose(string password, string errorMsg)
         {
-            _pwdViewModel.RequestClose -= _pwdViewModel_RequestClose;
+            _pwdViewModel.RequestClose -= PwdViewModel_RequestClose;
             _pwdWindow.Close();
 
             if (!String.IsNullOrEmpty(errorMsg))
@@ -855,12 +1095,22 @@ namespace HLU.Data.Connection
             }
         }
 
-        #endregion
+        #endregion Login
 
-        #endregion
+        #endregion Protected
 
         #region Private Methods
 
+        /// <summary>
+        /// Maps a .NET system type to its corresponding database type code by looking up the system
+        /// type in the _typeMapSystemToSQL dictionary. If the system type is found, it returns the
+        /// associated database type code; otherwise, it returns -1 to indicate that the type was
+        /// not found. This method is used to translate .NET system types into their corresponding
+        /// database type codes for accurate type mapping and handling when constructing SQL
+        /// commands or defining table schemas.
+        /// </summary>
+        /// <param name="tsys">The .NET system type to be mapped.</param>
+        /// <returns>The corresponding database type code, or -1 if the type is not found.</returns>
         protected int SystemToSqlType(Type tsys)
         {
             int tsql;
@@ -870,6 +1120,16 @@ namespace HLU.Data.Connection
                 return (-1);
         }
 
+        /// <summary>
+        /// Maps a database type code to its corresponding .NET system type by looking up the code
+        /// in the _typeMapSQLToSystem dictionary. If the code is found, it returns the associated
+        /// .NET system type; otherwise, it returns Type.Missing to indicate that the type was not
+        /// found. This method is used to translate database type codes, which may be returned by
+        /// database metadata or used in SQL commands, into their corresponding .NET system types
+        /// for accurate type mapping and handling within the class.
+        /// </summary>
+        /// <param name="tsql">The database type code to be mapped.</param>
+        /// <returns>The corresponding .NET system type, or Type.Missing if the type is not found.</returns>
         protected Type SqlToSystemType(int tsql)
         {
             Type tsys;
@@ -879,6 +1139,15 @@ namespace HLU.Data.Connection
                 return (Type)Type.Missing;
         }
 
+        /// <summary>
+        /// Maps a database type code to its corresponding backend data type string by looking up
+        /// the code in the _typeMapSQLToSQLCode dictionary. If the code is found, it returns the
+        /// associated type name; otherwise, it returns null. This method is used to translate
+        /// database type codes into the appropriate backend data type strings that can be used in
+        /// SQL commands or when defining table schemas.
+        /// </summary>
+        /// <param name="tsql">The database type code to be mapped.</param>
+        /// <returns>The corresponding backend data type string, or null if the type is not found.</returns>
         protected string SqlToSqlCodeType(int tsql)
         {
             string tcode;
@@ -886,10 +1155,20 @@ namespace HLU.Data.Connection
             return tcode;
         }
 
-        #endregion
+        #endregion Private Methods
 
         #region Public Override
 
+        /// <summary>
+        /// Quotes an identifier (such as a table or column name) by wrapping it with the
+        /// appropriate quote characters defined by the QuotePrefix and QuoteSuffix properties. If
+        /// the identifier is not null or empty, the method checks if it already starts with the
+        /// QuotePrefix and ends with the QuoteSuffix; if not, it adds them accordingly. This method
+        /// ensures that identifiers are properly quoted to prevent issues with reserved keywords or
+        /// special characters in SQL commands.
+        /// </summary>
+        /// <param name="identifier">The identifier to be quoted.</param>
+        /// <returns>The quoted identifier.</returns>
         public override string QuoteIdentifier(string identifier)
         {
             if (!String.IsNullOrEmpty(identifier))
@@ -900,6 +1179,16 @@ namespace HLU.Data.Connection
             return identifier;
         }
 
+        /// <summary>
+        /// Generates a comma-separated list of target columns for use in a SQL SELECT statement,
+        /// based on an array of DataColumn objects.
+        /// </summary>
+        /// <param name="targetColumns">An array of DataColumn objects representing the target columns to include in the SELECT statement.</param>
+        /// <param name="quoteIdentifiers">A boolean value indicating whether to quote the identifiers.</param>
+        /// <param name="checkQualify">A boolean value indicating whether to check if the columns need to be qualified.</param>
+        /// <param name="qualifyColumns">A boolean value indicating whether to qualify the columns.</param>
+        /// <param name="resultTable">The resulting DataTable that will contain the selected columns.</param>
+        /// <returns>A comma-separated list of target columns for use in a SQL SELECT statement.</returns>
         public override string TargetList(DataColumn[] targetColumns, bool quoteIdentifiers,
             bool checkQualify, ref bool qualifyColumns, out DataTable resultTable)
         {
@@ -1126,7 +1415,7 @@ namespace HLU.Data.Connection
                 List<SqlFilterCondition> fromConds = [];
                 string fromList = FromList(true, true, targetColumns, sqlFromTables, ref fromConds, out additionalTables);
 
-                whereConds = fromConds.Concat(whereConds).ToList();
+                whereConds = [.. fromConds, .. whereConds];
 
                 // Force the column names to be qualified only if there are any
                 // additional tables and there are multiple columns.
@@ -1185,7 +1474,7 @@ namespace HLU.Data.Connection
         /// <param name="targetColumns">The target columns.</param>
         /// <param name="sqlFromTables">The SQL from tables.</param>
         /// <param name="sqlWhereClause">The SQL where clause.</param>
-        /// <returns></returns>
+        /// <returns>A string indicating the result of the SQL validation.</returns>
         public string SqlValidate(DataColumn[] targetColumns, List<DataTable> sqlFromTables, string sqlWhereClause)
         {
             if ((targetColumns == null) || (targetColumns.Length == 0)) return "Error verifying Sql";
@@ -1258,7 +1547,7 @@ namespace HLU.Data.Connection
             }
         }
 
-        #endregion
+        #endregion Public Override
 
         #region Public Abstract
 
@@ -1307,6 +1596,18 @@ namespace HLU.Data.Connection
 
         public abstract bool ContainsDataSet(DataSet ds, out string errorMessage);
 
+        /// <summary>
+        /// Creates a new table in the database based on the schema of the provided DataTable. The
+        /// method constructs a CREATE TABLE SQL statement by iterating through the columns of the
+        /// DataTable, mapping their data types to the corresponding database types, and including
+        /// any necessary constraints such as NOT NULL or PRIMARY KEY. The method then executes the
+        /// SQL statement to create the table in the database. If the table is created successfully,
+        /// it returns true; otherwise, it returns false. This method allows for dynamic creation of
+        /// database tables based on in-memory DataTable schemas, facilitating data export or
+        /// synchronization scenarios.
+        /// </summary>
+        /// <param name="adoTable">The DataTable whose schema will be used to create the new table in the database.</param>
+        /// <returns>True if the table was created successfully; otherwise, false.</returns>
         public bool CreateTable(DataTable adoTable)
         {
             try
@@ -1352,7 +1653,7 @@ namespace HLU.Data.Connection
             catch { return false; }
         }
 
-        #endregion
+        #endregion Public Abstract
 
         #region Protected Abstract
 
@@ -1386,6 +1687,6 @@ namespace HLU.Data.Connection
         [GeneratedRegex(@"\s*\(\s*[0-9]+(\s*,\s*[0-9]+\s*)*\)")]
         private static partial Regex SqlTypeRegex();
 
-        #endregion
+        #endregion Protected Abstract
     }
 }

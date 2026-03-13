@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2014 Sussex Biodiversity Record Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -40,10 +41,16 @@ namespace HLU.UI.ViewModel
         private ICommand _cancelCommand;
         private bool _makeDefaultReponse;
 
-        #endregion
+        #endregion Fields
 
-        #region ctor
+        #region Constructor
 
+        /// <summary>
+        /// Initializes a new instance of the ViewModelWindowWarnOnSubsetUpdate class.
+        /// </summary>
+        /// <param name="numFrags">The number of fragments.</param>
+        /// <param name="numTotalFrags">The total number of fragments.</param>
+        /// <param name="typeFeatures">The type of features.</param>
         public ViewModelWindowWarnOnSubsetUpdate(int numFrags, int numTotalFrags, GeometryTypes typeFeatures)
         {
             _numFrags = numFrags;
@@ -51,7 +58,7 @@ namespace HLU.UI.ViewModel
             _gisFeaturesType = typeFeatures;
         }
 
-        #endregion
+        #endregion Constructor
 
         #region ViewModelBase members
 
@@ -66,7 +73,7 @@ namespace HLU.UI.ViewModel
             get { return DisplayName; }
         }
 
-        #endregion
+        #endregion ViewModelBase members
 
         #region RequestClose
 
@@ -74,16 +81,14 @@ namespace HLU.UI.ViewModel
 
         public event RequestCloseEventHandler RequestClose;
 
-        #endregion
+        #endregion RequestClose
 
         #region Yes Command
 
         /// <summary>
-        /// Create Yes button command
+        /// Gets the command for the Yes button
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command to execute when the Yes button is clicked.</value>
         public ICommand YesCommand
         {
             get
@@ -101,8 +106,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles event when Yes button is clicked
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void YesCommandClick(object param)
         {
             // Set the default value to 'Subset'.
@@ -112,16 +116,14 @@ namespace HLU.UI.ViewModel
                 RequestClose?.Invoke(true, true, null);
         }
 
-        #endregion
+        #endregion Yes Command
 
         #region No Command
 
         /// <summary>
-        /// Create No button command
+        /// Gets the command for the No button
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command to execute when the No button is clicked.</value>
         public ICommand NoCommand
         {
             get
@@ -139,8 +141,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles event when No button is clicked
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void NoCommandClick(object param)
         {
             // Set the default value to 'All'.
@@ -150,16 +151,14 @@ namespace HLU.UI.ViewModel
                 RequestClose?.Invoke(true, true, null);
         }
 
-        #endregion
+        #endregion No Command
 
         #region Cancel Command
 
         /// <summary>
-        /// Create Cancel button command
+        /// Gets the command for the Cancel button
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command to execute when the Cancel button is clicked.</value>
         public ICommand CancelCommand
         {
             get
@@ -177,14 +176,13 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles event when Cancel button is clicked
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void CancelCommandClick(object param)
         {
             RequestClose?.Invoke(false, false, null);
         }
 
-        #endregion
+        #endregion Cancel Command
 
         #region Content Properties
 

@@ -2,7 +2,7 @@
 // and manage biodiversity information from ArcGIS Pro and SQL Server
 // based on pre-defined or user specified criteria.
 //
-// Copyright © 2024-25 Andy Foy Consulting.
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of DataTools suite of programs.
 //
@@ -50,7 +50,7 @@ using QueryFilter = ArcGIS.Core.Data.QueryFilter;
 namespace HLU.GISApplication
 {
     /// <summary>
-    /// This class provides ArcGIS Pro map functions.
+    /// Provides methods for interacting with ArcGIS Pro application, maps, layers, and tables.
     /// </summary>
     internal partial class ArcProApp
     {
@@ -77,13 +77,13 @@ namespace HLU.GISApplication
         #region Constructor
 
         /// <summary>
-        /// Set the global variables.
+        /// Initializes a new instance of the <see cref="ArcProApp"/> class and sets up necessary
+        /// structures and type mappings.
         /// </summary>
         public ArcProApp()
         {
             // Get the HLU featureLayer structure from the database.
-            if (_hluLayerStructure == null)
-                _hluLayerStructure = new HluGISLayer.incid_mm_polygonsDataTable();
+            _hluLayerStructure ??= new HluGISLayer.incid_mm_polygonsDataTable();
 
             // Set the data type maps to/from SQL.
             GetTypeMaps(out _typeMapSystemToSQL, out _typeMapSQLToSystem);
@@ -94,8 +94,9 @@ namespace HLU.GISApplication
         #region Properties
 
         /// <summary>
-        /// The name of the active map.
+        /// Gets the name of the active map.
         /// </summary>
+        /// <value>The name of the active map, or <c>null</c> if no map is active.</value>
         public string MapName
         {
             get
@@ -115,7 +116,7 @@ namespace HLU.GISApplication
         /// <summary>
         /// Writes any message to the Trace log with a timestamp.
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name="message">The message to write to the Trace log.</param>
         private static void TraceLog(string message)
         {
             Trace.WriteLine($"{DateTime.Now:G} : {message}");
@@ -344,7 +345,7 @@ namespace HLU.GISApplication
                     return null;
 
                 // Extract just the field names.
-                return fields.Select(f => f.Name).ToList();
+                return [.. fields.Select(f => f.Name)];
             }
             catch (Exception ex)
             {
@@ -566,7 +567,7 @@ namespace HLU.GISApplication
             if (_activeMap == null) return null;
 
             //Get the feature layers in the active map view.
-            List<FeatureLayer> featureLayerList = _activeMap.GetLayersAsFlattenedList().OfType<FeatureLayer>().ToList();
+            List<FeatureLayer> featureLayerList = [.. _activeMap.GetLayersAsFlattenedList().OfType<FeatureLayer>()];
 
             //List<FeatureLayer> layers = [];
             //foreach (var featureLayer in featureLayers) layers.Add(featureLayer);

@@ -3,6 +3,7 @@
 // Copyright © 2014 Sussex Biodiversity Record Centre
 // Copyright © 2019 London & South East Record Centres (LaSER)
 // Copyright © 2019-2022 Greenspace Information for Greater London CIC
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -28,7 +29,6 @@ using HLU.Data;
 using HLU.Data.Model;
 using HLU.GISApplication;
 using HLU.Properties;
-using HLU.UI.Model;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -702,8 +702,7 @@ namespace HLU.UI.ViewModel
                     int numFragsOld = 0;
                     if (prevGISSelection != null)
                     {
-                        DataRow[] gisRows = prevGISSelection.AsEnumerable()
-                            .Where(r => r[HluDataset.incid_mm_polygons.incidColumn.ColumnName].Equals(_incidCurrentRow.incid)).ToArray();
+                        DataRow[] gisRows = [.. prevGISSelection.AsEnumerable().Where(r => r[HluDataset.incid_mm_polygons.incidColumn.ColumnName].Equals(_incidCurrentRow.incid))];
                         numFragsOld = gisRows.Length;
                     }
 
@@ -711,8 +710,7 @@ namespace HLU.UI.ViewModel
                     int numFragsNew = 0;
                     if (_gisSelection != null)
                     {
-                        DataRow[] gisRows = _gisSelection.AsEnumerable()
-                            .Where(r => r[HluDataset.incid_mm_polygons.incidColumn.ColumnName].Equals(_incidCurrentRow.incid)).ToArray();
+                        DataRow[] gisRows = [.. _gisSelection.AsEnumerable().Where(r => r[HluDataset.incid_mm_polygons.incidColumn.ColumnName].Equals(_incidCurrentRow.incid))];
                         numFragsNew = gisRows.Length;
                     }
 
@@ -1062,13 +1060,13 @@ namespace HLU.UI.ViewModel
                 try
                 {
                     HluDataSet.incid_mm_polygonsDataTable t = new();
-                    DataTable[] selTables = new DataTable[] { t }.ToArray();
+                    DataTable[] selTables = [t];
 
                     IEnumerable<DataTable> queryTables = whereClause.SelectMany(cond => cond.Select(c => c.Table)).Distinct();
                     //DataTable[] selTables = new DataTable[] { t }.Union(queryTables).ToArray();
 
                     var fromTables = queryTables.Distinct().Where(q => !selTables.Select(s => s.TableName).Contains(q.TableName));
-                    DataTable[] whereTables = selTables.Concat(fromTables).ToArray();
+                    DataTable[] whereTables = [.. selTables, .. fromTables];
 
                     DataRelation rel;
                     IEnumerable<SqlFilterCondition> joinCond = fromTables.Select(st =>
@@ -1088,7 +1086,7 @@ namespace HLU.UI.ViewModel
 
                             // Chunk only at top-level OR boundaries while tracking parentheses.
                             // This avoids splitting matched pairs such as "incid >= 1" AND "incid <= 4".
-                            whereClause = whereCond.ChunkClauseTopLevel(50, 500).ToList();
+                            whereClause = [.. whereCond.ChunkClauseTopLevel(50, 500)];
                         }
                         catch
                         {
@@ -1113,11 +1111,11 @@ namespace HLU.UI.ViewModel
                             cond.BooleanOperator = "AND";
                             cond.OpenParentheses = "((";
 
-                            cond = whereCond[whereCond.Count - 1];
+                            cond = whereCond[^1];
                             cond.CloseParentheses = "))";
                         }
 
-                        numFragments += await _db.SqlCount(selTables, "*", joinCond.Concat(whereClause[i]).ToList());
+                        numFragments += await _db.SqlCount(selTables, "*", [.. joinCond, .. whereClause[i]]);
                     }
                 }
                 catch
@@ -1147,10 +1145,10 @@ namespace HLU.UI.ViewModel
                 try
                 {
                     HluDataSet.incid_mm_polygonsDataTable t = new();
-                    DataTable[] selTables = new DataTable[] { t }.ToArray();
+                    DataTable[] selTables = [t];
 
                     var fromTables = sqlFromTables.Distinct().Where(q => !selTables.Select(s => s.TableName).Contains(q.TableName));
-                    DataTable[] whereTables = selTables.Concat(fromTables).ToArray();
+                    DataTable[] whereTables = [.. selTables, .. fromTables];
 
                     DataRelation rel;
                     IEnumerable<SqlFilterCondition> joinCond = fromTables.Select(st =>
@@ -1159,10 +1157,10 @@ namespace HLU.UI.ViewModel
                         (rel = GetRelation(_hluDS.incid, st)) != null ?
                         new SqlFilterCondition("AND", t, t.incidColumn, typeof(DataColumn), "(", ")", rel.ChildColumns[0]) : null).Where(c => c != null);
 
-                    numFragments = await _db.SqlCount(whereTables, "*", joinCond.ToList(), sqlWhereClause);
+                    numFragments = await _db.SqlCount(whereTables, "*", [.. joinCond], sqlWhereClause);
 
                     // Create a selection DataTable of PK values of IncidMMPolygons.
-                    _incidMMPolygonSelection = _db.SqlSelect(true, false, _hluDS.incid_mm_polygons.PrimaryKey, whereTables.ToList(), joinCond.ToList(), sqlWhereClause);
+                    _incidMMPolygonSelection = _db.SqlSelect(true, false, _hluDS.incid_mm_polygons.PrimaryKey, [.. whereTables], [.. joinCond], sqlWhereClause);
 
                     //TODO: Temporary check.
                     if (numFragments != _incidMMPolygonSelection.Rows.Count)
@@ -1260,8 +1258,7 @@ namespace HLU.UI.ViewModel
             // instead of in StatusIncid() which is constantly being called.
             if (_gisSelection != null)
             {
-                DataRow[] gisRows = _gisSelection.AsEnumerable()
-                    .Where(r => r[HluDataset.incid_mm_polygons.incidColumn.ColumnName].Equals(_incidCurrentRow.incid)).ToArray();
+                DataRow[] gisRows = [.. _gisSelection.AsEnumerable().Where(r => r[HluDataset.incid_mm_polygons.incidColumn.ColumnName].Equals(_incidCurrentRow.incid))];
                 _currentIncidToidsInGISCount = gisRows.GroupBy(r => r[HluDataset.incid_mm_polygons.toidColumn.ColumnName]).Count();
                 _currentIncidFragsInGISCount = gisRows.Length;
             }
@@ -1315,8 +1312,7 @@ namespace HLU.UI.ViewModel
                 int fragsIncidSelectionGisCount = 0;
                 if (_gisSelection != null)
                 {
-                    DataRow[] gisRows = _gisSelection.AsEnumerable()
-                        .Where(r => r[HluDataset.incid_mm_polygons.incidColumn.ColumnName].Equals(incid)).ToArray();
+                    DataRow[] gisRows = [.. _gisSelection.AsEnumerable().Where(r => r[HluDataset.incid_mm_polygons.incidColumn.ColumnName].Equals(incid))];
                     toidsIncidSelectionGisCount = gisRows.GroupBy(r => r[HluDataset.incid_mm_polygons.toidColumn.ColumnName]).Count();
                     fragsIncidSelectionGisCount = gisRows.Length;
                 }
@@ -1384,8 +1380,6 @@ namespace HLU.UI.ViewModel
         /// <returns><c>true</c> if a logical split can be performed; otherwise, <c>false</c>.</returns>
         private bool ComputeCanLogicallySplit()
         {
-            WorkMode currentMode = WorkMode;
-
             // Must be in a mode that allows edits and ready for edit operations (includes CanEdit + Reason/Process selection).
             if (!IsEditOperationModeReady)
                 return false;
@@ -1648,9 +1642,9 @@ namespace HLU.UI.ViewModel
                 _viewModelWinWarnSplitMerge = new ViewModelWindowNotifyOnSplitMerge(msgText);
 
                 // when ViewModel asks to be closed, close window
-                _viewModelWinWarnSplitMerge.RequestClose -= viewModelWinWarnSplitMerge_RequestClose; // Safety: avoid double subscription.
+                _viewModelWinWarnSplitMerge.RequestClose -= ViewModelWinWarnSplitMerge_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinWarnSplitMerge.RequestClose +=
-                    new ViewModelWindowNotifyOnSplitMerge.RequestCloseEventHandler(viewModelWinWarnSplitMerge_RequestClose);
+                    new ViewModelWindowNotifyOnSplitMerge.RequestCloseEventHandler(ViewModelWinWarnSplitMerge_RequestClose);
 
                 // allow all controls in window to bind to ViewModel by setting DataContext
                 _windowWarnSplitMerge.DataContext = _viewModelWinWarnSplitMerge;
@@ -1663,10 +1657,10 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Update the user settings when the split merge request window is closed.
         /// </summary>
-        private void viewModelWinWarnSplitMerge_RequestClose()
+        private void ViewModelWinWarnSplitMerge_RequestClose()
         {
             // Remove the event handler and close the window.
-            _viewModelWinWarnSplitMerge.RequestClose -= viewModelWinWarnSplitMerge_RequestClose;
+            _viewModelWinWarnSplitMerge.RequestClose -= ViewModelWinWarnSplitMerge_RequestClose;
             _windowWarnSplitMerge.Close();
 
             // Update the user notify setting

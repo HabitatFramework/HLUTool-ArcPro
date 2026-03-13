@@ -2,6 +2,7 @@
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
 // Copyright © 2016 Thames Valley Environmental Records Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -73,7 +74,7 @@ namespace HLU.UI.ViewModel
         private bool _copyIncidSource3BoundaryImportance;
         private bool _copyIncidSource3HabitatImportance;
 
-        #endregion
+        #endregion Switches
 
         #region Values
 
@@ -111,9 +112,9 @@ namespace HLU.UI.ViewModel
         private string _incidSource3BoundaryImportance;
         private string _incidSource3HabitatImportance;
 
-        #endregion
+        #endregion Values
 
-        #endregion
+        #endregion Fields
 
         #region Properties
 
@@ -449,7 +450,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Switches
 
         #region Values
 
@@ -795,12 +796,18 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Values
 
-        #endregion
+        #endregion Properties
 
         #region Copy/Paste
 
+        /// <summary>
+        /// Copies the values from the main view model based on the copy switches. If a switch is
+        /// false, the value will be set to null (or an empty collection for the secondary habitats
+        /// and BAP habitats to ensure the UI controls are refreshed correctly).
+        /// </summary>
+        /// <param name="vmMain">The main view model from which to copy values.</param>
         internal void CopyValues(ViewModelWindowMain vmMain)
         {
             List<string> errorProps = [];
@@ -841,12 +848,16 @@ namespace HLU.UI.ViewModel
             if (errorProps.Count > 0)
                 MessageBox.Show(String.Format("Unable to copy {0}{1}.", errorProps.Count > 1 ?
                     String.Format("the following {0} fields: \n\n", errorProps.Count) : "field ",
-                    String.Join(", ", errorProps.ToArray())), "HLU: Copy Error",
+                    String.Join(", ", [.. errorProps])), "HLU: Copy Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
 
             vmMain.OnPropertyChanged(nameof(vmMain.CanPaste));
         }
 
+        /// <summary>
+        /// Pastes the values to the main view model based on the copy switches. If a switch is false, the value will be set to null.
+        /// </summary>
+        /// <param name="vmMain">The main view model to which to paste values.</param>
         internal void PasteValues(ViewModelWindowMain vmMain)
         {
             List<string> errorProps = [];
@@ -888,7 +899,7 @@ namespace HLU.UI.ViewModel
             if (errorProps.Count > 0)
                 MessageBox.Show(String.Format("Unable to paste {0}{1}", errorProps.Count > 1 ?
                     String.Format("the following {0} fields: \n\n", errorProps.Count) : "field ",
-                    String.Join(", ", errorProps.ToArray())), "HLU: Paste Error",
+                    String.Join(", ", [.. errorProps])), "HLU: Paste Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
 
             // Refresh all the controls
@@ -896,17 +907,27 @@ namespace HLU.UI.ViewModel
 
         }
 
+        /// <summary>
+        /// Gets the default value for a given type. For reference types this is null, for value
+        /// types this is the default value (e.g. 0 for int, false for bool etc.).
+        /// </summary>
+        /// <param name="targetType">The type for which to get the default value.</param>
+        /// <returns>The default value for the specified type.</returns>
         private object GetDefault(Type targetType)
         {
             return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
         }
 
-        #endregion
+        #endregion Copy/Paste
 
         #region INotifyPropertyChanged Members
 
+        /// <summary>
+        /// Defines the PropertyChanged event to allow the view to be notified when a property value
+        /// changes. This is used to ensure that the UI is updated when copy switches and values are changed.
+        /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
-        #endregion
+        #endregion INotifyPropertyChanged Members
     }
 }

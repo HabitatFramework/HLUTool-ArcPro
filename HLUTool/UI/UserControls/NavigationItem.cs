@@ -3,6 +3,7 @@
 // Copyright © 2013, 2016 Thames Valley Environmental Records Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
 // Copyright © 2019 London & South East Record Centres (LaSER)
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -22,7 +23,7 @@
 using System.ComponentModel;
 using System.Windows.Controls;
 
-namespace HLU.UI.View
+namespace HLU.UI.UserControls
 {
     /// <summary>
     /// Represents a navigation item for the options window.
@@ -34,6 +35,10 @@ namespace HLU.UI.View
         public UserControl Content { get; set; }
 
         private bool _hasErrors;
+        /// <summary>
+        /// Gets or sets a value indicating whether this navigation item has any validation errors.
+        /// </summary>
+        /// <value><c>true</c> if this navigation item has errors; otherwise, <c>false</c>.</value>
         public bool HasErrors
         {
             get => _hasErrors;
@@ -45,6 +50,10 @@ namespace HLU.UI.View
         }
 
         private string _errorMessage;
+        /// <summary>
+        /// Gets or sets the error message associated with this navigation item, if any.
+        /// </summary>
+        /// <value>The error message.</value>
         public string ErrorMessage
         {
             get => _errorMessage;
@@ -56,6 +65,10 @@ namespace HLU.UI.View
         }
 
         private bool _isSelected;
+        /// <summary>
+        /// Gets or sets a value indicating whether this navigation item is currently selected.
+        /// </summary>
+        /// <value><c>true</c> if this navigation item is selected; otherwise, <c>false</c>.</value>
         public bool IsSelected
         {
             get => _isSelected;
@@ -66,8 +79,15 @@ namespace HLU.UI.View
             }
         }
 
+        /// <summary>
+        /// Occurs when a property value changes.
+        /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
+        /// <summary>
+        /// Raises the PropertyChanged event for the specified property name.
+        /// </summary>
+        /// <param name="propertyName">The name of the property that has changed.</param>
         protected void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

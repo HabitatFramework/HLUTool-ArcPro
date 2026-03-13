@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2019 London & South East Record Centres (LaSER)
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -30,8 +31,12 @@ namespace HLU.UI.UserControls
     /// <seealso cref="System.Windows.Controls.Primitives.UniformGrid" />
     public class UniformGrid2 : UniformGrid
     {
+        #region Fields
+
         private int _columns;
         private int _rows;
+
+        #endregion Fields
 
         #region Orientation
 
@@ -46,14 +51,24 @@ namespace HLU.UI.UserControls
         /// <summary>
         /// Gets or sets the Orientation property.
         /// </summary>
+        /// <value>The orientation of the UniformGrid2.</value>
         public Orientation Orientation
         {
             get { return (Orientation)GetValue(OrientationProperty); }
             set { SetValue(OrientationProperty, value); }
         }
 
-        #endregion
+        #endregion Orientation
 
+        #region Methods
+
+        /// <summary>
+        /// Arranges the content of a UniformGrid2 element.
+        /// </summary>
+        /// <param name="arrangeSize">
+        /// The final area within the parent that this element should use to arrange itself and its children.
+        /// </param>
+        /// <returns>The actual size used.</returns>
         protected override Size ArrangeOverride(Size arrangeSize)
         {
             if (Orientation == Orientation.Horizontal)
@@ -62,6 +77,11 @@ namespace HLU.UI.UserControls
                 return ArrangeOverrideVertical(arrangeSize);
         }
 
+        /// <summary>
+        /// Measures the size in layout required for child elements and determines a size for the UniformGrid2 element.
+        /// </summary>
+        /// <param name="constraint">The available size that this element can give to child elements.</param>
+        /// <returns>The size required by the UniformGrid2 element.</returns>
         protected override Size MeasureOverride(Size constraint)
         {
             if (Orientation == Orientation.Horizontal)
@@ -70,6 +90,13 @@ namespace HLU.UI.UserControls
                 return MeasureOverrideVertical(constraint);
         }
 
+        /// <summary>
+        /// Arranges the content of a UniformGrid2 element when the orientation is vertical.
+        /// </summary>
+        /// <param name="arrangeSize">
+        /// The final area within the parent that this element should use to arrange itself and its children.
+        /// </param>
+        /// <returns>The actual size used.</returns>
         private Size ArrangeOverrideVertical(Size arrangeSize)
         {
             Rect finalRect = new(0.0, 0.0, arrangeSize.Width / ((double)_columns), arrangeSize.Height / ((double)_rows));
@@ -91,6 +118,12 @@ namespace HLU.UI.UserControls
             return arrangeSize;
         }
 
+        /// <summary>
+        /// Measures the size in layout required for child elements and determines a size for the
+        /// UniformGrid2 element when the orientation is vertical.
+        /// </summary>
+        /// <param name="constraint">The available size that this element can give to child elements.</param>
+        /// <returns>The size required by the UniformGrid2 element.</returns>
         private Size MeasureOverrideVertical(Size constraint)
         {
             UpdateComputedValuesVertical();
@@ -117,6 +150,9 @@ namespace HLU.UI.UserControls
             return new Size(width * _columns, height * _rows);
         }
 
+        /// <summary>
+        /// Updates the computed values for the number of columns and rows when the orientation is vertical.
+        /// </summary>
         private void UpdateComputedValuesVertical()
         {
             _columns = Columns;
@@ -164,5 +200,7 @@ namespace HLU.UI.UserControls
                 }
             }
         }
+
+        #endregion Methods
     }
 }

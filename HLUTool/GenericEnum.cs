@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -23,6 +24,11 @@ using System.Reflection;
 
 namespace HLU
 {
+    /// <summary>
+    /// Custom attribute to associate a string code with an enum value. This allows for more
+    /// flexible mapping between enum values and external representations, such as database codes or
+    /// API values.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Field)]
     public class EnumCode : Attribute
     {
@@ -34,6 +40,11 @@ namespace HLU
         }
     }
 
+    /// <summary>
+    /// Generic static class to provide utility methods for working with enums, including parsing,
+    /// getting values and names, and retrieving custom codes defined by the EnumCode attribute.
+    /// </summary>
+    /// <typeparam name="T">The type of the enum.</typeparam>
     public static class Enum<T>
     {
         public static T Parse(string value)
@@ -58,7 +69,7 @@ namespace HLU
 
         public static string[] GetCodes()
         {
-            return Enum.GetValues(typeof(T)).Cast<T>().Select(e => GetCode(e)).ToArray();
+            return [.. Enum.GetValues(typeof(T)).Cast<T>().Select(e => GetCode(e))];
         }
 
         public static string GetCode(T en)

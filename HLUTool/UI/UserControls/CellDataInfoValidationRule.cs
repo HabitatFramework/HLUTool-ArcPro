@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -24,8 +25,18 @@ using System.Windows.Data;
 
 namespace HLU.UI.UserControls
 {
+    /// <summary>
+    /// Validation rule that uses the IDataErrorInfo interface to validate a cell's data. This is
+    /// used in the DataGrid to provide validation feedback to the user.
+    /// </summary>
     public class CellDataInfoValidationRule : ValidationRule
     {
+        /// <summary>
+        /// Validates the cell's data by checking for any errors reported by the IDataErrorInfo interface.
+        /// </summary>
+        /// <param name="value">The value to be validated.</param>
+        /// <param name="cultureInfo">The culture information.</param>
+        /// <returns>A ValidationResult indicating whether the value is valid.</returns>
         public override ValidationResult Validate(object value, CultureInfo cultureInfo)
         {
             // obtain the bound business object

@@ -1,4 +1,22 @@
-﻿using ArcGIS.Desktop.Framework;
+﻿// HLUTool is used to view and maintain habitat and land use GIS data.
+// Copyright © 2025-2026 Andy Foy Consulting
+//
+// This file is part of HLUTool.
+//
+// HLUTool is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// HLUTool is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
+
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using HLU.Data.Model;
 using HLU.UI;
@@ -36,7 +54,7 @@ namespace HLU.UI.UserControls.Toolbar
         #region Constructor
 
         /// <summary>
-        /// Constructor.
+        /// Initializes a new instance of the <see cref="OptionsWindowButton"/> class.
         /// </summary>
         public OptionsWindowButton()
         {
@@ -54,6 +72,8 @@ namespace HLU.UI.UserControls.Toolbar
         }
 
         #endregion Constructor
+
+        #region Overrides
 
         /// <summary>
         /// Show the options window. Called when the button is clicked.
@@ -81,9 +101,9 @@ namespace HLU.UI.UserControls.Toolbar
                     };
 
                     // when ViewModel asks to be closed, close window
-                    _viewModelOptions.RequestClose -= _viewModelOptions_RequestClose; // Safety: avoid double subscription.
+                    _viewModelOptions.RequestClose -= ViewModelOptions_RequestClose; // Safety: avoid double subscription.
                     _viewModelOptions.RequestClose +=
-                        new ViewModelWindowOptions.RequestCloseEventHandler(_viewModelOptions_RequestClose);
+                        new ViewModelWindowOptions.RequestCloseEventHandler(ViewModelOptions_RequestClose);
 
                     // allow all controls in window to bind to ViewModel by setting DataContext
                     _windowOptions.DataContext = _viewModelOptions;
@@ -116,18 +136,24 @@ namespace HLU.UI.UserControls.Toolbar
             Enabled = isEnabled;
         }
 
+        #endregion Overrides
+
+        #region Methods
+
         /// <summary>
         /// Save the options settings when the options window is closed.
         /// </summary>
         /// <param name="applySettings">if set to <c>true</c> [save settings].</param>
-        void _viewModelOptions_RequestClose(bool applySettings)
+        void ViewModelOptions_RequestClose(bool applySettings)
         {
-            _viewModelOptions.RequestClose -= _viewModelOptions_RequestClose;
+            _viewModelOptions.RequestClose -= ViewModelOptions_RequestClose;
             _windowOptions.Close();
 
             // Apply updated settings in the main window.
             if (applySettings)
                 _viewModel.ApplySettings();
         }
+
+        #endregion Methods
     }
 }

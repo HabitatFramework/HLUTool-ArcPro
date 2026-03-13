@@ -1,6 +1,7 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -34,11 +35,11 @@ namespace HLU
         /// <summary>
         /// Groups contiguous elements in a sequence that share the same key, as defined by the keySelector function.
         /// </summary>
-        /// <typeparam name="TSource"></typeparam>
-        /// <typeparam name="TKey"></typeparam>
-        /// <param name="source"></param>
-        /// <param name="keySelector"></param>
-        /// <returns></returns>
+        /// <typeparam name="TSource">The type of elements in the source sequence.</typeparam>
+        /// <typeparam name="TKey">The type of the key returned by the keySelector function.</typeparam>
+        /// <param name="source">The source sequence to chunk.</param>
+        /// <param name="keySelector">A function to extract the key for each element.</param>
+        /// <returns>An enumerable of groupings, where each grouping contains contiguous elements that share the same key.</returns>
         public static IEnumerable<IGrouping<TKey, TSource>> ChunkBy<TSource, TKey>(
             this IEnumerable<TSource> source, Func<TSource, TKey> keySelector)
         {
@@ -48,12 +49,12 @@ namespace HLU
         /// <summary>
         /// Groups contiguous elements in a sequence that share the same key, as defined by the keySelector function and the provided equality comparer.
         /// </summary>
-        /// <typeparam name="TSource"></typeparam>
-        /// <typeparam name="TKey"></typeparam>
-        /// <param name="source"></param>
-        /// <param name="keySelector"></param>
-        /// <param name="comparer"></param>
-        /// <returns></returns>
+        /// <typeparam name="TSource">The type of elements in the source sequence.</typeparam>
+        /// <typeparam name="TKey">The type of the key returned by the keySelector function.</typeparam>
+        /// <param name="source">The source sequence to chunk.</param>
+        /// <param name="keySelector">A function to extract the key for each element.</param>
+        /// <param name="comparer">An equality comparer to compare keys.</param>
+        /// <returns>An enumerable of groupings, where each grouping contains contiguous elements that share the same key.</returns>
         public static IEnumerable<IGrouping<TKey, TSource>> ChunkBy<TSource, TKey>(
             this IEnumerable<TSource> source, Func<TSource, TKey> keySelector, IEqualityComparer<TKey> comparer)
         {
@@ -101,14 +102,14 @@ namespace HLU
 
         #endregion Grouping extensions
 
-        #region Chunking
+        #region Chunking Class
 
         /// <summary>
         /// A Chunk is a contiguous group of one or more source elements that have the same key.
         /// A Chunk has a key and a list of ChunkItem objects, which are copies of the elements in the source sequence.
         /// </summary>
-        /// <typeparam name="TKey"></typeparam>
-        /// <typeparam name="TSource"></typeparam>
+        /// <typeparam name="TKey">The type of the key returned by the keySelector function.</typeparam>
+        /// <typeparam name="TSource">The type of elements in the source sequence.</typeparam>
         class Chunk<TKey, TSource> : IGrouping<TKey, TSource>
         {
             // INVARIANT: DoneCopyingChunk == true ||
@@ -166,9 +167,9 @@ namespace HLU
             /// <summary>
             /// REQUIRES: enumerator != null && predicate != null
             /// </summary>
-            /// <param name="key"></param>
-            /// <param name="enumerator"></param>
-            /// <param name="predicate"></param>
+            /// <param name="key">The key for the chunk.</param>
+            /// <param name="enumerator">The enumerator for the source sequence.</param>
+            /// <param name="predicate">A function to determine if an element belongs to the chunk.</param>
             public Chunk(TKey key, IEnumerator<TSource> enumerator, Func<TSource, bool> predicate)
             {
                 this.key = key;
@@ -185,11 +186,12 @@ namespace HLU
             }
 
             /// <summary>
-            /// Indicates that all chunk elements have been copied to the list of ChunkItems,
-            /// and the source enumerator is either at the end, or else on an element with a new key
-            /// the tail of the linked list is set to null in the CopyNextChunkElement method if the
+            /// Gets a value indicating whether all chunk elements have been copied to the list of ChunkItems,
+            /// and the source enumerator is either at the end, or else on an element with a new key.
+            /// The tail of the linked list is set to null in the CopyNextChunkElement method if the
             /// key of the next element does not match the current chunk's key, or there are no more elements in the source.
             /// </summary>
+            /// <value><c>true</c> if all chunk elements have been copied; otherwise, <c>false</c>.</value>
             private bool DoneCopyingChunk { get { return tail == null; } }
 
             /// <summary>
@@ -223,7 +225,7 @@ namespace HLU
             /// there are more elements in the source sequence. If there are, it
             /// returns true if enumerator for this chunk was exhausted.
             /// </summary>
-            /// <returns></returns>
+            /// <returns><c>true</c> if the enumerator for this chunk was exhausted; otherwise, <c>false</c>.</returns>
             internal bool CopyAllChunkElements()
             {
                 while (true)
@@ -244,8 +246,9 @@ namespace HLU
             }
 
             /// <summary>
-            /// The key for this chunk. All elements in the chunk share this key.
+            /// Gets the key for this chunk. All elements in the chunk share this key.
             /// </summary>
+            /// <value>The key for this chunk.</value>
             public TKey Key { get { return key; } }
 
             /// <summary>
@@ -253,7 +256,7 @@ namespace HLU
             /// of the client requests. It adds the next element of the chunk only after
             /// the clients requests the last element in the list so far.
             /// </summary>
-            /// <returns></returns>
+            /// <returns>An enumerator for the chunk.</returns>
             public IEnumerator<TSource> GetEnumerator()
             {
                 // specify the initial element to enumerate
@@ -283,19 +286,23 @@ namespace HLU
             /// <summary>
             /// Explicit non-generic enumerator implementation. It simply calls the generic version.
             /// </summary>
-            /// <returns></returns>
+            /// <returns>An enumerator for the chunk.</returns>
             IEnumerator IEnumerable.GetEnumerator()
             {
                 return GetEnumerator();
             }
         }
 
-        #endregion Chunking
+        #endregion Chunking Class
 
         #region List extensions
 
         /// Break a list of items into chunks of a specific size.
         /// </summary>
+        /// <typeparam name="T">The type of items in the source list.</typeparam>
+        /// <param name="source">The source list to chunk.</param>
+        /// <param name="chunksize">The maximum number of items in each chunk. Must be greater than zero.</param>
+        /// <returns>An enumerable of lists, where each list contains up to chunksize items from the source.</returns>
         public static IEnumerable<List<T>> ChunkClause<T>(this IEnumerable<T> source, int chunksize)
         {
             // Check for invalid chunk size
@@ -303,7 +310,7 @@ namespace HLU
 
             while (source.Any())
             {
-                yield return source.Take(chunksize).ToList();
+                yield return [.. source.Take(chunksize)];
                 source = source.Skip(chunksize);
             }
         }
@@ -334,7 +341,7 @@ namespace HLU
             if (chunkSize <= 0)
                 throw new ArgumentException("Chunk size must be greater than zero.", nameof(chunkSize));
 
-            List<SqlFilterCondition> all = source as List<SqlFilterCondition> ?? source.ToList();
+            List<SqlFilterCondition> all = source as List<SqlFilterCondition> ?? [.. source];
             if (all.Count == 0)
                 yield break;
 
@@ -396,9 +403,9 @@ namespace HLU
         /// <summary>
         /// Counts the occurrences of a specific character in a string.
         /// </summary>
-        /// <param name="value"></param>
-        /// <param name="c"></param>
-        /// <returns></returns>
+        /// <param name="value">The string to search.</param>
+        /// <param name="c">The character to count.</param>
+        /// <returns>The number of occurrences of the character in the string.</returns>
         private static int CountChar(string value, char c)
         {
             if (String.IsNullOrEmpty(value))

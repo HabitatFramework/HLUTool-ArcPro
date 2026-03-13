@@ -2,7 +2,7 @@
 // and manage biodiversity information from ArcGIS Pro and SQL Server
 // based on pre-defined or user specified criteria.
 //
-// Copyright © 2024 Andy Foy Consulting.
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of DataTools suite of programs..
 //
@@ -35,8 +35,8 @@ namespace HLU.Helpers
         /// <summary>
         /// Check if a directory exists.
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <returns>bool</returns>
+        /// <param name="filePath">The path of the directory to check.</param>
+        /// <returns><c>true</c> if the directory exists; otherwise, <c>false</c>.</returns>
         public static bool DirExists(string filePath)
         {
             // Check input first.
@@ -54,8 +54,8 @@ namespace HLU.Helpers
         /// <summary>
         /// Get the name of a directory from a full path.
         /// </summary>
-        /// <param name="fullPath"></param>
-        /// <returns></returns>
+        /// <param name="fullPath">The full path of the directory.</param>
+        /// <returns>The name of the directory, or <c>null</c> if the path is invalid.</returns>
         public static string GetDirectoryName(string fullPath)
         {
             // Check input first.
@@ -76,9 +76,9 @@ namespace HLU.Helpers
         /// <summary>
         /// Check if a file exists from a file path and name.
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="fileName"></param>
-        /// <returns>bool</returns>
+        /// <param name="filePath">The path of the directory containing the file.</param>
+        /// <param name="fileName">The name of the file to check.</param>
+        /// <returns><c>true</c> if the file exists; otherwise, <c>false</c>.</returns>
         public static bool FileExists(string filePath, string fileName)
         {
             // Check input first.
@@ -114,8 +114,8 @@ namespace HLU.Helpers
         /// <summary>
         /// Check if a file exists from a full path.
         /// </summary>
-        /// <param name="fullPath"></param>
-        /// <returns>bool</returns>
+        /// <param name="fullPath">The full path of the file to check.</param>
+        /// <returns><c>true</c> if the file exists; otherwise, <c>false</c>.</returns>
         public static bool FileExists(string fullPath)
         {
             // Check input first.
@@ -133,8 +133,8 @@ namespace HLU.Helpers
         /// <summary>
         /// Get the name of a file from a full path.
         /// </summary>
-        /// <param name="fullPath"></param>
-        /// <returns>string</returns>
+        /// <param name="fullPath">The full path of the file.</param>
+        /// <returns>The name of the file, or <c>null</c> if the path is invalid.</returns>
         public static string GetFileName(string fullPath)
         {
             // Check input first.
@@ -151,8 +151,8 @@ namespace HLU.Helpers
         /// <summary>
         /// Get a file extension from a full path.
         /// </summary>
-        /// <param name="fullPath"></param>
-        /// <returns>string</returns>
+        /// <param name="fullPath">The full path of the file.</param>
+        /// <returns>The file extension, or <c>null</c> if the path is invalid.</returns>
         public static string GetExtension(string fullPath)
         {
             // Check input first.
@@ -169,8 +169,8 @@ namespace HLU.Helpers
         /// <summary>
         /// Get all files in a directory.
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <returns>List<string></returns>
+        /// <param name="filePath">The path of the directory.</param>
+        /// <returns>A list of file paths, or <c>null</c> if the path is invalid.</returns>
         public static List<string> GetAllFilesInDirectory(string filePath)
         {
             // Check input first.
@@ -193,8 +193,8 @@ namespace HLU.Helpers
         /// <summary>
         /// Get a full file name without the extension.
         /// </summary>
-        /// <param name="fullName"></param>
-        /// <returns>string</returns>
+        /// <param name="fullName">The full path of the file.</param>
+        /// <returns>The full file name without the extension, or <c>null</c> if the path is invalid.</returns>
         public static string GetFullNameWithoutExtension(string fullName)
         {
             // Check input first.
@@ -213,8 +213,8 @@ namespace HLU.Helpers
         /// <summary>
         /// Get a full file name without the extension.
         /// </summary>
-        /// <param name="fileName"></param>
-        /// <returns>string</returns>
+        /// <param name="fileName">The name of the file.</param>
+        /// <returns>The file name without the extension, or <c>null</c> if the input is invalid.</returns>
         public static string GetFileNameWithoutExtension(string fileName)
         {
             // Check input first.
@@ -230,8 +230,8 @@ namespace HLU.Helpers
         /// <summary>
         /// Delete a file.
         /// </summary>
-        /// <param name="fullPath"></param>
-        /// <returns>bool</returns>
+        /// <param name="fullPath">The full path of the file to delete.</param>
+        /// <returns><c>true</c> if the file was deleted successfully; otherwise, <c>false</c>.</returns>
         public static bool DeleteFile(string fullPath)
         {
             // Check input first.
@@ -257,9 +257,9 @@ namespace HLU.Helpers
         /// <summary>
         /// Write a new text file with optional headers.
         /// </summary>
-        /// <param name="outTable"></param>
-        /// <param name="outHeader"></param>
-        /// <returns>bool</returns>
+        /// <param name="outTable">The full path of the file to create.</param>
+        /// <param name="outHeader">The header line to write to the file.</param>
+        /// <returns><c>true</c> if the file was created successfully; otherwise, <c>false</c>.</returns>
         public static bool WriteEmptyTextFile(string outTable, string outHeader)
         {
             // Check input first.
@@ -288,6 +288,12 @@ namespace HLU.Helpers
             }
         }
 
+        /// <summary>
+        /// Rename a file.
+        /// </summary>
+        /// <param name="oldPath">The full path of the file to rename.</param>
+        /// <param name="newPath">The new full path of the file.</param>
+        /// <returns><c>true</c> if the file was renamed successfully; otherwise, <c>false</c>.</returns>
         public static bool RenameFile(string oldPath, string newPath)
         {
             // Check input first.
@@ -316,8 +322,8 @@ namespace HLU.Helpers
         /// <summary>
         /// Create a log file.
         /// </summary>
-        /// <param name="logFile"></param>
-        /// <returns>bool</returns>
+        /// <param name="logFile">The full path of the log file to create.</param>
+        /// <returns><c>true</c> if the log file was created successfully; otherwise, <c>false</c>.</returns>
         public static bool CreateLogFile(string logFile)
         {
             // Check input first.
@@ -335,9 +341,9 @@ namespace HLU.Helpers
         /// <summary>
         /// Write to the end of a log file.
         /// </summary>
-        /// <param name="logFile"></param>
-        /// <param name="logLine"></param>
-        /// <returns>bool</returns>
+        /// <param name="logFile">The full path of the log file to write to.</param>
+        /// <param name="logLine">The line of text to write to the log file.</param>
+        /// <returns><c>true</c> if the line was written successfully; otherwise, <c>false</c>.</returns>
         public static bool WriteLine(string logFile, string logLine)
         {
             // Check input first.

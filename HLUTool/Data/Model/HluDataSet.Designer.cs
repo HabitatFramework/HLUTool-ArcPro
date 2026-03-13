@@ -27004,7 +27004,7 @@ namespace HLU.Data.Model {
         }
     }
 }
-namespace HLU.Data.Model.HluDataSetTableAdapters {
+namespace HLU.Data.Model {
     
     
     /// <summary>

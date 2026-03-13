@@ -1,4 +1,22 @@
-﻿using ArcGIS.Desktop.Framework;
+﻿// HLUTool is used to view and maintain habitat and land use GIS data.
+// Copyright © 2025-2026 Andy Foy Consulting
+//
+// This file is part of HLUTool.
+//
+// HLUTool is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// HLUTool is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
+
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using HLU.Data;
 using HLU.UI.ViewModel;
@@ -39,8 +57,7 @@ namespace HLU.UI.UserControls.Toolbar
         public ActiveLayerComboBox()
         {
             // Get this instance of the ComboBox.
-            if (_hluLayerComboBox == null)
-                _hluLayerComboBox = this;
+            _hluLayerComboBox ??= this;
 
             // Get the dockpane DAML id.
             DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
@@ -56,17 +73,7 @@ namespace HLU.UI.UserControls.Toolbar
 
         #endregion Constructor
 
-        #region Methods
-
-        /// <summary>
-        /// Gets the instance of the ActiveLayerComboBox.
-        /// </summary>
-        /// <returns></returns>
-        public static ActiveLayerComboBox GetInstance()
-        {
-            // Return the instance of the ComboBox.
-            return _hluLayerComboBox;
-        }
+        #region Overrides
 
         /// <summary>
         /// Called periodically by the framework once the tool has been created.
@@ -111,6 +118,42 @@ namespace HLU.UI.UserControls.Toolbar
             // Initialize the ComboBox if it's not already.
             if (!_isInitialized)
                 Initialize();
+        }
+
+        /// <summary>
+        /// Called when the selection changes.
+        /// </summary>
+        /// <param name="item"></param>
+        protected override async void OnSelectionChange(ComboBoxItem item)
+        {
+            // If suppressing selection change, exit.
+            if (_suppressSelectionChange)
+                return;
+
+            // If the ComboBox is not enabled, exit.
+            if (item == null)
+                await _viewModel?.SwitchGISLayerAsync(item.Text);
+
+            // If the selected item is the same as the active layer, exit.
+            if (string.Equals(_viewModel?.ActiveLayerName, item.Text, StringComparison.Ordinal))
+                return;
+
+            // Switch the GIS layer in the ViewModel.
+            await _viewModel.SwitchGISLayerAsync(item.Text);
+        }
+
+        #endregion Overrides
+
+        #region Methods
+
+        /// <summary>
+        /// Gets the instance of the ActiveLayerComboBox.
+        /// </summary>
+        /// <returns></returns>
+        public static ActiveLayerComboBox GetInstance()
+        {
+            // Return the instance of the ComboBox.
+            return _hluLayerComboBox;
         }
 
         /// <summary>
@@ -159,28 +202,6 @@ namespace HLU.UI.UserControls.Toolbar
         public void UpdateState(bool enabled)
         {
             _isEnabled = enabled;
-        }
-
-        /// <summary>
-        /// Called when the selection changes.
-        /// </summary>
-        /// <param name="item"></param>
-        protected override async void OnSelectionChange(ComboBoxItem item)
-        {
-            // If suppressing selection change, exit.
-            if (_suppressSelectionChange)
-                return;
-
-            // If the ComboBox is not enabled, exit.
-            if (item == null)
-                await _viewModel?.SwitchGISLayerAsync(item.Text);
-
-            // If the selected item is the same as the active layer, exit.
-            if (string.Equals(_viewModel?.ActiveLayerName, item.Text, StringComparison.Ordinal))
-                return;
-
-            // Switch the GIS layer in the ViewModel.
-            await _viewModel.SwitchGISLayerAsync(item.Text);
         }
 
         /// <summary>

@@ -1,6 +1,7 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -53,7 +54,7 @@ namespace HLU.Data.Connection
         private UI.View.Connection.ViewConnectSqlServer _connWindow;
         private UI.ViewModel.ViewModelConnectSqlServer _connViewModel;
 
-        #endregion
+        #endregion Private Members
 
         #region Constructor
 
@@ -102,15 +103,14 @@ namespace HLU.Data.Connection
             catch { throw; }
         }
 
-        #endregion
-
-        #region DbBase Members
+        #endregion Constructor
 
         #region Public Members
 
         /// <summary>
         /// Gets the backend type for this database connection, which is SQL Server in this case.
         /// </summary>
+        /// <value>The backend type for this database connection.</value>
         public override Backends Backend { get { return Backends.SqlServer; } }
 
         /// <summary>
@@ -150,14 +150,14 @@ namespace HLU.Data.Connection
                     }
                     else
                     {
-                        string[] checkColumns = (from dsCol in t.Columns.Cast<DataColumn>()
+                        string[] checkColumns = [.. (from dsCol in t.Columns.Cast<DataColumn>()
                                                  let dbCols = from dbCol in dbSchemaCols
                                                               where dbCol.ColumnName == dsCol.ColumnName &&
                                                               DbToSystemType(SQLCodeToSQLType(dbCol.DataType)) == dsCol.DataType
                                                               select dbCol
                                                  where !dbCols.Any()
                                                  select QuoteIdentifier(dsCol.ColumnName) + " (" +
-                                                 ((SqlDbType)SystemToDbType(dsCol.DataType) + ")").ToString()).ToArray();
+                                                 ((SqlDbType)SystemToDbType(dsCol.DataType) + ")").ToString())];
                         if (checkColumns.Length > 0) messageText.Append(String.Format("\n\nTable: {0}\nColumns: {1}",
                             QuoteIdentifier(t.TableName), String.Join(", ", checkColumns)));
                     }
@@ -182,16 +182,19 @@ namespace HLU.Data.Connection
         /// <summary>
         /// Gets the database connection object for this SQL Server connection.
         /// </summary>
+        /// <value>The database connection object for this SQL Server connection.</value>
         public override IDbConnection Connection { get { return _connection; } }
 
         /// <summary>
         /// Gets the connection string builder for this SQL Server connection, which allows for constructing and modifying the connection string.
         /// </summary>
+        /// <value>The connection string builder for this SQL Server connection.</value>
         public override DbConnectionStringBuilder ConnectionStringBuilder { get { return _connStrBuilder; } }
 
         /// <summary>
         /// Gets the current database transaction for this SQL Server connection, if any. This allows for managing transactions across multiple database operations.
         /// </summary>
+        /// <value>The current database transaction for this SQL Server connection, or null if no transaction is active.</value>
         public override IDbTransaction Transaction
         {
             get { return _transaction; }
@@ -374,7 +377,7 @@ namespace HLU.Data.Connection
                         Connection = _connection,
                         CommandText = String.Format("DELETE FROM {0} WHERE {1}", tableName, sbWhereDel)
                     };
-                    adapter.DeleteCommand.Parameters.AddRange(deleteParams.ToArray());
+                    adapter.DeleteCommand.Parameters.AddRange([.. deleteParams]);
 
                     adapter.UpdateCommand = new()
                     {
@@ -383,7 +386,7 @@ namespace HLU.Data.Connection
                         CommandText =
                         String.Format("UPDATE {0} SET {1} WHERE {2}", tableName, sbUpdSetList, sbWhereUpd)
                     };
-                    adapter.UpdateCommand.Parameters.AddRange(updateParams.ToArray());
+                    adapter.UpdateCommand.Parameters.AddRange([.. updateParams]);
 
                     adapter.InsertCommand = new()
                     {
@@ -392,7 +395,7 @@ namespace HLU.Data.Connection
                         CommandText = String.Format("INSERT INTO {0} ({1}) VALUES ({2})",
                         tableName, sbTargetList, sbInsValues)
                     };
-                    adapter.InsertCommand.Parameters.AddRange(insertParams.ToArray());
+                    adapter.InsertCommand.Parameters.AddRange([.. insertParams]);
                 }
                 else
                 {
@@ -1050,17 +1053,20 @@ namespace HLU.Data.Connection
             return adapter;
         }
 
-        #endregion
+        #endregion Public Methods
 
-        #region Protected Members
+        #region Parameter Handling
 
         /// <summary>
         /// Gets the prefix used for parameter names in SQL commands. For SQL Server, the parameter prefix is typically '@'.
         /// </summary>
+        /// <value>The prefix used for parameter names in SQL commands.</value>
         protected override string ParameterPrefix
         {
             get { return "@"; }
         }
+
+        #endregion Parameter Handling
 
         #region Browse Connection
 
@@ -1087,9 +1093,9 @@ namespace HLU.Data.Connection
                 };
 
                 // when ViewModel asks to be closed, close window
-                _connViewModel.RequestClose -= _connViewModel_RequestClose; // Safety: avoid double subscription.
+                _connViewModel.RequestClose -= ConnViewModel_RequestClose; // Safety: avoid double subscription.
                 _connViewModel.RequestClose +=
-                    new UI.ViewModel.ViewModelConnectSqlServer.RequestCloseEventHandler(_connViewModel_RequestClose);
+                    new UI.ViewModel.ViewModelConnectSqlServer.RequestCloseEventHandler(ConnViewModel_RequestClose);
 
                 // allow all controls in window to bind to ViewModel by setting DataContext
                 _connWindow.DataContext = _connViewModel;
@@ -1116,9 +1122,9 @@ namespace HLU.Data.Connection
         /// <param name="connString">The connection string provided by the ViewModel.</param>
         /// <param name="defaultSchema">The default schema provided by the ViewModel.</param>
         /// <param name="errorMsg">The error message provided by the ViewModel, if any.</param>
-        protected void _connViewModel_RequestClose(string connString, string defaultSchema, string errorMsg)
+        protected void ConnViewModel_RequestClose(string connString, string defaultSchema, string errorMsg)
         {
-            _connViewModel.RequestClose -= _connViewModel_RequestClose;
+            _connViewModel.RequestClose -= ConnViewModel_RequestClose;
             _connWindow.Close();
 
             if (!String.IsNullOrEmpty(errorMsg))
@@ -1132,15 +1138,9 @@ namespace HLU.Data.Connection
             }
         }
 
-        #endregion
+        #endregion Browse Connection
 
-        #endregion
-
-        #endregion
-
-        #region SQLBuilder Members
-
-        #region Public Members
+        #region SQLBuilder Properties
 
         public override string QuotePrefix { get { return "["; } }
 
@@ -1157,6 +1157,10 @@ namespace HLU.Data.Connection
         public override string WildcardManyMatch { get { return "%"; } }
 
         public override string ConcatenateOperator { get { return "+"; } }
+
+        #endregion Properties
+
+        #region SQLBuilder Methods
 
         /// <summary>
         /// Does not escape string delimiter or other special characters.
@@ -1209,9 +1213,7 @@ namespace HLU.Data.Connection
             }
         }
 
-        #endregion
-
-        #endregion
+        #endregion SQLBuilder Methods
 
         #region Private Methods
 
@@ -1481,6 +1483,6 @@ namespace HLU.Data.Connection
             }
         }
 
-        #endregion
+        #endregion Private Methods
     }
 }

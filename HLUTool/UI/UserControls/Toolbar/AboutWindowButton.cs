@@ -1,5 +1,5 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
-// Copyright © 2024 Andy Foy Consulting
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //

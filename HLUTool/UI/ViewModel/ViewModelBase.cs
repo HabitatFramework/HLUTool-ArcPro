@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -94,7 +95,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         protected virtual bool ThrowOnInvalidPropertyName { get; private set; }
 
-        #endregion // Debugging Aides
+        #endregion Debugging Aides
 
         #region INotifyPropertyChanged Members
 
@@ -152,6 +153,6 @@ namespace HLU.UI.ViewModel
         }
 #endif
 
-        #endregion // IDisposable Members
+        #endregion /Disposable Members
     }
 }

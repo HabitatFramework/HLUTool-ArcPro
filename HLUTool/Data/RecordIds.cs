@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -18,7 +19,6 @@
 
 using HLU.Data.Connection;
 using HLU.Data.Model;
-using HLU.Data.Model.HluDataSetTableAdapters;
 using HLU.UI.ViewModel;
 using System;
 using System.Data;
@@ -43,9 +43,9 @@ namespace HLU.Data
         int _nextIncidBapId = -1;
         int _nextIncidSourcesId = -1;
 
-        #endregion
+        #endregion Fields
 
-        #region ctor
+        #region Constructor
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RecordIds"/> class.
@@ -67,8 +67,7 @@ namespace HLU.Data
             _gisLayerType = gisLayerType;
             if (_hluDataset.lut_last_incid.IsInitialized && _hluDataset.lut_last_incid.Count == 0)
             {
-                if (_hluTableAdapterMgr.lut_last_incidTableAdapter == null)
-                    _hluTableAdapterMgr.lut_last_incidTableAdapter =
+                _hluTableAdapterMgr.lut_last_incidTableAdapter ??=
                         new HluTableAdapter<HluDataSet.lut_last_incidDataTable, HluDataSet.lut_last_incidRow>(_db);
                 _hluTableAdapterMgr.Fill(_hluDataset,
                     [typeof(HluDataSet.lut_last_incidDataTable)], false);
@@ -113,13 +112,14 @@ namespace HLU.Data
             _nextIncidSourcesId = retVal != DBNull.Value && retVal != null ? (int)retVal : 1;
         }
 
-        #endregion
+        #endregion Constructor
 
         #region Public Properties
 
         /// <summary>
         /// Gets the habitat version from lut_version table.
         /// </summary>
+        /// <value>The habitat version.</value>
         public string HabitatVersion
         {
             get
@@ -138,6 +138,7 @@ namespace HLU.Data
         /// <summary>
         /// Gets the SiteID from lut_site_id table based on GIS layer type.
         /// </summary>
+        /// <value>The SiteID.</value>
         public string SiteID
         {
             get
@@ -172,6 +173,7 @@ namespace HLU.Data
         /// Gets the next available INCID, checking lut_last_incid and incid tables in DB.
         /// Increments the number and saves the new value back to lut_last_incid in DB.
         /// </summary>
+        /// <value>The next INCID string.</value>
         public string NextIncid
         {
             get
@@ -184,6 +186,7 @@ namespace HLU.Data
         /// <summary>
         /// Gets the current INCID string.
         /// </summary>
+        /// <value>The current INCID string.</value>
         public string CurrentIncid
         {
             get { return SiteID + ":" + _incidCurrentNumber.ToString("D7"); }
@@ -192,6 +195,7 @@ namespace HLU.Data
         /// <summary>
         /// Gets the current INCID Bap ID.
         /// </summary>
+        /// <value>The current INCID Bap ID.</value>
         public int CurrentIncidBapId
         {
             get
@@ -204,6 +208,7 @@ namespace HLU.Data
         /// <summary>
         /// Gets the next available INCID Secondary ID.
         /// </summary>
+        /// <value>The next INCID Secondary ID.</value>
         public int NextIncidSecondaryId
         {
             get
@@ -217,6 +222,7 @@ namespace HLU.Data
         /// <summary>
         /// Gets the next available INCID Condition ID.
         /// </summary>
+        /// <value>The next INCID Condition ID.</value>
         public int NextIncidConditionId
         {
             get
@@ -230,6 +236,7 @@ namespace HLU.Data
         /// <summary>
         /// Gets the next available INCID Bap ID.
         /// </summary>
+        /// <value>The next INCID Bap ID.</value>
         public int NextIncidBapId
         {
             get
@@ -243,6 +250,7 @@ namespace HLU.Data
         /// <summary>
         /// Gets the next available INCID Sources ID.
         /// </summary>
+        /// <value>The next INCID Sources ID.</value>
         public int NextIncidSourcesId
         {
             get
@@ -256,20 +264,21 @@ namespace HLU.Data
         /// <summary>
         /// Gets the maximum INCID number.
         /// </summary>
+        /// <value>The maximum INCID number.</value>
         public int MaxIncidNumber
         {
             get { return (int)Math.Pow((double)10, (double)(IncidString(1).Length - SiteID.Length - 1)) - 1; }
         }
 
-        #endregion
+        #endregion Public Properties
 
         #region Public methods
 
         /// <summary>
         /// Parses the INCID number from an INCID string.
         /// </summary>
-        /// <param name="incidString"></param>
-        /// <returns></returns>
+        /// <param name="incidString">The INCID string to parse.</param>
+        /// <returns>The INCID number, or -1 if parsing fails.</returns>
         public static int IncidNumber(string incidString)
         {
             try
@@ -287,8 +296,8 @@ namespace HLU.Data
         /// <summary>
         /// Formats an INCID string from an INCID number.
         /// </summary>
-        /// <param name="incidNumber"></param>
-        /// <returns></returns>
+        /// <param name="incidNumber">The INCID number to format.</param>
+        /// <returns>The formatted INCID string.</returns>
         public string IncidString(int incidNumber)
         {
             // Concatenate SiteID and INCID number with leading zeros.
@@ -298,8 +307,8 @@ namespace HLU.Data
         /// <summary>
         /// Gets the maximum toid fragment ID for a given TOID.
         /// </summary>
-        /// <param name="toid"></param>
-        /// <returns></returns>
+        /// <param name="toid">The TOID to get the maximum fragment ID for.</param>
+        /// <returns>The maximum toid fragment ID, or null if the TOID is invalid.</returns>
         public string MaxToidFragmentId(string toid)
         {
             // Check parameter.
@@ -318,15 +327,15 @@ namespace HLU.Data
             catch { return null; }
         }
 
-        #endregion
+        #endregion Public methods
 
-        #region Private
+        #region Private methods
 
         /// <summary>
         /// Gets the current maximum INCID number from in-memory table, lut_last_incid table and DB incid table.
         /// </summary>
-        /// <param name="increment"></param>
-        /// <returns></returns>
+        /// <param name="increment">Indicates whether to increment the maximum INCID number.</param>
+        /// <returns>The current maximum INCID number, or -1 if an error occurs.</returns>
         private int CurrentMaxIncidNumber(bool increment)
         {
             try
@@ -376,11 +385,11 @@ namespace HLU.Data
         /// <summary>
         /// Gets the next ID for a given table and ID column ordinal.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="nextID"></param>
-        /// <param name="table"></param>
-        /// <param name="idColumnOrdinal"></param>
-        /// <returns></returns>
+        /// <typeparam name="T">The type of the DataTable.</typeparam>
+        /// <param name="nextID">The next ID to start from.</param>
+        /// <param name="table">The DataTable to get the next ID for.</param>
+        /// <param name="idColumnOrdinal">The ordinal of the ID column.</param>
+        /// <returns>The next ID for the specified table and column.</returns>
         public int NextID<T>(int nextID, T table, int idColumnOrdinal)
             where T : DataTable
         {
@@ -399,6 +408,6 @@ namespace HLU.Data
             return nextID;
         }
 
-        #endregion Private
+        #endregion Private methods
     }
 }

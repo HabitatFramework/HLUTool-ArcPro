@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -23,8 +24,17 @@ using System.Windows.Media;
 
 namespace HLU.UI.UserControls
 {
+    /// <summary>
+    /// Provides methods to find controls in the visual and logical tree of a WPF application.
+    /// </summary>
     static class FindControls
     {
+        /// <summary>
+        /// Finds all logical children of a given type in the logical tree of a WPF application.
+        /// </summary>
+        /// <typeparam name="T">The type of the logical children to find.</typeparam>
+        /// <param name="depObj">The parent dependency object.</param>
+        /// <returns>An enumerable of logical children of the specified type.</returns>
         public static IEnumerable<T> FindLogicalChildren<T>(DependencyObject depObj) where T : DependencyObject
         {
             if (depObj != null)
@@ -32,9 +42,9 @@ namespace HLU.UI.UserControls
                 foreach (object c in LogicalTreeHelper.GetChildren(depObj))
                 {
                     DependencyObject child = c as DependencyObject;
-                    if ((child != null) && (child is T))
+                    if ((child != null) && (child is T typedChild))
                     {
-                        yield return (T)child;
+                        yield return typedChild;
                     }
 
                     foreach (T childOfChild in FindLogicalChildren<T>(child))
@@ -45,6 +55,12 @@ namespace HLU.UI.UserControls
             }
         }
 
+        /// <summary>
+        /// Finds all visual children of a given type in the visual tree of a WPF application.
+        /// </summary>
+        /// <typeparam name="T">The type of the visual children to find.</typeparam>
+        /// <param name="depObj">The parent dependency object.</param>
+        /// <returns>An enumerable of visual children of the specified type.</returns>
         public static IEnumerable<T> FindVisualChildren<T>(DependencyObject depObj) where T : DependencyObject
         {
             if (depObj != null)
@@ -52,9 +68,9 @@ namespace HLU.UI.UserControls
                 for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
                 {
                     DependencyObject child = VisualTreeHelper.GetChild(depObj, i);
-                    if (child != null && child is T)
+                    if (child != null && child is T typedChild)
                     {
-                        yield return (T)child;
+                        yield return typedChild;
                     }
 
                     foreach (T childOfChild in FindVisualChildren<T>(child))
@@ -65,11 +81,18 @@ namespace HLU.UI.UserControls
             }
         }
 
+        /// <summary>
+        /// Finds all visual children of a given type in the visual tree of a WPF application and adds them to a provided list.
+        /// </summary>
+        /// <param name="reference">The parent dependency object.</param>
+        /// <param name="childType">The type of the visual children to find.</param>
+        /// <param name="childrenList">The list to which the found children will be added.</param>
+        /// <returns>The first found child of the specified type, or null if none are found.</returns>
         public static DependencyObject GetChildren(this DependencyObject reference, Type childType,
             ref List<DependencyObject> childrenList)
         {
             DependencyObject foundChild = null;
-            if (childrenList == null) childrenList = [];
+            childrenList ??= [];
             if (reference != null)
             {
                 int childrenCount = VisualTreeHelper.GetChildrenCount(reference);
@@ -89,6 +112,13 @@ namespace HLU.UI.UserControls
             return foundChild;
         }
 
+        /// <summary>
+        /// Finds a child of a given type and name in the visual tree of a WPF application.
+        /// </summary>
+        /// <param name="reference">The parent dependency object.</param>
+        /// <param name="childName">The name of the child to find.</param>
+        /// <param name="childType">The type of the child to find.</param>
+        /// <returns>The first found child of the specified type and name, or null if none are found.</returns>
         public static DependencyObject FindChild(this DependencyObject reference, string childName, Type childType)
         {
             DependencyObject foundChild = null;

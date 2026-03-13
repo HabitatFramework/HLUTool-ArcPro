@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -24,8 +25,10 @@ namespace HLU.Data.Connection
     /// <summary>
     /// Wrapper class for 32-bit ODBC manager.
     /// </summary>
-    class OdbcCP32
+    partial class OdbcCP32
     {
+        #region Constants and Enums
+
         /// <summary>
         /// The driver to use for the datasource.
         /// </summary>
@@ -68,15 +71,44 @@ namespace HLU.Data.Connection
             ODBC_REMOVE_DEFAULT_DSN = 7
         }
 
-        public OdbcCP32() { }
+        #endregion Constants and Enums
 
-		#region Win32 API Imports
+        #region Constructors
 
-        [DllImport("ODBCCP32.dll")]
-		private static extern bool SQLManageDataSources(IntPtr hwnd);
+        /// <summary>
+        /// Initialises a new instance of the OdbcCP32 class. This class provides methods to manage
+        /// ODBC datasources and to create, compact and repair Microsoft Access databases.
+        /// </summary>
+        public OdbcCP32()
+        {
+        }
 
-		[DllImport("ODBCCP32.dll", CharSet = CharSet.Unicode)]
-		private static extern bool SQLCreateDataSource(IntPtr hwnd, string lpszDS);
+        #endregion Constructors
+
+        #region Win32 API Imports
+
+        /// <summary>
+        /// Displays the ODBC Data Source Administrator dialog box, which enables users to add,
+        /// remove, or configure ODBC data sources. This function is used by applications that
+        /// manage ODBC data sources.
+        /// </summary>
+        /// <param name="hwnd"></param>
+        /// <returns></returns>
+        [LibraryImport("ODBCCP32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool SQLManageDataSources(IntPtr hwnd);
+
+        /// <summary>
+        /// Displays the ODBC Data Source Administrator dialog box, which enables users to add,
+        /// remove, or configure ODBC data sources. This function is used by applications that
+        /// manage ODBC data sources.
+        /// </summary>
+        /// <param name="hwnd"></param>
+        /// <param name="lpszDS"></param>
+        /// <returns></returns>
+        [LibraryImport("ODBCCP32.dll", StringMarshalling = StringMarshalling.Utf16)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool SQLCreateDataSource(IntPtr hwnd, string lpszDS);
 
         /// <summary>
         /// A method to dynamically add DSN-names to the system. This method also
@@ -98,12 +130,13 @@ namespace HLU.Data.Connection
         /// <returns>The function returns TRUE if it is successful, FALSE if it fails.
         /// If no entry exists in the system information when this function is called,
         /// the function returns FALSE.</returns>
-        [DllImport("ODBCCP32.DLL", CharSet = CharSet.Unicode, SetLastError = true)]
-        private static extern bool SQLConfigDataSourceW(UInt32 hwndParent, RequestFlags fRequest, string lpszDriver, string lpszAttributes);
+        [LibraryImport("ODBCCP32.DLL", StringMarshalling = StringMarshalling.Utf16, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool SQLConfigDataSourceW(uint hwndParent, RequestFlags fRequest, string lpszDriver, string lpszAttributes);
 
-        #endregion
+        #endregion Win32 API Imports
 
-		#region ODBC Manager
+        #region ODBC Manager
 
         public bool ManageDatasources(IntPtr hwnd)
 		{

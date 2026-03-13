@@ -3,6 +3,7 @@
 // Copyright © 2013 Thames Valley Environmental Records Centre
 // Copyright © 2019 London & South East Record Centres (LaSER)
 // Copyright © 2020 Greenspace Information for Greater London CIC
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -23,7 +24,6 @@ using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework;
 using HLU.Data;
 using HLU.Data.Model;
-using HLU.Data.Model.HluDataSetTableAdapters;
 using HLU.Enums;
 using HLU.Date;
 using HLU.GISApplication;
@@ -78,15 +78,20 @@ namespace HLU.UI.ViewModel
 
         #endregion Fields
 
-        #region #ctor
+        #region Constructor
 
+        /// <summary>
+        /// Initializes a new instance of the ViewModelWindowMainBulkUpdate class.
+        /// </summary>
+        /// <param name="viewModelMain">The main view model instance.</param>
+        /// <param name="addInSettings">The add-in settings instance.</param>
         public ViewModelWindowMainBulkUpdate(ViewModelWindowMain viewModelMain, AddInSettings addInSettings)
         {
             _viewModelMain = viewModelMain;
             _addInSettings = addInSettings;
         }
 
-        #endregion
+        #endregion Constructor
 
         #region Bulk Update
 
@@ -181,9 +186,9 @@ namespace HLU.UI.ViewModel
             else
                 _viewModelBulkUpdate.DisplayName = "Bulk Update";
 
-            _viewModelBulkUpdate.RequestClose -= _viewModelBulkUpdate_RequestClose; // Safety: avoid double subscription.
+            _viewModelBulkUpdate.RequestClose -= ViewModelBulkUpdate_RequestClose; // Safety: avoid double subscription.
             _viewModelBulkUpdate.RequestClose +=
-                new ViewModelWindowBulkUpdate.RequestCloseEventHandler(_viewModelBulkUpdate_RequestClose);
+                new ViewModelWindowBulkUpdate.RequestCloseEventHandler(ViewModelBulkUpdate_RequestClose);
 
             // allow all controls in window to bind to ViewModel by setting DataContext
             _windowBulkUpdate.DataContext = _viewModelBulkUpdate;
@@ -192,7 +197,19 @@ namespace HLU.UI.ViewModel
             _windowBulkUpdate.ShowDialog();
         }
 
-        private async void _viewModelBulkUpdate_RequestClose(bool apply,
+        /// <summary>
+        /// Handles the RequestClose event from the bulk update view model. If the user selected to apply the update then
+        /// the bulk update is applied using the specified options.
+        /// </summary>
+        /// <param name="apply">Indicates whether the bulk update should be applied.</param>
+        /// <param name="bulkDeleteOrphanBapHabitats">Indicates whether orphan BAP habitats should be deleted.</param>
+        /// <param name="bulkDeletePotentialBapHabitats">Indicates whether potential BAP habitats should be deleted.</param>
+        /// <param name="bulkDeleteIHSCodes">Indicates whether IHS codes should be deleted.</param>
+        /// <param name="bulkDeleteSecondaryCodes">Indicates whether secondary codes should be deleted.</param>
+        /// <param name="bulkCreateHistory">Indicates whether history should be created.</param>
+        /// <param name="bulkDeterminationQuality">Specifies the determination quality for the bulk update.</param>
+        /// <param name="bulkInterpretationQuality">Specifies the interpretation quality for the bulk update.</param>
+        private async void ViewModelBulkUpdate_RequestClose(bool apply,
             bool bulkDeleteOrphanBapHabitats,
             bool bulkDeletePotentialBapHabitats,
             bool bulkDeleteIHSCodes,
@@ -201,7 +218,7 @@ namespace HLU.UI.ViewModel
             string bulkDeterminationQuality,
             string bulkInterpretationQuality)
         {
-            _viewModelBulkUpdate.RequestClose -= _viewModelBulkUpdate_RequestClose;
+            _viewModelBulkUpdate.RequestClose -= ViewModelBulkUpdate_RequestClose;
             _windowBulkUpdate.Close();
 
             // If the user selected to apply the update then
@@ -230,6 +247,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Applies the bulk update.
         /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         public async Task ApplyBulkUpdateAsync()
         {
             _viewModelMain.ChangeCursor(Cursors.Wait, "Bulk updating ...");
@@ -411,6 +429,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Cancels the bulk update mode.
         /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         public async Task CancelBulkUpdateAsync()
         {
             // Stop the bulk update mode and reset all the controls
@@ -421,6 +440,7 @@ namespace HLU.UI.ViewModel
         /// Stops the bulk update mode and resets all
         /// the controls to normal.
         /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         private async Task BulkUpdateResetControlsAsync()
         {
             // Force the Incid table to be refilled because it has been
@@ -446,7 +466,7 @@ namespace HLU.UI.ViewModel
             _viewModelMain.ChangeCursor(Cursors.Arrow, String.Empty);
         }
 
-        #endregion
+        #endregion Bulk Update
 
         #region OSMM Bulk Update
 
@@ -507,6 +527,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Applies the pending OSMM Bulk Updates.
         /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         public async Task ApplyOSMMBulkUpdateAsync()
         {
             _viewModelMain.ChangeCursor(Cursors.Wait, "OSMM Bulk updating ...");
@@ -706,7 +727,7 @@ namespace HLU.UI.ViewModel
 
                                             // Add secondary habitat to the list and table if it isn't already in the list
                                             if (SecondaryHabitat.SecondaryHabitatList == null ||
-                                                !SecondaryHabitat.SecondaryHabitatList.Any(sh => sh.secondary_habitat == secondaryCode))
+                                                !SecondaryHabitat.SecondaryHabitatList.Any(sh => sh.Secondary_habitat == secondaryCode))
                                                 _viewModelMain.AddSecondaryHabitat(true, -1, currIncid, secondaryCode, secondaryGroup);
                                         }
                                     }
@@ -719,11 +740,7 @@ namespace HLU.UI.ViewModel
                             {
                                 // Build a concatenated string of the secondary habitats
                                 string secondaryCodeDelimiter = _addInSettings.SecondaryCodeDelimiter;
-                                string secondarySummary = String.Join(secondaryCodeDelimiter, SecondaryHabitat.SecondaryHabitatList
-                                    .OrderBy(s => s.secondary_habitat_int)
-                                    .ThenBy(s => s.secondary_habitat)
-                                    .Select(s => s.secondary_habitat)
-                                    .Distinct().ToList());
+                                string secondarySummary = String.Join(secondaryCodeDelimiter, [.. SecondaryHabitat.SecondaryHabitatList.OrderBy(s => s.Secondary_habitat_int).ThenBy(s => s.Secondary_habitat).Select(s => s.Secondary_habitat).Distinct()]);
 
                                 // Build an update string to set the secondary habitat
                                 _viewModelMain.IncidCurrentRow.habitat_secondaries = secondarySummary;
@@ -796,6 +813,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Cancels the osmm bulk update mode.
         /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         public async Task CancelOSMMBulkUpdateAsync()
         {
             // Stop the osmm bulk update mode and reset all the controls
@@ -806,6 +824,7 @@ namespace HLU.UI.ViewModel
         /// Stops the osmm bulk update mode and resets all
         /// the controls to normal.
         /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         private async Task OSMMBulkUpdateResetControlsAsync()
         {
             // Force the Incid table to be refilled because it has been
@@ -840,7 +859,7 @@ namespace HLU.UI.ViewModel
             _viewModelMain.ChangeCursor(Cursors.Arrow, String.Empty);
         }
 
-        #endregion
+        #endregion OSMM Bulk Update
 
         #region Database & GIS Updates
 
@@ -1026,7 +1045,6 @@ namespace HLU.UI.ViewModel
             BulkUpdateAdoIncidRelatedTable(deleteSources, currIncid, relValues,
                 _viewModelMain.HluTableAdapterManager.incid_sourcesTableAdapter,
                 incidSourcesTable, ref incidSourcesRows);
-
         }
 
         /// <summary>
@@ -1215,7 +1233,6 @@ namespace HLU.UI.ViewModel
             BulkUpdateDbIncidRelatedTable(deleteSources, currIncid, relValues,
                 _viewModelMain.HluTableAdapterManager.incid_sourcesTableAdapter,
                 incidSourcesTable, ref incidSourcesRows);
-
         }
 
         /// <summary>
@@ -1244,18 +1261,17 @@ namespace HLU.UI.ViewModel
                 _viewModelMain.GetIncidChildRowsDb(relValues, adapter, ref dbTable);
 
                 // Update the child rows for the supplied incid to match the cloned rows
-                BulkUpdateAdoChildTable<T, R>(deleteExistingRows, newRows.AsEnumerable()
-                    .Cast<R>().ToArray(), ref dbTable, adapter);
+                BulkUpdateAdoChildTable<T, R>(deleteExistingRows, [.. newRows.AsEnumerable().Cast<R>()], ref dbTable, adapter);
 
-                uiRows = newRows.AsEnumerable().Cast<R>().ToArray();
+                uiRows = [.. newRows.AsEnumerable().Cast<R>()];
             }
         }
 
         /// <summary>
         /// Bulk updates the incid related tables using a DB connection.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <typeparam name="R"></typeparam>
+        /// <typeparam name="T">The type of the data table.</typeparam>
+        /// <typeparam name="R">The type of the data row.</typeparam>
         /// <param name="deleteExistingRows">if set to <c>1</c> [delete existing rows].</param>
         /// <param name="currIncid">The current incid.</param>
         /// <param name="relValues">An array of the current incid.</param>
@@ -1277,10 +1293,9 @@ namespace HLU.UI.ViewModel
                 _viewModelMain.GetIncidChildRowsDb(relValues, adapter, ref dbTable);
 
                 // Update the child rows for the supplied incid to match the cloned rows
-                BulkUpdateDbChildTable<T, R>(deleteExistingRows, newRows.AsEnumerable()
-                    .Cast<R>().ToArray(), ref dbTable);
+                BulkUpdateDbChildTable<T, R>(deleteExistingRows, [.. newRows.AsEnumerable().Cast<R>()], ref dbTable);
 
-                uiRows = newRows.AsEnumerable().Cast<R>().ToArray();
+                uiRows = [.. newRows.AsEnumerable().Cast<R>()];
             }
         }
 
@@ -1289,17 +1304,17 @@ namespace HLU.UI.ViewModel
         /// rows are created at the start of the bulk process so any not used
         /// need to be removed)
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <typeparam name="R"></typeparam>
+        /// <typeparam name="T">The type of the data table.</typeparam>
+        /// <typeparam name="R">The type of the data row.</typeparam>
         /// <param name="rows">The rows.</param>
-        /// <returns></returns>
+        /// <returns>The filtered rows.</returns>
         private R[] FilterUpdateRows<T, R>(R[] rows)
             where T : DataTable
             where R : DataRow
         {
             List<R> newRows = new(rows.Length);
 
-            if ((rows == null) || (rows.Length == 0) || (rows[0] == null)) return newRows.ToArray();
+            if ((rows == null) || (rows.Length == 0) || (rows[0] == null)) return [.. newRows];
 
             T table = (T)rows[0].Table;
 
@@ -1335,18 +1350,18 @@ namespace HLU.UI.ViewModel
                 if (add) newRows.Add(rows[i]);
             }
 
-            return newRows.ToArray();
+            return [.. newRows];
         }
 
         /// <summary>
         /// Clones the rows in a data table, changing the incid column in the
         /// cloned rows to match the supplied incid value.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <typeparam name="R"></typeparam>
+        /// <typeparam name="T">The type of the data table.</typeparam>
+        /// <typeparam name="R">The type of the data row.</typeparam>
         /// <param name="rows">The rows to be cloned.</param>
         /// <param name="incid">The incid value to be set in the cloned rows.</param>
-        /// <returns></returns>
+        /// <returns>The cloned rows with the updated incid value.</returns>
         private T CloneUpdateRows<T, R>(R[] rows, string incid)
             where T : DataTable, new()
             where R : DataRow
@@ -1387,7 +1402,7 @@ namespace HLU.UI.ViewModel
             {
                 // Get any rows for the current secondary habitat already in the database
                 IEnumerable<HluDataSet.incid_secondaryRow> dbRows =
-                    incidSecondaryTable.Where(r => r.secondary == sh.secondary_habitat);
+                    incidSecondaryTable.Where(r => r.secondary == sh.Secondary_habitat);
 
                 // Count how many rows match the current secondary code
                 switch (dbRows.Count())
@@ -1442,21 +1457,21 @@ namespace HLU.UI.ViewModel
 
             // Get all the BAP habitats from the user interface
             IEnumerable<BapEnvironment> beUI = from b in _viewModelMain.IncidBapRowsAuto.Concat(_viewModelMain.IncidBapRowsUser)
-                                               group b by b.bap_habitat into habs
+                                               group b by b.Bap_habitat into habs
                                                select habs.First();
 
             // Loop through all the BAP habitats from the user interface
             foreach (BapEnvironment be in beUI)
             {
                 // Check if the current BAP habitat is primary (mandatory) or secondary
-                bool isSecondary = !mandatoryBap.Contains(be.bap_habitat);
+                bool isSecondary = !mandatoryBap.Contains(be.Bap_habitat);
 
                 // Flag the current BAP habitat as secondary
                 if (isSecondary) be.MakeSecondary();
 
                 // Get any rows for the current BAP habitat already in the database
                 IEnumerable<HluDataSet.incid_bapRow> dbRows =
-                    incidBapTable.Where(r => r.bap_habitat == be.bap_habitat);
+                    incidBapTable.Where(r => r.bap_habitat == be.Bap_habitat);
 
                 // Count how many rows match the current BAP habitat
                 switch (dbRows.Count())
@@ -1507,7 +1522,7 @@ namespace HLU.UI.ViewModel
             // in the user interface (they must have come from an OSMM
             // bulk update)
             var newBap = from p in mandatoryBap
-                         where !beUI.Any(row => row.bap_habitat == p)
+                         where !beUI.Any(row => row.Bap_habitat == p)
                          select new BapEnvironment(false, false, -1, currIncid, p, _bulkDeterminationQuality, _bulkInterpretationQuality, "Based on OSMM Update");
 
             // Insert any new primary BAP environments that aren't
@@ -1516,7 +1531,7 @@ namespace HLU.UI.ViewModel
             {
                 // Get any rows for the current BAP habitat already in the database
                 IEnumerable<HluDataSet.incid_bapRow> dbRows =
-                    incidBapTable.Where(r => r.bap_habitat == be.bap_habitat);
+                    incidBapTable.Where(r => r.bap_habitat == be.Bap_habitat);
 
                 switch (dbRows.Count())
                 {
@@ -1556,7 +1571,7 @@ namespace HLU.UI.ViewModel
             {
                 var delRows = incidBapTable.Where(r => !mandatoryBap.Contains(r.bap_habitat) &&
                     BapEnvironment.IsSecondary(r) == true &&
-                    !_viewModelMain.IncidBapRowsUser.Any(be => be.bap_habitat == r.bap_habitat));
+                    !_viewModelMain.IncidBapRowsUser.Any(be => be.Bap_habitat == r.bap_habitat));
                 foreach (HluDataSet.incid_bapRow r in delRows)
                     _viewModelMain.HluTableAdapterManager.incid_bapTableAdapter.Delete(r);
             }
@@ -1572,6 +1587,7 @@ namespace HLU.UI.ViewModel
         /// or
         /// Failed to update GIS layer for incid
         /// </exception>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         private async Task BulkUpdateGisAsync(int incidOrdinal, DataTable incidSelection, bool deleteSecondaryCodes, bool createHistory, Operations operation, DateTime nowDtTm)
         {
             // Get the columns and values to be updated in GIS
@@ -1697,8 +1713,10 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Set the columns and values to be updated in GIS.
         /// </summary>
+        /// <param name="deleteSecondaryCodes">if set to <c>true</c> delete any existing secondary habitat codes.</param>
         /// <param name="updateColumns">The columns to update.</param>
-        /// <param name="updateValues">The values to update.</param>
+        /// <param name="updateDBValues">The values to update in the DB shadow copy of GIS layer.</param>
+        /// <param name="updateGISValues">The values to update in the GIS layer.</param>
         private void BulkUpdateGisColumns(bool deleteSecondaryCodes, out DataColumn[] updateColumns, out object[] updateDBValues, out object[] updateGISValues)
         {
             List<DataColumn> updateColumnList = [];
@@ -1773,16 +1791,17 @@ namespace HLU.UI.ViewModel
                     .Select(h => _viewModelMain.IncidCurrentRow[h.ColumnName]));
             }
 
-            updateColumns = updateColumnList.ToArray();
-            updateDBValues = updateDBValueList.ToArray();
-            updateGISValues = updateGISValueList.ToArray();
+            // Set the output arrays
+            updateColumns = [.. updateColumnList];
+            updateDBValues = [.. updateDBValueList];
+            updateGISValues = [.. updateGISValueList];
         }
 
         /// <summary>
         /// Bulk updates the required child table using an ADO connection.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <typeparam name="R"></typeparam>
+        /// <typeparam name="T">The type of the data table.</typeparam>
+        /// <typeparam name="R">The type of the data row.</typeparam>
         /// <param name="deleteExistingRows">if set to <c>1</c> delete any existing rows.</param>
         /// <param name="newRows">The new rows to be inserted.</param>
         /// <param name="dbRows">The database rows.</param>
@@ -1812,16 +1831,13 @@ namespace HLU.UI.ViewModel
             int pkOrdinal = dbRows.PrimaryKey[0].Ordinal;
 
             // Create an enumerable of all the target data table rows
-            R[] dbRowsEnum = dbRows.AsEnumerable().Select(r => (R)r).ToArray();
+            R[] dbRowsEnum = [.. dbRows.AsEnumerable().Select(r => (R)r)];
 
             // Get an array of all the columns in the target data table (except the primary key)
-            DataColumn[] cols = dbRows.Columns.Cast<DataColumn>().Where(c => c.Ordinal != pkOrdinal).ToArray();
+            DataColumn[] cols = [.. dbRows.Columns.Cast<DataColumn>().Where(c => c.Ordinal != pkOrdinal)];
 
             // Select only new rows with non-blank data or non-duplicate data
-            R[] newRowsNoDups = (from nr in newRows
-                                 where cols.Any(col => !nr.IsNull(col.Ordinal)) &&
-                                     !dbRowsEnum.Any(dr => !cols.Any(c => !dr[c.Ordinal].Equals(nr[c.Ordinal])))
-                                 select nr).OrderBy(r => r[pkOrdinal]).ToArray();
+            R[] newRowsNoDups = [.. (from nr in newRows where cols.Any(col => !nr.IsNull(col.Ordinal)) && !dbRowsEnum.Any(dr => !cols.Any(c => !dr[c.Ordinal].Equals(nr[c.Ordinal]))) select nr).OrderBy(r => r[pkOrdinal])];
 
             // Get the number of non-blank row with non-duplicate data corresponding to child table dbRows
             int numRowsNew = newRowsNoDups.Length;
@@ -1830,13 +1846,10 @@ namespace HLU.UI.ViewModel
             if ((deleteExistingRows) && (numRowsNew == 0)) return;
 
             // Select only existing data table rows not in the new rows
-            R[] oldRows = (from dr in dbRowsEnum
-                                 where cols.Any(col => !dr.IsNull(col.Ordinal)) &&
-                                     !newRows.Any(nr => cols.Count(c => nr[c.Ordinal].Equals(dr[c.Ordinal])) == cols.Length)
-                           select dr).OrderBy(r => r[pkOrdinal]).ToArray();
+            R[] oldRows = [.. (from dr in dbRowsEnum where cols.Any(col => !dr.IsNull(col.Ordinal)) && !newRows.Any(nr => cols.Count(c => nr[c.Ordinal].Equals(dr[c.Ordinal])) == cols.Length) select dr).OrderBy(r => r[pkOrdinal])];
 
             // Delete all the existing database rows
-            System.Array.ForEach(dbRowsEnum.ToArray(),
+            System.Array.ForEach([.. dbRowsEnum],
                 new Action<R>(r => adapter.Delete(r)));
 
             // Set the property name for the primary key
@@ -1931,8 +1944,8 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Bulk updates the required child table using a DB connection.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <typeparam name="R"></typeparam>
+        /// <typeparam name="T">The type of the data table.</typeparam>
+        /// <typeparam name="R">The type of the data row.</typeparam>
         /// <param name="deleteExistingRows">if set to <c>1</c> delete any existing rows.</param>
         /// <param name="newRows">The new rows to be inserted.</param>
         /// <param name="dbRows">The database rows.</param>
@@ -1960,12 +1973,9 @@ namespace HLU.UI.ViewModel
             int pkOrdinal = pk[0].Ordinal;
 
             // remove any new rows with no or duplicate data
-            R[] dbRowsEnum = dbRows.AsEnumerable().Select(r => (R)r).ToArray();
-            DataColumn[] cols = dbRows.Columns.Cast<DataColumn>().Where(c => c.Ordinal != pkOrdinal).ToArray();
-            R[] newRowsNoDups = (from nr in newRows
-                                 where cols.Any(col => !nr.IsNull(col.Ordinal)) &&
-                                     !dbRowsEnum.Any(dr => !cols.Any(c => !dr[c.Ordinal].Equals(nr[c.Ordinal])))
-                                 select nr).OrderBy(r => r[pkOrdinal]).ToArray();
+            R[] dbRowsEnum = [.. dbRows.AsEnumerable().Select(r => (R)r)];
+            DataColumn[] cols = [.. dbRows.Columns.Cast<DataColumn>().Where(c => c.Ordinal != pkOrdinal)];
+            R[] newRowsNoDups = [.. (from nr in newRows where cols.Any(col => !nr.IsNull(col.Ordinal)) && !dbRowsEnum.Any(dr => !cols.Any(c => !dr[c.Ordinal].Equals(nr[c.Ordinal]))) select nr).OrderBy(r => r[pkOrdinal])];
 
             // number of non-blank controls corresponding to child table dbRows
             int numRowsNew = newRowsNoDups.Length;
@@ -2093,6 +2103,6 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Database Update Methods
     }
 }

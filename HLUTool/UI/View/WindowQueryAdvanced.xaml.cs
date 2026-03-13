@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -36,11 +37,26 @@ namespace HLU.UI.View
             InitializeComponent();
         }
 
+        #region Methods
+
+        /// <summary>
+        /// Validate the text in the editable combo box is one of the items in the list. If not,
+        /// reset to the last valid value.
+        /// </summary>
+        /// <param name="sender">The combo box that triggered the event.</param>
+        /// <param name="e">The key event arguments.</param>
         private void EditableComboBox_KeyUp(object sender, KeyEventArgs e)
         {
             ValidateComboboxText(sender as ComboBox);
         }
 
+        /// <summary>
+        /// Validate the text in the editable combo box is one of the items in the list. If not,
+        /// reset to the last valid value. This is called when the combo box loses focus, to catch
+        /// any invalid text that may have been left after key up events (e.g. if user pasted
+        /// invalid text into the combo box, or used mouse to change caret position and edit text).
+        /// </summary>
+        /// <param name="cb">The combo box to validate.</param>
         private void ValidateComboboxText(ComboBox cb)
         {
             if ((cb == null) || (cb.Items.Count == 0)) return;
@@ -81,6 +97,6 @@ namespace HLU.UI.View
             }
         }
 
+        #endregion Methods
     }
-
 }

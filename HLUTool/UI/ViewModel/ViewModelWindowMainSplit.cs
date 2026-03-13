@@ -4,6 +4,7 @@
 // Copyright © 2014 Sussex Biodiversity Record Centre
 // Copyright © 2019 London & South East Record Centres (LaSER)
 // Copyright © 2019-2022 Greenspace Information for Greater London CIC
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -62,10 +63,13 @@ namespace HLU.UI.ViewModel
         #region Logical Split
 
         /// <summary>
-        /// There must be either more than one feature in the selection that share the same incid, but *not* the same toid or toidfragid,
-        /// or there must be only one feature in the selection.
+        /// There must be either more than one feature in the selection that share the same incid,
+        /// but *not* the same toid or toidfragid, or there must be only one feature in the selection.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains a boolean
+        /// value indicating whether the logical split was successful.
+        /// </returns>
         internal async Task<bool> LogicalSplitAsync()
         {
             // Check the selection meets the criteria for a logical split (shouldn't be possible to reach here otherwise).
@@ -194,16 +198,16 @@ namespace HLU.UI.ViewModel
                 // This adds an additional history request column that maps "modified_toidfragid"
                 // to the source GIS field "toidfragid" using the delimiter mechanism.
                 DataColumn[] historyColumns =
-                    _viewModelMain.HistoryColumns.Concat(
-                        [
-                            new(
+                    [
+                        .. _viewModelMain.HistoryColumns,
+                        new(
                         _viewModelMain.HluDataset.history.modified_toidfragidColumn.ColumnName.Replace(
-                            _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.ColumnName,
-                            String.Empty) +
+                        _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.ColumnName,
+                        String.Empty) +
                         ArcProApp.HistoryAdditionalFieldsDelimiter +
                         _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.ColumnName,
                         _viewModelMain.HluDataset.history.modified_toidfragidColumn.DataType)
-                        ]).ToArray();
+                    ];
 
                 // Update the GIS layer and retrieve the history of changes made.
                 // This queues the GIS edits into the provided EditOperation but does not execute it.
@@ -231,8 +235,7 @@ namespace HLU.UI.ViewModel
                     ref polygons);
 
                 // Get the primary key columns for the history table.
-                historyTable.PrimaryKey = historyTable.Columns.Cast<DataColumn>()
-                    .Where(c => _viewModelMain.GisIDColumnOrdinals.Contains(c.Ordinal)).ToArray();
+                historyTable.PrimaryKey = [.. historyTable.Columns.Cast<DataColumn>().Where(c => _viewModelMain.GisIDColumnOrdinals.Contains(c.Ordinal))];
 
                 // Loop through the shadow copy of the incid_mm_polygons rows and update
                 // the toidfragid and incid where necessary.
@@ -243,9 +246,7 @@ namespace HLU.UI.ViewModel
                     if (r.incid == _viewModelMain.Incid)
                     {
                         // Get the key values in the same order as the history table primary key columns.
-                        object[] historyKeyValues = historyTable.PrimaryKey
-                            .Select(pkCol => r[pkCol.ColumnName])
-                            .ToArray();
+                        object[] historyKeyValues = [.. historyTable.PrimaryKey.Select(pkCol => r[pkCol.ColumnName])];
 
                         // Get the matching history row for the GIS feature.
                         DataRow historyRow = historyTable.Rows.Find(historyKeyValues);
@@ -364,7 +365,10 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// There must be more than one feature in the selection that share the same incid, toid and toidfragid.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A </returns>
+        /// A task that represents the asynchronous operation. The task result contains a boolean
+        /// value indicating whether the physical split was successful.
+        /// </returns>
         internal async Task<bool> PhysicalSplitAsync()
         {
             // Check there is a selection.
@@ -405,8 +409,8 @@ namespace HLU.UI.ViewModel
         /// database with the new features, and maintains a history of the operation. It ensures transactional
         /// integrity by using a database transaction, rolling back changes in case of an error. The method also
         /// synchronizes the application state with the updated GIS data.</remarks>
-        /// <returns><see langword="true"/> if the physical split operation completes successfully; otherwise, <see
-        /// langword="false"/>.</returns>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a boolean
+        /// value indicating whether the physical split was successful.</returns>
         private async Task<bool> PerformPhysicalSplitAsync()
         {
             _viewModelMain.ChangeCursor(Cursors.Wait, "Splitting ...");
@@ -443,7 +447,7 @@ namespace HLU.UI.ViewModel
 
                 // get a filter from the GIS selection
                 List<List<SqlFilterCondition>> featuresFilter = ViewModelWindowMainHelpers.GisSelectionToWhereClause(
-                    _viewModelMain.GisSelection.AsEnumerable().Skip(skipCount).ToArray(), _viewModelMain.GisIDColumnOrdinals,
+                    [.. _viewModelMain.GisSelection.AsEnumerable().Skip(skipCount)], _viewModelMain.GisIDColumnOrdinals,
                     ViewModelWindowMain.IncidPageSize, _viewModelMain.HluDataset.incid_mm_polygons);
 
                 if (featuresFilter.Count != 1)
@@ -456,9 +460,9 @@ namespace HLU.UI.ViewModel
                 // This queues the GIS edits into the provided EditOperation but does not execute it.
                 DataTable newFeatures = await _viewModelMain.GISApplication.SplitFeaturesPhysicallyAsync(currentToidFragmentID,
                     lastToidFragmentID, featuresFilter[0],
-                    _viewModelMain.HluDataset.incid_mm_polygons.Columns.Cast<DataColumn>().Where(c =>
+                    [.. _viewModelMain.HluDataset.incid_mm_polygons.Columns.Cast<DataColumn>().Where(c =>
                         c.ColumnName != _viewModelMain.HluDataset.incid_mm_polygons.shape_lengthColumn.ColumnName &&
-                        c.ColumnName != _viewModelMain.HluDataset.incid_mm_polygons.shape_areaColumn.ColumnName).ToArray(),
+                        c.ColumnName != _viewModelMain.HluDataset.incid_mm_polygons.shape_areaColumn.ColumnName)],
                     editOperation);
 
                 // If an error occurred when updating the GIS layer or
@@ -474,7 +478,7 @@ namespace HLU.UI.ViewModel
 
                 // get a where clause for the original split feature
                 List<List<SqlFilterCondition>> originalFeatureWhereClause = ViewModelWindowMainHelpers.GisSelectionToWhereClause(
-                    _viewModelMain.GisSelection.AsEnumerable().Take(1).ToArray(), _viewModelMain.GisIDColumnOrdinals,
+                    [.. _viewModelMain.GisSelection.AsEnumerable().Take(1)], _viewModelMain.GisIDColumnOrdinals,
                     ViewModelWindowMain.IncidPageSize, _viewModelMain.HluDataset.incid_mm_polygons);
 
                 if (originalFeatureWhereClause.Count != 1)
@@ -492,9 +496,12 @@ namespace HLU.UI.ViewModel
                 DataTable history = updTable.Copy();
                 history.Columns[updTable.shape_lengthColumn.ColumnName].ColumnName = ViewModelWindowMain.HistoryGeometry1ColumnName;
                 history.Columns[updTable.shape_areaColumn.ColumnName].ColumnName = ViewModelWindowMain.HistoryGeometry2ColumnName;
-                string[] historyColNames = (new string[] { ViewModelWindowMain.HistoryGeometry1ColumnName, ViewModelWindowMain.HistoryGeometry2ColumnName }
-                    .Concat(_viewModelMain.HistoryColumns.Select(c => c.ColumnName)).ToArray());
-                DataColumn[] delCols = history.Columns.Cast<DataColumn>().Where(c => !historyColNames.Contains(c.ColumnName)).ToArray();
+                string[] historyColNames = (
+                [
+                    ViewModelWindowMain.HistoryGeometry1ColumnName, ViewModelWindowMain.HistoryGeometry2ColumnName,
+                    .. _viewModelMain.HistoryColumns.Select(c => c.ColumnName),
+                ]);
+                DataColumn[] delCols = [.. history.Columns.Cast<DataColumn>().Where(c => !historyColNames.Contains(c.ColumnName))];
                 foreach (DataColumn c in delCols)
                     history.Columns.Remove(c);
 
@@ -504,7 +511,7 @@ namespace HLU.UI.ViewModel
                 // update the original row
                 string updateStatement = String.Format("UPDATE {0} SET {1} WHERE {2}",
                     _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
-                    String.Join(",", newFeatures.Rows[0].ItemArray.Select((i, index) =>
+                    String.Join(",", [.. newFeatures.Rows[0].ItemArray.Select((i, index) =>
                         new
                         {
                             newFeatures.Columns[index].ColumnName,
@@ -512,7 +519,7 @@ namespace HLU.UI.ViewModel
                         })
                     .Where(a => !_viewModelMain.GisIDColumns.Any(c => c.ColumnName == a.ColumnName))
                     .Select(a => String.Format("{0} = {1}", _viewModelMain.DataBase.QuoteIdentifier(a.ColumnName),
-                        _viewModelMain.DataBase.QuoteValue(a.value))).ToArray()),
+                        _viewModelMain.DataBase.QuoteValue(a.value)))]),
                     _viewModelMain.DataBase.WhereClause(false, true, true, originalFeatureWhereClause[0]));
 
                 try
@@ -530,8 +537,8 @@ namespace HLU.UI.ViewModel
                 // build an insert statement for DB shadow copy of GIS layer
                 string insertCommand = String.Format("INSERT INTO {0} ({1}) VALUES (",
                     _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
-                    String.Join(",", newFeatures.Columns.Cast<DataColumn>().Select(c =>
-                    _viewModelMain.DataBase.QuoteIdentifier(c.ColumnName)).ToArray())) + "{0})";
+                    String.Join(",", [.. newFeatures.Columns.Cast<DataColumn>().Select(c =>
+                    _viewModelMain.DataBase.QuoteIdentifier(c.ColumnName))])) + "{0})";
 
                 int toidFragID = Int32.Parse(lastToidFragmentID);
                 string numFormat = String.Format("D{0}", updTable.toidfragidColumn.MaxLength);
@@ -540,10 +547,10 @@ namespace HLU.UI.ViewModel
                 for (int i = 1; i < newFeatures.Rows.Count; i++)
                 {
                     String insertStatement = String.Format(insertCommand, String.Join(",",
-                        newFeatures.Rows[i].ItemArray.Select((item, index) =>
+                        [.. newFeatures.Rows[i].ItemArray.Select((item, index) =>
                             _viewModelMain.DataBase.QuoteValue(newFeatures.Columns[index].ColumnName ==
                             updTable.toidfragidColumn.ColumnName ?
-                            (toidFragID + i).ToString(numFormat) : String.IsNullOrEmpty(item.ToString()) ? null : item)).ToArray()));
+                            (toidFragID + i).ToString(numFormat) : String.IsNullOrEmpty(item.ToString()) ? null : item))]));
 
                     try
                     {
@@ -1002,7 +1009,7 @@ namespace HLU.UI.ViewModel
                 if (_viewModelMain.IncidBapRowsAuto != null)
                 {
                     beAuto = from b in _viewModelMain.IncidBapRowsAuto
-                                       group b by b.bap_habitat into habs
+                                       group b by b.Bap_habitat into habs
                                        select habs.First();
                 }
 
@@ -1011,8 +1018,8 @@ namespace HLU.UI.ViewModel
                 if (_viewModelMain.IncidBapHabitatsUser != null)
                 {
                     beUser = from b in _viewModelMain.IncidBapHabitatsUser
-                             where !beAuto.Any(a => a.bap_habitat == b.bap_habitat)
-                             group b by b.bap_habitat into habs
+                             where !beAuto.Any(a => a.Bap_habitat == b.Bap_habitat)
+                             group b by b.Bap_habitat into habs
                              select habs.First();
                 }
 
@@ -1026,10 +1033,10 @@ namespace HLU.UI.ViewModel
                     HluDataSet.incid_bapRow newRow;
                     // If the row is new get a new bap_id and then add it to
                     // the local copy of rows.
-                    if (be.bap_id == -1)
+                    if (be.Bap_id == -1)
                     {
-                        be.bap_id = _viewModelMain.RecIDs.NextIncidBapId;
-                        be.incid = _viewModelMain.Incid;
+                        be.Bap_id = _viewModelMain.RecIDs.NextIncidBapId;
+                        be.Incid = _viewModelMain.Incid;
                         newRow = _viewModelMain.IncidBapTable.Newincid_bapRow();
 
                         newRow.ItemArray = be.ToItemArray();
@@ -1261,12 +1268,12 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Clones a DataRow of type R from a DataTable of type T, replacing the value in the specified column.
         /// </summary>
-        /// <typeparam name="R"></typeparam>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="row"></param>
-        /// <param name="incidColumnOrdinal"></param>
-        /// <param name="incid"></param>
-        /// <returns></returns>
+        /// <typeparam name="R">The type of the DataRow to be cloned.</typeparam>
+        /// <typeparam name="T">The type of the DataTable containing the DataRow.</typeparam>
+        /// <param name="row">The DataRow to be cloned.</param>
+        /// <param name="incidColumnOrdinal">The ordinal position of the column to be updated.</param>
+        /// <param name="incid">The new value for the incid column.</param>
+        /// <returns>The cloned DataRow with the updated incid value.</returns>
         private R CloneRow<R, T>(R row, int incidColumnOrdinal, string incid)
             where R : DataRow
             where T : DataTable
@@ -1301,7 +1308,7 @@ namespace HLU.UI.ViewModel
         private HluDataSet.incid_bapRow UpdateIncidBapRow(BapEnvironment be)
         {
             // Find the corresponding incid_bap row.
-            var q = _viewModelMain.IncidBapRows.Where(r => r.RowState != DataRowState.Deleted && r.bap_id == be.bap_id);
+            var q = _viewModelMain.IncidBapRows.Where(r => r.RowState != DataRowState.Deleted && r.bap_id == be.Bap_id);
 
             // If exactly one row was found, update it with the values from the BapEnvironment object.
             if (q.Count() == 1)

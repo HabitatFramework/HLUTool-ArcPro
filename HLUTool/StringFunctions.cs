@@ -1,23 +1,20 @@
-﻿// The DataTools are a suite of ArcGIS Pro addins used to extract, sync
-// and manage biodiversity information from ArcGIS Pro and SQL Server
-// based on pre-defined or user specified criteria.
+﻿// HLUTool is used to view and maintain habitat and land use GIS data.
+// Copyright © 2025-2026 Andy Foy Consulting
 //
-// Copyright © 2024 Andy Foy Consulting.
+// This file is part of HLUTool.
 //
-// This file is part of DataTools suite of programs..
-//
-// DataTools are free software: you can redistribute it and/or modify
-// them under the terms of the GNU General Public License as published by
+// HLUTool is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// DataTools are distributed in the hope that it will be useful,
+// HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with with program.  If not, see <http://www.gnu.org/licenses/>.
+// along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
 using System.Collections.Generic;
@@ -110,6 +107,9 @@ namespace HLU
     {
         #region Constructor
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="StringFunctions"/> class.
+        /// </summary>
         public StringFunctions()
         {
             // constructor takes no arguments.
@@ -122,10 +122,10 @@ namespace HLU
         /// <summary>
         /// Remove all potentially special characters from a string and return the result.
         /// </summary>
-        /// <param name="inputString"></param>
-        /// <param name="repChar"></param>
-        /// <param name="isFileName"></param>
-        /// <returns>string</returns>
+        /// <param name="inputString">The input string to process.</param>
+        /// <param name="repChar">The character to replace illegal characters with.</param>
+        /// <param name="isFileName">Indicates whether the input string is a file name.</param>
+        /// <returns>The processed string with illegal characters removed or replaced.</returns>
         public static string StripIllegals(string inputString, string repChar, bool isFileName = false)
         {
             // If it is a file name, check if there is a '.' at fourth place before last.
@@ -154,8 +154,8 @@ namespace HLU
         /// <summary>
         /// Check if the supplied replacement character is a valid character.
         /// </summary>
-        /// <param name="repChar"></param>
-        /// <returns>bool</returns>
+        /// <param name="repChar">The character to check for validity.</param>
+        /// <returns><c>true</c> if the character is valid; otherwise, <c>false</c>.</returns>
         public static bool IsValid(string repChar)
         {
             List<string> theIllegals = [@"\", "%", "$", ":", "*", "/", "?", "<", ">", "|", "~", "£", "."];
@@ -168,9 +168,9 @@ namespace HLU
         /// <summary>
         /// Keeps numbers and spaces from an input string and returns the results.
         /// </summary>
-        /// <param name="inputString"></param>
-        /// <param name="repChar"></param>
-        /// <returns>string</returns>
+        /// <param name="inputString">The input string to process.</param>
+        /// <param name="repChar">The character to replace invalid characters with.</param>
+        /// <returns>The processed string with only numbers and spaces.</returns>
         public static string KeepNumbersAndSpaces(string inputString, string repChar)
         {
             string strOutputString = "";
@@ -192,8 +192,8 @@ namespace HLU
         /// <summary>
         /// Calculate the current financial year.
         /// </summary>
-        /// <param name="curDate"></param>
-        /// <returns></returns>
+        /// <param name="curDate">The current date to calculate the financial year for.</param>
+        /// <returns>The financial year as a string in the format "YYYY".</returns>
         public static string FinancialYear(DateTime curDate)
         {
             string CurrYr = curDate.ToString("yy");
@@ -216,9 +216,9 @@ namespace HLU
         /// <summary>
         /// Gets the sub-reference out of a short reference string.
         /// </summary>
-        /// <param name="inputString"></param>
-        /// <param name="repChar"></param>
-        /// <returns>string</returns>
+        /// <param name="inputString">The input string containing the short reference.</param>
+        /// <param name="repChar">The character used as a separator in the short reference.</param>
+        /// <returns>The sub-reference extracted from the short reference string.</returns>
         public static string GetSubref(string inputString, string repChar)
         {
             // Input should look like xx.xxxx or xxxx where x is an integer.
@@ -229,12 +229,13 @@ namespace HLU
         /// <summary>
         /// Replace standard search strings in a supplied text string.
         /// </summary>
-        /// <param name="rawName"></param>
-        /// <param name="reference"></param>
-        /// <param name="siteName"></param>
-        /// <param name="shortRef"></param>
-        /// <param name="subRef"></param>
-        /// <returns>string</returns>
+        /// <param name="rawName">The raw input string containing placeholders.</param>
+        /// <param name="reference">The reference string to replace the %ref% placeholder.</param>
+        /// <param name="siteName">The site name to replace the %sitename% placeholder.</param>
+        /// <param name="shortRef">The short reference to replace the %shortref% placeholder.</param>
+        /// <param name="subRef">The sub-reference to replace the %subref% placeholder.</param>
+        /// <param name="radius">The radius to replace the %radius% placeholder.</param>
+        /// <returns>The processed string with placeholders replaced by actual values.</returns>
         public static string ReplaceSearchStrings(string rawName, string reference, string siteName, string shortRef, string subRef, string radius = "")
         {
             string cleanName = rawName;
@@ -258,8 +259,8 @@ namespace HLU
         /// <summary>
         /// Replace a comma separated string with semi-colon separators.
         /// </summary>
-        /// <param name="aGroupColumnString"></param>
-        /// <returns>string</returns>
+        /// <param name="aGroupColumnString">The input string containing comma-separated values.</param>
+        /// <returns>The formatted string with semi-colon separators.</returns>
         public static string GetGroupColumnsFormatted(string aGroupColumnString)
         {
             List<string> strColumns = [.. aGroupColumnString.Split(',')];
@@ -277,8 +278,8 @@ namespace HLU
         /// <summary>
         /// Replace a dollar separated string with semi-colon separators.
         /// </summary>
-        /// <param name="aStatsColumnString"></param>
-        /// <returns>string</returns>
+        /// <param name="aStatsColumnString">The input string containing dollar-separated values.</param>
+        /// <returns>The formatted string with semi-colon separators.</returns>
         public static string GetStatsColumnsFormatted(string aStatsColumnString)
         {
             List<string> strEntries = [.. aStatsColumnString.Split('$')];
@@ -300,10 +301,10 @@ namespace HLU
         /// <summary>
         /// Align statistics columns.
         /// </summary>
-        /// <param name="AllColumns"></param>
-        /// <param name="StatsColumns"></param>
-        /// <param name="GroupColumns"></param>
-        /// <returns>string</returns>
+        /// <param name="AllColumns">A string containing all column names, separated by commas.</param>
+        /// <param name="StatsColumns">A string containing the statistics column names, separated by semi-colons.</param>
+        /// <param name="GroupColumns">A string containing the group column names, separated by semi-colons.</param>
+        /// <returns>The aligned statistics columns as a string.</returns>
         public static string AlignStatsColumns(string AllColumns, string StatsColumns, string GroupColumns)
         {
             if (String.IsNullOrEmpty(GroupColumns) || String.IsNullOrEmpty(AllColumns))
@@ -341,8 +342,8 @@ namespace HLU
         /// Look at each layer in a list of layers and returns the unique
         /// group names (in front of any hyphen in the layer names).
         /// </summary>
-        /// <param name="LayerList"></param>
-        /// <returns>List<string></returns>
+        /// <param name="LayerList">A list of layer names to extract group names from.</param>
+        /// <returns>List<string> containing the unique group names.</returns>
         public static List<string> ExtractGroups(List<string> LayerList)
         {
             List<string> liGroups = [];
@@ -365,8 +366,8 @@ namespace HLU
         /// Return the group name from the front of a hyphen in
         /// the layer name.
         /// </summary>
-        /// <param name="LayerName"></param>
-        /// <returns>string</returns>
+        /// <param name="LayerName">The name of the layer from which to extract the group name.</param>
+        /// <returns>The group name if present; otherwise, an empty string.</returns>
         public static string GetGroupName(string LayerName)
         {
             int intHyphenIndex = LayerName.IndexOf('-');

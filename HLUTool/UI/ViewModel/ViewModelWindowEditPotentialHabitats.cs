@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2019 Greenspace Information for Greater London CIC
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -49,23 +50,28 @@ namespace HLU.UI.ViewModel
 
         private ObservableCollection<BapEnvironment> _incidBapRowsUser;
 
-        #endregion
+        #endregion Fields
 
         #region Constructor
 
+        /// <summary>
+        /// Initialise the ViewModel for the Edit Potential Habitats window.
+        /// </summary>
+        /// <param name="viewModelMain">The main ViewModel.</param>
+        /// <param name="incidBapHabitatsUser">The collection of user-defined BAP habitats.</param>
         public ViewModelWindowEditPotentialHabitats(ViewModelWindowMain viewModelMain, ObservableCollection<BapEnvironment> incidBapHabitatsUser)
         {
             _viewModelMain = viewModelMain;
 
             IEnumerable<BapEnvironment> prevBapRowsAuto = null;
             prevBapRowsAuto = from p in incidBapHabitatsUser
-                         select new BapEnvironment(false, true, p.bap_id, p.incid, p.bap_habitat, p.quality_determination, p.quality_interpretation, p.interpretation_comments);
+                         select new BapEnvironment(false, true, p.Bap_id, p.Incid, p.Bap_habitat, p.Quality_determination, p.Quality_interpretation, p.Interpretation_comments);
 
             _incidBapRowsUser = new ObservableCollection<BapEnvironment>(prevBapRowsAuto);
             OnPropertyChanged(nameof(IncidBapHabitatsUser));
         }
 
-        #endregion
+        #endregion Constructor
 
         #region ViewModelBase Members
 
@@ -80,26 +86,24 @@ namespace HLU.UI.ViewModel
             get { return DisplayName; }
         }
 
-        #endregion
+        #endregion ViewModelBase Members
 
         #region RequestClose
 
-        // declare the delegate since using non-generic pattern
+        // Declare the delegate since using non-generic pattern
         public delegate void RequestCloseEventHandler(ObservableCollection<BapEnvironment> incidBapRowsUser);
 
-        // declare the event
+        // Declare the event
         public event RequestCloseEventHandler RequestClose;
 
-        #endregion
+        #endregion RequestClose
 
         #region Ok Command
 
         /// <summary>
-        /// Set the Ok button command.
+        /// Gets the command for the Ok button.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command to execute when the Ok button is clicked.</value>
         public ICommand OkCommand
         {
             get
@@ -117,19 +121,16 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles events when the Ok button is clicked.
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void OkCommandClick(object param)
         {
             RequestClose?.Invoke(_incidBapRowsUser);
         }
 
         /// <summary>
-        /// Determine if the Ok button can be clicked.
+        /// Gets a value indicating whether the Ok button can be clicked, based on the validity of the user-defined BAP habitats.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value><c>true</c> if the Ok button can be clicked; otherwise, <c>false</c>.</value>
         public bool CanOk
         {
             get
@@ -147,16 +148,14 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Ok Command
 
         #region Cancel Command
 
         /// <summary>
-        /// Set the Cancel button command.
+        /// Gets the command for the Cancel button.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command to execute when the Cancel button is clicked.</value>
         public ICommand CancelCommand
         {
             get
@@ -174,14 +173,13 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles events when the Cancel button is clicked.
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void CancelCommandClick(object param)
         {
             RequestClose?.Invoke(null);
         }
 
-        #endregion
+        #endregion Cancel Command
 
         #region BAP Habitat
 
@@ -226,7 +224,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion BAP Habitat
 
         #region IDataErrorInfo Members
 
@@ -255,7 +253,6 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
-
+        #endregion IDataErrorInfo Members
     }
 }

@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -33,7 +34,7 @@ namespace HLU.UI
         readonly Action<object> _execute;
         readonly Predicate<object> _canExecute;
 
-        #endregion // Fields
+        #endregion Fields
 
         #region Constructors
 
@@ -59,27 +60,39 @@ namespace HLU.UI
             _canExecute = canExecute;
         }
 
-        #endregion // Constructors
+        #endregion Constructors
 
         #region ICommand Members
 
+        /// <summary>
+        /// Defines the method that determines whether the command can execute in its current state.
+        /// </summary>
+        /// <param name="parameter">The parameter passed to the command.</param>
+        /// <returns>True if the command can execute; otherwise, false.</returns>
         [DebuggerStepThrough]
         public bool CanExecute(object parameter)
         {
             return _canExecute == null || _canExecute(parameter);
         }
 
+        /// <summary>
+        /// Defines the method to be called when the command is invoked.
+        /// </summary>
         public event EventHandler CanExecuteChanged
         {
             add { CommandManager.RequerySuggested += value; }
             remove { CommandManager.RequerySuggested -= value; }
         }
 
+        /// <summary>
+        /// Defines the method to be called when the command is invoked.
+        /// </summary>
+        /// <param name="parameter">The parameter passed to the command.</param>
         public void Execute(object parameter)
         {
             _execute(parameter);
         }
 
-        #endregion
+        #endregion ICommand Members
     }
 }

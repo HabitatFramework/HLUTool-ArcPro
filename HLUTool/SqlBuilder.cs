@@ -1,6 +1,7 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -163,6 +164,7 @@ namespace HLU
         /// <summary>
         /// Gets or sets the boolean operator. Defaults to "AND".
         /// </summary>
+        /// <value>The logical operator used to combine this filter condition with others, such as "AND" or "OR".</value>
         public string BooleanOperator
         {
             get { return _booleanOperator; }
@@ -172,6 +174,10 @@ namespace HLU
         /// <summary>
         /// Gets or sets the opening parentheses. Defaults to String.Empty.
         /// </summary>
+        /// <value>
+        /// A string representing any opening parentheses to include before the condition in the
+        /// generated SQL expression. Can be empty if no parentheses are needed.
+        /// </value>
         public string OpenParentheses
         {
             get { return _openParentheses; }
@@ -181,6 +187,7 @@ namespace HLU
         /// <summary>
         /// Gets or sets the underlying data table associated with this instance.
         /// </summary>
+        /// <value>The DataTable that contains the column to which this filter condition applies.</value>
         public DataTable Table
         {
             get { return _table; }
@@ -190,6 +197,7 @@ namespace HLU
         /// <summary>
         /// Gets or sets the data column associated with this instance.
         /// </summary>
+        /// <value>The DataColumn within the specified table that this filter condition targets.</value>
         public DataColumn Column
         {
             get { return _column; }
@@ -199,6 +207,7 @@ namespace HLU
         /// <summary>
         /// Gets or sets the operator. Defaults to "=".
         /// </summary>
+        /// <value>The operator used in the filter condition, such as "=", "<", ">", etc.</value>
         public string Operator
         {
             get { return _operator; }
@@ -208,6 +217,11 @@ namespace HLU
         /// <summary>
         /// Defaults to this.Column.DataType but can be set to typeof(DataColumn) to model table relations.
         /// </summary>
+        /// <value>
+        /// The .NET type of the column's data, used to interpret and compare the filter value.
+        /// Defaults to the data type of the associated column, but can be set to typeof(DataColumn)
+        /// to represent table relations.
+        /// </value>
         public Type ColumnSystemType
         {
             get { return _columnSystemType ?? Column.DataType; }
@@ -217,6 +231,10 @@ namespace HLU
         /// <summary>
         /// Gets or sets the value associated with this instance.
         /// </summary>
+        /// <value>
+        /// The value to compare against the column in the filter condition. The type should be
+        /// compatible with the column's data type.
+        /// </value>
         public object Value
         {
             get { return _value; }
@@ -226,6 +244,10 @@ namespace HLU
         /// <summary>
         /// Gets or sets the closing parentheses. Defaults to String.Empty.
         /// </summary>
+        /// <value></value>
+        /// A string representing any closing parentheses to include after the condition in the
+        /// generated SQL expression. Can be empty if no parentheses are needed.
+        /// </value>
         public string CloseParentheses
         {
             get { return _closeParentheses; }
@@ -264,7 +286,7 @@ namespace HLU
 
         public abstract DataTable SqlSelect(bool selectDistinct, DataTable[] targetTables, List<SqlFilterCondition> whereConds);
 
-        #endregion
+        #endregion Abstract
 
         #region Protected
 
@@ -304,7 +326,7 @@ namespace HLU
                 return -1;
         }
 
-        #endregion
+        #endregion Protected
 
         #region Public Methods
 
@@ -421,7 +443,7 @@ namespace HLU
 
             try
             {
-                DataColumn[] targetList = targetTables.SelectMany(t => t.Columns.Cast<DataColumn>()).ToArray();
+                DataColumn[] targetList = [.. targetTables.SelectMany(t => t.Columns.Cast<DataColumn>())];
                 qualifyColumns = targetTables.Length > 1;
                 return TargetList(targetList, quoteIdentifiers, false, ref qualifyColumns, out resultTable);
             }
@@ -444,7 +466,7 @@ namespace HLU
         public string FromList(bool includeFrom, bool quoteIdentifiers,
             DataTable[] targetTables, ref List<SqlFilterCondition> whereClause, out bool additionalTables)
         {
-            DataColumn[] targetColumns = targetTables.SelectMany(t => t.Columns.Cast<DataColumn>()).ToArray();
+            DataColumn[] targetColumns = [.. targetTables.SelectMany(t => t.Columns.Cast<DataColumn>())];
             return FromList(includeFrom, targetColumns, quoteIdentifiers, ref whereClause, out additionalTables);
         }
 
@@ -466,16 +488,16 @@ namespace HLU
         public string FromList(bool includeFrom, DataColumn[] targetColumns,
             bool quoteIdentifiers, ref List<SqlFilterCondition> whereClause, out bool additionalTables)
         {
-            DataTable[] colTables = targetColumns.Select(c => c.Table).Distinct().ToArray();
+            DataTable[] colTables = [.. targetColumns.Select(c => c.Table).Distinct()];
             var whereTables = whereClause.Select(con => con.Table).Distinct().Where(t => !colTables.Select(s => s.TableName).Contains(t.TableName));
 
             int numTables = colTables.Length;
-            colTables = colTables.Concat(whereTables).ToArray();
+            colTables = [.. colTables, .. whereTables];
             additionalTables = colTables.Length > numTables;
 
-            whereClause = JoinClause(colTables).Concat(whereClause).ToList();
+            whereClause = [.. JoinClause(colTables).Concat(whereClause)];
 
-            return FromList(includeFrom, quoteIdentifiers, colTables.Select(t => t.TableName).ToArray());
+            return FromList(includeFrom, quoteIdentifiers, [.. colTables.Select(t => t.TableName)]);
         }
 
         /// <summary>
@@ -492,16 +514,16 @@ namespace HLU
         public string FromList(bool includeFrom, bool quoteIdentifiers, DataColumn[] targetColumns,
             List<DataTable> fromTables, ref List<SqlFilterCondition> whereClause, out bool additionalTables)
         {
-            DataTable[] colTables = targetColumns.Select(c => c.Table).Distinct().ToArray();
+            DataTable[] colTables = [.. targetColumns.Select(c => c.Table).Distinct()];
             var whereTables = fromTables.Distinct().Where(t => !colTables.Select(s => s.TableName).Contains(t.TableName));
 
             int numTables = colTables.Length;
-            colTables = colTables.Concat(whereTables).ToArray();
+            colTables = [.. colTables, .. whereTables];
             additionalTables = colTables.Length > numTables;
 
-            whereClause = JoinClause(colTables).ToList();
+            whereClause = [.. JoinClause(colTables)];
 
-            return FromList(includeFrom, quoteIdentifiers, colTables.Select(t => t.TableName).ToArray());
+            return FromList(includeFrom, quoteIdentifiers, [.. colTables.Select(t => t.TableName)]);
         }
 
         /// <summary>
@@ -552,7 +574,7 @@ namespace HLU
                 if ((outWhereClause.Count == 0) || (oneWhereClause[0].BooleanOperator.Equals("OR", StringComparison.CurrentCultureIgnoreCase)))
                     outWhereClause.Add(oneWhereClause);
                 else
-                    outWhereClause[outWhereClause.Count - 1].AddRange(oneWhereClause);
+                    outWhereClause[^1].AddRange(oneWhereClause);
             }
             return outWhereClause;
         }
@@ -572,7 +594,7 @@ namespace HLU
             bool qualifyColumns, List<List<SqlFilterCondition>> whereConds)
         {
             return WhereClause(includeWhere, quoteIdentifiers, qualifyColumns,
-                whereConds.SelectMany(cond => cond).ToList());
+                [.. whereConds.SelectMany(cond => cond)]);
         }
 
         /// <summary>
@@ -618,12 +640,7 @@ namespace HLU
                     SqlFilterCondition firstCond = whereConds[0];
 
                     // Collect all values
-                    List<string> values = whereConds
-                        .Where(c => c.Value != null)
-                        .Select(c => c.Value.ToString())
-                        .Where(v => !String.IsNullOrEmpty(v))
-                        .Distinct()
-                        .ToList();
+                    List<string> values = [.. whereConds.Where(c => c.Value != null).Select(c => c.Value.ToString()).Where(v => !String.IsNullOrEmpty(v)).Distinct()];
 
                     if (values.Count > 0)
                     {
@@ -802,7 +819,7 @@ namespace HLU
             return sbWhereClause.ToString();
         }
 
-        #endregion
+        #endregion Public Methods
 
         #region Private Methods
 
@@ -882,6 +899,6 @@ namespace HLU
             catch { return sqlCond.Value; }
         }
 
-        #endregion
+        #endregion Private Methods
     }
 }

@@ -3,6 +3,7 @@
 // Copyright © 2014 Sussex Biodiversity Record Centre
 // Copyright © 2019 London & South East Record Centres (LaSER)
 // Copyright © 2019-2022 Greenspace Information for Greater London CIC
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -186,16 +187,16 @@ namespace HLU.UI.ViewModel
 
             // Prompt the user to choose which incid to keep.
             _mergeFeaturesViewModelLogical = new(incidTable, _viewModelMain.GisIDColumnOrdinals,
-                _viewModelMain.IncidTable.incidColumn.Ordinal, selectTable.Select(r => r).ToArray(),
+                _viewModelMain.IncidTable.incidColumn.Ordinal, [.. selectTable.Select(r => r)],
                 _viewModelMain.GISApplication)
             {
                 DisplayName = "Select INCID To Keep"
             };
 
             // Handle the RequestClose event to get the selected feature index.
-            _mergeFeaturesViewModelLogical.RequestClose -= _mergeFeaturesViewModelLogical_RequestClose; // Safety: avoid double subscription.
+            _mergeFeaturesViewModelLogical.RequestClose -= MergeFeaturesViewModelLogical_RequestClose; // Safety: avoid double subscription.
             _mergeFeaturesViewModelLogical.RequestClose += new ViewModelWindowMergeFeatures<HluDataSet.incidDataTable,
-                    HluDataSet.incidRow>.RequestCloseEventHandler(_mergeFeaturesViewModelLogical_RequestClose);
+                    HluDataSet.incidRow>.RequestCloseEventHandler(MergeFeaturesViewModelLogical_RequestClose);
 
             // Set the DataContext for data binding.
             _mergeFeaturesWindow.DataContext = _mergeFeaturesViewModelLogical;
@@ -235,19 +236,16 @@ namespace HLU.UI.ViewModel
                 string keepIncid = incidTable[_mergeResultFeatureIndex].incid;
 
                 // Identify polygon rows that will be moved to the kept incid.
-                List<HluDataSet.incid_mm_polygonsRow> polygonsToUpdate = selectTable
-                    .Where(r => !String.Equals(r.incid, keepIncid, StringComparison.Ordinal))
-                    .ToList();
+                List<HluDataSet.incid_mm_polygonsRow> polygonsToUpdate = [.. selectTable.Where(r => !String.Equals(r.incid, keepIncid, StringComparison.Ordinal))];
 
                 // Update existing history rows only for polygons that are being moved.
-                List<(string Incid, string Toid, string ToidFragId)> losingPolygonKeys = polygonsToUpdate
+                List<(string Incid, string Toid, string ToidFragId)> losingPolygonKeys = [.. polygonsToUpdate
                     .Select(r => (r.incid, r.toid, r.toidfragid))
                     .Where(k =>
                         !String.IsNullOrWhiteSpace(k.incid) &&
                         !String.IsNullOrWhiteSpace(k.toid) &&
                         !String.IsNullOrWhiteSpace(k.toidfragid))
-                    .Distinct()
-                    .ToList();
+                    .Distinct()];
 
                 //// Update the history for the losing polygons.
                 //UpdateHistoryForLogicalMerge(
@@ -274,13 +272,13 @@ namespace HLU.UI.ViewModel
                 var keepPolygon = selectTable.FirstOrDefault(r => r.incid == keepIncid);
                 if (keepPolygon != null)
                 {
-                    updateFields = (from c in selectTable.Columns.Cast<DataColumn>()
+                    updateFields = [.. (from c in selectTable.Columns.Cast<DataColumn>()
                                     where (c.Ordinal != _viewModelMain.HluDataset.incid_mm_polygons.incidColumn.Ordinal) &&
                                         (c.Ordinal != _viewModelMain.HluDataset.incid_mm_polygons.toidColumn.Ordinal) &&
                                         (c.Ordinal != _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.Ordinal) &&
                                         (c.Ordinal != _viewModelMain.HluDataset.incid_mm_polygons.shape_lengthColumn.Ordinal) &&
                                         (c.Ordinal != _viewModelMain.HluDataset.incid_mm_polygons.shape_areaColumn.Ordinal)
-                                    select new KeyValuePair<int, object>(c.Ordinal, keepPolygon[c.Ordinal])).ToList();
+                                    select new KeyValuePair<int, object>(c.Ordinal, keepPolygon[c.Ordinal]))];
                 }
 
                 // Update the shadow DB copy of the GIS layer.
@@ -336,7 +334,7 @@ namespace HLU.UI.ViewModel
                         "DELETE FROM {0} WHERE {1} IN ({2})",
                         _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid.TableName),
                         _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.incidColumn.ColumnName),
-                        String.Join(",", deleteIncids.Select(i => _viewModelMain.DataBase.QuoteValue(i)).ToArray()));
+                        String.Join(",", [.. deleteIncids.Select(i => _viewModelMain.DataBase.QuoteValue(i))]));
 
                     // Execute the delete statement.
                     try
@@ -435,10 +433,10 @@ namespace HLU.UI.ViewModel
         /// Handles the closure of the merge features view model and updates the selected feature index.
         /// </summary>
         /// <param name="selectedIndex">The index of the selected feature to be used after the merge operation.</param>
-        private void _mergeFeaturesViewModelLogical_RequestClose(int selectedIndex)
+        private void MergeFeaturesViewModelLogical_RequestClose(int selectedIndex)
         {
             // Unsubscribe from the event to prevent memory leaks.
-            _mergeFeaturesViewModelLogical.RequestClose -= _mergeFeaturesViewModelLogical_RequestClose;
+            _mergeFeaturesViewModelLogical.RequestClose -= MergeFeaturesViewModelLogical_RequestClose;
             _mergeFeaturesWindow.Close();
 
             // Set the result selected feature index.
@@ -456,7 +454,8 @@ namespace HLU.UI.ViewModel
         /// <remarks>This method merges multiple GIS features into a single feature, updates the database
         /// to synchronize with the GIS layer,  and records the history of the merge operation. The method ensures
         /// that the GIS layer and database remain consistent after the merge.</remarks>
-        /// <returns><see langword="true"/> if the merge operation completes successfully; otherwise, <see langword="false"/>.</returns>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a boolean
+        /// value indicating whether the physical merge was successful.</returns>
         /// <exception cref="Exception">Thrown if the GIS merge operation fails, or if the database synchronization process encounters an error.</exception>
         internal async Task<bool> PhysicalMergeAsync()
         {
@@ -548,10 +547,10 @@ namespace HLU.UI.ViewModel
                 };
 
                 // Handle the RequestClose event to get the selected feature index
-                _mergeFeaturesViewModelPhysical.RequestClose -= _mergeFeaturesViewModelPhysical_RequestClose; // Safety: avoid double subscription.
+                _mergeFeaturesViewModelPhysical.RequestClose -= MergeFeaturesViewModelPhysical_RequestClose; // Safety: avoid double subscription.
                 _mergeFeaturesViewModelPhysical.RequestClose += new ViewModelWindowMergeFeatures
                     <HluDataSet.incid_mm_polygonsDataTable, HluDataSet.incid_mm_polygonsRow>
-                    .RequestCloseEventHandler(_mergeFeaturesViewModelPhysical_RequestClose);
+                    .RequestCloseEventHandler(MergeFeaturesViewModelPhysical_RequestClose);
 
                 // Set the DataContext for data binding.
                 _mergeFeaturesWindow.DataContext = _mergeFeaturesViewModelPhysical;
@@ -608,7 +607,7 @@ namespace HLU.UI.ViewModel
                 // Build a where clause of features to merge.
                 List<List<SqlFilterCondition>> mergeFeaturesWhereClause =
                     ViewModelWindowMainHelpers.GisSelectionToWhereClause(
-                    selectTable.Where((r, index) => index != _mergeResultFeatureIndex).ToArray(),
+                    [.. selectTable.Where((r, index) => index != _mergeResultFeatureIndex)],
                         _viewModelMain.GisIDColumnOrdinals, ViewModelWindowMain.IncidPageSize, selectTable);
 
                 if (mergeFeaturesWhereClause.Count <= 0)
@@ -620,7 +619,7 @@ namespace HLU.UI.ViewModel
                 // but is needed to update geometry fields in incid_mm_polygons.
                 DataTable historyTable = await _viewModelMain.GISApplication.MergeFeaturesPhysicallyAsync(
                     newToidFragmentID,
-                    resultFeatureWhereClause[0].Select(c => c.Clone()).ToList(),
+                    [.. resultFeatureWhereClause[0].Select(c => c.Clone())],
                     _viewModelMain.HistoryColumns,
                     editOperation);
 
@@ -642,12 +641,11 @@ namespace HLU.UI.ViewModel
                 historyTable.AcceptChanges();
 
                 // Build a list of merged toidfragids (excluding the kept fragment).
-                List<string> mergedToidFragIds = selectTable
+                List<string> mergedToidFragIds = [.. selectTable
                     .Where((r, index) => index != _mergeResultFeatureIndex)
                     .Select(r => r.toidfragid)
                     .Where(f => !String.IsNullOrWhiteSpace(f))
-                    .Distinct()
-                    .ToList();
+                    .Distinct()];
 
                 // Update existing history rows for physically merged (deleted) fragments
                 // so history is preserved against the kept fragment.
@@ -750,10 +748,10 @@ namespace HLU.UI.ViewModel
         /// Handles the closure of the merge features view model and updates the selected feature index.
         /// </summary>
         /// <param name="selectedIndex">The index of the selected feature to be set after the view model is closed.</param>
-        private void _mergeFeaturesViewModelPhysical_RequestClose(int selectedIndex)
+        private void MergeFeaturesViewModelPhysical_RequestClose(int selectedIndex)
         {
             // Unsubscribe from the event to prevent memory leaks.
-            _mergeFeaturesViewModelPhysical.RequestClose -= _mergeFeaturesViewModelPhysical_RequestClose;
+            _mergeFeaturesViewModelPhysical.RequestClose -= MergeFeaturesViewModelPhysical_RequestClose;
             _mergeFeaturesWindow.Close();
 
             // Set the result selected feature index.
@@ -901,10 +899,9 @@ namespace HLU.UI.ViewModel
             if ((losingPolygonKeys == null) || (losingPolygonKeys.Count == 0)) return;
 
             // Remove any keys that already belong to the kept incid (belt-and-braces).
-            losingPolygonKeys = losingPolygonKeys
+            losingPolygonKeys = [.. losingPolygonKeys
                 .Where(k => !String.Equals(k.Incid, keepIncid, StringComparison.Ordinal))
-                .Distinct()
-                .ToList();
+                .Distinct()];
 
             // If no losing keys remain, exit.
             if (losingPolygonKeys.Count == 0) return;
@@ -966,17 +963,16 @@ namespace HLU.UI.ViewModel
             if ((oldToidFragIds == null) || (oldToidFragIds.Count == 0)) return;
 
             // Remove the kept frag id if it accidentally appears in the list.
-            oldToidFragIds = oldToidFragIds
+            oldToidFragIds = [.. oldToidFragIds
                 .Where(f => !String.IsNullOrWhiteSpace(f) && !String.Equals(f, newToidFragId, StringComparison.Ordinal))
-                .Distinct()
-                .ToList();
+                .Distinct()];
 
             // If no old frag ids remain, exit.
             if (oldToidFragIds.Count == 0) return;
 
             // Build the IN list for the update statement.
             string inList = String.Join(",",
-                oldToidFragIds.Select(f => _viewModelMain.DataBase.QuoteValue(f)).ToArray());
+                [.. oldToidFragIds.Select(f => _viewModelMain.DataBase.QuoteValue(f))]);
 
             // Build the update statement.
             string updateStatement = String.Format(

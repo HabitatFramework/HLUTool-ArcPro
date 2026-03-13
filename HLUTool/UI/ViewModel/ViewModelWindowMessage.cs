@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -26,13 +27,13 @@ namespace HLU.UI.ViewModel
     /// </summary>
     class ViewModelWindowMessage : ViewModelBase
     {
-        #region Private Members
+        #region Fields
 
         private RelayCommand _okCommand;
         private string _messageHeader;
         private string _messageText;
 
-        #endregion
+        #endregion Fields
 
         #region Window Title
 
@@ -47,21 +48,20 @@ namespace HLU.UI.ViewModel
             get { return DisplayName; }
         }
 
-        #endregion
+        #endregion Window Title
 
         #region RequestClose
 
         public EventHandler RequestClose;
 
-        #endregion
+        #endregion RequestClose
 
         #region Ok Command
 
         /// <summary>
-        /// Create Ok button command
+        /// Gets the command to close the message window when the Ok button is clicked.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
+        /// <value>The command to close the message window.</value>
         public ICommand OkCommand
         {
             get
@@ -78,13 +78,13 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles event when Ok button is clicked
         /// </summary>
-        /// <param name="param"></param>
+        /// <param name="param">The parameter passed to the command.</param>
         private void Ok(object param)
         {
             RequestClose?.Invoke(this, EventArgs.Empty);
         }
 
-        #endregion
+        #endregion Ok Command
 
         #region Message
 
@@ -100,6 +100,6 @@ namespace HLU.UI.ViewModel
             set { _messageHeader = value; }
         }
 
-        #endregion
+        #endregion Message
     }
 }

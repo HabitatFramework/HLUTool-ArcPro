@@ -3,6 +3,7 @@
 // Copyright © 2013-2014, 2016 Thames Valley Environmental Records Centre
 // Copyright © 2014, 2018 Sussex Biodiversity Record Centre
 // Copyright © 2019-2022 Greenspace Information for Greater London CIC
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -57,7 +58,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
-using static HLU.GISApplication.HistoryFieldBindingHelper;
+using static HLU.Helpers.HistoryFieldBindingHelper;
 using Envelope = ArcGIS.Core.Geometry.Envelope;
 using Field = ArcGIS.Core.Data.Field;
 using FieldDescription = ArcGIS.Core.Data.DDL.FieldDescription;
@@ -66,6 +67,7 @@ using LinearUnit = ArcGIS.Core.Geometry.LinearUnit;
 using QueryFilter = ArcGIS.Core.Data.QueryFilter;
 using SpatialReference = ArcGIS.Core.Geometry.SpatialReference;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
+using HLU.Helpers;
 //using ArcGIS.Core.Internal.CIM;
 
 namespace HLU.GISApplication
@@ -251,8 +253,9 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Get the quote prefix for ArcGIS Pro.
+        /// Gets the quote prefix for ArcGIS Pro.
         /// </summary>
+        /// <value>The quote prefix string.</value>
         public override string QuotePrefix
         {
             get
@@ -273,8 +276,9 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Get the quote suffix for ArcGIS Pro.
+        /// Gets the quote suffix for ArcGIS Pro.
         /// </summary>
+        /// <value>The quote suffix string.</value>
         public override string QuoteSuffix
         {
             get
@@ -363,8 +367,10 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Returns true if the connection string appears to be SQL Server.
+        /// Checks if the connection string contains markers indicative of SQL Server or SDE connections.
         /// </summary>
+        /// <param name="connectionString">The connection string to check.</param>
+        /// <returns>True if the connection string appears to be SQL Server; otherwise, false.</returns>
         private static bool IsSqlServer(string connectionString)
         {
             if (String.IsNullOrWhiteSpace(connectionString))
@@ -378,8 +384,10 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Returns true if the connection string appears to be Oracle.
+        /// Checks if the connection string contains markers indicative of Oracle connections.
         /// </summary>
+        /// <param name="connectionString">The connection string to check.</param>
+        /// <returns>True if the connection string appears to be Oracle; otherwise, false.</returns>
         private static bool IsOracle(string connectionString)
         {
             if (String.IsNullOrWhiteSpace(connectionString))
@@ -390,8 +398,10 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Returns true if the connection string appears to be PostgreSQL.
+        /// Checks if the connection string contains markers indicative of PostgreSQL connections.
         /// </summary>
+        /// <param name="connectionString">The connection string to check.</param>
+        /// <returns>True if the connection string appears to be PostgreSQL; otherwise, false.</returns>
         private static bool IsPostgreSql(string connectionString)
         {
             if (String.IsNullOrWhiteSpace(connectionString))
@@ -403,23 +413,27 @@ namespace HLU.GISApplication
 
 
         /// <summary>
-        /// Get the string literal delimiter for ArcGIS Pro.
+        /// Gets the string literal delimiter for ArcGIS Pro.
         /// </summary>
+        /// <value>The string literal delimiter character.</value>
         public override string StringLiteralDelimiter { get { return "'"; } }
 
         /// <summary>
-        /// Get the date literal prefix for ArcGIS Pro.
+        /// Gets the date literal prefix for ArcGIS Pro.
         /// </summary>
+        /// <value>The date literal prefix string.</value>
         public override string DateLiteralPrefix { get { return _dateLiteralPrefix; ; } }
 
         /// <summary>
-        /// Get the date literal suffix for ArcGIS Pro.
+        /// Gets the date literal suffix for ArcGIS Pro.
         /// </summary>
+        /// <value>The date literal suffix string.</value>
         public override string DateLiteralSuffix { get { return _dateLiteralSuffix; } }
 
         /// <summary>
-        ///  Get the wildcard single match character for ArcGIS Pro.
+        /// Gets the wildcard single match character for ArcGIS Pro.
         /// </summary>
+        /// <value>The wildcard single match character.</value>
         public override string WildcardSingleMatch
         {
             get
@@ -431,8 +445,9 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Get the wildcard many match character for ArcGIS Pro.
+        /// Gets the wildcard many match character for ArcGIS Pro.
         /// </summary>
+        /// <value>The wildcard many match character.</value>
         public override string WildcardManyMatch
         {
             get
@@ -444,10 +459,12 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Get the concatenate operator for ArcGIS Pro.
+        /// Gets the concatenate operator for ArcGIS Pro.
         /// </summary>
+        /// <value>The concatenate operator string.</value>
         public override string ConcatenateOperator { get { return "&"; } }
 
+        //TODO: Remove?
         ///// <summary>
         ///// The the quote character for ArcGIS Pro.
         ///// </summary>
@@ -464,8 +481,7 @@ namespace HLU.GISApplication
         //}
 
         /// <summary>
-        /// Does not escape string delimiter or other special characters.
-        /// Does check if value is already quoted.
+        /// Quotes a value for use in a SQL query, based on its type and the requirements of ArcGIS Pro.
         /// </summary>
         /// <param name="value">The value to quote.</param>
         /// <returns>The quoted value as a string.</returns>
@@ -505,7 +521,7 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Get the field name alis of a supplied data column.
+        /// Gets the field name alias of a supplied data column.
         /// </summary>
         /// <param name="c">The data column for which to get the alias.</param>
         /// <returns>The field name alias as a string.</returns>
@@ -518,7 +534,7 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Get the field name alias of a supplied table name and column name.
+        /// Gets the field name alias of a supplied table name and column name.
         /// </summary>
         /// <param name="tableName">The name of the table.</param>
         /// <param name="columnName">The name of the column.</param>
@@ -545,7 +561,7 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Get the target list of data columns as a comma-seperated string.
+        /// Gets the target list of data columns as a comma-seperated string.
         /// </summary>
         /// <param name="targetColumns">The array of data columns to include in the target list.</param>
         /// <param name="quoteIdentifiers">Indicates whether to quote identifiers in the target list.</param>
@@ -758,7 +774,9 @@ namespace HLU.GISApplication
             //}
         }
 
-        #endregion
+        #endregion Implementation of SqlBuilder
+
+        #region Other Public Methods
 
         public static readonly string HistoryAdditionalFieldsDelimiter = Settings.Default.HistoryAdditionalFieldsDelimiter;
 
@@ -928,6 +946,8 @@ namespace HLU.GISApplication
             // Return the resultTable
             return resultTable;
         }
+
+        #endregion Other Public Methods
 
         #region Selection
 
@@ -2100,7 +2120,7 @@ namespace HLU.GISApplication
 
                 // Order OIDs to ensure the "original" feature (with the smallest OID) is processed
                 // first and retains the current toidfragid, while the others get new fragment IDs.
-                List<long> orderedOids = selectedObjectIds.OrderBy(o => o).ToList();
+                List<long> orderedOids = [.. selectedObjectIds.OrderBy(o => o)];
                 long minOid = orderedOids[0];
 
                 // Resolve optional shape fields for shapefile-based layers where length/area are stored in normal fields.
@@ -2192,7 +2212,7 @@ namespace HLU.GISApplication
                 {
                     QueryFilter updateFilter = new()
                     {
-                        ObjectIDs = newToidFragByOid.Keys.ToList()
+                        ObjectIDs = [.. newToidFragByOid.Keys]
                     };
 
                     using RowCursor updateCursor = _hluFeatureClass.Search(updateFilter, false);
@@ -2485,7 +2505,7 @@ namespace HLU.GISApplication
                     fieldIndex,
                     c.DataType);
 
-            return bindings.ToList();
+            return [.. bindings];
         }
 
         /// <summary>
@@ -2793,7 +2813,7 @@ namespace HLU.GISApplication
                         throw new HLUToolException("Failed to identify the result feature in the current selection.");
 
                     // Determine the features to merge (all selected except the result feature).
-                    mergeObjectIds = selectedObjectIds.Where(oid => oid != resultObjectId).ToList();
+                    mergeObjectIds = [.. selectedObjectIds.Where(oid => oid != resultObjectId)];
 
                     // Collect geometries and history for the features that will be deleted.
                     List<Geometry> geometriesToUnion = [];
@@ -3215,7 +3235,7 @@ namespace HLU.GISApplication
             };
 
             // Extract history column names
-            string[] historyColumnNames = historyColumns.Select(c => c.ColumnName).ToArray();
+            string[] historyColumnNames = [.. historyColumns.Select(c => c.ColumnName)];
 
             // Create a DataTable to store history data
             DataTable historyTable = new();
@@ -4447,8 +4467,7 @@ namespace HLU.GISApplication
                         _hluLayerNamesList.Add(layerName);
 
                         // Store the first valid layer name.
-                        if (firstValidLayerName == null)
-                            firstValidLayerName = layerName;
+                        firstValidLayerName ??= layerName;
                     }
                 }
             }
@@ -5017,9 +5036,9 @@ namespace HLU.GISApplication
                 {
                     if ((!String.IsNullOrEmpty(cond.CloseParentheses)) && (outWhereClause.Count > 0))
                     {
-                        SqlFilterCondition condPrev = outWhereClause[outWhereClause.Count - 1];
+                        SqlFilterCondition condPrev = outWhereClause[^1];
                         condPrev.CloseParentheses += cond.CloseParentheses;
-                        outWhereClause[outWhereClause.Count - 1] = condPrev;
+                        outWhereClause[^1] = condPrev;
                     }
                     if ((!String.IsNullOrEmpty(cond.OpenParentheses)) && (i < whereClause.Count - 1))
                     {

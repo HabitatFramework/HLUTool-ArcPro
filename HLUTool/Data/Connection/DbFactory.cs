@@ -1,6 +1,7 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -28,23 +29,53 @@ using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.Data.Connection
 {
+    /// <summary>
+    /// Factory class to create database connections based on user settings. If settings are
+    /// incomplete or invalid, prompts user to select connection type and enter connection details.
+    /// </summary>
     class DbFactory
     {
+        #region Fields
+
         private static ViewSelectConnection _selConnWindow;
         private static ViewModelSelectConnection _selConnViewModel;
         private static ConnectionTypes _connType;
         private static Backends _backend;
 
+        #endregion Fields
+
+        #region Properties
+
+        /// <summary>
+        /// Gets the current connection type. This is set when CreateConnection is called, either
+        /// from settings or user input.
+        /// </summary>
+        /// <value>The current connection type.</value>
         public static ConnectionTypes ConnectionType
         {
             get { return _connType; }
         }
 
+        /// <summary>
+        /// Gets the current database backend. This is determined from the connection string and
+        /// type when CreateConnection is called.
+        /// </summary>
+        /// <value>The current database backend.</value>
         public static Backends Backend
         {
             get { return _backend; }
         }
 
+        #endregion Properties
+
+        #region Methods
+
+        /// <summary>
+        /// Creates a database connection based on user settings. If settings are incomplete or
+        /// invalid, prompts user to select connection type and enter connection details.
+        /// </summary>
+        /// <param name="dbConnectionTimeout">The timeout value for the database connection.</param>
+        /// <returns>A database connection object.</returns>
         public static DbBase CreateConnection(int dbConnectionTimeout)
         {
             if (Enum.IsDefined(typeof(ConnectionTypes), Settings.Default.DbConnectionType))
@@ -120,6 +151,11 @@ namespace HLU.Data.Connection
             return db;
         }
 
+        /// <summary>
+        /// Clears the database connection settings. This can be used to reset the connection information
+        /// to its default state.
+        /// </summary>
+        /// <returns><c>true</c> if the settings were successfully cleared; otherwise, <c>false</c>.</returns>
         public static bool ClearSettings()
         {
             try
@@ -135,6 +171,10 @@ namespace HLU.Data.Connection
             catch { return false; }
         }
 
+        /// <summary>
+        /// Prompts the user to select a database connection type and enter connection details if necessary.
+        /// </summary>
+        /// <returns>The selected database connection type.</returns>
         private static ConnectionTypes SelectConnectionType()
         {
             try
@@ -155,9 +195,9 @@ namespace HLU.Data.Connection
                 };
 
                 // when ViewModel asks to be closed, close window
-                _selConnViewModel.RequestClose -= _selConnViewModel_RequestClose; // Safety: avoid double subscription.
+                _selConnViewModel.RequestClose -= SelConnViewModel_RequestClose; // Safety: avoid double subscription.
                 _selConnViewModel.RequestClose +=
-                    new ViewModelSelectConnection.RequestCloseEventHandler(_selConnViewModel_RequestClose);
+                    new ViewModelSelectConnection.RequestCloseEventHandler(SelConnViewModel_RequestClose);
 
                 // allow all controls in window to bind to ViewModel by setting DataContext
                 _selConnWindow.DataContext = _selConnViewModel;
@@ -175,9 +215,15 @@ namespace HLU.Data.Connection
             return ConnectionTypes.Unknown;
         }
 
-        private static void _selConnViewModel_RequestClose(ConnectionTypes connType, string errorMsg)
+        /// <summary>
+        /// Handles the RequestClose event from the ViewModel. Closes the selection window and sets the
+        /// selected connection type.
+        /// </summary>
+        /// <param name="connType">The selected connection type.</param>
+        /// <param name="errorMsg">An error message, if any, to display to the user.</param>
+        private static void SelConnViewModel_RequestClose(ConnectionTypes connType, string errorMsg)
         {
-            _selConnViewModel.RequestClose -= _selConnViewModel_RequestClose;
+            _selConnViewModel.RequestClose -= SelConnViewModel_RequestClose;
             _selConnWindow.Close();
 
             if (!String.IsNullOrEmpty(errorMsg))
@@ -185,5 +231,7 @@ namespace HLU.Data.Connection
 
             _connType = connType;
         }
+
+        #endregion Methods
     }
 }

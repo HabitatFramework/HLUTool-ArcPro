@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -35,50 +36,59 @@ namespace HLU.UI.ViewModel
         private string _userText;
         private string _password;
 
-        #endregion
+        #endregion Private Members
 
         #region Constructor
 
+        /// <summary>
+        /// Initializes a new instance of the ViewModelPassword class.
+        /// </summary>
         public ViewModelPassword()
         {
         }
 
-        #endregion
+        #endregion Constructor
 
         #region Display Name
 
+        /// <summary>
+        /// Gets or sets the display name of this view model, which is used as the title of the dialog.
+        /// </summary>
+        /// <value>The display name.</value>
         public override string DisplayName
         {
             get { return _displayName; }
             set { _displayName = value; }
         }
 
-        #endregion
+        #endregion Display Name
 
         #region Window Title
 
+        /// <summary>
+        /// Gets the title of the window, which is the same as the display name.
+        /// </summary>
+        /// <value>The window title.</value>
         public override string WindowTitle { get { return DisplayName; } }
 
-        #endregion
+        #endregion Window Title
 
         #region RequestClose
 
-        // declare the delegate since using non-generic pattern
+        // Declare the delegate since using non-generic pattern
         public delegate void RequestCloseEventHandler(string password, string errorMsg);
 
-        // declare the event
+        // Declare the event
         public event RequestCloseEventHandler RequestClose;
 
-        #endregion
+        #endregion RequestClose
 
         #region Ok Command
 
         /// <summary>
-        /// Create Ok button command
+        /// Gets the Ok button command
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command to execute when the Ok button is clicked.</value>
         public ICommand OkCommand
         {
             get
@@ -96,8 +106,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles event when Ok button is clicked
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void OkCommandClick(object param)
         {
             try
@@ -111,23 +120,19 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Blank password may be ok, but this dialog shall only be raised when the password is known to be non-blank.
+        /// Gets a value indicating whether the Ok button can be clicked. The Ok button is enabled only when a password is provided.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>Indicates whether the Ok button can be clicked.</value>
         private bool CanOk { get { return !String.IsNullOrEmpty(_password); } }
 
-        #endregion
+        #endregion Ok Command
 
         #region Cancel Command
 
         /// <summary>
-        /// Create Cancel button command
+        /// Gets the Cancel button command
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command to execute when the cancel button is clicked.</value>
         public ICommand CancelCommand
         {
             get
@@ -145,40 +150,56 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles event when Cancel button is clicked
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void CancelCommandClick(object param)
         {
             RequestClose?.Invoke(null, null);
         }
 
-        #endregion
+        #endregion Cancel Command
 
         #region User
 
+        /// <summary>
+        /// Gets or sets the user label, which is used to prompt the user for input. For example, it
+        /// can be "Please enter your password:".
+        /// </summary>
+        /// <value>The user label.</value>
         public string UserLabel
         {
             get { return _userLabel; }
             set { _userLabel = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the user text, which is the text entered by the user. For example, it can
+        /// be the password entered by the user.
+        /// </summary>
+        /// <value>The user text.</value>
         public string UserText
         {
             get { return _userText; }
             set { _userText = value; }
         }
 
-        #endregion
+        #endregion User
 
         #region Password
 
+        /// <summary>
+        /// Gets or sets the password entered by the user. This property is used to store the
+        /// password and is not directly bound to the UI. The UserText property can be used for data
+        /// binding to the UI, and the Password property can be set in the code-behind when the user
+        /// clicks the Ok button.
+        /// </summary>
+        /// <value>The password entered by the user.</value>
         public string Password
         {
             get { return _password; }
             set { _password = value; }
         }
 
-        #endregion
+        #endregion Password
 
         #region IDataErrorInfo Members
 
@@ -214,6 +235,6 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion IDataErrorInfo Members
     }
 }

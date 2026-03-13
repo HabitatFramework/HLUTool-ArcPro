@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2014 Sussex Biodiversity Record Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -36,14 +37,19 @@ namespace HLU.UI.ViewModel
 
         #endregion
 
-        #region ctor
+        #region Constructor
 
+        /// <summary>
+        /// Initialise the ViewModel for the Notify On Split/Merge window with the message to
+        /// display to the user.
+        /// </summary>
+        /// <param name="msgText">The message to display to the user.</param>
         public ViewModelWindowNotifyOnSplitMerge(string msgText)
         {
             _msgText = msgText;
         }
 
-        #endregion
+        #endregion Constructor
 
         #region ViewModelBase members
 
@@ -58,7 +64,7 @@ namespace HLU.UI.ViewModel
             get { return DisplayName; }
         }
 
-        #endregion
+        #endregion ViewModelBase members
 
         #region RequestClose
 
@@ -66,16 +72,15 @@ namespace HLU.UI.ViewModel
 
         public event RequestCloseEventHandler RequestClose;
 
-        #endregion
+        #endregion RequestClose
 
         #region Ok Command
 
         /// <summary>
-        /// Create Ok button command
+        /// Gets the command to execute when the Ok button is clicked. This saves the settings and
+        /// raises the RequestClose event.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command to execute when the Ok button is clicked.</value>
         public ICommand OkCommand
         {
             get
@@ -93,15 +98,16 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles event when Ok button is clicked
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void OkCommandClick(object param)
         {
             Settings.Default.Save();
             RequestClose?.Invoke();
         }
 
-        #endregion
+        #endregion Ok Command
+
+        #region Properties
 
         public string GroupBoxNotifyOnSplitMergeHeader
         {
@@ -123,5 +129,7 @@ namespace HLU.UI.ViewModel
             get { return !Settings.Default.NotifyOnSplitMerge; }
             set { Settings.Default.NotifyOnSplitMerge = !value; }
         }
+
+        #endregion Properties
     }
 }

@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -21,6 +22,10 @@ using System.ComponentModel;
 
 namespace HLU.UI.UserControls
 {
+    /// <summary>
+    /// Represents an item that can be selected, along with its selection state.
+    /// </summary>
+    /// <typeparam name="T">The type of the item.</typeparam>
     public class SelectionItem<T> : INotifyPropertyChanged
     {
         #region Fields
@@ -29,10 +34,14 @@ namespace HLU.UI.UserControls
 
         private T item;
 
-        #endregion
+        #endregion Fields
 
         #region Properties
 
+        /// <summary>
+        /// Gets or sets a value indicating whether the item is selected.
+        /// </summary>
+        /// <value><c>true</c> if the item is selected; otherwise, <c>false</c>.</value>
         public bool IsSelected
         {
             get { return isSelected; }
@@ -45,6 +54,10 @@ namespace HLU.UI.UserControls
             }
         }
 
+        /// <summary>
+        /// Gets or sets the item associated with this selection state.
+        /// </summary>
+        /// <value>The item associated with this selection state.</value>
         public T Item
         {
             get { return item; }
@@ -56,43 +69,67 @@ namespace HLU.UI.UserControls
             }
         }
 
-        #endregion
+        #endregion Properties
 
         #region Events
 
+        /// <summary>
+        /// Occurs when a property value changes.
+        /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
+        /// <summary>
+        /// Occurs when the selection state changes.
+        /// </summary>
         public event EventHandler SelectionChanged;
 
-        #endregion
+        #endregion Events
 
         #region Constructor
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SelectionItem{T}"/> class with the
+        /// specified item and a default selection state of false.
+        /// </summary>
+        /// <param name="item">The item associated with this selection state.</param>
         public SelectionItem(T item)
             : this(false, item)
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SelectionItem{T}"/> class with the
+        /// specified item and selection state.
+        /// </summary>
+        /// <param name="selected">The initial selection state.</param>
+        /// <param name="item">The item associated with this selection state.</param>
         public SelectionItem(bool selected, T item)
         {
             this.isSelected = selected;
             this.item = item;
         }
 
-        #endregion
+        #endregion Constructor
 
         #region Event invokers
 
+        /// <summary>
+        /// Raises the <see cref="PropertyChanged"/> event for the specified property name.
+        /// </summary>
+        /// <param name="propertyName">The name of the property that changed.</param>
         private void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
+        /// <summary>
+        /// Raises the <see cref="SelectionChanged"/> event to notify subscribers that the selection state has changed.
+        /// </summary>
         private void OnSelectionChanged()
         {
             SelectionChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        #endregion
+        #endregion Event invokers
     }
 }

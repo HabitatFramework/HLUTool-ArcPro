@@ -1,6 +1,7 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2019 London & South East Record Centres (LaSER)
 // Copyright © 2020 Greenspace Information for Greater London CIC
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -75,7 +76,7 @@ namespace HLU.UI.ViewModel
         private string _interpretationQuality = interpretationQuality;
         private bool _primaryHabitatChanged = primaryHabitatChanged;
 
-        #endregion
+        #endregion Fields
 
         #region ViewModelBase Members
 
@@ -96,11 +97,11 @@ namespace HLU.UI.ViewModel
             get { return _displayName; }
         }
 
-        #endregion
+        #endregion ViewModelBase Members
 
         #region RequestClose
 
-        // declare the delegate since using non-generic pattern
+        // Declare the delegate since using non-generic pattern
         public delegate void RequestCloseEventHandler(bool apply,
             bool bulkDeleteOrphanBapHabitats,
             bool bulkDeletePotentialBapHabitats,
@@ -110,19 +111,17 @@ namespace HLU.UI.ViewModel
             string bulkDeterminationQuality,
             string bulkInterpretationQuality);
 
-        // declare the event
+        // Declare the event
         public event RequestCloseEventHandler RequestClose;
 
-        #endregion
+        #endregion RequestClose
 
         #region Ok Command
 
         /// <summary>
-        /// Create Ok button command
+        /// Gets the command for the Ok button
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command to execute when the Ok button is clicked.</value>
         public ICommand OkCommand
         {
             get
@@ -140,8 +139,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles event when Ok button is clicked
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void OkCommandClick(object param)
         {
             RequestClose?.Invoke(true,
@@ -155,11 +153,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        ///
+        /// Gets a value indicating whether the Ok command can be executed.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value><c>true</c> if the Ok command can be executed; otherwise, <c>false</c>.</value>
         private bool CanOk
         {
             get
@@ -168,16 +164,14 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Ok Command
 
         #region Cancel Command
 
         /// <summary>
-        /// Create Cancel button command
+        /// Gets the command for the Cancel button
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command to execute when the Cancel button is clicked.</value>
         public ICommand CancelCommand
         {
             get
@@ -194,14 +188,13 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles event when Cancel button is clicked
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void CancelCommandClick(object param)
         {
             RequestClose?.Invoke(false, false, false, false, false, false, null, null);
         }
 
-        #endregion
+        #endregion Cancel Command
 
         #region Interface
 
@@ -500,7 +493,7 @@ namespace HLU.UI.ViewModel
             set { }
         }
 
-        #endregion
+        #endregion Interface
 
         #region IDataErrorInfo Members
 
@@ -547,6 +540,6 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion IDataErrorInfo Members
     }
 }

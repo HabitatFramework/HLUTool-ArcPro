@@ -1,6 +1,7 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2013 Thames Valley Environmental Records Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -57,6 +58,14 @@ namespace HLU.UI.ViewModel
 
         #region Constructor
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ViewModelWindowMergeFeatures{T, R}"/> class.
+        /// </summary>
+        /// <param name="selectedFeatures">The selected features to be merged.</param>
+        /// <param name="keyOrdinals">The key ordinals for the selected features.</param>
+        /// <param name="incidOrdinal">The INCID ordinal for the selected features.</param>
+        /// <param name="childRows">The child rows associated with the selected features.</param>
+        /// <param name="gisApp">The GIS application instance.</param>
         public ViewModelWindowMergeFeatures(T selectedFeatures, int[] keyOrdinals, int incidOrdinal,
             HluDataSet.incid_mm_polygonsRow[] childRows, ArcProApp gisApp)
         {
@@ -80,20 +89,35 @@ namespace HLU.UI.ViewModel
 
         #region ViewModelBase Members
 
+        /// <summary>
+        /// Gets or sets the display name for the window.
+        /// </summary>
+        /// <value>The display name of the window.</value>
         public override string DisplayName
         {
             get { return _displayName; }
             set { _displayName = value; }
         }
 
+        /// <summary>
+        /// Gets the title for the window, which is the same as the display name.
+        /// </summary>
+        /// <value>The title of the window.</value>
         public override string WindowTitle { get { return DisplayName; } }
 
         #endregion ViewModelBase Members
 
         #region RequestClose
 
+        /// <summary>
+        /// Declare the delegate for the RequestClose event, which takes the index of the result feature as a parameter.
+        /// </summary>
+        /// <param name="resultFeatureIndex">The index of the result feature.</param>
         public delegate void RequestCloseEventHandler(int resultFeatureIndex);
 
+        /// <summary>
+        /// Declare the RequestClose event, which is raised when the window should be closed, passing the index of the result feature.
+        /// </summary>
         public event RequestCloseEventHandler RequestClose;
 
         #endregion RequestClose
@@ -101,11 +125,10 @@ namespace HLU.UI.ViewModel
         #region Ok Command
 
         /// <summary>
-        /// Create Ok button command.
+        /// Gets the command to execute the merge operation and close the window, passing the index
+        /// of the selected feature to retain as a parameter.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command for the Ok button.</value>
         public ICommand OkCommand
         {
             get
@@ -123,16 +146,17 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles event when Ok button is clicked
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void OkCommandClick(object param)
         {
             RequestClose?.Invoke(_selectedIndex);
         }
 
         /// <summary>
-        /// Whether we can click the Ok button.
+        /// Gets a value indicating whether the Ok command can be executed, which is true if there
+        /// are no validation errors.
         /// </summary>
+        /// <value>True if the Ok command can be executed; otherwise, false.</value>
         private bool CanOk { get { return String.IsNullOrEmpty(this.Error); } }
 
         #endregion Ok Command
@@ -140,11 +164,9 @@ namespace HLU.UI.ViewModel
         #region Cancel Command
 
         /// <summary>
-        /// Create Cancel button command.
+        /// Gets the command to cancel the merge operation and close the window without making any changes.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command for the Cancel button.</value>
         public ICommand CancelCommand
         {
             get
@@ -162,8 +184,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles event when Cancel button is clicked
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void CancelCommandClick(object param)
         {
             RequestClose?.Invoke(-1);
@@ -174,8 +195,9 @@ namespace HLU.UI.ViewModel
         #region Flash Feature Command
 
         /// <summary>
-        /// Create Flash Feature command.
+        /// Gets the command to flash the selected feature(s) on the map.
         /// </summary>
+        /// <value>The command for the Flash Feature button.</value>
         public ICommand FlashFeatureCommand
         {
             get
@@ -191,8 +213,10 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Determines whether we can flash the selected feature(s) on the map.
+        /// Gets a value indicating whether the Flash Feature command can be executed, which is true
+        /// if there is a result feature to flash.
         /// </summary>
+        /// <value>True if the Flash Feature command can be executed; otherwise, false.</value>
         private bool CanFlashFeature
         {
             get
@@ -206,7 +230,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Flashes the selected feature(s) on the map.
         /// </summary>
-        /// <param name="param"></param>
+        /// <param name="param">The parameter passed to the command.</param>
         private void FlashFeature(object param)
         {
             // Check that we have a GIS application instance.
@@ -255,6 +279,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the features that are to be merged.
         /// </summary>
+        /// <value>The features to be merged.</value>
         public T MergeFeatures
         {
             get { return _selectedFeatures; }
@@ -263,6 +288,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets or sets the feature that is currently selected.
         /// </summary>
+        /// <value>The currently selected feature.</value>
         public int SelectedIndex
         {
             get { return _selectedIndex; }
@@ -288,9 +314,7 @@ namespace HLU.UI.ViewModel
                 if ((_resultFeature is HluDataSet.incidRow) && (_childRows != null))
                 {
                     string incid = _resultFeature.Field<string>(_incidOrdinal);
-                    _currChildRows = _childRows
-                        .Where(r => r.incid == incid)
-                        .ToArray();
+                    _currChildRows = [.. _childRows.Where(r => r.incid == incid)];
                 }
 
                 // Flash the selected feature on the map.
@@ -305,6 +329,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the error message for the object.
         /// </summary>
+        /// <value>The error message for the object.</value>
         public string Error
         {
             get
@@ -321,8 +346,8 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the error message for the property with the given name.
         /// </summary>
-        /// <param name="columnName"></param>
-        /// <returns></returns>
+        /// <param name="columnName">The name of the property for which to get the error message.</param>
+        /// <value>The error message for the specified property.</value>
         public string this[string columnName]
         {
             get

@@ -1,6 +1,7 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -43,7 +44,7 @@ namespace HLU.UI.ViewModel
 
         #endregion Fields
 
-        #region ctor
+        #region Constructor
 
         /// <summary>
         /// Stores details of the warning dialog to be displayed.
@@ -70,7 +71,7 @@ namespace HLU.UI.ViewModel
             _maxFeaturesGISSelect = maxFeaturesGISSelect;
         }
 
-        #endregion ctor
+        #endregion Constructor
 
         #region ViewModelBase members
 
@@ -98,11 +99,9 @@ namespace HLU.UI.ViewModel
         #region Yes Command
 
         /// <summary>
-        /// Set Yes button command.
+        /// Gets the command for the Yes button.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command to execute when the Yes button is clicked.</value>
         public ICommand YesCommand
         {
             get
@@ -120,7 +119,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles events when the Yes button is clicked.
         /// </summary>
-        /// <param name="param"></param>
+        /// <param name="param">The parameter passed to the command.</param>
         /// <remarks></remarks>
         private void YesCommandClick(object param)
         {
@@ -137,11 +136,9 @@ namespace HLU.UI.ViewModel
         #region No Command
 
         /// <summary>
-        /// Set No button command.
+        /// Gets the command for the No button.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command to execute when the No button is clicked.</value>
         public ICommand NoCommand
         {
             get
@@ -157,10 +154,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Handles events when the Cancel button is clicked.
+        /// Handles events when the No button is clicked.
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void NoCommandClick(object param)
         {
             RequestClose?.Invoke(false);

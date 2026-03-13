@@ -2,6 +2,7 @@
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2013 Thames Valley Environmental Records Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -31,140 +32,18 @@ using HLU.Properties;
 
 namespace HLU.GISApplication
 {
+    //TODO: Move these methods to a more general utility class as they are not specific to the scratch database. Also, consider whether the GisWhereClause method could be refactored to be more efficient and easier to read.
+    /// <summary>
+    /// Contains methods for working with the scratch database, which is used to store the Incid and
+    /// Incid_MM tables that are used to filter GIS data based on a selection of Incids.
+    /// </summary>
     static class ScratchDb
     {
-        private static string _scratchMdbPath;
-        private static string _scratchSelTable = "HluSelection";
-        private static DbBase _scratchDb;
-        private static HluGISLayer.incid_mm_polygonsDataTable _hluLayerStructure = new();
-        private static HluDataSet.incidDataTable _incidTable;
-        private static HluDataSet.incid_mm_polygonsDataTable _incidMMTable;
-
-        public static string ScratchMdbPath
-        {
-            get { return _scratchMdbPath; }
-        }
-
-        public static string ScratchSelectionTable
-        {
-            get { return _scratchSelTable; }
-        }
-
-        //TODO: Replace with File GDB
-        public static bool CreateScratchMdb(HluDataSet.incidDataTable incidTable,
-            HluDataSet.incid_mm_polygonsDataTable incidMMTable, int dbConnectionTimeout)
-        {
-            try
-            {
-                _incidTable = incidTable;
-                _incidMMTable = incidMMTable;
-
-                _scratchMdbPath = String.Empty;
-                try { _scratchMdbPath = Path.GetTempPath(); }
-                catch
-                {
-                    _scratchMdbPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-                    _scratchMdbPath += Path.DirectorySeparatorChar.ToString();
-                }
-
-                _scratchMdbPath += Path.GetFileNameWithoutExtension(Path.GetRandomFileName()) + ".mdb";
-
-                OdbcCP32 odbc = new();
-                odbc.CreateDatabase(_scratchMdbPath);
-                string connString = String.Format(@"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};", _scratchMdbPath);
-                string defaultSchema = "";
-                bool promptPwd = false;
-
-                _scratchDb = new DbOleDb(ref connString, ref defaultSchema, ref promptPwd,
-                    Settings.Default.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders,
-                    true, Settings.Default.DbIsUnicode, Settings.Default.DbUseTimeZone, 255,
-                    Settings.Default.DbBinaryLength, Settings.Default.DbTimePrecision,
-                    Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, dbConnectionTimeout);
-
-                return true;
-            }
-            catch
-            {
-                if (File.Exists(_scratchMdbPath))
-                {
-                    try
-                    {
-                        if ((_scratchDb != null) && (_scratchDb.Connection.State != ConnectionState.Closed))
-                            _scratchDb.Connection.Close();
-                        File.Delete(_scratchMdbPath);
-                    }
-                    catch { }
-                }
-                return false;
-            }
-        }
-
-        public static void WriteSelectionScratchTable(DataColumn[] targetColumns, DataTable idList)
-        {
-            try
-            {
-                int incidOrdinal = -1;
-
-                if (idList.Columns.Contains(_incidTable.incidColumn.ColumnName))
-                {
-                    if (idList.Columns[_incidTable.incidColumn.ColumnName].DataType == _hluLayerStructure.incidColumn.DataType)
-                        incidOrdinal = idList.Columns[_incidTable.incidColumn.ColumnName].Ordinal;
-                    else
-                        return;
-                }
-                else
-                {
-                    var q = idList.Columns.Cast<DataColumn>().Where(c => c.ColumnName.EndsWith(
-                        Settings.Default.ColumnTableNameSeparator + _incidTable.incidColumn.ColumnName) &&
-                        c.DataType == _incidTable.incidColumn.DataType);
-                    if (q.Count() == 1)
-                        incidOrdinal = q.ElementAt(0).Ordinal;
-                    else
-                        return;
-                }
-
-                // incid column always has the same name as in the GIS layer structure
-                if (idList.Columns[incidOrdinal].ColumnName != _hluLayerStructure.incidColumn.ColumnName)
-                    idList.Columns[incidOrdinal].ColumnName = _hluLayerStructure.incidColumn.ColumnName;
-
-                try
-                {
-                    _scratchDb.ExecuteNonQuery(String.Format("DROP TABLE {0}", _scratchSelTable),
-                        _scratchDb.Connection.ConnectionTimeout, CommandType.Text);
-                }
-                catch { }
-
-                if (String.IsNullOrEmpty(idList.TableName)) idList.TableName = _scratchSelTable;
-
-                if ((idList.PrimaryKey == null) || (idList.PrimaryKey.Length == 0))
-                    idList.PrimaryKey = [idList.Columns[incidOrdinal]];
-
-                if (!_scratchDb.CreateTable(idList)) return;
-
-                DataTable scratchTable = idList.Clone();
-
-                DataSet datasetOut = new(_scratchSelTable);
-                IDbDataAdapter adapterOut = _scratchDb.CreateAdapter(scratchTable);
-                adapterOut.Fill(datasetOut);
-                adapterOut.TableMappings.Clear();
-                adapterOut.TableMappings.Add(scratchTable.TableName, datasetOut.Tables[0].TableName);
-                scratchTable = datasetOut.Tables[0];
-
-                foreach (DataRow r in idList.Rows)
-                    scratchTable.LoadDataRow(r.ItemArray, false);
-
-                adapterOut.Update(datasetOut);
-            }
-            catch { }
-            finally
-            {
-                if ((_scratchDb != null) && (_scratchDb.Connection.State != ConnectionState.Closed))
-                {
-                    try { _scratchDb.Connection.Close(); }
-                    catch { }
-                }
-            }
-        }
+        // Static variables for storing the Incid and Incid_MM tables from the scratch database.
+        // These are used by the GisWhereClause method to determine which table to base the filter
+        // conditions on.
+        private static HluDataSet.incidDataTable _incidTable = null;
+        private static HluDataSet.incid_mm_polygonsDataTable _incidMMTable = null;
 
         /// <summary>
         /// Create a list of sql filter conditions using a table of selected Incids.
@@ -311,7 +190,7 @@ namespace HLU.GISApplication
             List<SqlFilterCondition> adjustedWhereClause = IncidSelectionWhereClause;
             if (tableAliases != null && tableAliases.Count > 0)
             {
-                adjustedWhereClause = IncidSelectionWhereClause.Select(cond =>
+                adjustedWhereClause = [.. IncidSelectionWhereClause.Select(cond =>
                 {
                     // Create a copy of the condition
                     SqlFilterCondition newCond = new(cond.BooleanOperator, cond.Table, cond.Column, cond.Value)
@@ -340,29 +219,15 @@ namespace HLU.GISApplication
                     }
 
                     return newCond;
-                }).ToList();
+                })];
             }
 
             // Sort negative sortOrdinals in descending order
             sql.Append(String.Format("SELECT {0} FROM {1}{2}", targetList, fromClause, db.WhereClause(true, true, true, adjustedWhereClause)));
             if (sortOrdinals != null)
-                sql.Append(String.Format(" ORDER BY {0}", string.Join(", ", sortOrdinals.Select(x => x < 0 ? String.Format("{0} DESC", Math.Abs(x).ToString()) : x.ToString()).ToArray())));
+                sql.Append(String.Format(" ORDER BY {0}", string.Join(", ", [.. sortOrdinals.Select(x => x < 0 ? String.Format("{0} DESC", Math.Abs(x).ToString()) : x.ToString())])));
 
             return sql.ToString();
-        }
-
-        public static void CleanUp()
-        {
-            if (File.Exists(_scratchMdbPath))
-            {
-                try
-                {
-                    if ((_scratchDb != null) && (_scratchDb.Connection.State != ConnectionState.Closed))
-                        _scratchDb.Connection.Close();
-                    File.Delete(_scratchMdbPath);
-                }
-                catch { }
-            }
         }
     }
 }

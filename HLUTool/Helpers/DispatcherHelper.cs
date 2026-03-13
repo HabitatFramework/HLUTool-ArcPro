@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -54,6 +55,11 @@ namespace HLU.Helpers
             }
         }
 
+        /// <summary>
+        /// Exits the nested message loop created by DoEvents.
+        /// </summary>
+        /// <param name="state">The state object passed to the callback, expected to be a <see cref="DispatcherFrame"/>.</param>
+        /// <returns>null</returns>
         private static object ExitFrame(object state)
         {
             DispatcherFrame frame = state as DispatcherFrame;

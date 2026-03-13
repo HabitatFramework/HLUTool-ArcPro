@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -38,11 +39,11 @@ namespace HLU.Converters
         /// <summary>
         /// Converts a DataRow, DataRow[], DataView or DataTable to a list of code/description pairs.
         /// </summary>
-        /// <param name="value"></param>
-        /// <param name="targetType"></param>
-        /// <param name="parameter"></param>
-        /// <param name="culture"></param>
-        /// <returns></returns>
+        /// <param name="value">The value to convert.</param>
+        /// <param name="targetType">The target type of the conversion.</param>
+        /// <param name="parameter">An optional parameter for the conversion.</param>
+        /// <param name="culture">The culture to use in the conversion.</param>
+        /// <returns>An array of code/description pairs.</returns>
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             int codeColumnOrdinal = -1;
@@ -93,11 +94,11 @@ namespace HLU.Converters
         /// <summary>
         /// Converts a code/description pair to a string.
         /// </summary>
-        /// <param name="value"></param>
-        /// <param name="targetType"></param>
-        /// <param name="parameter"></param>
-        /// <param name="culture"></param>
-        /// <returns></returns>
+        /// <param name="value">The value to convert.</param>
+        /// <param name="targetType">The target type of the conversion.</param>
+        /// <param name="parameter">An optional parameter for the conversion.</param>
+        /// <param name="culture">The culture to use in the conversion.</param>
+        /// <returns>A string representation of the code/description pair.</returns>
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value is string s)
@@ -113,11 +114,11 @@ namespace HLU.Converters
         /// <summary>
         /// Gets the ordinals of the code, description and sort columns from the parameter.
         /// </summary>
-        /// <param name="t"></param>
-        /// <param name="parameter"></param>
-        /// <param name="codeColumnOrdinal"></param>
-        /// <param name="descriptionColumnOrdinal"></param>
-        /// <param name="sortColumnOrdinal"></param>
+        /// <param name="t">The DataTable containing the columns.</param>
+        /// <param name="parameter">A string parameter specifying the column names.</param>
+        /// <param name="codeColumnOrdinal">The ordinal of the code column.</param>
+        /// <param name="descriptionColumnOrdinal">The ordinal of the description column.</param>
+        /// <param name="sortColumnOrdinal">The ordinal of the sort column.</param>
         private void GetOrdinals(DataTable t, string parameter, out int codeColumnOrdinal,
             out int descriptionColumnOrdinal, out int sortColumnOrdinal)
         {
@@ -162,11 +163,11 @@ namespace HLU.Converters
         /// <summary>
         /// Formats a list of code/description pairs from the rows.
         /// </summary>
-        /// <param name="rows"></param>
-        /// <param name="codeColumnOrdinal"></param>
-        /// <param name="descriptionColumnOrdinal"></param>
-        /// <param name="sortColumnOrdinal"></param>
-        /// <returns></returns>
+        /// <param name="rows">The rows containing the code/description pairs.</param>
+        /// <param name="codeColumnOrdinal">The ordinal of the code column.</param>
+        /// <param name="descriptionColumnOrdinal">The ordinal of the description column.</param>
+        /// <param name="sortColumnOrdinal">The ordinal of the sort column.</param>
+        /// <returns>An ordered list of code/description pairs.</returns>
         private object FormatList(DataRow[] rows, int codeColumnOrdinal,
             int descriptionColumnOrdinal, int sortColumnOrdinal)
         {
@@ -212,10 +213,10 @@ namespace HLU.Converters
         /// <summary>
         /// Formats a code/description pair from the row.
         /// </summary>
-        /// <param name="r"></param>
-        /// <param name="codeColumnOrdinal"></param>
-        /// <param name="descriptionColumnOrdinal"></param>
-        /// <returns></returns>
+        /// <param name="r">The DataRow containing the code/description pair.</param>
+        /// <param name="codeColumnOrdinal">The ordinal of the code column.</param>
+        /// <param name="descriptionColumnOrdinal">The ordinal of the description column.</param>
+        /// <returns>The formatted code/description pair.</returns>
         private string FormatDescription(DataRow r, int codeColumnOrdinal, int descriptionColumnOrdinal)
         {
             string code = r.Field<string>(codeColumnOrdinal);
@@ -271,11 +272,11 @@ namespace HLU.Converters
         /// <summary>
         /// Converts a DataRow, DataRow[], DataView or DataTable to a list of code/description pairs.
         /// </summary>
-        /// <param name="values"></param>
-        /// <param name="targetType"></param>
-        /// <param name="parameter"></param>
-        /// <param name="culture"></param>
-        /// <returns></returns>
+        /// <param name="values">The values to convert.</param>
+        /// <param name="targetType">The target type of the conversion.</param>
+        /// <param name="parameter">An optional parameter for the conversion.</param>
+        /// <param name="culture">The culture to use in the conversion.</param>
+        /// <returns>The converted value.</returns>
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
             if ((values != null) && (values.Length == 2))
@@ -287,11 +288,11 @@ namespace HLU.Converters
         /// <summary>
         /// Converts a code/description pair to a string.
         /// </summary>
-        /// <param name="value"></param>
-        /// <param name="targetTypes"></param>
-        /// <param name="parameter"></param>
-        /// <param name="culture"></param>
-        /// <returns></returns>
+        /// <param name="value">The value to convert back.</param>
+        /// <param name="targetTypes">The target types of the conversion.</param>
+        /// <param name="parameter">An optional parameter for the conversion.</param>
+        /// <param name="culture">The culture to use in the conversion.</param>
+        /// <returns>The converted value as an array of objects.</returns>
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
         {
             if (value != null)

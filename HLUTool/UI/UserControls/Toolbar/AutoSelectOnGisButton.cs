@@ -1,4 +1,22 @@
-﻿using ArcGIS.Desktop.Framework;
+﻿// HLUTool is used to view and maintain habitat and land use GIS data.
+// Copyright © 2025-2026 Andy Foy Consulting
+//
+// This file is part of HLUTool.
+//
+// HLUTool is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// HLUTool is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
+
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using HLU.Properties;
 using HLU.UI;
@@ -29,7 +47,7 @@ namespace HLU.UI.UserControls.Toolbar
         #region Constructor
 
         /// <summary>
-        /// Constructor.
+        /// Initializes a new instance of the <see cref="AutoSelectOnGisButton"/> class.
         /// </summary>
         public AutoSelectOnGisButton()
         {
@@ -48,14 +66,7 @@ namespace HLU.UI.UserControls.Toolbar
 
         #endregion Constructor
 
-        /// <summary>
-        /// Gets or sets the auto select on GIS enabled state.
-        /// </summary>
-        public static bool AutoSelectOnGisEnabled
-        {
-            get;
-            private set;
-        }
+        #region Overrides
 
         /// <summary>
         /// Set the auto select enabled state. Called when the checkbox is clicked.
@@ -92,5 +103,21 @@ namespace HLU.UI.UserControls.Toolbar
             bool isEnabled = _viewModel.GridMainVisibility == Visibility.Visible;
             Enabled = isEnabled;
         }
+
+        #endregion Overrides
+
+        #region Properties
+
+        /// <summary>
+        /// Gets or sets the auto select on GIS enabled state.
+        /// </summary>
+        /// <value><c>true</c> if auto select on GIS is enabled; otherwise, <c>false</c>.</value>
+        public static bool AutoSelectOnGisEnabled
+        {
+            get;
+            private set;
+        }
+
+        #endregion Properties
     }
 }

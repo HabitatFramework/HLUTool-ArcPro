@@ -1,6 +1,7 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2014 Sussex Biodiversity Record Centre
 // Copyright © 2019 Greenspace Information for Greater London CIC
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -47,9 +48,9 @@ namespace HLU.UI.ViewModel
     /// </summary>
     class ViewModelWindowQueryAdvanced : ViewModelBase, IDataErrorInfo
     {
-        public static HluDataSet HluDatasetStatic = null;
-
         #region Fields
+
+        public static HluDataSet HluDatasetStatic = null;
 
         private ICommand _getValuesCommand;
 
@@ -89,55 +90,65 @@ namespace HLU.UI.ViewModel
         private string _descriptionFieldName = Settings.Default.LutDescriptionFieldName;
         private int _descriptionFieldOrdinal = Settings.Default.LutDescriptionFieldOrdinal;
         private string _sortOrderFieldName = Settings.Default.LutSortOrderFieldName;
-        //private Regex _queryValueRegex = new Regex(@"\s+:\s+", RegexOptions.IgnoreCase); // @"\A(?<code>[^:\s]+)\s+:\s+(?<desc>[^:]+)\z", RegexOptions.IgnoreCase);
 
         private long _lastValueCounter = 0;
 
-        #endregion
+        #endregion Fields
 
         #region Constructor
 
+        /// <summary>
+        /// Initialise a new instance of the ViewModelWindowQueryAdvanced class.
+        /// </summary>
+        /// <param name="hluDataset">The HLU dataset to be used by the view model.</param>
+        /// <param name="hluDatabase">The HLU database to be used by the view model.</param>
         public ViewModelWindowQueryAdvanced(HluDataSet hluDataset, DbBase hluDatabase)
         {
             HluDatasetStatic = hluDataset;
             _db = hluDatabase;
         }
 
-        #endregion
+        #endregion Constructor
 
         #region ViewModelBase Members
 
+        /// <summary>
+        /// Gets or sets the display name of the view model.
+        /// </summary>
+        /// <value>The display name of the view model.</value>
         public override string DisplayName
         {
             get { return _displayName; }
             set { _displayName = value; }
         }
 
+        /// <summary>
+        /// Gets the title of the window associated with this view model.
+        /// </summary>
+        /// <value>The window title.</value>
         public override string WindowTitle
         {
             get { return _displayName; }
         }
 
-        #endregion
+        #endregion ViewModelBase Members
 
         #region RequestClose
 
-        // declare the delegate since using non-generic pattern
+        // Declare the delegate since using non-generic pattern
         public delegate void RequestCloseEventHandler(string sqlFromTables, string sqlWhereClause);
 
-        // declare the event
+        // Declare the event
         public event RequestCloseEventHandler RequestClose;
 
-        #endregion
+        #endregion RequestClose
 
         #region GetValues Command
 
         /// <summary>
-        /// Set GetValues button command.
+        /// Gets the  GetValues button command.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command to get values.</value>
         public ICommand GetValuesCommand
         {
             get
@@ -155,8 +166,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles events when the GetValues button is clicked.
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void GetValuesCommandClick(object param)
         {
             // Return null if there is no table or column selected or
@@ -253,11 +263,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Determine if the GetValues button can be clicked.
+        /// Gets a value indicating whether the GetValues button can be clicked.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>True if the GetValues button can be clicked; otherwise, false.</value>
         public bool CanGetValues
         {
             get
@@ -324,16 +332,14 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion GetValues Command
 
         #region Clear Command
 
         /// <summary>
-        /// Set the Clear button command.
+        /// Gets the Clear button command.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command to clear the current query.</value>
         public ICommand ClearCommand
         {
             get
@@ -351,8 +357,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles events when the Clear button is clicked.
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void ClearCommandClick(object param)
         {
             Table = null;
@@ -367,23 +372,19 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Determine if the Clear button can be clicked.
+        /// Gets a value indicating whether the Clear button can be clicked.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>True if the Clear button can be clicked; otherwise, false.</value>
         private bool CanClear { get { return (!String.IsNullOrEmpty(SqlFromTables) || !String.IsNullOrEmpty(SqlWhereClause)); } }
 
-        #endregion
+        #endregion Clear Command
 
         #region Verify Command
 
         /// <summary>
-        /// Set the Verify button command.
+        /// Gets the Verify button command.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command to verify the current query.</value>
         public ICommand VerifyCommand
         {
             get
@@ -401,110 +402,106 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles events when the Verify button is clicked.
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void VerifyCommandClick(object param)
         {
-            if ((SqlFromTables != null) && (SqlWhereClause != null))
+            // If the SQL is not empty then try to verify it.
+            if ((SqlFromTables == null) || (SqlWhereClause == null))
+                return;
+
+            try
             {
-                try
+                // Show the wait cursor whilst verifying the sql.
+                ChangeCursor(Cursors.Wait);
+
+                // Get a list of all the possible query tables.
+                List<DataTable> tables = [];
+                if ((ViewModelWindowQueryAdvanced.HluDatasetStatic != null))
                 {
-                    // Show the wait cursor whilst verifying the sql.
-                    ChangeCursor(Cursors.Wait);
+                    tables = [.. ViewModelWindowQueryAdvanced.HluDatasetStatic.incid.ChildRelations
+                        .Cast<DataRelation>().Select(r => r.ChildTable)];
+                    tables.Add(ViewModelWindowQueryAdvanced.HluDatasetStatic.incid);
+                }
 
-                    // Get a list of all the possible query tables.
-                    List<DataTable> tables = [];
-                    if ((ViewModelWindowQueryAdvanced.HluDatasetStatic != null))
+                // Split the string of query table names created by the
+                // user in the form into an array.
+                string[] fromTables = [.. SqlFromTables.Split(',').Select(s => s.Trim(' ')).Distinct()];
+
+                // Select only the database tables that are in the query array.
+                List<DataTable> whereTables = [.. tables.Where(t => fromTables.Contains(t.TableName))];
+
+                // Parse the SQL to see if it is valid.
+                if (whereTables.Count != 0)
+                {
+                    // Replace any connection type specific qualifiers and delimiters.
+                    string newWhereClause = null;
+                    if (SqlWhereClause != null)
+                        newWhereClause = ReplaceStringQualifiers(SqlWhereClause);
+
+                    // Validate the SQL by trying to select the top 1 row.
+                    string validity = _db.SqlValidate(HluDatasetStatic.incid.PrimaryKey, whereTables, newWhereClause);
+
+                    // Reset the cursor back to normal.
+                    ChangeCursor(Cursors.Arrow);
+
+                    // The SQL is valid.
+                    if (validity == "1")
                     {
-                        tables = ViewModelWindowQueryAdvanced.HluDatasetStatic.incid.ChildRelations
-                            .Cast<DataRelation>().Select(r => r.ChildTable).ToList();
-                        tables.Add(ViewModelWindowQueryAdvanced.HluDatasetStatic.incid);
+                        // Warn the user that the SQL is invalid.
+                        MessageBox.Show("SQL is valid.", "HLU Query",
+                            MessageBoxButton.OK, MessageBoxImage.Information);
                     }
-
-                    // Split the string of query table names created by the
-                    // user in the form into an array.
-                    string[] fromTables = SqlFromTables.Split(',').Select(s => s.Trim(' ')).Distinct().ToArray();
-
-                    // Select only the database tables that are in the query array.
-                    List<DataTable> whereTables = tables.Where(t => fromTables.Contains(t.TableName)).ToList();
-
-                    // Parse the SQL to see if it is valid.
-                    if (whereTables.Count != 0)
+                    // The SQL is valid but did not return any rows.
+                    else if (validity == "0")
                     {
-                        // Replace any connection type specific qualifiers and delimiters.
-                        string newWhereClause = null;
-                        if (SqlWhereClause != null)
-                            newWhereClause = ReplaceStringQualifiers(SqlWhereClause);
-
-                        // Validate the SQL by trying to select the top 1 row.
-                        string validity = _db.SqlValidate(HluDatasetStatic.incid.PrimaryKey, whereTables, newWhereClause);
-
-                        // Reset the cursor back to normal.
-                        ChangeCursor(Cursors.Arrow);
-
-                        // The SQL is valid.
-                        if (validity == "1")
-                        {
-                            // Warn the user that the SQL is invalid.
-                            MessageBox.Show("SQL is valid.", "HLU Query",
-                                MessageBoxButton.OK, MessageBoxImage.Information);
-                        }
-                        // The SQL is valid but did not return any rows.
-                        else if (validity == "0")
-                        {
-                            // Warn the user that no rows were returned.
-                            MessageBox.Show("SQL is valid but no records were returned.", "HLU Query",
-                                MessageBoxButton.OK, MessageBoxImage.Warning);
-                        }
-                        // The SQL is not valid.
-                        else if (validity != null)
-                        {
-                            // Warn the user that the SQL is invalid.
-                            MessageBox.Show(String.Format("{0}.", validity), "HLU Query",
-                                MessageBoxButton.OK, MessageBoxImage.Error);
-                        }
-                    }
-                    else
-                    {
-                        // Reset the cursor back to normal.
-                        ChangeCursor(Cursors.Arrow);
-
-                        // Warn the user that the no valid tables were found.
-                        MessageBox.Show("No valid tables were found.", "HLU Query",
+                        // Warn the user that no rows were returned.
+                        MessageBox.Show("SQL is valid but no records were returned.", "HLU Query",
                             MessageBoxButton.OK, MessageBoxImage.Warning);
                     }
+                    // The SQL is not valid.
+                    else if (validity != null)
+                    {
+                        // Warn the user that the SQL is invalid.
+                        MessageBox.Show(String.Format("{0}.", validity), "HLU Query",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
-                catch (Exception ex)
+                else
                 {
                     // Reset the cursor back to normal.
                     ChangeCursor(Cursors.Arrow);
 
-                    // Warn the user that the SQL is invalid.
-                    MessageBox.Show(ex.Message, "HLU Query",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    // Warn the user that the no valid tables were found.
+                    MessageBox.Show("No valid tables were found.", "HLU Query",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
-                finally { }
             }
+            catch (Exception ex)
+            {
+                // Reset the cursor back to normal.
+                ChangeCursor(Cursors.Arrow);
+
+                // Warn the user that the SQL is invalid.
+                MessageBox.Show(ex.Message, "HLU Query",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally { }
         }
 
         /// <summary>
-        /// Determine if the Verify button can be clicked.
+        /// Gets a value indicating whether the Verify button can be clicked.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>True if the Verify button can be clicked; otherwise, false.</value>
         private bool CanVerify { get { return (!String.IsNullOrEmpty(SqlFromTables) && !String.IsNullOrEmpty(SqlWhereClause)); } }
 
-        #endregion
+        #endregion Verify Command
 
         #region Ok Command
 
         /// <summary>
-        /// Set the Ok button command.
+        /// Gets the Ok button command.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The Ok button command.</value>
         public ICommand OkCommand
         {
             get
@@ -522,32 +519,27 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles events when the Ok button is clicked.
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The command parameter.</param>
         private void OkCommandClick(object param)
         {
             RequestClose?.Invoke(SqlFromTables, SqlWhereClause);
         }
 
         /// <summary>
-        /// Determine if the Ok button can be clicked.
+        /// Gets a value indicating whether the Ok button can be clicked.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>True if the Ok button can be clicked; otherwise, false.</value>
         private bool CanOk { get { return (String.IsNullOrEmpty(Error) &&
             !String.IsNullOrEmpty(SqlFromTables) && !String.IsNullOrEmpty(SqlWhereClause)); } }
 
-        #endregion
+        #endregion Ok Command
 
         #region Cancel Command
 
         /// <summary>
-        /// Set the Cancel button command.
+        /// Gets the Cancel button command.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The Cancel button command.</value>
         public ICommand CancelCommand
         {
             get
@@ -565,23 +557,20 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles events when the Cancel button is clicked.
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The command parameter.</param>
         private void CancelCommandClick(object param)
         {
             RequestClose?.Invoke(null, null);
         }
 
-        #endregion
+        #endregion Cancel Command
 
         #region Load Command
 
         /// <summary>
-        /// Set the Load button command.
+        /// Gets the Load button command.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The Load button command.</value>
         public ICommand LoadCommand
         {
             get
@@ -599,23 +588,20 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles events when the Load button is clicked.
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The command parameter.</param>
         private void LoadCommandClick(object param)
         {
             LoadSQLQuery();
         }
 
-        #endregion
+        #endregion Load Command
 
         #region Save Command
 
         /// <summary>
-        /// Set the Save button command.
+        /// Gets the Save button command.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The Save button command.</value>
         public ICommand SaveCommand
         {
             get
@@ -633,22 +619,19 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles events when the Save button is clicked.
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The command parameter.</param>
         private void SaveCommandClick(object param)
         {
             SaveSQLQuery();
         }
 
         /// <summary>
-        /// Determine if the Save button can be clicked.
+        /// Gets a value indicating whether the Save button can be clicked.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>True if the Save button can be clicked; otherwise, false.</value>
         private bool CanSave { get { return (!String.IsNullOrEmpty(SqlFromTables) && !String.IsNullOrEmpty(SqlWhereClause)); } }
 
-        #endregion
+        #endregion Save Command
 
         #region Table
 
@@ -698,7 +681,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Table
 
         #region Column
 
@@ -760,7 +743,7 @@ namespace HLU.UI.ViewModel
             get { return Table != null; }
         }
 
-        #endregion
+        #endregion Column
 
         #region Operator
 
@@ -774,11 +757,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_comparisonOperators == null)
-                {
-                    _comparisonOperators = [ "=", "<", ">", "<=", ">=", "<>", "(", ")", "AND", "OR",
+                _comparisonOperators ??= [ "=", "<", ">", "<=", ">=", "<>", "(", ")", "AND", "OR",
                         "IS NULL", "IS NOT NULL", "LIKE", "NOT LIKE", "IN ()", "NOT IN ()" ];
-                }
                 return _comparisonOperators;
             }
         }
@@ -810,7 +790,7 @@ namespace HLU.UI.ViewModel
             get { return Column != null; }
         }
 
-        #endregion
+        #endregion Operator
 
         #region Value
 
@@ -939,18 +919,16 @@ namespace HLU.UI.ViewModel
             get { return _queryValues != null; }
         }
 
-        #endregion
+        #endregion Value
 
         #region Add Buttons
 
         #region Add Table
 
         /// <summary>
-        /// Set the AddTable button command.
+        /// Gets the AddTable button command.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The AddTable button command.</value>
         public ICommand AddTableCommand
         {
             get
@@ -968,8 +946,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles events when the AddTable button is clicked.
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The command parameter.</param>
         private void AddTableCommandClick(object param)
         {
             // Only add the table if it's not already in the list
@@ -985,26 +962,22 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Determine if the AddTable button can be clicked.
+        /// Gets a value indicating whether the AddTable button can be clicked.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>True if the AddTable button can be clicked; otherwise, false.</value>
         private bool CanAddTable
         {
             get { return (Table != null); }
         }
 
-        #endregion
+        #endregion Add Table
 
         #region Add Column
 
         /// <summary>
-        /// Set the AddColumn button command.
+        /// Gets the AddColumn button command.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The AddColumn button command.</value>
         public ICommand AddColumnCommand
         {
             get
@@ -1022,8 +995,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles events when the AddColumn button is clicked.
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The command parameter.</param>
         private void AddColumnCommandClick(object param)
         {
             if (String.IsNullOrEmpty(SqlWhereClause) || SqlWhereClause.EndsWith(' '))
@@ -1035,26 +1007,22 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Determine if the AddColumn button can be clicked.
+        /// Gets a value indicating whether the AddColumn button can be clicked.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>True if the AddColumn button can be clicked; otherwise, false.</value>
         private bool CanAddColumn
         {
             get { return Column != null; }
         }
 
-        #endregion
+        #endregion Add Column
 
         #region Add Operator
 
         /// <summary>
-        /// Set the AddOperator button command.
+        /// Gets the AddOperator button command.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The AddOperator button command.</value>
         public ICommand AddOperatorCommand
         {
             get
@@ -1072,8 +1040,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles events when the AddOperator button is clicked.
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The command parameter.</param>
         private void AddOperatorCommandClick(object param)
         {
             if (String.IsNullOrEmpty(SqlWhereClause) || SqlWhereClause.EndsWith(' '))
@@ -1085,26 +1052,22 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Determine if the AddOperator button can be clicked.
+        /// Gets a value indicating whether the AddOperator button can be clicked.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>True if the AddOperator button can be clicked; otherwise, false.</value>
         private bool CanAddOperator
         {
             get { return (ComparisonOperator != null); }
         }
 
-        #endregion
+        #endregion Add Operator
 
         #region Add Value
 
         /// <summary>
-        /// Set the AddValue button command.
+        /// Gets the AddValue button command.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The AddValue button command.</value>
         public ICommand AddValueCommand
         {
             get
@@ -1122,8 +1085,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles events when the AddValue button is clicked.
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The command parameter.</param>
         private void AddValueCommandClick(object param)
         {
             if (String.IsNullOrEmpty(SqlWhereClause) || SqlWhereClause.EndsWith(' '))
@@ -1136,19 +1098,17 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Determine if the AddValue button can be clicked.
+        /// Gets a value indicating whether the AddValue button can be clicked.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>True if the AddValue button can be clicked; otherwise, false.</value>
         private bool CanAddValue
         {
             get { return QueryValue != null; }
         }
 
-        #endregion
+        #endregion Add Value
 
-        #endregion
+        #endregion Add Buttons
 
         #region SQL
 
@@ -1178,7 +1138,7 @@ namespace HLU.UI.ViewModel
             set { _sqlWhereClause = value; }
         }
 
-        #endregion
+        #endregion SQL
 
         #region Load/Save
 
@@ -1281,7 +1241,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="queryPath">The path of the SQL query to load.</param>
         /// <param name="queryFile">The file name of the SQL query to load.</param>
-        /// <returns></returns>
+        /// <returns>True if a SQL query file was successfully loaded; otherwise, false.</returns>
         private bool LoadSQLQueryFile(ref string queryPath, ref string queryFile)
         {
             try
@@ -1375,7 +1335,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="queryPath">The path to save the SQL query to.</param>
         /// <param name="queryFile">The file name to save the SQL query to.</param>
-        /// <returns></returns>
+        /// <returns>True if the SQL query file was successfully saved; otherwise, false.</returns>
         public bool SaveSQLQueryFile(ref string queryPath, ref string queryFile)
         {
             try
@@ -1406,7 +1366,7 @@ namespace HLU.UI.ViewModel
             catch { return false; }
         }
 
-        #endregion
+        #endregion Load/Save
 
         #region SQLUpdater
 
@@ -1414,8 +1374,8 @@ namespace HLU.UI.ViewModel
         /// Replaces any string or date delimiters with connection type specific
         /// versions and qualifies any table names.
         /// </summary>
-        /// <param name="words">The words.</param>
-        /// <returns></returns>
+        /// <param name="sqlcmd">The SQL command.</param>
+        /// <returns>The SQL command with replaced string qualifiers.</returns>
         internal String ReplaceStringQualifiers(String sqlcmd)
         {
             // Check if a table name (delimited by '[]' characters) is found
@@ -1539,7 +1499,7 @@ namespace HLU.UI.ViewModel
             return sqlcmd;
         }
 
-        #endregion
+        #endregion SQLUpdater
 
         #region Quotes & Qualifiers
 
@@ -1548,7 +1508,7 @@ namespace HLU.UI.ViewModel
         /// already present).
         /// </summary>
         /// <param name="identifier">The string to add quotes to.</param>
-        /// <returns></returns>
+        /// <returns>The quoted string.</returns>
         public string QuoteIdentifier(string identifier)
         {
             if (!String.IsNullOrEmpty(identifier))
@@ -1559,32 +1519,64 @@ namespace HLU.UI.ViewModel
             return identifier;
         }
 
+        /// <summary>
+        /// Gets the prefix to use when quoting identifiers (e.g. table and column names).
+        /// </summary>
+        /// <value>The quote prefix.</value>
         public string QuotePrefix { get { return "["; } }
 
+        /// <summary>
+        /// Gets the suffix to use when quoting identifiers (e.g. table and column names).
+        /// </summary>
+        /// <value>The quote suffix.</value>
         public string QuoteSuffix { get { return "]"; } }
 
+        /// <summary>
+        /// Gets the delimiter to use when quoting string literals.
+        /// </summary>
+        /// <value>The string literal delimiter.</value>
         public string StringLiteralDelimiter { get { return "\'"; } }
 
+        /// <summary>
+        /// Gets the prefix to use when quoting date literals.
+        /// </summary>
+        /// <value>The date literal prefix.</value>
         public string DateLiteralPrefix { get { return "#"; } }
 
+        /// <summary>
+        /// Gets the suffix to use when quoting date literals.
+        /// </summary>
+        /// <value>The date literal suffix.</value>
         public string DateLiteralSuffix { get { return "#"; } }
 
+        /// <summary>
+        /// Gets the wildcard character to use when matching a single character in a string.
+        /// </summary>
+        /// <value>The wildcard character to use when matching a single character in a string.</value>
         public string WildcardSingleMatch { get { return "_"; } }
 
+        /// <summary>
+        /// Gets the wildcard character to use when matching any number of characters in a string.
+        /// </summary>
+        /// <value>The wildcard character to use when matching any number of characters in a string.</value>
         public string WildcardManyMatch { get { return "%"; } }
 
         /// <summary>
         /// Does not escape string delimiter or other special characters.
         /// Does check if value is already quoted.
         /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
+        /// <param name="value">The value to quote.</param>
+        /// <returns>The quoted value.</returns>
         public string QuoteValue(object value)
         {
             if (value == null) return "NULL";
+
+            // Get the type of the value and look up the corresponding database data type in the
+            // type map
             Type valueType = value.GetType();
             int colType;
 
+            //If the type map is not initialised then add the default type mappings to it
             if (_typeMapSystemToSQL == null || _typeMapSystemToSQL.Count == 0)
             {
                 Dictionary<Type, int> typeMapSystemToSQLAdd = [];
@@ -1638,6 +1630,8 @@ namespace HLU.UI.ViewModel
                 }
             }
 
+            // If a database data type is found for the value type then quote the value according to
+            // the database data type; otherwise, return the value as a string.
             if (_typeMapSystemToSQL.TryGetValue(valueType, out colType))
             {
                 string s = valueType == typeof(DateTime) ? ((DateTime)value).ToString("s").Replace("T", " ") : value.ToString();
@@ -1688,7 +1682,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Quotes & Qualifiers
 
         #region Cursor
 
@@ -1708,10 +1702,14 @@ namespace HLU.UI.ViewModel
                 DispatcherHelper.DoEvents(); //TODO: Replace with modern equivalent?
         }
 
-        #endregion
+        #endregion Cursor
 
         #region IDataErrorInfo Members
 
+        /// <summary>
+        /// Gets an error message indicating what is wrong with this object.
+        /// </summary>
+        /// <value>The error message indicating what is wrong with this object.</value>
         public string Error
         {
             get
@@ -1725,6 +1723,11 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets an error message for the property with the given name.
+        /// </summary>
+        /// <param name="columnName">The name of the property.</param>
+        /// <returns>The error message for the property.</returns>
         public string this[string columnName]
         {
             get
@@ -1737,7 +1740,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion IDataErrorInfo Members
 
     }
 }

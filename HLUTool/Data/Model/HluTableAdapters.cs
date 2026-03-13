@@ -1,6 +1,7 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2019 Greenspace Information for Greater London CIC
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -28,7 +29,7 @@ using System.Reflection;
 using System.Text;
 using HLU.Data.Connection;
 
-namespace HLU.Data.Model.HluDataSetTableAdapters
+namespace HLU.Data.Model
 {
     /// <summary>
     /// Provides a generic data adapter for performing fill, update, insert, and delete operations on a strongly typed
@@ -70,7 +71,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
 
         private Dictionary<string, int> _paramsUpdOrig;
 
-        #endregion
+        #endregion Fields
 
         #region Constructor
 
@@ -87,50 +88,64 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                 ArgumentNullException.ThrowIfNull(db);
 
                 if (typeof(T).GetProperty("Item").PropertyType != typeof(R))
-                    throw new ArgumentException("Type parameter R must be the row type of T.", "R");
+                    throw new ArgumentException("Type parameter R must be the row type of T.");
 
                 var columns = typeof(T).GetProperties().Where(pi => pi.PropertyType == typeof(DataColumn));
                 _columnsDic = columns.ToDictionary(pi => pi.Name, pi => pi.PropertyType);
 
                 _db = db;
-                this.ClearBeforeFill = true;
+                ClearBeforeFill = true;
             }
             catch { throw; }
         }
 
-        #endregion
+        #endregion Constructor
+
+        #region Properties
 
         /// <summary>
         /// Gets the underlying data adapter used for database operations.
         /// </summary>
+        /// <value>
+        /// The data adapter instance. This property is lazily initialized and will be created on
+        /// first access if it has not already been set.
+        /// </value>
         protected internal IDbDataAdapter Adapter
         {
             get
             {
-                if ((this._adapter == null)) this.InitAdapter();
-                return this._adapter;
+                if (_adapter == null)
+                    InitAdapter();
+                return _adapter;
             }
         }
 
         /// <summary>
         /// Gets the database connection used by the adapter.
         /// </summary>
+        /// <value>The database connection instance.</value>
         internal IDbConnection Connection { get { return _db.Connection; } }
 
         /// <summary>
         /// Gets the database transaction used by the adapter.
         /// </summary>
+        /// <value>The database transaction instance, or null if no transaction is currently active.</value>
         internal IDbTransaction Transaction { get { return _db.Transaction; } }
 
         /// <summary>
         /// Gets the collection of commands used by the adapter.
         /// </summary>
+        /// <value>
+        /// An array of database commands. This collection is lazily initialized and will be created
+        /// on first access if it has not already been set.
+        /// </value>
         protected IDbCommand[] CommandCollection
         {
             get
             {
-                if ((this._commandCollection == null)) this.InitCommandCollection();
-                return this._commandCollection;
+                if (_commandCollection == null)
+                    InitCommandCollection();
+                return _commandCollection;
             }
         }
 
@@ -140,10 +155,12 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
         /// <remarks>Set this property to <see langword="true"/> to remove all existing rows from the
         /// target data table before filling it with new data. If set to <see langword="false"/>, new data will be
         /// appended to the existing rows.</remarks>
+        /// <value><c>true</c> if existing rows should be cleared before filling; otherwise, <c>false</c>.</value>
         public bool ClearBeforeFill
         {
-            get { return this._clearBeforeFill; }
-            set { this._clearBeforeFill = value; }
+            get { return _clearBeforeFill; }
+            set {
+                _clearBeforeFill = value; }
         }
 
         /// <summary>
@@ -169,7 +186,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                 _adapter = adapter;
 
             // Store original select command and parameter mappings for later use
-            if (this.Adapter != null)
+            if (Adapter != null)
             {
                 _originalSelectCommand = adapter.SelectCommand.CommandText;
 
@@ -193,7 +210,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                     switch (p.SourceVersion)
                     {
                         case DataRowVersion.Current:
-                            if (!String.IsNullOrEmpty(p.SourceColumn))
+                            if (!string.IsNullOrEmpty(p.SourceColumn))
                                 _paramsUpdCurr.Add(p.SourceColumn, i);
                             break;
                         case DataRowVersion.Original:
@@ -213,12 +230,12 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
         /// execute commands from the collection.</remarks>
         private void InitCommandCollection()
         {
-            this._commandCollection = new IDbCommand[1];
-            if ((this._adapter == null) || (this._adapter.SelectCommand == null)) InitAdapter();
-            this._commandCollection[0] = _db.CreateCommand();
-            this._commandCollection[0].Connection = this.Connection;
-            this._commandCollection[0].CommandText = this._adapter.SelectCommand.CommandText;
-            this._commandCollection[0].CommandType = CommandType.Text;
+            _commandCollection = new IDbCommand[1];
+            if (_adapter == null || _adapter.SelectCommand == null) InitAdapter();
+            _commandCollection[0] = _db.CreateCommand();
+            _commandCollection[0].Connection = Connection;
+            _commandCollection[0].CommandText = _adapter.SelectCommand.CommandText;
+            _commandCollection[0].CommandType = CommandType.Text;
         }
 
         /// <summary>
@@ -226,28 +243,28 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
         /// </summary>
         /// <param name="dataTable">The data table to fill. If null, a new instance will be created.</param>
         /// <returns>The number of rows added to or refreshed in the data table.</returns>
-        [DataObjectMethodAttribute(DataObjectMethodType.Fill, true)]
+        [DataObjectMethod(DataObjectMethodType.Fill, true)]
         public virtual int Fill(T dataTable)
         {
-            if (dataTable == null) dataTable = new T();
-            this.Adapter.SelectCommand = this.CommandCollection[0];
-            if ((this.ClearBeforeFill == true)) dataTable.Clear();
-            int returnValue = _db.FillTable(this.Adapter.SelectCommand.CommandText, ref dataTable);
+            dataTable ??= new T();
+            Adapter.SelectCommand = CommandCollection[0];
+            if (ClearBeforeFill == true) dataTable.Clear();
+            int returnValue = _db.FillTable(Adapter.SelectCommand.CommandText, ref dataTable);
             return returnValue;
         }
 
         /// <summary>
         /// Fills the specified data table with data from the database using a custom WHERE clause.
         /// </summary>
-        /// <param name="dataTable"></param>
-        /// <param name="whereClause"></param>
-        /// <returns></returns>
+        /// <param name="dataTable">The data table to fill. If null, a new instance will be created.</param>
+        /// <param name="whereClause">The custom WHERE clause to apply to the query.</param>
+        /// <returns>The number of rows added to or refreshed in the data table.</returns>
         public virtual int Fill(T dataTable, string whereClause)
         {
-            if (!String.IsNullOrEmpty(whereClause))
+            if (!string.IsNullOrEmpty(whereClause))
             {
-                if (dataTable == null) dataTable = new T();
-                this.CommandCollection[0].CommandText = _originalSelectCommand +
+                dataTable ??= new T();
+                CommandCollection[0].CommandText = _originalSelectCommand +
                     (!whereClause.TrimStart().StartsWith("WHERE", StringComparison.CurrentCultureIgnoreCase) ? " WHERE " : "") + whereClause;
                 return Fill(dataTable);
             }
@@ -257,22 +274,22 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
         /// <summary>
         /// Fills the specified data table with data from the database using a list of filter conditions for the WHERE clause.
         /// </summary>
-        /// <param name="dataTable"></param>
-        /// <param name="whereClause"></param>
-        /// <returns></returns>
+        /// <param name="dataTable">The data table to fill. If null, a new instance will be created.</param>
+        /// <param name="whereClause">A list of filter conditions to apply to the WHERE clause.</param>
+        /// <returns>The number of rows added to or refreshed in the data table.</returns>
         public virtual int Fill(T dataTable, List<SqlFilterCondition> whereClause)
         {
-            if ((whereClause == null) || (whereClause.Count == 0))
+            if (whereClause == null || whereClause.Count == 0)
                 return Fill(dataTable);
 
             try
             {
                 if (dataTable == null)
                     dataTable = new T();
-                else if ((this.ClearBeforeFill == true))
+                else if (ClearBeforeFill == true)
                     dataTable.Clear();
 
-                this.CommandCollection[0].CommandText = _originalSelectCommand +
+                CommandCollection[0].CommandText = _originalSelectCommand +
                     _db.WhereClause(true, true, true, whereClause);
 
                 return Fill(dataTable);
@@ -283,32 +300,32 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
         /// <summary>
         /// Fills the specified data table with data from the database using multiple sets of filter conditions for the WHERE clause.
         /// </summary>
-        /// <param name="dataTable"></param>
-        /// <param name="whereClause"></param>
-        /// <returns></returns>
+        /// <param name="dataTable">The data table to fill. If null, a new instance will be created.</param>
+        /// <param name="whereClause">A list of lists of filter conditions to apply to the WHERE clause.</param>
+        /// <returns>The number of rows added to or refreshed in the data table.</returns>
         public virtual int Fill(T dataTable, List<List<SqlFilterCondition>> whereClause)
         {
-            if ((whereClause == null) || (whereClause.Count == 0))
+            if (whereClause == null || whereClause.Count == 0)
                 return Fill(dataTable);
 
             try
             {
                 if (dataTable == null)
                     dataTable = new T();
-                else if ((this.ClearBeforeFill == true))
+                else if (ClearBeforeFill == true)
                     dataTable.Clear();
 
-                bool backupClearBeforeFill = this.ClearBeforeFill;
-                this.ClearBeforeFill = false;
+                bool backupClearBeforeFill = ClearBeforeFill;
+                ClearBeforeFill = false;
 
                 foreach (List<SqlFilterCondition> oneWhereClause in whereClause)
                 {
-                    this.CommandCollection[0].CommandText = _originalSelectCommand +
+                    CommandCollection[0].CommandText = _originalSelectCommand +
                         _db.WhereClause(true, true, true, oneWhereClause);
                     Fill(dataTable);
                 }
 
-                this.ClearBeforeFill = backupClearBeforeFill;
+                ClearBeforeFill = backupClearBeforeFill;
 
                 return dataTable.Rows.Count;
             }
@@ -319,10 +336,10 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
         /// Retrieves all data from the database into a new instance of the DataTable.
         /// </summary>
         /// <returns></returns>
-        [DataObjectMethodAttribute(DataObjectMethodType.Select, true)]
+        [DataObjectMethod(DataObjectMethodType.Select, true)]
         public virtual T GetData()
         {
-            this.Adapter.SelectCommand = this.CommandCollection[0];
+            Adapter.SelectCommand = CommandCollection[0];
             _db.FillTable(ref _hluTable);
             return _hluTable;
         }
@@ -330,28 +347,28 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
         /// <summary>
         /// Updates the database with changes made to the specified data table.
         /// </summary>
-        /// <param name="dataTable"></param>
-        /// <returns></returns>
+        /// <param name="dataTable">The data table to update.</param>
+        /// <returns>The number of rows affected.</returns>
         public virtual int Update(T dataTable)
         {
-            return _db.Update<T>(dataTable);
+            return _db.Update(dataTable);
         }
 
         /// <summary>
         /// Updates the database with changes made to the specified dataset.
         /// </summary>
-        /// <param name="dataSet"></param>
-        /// <returns></returns>
+        /// <param name="dataSet">The dataset to update.</param>
+        /// <returns>The number of rows affected.</returns>
         public virtual int Update(HluDataSet dataSet)
         {
-            return this.Adapter.Update(dataSet);
+            return Adapter.Update(dataSet);
         }
 
         /// <summary>
         /// Updates the database with changes made to the specified data row.
         /// </summary>
-        /// <param name="dataRow"></param>
-        /// <returns></returns>
+        /// <param name="dataRow">The data row to update.</param>
+        /// <returns>The number of rows affected.</returns>
         public virtual int Update(R dataRow)
         {
             return _db.Update<T, R>([dataRow]);
@@ -360,8 +377,8 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
         /// <summary>
         /// Updates the database with changes made to the specified array of data rows.
         /// </summary>
-        /// <param name="dataRows"></param>
-        /// <returns></returns>
+        /// <param name="dataRows">The array of data rows to update.</param>
+        /// <returns>The number of rows affected.</returns>
         public virtual int Update(R[] dataRows)
         {
             return _db.Update<T, R>(dataRows);
@@ -370,12 +387,12 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
         /// <summary>
         /// Deletes the specified original data row from the database.
         /// </summary>
-        /// <param name="originalRow"></param>
-        /// <returns></returns>
-        [DataObjectMethodAttribute(DataObjectMethodType.Delete, true)]
+        /// <param name="originalRow">The original data row to delete.</param>
+        /// <returns>The number of rows affected.</returns>
+        [DataObjectMethod(DataObjectMethodType.Delete, true)]
         public virtual int Delete(R originalRow)
         {
-            ConnectionState previousConnectionState = this.Adapter.UpdateCommand.Connection.State;
+            ConnectionState previousConnectionState = Adapter.UpdateCommand.Connection.State;
 
             try
             {
@@ -385,69 +402,71 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                     DataColumn col =
                         (DataColumn)originalRow.Table.GetType().GetProperty(kv.Key).GetValue(originalRow.Table, null);
 
-                    ((IDataParameter)this.Adapter.DeleteCommand.Parameters[
+                    ((IDataParameter)Adapter.DeleteCommand.Parameters[
                         _paramsDelOrig.Single(p => p.Key == col.ColumnName).Value]).Value =
-                        (originalRow.IsNull(col)) ? (object)DBNull.Value : originalRow[col];
+                        originalRow.IsNull(col) ? DBNull.Value : originalRow[col];
                 }
 
-                if ((this.Adapter.DeleteCommand.Connection.State & ConnectionState.Open) != ConnectionState.Open)
-                    this.Adapter.DeleteCommand.Connection.Open();
+                if ((Adapter.DeleteCommand.Connection.State & ConnectionState.Open) != ConnectionState.Open)
+                    Adapter.DeleteCommand.Connection.Open();
 
-                if (_db.Transaction != null) this.Adapter.DeleteCommand.Transaction = _db.Transaction;
+                if (_db.Transaction != null)
+                    Adapter.DeleteCommand.Transaction = _db.Transaction;
 
-                int returnValue = this.Adapter.DeleteCommand.ExecuteNonQuery();
+                int returnValue = Adapter.DeleteCommand.ExecuteNonQuery();
 
                 return returnValue;
             }
             finally
             {
-                if ((previousConnectionState == ConnectionState.Closed))
-                    this.Adapter.DeleteCommand.Connection.Close();
+                if (previousConnectionState == ConnectionState.Closed)
+                    Adapter.DeleteCommand.Connection.Close();
             }
         }
 
         /// <summary>
         /// Inserts the specified data row into the database.
         /// </summary>
-        /// <param name="row"></param>
-        /// <returns></returns>
-        [DataObjectMethodAttribute(DataObjectMethodType.Insert, true)]
+        /// <param name="row">The data row to insert.</param>
+        /// <returns>The number of rows affected.</returns>
+        [DataObjectMethod(DataObjectMethodType.Insert, true)]
         public virtual int Insert(R row)
         {
-            ConnectionState previousConnectionState = this.Adapter.InsertCommand.Connection.State;
+            ConnectionState previousConnectionState = Adapter.InsertCommand.Connection.State;
 
             try
             {
                 for (int i = 0; i < _columnCount; i++)
-                    ((IDataParameter)this.Adapter.InsertCommand.Parameters[i]).Value =
+                    ((IDataParameter)Adapter.InsertCommand.Parameters[i]).Value =
                         row.IsNull(row.Table.Columns[i]) ? DBNull.Value : row[i];
 
-                if ((this.Adapter.InsertCommand.Connection.State & ConnectionState.Open) != ConnectionState.Open)
-                    this.Adapter.InsertCommand.Connection.Open();
+                if ((Adapter.InsertCommand.Connection.State & ConnectionState.Open) != ConnectionState.Open)
+                    Adapter.InsertCommand.Connection.Open();
 
-                if (_db.Transaction != null) this.Adapter.InsertCommand.Transaction = _db.Transaction;
+                if (_db.Transaction != null)
+                    Adapter.InsertCommand.Transaction = _db.Transaction;
 
-                int returnValue = this.Adapter.InsertCommand.ExecuteNonQuery();
+                int returnValue = Adapter.InsertCommand.ExecuteNonQuery();
 
                 return returnValue;
             }
             finally
             {
-                if ((previousConnectionState == ConnectionState.Closed))
-                    this.Adapter.InsertCommand.Connection.Close();
+                if (previousConnectionState == ConnectionState.Closed)
+                    Adapter.InsertCommand.Connection.Close();
             }
         }
 
         /// <summary>
         /// Updates the specified data row in the database using the original row for concurrency checks.
         /// </summary>
-        /// <param name="newRow"></param>
-        /// <param name="originalRow"></param>
-        /// <returns></returns>
-        [DataObjectMethodAttribute(DataObjectMethodType.Update, true)]
+        /// <param name="newRow">The new data row with updated values.</param>
+        /// <param name="originalRow">The original data row for concurrency checks.</param>
+        /// <returns>The number of rows affected.</returns>
+        [DataObjectMethod(DataObjectMethodType.Update, true)]
         public virtual int Update(R newRow, R originalRow)
         {
-            ConnectionState previousConnectionState = this.Adapter.UpdateCommand.Connection.State;
+            ConnectionState previousConnectionState = Adapter.UpdateCommand.Connection.State;
 
             try
             {
@@ -457,32 +476,35 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                     DataColumn col =
                         (DataColumn)originalRow.Table.GetType().GetProperty(kv.Key).GetValue(originalRow.Table, null);
 
-                    ((IDataParameter)this.Adapter.UpdateCommand.Parameters[
+                    ((IDataParameter)Adapter.UpdateCommand.Parameters[
                         _paramsUpdOrig.Single(p => p.Key == col.ColumnName).Value]).Value =
-                        (originalRow.IsNull(col)) ? (object)DBNull.Value : originalRow[col];
+                        originalRow.IsNull(col) ? DBNull.Value : originalRow[col];
                 }
 
-                if ((this.Adapter.UpdateCommand.Connection.State & ConnectionState.Open) != ConnectionState.Open)
-                    this.Adapter.UpdateCommand.Connection.Open();
+                if ((Adapter.UpdateCommand.Connection.State & ConnectionState.Open) != ConnectionState.Open)
+                    Adapter.UpdateCommand.Connection.Open();
 
-                if (_db.Transaction != null) this.Adapter.UpdateCommand.Transaction = _db.Transaction;
+                if (_db.Transaction != null)
+                    Adapter.UpdateCommand.Transaction = _db.Transaction;
 
-                int returnValue = this.Adapter.UpdateCommand.ExecuteNonQuery();
+                int returnValue = Adapter.UpdateCommand.ExecuteNonQuery();
 
                 return returnValue;
             }
             finally
             {
-                if ((previousConnectionState == ConnectionState.Closed))
-                    this.Adapter.UpdateCommand.Connection.Close();
+                if (previousConnectionState == ConnectionState.Closed)
+                    Adapter.UpdateCommand.Connection.Close();
             }
         }
+
+        #endregion Methods
     }
 
     /// <summary>
     /// TableAdapterManager is used to coordinate TableAdapters in the dataset to enable Hierarchical Update scenarios
     ///</summary>
-    [DesignerCategoryAttribute("code")]
+    [DesignerCategory("code")]
     [ToolboxItem(true)]
     public partial class TableAdapterManager : Component
     {
@@ -668,579 +690,581 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
 
         public HluTableAdapter<HluDataSet.exportsDataTable, HluDataSet.exportsRow> exportsTableAdapter
         {
-            get { return this._exportsTableAdapter; }
+            get { return _exportsTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._exportsTableAdapter = value;
+                _exportsTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.exports_field_typesDataTable, HluDataSet.exports_field_typesRow> exports_field_typesTableAdapter
         {
-            get { return this._exports_field_typesTableAdapter; }
+            get { return _exports_field_typesTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._exports_field_typesTableAdapter = value;
+                _exports_field_typesTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.exports_fieldsDataTable, HluDataSet.exports_fieldsRow> exports_fieldsTableAdapter
         {
-            get { return this._exports_fieldsTableAdapter; }
+            get { return _exports_fieldsTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._exports_fieldsTableAdapter = value;
+                _exports_fieldsTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_versionDataTable, HluDataSet.lut_versionRow> lut_versionTableAdapter
         {
-            get { return this._lut_versionTableAdapter; }
+            get { return _lut_versionTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_versionTableAdapter = value;
+                _lut_versionTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.historyDataTable, HluDataSet.historyRow> historyTableAdapter
         {
-            get { return this._historyTableAdapter; }
+            get { return _historyTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._historyTableAdapter = value;
+                _historyTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.incidDataTable, HluDataSet.incidRow> incidTableAdapter
         {
-            get { return this._incidTableAdapter; }
+            get { return _incidTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._incidTableAdapter = value;
+                _incidTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.incid_bapDataTable, HluDataSet.incid_bapRow> incid_bapTableAdapter
         {
-            get { return this._incid_bapTableAdapter; }
+            get { return _incid_bapTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._incid_bapTableAdapter = value;
+                _incid_bapTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.incid_conditionDataTable, HluDataSet.incid_conditionRow> incid_conditionTableAdapter
         {
-            get { return this._incid_conditionTableAdapter; }
+            get { return _incid_conditionTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._incid_conditionTableAdapter = value;
+                _incid_conditionTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.incid_secondaryDataTable, HluDataSet.incid_secondaryRow> incid_secondaryTableAdapter
         {
-            get { return this._incid_secondaryTableAdapter; }
+            get { return _incid_secondaryTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._incid_secondaryTableAdapter = value;
+                _incid_secondaryTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.incid_ihs_complexDataTable, HluDataSet.incid_ihs_complexRow> incid_ihs_complexTableAdapter
         {
-            get { return this._incid_ihs_complexTableAdapter; }
+            get { return _incid_ihs_complexTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._incid_ihs_complexTableAdapter = value;
+                _incid_ihs_complexTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.incid_ihs_formationDataTable, HluDataSet.incid_ihs_formationRow> incid_ihs_formationTableAdapter
         {
-            get { return this._incid_ihs_formationTableAdapter; }
+            get { return _incid_ihs_formationTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._incid_ihs_formationTableAdapter = value;
+                _incid_ihs_formationTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.incid_ihs_managementDataTable, HluDataSet.incid_ihs_managementRow> incid_ihs_managementTableAdapter
         {
-            get { return this._incid_ihs_managementTableAdapter; }
+            get { return _incid_ihs_managementTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._incid_ihs_managementTableAdapter = value;
+                _incid_ihs_managementTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.incid_ihs_matrixDataTable, HluDataSet.incid_ihs_matrixRow> incid_ihs_matrixTableAdapter
         {
-            get { return this._incid_ihs_matrixTableAdapter; }
+            get { return _incid_ihs_matrixTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._incid_ihs_matrixTableAdapter = value;
+                _incid_ihs_matrixTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.incid_mm_polygonsDataTable, HluDataSet.incid_mm_polygonsRow> incid_mm_polygonsTableAdapter
         {
-            get { return this._incid_mm_polygonsTableAdapter; }
+            get { return _incid_mm_polygonsTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._incid_mm_polygonsTableAdapter = value;
+                _incid_mm_polygonsTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.incid_sourcesDataTable, HluDataSet.incid_sourcesRow> incid_sourcesTableAdapter
         {
-            get { return this._incid_sourcesTableAdapter; }
+            get { return _incid_sourcesTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._incid_sourcesTableAdapter = value;
+                _incid_sourcesTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.incid_osmm_updatesDataTable, HluDataSet.incid_osmm_updatesRow> incid_osmm_updatesTableAdapter
         {
-            get { return this._incid_osmm_updatesTableAdapter; }
+            get { return _incid_osmm_updatesTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._incid_osmm_updatesTableAdapter = value;
+                _incid_osmm_updatesTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_quality_determinationDataTable, HluDataSet.lut_quality_determinationRow> lut_quality_determinationTableAdapter
         {
-            get { return this._lut_quality_determinationTableAdapter; }
+            get { return _lut_quality_determinationTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_quality_determinationTableAdapter = value;
+                _lut_quality_determinationTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_quality_interpretationDataTable, HluDataSet.lut_quality_interpretationRow> lut_quality_interpretationTableAdapter
         {
-            get { return this._lut_quality_interpretationTableAdapter; }
+            get { return _lut_quality_interpretationTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_quality_interpretationTableAdapter = value;
+                _lut_quality_interpretationTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_boundary_mapDataTable, HluDataSet.lut_boundary_mapRow> lut_boundary_mapTableAdapter
         {
-            get { return this._lut_boundary_mapTableAdapter; }
+            get { return _lut_boundary_mapTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_boundary_mapTableAdapter = value;
+                _lut_boundary_mapTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_habitat_classDataTable, HluDataSet.lut_habitat_classRow> lut_habitat_classTableAdapter
         {
-            get { return this._lut_habitat_classTableAdapter; }
+            get { return _lut_habitat_classTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_habitat_classTableAdapter = value;
+                _lut_habitat_classTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_habitat_typeDataTable, HluDataSet.lut_habitat_typeRow> lut_habitat_typeTableAdapter
         {
-            get { return this._lut_habitat_typeTableAdapter; }
+            get { return _lut_habitat_typeTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_habitat_typeTableAdapter = value;
+                _lut_habitat_typeTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_conditionDataTable, HluDataSet.lut_conditionRow> lut_conditionTableAdapter
         {
-            get { return this._lut_conditionTableAdapter; }
+            get { return _lut_conditionTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_conditionTableAdapter = value;
+                _lut_conditionTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_condition_qualifierDataTable, HluDataSet.lut_condition_qualifierRow> lut_condition_qualifierTableAdapter
         {
-            get { return this._lut_condition_qualifierTableAdapter; }
+            get { return _lut_condition_qualifierTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_condition_qualifierTableAdapter = value;
+                _lut_condition_qualifierTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_primary_categoryDataTable, HluDataSet.lut_primary_categoryRow> lut_primary_categoryTableAdapter
         {
-            get { return this._lut_primary_categoryTableAdapter; }
+            get { return _lut_primary_categoryTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_primary_categoryTableAdapter = value;
+                _lut_primary_categoryTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_primaryDataTable, HluDataSet.lut_primaryRow> lut_primaryTableAdapter
         {
-            get { return this._lut_primaryTableAdapter; }
+            get { return _lut_primaryTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_primaryTableAdapter = value;
+                _lut_primaryTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_primary_bap_habitatDataTable, HluDataSet.lut_primary_bap_habitatRow> lut_primary_bap_habitatTableAdapter
         {
-            get { return this._lut_primary_bap_habitatTableAdapter; }
+            get { return _lut_primary_bap_habitatTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_primary_bap_habitatTableAdapter = value;
+                _lut_primary_bap_habitatTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_secondary_groupDataTable, HluDataSet.lut_secondary_groupRow> lut_secondary_groupTableAdapter
         {
-            get { return this._lut_secondary_groupTableAdapter; }
+            get { return _lut_secondary_groupTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_secondary_groupTableAdapter = value;
+                _lut_secondary_groupTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_secondaryDataTable, HluDataSet.lut_secondaryRow> lut_secondaryTableAdapter
         {
-            get { return this._lut_secondaryTableAdapter; }
+            get { return _lut_secondaryTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_secondaryTableAdapter = value;
+                _lut_secondaryTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_secondary_bap_habitatDataTable, HluDataSet.lut_secondary_bap_habitatRow> lut_secondary_bap_habitatTableAdapter
         {
-            get { return this._lut_secondary_bap_habitatTableAdapter; }
+            get { return _lut_secondary_bap_habitatTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_secondary_bap_habitatTableAdapter = value;
+                _lut_secondary_bap_habitatTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_primary_secondaryDataTable, HluDataSet.lut_primary_secondaryRow> lut_primary_secondaryTableAdapter
         {
-            get { return this._lut_primary_secondaryTableAdapter; }
+            get { return _lut_primary_secondaryTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_primary_secondaryTableAdapter = value;
+                _lut_primary_secondaryTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_habitat_type_primaryDataTable, HluDataSet.lut_habitat_type_primaryRow> lut_habitat_type_primaryTableAdapter
         {
-            get { return this._lut_habitat_type_primaryTableAdapter; }
+            get { return _lut_habitat_type_primaryTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_habitat_type_primaryTableAdapter = value;
+                _lut_habitat_type_primaryTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_habitat_type_secondaryDataTable, HluDataSet.lut_habitat_type_secondaryRow> lut_habitat_type_secondaryTableAdapter
         {
-            get { return this._lut_habitat_type_secondaryTableAdapter; }
+            get { return _lut_habitat_type_secondaryTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_habitat_type_secondaryTableAdapter = value;
+                _lut_habitat_type_secondaryTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_ihs_primary_secondaryDataTable, HluDataSet.lut_ihs_primary_secondaryRow> lut_ihs_primary_secondaryTableAdapter
         {
-            get { return this._lut_ihs_primary_secondaryTableAdapter; }
+            get { return _lut_ihs_primary_secondaryTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_ihs_primary_secondaryTableAdapter = value;
+                _lut_ihs_primary_secondaryTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_osmm_habitat_xrefDataTable, HluDataSet.lut_osmm_habitat_xrefRow> lut_osmm_habitat_xrefTableAdapter
         {
-            get { return this._lut_osmm_habitat_xrefTableAdapter; }
+            get { return _lut_osmm_habitat_xrefTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_osmm_habitat_xrefTableAdapter = value;
+                _lut_osmm_habitat_xrefTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_ihs_complexDataTable, HluDataSet.lut_ihs_complexRow> lut_ihs_complexTableAdapter
         {
-            get { return this._lut_ihs_complexTableAdapter; }
+            get { return _lut_ihs_complexTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_ihs_complexTableAdapter = value;
+                _lut_ihs_complexTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_ihs_formationDataTable, HluDataSet.lut_ihs_formationRow> lut_ihs_formationTableAdapter
         {
-            get { return this._lut_ihs_formationTableAdapter; }
+            get { return _lut_ihs_formationTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_ihs_formationTableAdapter = value;
+                _lut_ihs_formationTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_ihs_habitatDataTable, HluDataSet.lut_ihs_habitatRow> lut_ihs_habitatTableAdapter
         {
-            get { return this._lut_ihs_habitatTableAdapter; }
+            get { return _lut_ihs_habitatTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_ihs_habitatTableAdapter = value;
+                _lut_ihs_habitatTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_ihs_managementDataTable, HluDataSet.lut_ihs_managementRow> lut_ihs_managementTableAdapter
         {
-            get { return this._lut_ihs_managementTableAdapter; }
+            get { return _lut_ihs_managementTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_ihs_managementTableAdapter = value;
+                _lut_ihs_managementTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_ihs_matrixDataTable, HluDataSet.lut_ihs_matrixRow> lut_ihs_matrixTableAdapter
         {
-            get { return this._lut_ihs_matrixTableAdapter; }
+            get { return _lut_ihs_matrixTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_ihs_matrixTableAdapter = value;
+                _lut_ihs_matrixTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_importanceDataTable, HluDataSet.lut_importanceRow> lut_importanceTableAdapter
         {
-            get { return this._lut_importanceTableAdapter; }
+            get { return _lut_importanceTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_importanceTableAdapter = value;
+                _lut_importanceTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_last_incidDataTable, HluDataSet.lut_last_incidRow> lut_last_incidTableAdapter
         {
-            get { return this._lut_last_incidTableAdapter; }
+            get { return _lut_last_incidTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_last_incidTableAdapter = value;
+                _lut_last_incidTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_legacy_habitatDataTable, HluDataSet.lut_legacy_habitatRow> lut_legacy_habitatTableAdapter
         {
-            get { return this._lut_legacy_habitatTableAdapter; }
+            get { return _lut_legacy_habitatTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_legacy_habitatTableAdapter = value;
+                _lut_legacy_habitatTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_operationDataTable, HluDataSet.lut_operationRow> lut_operationTableAdapter
         {
-            get { return this._lut_operationTableAdapter; }
+            get { return _lut_operationTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_operationTableAdapter = value;
+                _lut_operationTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_osmm_updates_spatialDataTable, HluDataSet.lut_osmm_updates_spatialRow> lut_osmm_updates_spatialTableAdapter
         {
-            get { return this._lut_osmm_updates_spatialTableAdapter; }
+            get { return _lut_osmm_updates_spatialTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_osmm_updates_spatialTableAdapter = value;
+                _lut_osmm_updates_spatialTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_osmm_updates_processDataTable, HluDataSet.lut_osmm_updates_processRow> lut_osmm_updates_processTableAdapter
         {
-            get { return this._lut_osmm_updates_processTableAdapter; }
+            get { return _lut_osmm_updates_processTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_osmm_updates_processTableAdapter = value;
+                _lut_osmm_updates_processTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_osmm_updates_changeDataTable, HluDataSet.lut_osmm_updates_changeRow> lut_osmm_updates_changeTableAdapter
         {
-            get { return this._lut_osmm_updates_changeTableAdapter; }
+            get { return _lut_osmm_updates_changeTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_osmm_updates_changeTableAdapter = value;
+                _lut_osmm_updates_changeTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_processDataTable, HluDataSet.lut_processRow> lut_processTableAdapter
         {
-            get { return this._lut_processTableAdapter; }
+            get { return _lut_processTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_processTableAdapter = value;
+                _lut_processTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_reasonDataTable, HluDataSet.lut_reasonRow> lut_reasonTableAdapter
         {
-            get { return this._lut_reasonTableAdapter; }
+            get { return _lut_reasonTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_reasonTableAdapter = value;
+                _lut_reasonTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_site_idDataTable, HluDataSet.lut_site_idRow> lut_site_idTableAdapter
         {
-            get { return this._lut_site_idTableAdapter; }
+            get { return _lut_site_idTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_site_idTableAdapter = value;
+                _lut_site_idTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_sourcesDataTable, HluDataSet.lut_sourcesRow> lut_sourcesTableAdapter
         {
-            get { return this._lut_sourcesTableAdapter; }
+            get { return _lut_sourcesTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_sourcesTableAdapter = value;
+                _lut_sourcesTableAdapter = value;
             }
         }
 
         public HluTableAdapter<HluDataSet.lut_userDataTable, HluDataSet.lut_userRow> lut_userTableAdapter
         {
-            get { return this._lut_userTableAdapter; }
+            get { return _lut_userTableAdapter; }
             set
             {
-                if (!this.MatchTableAdapterConnection(value.Connection))
+                if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
-                this._lut_userTableAdapter = value;
+                _lut_userTableAdapter = value;
             }
         }
 
-        #endregion
+        #endregion Table Adapters
 
         #region Properties
 
         public UpdateOrderOption UpdateOrder
         {
-            get { return this._updateOrder; }
-            set { this._updateOrder = value; }
+            get { return _updateOrder; }
+            set {
+                _updateOrder = value; }
         }
 
         public bool BackupDataSetBeforeUpdate
         {
-            get { return this._backupDataSetBeforeUpdate; }
-            set { this._backupDataSetBeforeUpdate = value; }
+            get { return _backupDataSetBeforeUpdate; }
+            set {
+                _backupDataSetBeforeUpdate = value; }
         }
 
         [Browsable(false)]
@@ -1253,105 +1277,105 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             {
                 int count = 0;
 
-                if (this._exportsTableAdapter != null) count++;
+                if (_exportsTableAdapter != null) count++;
 
-                if (this._exports_field_typesTableAdapter != null) count++;
+                if (_exports_field_typesTableAdapter != null) count++;
 
-                if (this._exports_fieldsTableAdapter != null) count++;
+                if (_exports_fieldsTableAdapter != null) count++;
 
-                if (this._historyTableAdapter != null) count++;
+                if (_historyTableAdapter != null) count++;
 
-                if (this._incidTableAdapter != null) count++;
+                if (_incidTableAdapter != null) count++;
 
-                if (this._incid_bapTableAdapter != null) count++;
+                if (_incid_bapTableAdapter != null) count++;
 
-                if (this._incid_conditionTableAdapter != null) count++;
+                if (_incid_conditionTableAdapter != null) count++;
 
-                if (this._incid_secondaryTableAdapter != null) count++;
+                if (_incid_secondaryTableAdapter != null) count++;
 
-                if (this._incid_ihs_complexTableAdapter != null) count++;
+                if (_incid_ihs_complexTableAdapter != null) count++;
 
-                if (this._incid_ihs_formationTableAdapter != null) count++;
+                if (_incid_ihs_formationTableAdapter != null) count++;
 
-                if (this._incid_ihs_managementTableAdapter != null) count++;
+                if (_incid_ihs_managementTableAdapter != null) count++;
 
-                if (this._incid_ihs_matrixTableAdapter != null) count++;
+                if (_incid_ihs_matrixTableAdapter != null) count++;
 
-                if (this._incid_mm_polygonsTableAdapter != null) count++;
+                if (_incid_mm_polygonsTableAdapter != null) count++;
 
-                if (this._incid_sourcesTableAdapter != null) count++;
+                if (_incid_sourcesTableAdapter != null) count++;
 
-                if (this._incid_osmm_updatesTableAdapter != null) count++;
+                if (_incid_osmm_updatesTableAdapter != null) count++;
 
-                if (this._lut_quality_determinationTableAdapter != null) count++;
+                if (_lut_quality_determinationTableAdapter != null) count++;
 
-                if (this._lut_quality_interpretationTableAdapter != null) count++;
+                if (_lut_quality_interpretationTableAdapter != null) count++;
 
-                if (this._lut_boundary_mapTableAdapter != null) count++;
+                if (_lut_boundary_mapTableAdapter != null) count++;
 
-                if (this._lut_habitat_classTableAdapter != null) count++;
+                if (_lut_habitat_classTableAdapter != null) count++;
 
-                if (this._lut_habitat_typeTableAdapter != null) count++;
+                if (_lut_habitat_typeTableAdapter != null) count++;
 
-                if (this._lut_conditionTableAdapter != null) count++;
+                if (_lut_conditionTableAdapter != null) count++;
 
-                if (this._lut_condition_qualifierTableAdapter != null) count++;
+                if (_lut_condition_qualifierTableAdapter != null) count++;
 
-                if (this._lut_primary_categoryTableAdapter != null) count++;
+                if (_lut_primary_categoryTableAdapter != null) count++;
 
-                if (this._lut_primaryTableAdapter != null) count++;
+                if (_lut_primaryTableAdapter != null) count++;
 
-                if (this._lut_primary_bap_habitatTableAdapter != null) count++;
+                if (_lut_primary_bap_habitatTableAdapter != null) count++;
 
-                if (this._lut_secondary_groupTableAdapter != null) count++;
+                if (_lut_secondary_groupTableAdapter != null) count++;
 
-                if (this._lut_secondaryTableAdapter != null) count++;
+                if (_lut_secondaryTableAdapter != null) count++;
 
-                if (this._lut_secondary_bap_habitatTableAdapter != null) count++;
+                if (_lut_secondary_bap_habitatTableAdapter != null) count++;
 
-                if (this._lut_primary_secondaryTableAdapter != null) count++;
+                if (_lut_primary_secondaryTableAdapter != null) count++;
 
-                if (this._lut_habitat_type_primaryTableAdapter != null) count++;
+                if (_lut_habitat_type_primaryTableAdapter != null) count++;
 
-                if (this._lut_habitat_type_secondaryTableAdapter != null) count++;
+                if (_lut_habitat_type_secondaryTableAdapter != null) count++;
 
-                if (this._lut_ihs_primary_secondaryTableAdapter != null) count++;
+                if (_lut_ihs_primary_secondaryTableAdapter != null) count++;
 
-                if (this._lut_osmm_habitat_xrefTableAdapter != null) count++;
+                if (_lut_osmm_habitat_xrefTableAdapter != null) count++;
 
-                if (this._lut_ihs_complexTableAdapter != null) count++;
+                if (_lut_ihs_complexTableAdapter != null) count++;
 
-                if (this._lut_ihs_formationTableAdapter != null) count++;
+                if (_lut_ihs_formationTableAdapter != null) count++;
 
-                if (this._lut_ihs_habitatTableAdapter != null) count++;
+                if (_lut_ihs_habitatTableAdapter != null) count++;
 
-                if (this._lut_ihs_managementTableAdapter != null) count++;
+                if (_lut_ihs_managementTableAdapter != null) count++;
 
-                if (this._lut_ihs_matrixTableAdapter != null) count++;
+                if (_lut_ihs_matrixTableAdapter != null) count++;
 
-                if (this._lut_importanceTableAdapter != null) count++;
+                if (_lut_importanceTableAdapter != null) count++;
 
-                if (this._lut_last_incidTableAdapter != null) count++;
+                if (_lut_last_incidTableAdapter != null) count++;
 
-                if (this._lut_operationTableAdapter != null) count++;
+                if (_lut_operationTableAdapter != null) count++;
 
-                if (this._lut_osmm_updates_spatialTableAdapter != null) count++;
+                if (_lut_osmm_updates_spatialTableAdapter != null) count++;
 
-                if (this._lut_osmm_updates_processTableAdapter != null) count++;
+                if (_lut_osmm_updates_processTableAdapter != null) count++;
 
-                if (this._lut_osmm_updates_changeTableAdapter != null) count++;
+                if (_lut_osmm_updates_changeTableAdapter != null) count++;
 
-                if (this._lut_processTableAdapter != null) count++;
+                if (_lut_processTableAdapter != null) count++;
 
-                if (this._lut_reasonTableAdapter != null) count++;
+                if (_lut_reasonTableAdapter != null) count++;
 
-                if (this._lut_site_idTableAdapter != null) count++;
+                if (_lut_site_idTableAdapter != null) count++;
 
-                if (this._lut_sourcesTableAdapter != null) count++;
+                if (_lut_sourcesTableAdapter != null) count++;
 
-                if (this._lut_userTableAdapter != null) count++;
+                if (_lut_userTableAdapter != null) count++;
 
-                if (this._lut_versionTableAdapter != null) count++;
+                if (_lut_versionTableAdapter != null) count++;
 
                 return count;
             }
@@ -1364,8 +1388,8 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
         /// <summary>
         /// Initializes a new instance of the TableAdapterManager class.
         /// </summary>
-        /// <param name="db"></param>
-        /// <param name="createAdapters"></param>
+        /// <param name="db">The database connection to use for the table adapters.</param>
+        /// <param name="createAdapters">Specifies which table adapters to create.</param>
         /// <exception cref="ArgumentException"></exception>
         internal TableAdapterManager(DbBase db, Scope createAdapters)
         {
@@ -1382,7 +1406,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
 
             // Create dictionary to match DataTable types to TableAdapter properties.
             _tableAdapterMatches = (from pt in typeof(HluDataSet).GetProperties()
-                                    from pa in this.GetType().GetProperties().Where(pi => pi.PropertyType.GetGenericArguments().Length != 0)
+                                    from pa in GetType().GetProperties().Where(pi => pi.PropertyType.GetGenericArguments().Length != 0)
                                     where pa.PropertyType.GetGenericArguments().Contains(pt.PropertyType)
                                     select new
                                     {
@@ -1443,7 +1467,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
 
                 if (schemaTable != null)
                 {
-                    var cols = from t in TableAdapterManager.DataTableTypes
+                    var cols = from t in DataTableTypes
                                from c in t.GetProperties().Where(pi => pi.PropertyType == typeof(DataColumn))
                                select new
                                {
@@ -1451,7 +1475,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                                    Column = c.Name.Remove(c.Name.Length - 6)
                                };
 
-                    string[][] missingSchemaElems = (from c in cols
+                    string[][] missingSchemaElems = [.. (from c in cols
                                                      let schema = from r in schemaTable.AsEnumerable()
                                                                   select new
                                                                   {
@@ -1460,7 +1484,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                                                                   }
                                                      where !schema.Any(s => s.Column == c.Column && s.Table == c.Table)
                                                      select new string[] { db.QuoteIdentifier(c.Table), db.QuoteIdentifier(c.Column) }
-                                                     ).ToArray();
+                                                     )];
 
                     if (missingSchemaElems.Length > 0)
                     {
@@ -1471,14 +1495,14 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                             string table = missingSchemaElems[i][0];
                             messageText.Append("\n\nTable: ").Append(table);
                             StringBuilder columnList = new();
-                            while ((i < missingSchemaElems.Length) && (missingSchemaElems[i][0] == table))
+                            while (i < missingSchemaElems.Length && missingSchemaElems[i][0] == table)
                             {
                                 columnList.Append(", ").Append(missingSchemaElems[i++][1]);
                             }
                             if (columnList.Length > 0)
                                 messageText.Append(columnList.Remove(0, 1).Insert(0, "\nColumns:"));
                         }
-                        errorMessage = String.Format("Connection does not point to a valid HLU database." +
+                        errorMessage = string.Format("Connection does not point to a valid HLU database." +
                             "\nBad schema objects: {0}", messageText);
                         return false;
                     }
@@ -1677,7 +1701,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                     else
                     {
                         throw new ArgumentException("table",
-                            String.Format("Table '{0}' is not a member of HluDataSet.", tableType.Name));
+                            string.Format("Table '{0}' is not a member of HluDataSet.", tableType.Name));
                     }
                 }
             }
@@ -1716,7 +1740,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                     else
                     {
                         throw new ArgumentException("table",
-                            String.Format("Table '{0}' is not a member of HluDataSet.", tableType.Name));
+                            string.Format("Table '{0}' is not a member of HluDataSet.", tableType.Name));
                     }
                 }
             }
@@ -1743,7 +1767,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             {
                 tablePropertyInfo = typeof(HluDataSet).GetProperties().Single(pi => pi.PropertyType == tableType);
 
-                adapterProperty = this.GetType().InvokeMember(adapterPropertyInfo.Name,
+                adapterProperty = GetType().InvokeMember(adapterPropertyInfo.Name,
                      BindingFlags.GetProperty, null, this, null);
 
                 PropertyInfo clearBeforeFillPropertyInfo = adapterProperty.GetType().GetProperty("ClearBeforeFill");
@@ -1772,7 +1796,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             where T : DataTable, new()
             where R : DataRow
         {
-            if ((adapter == null) || (table == null)) return;
+            if (adapter == null || table == null) return;
 
             bool previousClearBeforeFill = adapter.ClearBeforeFill;
 
@@ -1795,16 +1819,16 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
         /// <summary>
         /// Prepares one adapter for update operation.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <typeparam name="R"></typeparam>
-        /// <param name="tableAdapter"></param>
-        /// <param name="adaptersWithAcceptChangesDuringUpdate"></param>
+        /// <typeparam name="T">The type of the data table.</typeparam>
+        /// <typeparam name="R">The type of the data row.</typeparam>
+        /// <param name="tableAdapter">The table adapter to prepare for update.</param>
+        /// <param name="adaptersWithAcceptChangesDuringUpdate">A list of adapters with AcceptChangesDuringUpdate set to true.</param>
         private void PrepareUpdate<T, R>(HluTableAdapter<T, R> tableAdapter,
             ref List<DataAdapter> adaptersWithAcceptChangesDuringUpdate)
             where T : DataTable, new()
             where R : DataRow
         {
-            if ((tableAdapter != null))
+            if (tableAdapter != null)
             {
                 DataAdapter dataAdapter = tableAdapter as DataAdapter;
                 if (dataAdapter.AcceptChangesDuringUpdate)
@@ -1818,23 +1842,24 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
         /// <summary>
         /// Perfom Update for one adapter.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="adapter"></param>
-        /// <param name="table"></param>
-        /// <param name="allChangedRows"></param>
-        /// <param name="allAddedRows"></param>
-        /// <param name="result"></param>
+        /// <typeparam name="T">The type of the data table.</typeparam>
+        /// <typeparam name="R">The type of the data row.</typeparam>
+        /// <param name="adapter">The table adapter to use for the update.</param>
+        /// <param name="table">The data table containing the rows to update.</param>
+        /// <param name="allChangedRows">A list to collect all changed rows.</param>
+        /// <param name="allAddedRows">A list to collect all added rows.</param>
+        /// <param name="result">The total number of rows affected.</param>
         private void UpdateUpdatedRows<T, R>(HluTableAdapter<T, R> adapter, T table,
             List<DataRow> allChangedRows, List<DataRow> allAddedRows, ref int result)
             where T : DataTable, new()
             where R : DataRow
         {
-            if ((adapter != null))
+            if (adapter != null)
             {
                 R[] updatedRows = (R[])table.Select(null, null, DataViewRowState.ModifiedCurrent);
-                updatedRows = this.GetRealUpdatedRows(updatedRows, allAddedRows);
+                updatedRows = GetRealUpdatedRows(updatedRows, allAddedRows);
                 int affected;
-                if ((updatedRows != null) && (0 < updatedRows.Length))
+                if (updatedRows != null && 0 < updatedRows.Length)
                 {
                     if ((affected = adapter.Update(updatedRows)) != -1)
                         result += affected;
@@ -1846,11 +1871,12 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
         /// <summary>
         /// Perfom Insert for one adapter.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="adapter"></param>
-        /// <param name="table"></param>
-        /// <param name="allAddedRows"></param>
-        /// <param name="result"></param>
+        /// <typeparam name="T">The type of the data table.</typeparam>
+        /// <typeparam name="R">The type of the data row.</typeparam>
+        /// <param name="adapter">The table adapter to use for the insert.</param>
+        /// <param name="table">The data table containing the rows to insert.</param>
+        /// <param name="allAddedRows">A list to collect all added rows.</param>
+        /// <param name="result">The total number of rows affected.</param>
         private void UpdateInsertedRows<T, R>(HluTableAdapter<T, R> adapter, T table,
             List<DataRow> allAddedRows, ref int result)
             where T : DataTable, new()
@@ -1860,7 +1886,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             {
                 R[] addedRows = (R[])table.Select(null, null, DataViewRowState.Added);
                 int affected;
-                if ((addedRows != null) && (0 < addedRows.Length))
+                if (addedRows != null && 0 < addedRows.Length)
                 {
                     if ((affected = adapter.Update(addedRows)) != -1)
                         result += affected;
@@ -1872,11 +1898,12 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
         /// <summary>
         /// Perfom Delete for one adapter.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="adapter"></param>
-        /// <param name="table"></param>
-        /// <param name="allChangedRows"></param>
-        /// <param name="result"></param>
+        /// <typeparam name="T">The type of the data table.</typeparam>
+        /// <typeparam name="R">The type of the data row.</typeparam>
+        /// <param name="adapter">The table adapter to use for the delete.</param>
+        /// <param name="table">The data table containing the rows to delete.</param>
+        /// <param name="allChangedRows">A list to collect all changed rows.</param>
+        /// <param name="result">The total number of rows affected.</param>
         private void UpdateDeletedRows<T, R>(HluTableAdapter<T, R> adapter, T table,
             List<DataRow> allChangedRows, ref int result)
             where T : DataTable, new()
@@ -1886,7 +1913,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             {
                 R[] deletedRows = (R[])table.Select(null, null, DataViewRowState.Deleted);
                 int affected;
-                if ((deletedRows != null) && (0 < deletedRows.Length))
+                if (deletedRows != null && 0 < deletedRows.Length)
                 {
                     if ((affected = adapter.Update(deletedRows)) != -1)
                         result += affected;
@@ -2363,17 +2390,17 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
         private R[] GetRealUpdatedRows<R>(R[] updatedRows, List<DataRow> allAddedRows)
             where R : DataRow
         {
-            if ((updatedRows == null) || (updatedRows.Length < 1)) return updatedRows;
+            if (updatedRows == null || updatedRows.Length < 1) return updatedRows;
 
-            if ((allAddedRows == null) || (allAddedRows.Count < 1)) return updatedRows;
+            if (allAddedRows == null || allAddedRows.Count < 1) return updatedRows;
 
             List<R> realUpdatedRows = [];
-            for (int i = 0; (i < updatedRows.Length); i++)
+            for (int i = 0; i < updatedRows.Length; i++)
             {
                 R row = updatedRows[i];
-                if ((allAddedRows.Contains(row) == false)) realUpdatedRows.Add(row);
+                if (allAddedRows.Contains(row) == false) realUpdatedRows.Add(row);
             }
-            return realUpdatedRows.ToArray();
+            return [.. realUpdatedRows];
         }
 
         /// <summary>
@@ -2385,18 +2412,16 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
 
             if (!dataSet.HasChanges()) return 0;
 
-            IDbConnection workConnection = this.Connection;
-            if ((workConnection == null))
-                throw new ApplicationException("TableAdapterManager contains no connection information." +
+            IDbConnection workConnection = Connection ?? throw new ApplicationException("TableAdapterManager contains no connection information." +
                     "Set each TableAdapterManager TableAdapter property to a valid TableAdapter instance.");
 
             bool workConnOpened = false;
-            if (((workConnection.State & ConnectionState.Broken) == ConnectionState.Broken))
+            if ((workConnection.State & ConnectionState.Broken) == ConnectionState.Broken)
             {
                 workConnection.Close();
             }
 
-            if ((workConnection.State == ConnectionState.Closed))
+            if (workConnection.State == ConnectionState.Closed)
             {
                 workConnection.Open();
                 workConnOpened = true;
@@ -2411,7 +2436,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             List<DataAdapter> adaptersWithAcceptChangesDuringUpdate = [];
             int result = 0;
             DataSet backupDataSet = null;
-            if (this.BackupDataSetBeforeUpdate)
+            if (BackupDataSetBeforeUpdate)
             {
                 backupDataSet = new();
                 backupDataSet.Merge(dataSet);
@@ -2421,79 +2446,79 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             {
                 // ---- Prepare for update -----------
                 //
-                PrepareUpdate(this._exportsTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._historyTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._incidTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._incid_conditionTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._incid_secondaryTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._incid_bapTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._incid_ihs_complexTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._incid_ihs_formationTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._incid_ihs_managementTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._incid_ihs_matrixTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._incid_mm_polygonsTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._incid_sourcesTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._incid_osmm_updatesTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_exportsTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_historyTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_incidTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_incid_conditionTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_incid_secondaryTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_incid_bapTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_incid_ihs_complexTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_incid_ihs_formationTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_incid_ihs_managementTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_incid_ihs_matrixTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_incid_mm_polygonsTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_incid_sourcesTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_incid_osmm_updatesTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
 
-                PrepareUpdate(this._lut_quality_determinationTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_quality_interpretationTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_boundary_mapTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_habitat_classTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_habitat_typeTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_conditionTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_condition_qualifierTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_primary_categoryTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_primaryTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_primary_bap_habitatTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_secondary_groupTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_secondaryTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_secondary_bap_habitatTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_primary_secondaryTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_habitat_type_primaryTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_habitat_type_secondaryTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_ihs_primary_secondaryTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_osmm_habitat_xrefTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_ihs_complexTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_ihs_formationTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_ihs_habitatTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_ihs_managementTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_ihs_matrixTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_importanceTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_last_incidTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_operationTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_osmm_updates_spatialTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_osmm_updates_processTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_osmm_updates_changeTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_processTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_reasonTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_site_idTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_sourcesTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_userTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
-                PrepareUpdate(this._lut_versionTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_quality_determinationTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_quality_interpretationTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_boundary_mapTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_habitat_classTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_habitat_typeTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_conditionTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_condition_qualifierTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_primary_categoryTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_primaryTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_primary_bap_habitatTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_secondary_groupTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_secondaryTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_secondary_bap_habitatTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_primary_secondaryTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_habitat_type_primaryTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_habitat_type_secondaryTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_ihs_primary_secondaryTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_osmm_habitat_xrefTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_ihs_complexTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_ihs_formationTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_ihs_habitatTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_ihs_managementTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_ihs_matrixTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_importanceTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_last_incidTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_operationTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_osmm_updates_spatialTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_osmm_updates_processTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_osmm_updates_changeTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_processTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_reasonTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_site_idTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_sourcesTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_userTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
+                PrepareUpdate(_lut_versionTableAdapter, ref adaptersWithAcceptChangesDuringUpdate);
 
                 //
                 //---- Perform updates -----------
                 //
-                if ((this.UpdateOrder == UpdateOrderOption.UpdateInsertDelete))
+                if (UpdateOrder == UpdateOrderOption.UpdateInsertDelete)
                 {
-                    result += this.UpdateUpdatedRows(dataSet, allChangedRows, allAddedRows);
-                    result += this.UpdateInsertedRows(dataSet, allAddedRows);
+                    result += UpdateUpdatedRows(dataSet, allChangedRows, allAddedRows);
+                    result += UpdateInsertedRows(dataSet, allAddedRows);
                 }
                 else
                 {
-                    result += this.UpdateInsertedRows(dataSet, allAddedRows);
-                    result += this.UpdateUpdatedRows(dataSet, allChangedRows, allAddedRows);
+                    result += UpdateInsertedRows(dataSet, allAddedRows);
+                    result += UpdateUpdatedRows(dataSet, allChangedRows, allAddedRows);
                 }
-                result += this.UpdateDeletedRows(dataSet, allChangedRows);
+                result += UpdateDeletedRows(dataSet, allChangedRows);
 
                 //
                 //---- Commit updates -----------
                 //
                 _db.CommitTransaction();
 
-                if ((0 < allAddedRows.Count))
+                if (0 < allAddedRows.Count)
                 {
-                    DataRow[] rows = new System.Data.DataRow[allAddedRows.Count];
+                    DataRow[] rows = new DataRow[allAddedRows.Count];
                     allAddedRows.CopyTo(rows);
                     for (int i = 0; i < rows.Length; i++)
                     {
@@ -2502,9 +2527,9 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
                     }
                 }
 
-                if ((0 < allChangedRows.Count))
+                if (0 < allChangedRows.Count)
                 {
-                    DataRow[] rows = new System.Data.DataRow[allChangedRows.Count];
+                    DataRow[] rows = new DataRow[allChangedRows.Count];
                     allChangedRows.CopyTo(rows);
                     for (int i = 0; i < rows.Length; i++)
                     {
@@ -2517,17 +2542,17 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             {
                 _db.RollbackTransaction();
                 // ---- Restore the dataset -----------
-                if (this.BackupDataSetBeforeUpdate)
+                if (BackupDataSetBeforeUpdate)
                 {
-                    System.Diagnostics.Debug.Assert((backupDataSet != null));
+                    Debug.Assert(backupDataSet != null);
                     dataSet.Clear();
                     dataSet.Merge(backupDataSet);
                 }
                 else
                 {
-                    if ((0 < allAddedRows.Count))
+                    if (0 < allAddedRows.Count)
                     {
-                        DataRow[] rows = new System.Data.DataRow[allAddedRows.Count];
+                        DataRow[] rows = new DataRow[allAddedRows.Count];
                         allAddedRows.CopyTo(rows);
                         for (int i = 0; i < rows.Length; i++)
                         {
@@ -2544,7 +2569,7 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             {
                 if (workConnOpened) workConnection.Close();
 
-                if ((0 < adaptersWithAcceptChangesDuringUpdate.Count))
+                if (0 < adaptersWithAcceptChangesDuringUpdate.Count)
                 {
                     DataAdapter[] adapters = new DataAdapter[adaptersWithAcceptChangesDuringUpdate.Count];
                     adaptersWithAcceptChangesDuringUpdate.CopyTo(adapters);
@@ -2560,24 +2585,26 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
 
         #endregion Update All
 
+        #region Helper methods
+
         /// <summary>
         /// Sort self-referenced table's rows.
         /// </summary>
-        /// <typeparam name="R"></typeparam>
-        /// <param name="rows"></param>
-        /// <param name="relation"></param>
-        /// <param name="childFirst"></param>
+        /// <typeparam name="R">The type of the data row.</typeparam>
+        /// <param name="rows">The array of rows to sort.</param>
+        /// <param name="relation">The data relation defining the parent-child relationship.</param>
+        /// <param name="childFirst">Indicates whether child rows should be processed before parent rows.</param>
         protected virtual void SortSelfReferenceRows<R>(R[] rows, DataRelation relation, bool childFirst)
             where R : DataRow
         {
-            Array.Sort<R>(rows, new SelfReferenceComparer<R>(relation, childFirst));
+            Array.Sort(rows, new SelfReferenceComparer<R>(relation, childFirst));
         }
 
         /// <summary>
         /// Check if the input database matches the TableAdapter's connection
         /// </summary>
-        /// <param name="inputDb"></param>
-        /// <returns></returns>
+        /// <param name="inputDb">The database to compare with the TableAdapter's connection.</param>
+        /// <returns>True if the input database matches the TableAdapter's connection; otherwise, false.</returns>
         private bool MatchTableAdapterConnection(DbBase inputDb)
         {
             if (inputDb == null)
@@ -2589,17 +2616,21 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
         /// <summary>
         /// Check if the input connection matches the TableAdapter's connection.
         /// </summary>
-        /// <param name="inputConnection"></param>
-        /// <returns></returns>
+        /// <param name="inputConnection">The connection to compare with the TableAdapter's connection.</param>
+        /// <returns>True if the input connection matches the TableAdapter's connection; otherwise, false.</returns>
         protected virtual bool MatchTableAdapterConnection(IDbConnection inputConnection)
         {
             if (inputConnection == null) // this.Connection is never null
                 return false;
-            else if (String.Equals(this.Connection.ConnectionString, inputConnection.ConnectionString,
+            else if (string.Equals(Connection.ConnectionString, inputConnection.ConnectionString,
                 StringComparison.Ordinal)) return true;
             else
                 return false;
         }
+
+        #endregion Helper methods
+
+        #region Enums
 
         /// <summary>
         /// Scope of updates.
@@ -2623,6 +2654,10 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             UpdateInsertDelete = 1
         }
 
+        #endregion Enums
+
+        #region Classes
+
         /// <summary>
         /// Used to sort self-referenced table's rows.
         ///</summary>
@@ -2636,51 +2671,51 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             /// <summary>
             /// Initializes a new instance of the SelfReferenceComparer class.
             /// </summary>
-            /// <param name="relation"></param>
-            /// <param name="childFirst"></param>
+            /// <param name="relation">The data relation defining the parent-child relationship.</param>
+            /// <param name="childFirst">Indicates whether child rows should be processed before parent rows.</param>
             internal SelfReferenceComparer(DataRelation relation, bool childFirst)
             {
-                this._relation = relation;
+                _relation = relation;
                 if (childFirst)
                 {
-                    this._childFirst = -1;
+                    _childFirst = -1;
                 }
                 else
                 {
-                    this._childFirst = 1;
+                    _childFirst = 1;
                 }
             }
 
             /// <summary>
             /// Determines if one row is a child and the other is a parent in the self-referenced relation.
             /// </summary>
-            /// <param name="child"></param>
-            /// <param name="parent"></param>
-            /// <returns></returns>
+            /// <param name="child">The potential child row.</param>
+            /// <param name="parent">The potential parent row.</param>
+            /// <returns>True if the first row is a child of the second row; otherwise, false.</returns>
             private bool IsChildAndParent(R child, R parent)
             {
-                Debug.Assert((child != null));
-                Debug.Assert((parent != null));
-                DataRow newParent = child.GetParentRow(this._relation, DataRowVersion.Default);
+                Debug.Assert(child != null);
+                Debug.Assert(parent != null);
+                DataRow newParent = child.GetParentRow(_relation, DataRowVersion.Default);
                 for (
-                ; ((newParent != null)
-                            && ((object.ReferenceEquals(newParent, child) == false)
-                            && (object.ReferenceEquals(newParent, parent) == false)));
+                ; newParent != null
+                            && ReferenceEquals(newParent, child) == false
+                            && ReferenceEquals(newParent, parent) == false;
                 )
                 {
-                    newParent = newParent.GetParentRow(this._relation, DataRowVersion.Default);
+                    newParent = newParent.GetParentRow(_relation, DataRowVersion.Default);
                 }
-                if ((newParent == null))
+                if (newParent == null)
                 {
-                    for (newParent = child.GetParentRow(this._relation, DataRowVersion.Original); ((newParent != null)
-                                && ((object.ReferenceEquals(newParent, child) == false)
-                                && (object.ReferenceEquals(newParent, parent) == false)));
+                    for (newParent = child.GetParentRow(_relation, DataRowVersion.Original); newParent != null
+                                && ReferenceEquals(newParent, child) == false
+                                && ReferenceEquals(newParent, parent) == false;
                     )
                     {
-                        newParent = newParent.GetParentRow(this._relation, DataRowVersion.Original);
+                        newParent = newParent.GetParentRow(_relation, DataRowVersion.Original);
                     }
                 }
-                if (object.ReferenceEquals(newParent, parent))
+                if (ReferenceEquals(newParent, parent))
                 {
                     return true;
                 }
@@ -2690,37 +2725,39 @@ namespace HLU.Data.Model.HluDataSetTableAdapters
             /// <summary>
             /// Compares two rows.
             /// </summary>
-            /// <param name="row1"></param>
-            /// <param name="row2"></param>
-            /// <returns></returns>
+            /// <param name="row1">The first row to compare.</param>
+            /// <param name="row2">The second row to compare.</param>
+            /// <returns>A signed integer that indicates the relative values of the rows.</returns>
             public int Compare(R row1, R row2)
             {
-                if (object.ReferenceEquals(row1, row2))
+                if (ReferenceEquals(row1, row2))
                 {
                     return 0;
                 }
-                if ((row1 == null))
+                if (row1 == null)
                 {
                     return -1;
                 }
-                if ((row2 == null))
+                if (row2 == null)
                 {
                     return 1;
                 }
 
                 // Is row1 the child or grandchild of row2
-                if (this.IsChildAndParent(row1, row2))
+                if (IsChildAndParent(row1, row2))
                 {
-                    return this._childFirst;
+                    return _childFirst;
                 }
 
                 // Is row2 the child or grandchild of row1
-                if (this.IsChildAndParent(row2, row1))
+                if (IsChildAndParent(row2, row1))
                 {
-                    return (-1 * this._childFirst);
+                    return -1 * _childFirst;
                 }
                 return 0;
             }
         }
+
+        #endregion Classes
     }
 }

@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -22,22 +23,46 @@ using System.Windows.Data;
 
 namespace HLU.UI.UserControls
 {
-    class DataGridComboBoxColumnWithBinding : System.Windows.Controls.DataGridComboBoxColumn
+    /// <summary>
+    /// A DataGridComboBoxColumn that supports binding the ItemsSource property to a collection in the view model.
+    /// </summary>
+    class DataGridComboBoxColumnWithBinding : DataGridComboBoxColumn
     {
-        protected override FrameworkElement GenerateEditingElement(System.Windows.Controls.DataGridCell cell, object dataItem)
+        /// <summary>
+        /// Generates the editing element for the cell. This method is called when the cell enters
+        /// edit mode. It creates a ComboBox and binds its ItemsSource property to the same source
+        /// as the column's ItemsSource property.
+        /// </summary>
+        /// <param name="cell">The cell that is being edited.</param>
+        /// <param name="dataItem">The data item associated with the row.</param>
+        /// <returns>The editing element for the cell.</returns>
+        protected override FrameworkElement GenerateEditingElement(DataGridCell cell, object dataItem)
         {
             FrameworkElement element = base.GenerateEditingElement(cell, dataItem);
             CopyItemsSource(element);
             return element;
         }
 
-        protected override FrameworkElement GenerateElement(System.Windows.Controls.DataGridCell cell, object dataItem)
+        /// <summary>
+        /// Generates the element for the cell when it is not in edit mode. This method creates a ComboBox
+        /// and binds its ItemsSource property to the same source as the column's ItemsSource property.
+        /// </summary>
+        /// <param name="cell">The cell that is not in edit mode.</param>
+        /// <param name="dataItem">The data item associated with the row.</param>
+        /// <returns>The element for the cell.</returns>
+        protected override FrameworkElement GenerateElement(DataGridCell cell, object dataItem)
         {
             FrameworkElement element = base.GenerateElement(cell, dataItem);
             CopyItemsSource(element);
             return element;
         }
 
+        /// <summary>
+        /// Copies the binding of the ItemsSource property from the column to the given element.
+        /// This allows the ComboBox in the cell to use the same collection for its items as defined
+        /// in the column's ItemsSource property.
+        /// </summary>
+        /// <param name="element">The element to which the ItemsSource binding will be copied.</param>
         private void CopyItemsSource(FrameworkElement element)
         {
             BindingOperations.SetBinding(element, ComboBox.ItemsSourceProperty,

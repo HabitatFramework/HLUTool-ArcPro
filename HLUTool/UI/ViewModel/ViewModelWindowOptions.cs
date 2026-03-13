@@ -3,6 +3,7 @@
 // Copyright © 2013, 2016 Thames Valley Environmental Records Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
 // Copyright © 2019 London & South East Record Centres (LaSER)
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -179,8 +180,7 @@ namespace HLU.UI.ViewModel
             _addInSettings = _viewModelMain.AddInSettings;
 
             // Get the GIS ID Column Ordinals.
-            _gisIDColumnOrdinals = Settings.Default.GisIDColumnOrdinals.Cast<string>()
-                .Select(s => Int32.Parse(s)).ToList();
+            _gisIDColumnOrdinals = [.. Settings.Default.GisIDColumnOrdinals.Cast<string>().Select(s => Int32.Parse(s))];
 
             // Set the application database options
             _dbConnectionTimeout = _addInSettings.DbConnectionTimeout;
@@ -225,16 +225,16 @@ namespace HLU.UI.ViewModel
 
             // Get the history column ordinals from the settings, excluding the GIS ID columns and
             // shape columns.
-            List<int> historyColumnOrdinals = Settings.Default.HistoryColumnOrdinals.Cast<string>()
+            List<int> historyColumnOrdinals = [.. Settings.Default.HistoryColumnOrdinals.Cast<string>()
                 .Select(s => Int32.Parse(s)).Where(i => !_gisIDColumnOrdinals.Contains(i) &&
-                    !_incidMMPolygonsTable.Columns[i].ColumnName.StartsWith("shape_")).ToList();
+                    !_incidMMPolygonsTable.Columns[i].ColumnName.StartsWith("shape_"))];
 
             // Get the history columns for the options window by getting the column names from the incid table,
             // excluding the GIS ID columns and shape columns.
-            _historyColumns = new SelectionList<string>(_incidMMPolygonsTable.Columns.Cast<DataColumn>()
+            _historyColumns = new SelectionList<string>([.. _incidMMPolygonsTable.Columns.Cast<DataColumn>()
                 .Where(c => !_gisIDColumnOrdinals.Contains(c.Ordinal)
                     && !c.ColumnName.StartsWith("shape_"))
-                .Select(c => EscapeAccessKey(c.ColumnName)).ToArray());
+                .Select(c => EscapeAccessKey(c.ColumnName))]);
 
             // Set the IsSelected property of the history columns based on whether their ordinals
             // are in the history column ordinals list.
@@ -551,10 +551,10 @@ namespace HLU.UI.ViewModel
 
         #region RequestClose
 
-        // declare the delegate since using non-generic pattern
+        // Declare the delegate since using non-generic pattern
         public delegate void RequestCloseEventHandler(bool saveSettings);
 
-        // declare the event
+        // Declare the event
         public event RequestCloseEventHandler RequestClose;
 
         #endregion RequestClose
@@ -1219,8 +1219,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return Enum.GetValues(typeof(SubsetUpdateActions)).Cast<SubsetUpdateActions>()
-                    .ToArray();
+                return [.. Enum.GetValues(typeof(SubsetUpdateActions)).Cast<SubsetUpdateActions>()];
             }
         }
 
@@ -1254,10 +1253,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_clearIHSUpdateActions == null)
-                {
-                    _clearIHSUpdateActions = Settings.Default.ClearIHSUpdateActions.Cast<string>().ToArray();
-                }
+                _clearIHSUpdateActions ??= [.. Settings.Default.ClearIHSUpdateActions.Cast<string>()];
 
                 return _clearIHSUpdateActions;
             }
@@ -1309,8 +1305,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return Enum.GetValues(typeof(HabitatSecondaryCodeValidationOptions)).Cast<HabitatSecondaryCodeValidationOptions>()
-                    .ToArray();
+                return [.. Enum.GetValues(typeof(HabitatSecondaryCodeValidationOptions)).Cast<HabitatSecondaryCodeValidationOptions>()];
             }
         }
 
@@ -1341,8 +1336,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return Enum.GetValues(typeof(PrimarySecondaryCodeValidationOptions)).Cast<PrimarySecondaryCodeValidationOptions>()
-                    .ToArray();
+                return [.. Enum.GetValues(typeof(PrimarySecondaryCodeValidationOptions)).Cast<PrimarySecondaryCodeValidationOptions>()];
             }
         }
 
@@ -1373,8 +1367,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return Enum.GetValues(typeof(QualityValidationOptions)).Cast<QualityValidationOptions>()
-                    .ToArray();
+                return [.. Enum.GetValues(typeof(QualityValidationOptions)).Cast<QualityValidationOptions>()];
             }
         }
 
@@ -1405,8 +1398,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return Enum.GetValues(typeof(PotentialPriorityDetermQtyValidationOptions)).Cast<PotentialPriorityDetermQtyValidationOptions>()
-                    .ToArray();
+                return [.. Enum.GetValues(typeof(PotentialPriorityDetermQtyValidationOptions)).Cast<PotentialPriorityDetermQtyValidationOptions>()];
             }
         }
 
@@ -1561,10 +1553,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_showOSMMUpdatesOptions == null)
-                {
-                    _showOSMMUpdatesOptions = Settings.Default.ShowOSMMUpdatesOptions.Cast<string>().ToArray();
-                }
+                _showOSMMUpdatesOptions ??= [.. Settings.Default.ShowOSMMUpdatesOptions.Cast<string>()];
 
                 return _showOSMMUpdatesOptions;
             }
@@ -1676,10 +1665,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_secondaryCodeOrderOptions == null)
-                {
-                    _secondaryCodeOrderOptions = Settings.Default.SecondaryCodeOrderOptions.Cast<string>().ToArray();
-                }
+                _secondaryCodeOrderOptions ??= [.. Settings.Default.SecondaryCodeOrderOptions.Cast<string>()];
 
                 return _secondaryCodeOrderOptions;
             }
@@ -1739,10 +1725,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_autoZoomToSelectionOptions == null)
-                {
-                    _autoZoomToSelectionOptions = Settings.Default.AutoZoomToSelectionOptions.Cast<string>().ToArray();
-                }
+                _autoZoomToSelectionOptions ??= [.. Settings.Default.AutoZoomToSelectionOptions.Cast<string>()];
 
                 return _autoZoomToSelectionOptions;
             }

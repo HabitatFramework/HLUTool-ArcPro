@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -33,7 +34,7 @@ namespace HLU.UI.ViewModel
 {
     class ViewModelConnectSqlServer : ViewModelBase, IDataErrorInfo
     {
-        #region private Members
+        #region Private Members
 
         //private IntPtr _windowHandle;
         private string _displayName;
@@ -45,57 +46,75 @@ namespace HLU.UI.ViewModel
         private string _defaultSchema;
         private SqlConnectionStringBuilder _connStrBuilder;
 
-        #endregion
+        #endregion Private Members
 
         #region Constructor
 
+        /// <summary>
+        /// Initialise the connection string builder and set default values for properties. These
+        /// will be used to populate the dialog fields and can be changed by the user. The
+        /// connection string builder is used to build the connection string based on user input and
+        /// also to test the connection when Ok is clicked.
+        /// </summary>
         public ViewModelConnectSqlServer()
         {
             _connStrBuilder = [];
         }
 
-        #endregion
+        #endregion Constructor
 
         #region Connection String Builder
 
+        /// <summary>
+        /// Get the connection string builder which is used to build the connection string based on
+        /// user input and to test the connection when Ok is clicked.
+        /// </summary>
+        /// <value>The <see cref="SqlConnectionStringBuilder"/> instance used to build the connection string.</value>
         public SqlConnectionStringBuilder ConnectionStringBuilder { get { return _connStrBuilder; } }
 
-        #endregion
+        #endregion Connection String Builder
 
         #region Display Name
 
+        /// <summary>
+        /// Get or set the display name for the dialog.
+        /// </summary>
+        /// <value>The display name for the dialog.</value>
         public override string DisplayName
         {
             get { return _displayName; }
             set { _displayName = value; }
         }
 
-        #endregion
+        #endregion Display Name
 
         #region Window Title
 
+        /// <summary>
+        /// Get the window title for the dialog.
+        /// </summary>
+        /// <value>The window title for the dialog.</value>
         public override string WindowTitle { get { return DisplayName; } }
 
-        #endregion
+        #endregion Window Title
 
         #region RequestClose
 
-        // declare the delegate since using non-generic pattern
+        // Declare the delegate since using non-generic pattern
         public delegate void RequestCloseEventHandler(string connString, string defaultSchema, string errorMsg);
 
-        // declare the event
+        // Declare the event
         public event RequestCloseEventHandler RequestClose;
 
-        #endregion
+        #endregion RequestClose
 
         #region Ok Command
 
         /// <summary>
-        /// Create Ok button command
+        /// Get the Ok command which is used to test the connection and close the dialog if the
+        /// connection is successful.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command to be executed when the Ok button is clicked.</value>
         public ICommand OkCommand
         {
             get
@@ -113,18 +132,15 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles event when Ok button is clicked
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void OkCommandClick(object param)
         {
-            SqlConnection cn;
-
             try
             {
-                cn = new SqlConnection(_connStrBuilder.ConnectionString);
+                using SqlConnection cn = new(_connStrBuilder.ConnectionString);
 
                 cn.Open();
-                cn.Close();
+                // Close() is automatic when using disposes
 
                 _connStrBuilder.PersistSecurityInfo = Settings.Default.DbConnectionPersistSecurityInfo;
 
@@ -133,19 +149,16 @@ namespace HLU.UI.ViewModel
             catch (SqlException exSql)
             {
                 MessageBox.Show("SQL Server responded with an error:\n\n" + exSql.Message,
-                     "SQL Server Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    "SQL Server Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            finally { cn = null; }
         }
 
         /// <summary>
-        /// Determines whether the Ok button is enabled
+        /// Get a value indicating whether the Ok command can be executed.
         /// To be enabled the following must be true:
         /// server name and database must be set; if windows authentication is not set then a username and password are required.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>True if the Ok command can be executed; otherwise, false.</value>
         private bool CanOk
         {
             get
@@ -156,16 +169,14 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Ok Command
 
         #region Cancel Command
 
         /// <summary>
-        /// Create Cancel button command
+        /// Get the Cancel command which is used to close the dialog without making any changes.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command to be executed when the Cancel button is clicked.</value>
         public ICommand CancelCommand
         {
             get
@@ -183,17 +194,20 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles event when Cancel button is clicked
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void CancelCommandClick(object param)
         {
             RequestClose?.Invoke(null, null, null);
         }
 
-        #endregion
+        #endregion Cancel Command
 
         #region Server
 
+        /// <summary>
+        /// Gets or sets the server name for the connection.
+        /// </summary>
+        /// <value>The server name for the connection.</value>
         public string Server
         {
             get { return _connStrBuilder.DataSource; }
@@ -206,16 +220,24 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets the list of available SQL Server instances on the network.
+        /// </summary>
+        /// <value>An array of available SQL Server instance names.</value>
         public string[] Servers
         {
             get
             {
-                if (_servers == null) _servers = LoadServers();
-                return _servers.ToArray();
+                _servers ??= LoadServers();
+                return [.. _servers];
             }
             set { }
         }
 
+        /// <summary>
+        /// Load the list of available SQL Server instances on the network.
+        /// </summary>
+        /// <returns>A list of available SQL Server instance names.</returns>
         private List<string> LoadServers()
         {
             try
@@ -239,10 +261,15 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Server
 
         #region Authentication
 
+        /// <summary>
+        /// Gets or sets a value indicating whether Windows Authentication is used for the
+        /// connection.
+        /// </summary>
+        /// <value>True if Windows Authentication is used; otherwise, false.</value>
         public bool WindowsAuthentication
         {
             get { return _connStrBuilder.IntegratedSecurity; }
@@ -255,6 +282,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether SQL Server Authentication is used for the connection.
+        /// </summary>
+        /// <value>True if SQL Server Authentication is used; otherwise, false.</value>
         public bool SQLServerAuthentication
         {
             get { return !_connStrBuilder.IntegratedSecurity; }
@@ -267,22 +298,34 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets the username for SQL Server Authentication.
+        /// </summary>
+        /// <value>The username for SQL Server Authentication.</value>
         public string Username
         {
             get { return _connStrBuilder.UserID; }
             set { if (value != _connStrBuilder.UserID) _connStrBuilder.UserID = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the password for SQL Server Authentication.
+        /// </summary>
+        /// <value>The password for SQL Server Authentication.</value>
         public string Password
         {
             get { return _connStrBuilder.Password; }
             set { if (value != _connStrBuilder.Password) _connStrBuilder.Password = value; }
         }
 
-        #endregion
+        #endregion Authentication
 
         #region Database
 
+        /// <summary>
+        /// Gets or sets the database name for the connection.
+        /// </summary>
+        /// <value>The database name for the connection.</value>
         public string Database
         {
             get { return _connStrBuilder.InitialCatalog; }
@@ -296,12 +339,22 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets the list of available databases on the selected SQL Server instance.
+        /// </summary>
+        /// <value>An array of available database names on the selected SQL Server instance.</value>
         public string[] Databases
         {
-            get { return _databases.ToArray(); }
+            get
+            {
+                return [.. _databases];
+            }
             set { }
         }
 
+        /// <summary>
+        /// Load the list of available databases on the selected SQL Server instance.
+        /// </summary>
         private void LoadDatabases()
         {
             try
@@ -314,9 +367,9 @@ namespace HLU.UI.ViewModel
                     cn.Open();
 
                     DataTable dbTable = cn.GetSchema("Databases");
-                    _databases = (from r in dbTable.AsEnumerable()
+                    _databases = [.. (from r in dbTable.AsEnumerable()
                                   let tableName = r.Field<string>("database_name")
-                                  select tableName).OrderBy(t => t).ToList();
+                                  select tableName).OrderBy(t => t)];
 
                     OnPropertyChanged(nameof(Databases));
                 }
@@ -329,16 +382,24 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Database
 
         #region Default Schema
 
+        /// <summary>
+        /// Gets or sets the list of available schemata for the selected database
+        /// </summary>
+        /// <value>An array of available schema names for the selected database.</value>
         public string[] Schemata
         {
-            get { return _schemata.ToArray(); }
+            get { return [.. _schemata]; }
             set { }
         }
 
+        /// <summary>
+        /// Gets or sets the default schema for the connection.
+        /// </summary>
+        /// <value>The default schema for the connection.</value>
         public string DefaultSchema
         {
             get { return _defaultSchema; }
@@ -349,6 +410,11 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Load the list of available schemata for the selected database. The default schema is set
+        /// to the first schema in the list if there is only one, otherwise it is set to the default
+        /// schema for SQL Server (dbo).
+        /// </summary>
         private void LoadSchemata()
         {
             List<String> schemaList = [];
@@ -362,9 +428,9 @@ namespace HLU.UI.ViewModel
                     cn.Open();
 
                     DataTable dbTable = cn.GetSchema("Users");
-                    schemaList = (from r in dbTable.AsEnumerable()
+                    schemaList = [.. (from r in dbTable.AsEnumerable()
                                   let schemaName = r.Field<string>("user_name")
-                                  select schemaName).OrderBy(s => s).ToList();
+                                  select schemaName).OrderBy(s => s)];
                     _defaultSchema = DbBase.GetDefaultSchema(Backends.SqlServer, _connStrBuilder, schemaList);
                 }
             }
@@ -388,10 +454,18 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Default Schema
 
         #region View Events
 
+        /// <summary>
+        /// View events are raised by the view when certain events occur, such as when a field is
+        /// changed or when the dialog is loaded. The view passes the window handle and the name of
+        /// the property that has changed to the view model, which can then take appropriate action,
+        /// such as loading the list of databases when the server name is changed.
+        /// </summary>
+        /// <param name="windowHandle"></param>
+        /// <param name="propertyName"></param>
         public void ViewEvents(IntPtr windowHandle, string propertyName)
         {
             //if (windowHandle != IntPtr.Zero) _windowHandle = windowHandle;
@@ -404,10 +478,14 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion View Events
 
         #region IDataErrorInfo Members
 
+        /// <summary>
+        /// Gets an error message indicating what is wrong with this object.
+        /// </summary>
+        /// <value>An error message indicating what is wrong with this object; otherwise, null or empty string.</value>
         public string Error
         {
             get
@@ -425,6 +503,13 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets the error message for the property with the given name. This is used to provide
+        /// error messages for individual properties, such as when a required field is left empty or
+        /// when an invalid value is entered.
+        /// </summary>
+        /// <param name="columnName"></param>
+        /// <value>The error message for the property with the given name; otherwise, null or empty string.</value>
         public string this[string columnName]
         {
             get
@@ -458,6 +543,6 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion IDataErrorInfo Members
     }
 }

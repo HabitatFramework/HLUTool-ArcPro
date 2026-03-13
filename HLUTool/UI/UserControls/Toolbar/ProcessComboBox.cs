@@ -1,4 +1,22 @@
-﻿using ArcGIS.Desktop.Framework;
+﻿// HLUTool is used to view and maintain habitat and land use GIS data.
+// Copyright © 2025-2026 Andy Foy Consulting
+//
+// This file is part of HLUTool.
+//
+// HLUTool is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// HLUTool is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
+
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using HLU.Data;
 using HLU.UI.ViewModel;
@@ -34,13 +52,12 @@ namespace HLU.UI.UserControls.Toolbar
         #region Constructor
 
         /// <summary>
-        /// Constructor.
+        /// Initializes a new instance of the <see cref="ProcessComboBox"/> class.
         /// </summary>
         public ProcessComboBox()
         {
             // Get this instance of the ComboBox.
-            if (_processComboBox == null)
-                _processComboBox = this;
+            _processComboBox ??= this;
 
             // Get the dockpane DAML id.
             DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
@@ -65,17 +82,7 @@ namespace HLU.UI.UserControls.Toolbar
 
         #endregion Constructor
 
-        #region Overrides and Public Methods
-
-        /// <summary>
-        /// Gets the instance of the ProcessComboBox.
-        /// </summary>
-        /// <returns></returns>
-        public static ProcessComboBox GetInstance()
-        {
-            // Return the instance of the ComboBox.
-            return _processComboBox;
-        }
+        #region Overrides
 
         /// <summary>
         /// Called periodically by the framework once the tool has been created.
@@ -113,6 +120,33 @@ namespace HLU.UI.UserControls.Toolbar
         }
 
         /// <summary>
+        /// Called when the selection changes.
+        /// </summary>
+        /// <param name="item"></param>
+        protected override void OnSelectionChange(ComboBoxItem item)
+        {
+            // Store the new value
+            string newProcess = item?.Text;
+
+            // Return if the value hasn't actually changed.
+            if (String.Equals(_previousProcess, newProcess, StringComparison.Ordinal))
+                return;
+
+            // Store the old value.
+            _previousProcess = newProcess;
+
+            // Update the main view model.
+            _viewModel.Process = newProcess;
+
+            // Notify the ViewModel of the selection change.
+            _viewModel?.RefreshReasonProcess();
+        }
+
+        #endregion Overrides
+
+        #region Methods
+
+        /// <summary>
         /// Initializes the ComboBox.
         /// </summary>
         internal void Initialize()
@@ -134,6 +168,16 @@ namespace HLU.UI.UserControls.Toolbar
             LoadProcesss();
 
             _isInitialized = true;
+        }
+
+        /// <summary>
+        /// Gets the instance of the ProcessComboBox.
+        /// </summary>
+        /// <returns>The instance of the <see cref="ProcessComboBox"/>.</returns>
+        public static ProcessComboBox GetInstance()
+        {
+            // Return the instance of the ComboBox.
+            return _processComboBox;
         }
 
         /// <summary>
@@ -169,29 +213,6 @@ namespace HLU.UI.UserControls.Toolbar
         public string Process
         {
             get { return (SelectedItem as ComboBoxItem)?.Text; }
-        }
-
-        /// <summary>
-        /// Called when the selection changes.
-        /// </summary>
-        /// <param name="item"></param>
-        protected override void OnSelectionChange(ComboBoxItem item)
-        {
-            // Store the new value
-            string newProcess = item?.Text;
-
-            // Return if the value hasn't actually changed.
-            if (String.Equals(_previousProcess, newProcess, StringComparison.Ordinal))
-                return;
-
-            // Store the old value.
-            _previousProcess = newProcess;
-
-            // Update the main view model.
-            _viewModel.Process = newProcess;
-
-            // Notify the ViewModel of the selection change.
-            _viewModel?.RefreshReasonProcess();
         }
 
         /// <summary>
@@ -255,7 +276,7 @@ namespace HLU.UI.UserControls.Toolbar
             }
         }
 
-        #endregion Overrides and Public Methods
+        #endregion Methods
 
         #region Validation
 
@@ -288,6 +309,7 @@ namespace HLU.UI.UserControls.Toolbar
                 return !string.IsNullOrEmpty(ErrorMessage);
             }
         }
+
         #endregion Validation
     }
 }

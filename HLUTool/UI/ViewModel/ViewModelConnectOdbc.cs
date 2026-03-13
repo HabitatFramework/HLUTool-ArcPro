@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -33,7 +34,7 @@ namespace HLU.UI.ViewModel
 {
     class ViewModelConnectOdbc : ViewModelBase, IDataErrorInfo
     {
-        #region private Members
+        #region Private Members
 
         private IntPtr _windowHandle;
         private string _displayName;
@@ -49,57 +50,73 @@ namespace HLU.UI.ViewModel
 
         private OdbcConnectionStringBuilder _connStrBuilder;
 
-        #endregion
+        #endregion Private Members
 
         #region Constructor
 
+        /// <summary>
+        /// Initializes a new instance of the ViewModelConnectOdbc class with default values for the
+        /// connection string builder and display name.
+        /// </summary>
         public ViewModelConnectOdbc()
         {
             _connStrBuilder = [];
         }
 
-        #endregion
+        #endregion Constructor
 
         #region Connection String Builder
 
+        /// <summary>
+        /// Gets the OdbcConnectionStringBuilder instance used to build the ODBC connection string based on user input.
+        /// </summary>
+        /// <value>The <see cref="OdbcConnectionStringBuilder"/> instance used to build the ODBC connection string.</value>
         public OdbcConnectionStringBuilder ConnectionStringBuilder { get { return _connStrBuilder; } }
 
-        #endregion
+        #endregion Connection String Builder
 
         #region Display Name
 
+        /// <summary>
+        /// Gets or sets the display name for the ODBC connection dialog. This is the name that will
+        /// be shown in the dialog title and other relevant UI elements.
+        /// </summary>
+        /// <value>The display name for the ODBC connection dialog.</value>
         public override string DisplayName
         {
             get { return _displayName; }
             set { _displayName = value; }
         }
 
-        #endregion
+        #endregion Display Name
 
         #region Window Title
 
+        /// <summary>
+        /// Gets the window title for the ODBC connection dialog. This is typically the same as the
+        /// display name, but can be customized if needed.
+        /// </summary>
+        /// <value>The window title for the ODBC connection dialog.</value>
         public override string WindowTitle { get { return DisplayName; } }
 
-        #endregion
+        #endregion Window Title
 
         #region RequestClose
 
-        // declare the delegate since using non-generic pattern
+        // Declare the delegate since using non-generic pattern
         public delegate void RequestCloseEventHandler(string connString, string defaultSchema, string errorMsg);
 
-        // declare the event
+        // Declare the event to handle dialog closure, passing the connection string, default schema, and any error message back to the caller
         public event RequestCloseEventHandler RequestClose;
 
-        #endregion
+        #endregion RequestClose
 
         #region Ok Command
 
         /// <summary>
-        /// Create Ok button command
+        /// Gets the command to execute when the Ok button is clicked.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command to execute when the Ok button is clicked.</value>
         public ICommand OkCommand
         {
             get
@@ -117,8 +134,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles event when Ok button is clicked
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void OkCommandClick(object param)
         {
             OdbcConnection cn = null;
@@ -143,13 +159,11 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Determines whether the Ok button is enabled
+        /// Gets a value indicating whether the Ok button is enabled.
         /// To be enabled the following must be true:
         /// server name and database must be set; if windows authentication is not set then a username and password are required.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value><c>true</c> if the Ok button is enabled; otherwise, <c>false</c>.</value>
         private bool CanOk
         {
             get
@@ -159,16 +173,14 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Ok Command
 
         #region Cancel Command
 
         /// <summary>
-        /// Create Cancel button command
+        /// Gets the command to execute when the Cancel button is clicked.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command to execute when the Cancel button is clicked.</value>
         public ICommand CancelCommand
         {
             get
@@ -186,23 +198,20 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles event when Cancel button is clicked
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void CancelCommandClick(object param)
         {
             RequestClose?.Invoke(null, null, null);
         }
 
-        #endregion
+        #endregion Cancel Command
 
         #region Manage DSN Command
 
         /// <summary>
-        /// Create Manage DSN button command
+        /// Gets the command to execute when the Manage DSN button is clicked.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The command to execute when the Manage DSN button is clicked.</value>
         public ICommand ManageDsnCommand
         {
             get
@@ -220,8 +229,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles event when Manage DSN button is clicked
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The parameter passed to the command.</param>
         private void ManageDsnCommandClick(object param)
         {
             //DispatcherHelper.DoEvents();
@@ -230,10 +238,16 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(DsnList));
         }
 
-        #endregion
+        #endregion Manage DSN Command
 
         #region DSN
 
+        /// <summary>
+        /// Gets the list of available DSNs (Data Source Names) from the Windows registry based on
+        /// whether the user has selected to use User DSNs or System DSNs. The list is retrieved
+        /// from the appropriate registry key and returned as an array of strings.
+        /// </summary>
+        /// <value>An array of strings representing the available DSNs based on the selected type (User or System).</value>
         public string[] DsnList
         {
             get
@@ -244,11 +258,15 @@ namespace HLU.UI.ViewModel
                     _dsnList = sk.GetValueNames();
                 else
                     _dsnList = [];
-                return _dsnList; 
+                return _dsnList;
             }
             set { }
         }
 
+        /// <summary>
+        /// Gets or sets the selected DSN (Data Source Name) for the ODBC connection.
+        /// </summary>
+        /// <value>The selected DSN for the ODBC connection.</value>
         public string Dsn
         {
             get { return _connStrBuilder.Dsn; }
@@ -262,6 +280,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether the user has selected to use User DSNs.
+        /// </summary>
+        /// <value><c>true</c> if the user has selected to use User DSNs; otherwise, <c>false</c>.</value>
         public bool UserDsn
         {
             get { return _userDsn; }
@@ -275,6 +297,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether the user has selected to use System DSNs
+        /// </summary>
+        /// <value><c>true</c> if the user has selected to use System DSNs; otherwise, <c>false</c>.</value>
         public bool SystemDsn
         {
             get { return _systemDsn; }
@@ -288,10 +314,16 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion DSN
 
         #region Default Schema
 
+        /// <summary>
+        /// Gets a value indicating whether the selected ODBC backend supports the concept of
+        /// schemata. If the backend is Access then this returns false and the schema selection
+        /// controls are hidden.
+        /// </summary>
+        /// <value><c>true</c> if the selected ODBC backend supports schemata; otherwise, <c>false</c>.</value>
         public bool SupportsSchemata
         {
             get
@@ -301,18 +333,31 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets or sets the list of available schemata for the selected ODBC backend. The list is
+        /// loaded when the DSN is selected and the backend is determined. If the backend does not
+        /// support schemata, this list will be empty.
+        /// </summary>
+        /// <value>An array of strings representing the available schemata for the selected ODBC backend.</value>
         public string[] Schemata
         {
-            get { return _schemata.ToArray(); }
+            get { return [.. _schemata]; }
             set { }
         }
 
+        /// <summary>
+        /// Gets or sets the selected default schema for the ODBC connection.
+        /// </summary>
+        /// <value>The selected default schema for the ODBC connection.</value>
         public string DefaultSchema
         {
             get { return _defaultSchema; }
             set { if (value != _defaultSchema) _defaultSchema = value; }
         }
 
+        /// <summary>
+        /// Load the list of available schemata for the selected ODBC backend.
+        /// </summary>
         private void LoadSchemata()
         {
             List<String> schemaList = [];
@@ -338,9 +383,9 @@ namespace HLU.UI.ViewModel
                         try
                         {
                             adapter.Fill(dbTable);
-                            schemaList = (from r in dbTable.AsEnumerable()
+                            schemaList = [.. (from r in dbTable.AsEnumerable()
                                           let schemaName = r.Field<string>("SCHEMA_NAME")
-                                          select schemaName).OrderBy(s => s).ToList();
+                                          select schemaName).OrderBy(s => s)];
                             _defaultSchema = DbBase.GetDefaultSchema(_backend, _connStrBuilder, schemaList);
                         }
                         catch { }
@@ -367,19 +412,32 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Default Schema
 
         #region View Events
 
+        /// <summary>
+        /// View event handler to receive the window handle from the view when it is loaded.
+        /// </summary>
+        /// <param name="windowHandle">The handle of the window.</param>
+        /// <param name="propertyName">The name of the property associated with the event.</param>
         public void ViewEvents(IntPtr windowHandle, string propertyName)
         {
             if (windowHandle != IntPtr.Zero) _windowHandle = windowHandle;
         }
 
-        #endregion
+        #endregion View Events
 
         #region IDataErrorInfo Members
 
+        /// <summary>
+        /// Gets an error message indicating what is wrong with this object. The error message is
+        /// based on the current state of the connection string builder and the selected backend. If
+        /// the DSN is not set, it indicates that a data source must be chosen. If the backend
+        /// supports schemata and the default schema is not set, it indicates that a default schema
+        /// must be chosen. If there are no errors, it returns null.
+        /// </summary>
+        /// <value>An error message indicating what is wrong with this object, or null if there are no errors.</value>
         string IDataErrorInfo.Error
         {
             get
@@ -394,10 +452,16 @@ namespace HLU.UI.ViewModel
                 if (error.Length > 1)
                     return error.Remove(0, 1).Insert(0, "Please choose ").ToString();
                 else
-                    return null; 
+                    return null;
             }
         }
 
+        /// <summary>
+        /// Gets an error message for the property with the given name.
+        /// </summary>
+        /// <value>An error message for the property with the given name, or null if there are no errors.</value>
+        /// <param name="columnName">The name of the property for which to get the error message.</param>
+        /// <returns>An error message for the property with the given name, or null if there are no errors.</returns>
         string IDataErrorInfo.this[string columnName]
         {
             get
@@ -424,6 +488,6 @@ namespace HLU.UI.ViewModel
 
         }
 
-        #endregion
+        #endregion IDataErrorInfo Members
     }
 }

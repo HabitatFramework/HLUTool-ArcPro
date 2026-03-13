@@ -1,6 +1,7 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -42,7 +43,7 @@ namespace HLU.UI.ViewModel
         private int _selectedNumber;
         private long _totalCount;
 
-        #endregion
+        #endregion Fields
 
         #region Constructor
 
@@ -76,7 +77,7 @@ namespace HLU.UI.ViewModel
                 _exportID = _exportFormats[0].export_id;
         }
 
-        #endregion
+        #endregion Constructor
 
         #region ViewModelBase Members
 
@@ -104,26 +105,31 @@ namespace HLU.UI.ViewModel
             get { return _displayName; }
         }
 
-        #endregion
+        #endregion ViewModelBase Members
 
         #region RequestClose
 
-        // declare the delegate since using non-generic pattern
+        // Declare the delegate since using non-generic pattern
         public delegate void RequestCloseEventHandler(int exportID, bool selectedOnly);
 
-        // declare the event
+        // Declare the event
         public event RequestCloseEventHandler RequestClose;
 
-        #endregion
+        #endregion RequestClose
 
         #region Ok Command
 
         /// <summary>
-        /// Create Ok button command
+        /// Gets the command to execute when the Ok button is clicked. This command is used to
+        /// handle the Ok operation in the export window, which involves validating the selected
+        /// export format and raising the RequestClose event with the appropriate parameters for the
+        /// export operation.
         /// </summary>
-        /// <value></value>
-        /// <returns>The command to execute when the Ok button is clicked.</returns>
-        /// <remarks>This property is used to bind the Ok button in the export window to the command that handles the Ok operation.</remarks>
+        /// <value>The command to execute when the Ok button is clicked.</value>
+        /// <remarks>
+        /// This property is used to bind the Ok button in the export window to the command that
+        /// handles the Ok operation.
+        /// </remarks>
         public ICommand OkCommand
         {
             get
@@ -156,16 +162,20 @@ namespace HLU.UI.ViewModel
         /// <remarks>This property is used to determine if the Ok button should be enabled based on the selected export ID.</remarks>
         private bool CanOk { get { return _exportID != -1; } }
 
-        #endregion
+        #endregion Ok Command
 
         #region Cancel Command
 
         /// <summary>
-        /// Create Cancel button command
+        /// Gets the command to execute when the Cancel button is clicked. This command is used to
+        /// handle the cancel operation in the export window, which involves raising the
+        /// RequestClose event with a negative export ID and a false value for the selectedOnly parameter.
         /// </summary>
-        /// <value></value>
-        /// <returns>The command to execute when the Cancel button is clicked.</returns>
-        /// <remarks>This property is used to bind the Cancel button in the export window to the command that handles the cancel operation.</remarks>
+        /// <value>The command to execute when the Cancel button is clicked.</value>
+        /// <remarks>
+        /// This property is used to bind the Cancel button in the export window to the command that
+        /// handles the cancel operation.
+        /// </remarks>
         public ICommand CancelCommand
         {
             get
@@ -189,7 +199,7 @@ namespace HLU.UI.ViewModel
             RequestClose?.Invoke(-1, false);
         }
 
-        #endregion
+        #endregion Cancel Command
 
         #region Control Properties
 
@@ -287,6 +297,6 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion IDataErrorInfo Members
     }
 }

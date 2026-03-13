@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2019 London & South East Record Centres (LaSER)
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -43,7 +44,7 @@ namespace HLU.UI.ViewModel
         private string _technicalGuideURL;
         private string _technicalGuideText;
 
-        #endregion
+        #endregion Fields
 
         #region ViewModelBase Members
 
@@ -64,25 +65,24 @@ namespace HLU.UI.ViewModel
             get { return DisplayName; }
         }
 
-        #endregion
+        #endregion ViewModelBase Members
 
         #region RequestClose
 
-        // declare the delegate since using non-generic pattern
+        // Declare the delegate since using non-generic pattern
         public delegate void RequestCloseEventHandler();
 
-        // declare the event
+        // Declare the event
         public event RequestCloseEventHandler RequestClose;
 
-        #endregion
+        #endregion RequestClose
 
         #region Ok Command
 
         /// <summary>
-        /// Create Ok button command
+        /// Gets the command to close the About window when the Ok button is clicked.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
+        /// <value>The command to execute when the Ok button is clicked.</value>
         public ICommand OkCommand
         {
             get
@@ -99,13 +99,13 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles event when Ok button is clicked
         /// </summary>
-        /// <param name="param"></param>
+        /// <param name="param">The parameter passed to the command.</param>
         private void Ok(object param)
         {
             RequestClose?.Invoke();
         }
 
-        #endregion
+        #endregion Ok Command
 
         #region Control Properties
 

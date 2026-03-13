@@ -2,6 +2,7 @@
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2013 Thames Valley Environmental Records Centre
 // Copyright © 2019 London & South East Record Centres (LaSER)
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -66,10 +67,13 @@ namespace HLU.UI.ViewModel
         #region Methods
 
         /// <summary>
-        /// Writes changes made to current incid back to database and GIS layer.
-        /// Also synchronizes shadow copy of GIS layer in DB and writes history.
+        /// Writes changes made to current incid back to database and GIS layer. Also synchronizes
+        /// shadow copy of GIS layer in DB and writes history.
         /// </summary>
-        /// <returns>True if update successful, false if not.</returns>
+        /// <returns>
+        /// A task that represents the asynchronous update operation. The task result contains a
+        /// boolean value indicating whether the update was successful.
+        /// </returns>
         internal async Task<bool> PerformUpdateAsync()
         {
             // Start database transaction
@@ -349,19 +353,18 @@ namespace HLU.UI.ViewModel
         /// </summary>
         private void UpdateBap()
         {
-            if (_viewModelMain.IncidBapRowsAuto == null)
-                _viewModelMain.IncidBapRowsAuto = [];
-            if (_viewModelMain.IncidBapHabitatsUser == null)
-                _viewModelMain.IncidBapHabitatsUser = [];
+            _viewModelMain.IncidBapRowsAuto ??= [];
+
+            _viewModelMain.IncidBapHabitatsUser ??= [];
 
             // remove duplicate codes
             IEnumerable<BapEnvironment> beAuto = from b in _viewModelMain.IncidBapRowsAuto
-                                                 group b by b.bap_habitat into habs
+                                                 group b by b.Bap_habitat into habs
                                                  select habs.First();
 
             IEnumerable<BapEnvironment> beUser = from b in _viewModelMain.IncidBapHabitatsUser
-                                                 where !beAuto.Any(a => a.bap_habitat == b.bap_habitat)
-                                                 group b by b.bap_habitat into habs
+                                                 where !beAuto.Any(a => a.Bap_habitat == b.Bap_habitat)
+                                                 group b by b.Bap_habitat into habs
                                                  select habs.First();
 
             var currentBapRows = beAuto.Concat(beUser);
@@ -372,10 +375,10 @@ namespace HLU.UI.ViewModel
 
             foreach (BapEnvironment be in currentBapRows)
             {
-                if (be.bap_id == -1) // new BAP environment
+                if (be.Bap_id == -1) // new BAP environment
                 {
-                    be.bap_id = _viewModelMain.RecIDs.NextIncidBapId;
-                    be.incid = _viewModelMain.Incid;
+                    be.Bap_id = _viewModelMain.RecIDs.NextIncidBapId;
+                    be.Incid = _viewModelMain.Incid;
                     HluDataSet.incid_bapRow newRow = _viewModelMain.IncidBapTable.Newincid_bapRow();
                     newRow.ItemArray = be.ToItemArray();
                     newRows.Add(newRow);
@@ -392,7 +395,7 @@ namespace HLU.UI.ViewModel
             // Delete any rows that haven't been marked as deleted but are
             // no longer in the current rows.
             _viewModelMain.IncidBapRows.Where(r => r.RowState != DataRowState.Deleted &&
-                !currentBapRows.Any(g => g.bap_id == r.bap_id)).ToList()
+                !currentBapRows.Any(g => g.Bap_id == r.bap_id)).ToList()
                 .ForEach(delegate(HluDataSet.incid_bapRow row) { row.Delete(); });
 
             // Update the table to remove the deleted rows.
@@ -419,12 +422,11 @@ namespace HLU.UI.ViewModel
         /// </summary>
         private void UpdateSecondary()
         {
-            if (_viewModelMain.IncidSecondaryHabitats == null)
-                _viewModelMain.IncidSecondaryHabitats = [];
+            _viewModelMain.IncidSecondaryHabitats ??= [];
 
             // remove duplicate codes
             IEnumerable<SecondaryHabitat> currSecondaryRows = from s in _viewModelMain.IncidSecondaryHabitats
-                                                        group s by new { s.secondary_group, s.secondary_habitat } into secs
+                                                        group s by new { s.Secondary_group, s.Secondary_habitat } into secs
                                                         select secs.First();
 
             List<HluDataSet.incid_secondaryRow> newRows = [];
@@ -433,10 +435,10 @@ namespace HLU.UI.ViewModel
 
             foreach (SecondaryHabitat sh in currSecondaryRows)
             {
-                if (sh.secondary_id == -1) // new secondary habitat environment
+                if (sh.Secondary_id == -1) // new secondary habitat environment
                 {
-                    sh.secondary_id = _viewModelMain.RecIDs.NextIncidSecondaryId;
-                    sh.incid = _viewModelMain.Incid;
+                    sh.Secondary_id = _viewModelMain.RecIDs.NextIncidSecondaryId;
+                    sh.Incid = _viewModelMain.Incid;
                     HluDataSet.incid_secondaryRow newRow = _viewModelMain.IncidSecondaryTable.Newincid_secondaryRow();
                     newRow.ItemArray = sh.ToItemArray();
                     newRows.Add(newRow);
@@ -454,7 +456,7 @@ namespace HLU.UI.ViewModel
             // Delete any rows that haven't been marked as deleted but are
             // no longer in the current rows.
             _viewModelMain.IncidSecondaryRows.Where(r => r.RowState != DataRowState.Deleted &&
-                !currSecondaryRows.Any(g => g.secondary_id == r.secondary_id)).ToList()
+                !currSecondaryRows.Any(g => g.Secondary_id == r.secondary_id)).ToList()
                 .ForEach(delegate(HluDataSet.incid_secondaryRow row) { row.Delete(); });
 
             // Update the table to remove the deleted rows.
@@ -483,7 +485,7 @@ namespace HLU.UI.ViewModel
         /// <returns>Updated incid_bap row, or null if no corresponding row was found.</returns>
         private HluDataSet.incid_bapRow UpdateIncidBapRow(BapEnvironment be)
         {
-            var q = _viewModelMain.IncidBapRows.Where(r => r.RowState != DataRowState.Deleted && r.bap_id == be.bap_id);
+            var q = _viewModelMain.IncidBapRows.Where(r => r.RowState != DataRowState.Deleted && r.bap_id == be.Bap_id);
             if (q.Count() == 1)
             {
                 if (!be.IsValid()) return null;
@@ -504,7 +506,7 @@ namespace HLU.UI.ViewModel
         /// <returns>Updated incid_secondary row, or null if no corresponding row was found.</returns>
         private HluDataSet.incid_secondaryRow UpdateIncidSecondaryRow(SecondaryHabitat sh)
         {
-            var q = _viewModelMain.IncidSecondaryRows.Where(r => r.RowState != DataRowState.Deleted && r.secondary_id == sh.secondary_id);
+            var q = _viewModelMain.IncidSecondaryRows.Where(r => r.RowState != DataRowState.Deleted && r.secondary_id == sh.Secondary_id);
             if (q.Count() == 1)
             {
                 if (!sh.IsValid()) return null;

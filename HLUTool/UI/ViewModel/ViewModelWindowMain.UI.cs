@@ -3,6 +3,7 @@
 // Copyright © 2014 Sussex Biodiversity Record Centre
 // Copyright © 2019 London & South East Record Centres (LaSER)
 // Copyright © 2019-2022 Greenspace Information for Greater London CIC
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -28,7 +29,6 @@ using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using HLU.Data;
 using HLU.Data.Model;
-using HLU.Data.Model.HluDataSetTableAdapters;
 using HLU.Date;
 using HLU.Helpers;
 using HLU.Properties;
@@ -52,7 +52,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
-using HLU.UI.Model;
 using System.Timers;
 using ComboBox = ArcGIS.Desktop.Framework.Contracts.ComboBox;
 using CommandType = System.Data.CommandType;
@@ -881,11 +880,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_reasonCodes == null)
-                {
-                    // Get the list of values from the lookup table.
-                    _reasonCodes = _lutReason.OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
-                }
+                // Get the list of values from the lookup table.
+                _reasonCodes ??= [.. _lutReason.OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
                 return _reasonCodes;
             }
@@ -899,17 +895,11 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_reasonCodes == null)
-                {
-                    // Get the list of values from the lookup table.
-                    _reasonCodes = _lutReason.OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
-                }
+                // Get the list of values from the lookup table.
+                _reasonCodes ??= [.. _lutReason.OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
-                if (_reasonCodesWithNone == null)
-                {
-                    // Add the <None> code to the beginning of the list.
-                    _reasonCodesWithNone = new HluDataSet.lut_reasonRow[] { _noneReasonRow }.Concat(_reasonCodes).ToArray();
-                }
+                // Add the <None> code to the beginning of the list.
+                _reasonCodesWithNone ??= [_noneReasonRow, .. _reasonCodes];
 
                 return _reasonCodesWithNone;
             }
@@ -953,11 +943,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_processCodes == null)
-                {
-                    // Get the list of values from the lookup table.
-                    _processCodes = _lutProcess.OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
-                }
+                // Get the list of values from the lookup table.
+                _processCodes ??= [.. _lutProcess.OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
                 return _processCodes;
             }
@@ -971,17 +958,11 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_processCodes == null)
-                {
-                    // Get the list of values from the lookup table.
-                    _processCodes = _lutProcess.OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
-                }
+                // Get the list of values from the lookup table.
+                _processCodes ??= [.. _lutProcess.OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
-                if (_processCodesWithNone == null)
-                {
-                    // Add the <None> code to the beginning of the list.
-                    _processCodesWithNone = new HluDataSet.lut_processRow[] { _noneProcessRow }.Concat(_processCodes).ToArray();
-                }
+                // Add the <None> code to the beginning of the list.
+                _processCodesWithNone ??= [_noneProcessRow, .. _processCodes];
 
                 return _processCodesWithNone;
             }
@@ -1209,17 +1190,13 @@ namespace HLU.UI.ViewModel
                 if (_lutHabitatClass == null || !_lutHabitatClass.Any())
                     return null;
 
-                // Get the list of values from the lookup table.
-                if (_habitatClassCodes == null)
-                {
-                    // Set the habitat classes for all local habitat classes with
-                    // local habitat types that relate to at least one primary
-                    // habitat type that is local.
-                    _habitatClassCodes = (from c in _lutHabitatClass
+                // Set the habitat classes for all local habitat classes with
+                // local habitat types that relate to at least one primary
+                // habitat type that is local.
+                _habitatClassCodes ??= [.. (from c in _lutHabitatClass
                                           join t in _lutHabitatType on c.code equals t.habitat_class_code
                                           join tp in _lutHabitatTypePrimary on t.code equals tp.code_habitat_type
-                                          select c).Distinct().OrderBy(c => c.sort_order).ThenBy(c => c.description).ToArray();
-                }
+                                          select c).Distinct().OrderBy(c => c.sort_order).ThenBy(c => c.description)];
 
                 return _habitatClassCodes;
             }
@@ -1242,10 +1219,9 @@ namespace HLU.UI.ViewModel
                 {
                     // Set the full list of habitat classes for all
                     // local habitat classes with local habitat types.
-                    _habitatClasses = _hluDS.lut_habitat_class.AsEnumerable()
+                    _habitatClasses = [.. _hluDS.lut_habitat_class.AsEnumerable()
                         .OrderBy(r => r.sort_order)
-                        .ThenBy(r => r.description)
-                        .ToArray();
+                        .ThenBy(r => r.description)];
                 }
 
                 return _habitatClasses ?? [];
@@ -1311,10 +1287,10 @@ namespace HLU.UI.ViewModel
                 {
                     // Only load codes with a primary habitat type for
                     // the selected class.
-                    _habitatTypeCodes = (from ht in _lutHabitatType
+                    _habitatTypeCodes = [.. (from ht in _lutHabitatType
                                              //join htp in _lutHabitatTypePrimary on ht.code equals htp.code_habitat_type
                                          where ht.habitat_class_code == _habitatClass
-                                         select ht).Distinct().OrderBy(c => c.sort_order).ThenBy(c => c.description).ToArray();
+                                         select ht).Distinct().OrderBy(c => c.sort_order).ThenBy(c => c.description)];
 
                     return _habitatTypeCodes;
                 }
@@ -1357,7 +1333,7 @@ namespace HLU.UI.ViewModel
 
                     // Combine both primary and secondary-derived codes,
                     // but allow only one entry per code, preferring the one marked as preferred.
-                    CodeDescriptionBool[] primaryCodes = (
+                    CodeDescriptionBool[] primaryCodes = [.. (
                         // First query – directly matched primary codes.
                         from p in _lutPrimary
                         join pc in _lutPrimaryCategory on p.category equals pc.code // Needed to only include local categories.
@@ -1368,10 +1344,10 @@ namespace HLU.UI.ViewModel
                                     Regex.IsMatch(p.code, @"\A" + htp.code_primary.TrimEnd('*') + @"")))
                         select new CodeDescriptionBool
                         {
-                            code = p.code,
-                            description = p.description,
-                            nvc_codes = p.nvc_codes,
-                            preferred = htp.preferred
+                            Code = p.code,
+                            Description = p.description,
+                            NVC_codes = p.nvc_codes,
+                            Preferred = htp.preferred
                         })
                     .Concat(
                         // Second query – inferred primary codes via secondary links.
@@ -1386,15 +1362,14 @@ namespace HLU.UI.ViewModel
                         where hts.code_habitat_type == _habitatType
                         select new CodeDescriptionBool
                         {
-                            code = p.code,
-                            description = p.description,
-                            nvc_codes = p.nvc_codes,
-                            preferred = false
+                            Code = p.code,
+                            Description = p.description,
+                            NVC_codes = p.nvc_codes,
+                            Preferred = false
                         })
-                    .DistinctBy(x => new { x.code, x.preferred }) // Remove exact duplicates only.
-                    .OrderByDescending(x => x.preferred) // Prefer 'true' if present.
-                    .ThenBy(x => x.code)
-                    .ToArray();
+                    .DistinctBy(x => new { x.Code, x.Preferred }) // Remove exact duplicates only.
+                    .OrderByDescending(x => x.Preferred) // Prefer 'true' if present.
+                    .ThenBy(x => x.Code)];
 
                     foreach (CodeDescriptionBool item in primaryCodes)
                         _primaryCodes.Add(item);
@@ -1402,14 +1377,13 @@ namespace HLU.UI.ViewModel
                     // Load all secondary habitat codes where the habitat type
                     // has one of more optional codes.
                     IEnumerable<HluDataSet.lut_secondaryRow> secondaryCodesOptional =
-                        (from hts in _lutHabitatTypeSecondary
+                        [.. (from hts in _lutHabitatTypeSecondary
                          join s in _lutSecondary on hts.code_secondary equals s.code
                          where hts.code_habitat_type == _habitatType
                              && hts.mandatory == 0
                          select s)
                         .OrderBy(r => r.sort_order)
-                        .ThenBy(r => r.description)
-                        .ToArray();
+                        .ThenBy(r => r.description)];
 
                     // Store the list of optional secondary codes.
                     _secondaryCodesOptional = secondaryCodesOptional.Select(hts => hts.code);
@@ -1417,14 +1391,13 @@ namespace HLU.UI.ViewModel
                     // Load all secondary habitat codes where the habitat type
                     // has one of more mandatory codes.
                     IEnumerable<HluDataSet.lut_secondaryRow> secondaryCodesMandatory =
-                        (from hts in _lutHabitatTypeSecondary
+                        [.. (from hts in _lutHabitatTypeSecondary
                          join s in _lutSecondary on hts.code_secondary equals s.code
                          where hts.code_habitat_type == _habitatType
                              && hts.mandatory == 1
                          select s)
                         .OrderBy(r => r.sort_order)
-                        .ThenBy(r => r.description)
-                        .ToArray();
+                        .ThenBy(r => r.description)];
 
                     // Store the list of mandatory secondary codes.
                     _secondaryCodesMandatory = secondaryCodesMandatory.Select(hts => hts.code);
@@ -1433,17 +1406,16 @@ namespace HLU.UI.ViewModel
                 {
                     // Load all primary habitat codes where the primary habitat code
                     // and primary habitat category are both flagged as local.
-                    CodeDescriptionBool[] allPrimaryCodes = (
+                    CodeDescriptionBool[] allPrimaryCodes = [.. (
                         from p in _lutPrimary
                         join pc in _lutPrimaryCategory on p.category equals pc.code
                         select new CodeDescriptionBool
                         {
-                            code = p.code,
-                            description = p.description,
-                            nvc_codes = p.nvc_codes,
-                            preferred = false
-                        })
-                        .ToArray();
+                            Code = p.code,
+                            Description = p.description,
+                            NVC_codes = p.nvc_codes,
+                            Preferred = false
+                        })];
 
                     foreach (CodeDescriptionBool item in allPrimaryCodes)
                         _primaryCodes.Add(item);
@@ -1455,7 +1427,7 @@ namespace HLU.UI.ViewModel
 
                 // If the previous selection is still valid, keep it.
                 if (!String.IsNullOrEmpty(previousIncidPrimary) &&
-                    _primaryCodes.Any(p => p.code == previousIncidPrimary))
+                    _primaryCodes.Any(p => p.Code == previousIncidPrimary))
                 {
                     _incidPrimary = previousIncidPrimary;
                 }
@@ -1533,7 +1505,7 @@ namespace HLU.UI.ViewModel
                 if (IncidCurrentRow != null)
                 {
                     //TODO: What does this actually do?
-                    if (_pasting && (_primaryCodes == null || !_primaryCodes.Any(r => r.code == value)))
+                    if (_pasting && (_primaryCodes == null || !_primaryCodes.Any(r => r.Code == value)))
                     {
                         _pasting = false;
                     }
@@ -1803,16 +1775,16 @@ namespace HLU.UI.ViewModel
                 if (!String.IsNullOrEmpty(IncidPrimary))
                 {
                     // Set the valid list of secondary groups for the primary code.
-                    _secondaryGroupsValid = (from sg in _lutSecondaryGroup
+                    _secondaryGroupsValid = [.. (from sg in _lutSecondaryGroup
                                              join s in _lutSecondary on sg.code equals s.code_group
                                              join ps in _lutPrimarySecondary on s.code equals ps.code_secondary
                                              where ((ps.code_primary == IncidPrimary) || (ps.code_primary.EndsWith('*') && Regex.IsMatch(IncidPrimary, @"\A" + ps.code_primary.TrimEnd('*') + @"") == true))
-                                             select sg).OrderBy(r => r.sort_order).ThenBy(r => r.description).Distinct().ToArray();
+                                             select sg).OrderBy(r => r.sort_order).ThenBy(r => r.description).Distinct()];
 
                     if (_secondaryGroupsValid != null)
                     {
                         // Add the <ALL> groups containing all and all essential secondary codes.
-                        _secondaryGroupsValid = new HluDataSet.lut_secondary_groupRow[] { _allRow, _allEssRow }.Concat(_secondaryGroupsValid).ToArray();
+                        _secondaryGroupsValid = [_allRow, _allEssRow, .. _secondaryGroupsValid];
                     }
                 }
                 else
@@ -1840,8 +1812,8 @@ namespace HLU.UI.ViewModel
                 if (_secondaryGroups == null || _secondaryGroups.Length == 0)
                 {
                     // Set the full list of local secondary groups.
-                    _secondaryGroups = (from sg in _lutSecondaryGroup
-                                        select sg).OrderBy(r => r.sort_order).ThenBy(r => r.description).Distinct().ToArray();
+                    _secondaryGroups = [.. (from sg in _lutSecondaryGroup
+                                        select sg).OrderBy(r => r.sort_order).ThenBy(r => r.description).Distinct()];
                 }
 
                 return _secondaryGroups;
@@ -1868,7 +1840,7 @@ namespace HLU.UI.ViewModel
                     if (secondaryGroupsWithAll != null)
                     {
                         // Add the <ALL> groups containing all and all essential secondary codes.
-                        secondaryGroupsWithAll = new HluDataSet.lut_secondary_groupRow[] { _allRow, _allEssRow }.Concat(secondaryGroupsWithAll).ToArray();
+                        secondaryGroupsWithAll = [_allRow, _allEssRow, .. secondaryGroupsWithAll];
                     }
 
                     // Set the full list of secondary groups (used in the options window).
@@ -1923,13 +1895,13 @@ namespace HLU.UI.ViewModel
                             // Load all secondary habitat codes that are flagged as local for
                             // all secondary groups that relate to the primary habitat and
                             // are essential.
-                            return _secondaryCodesValid.Where(s => s.sort_order < 100).ToArray();
+                            return [.. _secondaryCodesValid.Where(s => s.sort_order < 100)];
                         }
                         else
                         {
                             // Load all secondary habitat codes that are flagged as local and
                             // relate to the primary habitat and selected secondary group.
-                            return _secondaryCodesValid.Where(s => s.code_group == _secondaryGroup).ToArray();
+                            return [.. _secondaryCodesValid.Where(s => s.code_group == _secondaryGroup)];
                         }
                     }
                     else
@@ -1944,14 +1916,14 @@ namespace HLU.UI.ViewModel
                         {
                             // Load all secondary habitat codes that are flagged as local
                             // regardless of the primary habitat and are essential.
-                            return _secondaryCodesAll.Where(s => s.sort_order < 100).ToArray();
+                            return [.. _secondaryCodesAll.Where(s => s.sort_order < 100)];
                         }
                         else
                         {
                             // Load all secondary habitat codes that are flagged as local
                             // regardless of the primary habitat but related to the
                             // selected secondary group.
-                            return _secondaryCodesAll.Where(s => s.code_group == _secondaryGroup).ToArray();
+                            return [.. _secondaryCodesAll.Where(s => s.code_group == _secondaryGroup)];
                         }
                     }
                 }
@@ -1971,11 +1943,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_secondaryCodesAll == null)
-                {
-                    _secondaryCodesAll = (from s in _lutSecondary
-                                          select s).OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
-                }
+                _secondaryCodesAll ??= [.. (from s in _lutSecondary
+                                          select s).OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
                 return _secondaryCodesAll;
             }
@@ -2105,9 +2074,9 @@ namespace HLU.UI.ViewModel
 
                 // Create the concatenated secondary habitats summary.
                 _incidSecondarySummary = String.Join(_secondaryCodeDelimiter, _incidSecondaryHabitats
-                    .OrderBy(s => s.secondary_habitat_int)
-                    .ThenBy(s => s.secondary_habitat)
-                    .Select(s => s.secondary_habitat)
+                    .OrderBy(s => s.Secondary_habitat_int)
+                    .ThenBy(s => s.Secondary_habitat)
+                    .Select(s => s.Secondary_habitat)
                     .Distinct().ToList());
 
                 return _incidSecondarySummary == String.Empty ? null : _incidSecondarySummary;
@@ -2170,10 +2139,7 @@ namespace HLU.UI.ViewModel
                     return null;
 
                 // Get the list of values from the lookup table.
-                if (_legacyHabitatCodes == null)
-                {
-                    _legacyHabitatCodes = _lutLegacyHabitat.OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
-                }
+                _legacyHabitatCodes ??= [.. _lutLegacyHabitat.OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
                 // Return the list of legacy codes, with the clear row if applicable.
                 if (!String.IsNullOrEmpty(IncidLegacyHabitat))
@@ -2185,7 +2151,7 @@ namespace HLU.UI.ViewModel
                     clearRow.sort_order = -1;
 
                     // Add the <Clear> row
-                    return new HluDataSet.lut_legacy_habitatRow[] { clearRow }.Concat(_legacyHabitatCodes).ToArray();
+                    return [clearRow, .. _legacyHabitatCodes];
                 }
                 else
                 {
@@ -2883,14 +2849,11 @@ namespace HLU.UI.ViewModel
             get
             {
                 // Get the value from the lookup table.
-                if (_bapHabitatCodes == null)
-                {
-                    // Enable multiple priority habitat types (from the same or different
-                    // classifications) to be assigned
-                    _bapHabitatCodes = (from ht in _lutHabitatType
+                // Enable multiple priority habitat types (from the same or different
+                // classifications) to be assigned
+                _bapHabitatCodes ??= [.. (from ht in _lutHabitatType
                                         where ht.bap_priority == true
-                                        select ht).OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
-                }
+                                        select ht).OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
                 return _bapHabitatCodes;
             }
@@ -2906,7 +2869,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return _lutQualityDetermination.OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
+                return [.. _lutQualityDetermination.OrderBy(r => r.sort_order).ThenBy(r => r.description)];
             }
         }
 
@@ -2922,9 +2885,9 @@ namespace HLU.UI.ViewModel
             get
             {
                 if (DeterminationQualityCodes != null)
-                    return DeterminationQualityCodes.Where(r => r.code != BapEnvironment.BAPDetQltyUserAdded
+                    return [.. DeterminationQualityCodes.Where(r => r.code != BapEnvironment.BAPDetQltyUserAdded
                         && r.code != BapEnvironment.BAPDetQltyPrevious)
-                        .OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
+                        .OrderBy(r => r.sort_order).ThenBy(r => r.description)];
                 else
                     return null;
             }
@@ -2958,7 +2921,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return _lutQualityInterpretation.OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
+                return [.. _lutQualityInterpretation.OrderBy(r => r.sort_order).ThenBy(r => r.description)];
             }
         }
 
@@ -3135,11 +3098,8 @@ namespace HLU.UI.ViewModel
                 if (_lutBoundaryMap == null || !_lutBoundaryMap.Any())
                     return null;
 
-                if (_boundaryMapCodes == null)
-                {
-                    // Get the list of values from the lookup table.
-                    _boundaryMapCodes = _lutBoundaryMap.OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
-                }
+                // Get the list of values from the lookup table.
+                _boundaryMapCodes ??= [.. _lutBoundaryMap.OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
                 return _boundaryMapCodes;
             }
@@ -3301,12 +3261,8 @@ namespace HLU.UI.ViewModel
                 if (_lutCondition == null || !_lutCondition.Any())
                     return [];
 
-                // Load the condition codes if not already done.
-                if (_conditionCodes == null)
-                {
-                    // Get the list of values from the lookup table.
-                    _conditionCodes = _lutCondition.OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
-                }
+                // Get the list of values from the lookup table.
+                _conditionCodes ??= [.. _lutCondition.OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
                 // Return the list of condition codes, with the clear row if applicable.
                 if (_incidConditionRows != null &&
@@ -3321,7 +3277,7 @@ namespace HLU.UI.ViewModel
                     clearRow.sort_order = -1;
 
                     // Add the <Clear> row
-                    return new HluDataSet.lut_conditionRow[] { clearRow }.Concat(_conditionCodes).ToArray();
+                    return [clearRow, .. _conditionCodes];
                 }
                 else
                 {
@@ -3401,12 +3357,8 @@ namespace HLU.UI.ViewModel
                 if (_lutConditionQualifier == null || !_lutConditionQualifier.Any())
                     return null;
 
-                if (_conditionQualifierCodes == null)
-                {
-                    // Get the list of values from the lookup table.
-                    _conditionQualifierCodes = _lutConditionQualifier.OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
-
-                }
+                // Get the list of values from the lookup table.
+                _conditionQualifierCodes ??= [.. _lutConditionQualifier.OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
                 return _conditionQualifierCodes;
             }
@@ -3521,11 +3473,8 @@ namespace HLU.UI.ViewModel
                 if (_lutQualityDetermination == null || !_lutQualityDetermination.Any())
                     return null;
 
-                if (_qualityDeterminationCodes == null)
-                {
-                    // Get the list of values from the lookup table.
-                    _qualityDeterminationCodes = _lutQualityDetermination.OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray(); ;
-                }
+                // Get the list of values from the lookup table.
+                _qualityDeterminationCodes ??= [.. _lutQualityDetermination.OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
                 // Return the list of determination codes, with the clear row if applicable.
                 if (!String.IsNullOrEmpty(IncidQualityDetermination))
@@ -3537,7 +3486,7 @@ namespace HLU.UI.ViewModel
                     clearRow.sort_order = -1;
 
                     // Add the <Clear> row
-                    return new HluDataSet.lut_quality_determinationRow[] { clearRow }.Concat(_qualityDeterminationCodes).ToArray();
+                    return [.. new HluDataSet.lut_quality_determinationRow[] { clearRow }.Concat(_qualityDeterminationCodes)];
                 }
                 else
                 {
@@ -3598,11 +3547,8 @@ namespace HLU.UI.ViewModel
                 if (_lutQualityInterpretation == null || !_lutQualityInterpretation.Any())
                     return null;
 
-                if (_qualityInterpretationCodes == null)
-                {
-                    // Get the list of values from the lookup table.
-                    _qualityInterpretationCodes = _lutQualityInterpretation.OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray(); ;
-                }
+                // Get the list of values from the lookup table.
+                _qualityInterpretationCodes ??= [.. _lutQualityInterpretation.OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
                 // Return the list of interpretation codes, with the clear row if applicable.
                 if (!String.IsNullOrEmpty(IncidQualityInterpretation))
@@ -3614,7 +3560,7 @@ namespace HLU.UI.ViewModel
                     clearRow.sort_order = -1;
 
                     // Add the <Clear> row
-                    return new HluDataSet.lut_quality_interpretationRow[] { clearRow }.Concat(_qualityInterpretationCodes).ToArray();
+                    return [clearRow, .. _qualityInterpretationCodes];
                 }
                 else
                 {
@@ -3729,10 +3675,7 @@ namespace HLU.UI.ViewModel
                     return null;
 
                 // Get the list of values from the lookup table.
-                if (_sourceNames == null)
-                {
-                    _sourceNames = _lutSources.OrderBy(r => r.sort_order).ThenBy(r => r.source_name).ToArray();
-                }
+                _sourceNames ??= [.. _lutSources.OrderBy(r => r.sort_order).ThenBy(r => r.source_name)];
 
                 return _sourceNames;
             }
@@ -3752,11 +3695,8 @@ namespace HLU.UI.ViewModel
                     return null;
 
                 // Get the list of values from the lookup table.
-                if (_sourceHabitatClassCodes == null)
-                {
-                    _sourceHabitatClassCodes = _lutHabitatClass
-                        .OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
-                }
+                _sourceHabitatClassCodes ??= [.. _lutHabitatClass
+                        .OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
                 return _sourceHabitatClassCodes;
             }
@@ -3776,10 +3716,7 @@ namespace HLU.UI.ViewModel
                     return null;
 
                 // Get the list of values from the lookup table.
-                if (_sourceImportanceCodes == null)
-                {
-                    _sourceImportanceCodes = _lutImportance.OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
-                }
+                _sourceImportanceCodes ??= [.. _lutImportance.OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
                 return _sourceImportanceCodes;
             }
@@ -3836,9 +3773,7 @@ namespace HLU.UI.ViewModel
                 if (HluDataset.lut_sources.IsInitialized &&
                     HluDataset.lut_sources.Count == 0)
                 {
-                    if (_hluTableAdapterMgr.lut_sourcesTableAdapter == null)
-                        _hluTableAdapterMgr.lut_sourcesTableAdapter =
-                            new HluTableAdapter<HluDataSet.lut_sourcesDataTable, HluDataSet.lut_sourcesRow>(_db);
+                    _hluTableAdapterMgr.lut_sourcesTableAdapter ??= new HluTableAdapter<HluDataSet.lut_sourcesDataTable, HluDataSet.lut_sourcesRow>(_db);
                     _hluTableAdapterMgr.Fill(HluDataset,
                         [typeof(HluDataSet.lut_sourcesDataTable)], false);
                 }
@@ -3854,7 +3789,7 @@ namespace HLU.UI.ViewModel
                     clearRow.sort_order = -1;
 
                     // Add the <Clear> row
-                    return new HluDataSet.lut_sourcesRow[] { clearRow }.Concat(SourceNames).ToArray();
+                    return [clearRow, .. SourceNames];
                 }
                 else
                 {
@@ -3879,7 +3814,7 @@ namespace HLU.UI.ViewModel
                 if (_incidSourcesRows.Length < 3)
                 {
                     HluDataSet.incid_sourcesRow[] tmpRows = new HluDataSet.incid_sourcesRow[3 - _incidSourcesRows.Length];
-                    _incidSourcesRows = _incidSourcesRows.Concat(tmpRows).ToArray();
+                    _incidSourcesRows = [.. _incidSourcesRows, .. tmpRows];
                 }
 
                 if (_incidSourcesRows[0] != null)
@@ -4015,9 +3950,9 @@ namespace HLU.UI.ViewModel
                 if (!String.IsNullOrEmpty(IncidSource1HabitatClass))
                 {
                     // Load the habitat types for the selected habitat class.
-                    HluDataSet.lut_habitat_typeRow[] retArray = _lutHabitatType
+                    HluDataSet.lut_habitat_typeRow[] retArray = [.. _lutHabitatType
                         .Where(r => r.habitat_class_code == IncidSource1HabitatClass)
-                        .OrderBy(r => r.sort_order).ThenBy(r => r.name).ToArray();
+                        .OrderBy(r => r.sort_order).ThenBy(r => r.name)];
 
                     // Set the habitat type if there is only one
                     if ((retArray.Length == 1) && (IncidSource1Id != null))
@@ -4152,7 +4087,7 @@ namespace HLU.UI.ViewModel
                     clearRow.sort_order = -1;
 
                     // Add the <Clear> row
-                    return new HluDataSet.lut_sourcesRow[] { clearRow }.Concat(SourceNames).ToArray();
+                    return [clearRow, .. SourceNames];
                 }
                 else
                 {
@@ -4175,7 +4110,7 @@ namespace HLU.UI.ViewModel
                 if (_incidSourcesRows.Length < 3)
                 {
                     HluDataSet.incid_sourcesRow[] tmpRows = new HluDataSet.incid_sourcesRow[3 - _incidSourcesRows.Length];
-                    _incidSourcesRows = _incidSourcesRows.Concat(tmpRows).ToArray();
+                    _incidSourcesRows = [.. _incidSourcesRows, .. tmpRows];
                 }
                 if (_incidSourcesRows[1] != null)
                     return _incidSourcesRows[1].source_id;
@@ -4307,9 +4242,9 @@ namespace HLU.UI.ViewModel
                 if (!String.IsNullOrEmpty(IncidSource2HabitatClass))
                 {
                     // Load the habitat types for the selected habitat class.
-                    HluDataSet.lut_habitat_typeRow[] retArray = _lutHabitatType
+                    HluDataSet.lut_habitat_typeRow[] retArray = [.. _lutHabitatType
                         .Where(r => r.habitat_class_code == IncidSource2HabitatClass)
-                        .OrderBy(r => r.sort_order).ThenBy(r => r.name).ToArray();
+                        .OrderBy(r => r.sort_order).ThenBy(r => r.name)];
 
                     // Set the habitat type if there is only one
                     if ((retArray.Length == 1) && (IncidSource2Id != null))
@@ -4444,7 +4379,7 @@ namespace HLU.UI.ViewModel
                     clearRow.sort_order = -1;
 
                     // Add the clear row
-                    return new HluDataSet.lut_sourcesRow[] { clearRow }.Concat(SourceNames).ToArray();
+                    return [clearRow, .. SourceNames];
                 }
                 else
                 {
@@ -4467,7 +4402,7 @@ namespace HLU.UI.ViewModel
                 if (_incidSourcesRows.Length < 3)
                 {
                     HluDataSet.incid_sourcesRow[] tmpRows = new HluDataSet.incid_sourcesRow[3 - _incidSourcesRows.Length];
-                    _incidSourcesRows = _incidSourcesRows.Concat(tmpRows).ToArray();
+                    _incidSourcesRows = [.. _incidSourcesRows, .. tmpRows];
                 }
                 if (_incidSourcesRows[2] != null)
                     return _incidSourcesRows[2].source_id;
@@ -4623,9 +4558,9 @@ namespace HLU.UI.ViewModel
                 if (!String.IsNullOrEmpty(IncidSource3HabitatClass))
                 {
                     // Load the habitat types for the selected habitat class.
-                    HluDataSet.lut_habitat_typeRow[] retArray = _lutHabitatType
+                    HluDataSet.lut_habitat_typeRow[] retArray = [.. _lutHabitatType
                         .Where(r => r.habitat_class_code == IncidSource3HabitatClass)
-                        .OrderBy(r => r.sort_order).ThenBy(r => r.name).ToArray();
+                        .OrderBy(r => r.sort_order).ThenBy(r => r.name)];
 
                     // Set the habitat type if there is only one
                     if ((retArray.Length == 1) && (IncidSource3Id != null))
@@ -4728,11 +4663,15 @@ namespace HLU.UI.ViewModel
                     // creating history even if the user only wants to display some of them.
                     DataColumn[] displayHistoryColumns;
                     int result;
-                    displayHistoryColumns = _gisIDColumns.Concat((from s in Settings.Default.HistoryColumnOrdinals.Cast<string>()
-                                                                  where Int32.TryParse(s, out result) && (result >= 0) &&
-                                                                       (result < _hluDS.incid_mm_polygons.Columns.Count) &&
-                                                                       !_gisIDColumnOrdinals.Contains(result)
-                                                                  select _hluDS.incid_mm_polygons.Columns[Int32.Parse(s)])).ToArray();
+                    displayHistoryColumns =
+                    [
+                        .. _gisIDColumns,
+                        .. (from s in Settings.Default.HistoryColumnOrdinals.Cast<string>()
+                                                                      where Int32.TryParse(s, out result) && (result >= 0) &&
+                                                                           (result < _hluDS.incid_mm_polygons.Columns.Count) &&
+                                                                           !_gisIDColumnOrdinals.Contains(result)
+                                                                      select _hluDS.incid_mm_polygons.Columns[Int32.Parse(s)]),
+                    ];
 
                     return (from r in _incidHistoryRows.OrderByDescending(r => r.history_id)
                             group r by new
@@ -6209,7 +6148,7 @@ namespace HLU.UI.ViewModel
         {
             System.Windows.Application.Current?.Dispatcher.Invoke(() =>
             {
-                List<MessageItem> messagesToRemove = new();
+                List<MessageItem> messagesToRemove = [];
 
                 // Clear by ID
                 if (!string.IsNullOrEmpty(id))
@@ -6224,19 +6163,17 @@ namespace HLU.UI.ViewModel
                 // Clear by category
                 else if (!string.IsNullOrEmpty(category))
                 {
-                    messagesToRemove = _messageQueue
-                        .Where(m => string.Equals(m.Category, category, StringComparison.OrdinalIgnoreCase))
-                        .ToList();
+                    messagesToRemove = [.. _messageQueue.Where(m => string.Equals(m.Category, category, StringComparison.OrdinalIgnoreCase))];
                 }
                 // Clear by level
                 else if (level.HasValue)
                 {
-                    messagesToRemove = _messageQueue.Where(m => m.Level == level.Value).ToList();
+                    messagesToRemove = [.. _messageQueue.Where(m => m.Level == level.Value)];
                 }
                 // Clear all
                 else
                 {
-                    messagesToRemove = _messageQueue.ToList();
+                    messagesToRemove = [.. _messageQueue];
                 }
 
                 // Remove the messages
@@ -6310,8 +6247,10 @@ namespace HLU.UI.ViewModel
             CancelAutoDismiss(messageId);
 
             // Create a new timer
-            var timer = new System.Timers.Timer(seconds * 1000);
-            timer.AutoReset = false;
+            var timer = new System.Timers.Timer(seconds * 1000)
+            {
+                AutoReset = false
+            };
             timer.Elapsed += (sender, e) =>
             {
                 ClearMessage(id: messageId);
@@ -6441,12 +6380,9 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_dismissMessageCommand == null)
-                {
-                    _dismissMessageCommand = new RelayCommand(
+                _dismissMessageCommand ??= new RelayCommand(
                         param => ClearMessage(id: param?.ToString()),
                         param => true);
-                }
                 return _dismissMessageCommand;
             }
         }
@@ -6631,21 +6567,21 @@ namespace HLU.UI.ViewModel
             IncidCurrentRow = HluDataset.incid.NewincidRow();
 
             // Get new mulitplex rows.
-            IncidIhsMatrixRows = Array.Empty<HluDataSet.incid_ihs_matrixRow>()
-                .Select(r => HluDataset.incid_ihs_matrix.Newincid_ihs_matrixRow()).ToArray();
+            IncidIhsMatrixRows = [.. Array.Empty<HluDataSet.incid_ihs_matrixRow>()
+                .Select(r => HluDataset.incid_ihs_matrix.Newincid_ihs_matrixRow())];
 
-            IncidIhsFormationRows = Array.Empty<HluDataSet.incid_ihs_formationRow>()
-                .Select(r => HluDataset.incid_ihs_formation.Newincid_ihs_formationRow()).ToArray();
+            IncidIhsFormationRows = [.. Array.Empty<HluDataSet.incid_ihs_formationRow>()
+                .Select(r => HluDataset.incid_ihs_formation.Newincid_ihs_formationRow())];
 
-            IncidIhsManagementRows = Array.Empty<HluDataSet.incid_ihs_managementRow>()
-                .Select(r => HluDataset.incid_ihs_management.Newincid_ihs_managementRow()).ToArray();
+            IncidIhsManagementRows = [.. Array.Empty<HluDataSet.incid_ihs_managementRow>()
+                .Select(r => HluDataset.incid_ihs_management.Newincid_ihs_managementRow())];
 
-            IncidIhsComplexRows = Array.Empty<HluDataSet.incid_ihs_complexRow>()
-                .Select(r => HluDataset.incid_ihs_complex.Newincid_ihs_complexRow()).ToArray();
+            IncidIhsComplexRows = [.. Array.Empty<HluDataSet.incid_ihs_complexRow>()
+                .Select(r => HluDataset.incid_ihs_complex.Newincid_ihs_complexRow())];
 
             // Get new secondary rows.
-            IncidSecondaryRows = Array.Empty<HluDataSet.incid_secondaryRow>()
-                .Select(r => HluDataset.incid_secondary.Newincid_secondaryRow()).ToArray();
+            IncidSecondaryRows = [.. Array.Empty<HluDataSet.incid_secondaryRow>()
+                .Select(r => HluDataset.incid_secondary.Newincid_secondaryRow())];
 
             // Clear the secondary habitats table and the secondary habitat
             // rows for the class
@@ -6658,8 +6594,9 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(SecondaryGroupEnabled));
 
             // Get a new condition row.
-            IncidConditionRows = new HluDataSet.incid_conditionRow[1]
-                .Select(r => HluDataset.incid_condition.Newincid_conditionRow()).ToArray();
+            IncidConditionRows = [.. new HluDataSet.incid_conditionRow[1]
+                .Select(r => HluDataset.incid_condition.Newincid_conditionRow())];
+
             for (int i = 0; i < IncidConditionRows.Length; i++)
             {
                 IncidConditionRows[i].incid_condition_id = i;
@@ -6668,14 +6605,14 @@ namespace HLU.UI.ViewModel
             }
 
             // Get a new BAP row and reset the auto and user collections.
-            IncidBapRows = Array.Empty<HluDataSet.incid_bapRow>()
-                .Select(r => HluDataset.incid_bap.Newincid_bapRow()).ToArray();
+            IncidBapRows = [.. Array.Empty<HluDataSet.incid_bapRow>()
+                .Select(r => HluDataset.incid_bap.Newincid_bapRow())];
             IncidBapRowsAuto = [];
             IncidBapRowsUser = [];
 
             // Get new sources rows.
-            IncidSourcesRows = new HluDataSet.incid_sourcesRow[3]
-                .Select(r => HluDataset.incid_sources.Newincid_sourcesRow()).ToArray();
+            IncidSourcesRows = [.. new HluDataSet.incid_sourcesRow[3]
+                .Select(r => HluDataset.incid_sources.Newincid_sourcesRow())];
             for (int i = 0; i < IncidSourcesRows.Length; i++)
             {
                 IncidSourcesRows[i].incid_source_id = i;
@@ -7322,15 +7259,14 @@ namespace HLU.UI.ViewModel
         private async void UpdateClicked(object param)
         {
             // Update the attributes (don't wait).
-            await UpdateAsync(param);
+            await UpdateAsync();
         }
 
         /// <summary>
         /// UpdateCommand event handler.
         /// </summary>
-        /// <param name="param">The parameter passed to the command.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        private async Task UpdateAsync(object param)
+        private async Task UpdateAsync()
         {
             // Check if the GIS and database are in sync.
             if (!CheckInSync("Save", "Cannot save: Map"))
@@ -7381,7 +7317,7 @@ namespace HLU.UI.ViewModel
             // If in bulk update mode then perform the bulk update and exit.
             if (IsBulkMode)
             {
-                ApplyBulkUpdate(param);
+                ApplyBulkUpdate();
                 return;
             }
 
@@ -7644,9 +7580,9 @@ namespace HLU.UI.ViewModel
                     _currentIncidFragsInGISCount, _currentIncidFragsInDBCount, _gisLayerType);
 
                 // when ViewModel asks to be closed, close window
-                _viewModelWinWarnSubsetUpdate.RequestClose -= viewModelWinWarnSubsetUpdate_RequestClose; // Safety: avoid double subscription.
+                _viewModelWinWarnSubsetUpdate.RequestClose -= ViewModelWinWarnSubsetUpdate_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinWarnSubsetUpdate.RequestClose +=
-                    new ViewModelWindowWarnOnSubsetUpdate.RequestCloseEventHandler(viewModelWinWarnSubsetUpdate_RequestClose);
+                    new ViewModelWindowWarnOnSubsetUpdate.RequestCloseEventHandler(ViewModelWinWarnSubsetUpdate_RequestClose);
 
                 // allow all controls in window to bind to ViewModel by setting DataContext
                 _windowWarnSubsetUpdate.DataContext = _viewModelWinWarnSubsetUpdate;
@@ -7664,10 +7600,10 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="proceed">if set to <c>true</c> [proceed].</param>
         /// <param name="split">if set to <c>true</c> [split].</param>
-        private void viewModelWinWarnSubsetUpdate_RequestClose(bool proceed, bool split, int? subsetUpdateAction)
+        private void ViewModelWinWarnSubsetUpdate_RequestClose(bool proceed, bool split, int? subsetUpdateAction)
         {
             // Remove the event handler and close the window.
-            _viewModelWinWarnSubsetUpdate.RequestClose -= viewModelWinWarnSubsetUpdate_RequestClose;
+            _viewModelWinWarnSubsetUpdate.RequestClose -= ViewModelWinWarnSubsetUpdate_RequestClose;
             _windowWarnSubsetUpdate.Close();
 
             // If the user has set a default action for updating subsets of features
@@ -7709,8 +7645,7 @@ namespace HLU.UI.ViewModel
         public void StartBulkUpdate()
         {
             _saving = false;
-            if (_viewModelBulkUpdate == null)
-                _viewModelBulkUpdate = new ViewModelWindowMainBulkUpdate(this, _addInSettings);
+            _viewModelBulkUpdate ??= new ViewModelWindowMainBulkUpdate(this, _addInSettings);
 
             //TODO: Needed?
             //// If already in bulk update mode then perform the bulk update
@@ -7747,11 +7682,10 @@ namespace HLU.UI.ViewModel
         /// Action the bulk update.
         /// </summary>
         /// <param name="param">The parameter passed to the command.</param>
-        private void ApplyBulkUpdate(object param)
+        private void ApplyBulkUpdate()
         {
             _saving = false;
-            if (_viewModelBulkUpdate == null)
-                _viewModelBulkUpdate = new ViewModelWindowMainBulkUpdate(this, _addInSettings);
+            _viewModelBulkUpdate ??= new ViewModelWindowMainBulkUpdate(this, _addInSettings);
 
             // If already in bulk update mode then perform the bulk update
             if (IsBulkMode)
@@ -7823,8 +7757,7 @@ namespace HLU.UI.ViewModel
             }
 
             _saving = false;
-            if (_viewModelOSMMUpdate == null)
-                _viewModelOSMMUpdate = new ViewModelWindowMainOSMMUpdate(this);
+            _viewModelOSMMUpdate ??= new ViewModelWindowMainOSMMUpdate(this);
 
             // If the OSMM update mode is not already started.
             if (IsNotOsmmReviewMode)
@@ -8073,8 +8006,7 @@ namespace HLU.UI.ViewModel
         /// <returns>A task that represents the asynchronous operation.</returns>
         private async Task OSMMUpdateAcceptAsync()
         {
-            if (_viewModelOSMMUpdate == null)
-                _viewModelOSMMUpdate = new ViewModelWindowMainOSMMUpdate(this);
+            _viewModelOSMMUpdate ??= new ViewModelWindowMainOSMMUpdate(this);
 
             // Save the current incid
             int incidCurrRowIx = IncidCurrentRowIndex;
@@ -8105,8 +8037,7 @@ namespace HLU.UI.ViewModel
         /// <returns>A task that represents the asynchronous operation.</returns>
         private async Task OSMMUpdateRejectAsync()
         {
-            if (_viewModelOSMMUpdate == null)
-                _viewModelOSMMUpdate = new ViewModelWindowMainOSMMUpdate(this);
+            _viewModelOSMMUpdate ??= new ViewModelWindowMainOSMMUpdate(this);
 
             // Save the current incid
             int incidCurrRowIx = IncidCurrentRowIndex;
@@ -8147,8 +8078,7 @@ namespace HLU.UI.ViewModel
         private void StartOSMMBulkUpdateClicked(object param)
         {
             _saving = false;
-            if (_viewModelBulkUpdate == null)
-                _viewModelBulkUpdate = new ViewModelWindowMainBulkUpdate(this, _addInSettings);
+            _viewModelBulkUpdate ??= new ViewModelWindowMainBulkUpdate(this, _addInSettings);
 
             // If the OSMM Bulk update mode is not already started.
             if (IsNotOsmmBulkMode)
@@ -8220,7 +8150,7 @@ namespace HLU.UI.ViewModel
             // Create ViewModel to which main window binds
             _viewModelAbout = new ViewModelWindowAbout
             {
-                AppVersion = String.Format("{0} {1}", _appVersion, _betaVersion ? "[Beta]" : null),
+                AppVersion = _appVersion,
                 DbVersion = _dbVersion,
                 DataVersion = _dataVersion,
                 ConnectionType = dbBackend,
@@ -8235,8 +8165,8 @@ namespace HLU.UI.ViewModel
             };
 
             // When ViewModel asks to be closed, close window
-            _viewModelAbout.RequestClose -= viewModelAbout_RequestClose; // Safety: avoid double subscription.
-            _viewModelAbout.RequestClose += new ViewModelWindowAbout.RequestCloseEventHandler(viewModelAbout_RequestClose);
+            _viewModelAbout.RequestClose -= ViewModelAbout_RequestClose; // Safety: avoid double subscription.
+            _viewModelAbout.RequestClose += new ViewModelWindowAbout.RequestCloseEventHandler(ViewModelAbout_RequestClose);
 
             // Allow all controls in window to bind to ViewModel by setting DataContext
             _windowAbout.DataContext = _viewModelAbout;
@@ -8250,10 +8180,10 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="sender">The sender of the event.</param>
         /// <param name="e">The event arguments.</param>
-        private void viewModelAbout_RequestClose()
+        private void ViewModelAbout_RequestClose()
         {
             // Remove the event handler and close the window.
-            _viewModelAbout.RequestClose -= viewModelAbout_RequestClose;
+            _viewModelAbout.RequestClose -= ViewModelAbout_RequestClose;
             _windowAbout.Close();
         }
 
@@ -8322,9 +8252,9 @@ namespace HLU.UI.ViewModel
                 };
 
                 // when ViewModel asks to be closed, close window
-                _viewModelWinQueryAdvanced.RequestClose -= viewModelWinQueryAdvanced_RequestClose; // Safety: avoid double subscription.
+                _viewModelWinQueryAdvanced.RequestClose -= ViewModelWinQueryAdvanced_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinQueryAdvanced.RequestClose +=
-                    new ViewModelWindowQueryAdvanced.RequestCloseEventHandler(viewModelWinQueryAdvanced_RequestClose);
+                    new ViewModelWindowQueryAdvanced.RequestCloseEventHandler(ViewModelWinQueryAdvanced_RequestClose);
 
                 // allow all controls in window to bind to ViewModel by setting DataContext
                 _windowQueryAdvanced.DataContext = _viewModelWinQueryAdvanced;
@@ -8344,10 +8274,10 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="sqlFromTables">The tables to query.</param>
         /// <param name="sqlWhereClause">The where clause to apply in the query.</param>
-        private async void viewModelWinQueryAdvanced_RequestClose(string sqlFromTables, string sqlWhereClause)
+        private async void ViewModelWinQueryAdvanced_RequestClose(string sqlFromTables, string sqlWhereClause)
         {
             // Remove the event handler and close the window.
-            _viewModelWinQueryAdvanced.RequestClose -= viewModelWinQueryAdvanced_RequestClose;
+            _viewModelWinQueryAdvanced.RequestClose -= ViewModelWinQueryAdvanced_RequestClose;
             _windowQueryAdvanced.Close();
 
             // If no query was specified, exit (this should not happen).
@@ -8362,17 +8292,17 @@ namespace HLU.UI.ViewModel
                 List<DataTable> tables = [];
                 if ((ViewModelWindowQueryAdvanced.HluDatasetStatic != null))
                 {
-                    tables = ViewModelWindowQueryAdvanced.HluDatasetStatic.incid.ChildRelations
-                        .Cast<DataRelation>().Select(r => r.ChildTable).ToList();
+                    tables = [.. ViewModelWindowQueryAdvanced.HluDatasetStatic.incid.ChildRelations
+                        .Cast<DataRelation>().Select(r => r.ChildTable)];
                     tables.Add(ViewModelWindowQueryAdvanced.HluDatasetStatic.incid);
                 }
 
                 // Split the string of query table names created by the
                 // user in the form into an array.
-                string[] fromTables = sqlFromTables.Split(',').Select(s => s.Trim(' ')).Distinct().ToArray();
+                string[] fromTables = [.. sqlFromTables.Split(',').Select(s => s.Trim(' ')).Distinct()];
 
                 // Select only the database tables that are in the query array.
-                List<DataTable> whereTables = tables.Where(t => fromTables.Contains(t.TableName)).ToList();
+                List<DataTable> whereTables = [.. tables.Where(t => fromTables.Contains(t.TableName))];
 
                 // Replace any connection type specific qualifiers and delimiters.
                 string newWhereClause = null;
@@ -8536,9 +8466,9 @@ namespace HLU.UI.ViewModel
                     expectedNumFeatures, expectedNumIncids, expectedNumFeatures > -1 ? _gisLayerType : GeometryTypes.Unknown, _warnBeforeMaxFeatures);
 
                 // When ViewModel asks to be closed, close window
-                _viewModelWinWarnGISSelect.RequestClose -= viewModelWinWarnGISSelect_RequestClose; // Safety: avoid double subscription.
+                _viewModelWinWarnGISSelect.RequestClose -= ViewModelWinWarnGISSelect_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinWarnGISSelect.RequestClose +=
-                    new ViewModelWindowWarnOnGISSelect.RequestCloseEventHandler(viewModelWinWarnGISSelect_RequestClose);
+                    new ViewModelWindowWarnOnGISSelect.RequestCloseEventHandler(ViewModelWinWarnGISSelect_RequestClose);
 
                 // Allow all controls in window to bind to ViewModel by setting DataContext
                 _windowWarnGISSelect.DataContext = _viewModelWinWarnGISSelect;
@@ -8559,10 +8489,10 @@ namespace HLU.UI.ViewModel
         /// Closes the warning gis on selection window.
         /// </summary>
         /// <param name="proceed">If set to <c>true</c> [proceed].</param>
-        private void viewModelWinWarnGISSelect_RequestClose(bool proceed)
+        private void ViewModelWinWarnGISSelect_RequestClose(bool proceed)
         {
             // Remove the event handler and close the window.
-            _viewModelWinWarnGISSelect.RequestClose -= viewModelWinWarnGISSelect_RequestClose;
+            _viewModelWinWarnGISSelect.RequestClose -= ViewModelWinWarnGISSelect_RequestClose;
             _windowWarnGISSelect.Close();
 
             // Update the user warning count threshold in case it was changed in the options within the warning window.
@@ -8636,9 +8566,9 @@ namespace HLU.UI.ViewModel
                 };
 
                 // when ViewModel asks to be closed, close window
-                _viewModelWinQueryOSMM.RequestClose -= viewModelWinQueryOSMM_RequestClose; // Safety: avoid double subscription.
+                _viewModelWinQueryOSMM.RequestClose -= ViewModelWinQueryOSMM_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinQueryOSMM.RequestClose +=
-                    new ViewModelWindowQueryOSMM.RequestCloseEventHandler(viewModelWinQueryOSMM_RequestClose);
+                    new ViewModelWindowQueryOSMM.RequestCloseEventHandler(ViewModelWinQueryOSMM_RequestClose);
 
                 // allow all controls in window to bind to ViewModel by setting DataContext
                 _windowQueryOSMM.DataContext = _viewModelWinQueryOSMM;
@@ -8661,10 +8591,10 @@ namespace HLU.UI.ViewModel
         /// <param name="changeFlag">The change flag value.</param>
         /// <param name="status">The OSMM status value.</param>
         /// <param name="apply">Whether to apply (or cancel) the query.</param>
-        private async void viewModelWinQueryOSMM_RequestClose(string processFlag, string spatialFlag, string changeFlag, string status, bool apply)
+        private async void ViewModelWinQueryOSMM_RequestClose(string processFlag, string spatialFlag, string changeFlag, string status, bool apply)
         {
             // Remove the event handler and close the window.
-            _viewModelWinQueryOSMM.RequestClose -= viewModelWinQueryOSMM_RequestClose;
+            _viewModelWinQueryOSMM.RequestClose -= ViewModelWinQueryOSMM_RequestClose;
             _windowQueryOSMM.Close();
 
             // If applying the query
@@ -8746,9 +8676,9 @@ namespace HLU.UI.ViewModel
                 };
 
                 // when ViewModel asks to be closed, close window
-                _viewModelWinQueryAdvanced.RequestClose -= viewModelWinQueryOSMMAdvanced_RequestClose; // Safety: avoid double subscription.
+                _viewModelWinQueryAdvanced.RequestClose -= ViewModelWinQueryOSMMAdvanced_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinQueryAdvanced.RequestClose +=
-                    new ViewModelWindowQueryAdvanced.RequestCloseEventHandler(viewModelWinQueryOSMMAdvanced_RequestClose);
+                    new ViewModelWindowQueryAdvanced.RequestCloseEventHandler(ViewModelWinQueryOSMMAdvanced_RequestClose);
 
                 // allow all controls in window to bind to ViewModel by setting DataContext
                 _windowQueryAdvanced.DataContext = _viewModelWinQueryAdvanced;
@@ -8768,10 +8698,10 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="sqlFromTables">The tables to query.</param>
         /// <param name="sqlWhereClause">The where clause to apply in the query.</param>
-        private async void viewModelWinQueryOSMMAdvanced_RequestClose(string sqlFromTables, string sqlWhereClause)
+        private async void ViewModelWinQueryOSMMAdvanced_RequestClose(string sqlFromTables, string sqlWhereClause)
         {
             // Remove the event handler and close the window.
-            _viewModelWinQueryAdvanced.RequestClose -= viewModelWinQueryOSMMAdvanced_RequestClose;
+            _viewModelWinQueryAdvanced.RequestClose -= ViewModelWinQueryOSMMAdvanced_RequestClose;
             _windowQueryAdvanced.Close();
 
             // If no query was specified, exit (this should not happen).
@@ -8801,21 +8731,21 @@ namespace HLU.UI.ViewModel
                 List<DataTable> tables = [];
                 if ((ViewModelWindowQueryAdvanced.HluDatasetStatic != null))
                 {
-                    tables = ViewModelWindowQueryAdvanced.HluDatasetStatic.incid.ChildRelations
-                        .Cast<DataRelation>().Select(r => r.ChildTable).ToList();
+                    tables = [.. ViewModelWindowQueryAdvanced.HluDatasetStatic.incid.ChildRelations
+                        .Cast<DataRelation>().Select(r => r.ChildTable)];
                     tables.Add(ViewModelWindowQueryAdvanced.HluDatasetStatic.incid);
                 }
 
                 // Split the string of query table names created by the
                 // user in the form into an array.
-                string[] fromTables = sqlFromTables.Split(',').Select(s => s.Trim(' ')).Distinct().ToArray();
+                string[] fromTables = [.. sqlFromTables.Split(',').Select(s => s.Trim(' ')).Distinct()];
 
                 // Include the incid_osmm_updates table to use in the query.
                 if (fromTables.Contains(IncidOSMMUpdatesTable.TableName) == false)
-                    fromTables = fromTables.Concat([IncidOSMMUpdatesTable.TableName]).ToArray();
+                    fromTables = [.. fromTables, IncidOSMMUpdatesTable.TableName];
 
                 // Select only the database tables that are in the query array.
-                List<DataTable> whereTables = tables.Where(t => fromTables.Contains(t.TableName)).ToList();
+                List<DataTable> whereTables = [.. tables.Where(t => fromTables.Contains(t.TableName))];
 
                 // If a status is included in the SQL then also filter out pending
                 // and applied updates, otherwise filter out everything
@@ -9032,7 +8962,7 @@ namespace HLU.UI.ViewModel
 
                     // Add secondary habitat to table if it isn't already in the table
                     if (SecondaryHabitat.SecondaryHabitatList == null ||
-                        !SecondaryHabitat.SecondaryHabitatList.Any(sh => sh.secondary_habitat == _secondaryHabitat))
+                        !SecondaryHabitat.SecondaryHabitatList.Any(sh => sh.Secondary_habitat == _secondaryHabitat))
                         AddSecondaryHabitat(false, -1, Incid, _secondaryHabitat, secondaryGroup);
 
                     // Clear the secondary habitat selection to reset the combo box display.
@@ -9083,9 +9013,9 @@ namespace HLU.UI.ViewModel
                 };
 
                 // when ViewModel asks to be closed, close window
-                _viewModelWinQuerySecondaries.RequestClose -= _viewModelWinQuerySecondaries_RequestClose; // Safety: avoid double subscription.
+                _viewModelWinQuerySecondaries.RequestClose -= ViewModelWinQuerySecondaries_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinQuerySecondaries.RequestClose +=
-                    new ViewModelWindowQuerySecondaries.RequestCloseEventHandler(_viewModelWinQuerySecondaries_RequestClose);
+                    new ViewModelWindowQuerySecondaries.RequestCloseEventHandler(ViewModelWinQuerySecondaries_RequestClose);
 
                 // allow all controls in window to bind to ViewModel by setting DataContext
                 _windowQuerySecondaries.DataContext = _viewModelWinQuerySecondaries;
@@ -9105,10 +9035,10 @@ namespace HLU.UI.ViewModel
         /// secondary habitats to the tble.
         /// </summary>
         /// <param name="querySecondaries">The list of secondaries to add.</param>
-        private void _viewModelWinQuerySecondaries_RequestClose(String querySecondaries)
+        private void ViewModelWinQuerySecondaries_RequestClose(String querySecondaries)
         {
             // Remove the event handler and close the window.
-            _viewModelWinQuerySecondaries.RequestClose -= _viewModelWinQuerySecondaries_RequestClose;
+            _viewModelWinQuerySecondaries.RequestClose -= ViewModelWinQuerySecondaries_RequestClose;
             _windowQuerySecondaries.Close();
 
             // If no secondaries were entered then just exit.
@@ -9145,7 +9075,7 @@ namespace HLU.UI.ViewModel
 
                             // Add secondary habitat if it isn't already in the table
                             if (SecondaryHabitat.SecondaryHabitatList == null ||
-                                !SecondaryHabitat.SecondaryHabitatList.Any(sh => sh.secondary_habitat == secondaryHabitat))
+                                !SecondaryHabitat.SecondaryHabitatList.Any(sh => sh.Secondary_habitat == secondaryHabitat))
                             {
                                 // Add secondary habitat to table if it isn't already in the table
                                 bool err;
@@ -9182,7 +9112,7 @@ namespace HLU.UI.ViewModel
                     if (errorCodes != null && errorCodes.Count > 0)
                     {
                         // Sort the distinct secondary codes in error numerically
-                        errorCodes = errorCodes.Distinct().OrderBy(e => e.PadLeft(5, '0')).ToList();
+                        errorCodes = [.. errorCodes.Distinct().OrderBy(e => e.PadLeft(5, '0'))];
                         // Message the user, depending on if there is one or more
                         if (errorCodes.Count == 1)
                             MessageBox.Show("Code '" +
@@ -9235,9 +9165,9 @@ namespace HLU.UI.ViewModel
                 };
 
                 // when ViewModel asks to be closed, close window
-                _viewModelWinEditPriorityHabitats.RequestClose -= _viewModelWinEditPriorityHabitats_RequestClose; // Safety: avoid double subscription.
+                _viewModelWinEditPriorityHabitats.RequestClose -= ViewModelWinEditPriorityHabitats_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinEditPriorityHabitats.RequestClose += new ViewModelWindowEditPriorityHabitats
-                    .RequestCloseEventHandler(_viewModelWinEditPriorityHabitats_RequestClose);
+                    .RequestCloseEventHandler(ViewModelWinEditPriorityHabitats_RequestClose);
 
                 // allow all controls in window to bind to ViewModel by setting DataContext
                 _windowEditPriorityHabitats.DataContext = _viewModelWinEditPriorityHabitats;
@@ -9256,10 +9186,10 @@ namespace HLU.UI.ViewModel
         /// Handle the RequestClose event from the Edit Priority Habitats window.
         /// </summary>
         /// <param name="incidBapHabitatsAuto"></param>
-        private void _viewModelWinEditPriorityHabitats_RequestClose(ObservableCollection<BapEnvironment> incidBapHabitatsAuto)
+        private void ViewModelWinEditPriorityHabitats_RequestClose(ObservableCollection<BapEnvironment> incidBapHabitatsAuto)
         {
             // Remove the event handler and close the window.
-            _viewModelWinEditPriorityHabitats.RequestClose -= _viewModelWinEditPriorityHabitats_RequestClose;
+            _viewModelWinEditPriorityHabitats.RequestClose -= ViewModelWinEditPriorityHabitats_RequestClose;
             _windowEditPriorityHabitats.Close();
 
             // If any habitats were returned then update the main window.
@@ -9311,9 +9241,9 @@ namespace HLU.UI.ViewModel
                 };
 
                 // when ViewModel asks to be closed, close window
-                _viewModelWinEditPotentialHabitats.RequestClose -= _viewModelWinEditPotentialHabitats_RequestClose; // Safety: avoid double subscription.
+                _viewModelWinEditPotentialHabitats.RequestClose -= ViewModelWinEditPotentialHabitats_RequestClose; // Safety: avoid double subscription.
                 _viewModelWinEditPotentialHabitats.RequestClose += new ViewModelWindowEditPotentialHabitats
-                    .RequestCloseEventHandler(_viewModelWinEditPotentialHabitats_RequestClose);
+                    .RequestCloseEventHandler(ViewModelWinEditPotentialHabitats_RequestClose);
 
                 // allow all controls in window to bind to ViewModel by setting DataContext
                 _windowEditPotentialHabitats.DataContext = _viewModelWinEditPotentialHabitats;
@@ -9332,10 +9262,10 @@ namespace HLU.UI.ViewModel
         /// Handle the RequestClose event from the Edit Potential Priority Habitats window.
         /// </summary>
         /// <param name="incidBapHabitatsUser"></param>
-        private void _viewModelWinEditPotentialHabitats_RequestClose(ObservableCollection<BapEnvironment> incidBapHabitatsUser)
+        private void ViewModelWinEditPotentialHabitats_RequestClose(ObservableCollection<BapEnvironment> incidBapHabitatsUser)
         {
             // Remove the event handler and close the window.
-            _viewModelWinEditPotentialHabitats.RequestClose -= _viewModelWinEditPotentialHabitats_RequestClose;
+            _viewModelWinEditPotentialHabitats.RequestClose -= ViewModelWinEditPotentialHabitats_RequestClose;
             _windowEditPotentialHabitats.Close();
 
             // If any habitats were returned then update the main window.
@@ -9428,7 +9358,7 @@ namespace HLU.UI.ViewModel
         /// cref="CanPaste"/> property otherwise.</remarks>
         /// <param name="sender">The source of the event, typically the object whose property changed.</param>
         /// <param name="e">The event data containing the name of the property that changed.</param>
-        internal void copySwitches_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        internal void CopySwitches_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName.StartsWith("Copy"))
                 OnPropertyChanged(nameof(CanCopy));

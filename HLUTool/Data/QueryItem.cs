@@ -1,6 +1,7 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2019 Greenspace Information for Greater London CIC
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -121,11 +122,11 @@ namespace HLU.Data
 
     //    public string[] ComparisonOperators
     //    {
-    //        get 
+    //        get
     //        {
     //            if (_comparisonOperators == null)
     //            {
-    //                _comparisonOperators = new string[] { "=", "<", ">", "<=", ">=", "<>", 
+    //                _comparisonOperators = new string[] { "=", "<", ">", "<=", ">=", "<>",
     //                    "contains", "begins with", "ends with", "IS NULL", "IS NOT NULL", "LIKE", "IN ()", "NOT IN ()" };
     //            }
     //            return _comparisonOperators;
@@ -146,7 +147,7 @@ namespace HLU.Data
     //            // Find the related lookup tables for the selected table and column
     //            IEnumerable<DataRelation> parentRelations = Table.ParentRelations.Cast<DataRelation>();
     //            IEnumerable<DataRelation> lutRelations = parentRelations.Where(r => r.ChildTable == Table &&
-    //                r.ParentTable.TableName.StartsWith("lut_", StringComparison.CurrentCultureIgnoreCase) && 
+    //                r.ParentTable.TableName.StartsWith("lut_", StringComparison.CurrentCultureIgnoreCase) &&
     //                r.ChildColumns.Length == 1 && r.ChildColumns.Contains(Column));
 
     //            DataRelation lutRelation;
@@ -159,12 +160,12 @@ namespace HLU.Data
     //                DataTable lut = lutRelation.ParentTable;
     //                DataColumn lutColumn = lutRelation.ParentColumns[0];
     //                DataColumn testColumn = null;
-    //                DataColumn descriptionColumn = lut.Columns.Contains(_descriptionFieldName) ? 
-    //                    lut.Columns[_descriptionFieldName] : (testColumn = 
-    //                    lut.Columns.Cast<DataColumn>().FirstOrDefault(c => c.ColumnName.IndexOf("_name", 
+    //                DataColumn descriptionColumn = lut.Columns.Contains(_descriptionFieldName) ?
+    //                    lut.Columns[_descriptionFieldName] : (testColumn =
+    //                    lut.Columns.Cast<DataColumn>().FirstOrDefault(c => c.ColumnName.IndexOf("_name",
     //                        StringComparison.CurrentCultureIgnoreCase) != -1)) != null ? testColumn :
-    //                    _descriptionFieldOrdinal < lut.Columns.Count ? 
-    //                    lut.Columns[_descriptionFieldOrdinal] : lutColumn.Ordinal < lut.Columns.Count - 1 ? 
+    //                    _descriptionFieldOrdinal < lut.Columns.Count ?
+    //                    lut.Columns[_descriptionFieldOrdinal] : lutColumn.Ordinal < lut.Columns.Count - 1 ?
     //                    lut.Columns[lutColumn.Ordinal + 1] : lutColumn;
 
     //                // Enable multiple priority habitat types (from the same or different
@@ -181,7 +182,7 @@ namespace HLU.Data
     //                    lut.AsEnumerable().Where(r => r[lut.Columns["bap_priority"]].Equals(true)) :
     //                    lut.AsEnumerable();
 
-    //                return q.ToDictionary(r => r[lutColumn].ToString() + (descriptionColumn != lutColumn ? 
+    //                return q.ToDictionary(r => r[lutColumn].ToString() + (descriptionColumn != lutColumn ?
     //                    " : " + r[descriptionColumn].ToString() : String.Empty), r => r[lutColumn]);
     //            }
     //            return null;
@@ -219,7 +220,7 @@ namespace HLU.Data
     //        set
     //        {
     //            _sqlCond.Table = value;
-    //            if ((_sqlCond.Table != null) && (ViewModelWindowQueryBuilder.HluDatasetStatic != null) && 
+    //            if ((_sqlCond.Table != null) && (ViewModelWindowQueryBuilder.HluDatasetStatic != null) &&
     //                ViewModelWindowQueryBuilder.HluDatasetStatic.Tables.Contains(_sqlCond.Table.TableName))
     //            {
     //                _table = _sqlCond.Table;
@@ -234,9 +235,9 @@ namespace HLU.Data
     //    {
     //        get { return _column; }
     //        set
-    //        { 
+    //        {
     //            _sqlCond.Column = value;
-    //            if ((Table != null) && (_sqlCond.Column != null) && 
+    //            if ((Table != null) && (_sqlCond.Column != null) &&
     //                Table.Columns.Contains(_sqlCond.Column.ColumnName))
     //            {
     //                _column = _sqlCond.Column;

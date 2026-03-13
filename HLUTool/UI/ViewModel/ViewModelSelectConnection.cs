@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -40,50 +41,59 @@ namespace HLU.UI.ViewModel
 
         #region Constructor
 
+        /// <summary>
+        /// Initialise the view model, setting the list of connection types and default connection type from settings.
+        /// </summary>
         public ViewModelSelectConnection()
         {
-            _connectionTypes = Enum.GetValues(typeof(ConnectionTypes)).Cast<ConnectionTypes>()
-                .Where(t => t != Data.Connection.ConnectionTypes.Unknown).ToArray();
+            _connectionTypes = [.. Enum.GetValues(typeof(ConnectionTypes)).Cast<ConnectionTypes>().Where(t => t != Data.Connection.ConnectionTypes.Unknown)];
             object initVal = Enum.Parse(typeof(ConnectionTypes), Settings.Default.DefaultConnectionType, true);
             if (initVal != null) _connectionType = (ConnectionTypes)initVal;
         }
 
-        #endregion
+        #endregion Constructor
 
         #region Display Name
 
+        /// <summary>
+        /// Gets or sets the display name of the view model, which is used as the window title.
+        /// </summary>
+        /// <value>The display name.</value>
         public override string DisplayName
         {
             get { return _displayName; }
             set { _displayName = value; }
         }
 
-        #endregion
+        #endregion Display Name
 
         #region Window Title
 
+        /// <summary>
+        /// Gets the window title, which is the same as the display name.
+        /// </summary>
+        /// <value>The window title.</value>
         public override string WindowTitle { get { return DisplayName; } }
 
-        #endregion
+        #endregion Window Title
 
         #region RequestClose
 
-        // declare the delegate since using non-generic pattern
+        // Declare the delegate since using non-generic pattern
         public delegate void RequestCloseEventHandler(ConnectionTypes connType, string errorMsg);
 
-        // declare the event
+        // Declare the event
         public event RequestCloseEventHandler RequestClose;
 
-        #endregion
+        #endregion RequestClose
 
         #region Ok Command
 
         /// <summary>
-        /// Create Ok button command
+        /// Gets the Ok button command, which when executed will trigger the RequestClose event with
+        /// the selected connection type if it is valid.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The Ok command.</value>
         public ICommand OkCommand
         {
             get
@@ -101,31 +111,28 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles event when Ok button is clicked
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The command parameter.</param>
         private void OkCommandClick(object param)
         {
             RequestClose?.Invoke(_connectionType, null);
         }
 
         /// <summary>
-        /// Determines whether the Ok button is enabled
+        /// Gets a value indicating whether the Ok command can execute, which is true if a valid
+        /// connection type is selected.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value><c>true</c> if the Ok command can execute; otherwise, <c>false</c>.</value>
         private bool CanOk { get { return _connectionType != Data.Connection.ConnectionTypes.Unknown; } }
 
-        #endregion
+        #endregion Ok Command
 
         #region Cancel Command
 
         /// <summary>
-        /// Create Cancel button command
+        /// Gets the Cancel button command, which when executed will trigger the RequestClose event
+        /// with an unknown connection type to indicate cancellation.
         /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
+        /// <value>The Cancel command.</value>
         public ICommand CancelCommand
         {
             get
@@ -143,33 +150,49 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Handles event when Cancel button is clicked
         /// </summary>
-        /// <param name="param"></param>
-        /// <remarks></remarks>
+        /// <param name="param">The command parameter.</param>
         private void CancelCommandClick(object param)
         {
             RequestClose?.Invoke(Data.Connection.ConnectionTypes.Unknown, null);
         }
 
-        #endregion
+        #endregion Cancel Command
 
         #region Connection Types
 
+        /// <summary>
+        /// Gets the list of available connection types, which is populated from the ConnectionTypes
+        /// enum excluding the Unknown type.
+        /// </summary>
+        /// <value>The connection types.</value>
         public ConnectionTypes[] ConnectionTypes
         {
             get { return _connectionTypes; }
             set { }
         }
 
+        /// <summary>
+        /// Gets or sets the selected connection type, which is used to determine if the Ok command
+        /// can execute and is passed to the RequestClose event when Ok is clicked.
+        /// </summary>
+        /// <value>The selected connection type.</value>
         public ConnectionTypes ConnectionType
         {
             get { return _connectionType; }
             set { if (value != _connectionType) _connectionType = value; }
         }
 
-        #endregion
+        #endregion Connection Types
 
         #region View Events
 
+        /// <summary>
+        /// Handles events from the view, such as when a property changes. In this implementation,
+        /// it listens for changes to the ConnectionType property, but currently does not perform
+        /// any actions when it changes.
+        /// </summary>
+        /// <param name="windowHandle">The handle of the window that raised the event.</param>
+        /// <param name="propertyName">The name of the property that changed.</param>
         public void ViewEvents(IntPtr windowHandle, string propertyName)
         {
             if (windowHandle != IntPtr.Zero) _windowHandle = windowHandle;
@@ -182,10 +205,18 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion View Events
 
         #region IDataErrorInfo Members
 
+        /// <summary>
+        /// Gets an error message indicating what is wrong with this object. In this implementation,
+        /// it returns an error message if the selected connection type is unknown, prompting the
+        /// user to choose a valid connection type before they can proceed. If a valid connection
+        /// type is selected, it returns null, indicating no errors. This property is used by the
+        /// view to display validation errors to the user.
+        /// </summary>
+        /// <value>The error message.</value>
         string IDataErrorInfo.Error
         {
             get
@@ -197,6 +228,14 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets an error message for the property with the given name. In this implementation, it
+        /// checks the ConnectionType property and returns an error message if it is unknown,
+        /// prompting the user to choose a valid connection type. If the ConnectionType is valid, it
+        /// returns null. This indexer is used by the view to display validation errors for specific properties.
+        /// </summary>
+        /// <param name="columnName">The name of the property to retrieve the error message for.</param>
+        /// <returns>The error message for the specified property, or null if there is no error.</returns>
         string IDataErrorInfo.this[string columnName]
         {
             get
@@ -218,6 +257,6 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion IDataErrorInfo Members
     }
 }

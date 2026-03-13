@@ -1,6 +1,7 @@
 // HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -22,8 +23,12 @@ using System.Text;
 
 namespace HLU
 {
-    # region Exceptions
+    #region Exceptions
 
+    /// <summary>
+    /// Exception thrown when an invalid Base36 number is passed to a method or property that
+    /// accepts a Base36 string representation of a number.
+    /// </summary>
     public class InvalidBase36NumberException : Exception
     {
         public InvalidBase36NumberException(string val)
@@ -32,6 +37,10 @@ namespace HLU
         }
     }
 
+    /// <summary>
+    /// Exception thrown when an invalid value is passed to a method or property that accepts a long
+    /// integer (base-10) representation of a Base36 number.
+    /// </summary>
     public class InvalidBase36ValueException : Exception
     {
         public InvalidBase36ValueException(long val)
@@ -40,6 +49,10 @@ namespace HLU
         }
     }
 
+    /// <summary>
+    /// Exception thrown when an invalid character is passed to a method that accepts a single
+    /// Base36 digit.
+    /// </summary>
     public class InvalidBase36DigitException : Exception
     {
         public InvalidBase36DigitException(char val)
@@ -48,6 +61,10 @@ namespace HLU
         }
     }
 
+    /// <summary>
+    /// Exception thrown when an invalid value is passed to a method that accepts a single
+    /// Base36 digit value.
+    /// </summary>
     public class InvalidBase36DigitValueException : Exception
     {
         public InvalidBase36DigitValueException(byte val)
@@ -56,10 +73,10 @@ namespace HLU
         }
     }
 
-    #endregion
+    #endregion Exceptions
 
     /// <summary>
-	/// Class representing a Base36 number
+	/// Struct representing a Base36 number
 	/// </summary>
 	public struct Base36
 	{
@@ -74,21 +91,21 @@ namespace HLU
 		/// </summary>
 		public static readonly Base36 MinValue = new(long.MinValue + 1);
 
-		#endregion
+        #endregion Constants (and pseudo-constants)
 
         #region Fields
 
         private long _numericValue;
 
-		#endregion
+        #endregion Fields
 
-		#region Constructor
+        #region Constructor
 
-		/// <summary>
-		/// Instantiate a Base36 number from a long value
-		/// </summary>
-		/// <param name="NumericValue">The long value to give to the Base36 number</param>
-		public Base36(long NumericValue)
+        /// <summary>
+        /// Instantiate a Base36 number from a long value
+        /// </summary>
+        /// <param name="NumericValue">The long value to give to the Base36 number</param>
+        public Base36(long NumericValue)
 		{
 			_numericValue = 0; //required by the struct.
 			this.NumericValue = NumericValue;
@@ -104,14 +121,15 @@ namespace HLU
 			this.Value = Value;
 		}
 
-		#endregion
+        #endregion Constructor
 
-		#region Properties
+        #region Properties
 
-		/// <summary>
-		/// Get or set the value of the type using a base-10 long integer
-		/// </summary>
-		public long NumericValue
+        /// <summary>
+        /// Get or set the value of the type using a base-10 long integer
+        /// </summary>
+		/// <value>The base-10 long integer value of the Base36 number</value>
+        public long NumericValue
 		{
 			get
 			{
@@ -129,10 +147,11 @@ namespace HLU
 			}
 		}
 
-		/// <summary>
-		/// Get or set the value of the type using a Base36 string
-		/// </summary>
-		public string Value
+        /// <summary>
+        /// Get or set the value of the type using a Base36 string
+        /// </summary>
+        /// <value>The Base36 string representation of the number</value>
+        public string Value
 		{
 			get
 			{
@@ -152,16 +171,16 @@ namespace HLU
 			}
 		}
 
-		#endregion
+        #endregion Properties
 
-		#region Public Static Methods
+        #region Public Static Methods
 
-		/// <summary>
-		/// Static method to convert a Base36 string to a long integer (base-10)
-		/// </summary>
-		/// <param name="Base36Value">The number to convert from</param>
-		/// <returns>The long integer</returns>
-		public static long Base36ToNumber(string Base36Value)
+        /// <summary>
+        /// Static method to convert a Base36 string to a long integer (base-10)
+        /// </summary>
+        /// <param name="Base36Value">The number to convert from</param>
+        /// <returns>The long integer</returns>
+        public static long Base36ToNumber(string Base36Value)
 		{
 			//Make sure we have passed something
 			if(Base36Value == "")
@@ -185,13 +204,13 @@ namespace HLU
 			try
 			{
 				//Keep a running total of the value
-				long returnValue = Base36DigitToNumber(Base36Value[Base36Value.Length - 1]);
+				long returnValue = Base36DigitToNumber(Base36Value[^1]);
 
 				//Loop through the character in the string (right to left) and add
 				//up increasing powers as we go.
 				for(int i = 1; i < Base36Value.Length; i++)
 				{
-					returnValue += ((long)Math.Pow(36, i) * Base36DigitToNumber(Base36Value[Base36Value.Length - (i + 1)]));
+					returnValue += ((long)Math.Pow(36, i) * Base36DigitToNumber(Base36Value[^(i + 1)]));
 				}
 
 				//Do negative correction if required:
@@ -236,17 +255,22 @@ namespace HLU
 			}
 		}
 
-		#endregion
+        #endregion
 
-		#region Private Static Methods
+        #region Private Static Methods
 
-		private static string PositiveNumberToBase36(long NumericValue)
+        /// <summary>
+        /// Private static method to convert a positive long integer (base-10) to a Base36 number.
+        /// </summary>
+        /// <param name="NumericValue">The positive long integer to convert</param>
+        /// <returns>A Base36 representation of the number</returns>
+        private static string PositiveNumberToBase36(long NumericValue)
 		{
 			//This is a clever recursively called function that builds
 			//the base-36 string representation of the long base-10 value
 			if(NumericValue < 36)
 			{
-				//The get out clause; fires when we reach a number less than 
+				//The get out clause; fires when we reach a number less than
 				//36 - this means we can add the last digit.
 				return NumberToBase36Digit((byte)NumericValue).ToString();
 			}
@@ -258,7 +282,13 @@ namespace HLU
 			}
 		}
 
-		private static byte Base36DigitToNumber(char Base36Digit)
+        /// <summary>
+        /// Private static method to convert a single Base36 digit to its base-10 value.
+        /// </summary>
+        /// <param name="Base36Digit">The Base36 digit to convert</param>
+        /// <returns>The base-10 value of the Base36 digit</returns>
+        /// <exception cref="InvalidBase36DigitException"></exception>
+        private static byte Base36DigitToNumber(char Base36Digit)
 		{
 			//Converts one base-36 digit to it's base-10 value
 			if(!char.IsLetterOrDigit(Base36Digit))
@@ -278,7 +308,13 @@ namespace HLU
 			}
 		}
 
-		private static char NumberToBase36Digit(byte NumericValue)
+        /// <summary>
+        /// Private static method to convert a single number (base-10) to its Base36 digit.
+        /// </summary>
+        /// <param name="NumericValue">The base-10 value to convert</param>
+        /// <returns>The Base36 digit representation of the number</returns>
+        /// <exception cref="InvalidBase36DigitValueException"></exception>
+        private static char NumberToBase36Digit(byte NumericValue)
 		{
 			//Converts a number to it's base-36 value.
 			//Only works for numbers <= 35.
@@ -300,147 +336,147 @@ namespace HLU
 			}
 		}
 
-		#endregion
+        #endregion Private Static Methods
 
-		#region Operator Overloads
+        #region Operator Overloads
 
-		/// <summary>
-		/// Operator overload
-		/// </summary>
-		/// <param name="LHS"></param>
-		/// <param name="RHS"></param>
-		/// <returns></returns>
-		public static bool operator > (Base36 LHS, Base36 RHS)
+        /// <summary>
+        /// Greater than operator overload
+        /// </summary>
+        /// <param name="LHS">The left-hand side operand</param>
+        /// <param name="RHS">The right-hand side operand</param>
+        /// <returns>True if LHS is greater than RHS, otherwise false</returns>
+        public static bool operator > (Base36 LHS, Base36 RHS)
 		{
 			return LHS._numericValue > RHS._numericValue;
 		}
 
-		/// <summary>
-		/// Operator overload
-		/// </summary>
-		/// <param name="LHS"></param>
-		/// <param name="RHS"></param>
-		/// <returns></returns>
-		public static bool operator < (Base36 LHS, Base36 RHS)
+        /// <summary>
+        /// Less than operator overload
+        /// </summary>
+        /// <param name="LHS">The left-hand side operand</param>
+        /// <param name="RHS">The right-hand side operand</param>
+        /// <returns>True if LHS is less than RHS, otherwise false</returns>
+        public static bool operator < (Base36 LHS, Base36 RHS)
 		{
 			return LHS._numericValue < RHS._numericValue;
 		}
 
-		/// <summary>
-		/// Operator overload
-		/// </summary>
-		/// <param name="LHS"></param>
-		/// <param name="RHS"></param>
-		/// <returns></returns>
-		public static bool operator >= (Base36 LHS, Base36 RHS)
+        /// <summary>
+        /// Greater than or equal to operator overload
+        /// </summary>
+        /// <param name="LHS">The left-hand side operand</param>
+        /// <param name="RHS">The right-hand side operand</param>
+        /// <returns>True if LHS is greater than or equal to RHS, otherwise false</returns>
+        public static bool operator >= (Base36 LHS, Base36 RHS)
 		{
 			return LHS._numericValue >= RHS._numericValue;
 		}
 
-		/// <summary>
-		/// Operator overload
-		/// </summary>
-		/// <param name="LHS"></param>
-		/// <param name="RHS"></param>
-		/// <returns></returns>
-		public static bool operator <= (Base36 LHS, Base36 RHS)
+        /// <summary>
+        /// Less than or equal to operator overload
+        /// </summary>
+        /// <param name="LHS">The left-hand side operand</param>
+        /// <param name="RHS">The right-hand side operand</param>
+        /// <returns>True if LHS is less than or equal to RHS, otherwise false</returns>
+        public static bool operator <= (Base36 LHS, Base36 RHS)
 		{
 			return LHS._numericValue <= RHS._numericValue;
 		}
 
-		/// <summary>
-		/// Operator overload
-		/// </summary>
-		/// <param name="LHS"></param>
-		/// <param name="RHS"></param>
-		/// <returns></returns>
-		public static bool operator == (Base36 LHS, Base36 RHS)
+        /// <summary>
+        /// Equality operator overload
+        /// </summary>
+        /// <param name="LHS">The left-hand side operand</param>
+        /// <param name="RHS">The right-hand side operand</param>
+        /// <returns>True if LHS is equal to RHS, otherwise false</returns>
+        public static bool operator == (Base36 LHS, Base36 RHS)
 		{
 			return LHS._numericValue == RHS._numericValue;
 		}
 
-		/// <summary>
-		/// Operator overload
-		/// </summary>
-		/// <param name="LHS"></param>
-		/// <param name="RHS"></param>
-		/// <returns></returns>
-		public static bool operator != (Base36 LHS, Base36 RHS)
+        /// <summary>
+        /// Not equal to operator overload
+        /// </summary>
+        /// <param name="LHS">The left-hand side operand</param>
+        /// <param name="RHS">The right-hand side operand</param>
+        /// <returns>True if LHS is not equal to RHS, otherwise false</returns>
+        public static bool operator != (Base36 LHS, Base36 RHS)
 		{
 			return !(LHS == RHS);
 		}
 
-		/// <summary>
-		/// Operator overload
-		/// </summary>
-		/// <param name="LHS"></param>
-		/// <param name="RHS"></param>
-		/// <returns></returns>
-		public static Base36 operator + (Base36 LHS, Base36 RHS)
+        /// <summary>
+        /// Addition operator overload
+        /// </summary>
+        /// <param name="LHS">The left-hand side operand</param>
+        /// <param name="RHS">The right-hand side operand</param>
+        /// <returns>The result of adding LHS and RHS</returns>
+        public static Base36 operator + (Base36 LHS, Base36 RHS)
 		{
 			return new Base36(LHS._numericValue + RHS._numericValue);
 		}
 
-		/// <summary>
-		/// Operator overload
-		/// </summary>
-		/// <param name="LHS"></param>
-		/// <param name="RHS"></param>
-		/// <returns></returns>
-		public static Base36 operator - (Base36 LHS, Base36 RHS)
+        /// <summary>
+        /// Subtract operator overload
+        /// </summary>
+        /// <param name="LHS">The left-hand side operand</param>
+        /// <param name="RHS">The right-hand side operand</param>
+        /// <returns>The result of subtracting RHS from LHS</returns>
+        public static Base36 operator - (Base36 LHS, Base36 RHS)
 		{
 			return new Base36(LHS._numericValue - RHS._numericValue);
 		}
 
-		/// <summary>
-		/// Operator overload
-		/// </summary>
-		/// <param name="Value"></param>
-		/// <returns></returns>
-		public static Base36 operator ++ (Base36 Value)
+        /// <summary>
+        /// Increment operator overload
+        /// </summary>
+        /// <param name="Value">The operand to increment</param>
+        /// <returns>The result of incrementing the operand</returns>
+        public static Base36 operator ++ (Base36 Value)
 		{
 			return new Base36(Value._numericValue++);
 		}
 
-		/// <summary>
-		/// Operator overload
-		/// </summary>
-		/// <param name="Value"></param>
-		/// <returns></returns>
-		public static Base36 operator -- (Base36 Value)
+        /// <summary>
+        /// Decrement operator overload
+        /// </summary>
+        /// <param name="Value">The operand to decrement</param>
+        /// <returns>The result of decrementing the operand</returns>
+        public static Base36 operator -- (Base36 Value)
 		{
 			return new Base36(Value._numericValue--);
 		}
 
-		/// <summary>
-		/// Operator overload
-		/// </summary>
-		/// <param name="LHS"></param>
-		/// <param name="RHS"></param>
-		/// <returns></returns>
-		public static Base36 operator * (Base36 LHS, Base36 RHS)
+        /// <summary>
+        /// Multiply operator overload
+        /// </summary>
+        /// <param name="LHS">The left-hand side operand</param>
+        /// <param name="RHS">The right-hand side operand</param>
+        /// <returns>The result of multiplying LHS and RHS</returns>
+        public static Base36 operator * (Base36 LHS, Base36 RHS)
 		{
 			return new Base36(LHS._numericValue * RHS._numericValue);
 		}
 
-		/// <summary>
-		/// Operator overload
-		/// </summary>
-		/// <param name="LHS"></param>
-		/// <param name="RHS"></param>
-		/// <returns></returns>
-		public static Base36 operator / (Base36 LHS, Base36 RHS)
+        /// <summary>
+        /// Divide operator overload
+        /// </summary>
+        /// <param name="LHS">The left-hand side operand</param>
+        /// <param name="RHS">The right-hand side operand</param>
+        /// <returns>The result of dividing LHS by RHS</returns>
+        public static Base36 operator / (Base36 LHS, Base36 RHS)
 		{
 			return new Base36(LHS._numericValue / RHS._numericValue);
 		}
 
-		/// <summary>
-		/// Operator overload
-		/// </summary>
-		/// <param name="LHS"></param>
-		/// <param name="RHS"></param>
-		/// <returns></returns>
-		public static Base36 operator % (Base36 LHS, Base36 RHS)
+        /// <summary>
+        /// Modulus operator overload
+        /// </summary>
+        /// <param name="LHS">The left-hand side operand</param>
+        /// <param name="RHS">The right-hand side operand</param>
+        /// <returns>The result of the modulus operation on LHS and RHS</returns>
+        public static Base36 operator % (Base36 LHS, Base36 RHS)
 		{
 			return new Base36(LHS._numericValue % RHS._numericValue);
 		}
@@ -520,15 +556,15 @@ namespace HLU
 			return new Base36(Value);
 		}
 
-		#endregion
+        #endregion Operator Overloads
 
-		#region Public Override Methods
+        #region Public Override Methods
 
-		/// <summary>
-		/// Returns a string representation of the Base36 number
-		/// </summary>
-		/// <returns>A string representation</returns>
-		public override string ToString()
+        /// <summary>
+        /// Returns a string representation of the Base36 number
+        /// </summary>
+        /// <returns>A string representation</returns>
+        public override string ToString()
 		{
 			return Base36.NumberToBase36(_numericValue);
 		}
@@ -560,17 +596,17 @@ namespace HLU
 		}
 
 
-		#endregion
+        #endregion Public Override Methods
 
-		#region Public Methods
+        #region Public Methods
 
-		/// <summary>
-		/// Returns a string representation padding the leading edge with
-		/// zeros if necessary to make up the number of characters
-		/// </summary>
-		/// <param name="MinimumDigits">The minimum number of digits that the string must contain</param>
-		/// <returns>The padded string representation</returns>
-		public string ToString(int MinimumDigits)
+        /// <summary>
+        /// Returns a string representation padding the leading edge with
+        /// zeros if necessary to make up the number of characters
+        /// </summary>
+        /// <param name="MinimumDigits">The minimum number of digits that the string must contain</param>
+        /// <returns>The padded string representation</returns>
+        public string ToString(int MinimumDigits)
 		{
 			string base36Value = Base36.NumberToBase36(_numericValue);
 
@@ -585,7 +621,7 @@ namespace HLU
 			}
 		}
 
-		#endregion
+        #endregion Public Methods
 
-	}
+    }
 }

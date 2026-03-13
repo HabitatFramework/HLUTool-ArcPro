@@ -1,23 +1,20 @@
-﻿// The DataTools are a suite of ArcGIS Pro addins used to extract, sync
-// and manage biodiversity information from ArcGIS Pro and SQL Server
-// based on pre-defined or user specified criteria.
+﻿// HLUTool is used to view and maintain habitat and land use GIS data.
+// Copyright © 2025-2026 Andy Foy Consulting
 //
-// Copyright © 2024 Andy Foy Consulting.
+// This file is part of HLUTool.
 //
-// This file is part of DataTools suite of programs..
-//
-// DataTools are free software: you can redistribute it and/or modify
-// them under the terms of the GNU General Public License as published by
+// HLUTool is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// DataTools are distributed in the hope that it will be useful,
+// HLUTool is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with with program.  If not, see <http://www.gnu.org/licenses/>.
+// along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.DDL;
@@ -34,6 +31,7 @@ using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU
 {
+    //TODO: Remove this class and merge into other classes? It is only used in one place and the functions are quite specific to that use case. Or move to a more general helper class if there are functions that could be used in other places.
     public class SQLServerFunctions
     {
         #region Fields
@@ -76,11 +74,13 @@ namespace HLU
         #region Geodatabase
 
         /// <summary>
-        /// Open a SQL Server database using a .sde connection file to check
-        /// the SDE connection works.
+        /// Open a SQL Server database using a .sde connection file to check the SDE connection works.
         /// </summary>
-        /// <param name="sdeFileName"></param>
-        /// <returns>bool</returns>
+        /// <param name="sdeFileName">The path to the .sde connection file.</param>
+        /// <returns>
+        /// A task representing the asynchronous operation, with a result of <c>true</c> if the
+        /// connection is valid; otherwise, <c>false</c>.
+        /// </returns>
         public static async Task<bool> CheckSDEConnectionAsync(string sdeFileName)
         {
             bool _sdeConnectionValid = false;
@@ -118,7 +118,7 @@ namespace HLU
         /// <summary>
         /// Open a SQL Server database using a .sde connection file.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A task representing the asynchronous operation.</returns>
         public async Task OpenGeodatabaseAsync()
         {
             _geodatabase = null;
@@ -153,8 +153,11 @@ namespace HLU
         /// <summary>
         /// Get all of the feature class and table names from the geodatabase.
         /// </summary>
-        /// <param name="objectsTable"></param>
-        /// <returns>bool</returns>
+        /// <param name="objectsTable">The name of the table containing the objects.</param>
+        /// <returns>
+        /// A task representing the asynchronous operation, with a result of <c>true</c> if
+        /// successful; otherwise, <c>false</c>.
+        /// </returns>
         public async Task<bool> GetTableNamesAsync(string objectsTable)
         {
             _tableNames = [];
@@ -217,8 +220,10 @@ namespace HLU
         /// <summary>
         /// Get the fieldName names for the specified table in the geodatabase.
         /// </summary>
-        /// <param name="tableName"></param>
-        /// <returns>List<string></returns>
+        /// <param name="tableName">The name of the table for which to retrieve field names.</param>
+        /// <returns>
+        /// A task representing the asynchronous operation, with a result of a list of field names.
+        /// </returns>
         public async Task<List<string>> GetFieldNamesListAsync(string tableName)
         {
             List<string> fieldNames = [];
@@ -257,8 +262,10 @@ namespace HLU
         /// <summary>
         /// Get the fields for the specified table in the geodatabase.
         /// </summary>
-        /// <param name="fullPath"></param>
-        /// <returns>IReadOnlyList<Field></returns>
+        /// <param name="fullPath">The full path to the table for which to retrieve fields.</param>
+        /// <returns>
+        /// A task representing the asynchronous operation, with a result of a list of fields.
+        /// </returns>
         public async Task<IReadOnlyList<Field>> GetFieldsAsync(string fullPath)
         {
             IReadOnlyList<Field> fields = null;
@@ -295,9 +302,11 @@ namespace HLU
         /// <summary>
         /// Get the fields for the specified table in the geodatabase.
         /// </summary>
-        /// <param name="filePath"></param>
-        /// <param name="fileName"></param>
-        /// <returns>IReadOnlyList<Field></returns>
+        /// <param name="filePath">The path to the geodatabase containing the table.</param>
+        /// <param name="fileName">The name of the table for which to retrieve fields.</param>
+        /// <returns>
+        /// A task representing the asynchronous operation, with a result of a list of fields.
+        /// </returns>
         public static async Task<IReadOnlyList<Field>> GetFieldNamesAsync(string filePath, string fileName)
         {
             // Check there is an input file path.
@@ -338,8 +347,10 @@ namespace HLU
         /// <summary>
         /// Get the fields for the specified table in the geodatabase.
         /// </summary>
-        /// <param name="fullPath"></param>
-        /// <returns>IReadOnlyList<Field></returns>
+        /// <param name="fullPath">The full path to the table for which to retrieve fields.</param>
+        /// <returns>
+        /// A task representing the asynchronous operation, with a result of a list of fields.
+        /// </returns>
         public static async Task<IReadOnlyList<Field>> GetFieldNamesAsync(string fullPath)
         {
             // Check there is an input file path.
@@ -352,9 +363,11 @@ namespace HLU
         /// <summary>
         /// Check if a field exists in a geodatbase.
         /// </summary>
-        /// <param name="fullPath"></param>
-        /// <param name="fieldName"></param>
-        /// <returns>bool</returns>
+        /// <param name="fullPath">The full path to the table in which to check for the field.</param>
+        /// <param name="fieldName">The name of the field to check for.</param>
+        /// <returns>
+        /// A task representing the asynchronous operation, with a result of <c>true</c> if the field exists; otherwise, <c>false</c>.
+        /// </returns>
         public async Task<bool> FieldExistsAsync(string fullPath, string fieldName)
         {
             // Get the file name from the specified path.
@@ -406,8 +419,10 @@ namespace HLU
         /// Execute a raw SQL statement on the underlying database management system.
         /// Any SQL is permitted (DDL or DML), but no results can be returned.
         /// </summary>
-        /// <param name="sqlStatement"></param>
-        /// <returns>bool</returns>
+        /// <param name="sqlStatement">The SQL statement to execute.</param>
+        /// <returns>
+        /// A task representing the asynchronous operation, with a result of <c>true</c> if the SQL statement was executed successfully; otherwise, <c>false</c>.
+        /// </returns>
         public async Task<bool> ExecuteSQLOnGeodatabaseAsync(string sqlStatement)
         {
             // Check there is a sql statement.
@@ -444,11 +459,13 @@ namespace HLU
         /// <summary>
         /// Copy a table to a text file.
         /// </summary>
-        /// <param name="inTable"></param>
-        /// <param name="outFile"></param>
-        /// <param name="isSpatial"></param>
-        /// <param name="append"></param>
-        /// <returns>bool</returns>
+        /// <param name="inTable">The name of the input table to copy.</param>
+        /// <param name="outFile">The path to the output file.</param>
+        /// <param name="isSpatial">Indicates whether the table contains spatial data.</param>
+        /// <param name="append">Indicates whether to append to the existing file.</param>
+        /// <returns>
+        /// A task representing the asynchronous operation, with a result of <c>true</c> if the table was copied successfully; otherwise, <c>false</c>.
+        /// </returns>
         public async Task<bool> CopyToCSVAsync(string inTable, string outFile, bool isSpatial, bool append)
         {
             // Check if there is an input table name.
@@ -466,11 +483,13 @@ namespace HLU
         /// <summary>
         /// Copy a table to a text file.
         /// </summary>
-        /// <param name="inTable"></param>
-        /// <param name="outFile"></param>
-        /// <param name="isSpatial"></param>
-        /// <param name="append"></param>
-        /// <returns>bool</returns>
+        /// <param name="inTable">The name of the input table to copy.</param>
+        /// <param name="outFile">The path to the output file.</param>
+        /// <param name="isSpatial">Indicates whether the table contains spatial data.</param>
+        /// <param name="append">Indicates whether to append to the existing file.</param>
+        /// <returns>
+        /// A task representing the asynchronous operation, with a result of <c>true</c> if the table was copied successfully; otherwise, <c>false</c>.
+        /// </returns>
         public async Task<bool> CopyToTabAsync(string inTable, string outFile, bool isSpatial, bool append)
         {
             // Check if there is an input table name.
@@ -488,13 +507,15 @@ namespace HLU
         /// <summary>
         /// Copy a table to a text file.
         /// </summary>
-        /// <param name="inTable"></param>
-        /// <param name="outFile"></param>
-        /// <param name="separator"></param>
-        /// <param name="isSpatial"></param>
-        /// <param name="append"></param>
-        /// <param name="includeHeader"></param>
-        /// <returns>bool</returns>
+        /// <param name="inTable">The name of the input table to copy.</param>
+        /// <param name="outFile">The path to the output file.</param>
+        /// <param name="separator">The separator to use between fields.</param>
+        /// <param name="isSpatial">Indicates whether the table contains spatial data.</param>
+        /// <param name="append">Indicates whether to append to the existing file.</param>
+        /// <param name="includeHeader">Indicates whether to include the header row.</param>
+        /// <returns>
+        /// A task representing the asynchronous operation, with a result of <c>true</c> if the table was copied successfully; otherwise, <c>false</c>.
+        /// </returns>
         public async Task<bool> CopyToTextFileAsync(string inTable, string outFile, string separator, bool isSpatial, bool append, bool includeHeader = true)
         {
             // Check if there is an input table name.
@@ -643,8 +664,10 @@ namespace HLU
         /// <summary>
         /// Check if a feature class exists in the database.
         /// </summary>
-        /// <param name="featureClassName"></param>
-        /// <returns>bool</returns>
+        /// <param name="featureClassName">The name of the feature class to check.</param>
+        /// <returns>
+        /// A task representing the asynchronous operation, with a result of <c>true</c> if the feature class exists; otherwise, <c>false</c>.
+        /// </returns>
         public async Task<bool> FCExistsAsync(string featureClassName)
         {
             // Check there is an input feature class name.
@@ -685,12 +708,14 @@ namespace HLU
         /// <summary>
         /// Count the rows in a feature class within the database.
         /// </summary>
-        /// <param name="featureClassName"></param>
-        /// <param name="whereClause"></param>
-        /// <param name="subfields"></param>
-        /// <param name="prefixClause"></param>
-        /// <param name="postfixClause"></param>
-        /// <returns>long</returns>
+        /// <param name="featureClassName">The name of the feature class to count rows in.</param>
+        /// <param name="whereClause">An optional SQL WHERE clause to filter the rows.</param>
+        /// <param name="subfields">An optional comma-separated list of fields to include in the count.</param>
+        /// <param name="prefixClause">An optional SQL prefix clause.</param>
+        /// <param name="postfixClause">An optional SQL postfix clause.</param>
+        /// <returns>
+        /// A task representing the asynchronous operation, with a result of the number of rows in the feature class, or -1 if an error occurs.
+        /// </returns>
         public async Task<long> GetFeaturesCountAsync(string featureClassName, string whereClause = null, string subfields = null, string prefixClause = null, string postfixClause = null)
         {
             // Check there is an input feature class name.
@@ -753,10 +778,12 @@ namespace HLU
         /// Count the duplicate rows in a feature class within the database
         /// using a search where clause.
         /// </summary>
-        /// <param name="featureClassName"></param>
-        /// <param name="keyField"></param>
-        /// <param name="whereClause"></param>
-        /// <returns></returns>
+        /// <param name="featureClassName">The name of the feature class to check for duplicate rows.</param>
+        /// <param name="keyField">The name of the field to use as the key for identifying duplicates.</param>
+        /// <param name="whereClause">An optional SQL WHERE clause to filter the rows.</param>
+        /// <returns>
+        /// A task representing the asynchronous operation, with a result of the number of duplicate rows in the feature class, or -1 if an error occurs.
+        /// </returns>
         public async Task<long> GetDuplicateFeaturesCountAsync(string featureClassName, string keyField, string whereClause = null)
         {
             // Check there is an input feature class name.
@@ -821,10 +848,9 @@ namespace HLU
                     rowCursor.Dispose();
 
                     // Get a list of any duplicate keys.
-                    List<string> duplicateKeys = keys.GroupBy(x => x)
+                    List<string> duplicateKeys = [.. keys.GroupBy(x => x)
                       .Where(g => g.Count() > 1)
-                      .Select(y => y.Key)
-                      .ToList();
+                      .Select(y => y.Key)];
 
                     // Return how many duplicate keys there are.
                     featureCount = duplicateKeys.Count;
@@ -846,8 +872,10 @@ namespace HLU
         /// <summary>
         /// Check if a table exists in the database.
         /// </summary>
-        /// <param name="tableName"></param>
-        /// <returns>bool</returns>
+        /// <param name="tableName">The name of the table to check.</param>
+        /// <returns>
+        /// A task representing the asynchronous operation, with a result of <c>true</c> if the table exists; otherwise, <c>false</c>.
+        /// </returns>
         public async Task<bool> TableExistsAsync(string tableName)
         {
             // Check there is an input table name.
@@ -888,8 +916,10 @@ namespace HLU
         /// <summary>
         /// Count the rows in a table within the database.
         /// </summary>
-        /// <param name="tableName"></param>
-        /// <returns>long</returns>
+        /// <param name="tableName">The name of the table to count rows in.</param>
+        /// <returns>
+        /// A task representing the asynchronous operation, with a result of the number of rows in the table, or -1 if an error occurs.
+        /// </returns>
         public async Task<long> GetTableRowCountAsync(string tableName)
         {
             // Check there is an input table name.
@@ -932,8 +962,10 @@ namespace HLU
         /// <summary>
         /// Calculate the total row length in a table within the database.
         /// </summary>
-        /// <param name="tableName"></param>
-        /// <returns>int</returns>
+        /// <param name="tableName">The name of the table to calculate the row length for.</param>
+        /// <returns>
+        /// A task representing the asynchronous operation, with a result of the total row length in the table, or -1 if an error occurs.
+        /// </returns>
         public async Task<int> GetTableRowLengthAsync(string tableName)
         {
             int rowLength = 0;
@@ -987,8 +1019,10 @@ namespace HLU
         /// <summary>
         /// Check if a table exists in the database.
         /// </summary>
-        /// <param name="tableName"></param>
-        /// <returns>bool</returns>
+        /// <param name="tableName">The name of the table to check.</param>
+        /// <returns>
+        /// A task representing the asynchronous operation, with a result of <c>true</c> if the table exists; otherwise, <c>false</c>.
+        /// </returns>
         public async Task<bool> DeleteTableAsync(string tableName)
         {
             // Check there is an input table name.

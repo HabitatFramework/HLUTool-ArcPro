@@ -1,5 +1,6 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -150,7 +151,7 @@ namespace HLU.UI.ViewModel
             IEnumerable<string> orderedIncids = incidList.OrderBy(i => i);
 
             // Group the incid identifiers into blocks of `incidPageSize` conditions.
-            return (from b in incidList.Select((i, index) => new
+            return [.. (from b in incidList.Select((i, index) => new
             {
                 // Determine the block number based on the index and page size.
                 Block = index / incidPageSize,
@@ -160,14 +161,14 @@ namespace HLU.UI.ViewModel
             })
                     // Group the conditions by block number.
                     group b by b.Block into g
-                    select g.Select(b => b.Condition).ToList()).ToList();
+                    select g.Select(b => b.Condition).ToList())];
         }
 
         /// <summary>
         /// Get the IHS summary for a given array of IHS codes.
         /// </summary>
-        /// <param name="ihsCodes"></param>
-        /// <returns></returns>
+        /// <param name="ihsCodes">An array of IHS codes to be summarized.</param>
+        /// <returns>A string representing the concatenated IHS codes, separated by full stops.</returns>
         public static string IhsSummary(string[] ihsCodes)
         {
             // Concatenate the IHS codes into a single string separated by full stops.
@@ -179,9 +180,9 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Check if a row is dirty.
         /// </summary>
-        /// <typeparam name="R"></typeparam>
-        /// <param name="row"></param>
-        /// <returns></returns>
+        /// <typeparam name="R">The type of the DataRow.</typeparam>
+        /// <param name="row">The DataRow to check.</param>
+        /// <returns>True if the row is dirty; otherwise, false.</returns>
         public static bool RowIsDirty<R>(R row)
             where R : DataRow
         {
@@ -199,8 +200,6 @@ namespace HLU.UI.ViewModel
                 {
                     foreach (DataColumn dc in row.Table.Columns)
                     {
-                        string a = row[dc, DataRowVersion.Original].ToString();
-                        string b = row[dc, DataRowVersion.Current].ToString();
                         if (!row[dc, DataRowVersion.Original].Equals(
                              row[dc, DataRowVersion.Current]))
                             return true;
@@ -217,9 +216,9 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Get the operations code for a given operation description.
         /// </summary>
-        /// <param name="hluDS"></param>
-        /// <param name="modifyOperation"></param>
-        /// <returns></returns>
+        /// <param name="hluDS">The HLU data set.</param>
+        /// <param name="modifyOperation">The operation to modify.</param>
+        /// <returns>The operations code, or null if not found.</returns>
         public static string GetOperationsCode(HluDataSet hluDS, Operations modifyOperation)
         {
             // If the hluDS is null or the lut_operation is null then return null.
@@ -246,9 +245,9 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Get the reason code for a given reason description.
         /// </summary>
-        /// <param name="hluDS"></param>
-        /// <param name="reasonDescription"></param>
-        /// <returns></returns>
+        /// <param name="hluDS">The HLU data set.</param>
+        /// <param name="reasonDescription">The reason description to find the code for.</param>
+        /// <returns>The reason code, or null if not found.</returns>
         public static string GetReasonCode(HluDataSet hluDS, string reasonDescription)
         {
             // If the hluDS is null or the lut_reason is null then return null.
@@ -268,9 +267,9 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Get the process code for a given process description.
         /// </summary>
-        /// <param name="hluDS"></param>
-        /// <param name="processDescription"></param>
-        /// <returns></returns>
+        /// <param name="hluDS">The HLU data set.</param>
+        /// <param name="processDescription">The process description to find the code for.</param>
+        /// <returns>The process code, or null if not found.</returns>
         public static string GetProcessCode(HluDataSet hluDS, string processDescription)
         {
             // If the hluDS is null or the lut_process is null then return null.

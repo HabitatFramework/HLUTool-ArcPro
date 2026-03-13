@@ -1,6 +1,7 @@
 ﻿// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2019 London & South East Record Centres (LaSER)
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -27,9 +28,20 @@ namespace HLU
 {
     internal static class ShowMessageWindow
     {
+        #region Fields
+
         private static MessageWindow _messageWindow;
         private static ViewModelWindowMessage _messageWindowViewModel;
 
+        #endregion Fields
+
+        #region Constructors
+
+        /// <summary>
+        /// Initializes static members of the ShowMessageWindow class.
+        /// </summary>
+        /// <param name="messageText">The text of the message to display.</param>
+        /// <param name="messageHeader">The header of the message to display.</param>
         internal static void ShowMessage(string messageText, string messageHeader)
         {
             // Create message window
@@ -59,16 +71,22 @@ namespace HLU
             _messageWindow.ShowDialog();
         }
 
+        #endregion Constructors
+
+        #region Methods
+
         /// <summary>
         /// Closes help window and removes close window handler
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The event data.</param>
         /// <remarks></remarks>
         internal static void CloseMessageWindow(object sender, EventArgs e)
         {
             _messageWindowViewModel.RequestClose -= CloseMessageWindow;
             //_messageWindow.Close();
         }
+
+        #endregion Methods
     }
 }

@@ -1,4 +1,22 @@
-﻿using ArcGIS.Core.Data;
+﻿// HLUTool is used to view and maintain habitat and land use GIS data.
+// Copyright © 2025-2026 Andy Foy Consulting
+//
+// This file is part of HLUTool.
+//
+// HLUTool is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// HLUTool is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
+
+using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.DDL;
 using ArcGIS.Core.Data.Exceptions;
 using ArcGIS.Desktop.Catalog;
@@ -6,7 +24,6 @@ using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Core.Geoprocessing;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using HLU.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -15,7 +32,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using FieldDescription = ArcGIS.Core.Data.DDL.FieldDescription;
 
-namespace HLU.GISApplication
+namespace HLU.Helpers
 {
     /// <summary>
     /// Provides helper methods for working with ArcGIS Pro geodatabases, feature classes, tables, and related spatial
@@ -41,11 +58,11 @@ namespace HLU.GISApplication
         public static async Task<bool> FeatureClassExistsAsync(string filePath, string fileName)
         {
             // Check there is an input file path.
-            if (String.IsNullOrEmpty(filePath))
+            if (string.IsNullOrEmpty(filePath))
                 return false;
 
             // Check there is an input file name.
-            if (String.IsNullOrEmpty(fileName))
+            if (string.IsNullOrEmpty(fileName))
                 return false;
 
             if (fileName.Substring(fileName.Length - 4, 1) == ".")
@@ -83,7 +100,7 @@ namespace HLU.GISApplication
         public static async Task<bool> FeatureClassExistsAsync(string fullPath)
         {
             // Check there is an input file path.
-            if (String.IsNullOrEmpty(fullPath))
+            if (string.IsNullOrEmpty(fullPath))
                 return false;
 
             return await FeatureClassExistsAsync(FileFunctions.GetDirectoryName(fullPath), FileFunctions.GetFileName(fullPath));
@@ -115,23 +132,23 @@ namespace HLU.GISApplication
             string fieldMapping)
         {
             // Check if there is a source path.
-            if (String.IsNullOrEmpty(sourcePath))
+            if (string.IsNullOrEmpty(sourcePath))
                 return false;
 
             // Check if there is a geodatabase path.
-            if (String.IsNullOrEmpty(gdbPath))
+            if (string.IsNullOrEmpty(gdbPath))
                 return false;
 
             // Check if there is a temporary feature class name.
-            if (String.IsNullOrEmpty(tempFcName))
+            if (string.IsNullOrEmpty(tempFcName))
                 return false;
 
             // Check if there is a field mapping.
-            if (String.IsNullOrEmpty(fieldMapping))
+            if (string.IsNullOrEmpty(fieldMapping))
                 return false;
 
             // Build temp feature class path.
-            string tempFcPath = System.IO.Path.Combine(gdbPath, tempFcName);
+            string tempFcPath = Path.Combine(gdbPath, tempFcName);
 
             // Make a value array of strings to be passed to the tool.
             var parameters = Geoprocessing.MakeValueArray(
@@ -189,11 +206,11 @@ namespace HLU.GISApplication
         public static async Task<bool> DeleteFeatureClassAsync(string filePath, string fileName)
         {
             // Check there is an input file path.
-            if (String.IsNullOrEmpty(filePath))
+            if (string.IsNullOrEmpty(filePath))
                 return false;
 
             // Check there is an input file name.
-            if (String.IsNullOrEmpty(fileName))
+            if (string.IsNullOrEmpty(fileName))
                 return false;
 
             string featureClass = filePath + @"\" + fileName;
@@ -209,7 +226,7 @@ namespace HLU.GISApplication
         public static async Task<bool> DeleteFeatureClassAsync(string fileName)
         {
             // Check there is an input file name.
-            if (String.IsNullOrEmpty(fileName))
+            if (string.IsNullOrEmpty(fileName))
                 return false;
 
             // Make a value array of strings to be passed to the tool.
@@ -265,11 +282,11 @@ namespace HLU.GISApplication
             bool fieldIsNullable = true, bool fieldIsRequred = false, string fieldDomain = null)
         {
             // Check if there is an input table name.
-            if (String.IsNullOrEmpty(inTable))
+            if (string.IsNullOrEmpty(inTable))
                 return false;
 
             // Check if there is an input field name.
-            if (String.IsNullOrEmpty(fieldName))
+            if (string.IsNullOrEmpty(fieldName))
                 return false;
 
             // Make a value array of strings to be passed to the tool.
@@ -318,11 +335,11 @@ namespace HLU.GISApplication
         public static async Task<bool> DeleteFieldAsync(string inTable, string dropFields)
         {
             // Check if there is an input table name.
-            if (String.IsNullOrEmpty(inTable))
+            if (string.IsNullOrEmpty(inTable))
                 return false;
 
             // Check if there are fields to delete.
-            if (String.IsNullOrEmpty(dropFields))
+            if (string.IsNullOrEmpty(dropFields))
                 return false;
 
             // Make a value array of strings to be passed to the tool.
@@ -373,15 +390,15 @@ namespace HLU.GISApplication
             string caseFields = "", string concatenationSeparator = "", bool addToMap = false)
         {
             // Check if there is an input table name.
-            if (String.IsNullOrEmpty(inTable))
+            if (string.IsNullOrEmpty(inTable))
                 return false;
 
             // Check if there is an output table name.
-            if (String.IsNullOrEmpty(outTable))
+            if (string.IsNullOrEmpty(outTable))
                 return false;
 
             // Check if there is an input statistics fields string.
-            if (String.IsNullOrEmpty(statisticsFields))
+            if (string.IsNullOrEmpty(statisticsFields))
                 return false;
 
             // Make a value array of strings to be passed to the tool.
@@ -431,11 +448,11 @@ namespace HLU.GISApplication
         public static async Task<bool> FeatureToPointAsync(string inFeatureClass, string outFeatureClass, string pointLocation = "CENTROID", bool addToMap = false)
         {
             // Check if there is an input feature class.
-            if (String.IsNullOrEmpty(inFeatureClass))
+            if (string.IsNullOrEmpty(inFeatureClass))
                 return false;
 
             // Check if there is an output feature class.
-            if (String.IsNullOrEmpty(outFeatureClass))
+            if (string.IsNullOrEmpty(outFeatureClass))
                 return false;
 
             // Make a value array of strings to be passed to the tool.
@@ -490,11 +507,11 @@ namespace HLU.GISApplication
             string location = "NO_LOCATION", string angle = "NO_ANGLE", string method = "PLANAR", string fieldNames = "", string distanceUnit = "")
         {
             // Check if there is an input feature class.
-            if (String.IsNullOrEmpty(inFeatureClass))
+            if (string.IsNullOrEmpty(inFeatureClass))
                 return false;
 
             // Check if there is an output feature class.
-            if (String.IsNullOrEmpty(nearFeatureClass))
+            if (string.IsNullOrEmpty(nearFeatureClass))
                 return false;
 
             // Make a value array of strings to be passed to the tool.
@@ -543,7 +560,7 @@ namespace HLU.GISApplication
         public static Geodatabase CreateFileGeodatabase(string fullPath)
         {
             // Check if there is an input full path.
-            if (String.IsNullOrEmpty(fullPath))
+            if (string.IsNullOrEmpty(fullPath))
                 return null;
 
             Geodatabase geodatabase;
@@ -573,7 +590,7 @@ namespace HLU.GISApplication
         public static async Task<bool> DeleteFileGeodatabaseAsync(string fullPath)
         {
             // Check if there is an input full path.
-            if (String.IsNullOrEmpty(fullPath))
+            if (string.IsNullOrEmpty(fullPath))
                 return false;
 
             bool success = false;
@@ -632,11 +649,11 @@ namespace HLU.GISApplication
         public static async Task<bool> FeatureClassExistsGDBAsync(string gdbPath, string featureClassName)
         {
             // Check there is an input file path.
-            if (String.IsNullOrEmpty(gdbPath))
+            if (string.IsNullOrEmpty(gdbPath))
                 return false;
 
             // Check there is an input file name.
-            if (String.IsNullOrEmpty(featureClassName))
+            if (string.IsNullOrEmpty(featureClassName))
                 return false;
 
             bool exists = false;
@@ -678,11 +695,11 @@ namespace HLU.GISApplication
         public static async Task<bool> TableExistsGDBAsync(string gdbPath, string tableName)
         {
             // Check there is an input file path.
-            if (String.IsNullOrEmpty(gdbPath))
+            if (string.IsNullOrEmpty(gdbPath))
                 return false;
 
             // Check there is an input file name.
-            if (String.IsNullOrEmpty(tableName))
+            if (string.IsNullOrEmpty(tableName))
                 return false;
 
             bool exists = false;
@@ -724,11 +741,11 @@ namespace HLU.GISApplication
         public static async Task<bool> DeleteGeodatabaseFCAsync(string gdbPath, string featureClassName)
         {
             // Check there is an input file path.
-            if (String.IsNullOrEmpty(gdbPath))
+            if (string.IsNullOrEmpty(gdbPath))
                 return false;
 
             // Check there is an input file name.
-            if (String.IsNullOrEmpty(featureClassName))
+            if (string.IsNullOrEmpty(featureClassName))
                 return false;
 
             bool success = false;
@@ -783,7 +800,7 @@ namespace HLU.GISApplication
                 return false;
 
             // Check there is an input feature class name.
-            if (String.IsNullOrEmpty(featureClassName))
+            if (string.IsNullOrEmpty(featureClassName))
                 return false;
 
             bool success = false;
@@ -826,11 +843,11 @@ namespace HLU.GISApplication
         public static async Task<bool> DeleteGeodatabaseTableAsync(string gdbPath, string tableName)
         {
             // Check there is an input file path.
-            if (String.IsNullOrEmpty(gdbPath))
+            if (string.IsNullOrEmpty(gdbPath))
                 return false;
 
             // Check there is an input file name.
-            if (String.IsNullOrEmpty(tableName))
+            if (string.IsNullOrEmpty(tableName))
                 return false;
 
             bool success = false;
@@ -879,7 +896,7 @@ namespace HLU.GISApplication
                 return false;
 
             // Check if there is an input table name.
-            if (String.IsNullOrEmpty(tableName))
+            if (string.IsNullOrEmpty(tableName))
                 return false;
 
             bool success = false;
@@ -1011,15 +1028,15 @@ namespace HLU.GISApplication
         public static async Task<bool> AddAttributeIndexAsync(string gdbPath, string inTable, string fieldNames, string indexName)
         {
             // Check there is an input geodatabase path.
-            if (String.IsNullOrWhiteSpace(gdbPath))
+            if (string.IsNullOrWhiteSpace(gdbPath))
                 return false;
 
             // Check there is an input table path.
-            if (String.IsNullOrWhiteSpace(inTable))
+            if (string.IsNullOrWhiteSpace(inTable))
                 return false;
 
             // Check there is an input field name.
-            if (String.IsNullOrWhiteSpace(fieldNames))
+            if (string.IsNullOrWhiteSpace(fieldNames))
                 return false;
 
             return await QueuedTask.Run(async () =>
@@ -1118,15 +1135,15 @@ namespace HLU.GISApplication
             string matchFields = "", bool addToMap = false)
         {
             // Check if there is an input target feature class.
-            if (String.IsNullOrEmpty(targetFeatures))
+            if (string.IsNullOrEmpty(targetFeatures))
                 return false;
 
             // Check if there is an input join feature class.
-            if (String.IsNullOrEmpty(joinFeatures))
+            if (string.IsNullOrEmpty(joinFeatures))
                 return false;
 
             // Check if there is an output feature class.
-            if (String.IsNullOrEmpty(outFeatureClass))
+            if (string.IsNullOrEmpty(outFeatureClass))
                 return false;
 
             // Make a value array of strings to be passed to the tool.
@@ -1197,19 +1214,19 @@ namespace HLU.GISApplication
             bool addToMap = false)
         {
             // Check if there is an input target feature class.
-            if (String.IsNullOrEmpty(inFeatures))
+            if (string.IsNullOrEmpty(inFeatures))
                 return false;
 
             // Check if there is an input field name.
-            if (String.IsNullOrEmpty(inField))
+            if (string.IsNullOrEmpty(inField))
                 return false;
 
             // Check if there is a join feature class.
-            if (String.IsNullOrEmpty(joinFeatures))
+            if (string.IsNullOrEmpty(joinFeatures))
                 return false;
 
             // Check if there is a join field name.
-            if (String.IsNullOrEmpty(joinField))
+            if (string.IsNullOrEmpty(joinField))
                 return false;
 
             // Validate indexJoinFields parameter (must be "NEW_INDEXES", "REPLACE_INDEXES", or "NO_INDEXES")
@@ -1267,11 +1284,11 @@ namespace HLU.GISApplication
         public static async Task<bool> DeleteDuplicateJoinFieldAsync(string featureClassPath, string baseFieldName)
         {
             // Check there is an input feature class path.
-            if (String.IsNullOrWhiteSpace(featureClassPath))
+            if (string.IsNullOrWhiteSpace(featureClassPath))
                 return false;
 
             // Check there is an input field name.
-            if (String.IsNullOrWhiteSpace(baseFieldName))
+            if (string.IsNullOrWhiteSpace(baseFieldName))
                 return false;
 
             List<string> duplicateFields = await QueuedTask.Run(() =>
@@ -1328,11 +1345,11 @@ namespace HLU.GISApplication
         public static async Task<bool> TableExistsAsync(string filePath, string fileName)
         {
             // Check there is an input file path.
-            if (String.IsNullOrEmpty(filePath))
+            if (string.IsNullOrEmpty(filePath))
                 return false;
 
             // Check there is an input file name.
-            if (String.IsNullOrEmpty(fileName))
+            if (string.IsNullOrEmpty(fileName))
                 return false;
 
             if (fileName.Substring(fileName.Length - 4, 1) == ".")
@@ -1372,7 +1389,7 @@ namespace HLU.GISApplication
         public static async Task<bool> TableExistsAsync(string fullPath)
         {
             // Check there is an input full path.
-            if (String.IsNullOrEmpty(fullPath))
+            if (string.IsNullOrEmpty(fullPath))
                 return false;
 
             return await TableExistsAsync(FileFunctions.GetDirectoryName(fullPath), FileFunctions.GetFileName(fullPath));
@@ -1388,11 +1405,11 @@ namespace HLU.GISApplication
         public static async Task<bool> CreateTableAsync(string gdbPath, string tableName, DataTable schemaTable)
         {
             // Check there is an input geodatabase path.
-            if (String.IsNullOrEmpty(gdbPath))
+            if (string.IsNullOrEmpty(gdbPath))
                 return false;
 
             // Check there is an input table name.
-            if (String.IsNullOrEmpty(tableName))
+            if (string.IsNullOrEmpty(tableName))
                 return false;
 
             // Check there is a schema table.
@@ -1474,15 +1491,15 @@ namespace HLU.GISApplication
                 fieldType = FieldType.String;
                 fieldLength = fieldLength > 0 ? Math.Min(fieldLength, 254) : 254;
             }
-            else if (column.DataType == typeof(int) || column.DataType == typeof(Int32))
+            else if (column.DataType == typeof(int) || column.DataType == typeof(int))
             {
                 fieldType = FieldType.Integer;
             }
-            else if (column.DataType == typeof(double) || column.DataType == typeof(Double))
+            else if (column.DataType == typeof(double) || column.DataType == typeof(double))
             {
                 fieldType = FieldType.Double;
             }
-            else if (column.DataType == typeof(float) || column.DataType == typeof(Single))
+            else if (column.DataType == typeof(float) || column.DataType == typeof(float))
             {
                 fieldType = FieldType.Single;
             }
@@ -1528,11 +1545,11 @@ namespace HLU.GISApplication
         public static async Task<int> BulkInsertRowsAsync(string gdbPath, string tableName, List<Dictionary<string, object>> rows)
         {
             // Check there is an input geodatabase path.
-            if (String.IsNullOrEmpty(gdbPath))
+            if (string.IsNullOrEmpty(gdbPath))
                 return 0;
 
             // Check there is an input table name.
-            if (String.IsNullOrEmpty(tableName))
+            if (string.IsNullOrEmpty(tableName))
                 return 0;
 
             // Check there are rows to insert.
@@ -1796,7 +1813,7 @@ namespace HLU.GISApplication
             int position = 0)
         {
             // Check there is an input feature class path.
-            if (String.IsNullOrWhiteSpace(featureClassPath))
+            if (string.IsNullOrWhiteSpace(featureClassPath))
                 return false;
 
             // Check if the active map view exists.
@@ -1818,7 +1835,7 @@ namespace HLU.GISApplication
 
                     // Determine the layer name (use feature class name if not specified).
                     string finalLayerName = layerName;
-                    if (String.IsNullOrWhiteSpace(finalLayerName))
+                    if (string.IsNullOrWhiteSpace(finalLayerName))
                     {
                         // Extract feature class name from path.
                         finalLayerName = Path.GetFileNameWithoutExtension(featureClassPath);
@@ -1828,21 +1845,18 @@ namespace HLU.GISApplication
                     FeatureLayer newLayer = null;
 
                     // Check if we should add to a group layer.
-                    if (!String.IsNullOrWhiteSpace(groupLayerName))
+                    if (!string.IsNullOrWhiteSpace(groupLayerName))
                     {
                         // Find or create the group layer.
                         GroupLayer groupLayer = activeMap.FindLayers(groupLayerName, true)
                             .OfType<GroupLayer>()
                             .FirstOrDefault();
 
-                        if (groupLayer == null)
-                        {
-                            // Create the group layer if it doesn't exist.
-                            groupLayer = LayerFactory.Instance.CreateGroupLayer(
-                                activeMap,
-                                0,
-                                groupLayerName);
-                        }
+                        // Create the group layer if it doesn't exist.
+                        groupLayer ??= LayerFactory.Instance.CreateGroupLayer(
+                            activeMap,
+                            0,
+                            groupLayerName);
 
                         // Create layer parameters for creating within the group layer.
                         LayerCreationParams layerParams = new(uri)
@@ -1903,11 +1917,11 @@ namespace HLU.GISApplication
         public static async Task<bool> CopyFeaturesAsync(string inFeatureClass, string outFeatureClass, bool addToMap = false)
         {
             // Check if there is an input feature class.
-            if (String.IsNullOrEmpty(inFeatureClass))
+            if (string.IsNullOrEmpty(inFeatureClass))
                 return false;
 
             // Check if there is an output feature class.
-            if (String.IsNullOrEmpty(outFeatureClass))
+            if (string.IsNullOrEmpty(outFeatureClass))
                 return false;
 
             // Make a value array of strings to be passed to the tool.
@@ -1957,15 +1971,15 @@ namespace HLU.GISApplication
         public static async Task<bool> CopyFeaturesAsync(string inputWorkspace, string inputDatasetName, string outputFeatureClass, bool addToMap = false)
         {
             // Check there is an input workspace.
-            if (String.IsNullOrEmpty(inputWorkspace))
+            if (string.IsNullOrEmpty(inputWorkspace))
                 return false;
 
             // Check there is an input dataset name.
-            if (String.IsNullOrEmpty(inputDatasetName))
+            if (string.IsNullOrEmpty(inputDatasetName))
                 return false;
 
             // Check there is an output feature class.
-            if (String.IsNullOrEmpty(outputFeatureClass))
+            if (string.IsNullOrEmpty(outputFeatureClass))
                 return false;
 
             string inFeatureClass = inputWorkspace + @"\" + inputDatasetName;
@@ -1985,19 +1999,19 @@ namespace HLU.GISApplication
         public static async Task<bool> CopyFeaturesAsync(string inputWorkspace, string inputDatasetName, string outputWorkspace, string outputDatasetName, bool addToMap = false)
         {
             // Check there is an input workspace.
-            if (String.IsNullOrEmpty(inputWorkspace))
+            if (string.IsNullOrEmpty(inputWorkspace))
                 return false;
 
             // Check there is an input dataset name.
-            if (String.IsNullOrEmpty(inputDatasetName))
+            if (string.IsNullOrEmpty(inputDatasetName))
                 return false;
 
             // Check there is an output workspace.
-            if (String.IsNullOrEmpty(outputWorkspace))
+            if (string.IsNullOrEmpty(outputWorkspace))
                 return false;
 
             // Check there is an output dataset name.
-            if (String.IsNullOrEmpty(outputDatasetName))
+            if (string.IsNullOrEmpty(outputDatasetName))
                 return false;
 
             string inFeatureClass = inputWorkspace + @"\" + inputDatasetName;
@@ -2070,7 +2084,7 @@ namespace HLU.GISApplication
                 return null;
 
             // Check there is an input field name.
-            if (String.IsNullOrWhiteSpace(incidFieldName))
+            if (string.IsNullOrWhiteSpace(incidFieldName))
                 return null;
 
             return await QueuedTask.Run(() =>
@@ -2080,7 +2094,7 @@ namespace HLU.GISApplication
                 try
                 {
                     QueryFilter queryFilter = new();
-                    if (!String.IsNullOrWhiteSpace(whereClause))
+                    if (!string.IsNullOrWhiteSpace(whereClause))
                         queryFilter.WhereClause = whereClause;
 
                     // Only retrieve the INCID field for efficiency
@@ -2123,7 +2137,7 @@ namespace HLU.GISApplication
                 return null;
 
             // Check there is an input field name.
-            if (String.IsNullOrWhiteSpace(incidFieldName))
+            if (string.IsNullOrWhiteSpace(incidFieldName))
                 return null;
 
             // Check there are valid INCIDs.
@@ -2169,11 +2183,11 @@ namespace HLU.GISApplication
         public static async Task<bool> ExportFeaturesAsync(string inTable, string outTable, bool addToMap = false)
         {
             // Check there is an input table name.
-            if (String.IsNullOrEmpty(inTable))
+            if (string.IsNullOrEmpty(inTable))
                 return false;
 
             // Check there is an output table name.
-            if (String.IsNullOrEmpty(inTable))
+            if (string.IsNullOrEmpty(inTable))
                 return false;
 
             // Make a value array of strings to be passed to the tool.
@@ -2226,11 +2240,11 @@ namespace HLU.GISApplication
         public static async Task<bool> CopyTableAsync(string inTable, string outTable, bool addToMap = false)
         {
             // Check there is an input table name.
-            if (String.IsNullOrEmpty(inTable))
+            if (string.IsNullOrEmpty(inTable))
                 return false;
 
             // Check there is an output table name.
-            if (String.IsNullOrEmpty(inTable))
+            if (string.IsNullOrEmpty(inTable))
                 return false;
 
             // Make a value array of strings to be passed to the tool.
@@ -2279,15 +2293,15 @@ namespace HLU.GISApplication
         public static async Task<bool> CopyTableAsync(string inputWorkspace, string inputDatasetName, string outputTable)
         {
             // Check there is an input workspace.
-            if (String.IsNullOrEmpty(inputWorkspace))
+            if (string.IsNullOrEmpty(inputWorkspace))
                 return false;
 
             // Check there is an input dataset name.
-            if (String.IsNullOrEmpty(inputDatasetName))
+            if (string.IsNullOrEmpty(inputDatasetName))
                 return false;
 
             // Check there is an output feature class.
-            if (String.IsNullOrEmpty(outputTable))
+            if (string.IsNullOrEmpty(outputTable))
                 return false;
 
             string inputTable = inputWorkspace + @"\" + inputDatasetName;
@@ -2306,19 +2320,19 @@ namespace HLU.GISApplication
         public static async Task<bool> CopyTableAsync(string inputWorkspace, string inputDatasetName, string outputWorkspace, string outputDatasetName)
         {
             // Check there is an input workspace.
-            if (String.IsNullOrEmpty(inputWorkspace))
+            if (string.IsNullOrEmpty(inputWorkspace))
                 return false;
 
             // Check there is an input dataset name.
-            if (String.IsNullOrEmpty(inputDatasetName))
+            if (string.IsNullOrEmpty(inputDatasetName))
                 return false;
 
             // Check there is an output workspace.
-            if (String.IsNullOrEmpty(outputWorkspace))
+            if (string.IsNullOrEmpty(outputWorkspace))
                 return false;
 
             // Check there is an output dataset name.
-            if (String.IsNullOrEmpty(outputDatasetName))
+            if (string.IsNullOrEmpty(outputDatasetName))
                 return false;
 
             string inputTable = inputWorkspace + @"\" + inputDatasetName;

@@ -3,6 +3,7 @@
 // Copyright © 2013, 2016 Thames Valley Environmental Records Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
 // Copyright © 2019 London & South East Record Centres (LaSER)
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -190,10 +191,10 @@ namespace HLU.UI.ViewModel
 
         #region RequestClose
 
-        // declare the delegate since using non-generic pattern
+        // Declare the delegate since using non-generic pattern
         public delegate void RequestCloseEventHandler(string processFlag, string spatialFlag, string changeFlag, string status, bool apply);
 
-        // declare the event
+        // Declare the event
         public event RequestCloseEventHandler RequestClose;
 
         #endregion RequestClose
@@ -360,13 +361,13 @@ namespace HLU.UI.ViewModel
                 // Load the process flag options from the dataset if they haven't already been loaded.
                 if ((_osmmProcessFlags == null) || (_osmmProcessFlags.Length == 0))
                 {
-                    _osmmProcessFlags = (from m in _hluDataset.lut_osmm_updates_process
-                                         select m).OrderBy(m => m.sort_order).ThenBy(m => m.description).ToArray();
+                    _osmmProcessFlags = [.. (from m in _hluDataset.lut_osmm_updates_process
+                                         select m).OrderBy(m => m.sort_order).ThenBy(m => m.description)];
                 }
 
                 // Add an "Any" option to show all OSMM Updates regardless of the process flag value.
                 HluDataSet.lut_osmm_updates_processRow[] osmmProcessFlags;
-                osmmProcessFlags = AnyRowOSMMUpdatesProcess(-3).Concat(_osmmProcessFlags).OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
+                osmmProcessFlags = [.. AnyRowOSMMUpdatesProcess(-3).Concat(_osmmProcessFlags).OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
                 return osmmProcessFlags;
             }
@@ -402,13 +403,13 @@ namespace HLU.UI.ViewModel
                 // If the spatial flag options haven't already been loaded, load them from the dataset.
                 if ((_osmmSpatialFlags == null) || (_osmmSpatialFlags.Length == 0))
                 {
-                    _osmmSpatialFlags = (from m in _hluDataset.lut_osmm_updates_spatial
-                                         select m).OrderBy(m => m.sort_order).ThenBy(m => m.description).ToArray();
+                    _osmmSpatialFlags = [.. (from m in _hluDataset.lut_osmm_updates_spatial
+                                         select m).OrderBy(m => m.sort_order).ThenBy(m => m.description)];
                 }
 
                 // Add an "Any" option to show all OSMM Updates regardless of the spatial flag value.
                 HluDataSet.lut_osmm_updates_spatialRow[] osmmSpatialFlags;
-                osmmSpatialFlags = AnyRowOSMMUpdatesSpatial(-3).Concat(_osmmSpatialFlags).OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
+                osmmSpatialFlags = [.. AnyRowOSMMUpdatesSpatial(-3).Concat(_osmmSpatialFlags).OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
                 return osmmSpatialFlags;
             }
@@ -444,13 +445,13 @@ namespace HLU.UI.ViewModel
                 // If the change flag options haven't already been loaded, load them from the dataset.
                 if ((_osmmChangeFlags == null) || (_osmmChangeFlags.Length == 0))
                 {
-                    _osmmChangeFlags = (from m in _hluDataset.lut_osmm_updates_change
-                                        select m).OrderBy(m => m.sort_order).ThenBy(m => m.description).ToArray();
+                    _osmmChangeFlags = [.. (from m in _hluDataset.lut_osmm_updates_change
+                                        select m).OrderBy(m => m.sort_order).ThenBy(m => m.description)];
                 }
 
                 // Add an "Any" option to show all OSMM Updates regardless of the change flag value.
                 HluDataSet.lut_osmm_updates_changeRow[] osmmChangeFlags;
-                osmmChangeFlags = AnyRowOSMMUpdatesChange(-3).Concat(_osmmChangeFlags).OrderBy(r => r.sort_order).ThenBy(r => r.description).ToArray();
+                osmmChangeFlags = [.. AnyRowOSMMUpdatesChange(-3).Concat(_osmmChangeFlags).OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
                 return osmmChangeFlags;
             }
@@ -494,7 +495,7 @@ namespace HLU.UI.ViewModel
                 if (_viewModelMain.IsOsmmBulkMode)
                     osmmUpdateStatuses = ["Pending"];
                 else
-                    osmmUpdateStatuses = Settings.Default.OSMMUpdatesStatuses.Cast<string>().ToArray();
+                    osmmUpdateStatuses = [.. Settings.Default.OSMMUpdatesStatuses.Cast<string>()];
 
                 return osmmUpdateStatuses;
             }
@@ -822,12 +823,9 @@ namespace HLU.UI.ViewModel
                         //summary = dataReader.GetValue(4).ToString();
                         recs = (int)dataReader.GetValue(4);
 
-                        if (lastProcessFlag == null)
-                            lastProcessFlag = processFlag;
-                        if (lastSpatialFlag == null)
-                            lastSpatialFlag = spatialFlag;
-                        if (lastChangeFlag == null)
-                            lastChangeFlag = changeFlag;
+                        lastProcessFlag ??= processFlag;
+                        lastSpatialFlag ??= spatialFlag;
+                        lastChangeFlag ??= changeFlag;
 
                         // If this is a different group.
                         if (processFlag != lastProcessFlag || spatialFlag != lastSpatialFlag || changeFlag != lastChangeFlag)
