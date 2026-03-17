@@ -107,13 +107,6 @@ namespace HLU.Data.Connection
                         Settings.Default.DbTextLength, Settings.Default.DbBinaryLength, Settings.Default.DbTimePrecision,
                         Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, dbConnectionTimeout);
                     break;
-                case ConnectionTypes.OleDb:
-                    db = new DbOleDb(ref connString, ref defaultSchema, ref promptPwd,
-                        Settings.Default.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders,
-                        true, Settings.Default.DbIsUnicode, Settings.Default.DbUseTimeZone, Settings.Default.DbTextLength,
-                        Settings.Default.DbBinaryLength, Settings.Default.DbTimePrecision,
-                        Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, dbConnectionTimeout);
-                    break;
                 case ConnectionTypes.Oracle:
                     db = new DbOracle(ref connString, ref defaultSchema, ref promptPwd,
                         Settings.Default.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders,

@@ -256,6 +256,7 @@ namespace HLU.UI.ViewModel
                 // Get the SQL error message (if it is one) or the exception message.
                 string exMessage = DbBase.GetSqlErrorMessage(ex);
 
+                // Show error message
                 MessageBox.Show(string.Format("Your changes could not be saved. The error message returned was:\n\n{0}",
                     exMessage), "HLU: Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
 

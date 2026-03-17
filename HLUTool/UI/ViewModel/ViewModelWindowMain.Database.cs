@@ -2434,17 +2434,14 @@ namespace HLU.UI.ViewModel
                             (_currentIncidFragsInGISCount > _currentIncidFragsInDBCount))
                         {
                             if (_currentIncidFragsInGISCount == 1)
-                                MessageBox.Show("Selected feature not found in database.", "HLU: Selection",
-                                MessageBoxButton.OK, MessageBoxImage.Warning);
+                                ShowWarning("Selected feature not found in database.", MessageCategory.Database);
                             else
-                                MessageBox.Show("Not all selected features found in database.", "HLU: Selection",
-                                MessageBoxButton.OK, MessageBoxImage.Warning);
+                                ShowWarning("Not all selected features found in database.", MessageCategory.Database);
                         }
                         // Check if the counts returned are less than those expected.
                         else if (_currentIncidFragsInGISCount < _selectedFragsInDBCount)
                         {
-                            MessageBox.Show("Not all selected features found in active layer.", "HLU: Selection",
-                            MessageBoxButton.OK, MessageBoxImage.Warning);
+                            ShowWarning("Not all selected features found in active layer.", MessageCategory.GIS);
                         }
                     }
                     else
@@ -2465,8 +2462,7 @@ namespace HLU.UI.ViewModel
                         ChangeCursor(Cursors.Arrow, null);
 
                         // Warn the user that no records were found.
-                        MessageBox.Show("Map feature not found in active layer.", "HLU: Apply Query",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        ShowInfo("Map feature not found in active layer.", MessageCategory.GIS);
                     }
                 }
                 else
@@ -2487,8 +2483,7 @@ namespace HLU.UI.ViewModel
                     ChangeCursor(Cursors.Arrow, null);
 
                     // Warn the user that the record was not found
-                    MessageBox.Show("Record not found in database.", "HLU: Apply Query",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    ShowInfo("Record not found in database.", MessageCategory.Database);
                 }
             }
             catch (Exception ex)
@@ -2665,8 +2660,7 @@ namespace HLU.UI.ViewModel
                         ChangeCursor(Cursors.Arrow, null);
 
                         // Warn the user that no records were found.
-                        MessageBox.Show("No map features found in active layer.", "HLU: Apply Query",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        ShowInfo("No map features found in active layer.", MessageCategory.GIS);
                     }
                 }
                 else
@@ -2709,8 +2703,7 @@ namespace HLU.UI.ViewModel
                     // Warn the user that no records were found (if the caller has requested to
                     // select the records in GIS).
                     if (selectInGIS)
-                        MessageBox.Show("No records found in database.", "HLU: Apply Query",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                        ShowInfo("No records found in database.", MessageCategory.Database);
                 }
             }
             catch (Exception ex)
@@ -3039,7 +3032,6 @@ namespace HLU.UI.ViewModel
 
                 // Get the incid table values
                 IncidCurrentRowDerivedValuesRetrieve();
-                OnPropertyChanged(nameof(IncidPrimary));
 
                 // Get the incid child rows
                 GetIncidChildRows(IncidCurrentRow);

@@ -130,15 +130,14 @@ namespace HLU.UI
     public static class MessageCategory
     {
         public const string Navigation = "Navigation";
-        public const string Validation = "Validation";
         public const string Database = "Database";
         public const string Save = "Save";
         public const string Filter = "Filter";
+        public const string Update = "Update";
         public const string BulkUpdate = "BulkUpdate";
         public const string OSMMUpdate = "OSMMUpdate";
         public const string GIS = "GIS";
         public const string Export = "Export";
-        public const string Import = "Import";
         public const string Split = "Split";
         public const string Merge = "Merge";
         public const string General = "General";

@@ -1478,31 +1478,33 @@ namespace HLU.GISApplication
             double? ratio = null,
             List<int> validScales = null)
         {
+            // Check the parameters.
+            if (_hluLayer == null)
+                return;
+
             // Respect caller setting: 0 means do not zoom.
             if (autoZoomToSelection == 0)
                 return;
 
-            if (_hluLayer == null)
-                return;
-
+            // Get the active map view. If there is no active view, we can't zoom, so return.
             MapView view = MapView.Active;
             if (view == null)
                 return;
 
             await QueuedTask.Run(async () =>
             {
+                // Get the selection from the HLU layer. If there is no selection, there is nothing to zoom to, so return.
                 var selection = _hluLayer.GetSelection();
                 if (selection == null || selection.GetCount() == 0)
                     return;
 
-                // Determine whether we should zoom based on ArcMap-style behaviour.
-                // autoZoomToSelection meanings:
+                // Determine whether we should zoom based on autoZoomToSelection meanings:
                 //   2 = always zoom to selection.
                 //   1 = zoom only when the selection is not fully within the visible map extent.
                 //   0 = do not zoom at all.
                 bool shouldZoom = (autoZoomToSelection == 2);
 
-                if (!shouldZoom && autoZoomToSelection == 1)
+                if (autoZoomToSelection == 1)
                 {
                     // Get the current visible extent of the active map view.
                     // This represents what the user can currently see on screen.
@@ -1556,24 +1558,28 @@ namespace HLU.GISApplication
                 if (!shouldZoom)
                     return;
 
-                // Zoom to the selection in this layer.
+                // Step 1: Zoom to the selection in this layer.
                 await view.ZoomToAsync(_hluLayer, true).ConfigureAwait(false);
 
-                // Apply additional scale logic (ported from ApplyZoomToMapFrame):
+                // Step 2: Apply additional scale logic to mirror ArcMap's ApplyZoomToMapFrame:
                 // - If a ratio is provided, apply ratio or next scale up from validScales.
-                // - Otherwise, enforce minZoom as a minimum allowed zoom-in (legacy safeguard).
                 ApplyZoomToMapView(
                     view,
                     ratio,
                     null,
                     validScales);
 
+                // Step 3: If minZoom is provided and we haven't already zoomed out to a larger
+                // scale from the validScales logic, check if we are currently more zoomed-in than
+                // minZoom and zoom out to minZoom.
                 if (minZoom > 0 && (validScales == null || validScales.Count < 2) && !ratio.HasValue)
                 {
+                    // Get the current camera scale.
                     Camera camera = view.Camera;
+                    double currentScale = camera.Scale;
 
                     // Smaller scale = more zoomed-in. If we are closer than minZoom, zoom out to minZoom.
-                    if (camera.Scale < minZoom)
+                    if (currentScale < minZoom)
                     {
                         camera.Scale = minZoom;
 

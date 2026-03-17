@@ -171,9 +171,13 @@ namespace HLU.UI.ViewModel
             }
             catch (Exception ex)
             {
+                // Rollback the transaction
                 _viewModelMain.DataBase.RollbackTransaction();
+
+                // Show error message
                 MessageBox.Show("OSMM UpdateAsync failed. The error message returned was:\n\n" +
                     ex.Message, "HLU: OSMM Update", MessageBoxButton.OK, MessageBoxImage.Error);
+
                 return false;
             }
             finally
@@ -212,11 +216,6 @@ namespace HLU.UI.ViewModel
 
                 _viewModelMain.DataBase.CommitTransaction();
                 _viewModelMain.HluDataset.AcceptChanges();
-
-                // Don't message now as there will another message to show no more
-                // records are found.
-                //MessageBox.Show("OSMM update succeeded.", "HLU: OSMM Update",
-                //    MessageBoxButton.OK, MessageBoxImage.Information);
 
                 // Move beyond the end of the Incids (to show they have
                 // all been processed)

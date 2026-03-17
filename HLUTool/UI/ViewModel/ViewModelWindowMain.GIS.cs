@@ -582,15 +582,19 @@ namespace HLU.UI.ViewModel
         /// <returns>A task representing the asynchronous operation.</returns>
         internal async Task SelectCurrentOnMapAsync()
         {
+            // Check the GIS application is initialised.
             if (_gisApp == null)
             {
-                MessageBox.Show("GIS application is not initialised.", "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Warning);
+                // Display a warning message.
+                ShowWarning("GIS application is not initialised.", MessageCategory.GIS);
                 return;
             }
 
+            // Check the current incid is set.
             if (_incidCurrentRow == null || String.IsNullOrWhiteSpace(_incidCurrentRow.incid))
             {
-                MessageBox.Show("No current incid is set.", "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Information);
+                // Display a warning message.
+                ShowWarning("No current incid is set.", MessageCategory.GIS);
                 return;
             }
 
@@ -636,11 +640,13 @@ namespace HLU.UI.ViewModel
             }
             catch (HLUToolException ex)
             {
-                MessageBox.Show(ex.Message, "HLU: Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
+                // Show error message
+                ShowError(ex.Message, MessageCategory.GIS);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "HLU: Selection", MessageBoxButton.OK, MessageBoxImage.Error);
+                // Show error message
+                ShowError(ex.Message, MessageCategory.GIS);
             }
             // Make sure the cursor is always reset.
             finally
@@ -776,13 +782,13 @@ namespace HLU.UI.ViewModel
                     ClearMessage();
                 }
 
-                //TODO: Remove minZoom if not needed
                 // Zoom to the GIS selection (if auto zoom configured).
                 await _gisApp.ZoomSelectedAsync(_minZoom, _autoZoomToSelection);
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Error);
+                // Show error message
+                ShowError(ex.Message, MessageCategory.GIS);
             }
             finally
             {
@@ -846,8 +852,8 @@ namespace HLU.UI.ViewModel
                 }
                 catch (HLUToolException ex)
                 {
-                    // Preserve stack trace and wrap in a meaningful type
-                    MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    // Show warning message
+                    ShowWarning(ex.Message, MessageCategory.GIS);
                     return;
                 }
 
@@ -916,7 +922,8 @@ namespace HLU.UI.ViewModel
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "HLU: Selection", MessageBoxButton.OK, MessageBoxImage.Error);
+                // Show error message
+                ShowError(ex.Message, MessageCategory.GIS);
             }
             finally
             {
@@ -951,9 +958,21 @@ namespace HLU.UI.ViewModel
                 // Backup the current selection (filter).
                 DataTable incidSelectionBackup = _incidSelection;
 
-                //TODO: Keep or replace with GIS query?
-                // Build a where clause list for the incids to be selected.
-                List<List<SqlFilterCondition>> whereClause = [ScratchDb.GisWhereClause(_incidSelection, null, false)];
+                // Get the incid column and table for the where clause
+                DataColumn incidColumn = _incidSelection.Columns[_hluDS.incid.incidColumn.ColumnName];
+                DataTable condTable = _hluDS.incid_mm_polygons;
+
+                // Create a quote function if _gisApp exists, otherwise null.
+                Func<string, string> quoteFunc = _gisApp != null ? _gisApp.QuoteValue : null;
+
+                // Build the where clause for the incids to be selected.
+                List<SqlFilterCondition> whereConditions = SqlBuilder.BuildIncidWhereClause(
+                    _incidSelection,
+                    incidColumn,
+                    condTable,
+                    quoteFunc);
+
+                List<List<SqlFilterCondition>> whereClause = [whereConditions];
 
                 // Find the expected number of features to be selected in GIS
                 // (by querying the database).
@@ -969,13 +988,11 @@ namespace HLU.UI.ViewModel
                     // incids, toids and fragments selected. Do not overwrite DB filter selection.
                     AnalyzeGisSelectionSet(false);
 
-                    //TODO: Now doing this before SetFilterAsync() otherwise _selectedFragsInGISCount may
-                    // have been changed when auto selecting the first incid.
                     // Check if the counts returned are less than those expected.
                     if (_selectedFragsInGISCount < _selectedFragsInDBCount)
                     {
-                        MessageBox.Show("Not all selected features found in active layer.", "HLU: Selection",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                        // Show a warning message
+                        ShowWarning("Not all selected features found in active layer.", MessageCategory.GIS);
                     }
 
                     // Indicate the selection came from the map.
@@ -988,11 +1005,11 @@ namespace HLU.UI.ViewModel
                     // Warn the user that no features were found in GIS.
                     if (_gisSelection == null || _gisSelection.Rows.Count == 0)
                     {
-                        MessageBox.Show("No incid features found in active layer.", "HLU: Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+                        // Show an information message.
+                        ShowInfo("No incid features found in active layer.", MessageCategory.GIS);
                         return;
                     }
 
-                    //TODO: Remove minZoom if not needed
                     // Zoom to the GIS selection (if auto zoom configured).
                     await _gisApp.ZoomSelectedAsync(_minZoom, _autoZoomToSelection);
 
@@ -1007,8 +1024,11 @@ namespace HLU.UI.ViewModel
             }
             catch (Exception ex)
             {
+                // Clear the selection
                 _incidSelection = null;
-                MessageBox.Show(ex.Message, "HLU: Selection", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                // Show error message
+                ShowError(ex.Message, MessageCategory.GIS);
             }
             // Make sure the cursor is always reset.
             finally
@@ -1524,6 +1544,7 @@ namespace HLU.UI.ViewModel
             // Check the selected rows are unique before attempting to split them.
             if (!await _gisApp.SelectedRowsUniqueAsync())
             {
+                // Warn the user that they need to select features that have been physically split before they can be logically split.
                 MessageBox.Show("The map selection contains one or more features where a physical split has not been completed.\n\n" +
                     "Please select the features and invoke the Split command to prevent the map and database getting out of sync.",
                     "HLU: Data Integrity", MessageBoxButton.OK, MessageBoxImage.Exclamation);
@@ -1574,6 +1595,7 @@ namespace HLU.UI.ViewModel
             // Check the selected rows are unique before attempting to merge them.
             if (!await _gisApp.SelectedRowsUniqueAsync())
             {
+                // Warn the user that they need to select features that have been physically split before they can be logically merged.
                 MessageBox.Show("The map selection contains one or more features where a physical split has not been completed.\n\n" +
                     "Please select the features and invoke the Split command to prevent the map and database getting out of sync.",
                     "HLU: Data Integrity", MessageBoxButton.OK, MessageBoxImage.Exclamation);
@@ -1603,6 +1625,7 @@ namespace HLU.UI.ViewModel
             // Check the selected rows are unique before attempting to merge them.
             if (!await _gisApp.SelectedRowsUniqueAsync())
             {
+                // Warn the user that they need to select features that have been physically split before they can be physically merged.
                 MessageBox.Show("The map selection contains one or more features where a physical split has not been completed.\n\n" +
                     "Please select the features and invoke the Split command to prevent the map and database getting out of sync.",
                     "HLU: Data Integrity", MessageBoxButton.OK, MessageBoxImage.Exclamation);

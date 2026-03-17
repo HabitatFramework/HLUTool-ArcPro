@@ -77,32 +77,39 @@ namespace HLU.UI.ViewModel
             // Check there is a selection.
             if ((_viewModelMain.GisSelection == null) || (_viewModelMain.GisSelection.Rows.Count == 0))
             {
-                MessageBox.Show("Cannot logically split: Nothing is selected on the map.", "HLU: Logical Split",
-                    MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                // Show warning message
+                _viewModelMain.ShowWarning("Cannot logically split: Nothing is selected on the map.", MessageCategory.Split);
+
                 return false;
             }
 
             // Check all selected features exist in the database.
             if (!_viewModelMain.CheckSelectedToidFrags(false))
             {
-                MessageBox.Show("Cannot logically split: One or more selected map features missing from database.",
-                    "HLU: Logical Split", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                // Show warning message
+                _viewModelMain.ShowWarning("Cannot logically split: One or more selected map features missing from database.",
+                    MessageCategory.Split);
+
                 return false;
             }
 
             // Check there is only one incid selected.
             if (_viewModelMain.SelectedIncidsInGISCount != 1)
             {
-                MessageBox.Show("Cannot logically split: Map selection set contains features belonging to more than one INCID.",
-                    "HLU: Logical Split", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                // Show warning message
+                _viewModelMain.ShowWarning("Cannot logically split: Map selection set contains features belonging to more than one INCID.",
+                    MessageCategory.Split);
+
                 return false;
             }
 
             // Check if there is more than one incid selected but for the same toid and fragment.
             if ((_viewModelMain.GisSelection.Rows.Count > 1) && ((_viewModelMain.SelectedToidsInGISCount <= 1) && (_viewModelMain.SelectedFragsInGISCount <= 1)))
             {
-                MessageBox.Show("Cannot logically split: Map selection contains invalid set of features.",
-                    "HLU: Logical Split", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                // Show warning message
+                _viewModelMain.ShowWarning("Cannot logically split: Map selection contains invalid set of features.",
+                    MessageCategory.Split);
+
                 return false;
             }
 
@@ -125,9 +132,10 @@ namespace HLU.UI.ViewModel
                 // If only one feature exists for the current incid then abort the split.
                 if (featCount < 2)
                 {
-                    MessageBox.Show(String.Format("Cannot logically split: Feature selected in map is the only" +
-                        " feature corresponding to INCID {0}", _viewModelMain.Incid), "HLU: Logical Split",
-                        MessageBoxButton.OK, MessageBoxImage.Asterisk);
+                    // Show warning message
+                    _viewModelMain.ShowWarning($"Cannot logically split: Feature selected in map is the only" +
+                        " feature corresponding to INCID '{_viewModelMain.Incid}'", MessageCategory.Split);
+
                     return false;
                 }
             }
@@ -328,6 +336,7 @@ namespace HLU.UI.ViewModel
                 // Get the SQL error message (if it is one) or the exception message.
                 string exMessage = DbBase.GetSqlErrorMessage(ex);
 
+                // Show error message
                 MessageBox.Show("Split operation failed. The error message returned was:\n\n" +
                     exMessage, "HLU Split Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
@@ -374,15 +383,17 @@ namespace HLU.UI.ViewModel
             // Check there is a selection.
             if ((_viewModelMain.GisSelection == null) || (_viewModelMain.GisSelection.Rows.Count == 0))
             {
-                MessageBox.Show("Cannot physically split: Nothing is selected on the map.", "HLU: Physical Split",
-                    MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                // Show warning message
+                _viewModelMain.ShowWarning("Cannot physically split: Nothing is selected on the map.", MessageCategory.Split);
+
                 return false;
             }
             // Check all selected features exist in the database.
             else if (!_viewModelMain.CheckSelectedToidFrags(true))
             {
-                MessageBox.Show("Cannot physically split: One or more selected map features missing from database.",
-                    "HLU: Physical Split", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                // Show warning message
+                _viewModelMain.ShowWarning("Cannot physically split: One or more selected map features missing from database.", MessageCategory.Split);
+
                 return false;
             }
 
@@ -395,8 +406,9 @@ namespace HLU.UI.ViewModel
             }
             else
             {
-                MessageBox.Show("Cannot physically split: Map selection set contains features belonging to more than one INCID, Toid or Fragment.",
-                    "HLU: Physical Split", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                // Show warning message
+                _viewModelMain.ShowWarning("Cannot physically split: Map selection set contains features belonging to more than one INCID, Toid or Fragment.", MessageCategory.Split);
+
                 return false;
             }
         }

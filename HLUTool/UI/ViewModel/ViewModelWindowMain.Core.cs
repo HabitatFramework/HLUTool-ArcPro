@@ -1803,7 +1803,7 @@ namespace HLU.UI.ViewModel
                             if (MessageBox.Show("There were errors loading data from the database." +
                                 "\n\nWould like to see a list of those errors?", "HLU: Initialise Dataset",
                                 MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.Yes)
-                                ShowMessageWindow.ShowMessage(errorMessage, "HLU Dataset");
+                                ShowMessageWindow.ShowMessageDialog(errorMessage, "HLU Dataset");
 
                             errorMessage = String.Empty;
                         }
@@ -1978,7 +1978,7 @@ namespace HLU.UI.ViewModel
                             if (MessageBox.Show("There were errors loading data from the database." +
                                 "\n\nWould like to see a list of those errors?", "HLU: Initialise Dataset",
                                 MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.Yes)
-                                ShowMessageWindow.ShowMessage(errorMessage, "HLU Dataset");
+                                ShowMessageWindow.ShowMessageDialog(errorMessage, "HLU Dataset");
 
                             errorMessage = String.Empty;
                         }
@@ -3241,8 +3241,7 @@ namespace HLU.UI.ViewModel
                         ChangeCursor(Cursors.Arrow, null);
 
                         // Warn the user that no more records were found.
-                        MessageBox.Show("No more records found.", "HLU: OSMM Updates",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        ShowWarning("No more records found.",MessageCategory.Navigation);
 
                         break;
                     }
@@ -3266,8 +3265,7 @@ namespace HLU.UI.ViewModel
                         else
                         {
                             // Warn the user that record is not found.
-                            MessageBox.Show("Record not found in filtered records.", "HLU: OSMM Updates",
-                                MessageBoxButton.OK, MessageBoxImage.Information);
+                            ShowWarning("Record not found in filtered records.", MessageCategory.Navigation);
                         }
                     }
 
@@ -3492,11 +3490,13 @@ namespace HLU.UI.ViewModel
             //TODO: Error in here sometimes (e.g. when moving to first/last water polygon when whole layer selected/filtered
             seekRowNumber--;
 
+            // If the seek row number is out of bounds, set it to the nearest valid value.
             if (seekRowNumber < 0)
                 seekRowNumber = 0;
             else if (seekRowNumber > _incidSelection.Rows.Count - 1)
                 seekRowNumber = _incidSelection.Rows.Count - 1;
 
+            // Get the incid corresponding to the seek row number from the selection and try to find it in the current page.
             string seekIncid = (string)_incidSelection.DefaultView[seekRowNumber][0];
             HluDataSet.incidRow returnRow = _hluDS.incid.FindByincid(seekIncid);
 
@@ -3507,73 +3507,77 @@ namespace HLU.UI.ViewModel
             {
                 return returnRow;
             }
+
+            _refillIncidTable = false;
+            int seekIncidNumber = RecordIds.IncidNumber(seekIncid);
+            int incidNumberPageMin;
+            int incidNumberPageMax;
+
+            // Set the page min and max based on the current page if there are records in the page,
+            // otherwise set based on the seek incid number.
+            if (_hluDS.incid.Rows.Count == 0)
+            {
+                incidNumberPageMin = seekIncidNumber;
+                incidNumberPageMax = incidNumberPageMin + IncidPageSize;
+            }
             else
             {
-                _refillIncidTable = false;
-                int seekIncidNumber = RecordIds.IncidNumber(seekIncid);
-                int incidNumberPageMin;
-                int incidNumberPageMax;
-                if (_hluDS.incid.Rows.Count == 0)
+                incidNumberPageMin = RecordIds.IncidNumber(_hluDS.incid[0].incid);
+                incidNumberPageMax = RecordIds.IncidNumber(_hluDS.incid[^1].incid);
+            }
+
+            int start = _incidCurrentRowIndex > 0 ? _incidCurrentRowIndex - 1 : 0;
+            int stop = start;
+            bool moveForward = true;
+
+            //TODO: Check if seekIncidNumber is not -1 first?
+            if (seekIncidNumber < incidNumberPageMin) // moving backward
+            {
+                start = seekRowNumber - IncidPageSize > 0 ? seekRowNumber - IncidPageSize : 0;
+                stop = seekRowNumber > start ? seekRowNumber : IncidPageSize < _incidSelection.Rows.Count ?
+                IncidPageSize : _incidSelection.Rows.Count - 1;
+                moveForward = false;
+            }
+            else if (seekIncidNumber > incidNumberPageMax) // moving forward
+            {
+                start = seekRowNumber;
+                stop = seekRowNumber + IncidPageSize < _incidSelection.Rows.Count ?
+                    seekRowNumber + IncidPageSize : _incidSelection.Rows.Count - 1;
+            }
+
+            // Try to load the page of incids corresponding to the seek row number and return the
+            // required row from that page.
+            try
+            {
+                string[] incids = new string[start == stop ? 1 : stop - start + 1];
+
+                for (int i = 0; i < incids.Length; i++)
+                    incids[i] = _db.QuoteValue(_incidSelection.DefaultView[start + i][0]);
+
+                _hluTableAdapterMgr.incidTableAdapter.Fill(_hluDS.incid, String.Format("{0} IN ({1}) ORDER BY {0}",
+                    _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName), String.Join(",", incids)));
+
+                // If no records were loaded, warn the user and move to the first or last record in
+                // the current page as appropriate.
+                if (_hluDS.incid.Count == 0)
                 {
-                    incidNumberPageMin = seekIncidNumber;
-                    incidNumberPageMax = incidNumberPageMin + IncidPageSize;
+                    ShowWarning("Nodatabase record retrieved.", MessageCategory.Database);
+
+                    // Reset the incid and map selections and move
+                    // to the first incid in the database.
+                    await ClearFilterAsync(true);
+                    return _incidCurrentRow;
                 }
                 else
                 {
-                    incidNumberPageMin = RecordIds.IncidNumber(_hluDS.incid[0].incid);
-                    incidNumberPageMax = RecordIds.IncidNumber(_hluDS.incid[^1].incid);
+                    // If the table has paged backwards (because the required incid
+                    // is lower than the page minimum) and if the row number being
+                    // sought is the first (i.e. zero) then return the lowest incid.
+                    // Otherwise, return the lowest or highest as appropriate.
+                    return (moveForward || seekRowNumber == 0) ? _hluDS.incid[0] : _hluDS.incid[^1];
                 }
-
-                int start = _incidCurrentRowIndex > 0 ? _incidCurrentRowIndex - 1 : 0;
-                int stop = start;
-                bool moveForward = true;
-
-                //TODO: Check if seekIncidNumber is not -1 first?
-                if (seekIncidNumber < incidNumberPageMin) // moving backward
-                {
-                    start = seekRowNumber - IncidPageSize > 0 ? seekRowNumber - IncidPageSize : 0;
-                    stop = seekRowNumber > start ? seekRowNumber : IncidPageSize < _incidSelection.Rows.Count ?
-                    IncidPageSize : _incidSelection.Rows.Count - 1;
-                    moveForward = false;
-                }
-                else if (seekIncidNumber > incidNumberPageMax) // moving forward
-                {
-                    start = seekRowNumber;
-                    stop = seekRowNumber + IncidPageSize < _incidSelection.Rows.Count ?
-                        seekRowNumber + IncidPageSize : _incidSelection.Rows.Count - 1;
-                }
-
-                try
-                {
-                    string[] incids = new string[start == stop ? 1 : stop - start + 1];
-
-                    for (int i = 0; i < incids.Length; i++)
-                        incids[i] = _db.QuoteValue(_incidSelection.DefaultView[start + i][0]);
-
-                    _hluTableAdapterMgr.incidTableAdapter.Fill(_hluDS.incid, String.Format("{0} IN ({1}) ORDER BY {0}",
-                        _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName), String.Join(",", incids)));
-
-                    if (_hluDS.incid.Count == 0)
-                    {
-                        MessageBox.Show("No database record retrieved.", "HLU: Selection",
-                            MessageBoxButton.OK, MessageBoxImage.Asterisk);
-
-                        // Reset the incid and map selections and move
-                        // to the first incid in the database.
-                        await ClearFilterAsync(true);
-                        return _incidCurrentRow;
-                    }
-                    else
-                    {
-                        // If the table has paged backwards (because the required incid
-                        // is lower than the page minimum) and if the row number being
-                        // sought is the first (i.e. zero) then return the lowest incid.
-                        // Otherwise, return the lowest or highest as appropriate.
-                        return (moveForward || seekRowNumber == 0) ? _hluDS.incid[0] : _hluDS.incid[^1];
-                    }
-                }
-                catch { return null; }
             }
+            catch { return null; }
         }
 
         #endregion Seek

@@ -637,7 +637,7 @@ namespace HLU.UI.ViewModel
                 for (int j = 0; j < exportFilter.Count; j++)
                 {
                     // Union the constituent parts of the export query together.
-                    string sql = ScratchDb.UnionQuery(
+                    string sql = dataBase.BuildUnionQuery(
                         targetListStr,
                         fromClauseStr,
                         sortOrdinals,

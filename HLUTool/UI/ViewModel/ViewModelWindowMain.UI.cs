@@ -372,64 +372,6 @@ namespace HLU.UI.ViewModel
 
         #endregion Properties - Display
 
-        #region Properties - Messages
-
-        /// <summary>
-        /// Gets or setsthe message to display on the form.
-        /// </summary>
-        /// <value>The message to display on the form.</value>
-        public string StatusMessage
-        {
-            get
-            {
-                return _statusMessage;
-            }
-            set
-            {
-                _statusMessage = value;
-                OnPropertyChanged(nameof(HasMessage));
-                OnPropertyChanged(nameof(StatusMessage));
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the type of message; Error, Warning, Confirmation, Information
-        /// </summary>
-        /// <value>The type of message.</value>
-        public MessageType MessageLevel
-        {
-            get
-            {
-                return _messageLevel;
-            }
-            set
-            {
-                _messageLevel = value;
-                OnPropertyChanged(nameof(MessageLevel));
-            }
-        }
-
-        /// <summary>
-        /// Gets the visibility of the message area based on whether there is a message to display.
-        /// If there is no message, or if the DockPane is not set, then the message area is collapsed;
-        /// otherwise, it is visible.
-        /// </summary>
-        /// <value>Visibility indicating whether there is a message to display.</value>
-        public Visibility HasMessage
-        {
-            get
-            {
-                if (_dockPane == null
-                || String.IsNullOrEmpty(_statusMessage))
-                    //|| _dockPane.ProcessStatus != null
-                    return Visibility.Collapsed;
-                else
-                    return Visibility.Visible;
-            }
-        }
-
-        #endregion Properties - Messages
-
         #region Properties - Ribbon Controls
 
         /// <summary>
@@ -1504,6 +1446,13 @@ namespace HLU.UI.ViewModel
             {
                 if (IncidCurrentRow != null)
                 {
+                    // Guard: if the value hasn't actually changed, skip all the expensive
+                    // downstream work (NewPrimaryHabitat, GetBapEnvironments, etc.) that
+                    // would otherwise be re-triggered every time WPF pushes back the same
+                    // value via the two-way SelectedValue binding during a refresh.
+                    if (string.Equals(_incidPrimary, value, StringComparison.Ordinal))
+                        return;
+
                     //TODO: What does this actually do?
                     if (_pasting && (_primaryCodes == null || !_primaryCodes.Any(r => r.Code == value)))
                     {
@@ -6353,22 +6302,6 @@ namespace HLU.UI.ViewModel
 
         #endregion Message Queue
 
-        #region ShowMessage
-
-        /// <summary>
-        /// Show the message with the required icon (message type).
-        /// Legacy method - redirects to new message queue system.
-        /// </summary>
-        /// <param name="msg">The message to display.</param>
-        /// <param name="messageLevel">The level of the message (e.g., Info, Warning, Error).</param>
-        [Obsolete("Use ShowMessage with category parameter instead")]
-        public void ShowMessage(string msg, MessageType messageLevel)
-        {
-            ShowMessage(msg, messageLevel, MessageCategory.General, true, 0);
-        }
-
-        #endregion ShowMessage
-
         #region Message Dismss
 
         private ICommand _dismissMessageCommand;
@@ -7123,7 +7056,7 @@ namespace HLU.UI.ViewModel
             }
             catch (Exception ex)
             {
-                //MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Error);
+                // Show error message
                 ShowError(ex.Message, MessageCategory.Navigation);
             }
             finally
@@ -7150,7 +7083,7 @@ namespace HLU.UI.ViewModel
             }
             catch (Exception ex)
             {
-                //MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Error);
+                // Show error message
                 ShowError(ex.Message, MessageCategory.Navigation);
             }
             finally
@@ -7177,7 +7110,7 @@ namespace HLU.UI.ViewModel
             }
             catch (Exception ex)
             {
-                //MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Error);
+                // Show error message
                 ShowError(ex.Message, MessageCategory.Navigation);
             }
             finally
@@ -7206,7 +7139,7 @@ namespace HLU.UI.ViewModel
             }
             catch (Exception ex)
             {
-                //MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Error);
+                // Show error message
                 ShowError(ex.Message, MessageCategory.Navigation);
             }
             finally
@@ -7377,8 +7310,9 @@ namespace HLU.UI.ViewModel
             }
             catch (HLUToolException ex)
             {
-                // Preserve stack trace and wrap in a meaningful type
-                MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Warning);
+                // Show error message
+                ShowError(ex.Message, MessageCategory.Update);
+
                 return;
             }
 
@@ -7395,8 +7329,7 @@ namespace HLU.UI.ViewModel
             // selected in GIS then cancel the update.
             if (_currentIncidFragsInGISCount < 1)
             {
-                MessageBox.Show("No map features for the current incid are selected in the active layer.",
-                    "HLU: Selection", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                ShowWarning("No map features for the current incid are selected in the active layer.", MessageCategory.GIS);
                 return;
             }
 
@@ -7430,8 +7363,6 @@ namespace HLU.UI.ViewModel
                         _splitting = true;
                         if (!await vmSplit.LogicalSplitAsync())
                         {
-                            //MessageBox.Show("Could not complete logical split - update cancelled.\nPlease invoke the Split command before applying any updates.",
-                            //    "HLU: Save", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                             _updateCancelled = true;
                         }
                         _splitting = false;
@@ -7467,8 +7398,9 @@ namespace HLU.UI.ViewModel
                 }
                 else
                 {
-                    MessageBox.Show("Cannot Save: The changes have not been applied - the update was cancelled.",
-                        "HLU: Save", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    // Display a warning message.
+                    ShowWarning("Cannot Save: The changes have not been applied - the update was cancelled.",
+                        MessageCategory.Save);
 
                     // Clear the saving in progress flags so that the (still) pending
                     // changes aren't automatically applied when moving to another
@@ -7749,9 +7681,10 @@ namespace HLU.UI.ViewModel
             // Can't start OSMM Update mode if the bulk OSMM source hasn't been set.
             if (_addInSettings.BulkOSMMSourceId == null)
             {
-                MessageBox.Show("The Bulk OSMM Source has not been set.\n\n" +
-                    "Please set the Bulk OSMM Source in the Options.",
-                    "HLU: OSMM Update", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                // Inform the user that the bulk OSMM source hasn't been set and that they need to
+                // set it in the options before they can start the OSMM Update mode.
+                ShowWarning("The Bulk OSMM Source has not been set.\n\n" +
+                    "Please set the Bulk OSMM Source in the Options.", MessageCategory.OSMMUpdate);
 
                 return;
             }
@@ -8202,9 +8135,10 @@ namespace HLU.UI.ViewModel
                 // Can't start OSMM Update mode if the bulk OSMM source hasn't been set.
                 if (_addInSettings.BulkOSMMSourceId == null)
                 {
-                    MessageBox.Show("The Bulk OSMM Source has not been set.\n\n" +
-                        "Please set the Bulk OSMM Source in the Options.",
-                        "HLU: OSMM Update", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    // Inform the user that the bulk OSMM source hasn't been set and that they need
+                    // to set it in the options before they can start the OSMM Update mode.
+                    ShowWarning("The Bulk OSMM Source has not been set.\n\n" +
+                        "Please set the Bulk OSMM Source in the Options.", MessageCategory.OSMMUpdate);
 
                     return;
                 }
@@ -8264,7 +8198,8 @@ namespace HLU.UI.ViewModel
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "HLU: Query by Filter", MessageBoxButton.OK, MessageBoxImage.Error);
+                // Show error message
+                ShowError(ex.Message, MessageCategory.Update);
                 //throw;
             }
         }
@@ -8354,13 +8289,10 @@ namespace HLU.UI.ViewModel
                     // Reset the cursor back to normal.
                     ChangeCursor(Cursors.Arrow, null);
 
-                    //TODO: Now doing this before SetFilterAsync() otherwise _selectedFragsInGISCount may
-                    // have been changed when auto selecting the first incid.
                     // Check if the counts returned are less than those expected.
                     if (_selectedFragsInGISCount < _selectedFragsInDBCount)
                     {
-                        MessageBox.Show("Not all expected features found in active layer.", "HLU: Selection",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                        ShowWarning("Not all expected features found in active layer.", MessageCategory.GIS);
                     }
 
                     //TODO: Needed?
@@ -8403,8 +8335,7 @@ namespace HLU.UI.ViewModel
                         ChangeCursor(Cursors.Arrow, null);
 
                         // Warn the user that no records were found.
-                        MessageBox.Show("No map features found in active layer.", "HLU: Apply Query",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        ShowInfo("No map features found in active layer.", MessageCategory.GIS);
                     }
                 }
                 else
@@ -8425,16 +8356,16 @@ namespace HLU.UI.ViewModel
                     ChangeCursor(Cursors.Arrow, null);
 
                     // Warn the user that no records were found
-                    MessageBox.Show("No records found in database.", "HLU: Apply Query",
-                        MessageBoxButton.OK, MessageBoxImage.Information);
+                    ShowInfo("No records found in database.", MessageCategory.Database);
                 }
             }
             catch (Exception ex)
             {
                 _incidSelection = null;
                 ChangeCursor(Cursors.Arrow, null);
-                MessageBox.Show(ex.Message, "HLU: Apply Query",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+
+                // Show error message
+                ShowError(ex.Message, MessageCategory.Filter);
             }
             finally { RefreshStatus(); }
         }
@@ -8578,8 +8509,9 @@ namespace HLU.UI.ViewModel
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "HLU: Query by OSMM Updates", MessageBoxButton.OK, MessageBoxImage.Error);
-                //throw;
+                // Show error message
+                ShowError(ex.Message, MessageCategory.Filter);
+                //throw
             }
         }
 
@@ -8688,7 +8620,8 @@ namespace HLU.UI.ViewModel
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "HLU: Query by OSMM Updates", MessageBoxButton.OK, MessageBoxImage.Error);
+                // Show error message
+                ShowError(ex.Message, MessageCategory.Filter);
                 //throw;
             }
         }
@@ -8811,8 +8744,7 @@ namespace HLU.UI.ViewModel
                             // Check if the counts returned are less than those expected.
                             if (_selectedFragsInGISCount < _selectedFragsInDBCount)
                             {
-                                MessageBox.Show("Not all selected features found in active layer.", "HLU: Selection",
-                                MessageBoxButton.OK, MessageBoxImage.Warning);
+                                ShowWarning("Not all selected features found in active layer.", MessageCategory.GIS);
                             }
 
                             // Indicate the selection didn't come from the map.
@@ -8873,8 +8805,7 @@ namespace HLU.UI.ViewModel
                             ChangeCursor(Cursors.Arrow, null);
 
                             // Warn the user that no records were found.
-                            MessageBox.Show("No map features found in active layer.", "HLU: Selection",
-                                MessageBoxButton.OK, MessageBoxImage.Information);
+                            ShowInfo("No map features found in active layer.", MessageCategory.GIS);
                         }
                     }
                     else
@@ -8915,8 +8846,7 @@ namespace HLU.UI.ViewModel
                         ChangeCursor(Cursors.Arrow, null);
 
                         // Warn the user that no records were found.
-                        MessageBox.Show("No records found in database.", "HLU: Selection",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        ShowInfo("No records found in database.", MessageCategory.Database);
                     }
                 }
             }
@@ -8924,8 +8854,9 @@ namespace HLU.UI.ViewModel
             {
                 _incidSelection = null;
                 ChangeCursor(Cursors.Arrow, null);
-                MessageBox.Show(ex.Message, "HLU: Apply Query",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+
+                // Show error message
+                ShowError(ex.Message, MessageCategory.Filter);
             }
             finally
             {
@@ -8984,7 +8915,8 @@ namespace HLU.UI.ViewModel
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "HLU: Add Secondary Habitat", MessageBoxButton.OK, MessageBoxImage.Error);
+                // Show error message
+                ShowError(ex.Message, MessageCategory.Update);
                 //throw;
             }
         }
@@ -9025,7 +8957,8 @@ namespace HLU.UI.ViewModel
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "HLU: Add Secondary Habitats", MessageBoxButton.OK, MessageBoxImage.Error);
+                // Show error message
+                ShowError(ex.Message, MessageCategory.Filter);
                 throw;
             }
         }
@@ -9115,22 +9048,22 @@ namespace HLU.UI.ViewModel
                         errorCodes = [.. errorCodes.Distinct().OrderBy(e => e.PadLeft(5, '0'))];
                         // Message the user, depending on if there is one or more
                         if (errorCodes.Count == 1)
-                            MessageBox.Show("Code '" +
-                                errorCodes.FirstOrDefault() + "' is a duplicate or unknown and has not been added.",
-                                "HLU: Add Secondary Habitats",
-                                MessageBoxButton.OK, MessageBoxImage.Information);
+                            ShowWarning("Code '" +
+                                errorCodes.FirstOrDefault() + "' is a duplicate/unknown and has not been added.",
+                                MessageCategory.Update);
                         else
-                            MessageBox.Show("Codes '" +
-                                String.Join(", ", errorCodes.Take(errorCodes.Count - 1)) + " and " + errorCodes.Last() + "' are duplicates or unknown and have not been added.",
-                                "HLU: Add Secondary Habitats",
-                                MessageBoxButton.OK, MessageBoxImage.Information);
+                            ShowWarning("Codes '" +
+                                String.Join(", ", errorCodes.Take(errorCodes.Count - 1)) + " and " + errorCodes.Last() + "' are duplicates/unknown and have not been added.",
+                                MessageCategory.Update);
                     }
                 }
             }
             catch (Exception ex)
             {
                 ChangeCursor(Cursors.Arrow, null);
-                MessageBox.Show(ex.Message, "HLU: Add Secondary Habitats", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                // Show error message
+                ShowError(ex.Message, MessageCategory.Update);
             }
         }
 
@@ -9177,7 +9110,8 @@ namespace HLU.UI.ViewModel
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "HLU: Priority Habitats", MessageBoxButton.OK, MessageBoxImage.Error);
+                // Show error message
+                ShowError(ex.Message, MessageCategory.Update);
                 //throw;
             }
         }
@@ -9253,7 +9187,8 @@ namespace HLU.UI.ViewModel
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "HLU: Potential Priority Habitats", MessageBoxButton.OK, MessageBoxImage.Error);
+                // Show error message
+                ShowError(ex.Message, MessageCategory.Update);
                 //throw;
             }
         }

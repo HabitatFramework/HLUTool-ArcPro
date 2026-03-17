@@ -94,13 +94,13 @@
 
                 <DataGrid.Columns>
                     <DataGridTextColumn
-                        Binding="{Binding bap_id}"
+                        Binding="{Binding Bap_id}"
                         Header="bap_id"
                         IsReadOnly="True"
                         Visibility="Collapsed" />
 
                     <DataGridTextColumn
-                        Binding="{Binding incid}"
+                        Binding="{Binding Incid}"
                         Header="INCID"
                         IsReadOnly="True"
                         Visibility="Collapsed" />
@@ -112,7 +112,7 @@
                         DisplayMemberPath="description"
                         Header="Habitat"
                         IsReadOnly="False"
-                        SelectedValueBinding="{Binding bap_habitat, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"
+                        SelectedValueBinding="{Binding Bap_habitat, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"
                         SelectedValuePath="code">
                         <DataGridComboBoxColumn.EditingElementStyle>
                             <Style TargetType="ComboBox">
@@ -134,7 +134,7 @@
                         CanUserResize="True"
                         DisplayMemberPath="description"
                         Header="Determ. Quality"
-                        SelectedValueBinding="{Binding quality_determination, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"
+                        SelectedValueBinding="{Binding Quality_determination, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"
                         SelectedValuePath="code">
                         <DataGridComboBoxColumn.ElementStyle>
                             <Style TargetType="ComboBox">
@@ -156,7 +156,7 @@
                         CanUserResize="True"
                         DisplayMemberPath="description"
                         Header="Interp. Quality"
-                        SelectedValueBinding="{Binding quality_interpretation, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"
+                        SelectedValueBinding="{Binding Quality_interpretation, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"
                         SelectedValuePath="code">
                         <DataGridComboBoxColumn.ElementStyle>
                             <Style TargetType="ComboBox">
@@ -175,7 +175,7 @@
                     <DataGridTextColumn
                         Width="SizeToCells"
                         MinWidth="200"
-                        Binding="{Binding interpretation_comments, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"
+                        Binding="{Binding Interpretation_comments, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"
                         CanUserResize="True"
                         Header="Interp. Comments"
                         IsReadOnly="False">

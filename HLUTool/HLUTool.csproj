@@ -12,51 +12,9 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<CodeAnalysisDictionary Include="CustomDictionary.xml" />
-	</ItemGroup>
-
-	<!-- Explicitly excluded source files -->
-	<ItemGroup>
-		<Compile Remove="ArcGISFunctions OLD.cs" />
-		<Compile Remove="GISApplication\GISApp.cs" />
-		<Compile Remove="GISApplication\GISAppFactory.cs" />
-		<Compile Remove="GISApplication\WinAPI.cs" />
-		<Compile Remove="HluArcMapExtension.cs" />
-		<Compile Remove="UI\ViewModel\ViewModelConnectOleDb.cs" />
-		<Compile Remove="UI\ViewModel\ViewModelWindowMain_NEW.cs" />
-		<Compile Remove="UI\ViewModel\ViewModelWindowQueryIncid.cs" />
-		<Compile Remove="UI\ViewModel\ViewModelWindowSelectGIS.cs" />
-		<Compile Remove="UI\View\Connection\ViewConnectOleDb.xaml.cs" />
-		<Compile Remove="UI\View\WindowMain_OLD.xaml.cs" />
-		<Compile Remove="UI\View\WindowSelectGIS.xaml.cs" />
-	</ItemGroup>
-	<ItemGroup>
-	  <None Remove="Images\Update16.png" />
-	  <None Remove="Images\Update32.png" />
-	</ItemGroup>
-
-	<!-- Explicitly excluded XAML files -->
-	<ItemGroup>
-		<Page Remove="UI\View\Dictionary\FeatureClassAdminResources.xaml" />
-		<Page Remove="UI\View\Dictionary\GeometryTypeConverterDictionary.xaml" />
-		<Page Remove="UI\View\Dictionary\LayerConverterDictionary.xaml" />
-		<Page Remove="UI\View\Dictionary\MergeFeaturesWindowDictionary.xaml" />
-		<Page Remove="UI\View\Dictionary\MultiEqualityConverterDictionary.xaml" />
-		<Page Remove="UI\View\Dictionary\SpatialReferenceConverterDictionary.xaml" />
-		<Page Remove="UI\View\WindowMain_OLD.xaml" />
-	</ItemGroup>
-
-	<!-- Config and DarkImages content -->
+	<!-- Config -->
 	<ItemGroup>
 		<Content Include="Config.daml" />
-		<Content Include="DarkImages\AddInDesktop16.png" />
-		<Content Include="DarkImages\AddInDesktop32.png" />
-		<Content Include="DarkImages\HLUTool16.png" />
-		<Content Include="DarkImages\HLUTool32.png" />
-		<Content Include="DarkImages\Error32.png" />
-		<Content Include="DarkImages\Success32.png" />
-		<Content Include="DarkImages\Warning32.png" />
 	</ItemGroup>
 
 	<!-- Image resources -->

@@ -24,6 +24,8 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using HLU.Data;
+using HLU.Data.Connection;
 using HLU.Properties;
 
 namespace HLU
@@ -817,6 +819,185 @@ namespace HLU
             }
 
             return sbWhereClause.ToString();
+        }
+
+        /// <summary>
+        /// Creates a list of optimized SQL filter conditions from a DataTable of 
+        /// selected Incids by grouping continuous ranges.
+        /// </summary>
+        /// <param name="incidSelection">A DataTable containing the selected Incids.</param>
+        /// <param name="incidColumn">The DataColumn representing the Incid field.</param>
+        /// <param name="condTable">The DataTable to use in the filter conditions.</param>
+        /// <param name="quoteValueFunc">Optional function to quote values for GIS-specific formatting.</param>
+        /// <returns>A list of SQL filter conditions.</returns>
+        public static List<SqlFilterCondition> BuildIncidWhereClause(
+            DataTable incidSelection,
+            DataColumn incidColumn,
+            DataTable condTable,
+            Func<string, string> quoteValueFunc = null)
+        {
+            List<SqlFilterCondition> whereClause = [];
+
+            // Split the table of selected Incids into chunks of continuous Incids
+            var query = incidSelection
+                .AsEnumerable()
+                .Where(r => !String.IsNullOrWhiteSpace(r.Field<string>(0)))
+                .Select((r, index) => new
+                {
+                    RowIndex = RecordIds.IncidNumber(r.Field<string>(0)) - index,
+                    Incid = r.Field<string>(0)
+                })
+                .ChunkBy(r => r.RowIndex);
+
+            List<string> inList = [];
+
+            // Loop through each chunk/series of Incids
+            foreach (var item in query)
+            {
+                if (item.Count() < 3)
+                {
+                    // Add small chunks to the IN list
+                    if (quoteValueFunc != null)
+                        inList.AddRange(item.Select(t => quoteValueFunc(t.Incid)));
+                    else
+                        inList.AddRange(item.Select(t => t.Incid));
+                }
+                else
+                {
+                    // Use range operators for continuous series
+                    SqlFilterCondition cond = new()
+                    {
+                        BooleanOperator = "OR",
+                        OpenParentheses = "(",
+                        Column = incidColumn,
+                        Table = condTable,
+                        ColumnSystemType = incidColumn.DataType,
+                        Operator = ">=",
+                        Value = item.First().Incid,
+                        CloseParentheses = String.Empty
+                    };
+                    whereClause.Add(cond);
+
+                    cond = new()
+                    {
+                        BooleanOperator = "AND",
+                        OpenParentheses = String.Empty,
+                        Column = incidColumn,
+                        Table = condTable,
+                        ColumnSystemType = incidColumn.DataType,
+                        Operator = "<=",
+                        Value = item.Last().Incid,
+                        CloseParentheses = ")"
+                    };
+                    whereClause.Add(cond);
+                }
+            }
+
+            // Process remaining Incids using IN operator
+            int i = 0;
+            while (i < inList.Count)
+            {
+                int numElems = i < inList.Count - 254 ? 254 : inList.Count - i;
+                string[] oneList = new string[numElems];
+                inList.CopyTo(i, oneList, 0, numElems);
+
+                SqlFilterCondition cond = new()
+                {
+                    BooleanOperator = "OR",
+                    OpenParentheses = "(",
+                    Column = incidColumn,
+                    Table = condTable,
+                    ColumnSystemType = incidColumn.DataType,
+                    Operator = inList.Count == 1 ? "=" : "IN ()",
+                    Value = String.Join(",", oneList),
+                    CloseParentheses = ")"
+                };
+                whereClause.Add(cond);
+
+                i += numElems;
+            }
+
+            return whereClause;
+        }
+
+        /// <summary>
+        /// Builds a UNION query from a list of SqlFilterCondition objects.
+        /// All constituent SELECT statements use the same target list and FROM 
+        /// clause but different WHERE clauses.
+        /// </summary>
+        /// <param name="targetList">Target list for union query.</param>
+        /// <param name="fromClause">From clause for union query.</param>
+        /// <param name="sortOrdinals">Ordinals of columns to order by. Negative 
+        /// values indicate descending order.</param>
+        /// <param name="whereClause">List of where clauses to build UNION query 
+        /// from.</param>
+        /// <param name="db">Database against which UNION query will be run.</param>
+        /// <param name="tableAliases">Optional dictionary mapping qualified table 
+        /// names to their aliases.</param>
+        /// <returns>The complete SQL query string.</returns>
+        public string BuildUnionQuery(
+            string targetList,
+            string fromClause,
+            int[] sortOrdinals,
+            List<SqlFilterCondition> whereClause,
+            DbBase db,
+            Dictionary<string, string> tableAliases = null)
+        {
+            StringBuilder sql = new();
+
+            // Adjust table references if aliases are provided
+            List<SqlFilterCondition> adjustedWhereClause = whereClause;
+            if (tableAliases != null && tableAliases.Count > 0)
+            {
+                adjustedWhereClause = [.. whereClause.Select(cond =>
+        {
+            SqlFilterCondition newCond = new(cond.BooleanOperator,
+                cond.Table, cond.Column, cond.Value)
+            {
+                OpenParentheses = cond.OpenParentheses,
+                CloseParentheses = cond.CloseParentheses,
+                Operator = cond.Operator,
+                ColumnSystemType = cond.ColumnSystemType
+            };
+
+            if (cond.Table != null)
+            {
+                string qualifiedTableName =
+                    db.QualifyTableName(cond.Table.TableName);
+                if (tableAliases.TryGetValue(qualifiedTableName,
+                    out string alias))
+                {
+                    DataTable aliasedTable = new(alias);
+                    foreach (DataColumn col in cond.Table.Columns)
+                    {
+                        aliasedTable.Columns.Add(col.ColumnName,
+                            col.DataType);
+                    }
+                    newCond.Table = aliasedTable;
+                }
+            }
+
+            return newCond;
+        })];
+            }
+
+            // Build the SELECT statement with WHERE clause
+            sql.Append(String.Format("SELECT {0} FROM {1}{2}",
+                targetList,
+                fromClause,
+                db.WhereClause(true, true, true, adjustedWhereClause)));
+
+            // Add ORDER BY clause if specified
+            if (sortOrdinals != null)
+            {
+                sql.Append(String.Format(" ORDER BY {0}",
+                    string.Join(", ", [.. sortOrdinals.Select(x =>
+                x < 0
+                    ? String.Format("{0} DESC", Math.Abs(x).ToString())
+                    : x.ToString())])));
+            }
+
+            return sql.ToString();
         }
 
         #endregion Public Methods

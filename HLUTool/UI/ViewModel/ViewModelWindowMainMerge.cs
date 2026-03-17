@@ -82,24 +82,27 @@ namespace HLU.UI.ViewModel
             // Check one or more features are selected.
             if ((_viewModelMain.GisSelection == null) || (_viewModelMain.GisSelection.Rows.Count == 0))
             {
-                MessageBox.Show("Cannot logically merge: Nothing is selected on the map.", "HLU: Logical Merge",
-                    MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                // Show warning message
+                _viewModelMain.ShowWarning("Cannot logically merge: Nothing is selected on the map.", MessageCategory.Merge);
+
                 return false;
             }
 
             // Check more than one feature is selected.
             if (_viewModelMain.GisSelection.Rows.Count <= 1)
             {
-                MessageBox.Show("Cannot logically merge: Map selection must contain more than one feature for a merge.",
-                    "HLU: Logical Merge", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                // Show warning message
+                _viewModelMain.ShowWarning("Cannot logically merge: Map selection must contain more than one feature for a merge.", MessageCategory.Merge);
+
                 return false;
             }
 
             // Check all selected features are in the database.
             if (!_viewModelMain.CheckSelectedToidFrags(false))
             {
-                MessageBox.Show("Cannot logically merge: One or more selected map features missing from database.",
-                    "HLU: Logical Merge", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                // Show warning message
+                _viewModelMain.ShowWarning("Cannot logically merge: One or more selected map features missing from database.", MessageCategory.Merge);
+
                 return false;
             }
 
@@ -462,24 +465,27 @@ namespace HLU.UI.ViewModel
             // Check one or more features are selected.
             if ((_viewModelMain.GisSelection == null) || (_viewModelMain.GisSelection.Rows.Count == 0))
             {
-                MessageBox.Show("Cannot physically merge: Nothing is selected on the map.", "HLU: Physical Merge",
-                    MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                // Show warning message
+                _viewModelMain.ShowWarning("Cannot physically merge: Nothing is selected on the map.", MessageCategory.Merge);
+
                 return false;
             }
 
             // Check more than one feature is selected.
             if (_viewModelMain.GisSelection.Rows.Count <= 1)
             {
-                MessageBox.Show("Cannot physically merge: Map selection must contain more than one feature for a merge.",
-                    "HLU: Physical Merge", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                // Show warning message
+                _viewModelMain.ShowWarning("Cannot physically merge: Map selection must contain more than one feature for a merge.", MessageCategory.Merge);
+
                 return false;
             }
 
             // Check all selected features are in the database.
             if (!_viewModelMain.CheckSelectedToidFrags(false))
             {
-                MessageBox.Show("Cannot physically merge: One or more selected map features missing from database.",
-                    "HLU: Physical Merge", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                // Show warning message
+                _viewModelMain.ShowWarning("Cannot physically merge: One or more selected map features missing from database.", MessageCategory.Merge);
+
                 return false;
             }
 

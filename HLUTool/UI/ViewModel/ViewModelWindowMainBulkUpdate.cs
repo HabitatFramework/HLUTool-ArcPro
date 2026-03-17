@@ -410,12 +410,15 @@ namespace HLU.UI.ViewModel
                 // force re-loading data from db
                 _viewModelMain.IncidTable.Clear();
 
-                MessageBox.Show("Bulk update succeeded.", "HLU: Bulk Update",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                // Show success message
+                _viewModelMain.ShowInfo("Bulk update succeeded.", MessageCategory.BulkUpdate);
             }
             catch (Exception ex)
             {
+                // Rollback the transaction
                 _viewModelMain.DataBase.RollbackTransaction();
+
+                // Show error message
                 MessageBox.Show(String.Format("Bulk update failed. The error message returned was:\n\n{0}",
                     ex.Message), "HLU: Bulk Update", MessageBoxButton.OK, MessageBoxImage.Error);
             }
@@ -506,12 +509,11 @@ namespace HLU.UI.ViewModel
             // Can't start OSMM Update mode if the bulk OSMM source hasn't been set.
             if (_addInSettings.BulkOSMMSourceId == null)
             {
-                MessageBox.Show(
+                // Show warning message
+                _viewModelMain.ShowWarning(
                     "The Bulk OSMM Source has not been set.\n\n" +
                     "Please set the Bulk OSMM Source in the Options.",
-                    "HLU: OSMM Update",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Exclamation);
+                    MessageCategory.BulkUpdate);
 
                 return;
             }
@@ -794,12 +796,14 @@ namespace HLU.UI.ViewModel
                 // force re-loading data from db
                 _viewModelMain.IncidTable.Clear();
 
-                MessageBox.Show("OSMM Bulk update succeeded.", "HLU: OSMM Bulk Update",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                _viewModelMain.ShowInfo("OSMM Bulk update succeeded.", MessageCategory.BulkUpdate);
             }
             catch (Exception ex)
             {
+                // Rollback the transaction
                 _viewModelMain.DataBase.RollbackTransaction();
+
+                // Show error message
                 MessageBox.Show(String.Format("OSMM Bulk update failed. The error message returned was:\n\n{0}",
                     ex.Message), "HLU: OSMM Bulk Update", MessageBoxButton.OK, MessageBoxImage.Error);
             }

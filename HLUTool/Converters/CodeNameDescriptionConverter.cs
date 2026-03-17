@@ -341,9 +341,8 @@ namespace HLU.Converters
         /// <returns></returns>
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
-            System.Diagnostics.Debugger.Break();
-            ShowMessageWindow.ShowMessage(parameter.ToString(), "Convert");
-
+            // If there are three values, and the name and description are different, return "name :
+            // description", otherwise return just the name or description
             if ((values != null) && (values.Length == 3))
                 if ((values[2] != null) && (values[1] != values[2]))
                     return String.Format("{0} : {1}", values[1], values[2]);
@@ -364,9 +363,8 @@ namespace HLU.Converters
         /// <returns></returns>
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
         {
-            System.Diagnostics.Debugger.Break();
-            ShowMessageWindow.ShowMessage(parameter.ToString(), "ConvertBack");
-
+            // If the value is not null, split it on " : " and return the first part as the code,
+            // otherwise return the value
             if (value != null)
             {
                 string s = value as string;
@@ -381,6 +379,6 @@ namespace HLU.Converters
             }
         }
 
-        #endregion
+        #endregion IMultiValueConverter Members
     }
 }

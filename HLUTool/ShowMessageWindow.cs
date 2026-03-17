@@ -35,14 +35,14 @@ namespace HLU
 
         #endregion Fields
 
-        #region Constructors
+        #region Methods
 
         /// <summary>
-        /// Initializes static members of the ShowMessageWindow class.
+        /// Shows a dialog message window with the specified text and header.
         /// </summary>
         /// <param name="messageText">The text of the message to display.</param>
         /// <param name="messageHeader">The header of the message to display.</param>
-        internal static void ShowMessage(string messageText, string messageHeader)
+        internal static void ShowMessageDialog(string messageText, string messageHeader)
         {
             // Create message window
             _messageWindow = new()
@@ -70,10 +70,6 @@ namespace HLU
             // Show window
             _messageWindow.ShowDialog();
         }
-
-        #endregion Constructors
-
-        #region Methods
 
         /// <summary>
         /// Closes help window and removes close window handler

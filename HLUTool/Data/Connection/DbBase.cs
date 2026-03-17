@@ -69,7 +69,7 @@ namespace HLU.Data.Connection
     /// executing SQL commands. Specific database implementations (e.g., SQL Server, Oracle) will
     /// inherit from this class and implement the necessary functionality for their respective backends.
     /// </summary>
-    abstract partial class DbBase : SqlBuilder
+    abstract public partial class DbBase : SqlBuilder
     {
         #region Fields
 
@@ -149,7 +149,6 @@ namespace HLU.Data.Connection
         public static Backends GetBackend(string connString, ConnectionTypes connType) => connType switch
         {
             ConnectionTypes.ODBC => DbOdbc.GetBackend(connString),
-            ConnectionTypes.OleDb => DbOleDb.GetBackend(connString),
             _ => Backends.Undetermined,
         };
 

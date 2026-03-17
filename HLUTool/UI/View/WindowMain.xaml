@@ -731,36 +731,36 @@
                                                 IsReadOnly="False"
                                                 IsTextSearchEnabled="True"
                                                 ItemsSource="{Binding PrimaryCodes}"
-                                                SelectedValue="{Binding IncidPrimary, ValidatesOnDataErrors=True}"
-                                                SelectedValuePath="code"
-                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
-                                                Text="{Binding SelectedPrimaryDisplay, Mode=OneWay}"
-                                                TextSearch.TextPath="display"
-                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}">
-                                                <ComboBox.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <TextBlock Text="{Binding display}">
-                                                            <TextBlock.Style>
-                                                                <Style TargetType="TextBlock">
-                                                                    <!--  Default to ArcGIS Pro theme color  -->
-                                                                    <Setter Property="Foreground" Value="{DynamicResource SystemBaseHighColor}" />
+                                                 SelectedValue="{Binding IncidPrimary, ValidatesOnDataErrors=True}"
+                                                 SelectedValuePath="Code"
+                                                 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                 Text="{Binding SelectedPrimaryDisplay, Mode=OneWay}"
+                                                 TextSearch.TextPath="Display"
+                                                 ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}">
+                                                 <ComboBox.ItemTemplate>
+                                                     <DataTemplate>
+                                                         <TextBlock Text="{Binding Display}">
+                                                             <TextBlock.Style>
+                                                                 <Style TargetType="TextBlock">
+                                                                     <!--  Default to ArcGIS Pro theme color  -->
+                                                                     <Setter Property="Foreground" Value="{DynamicResource SystemBaseHighColor}" />
 
-                                                                    <!--  Only override Foreground for preferred items  -->
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding preferred}" Value="False">
-                                                                            <Setter Property="Foreground" Value="{DynamicResource SystemBaseHighColor}" />
-                                                                            <Setter Property="FontWeight" Value="Normal" />
-                                                                        </DataTrigger>
-                                                                        <DataTrigger Binding="{Binding preferred}" Value="True">
-                                                                            <Setter Property="Foreground" Value="DarkGreen" />
-                                                                            <Setter Property="FontWeight" Value="Medium" />
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </TextBlock.Style>
-                                                        </TextBlock>
-                                                    </DataTemplate>
-                                                </ComboBox.ItemTemplate>
+                                                                     <!--  Only override Foreground for preferred items  -->
+                                                                     <Style.Triggers>
+                                                                         <DataTrigger Binding="{Binding Preferred}" Value="False">
+                                                                             <Setter Property="Foreground" Value="{DynamicResource SystemBaseHighColor}" />
+                                                                             <Setter Property="FontWeight" Value="Normal" />
+                                                                         </DataTrigger>
+                                                                         <DataTrigger Binding="{Binding Preferred}" Value="True">
+                                                                             <Setter Property="Foreground" Value="DarkGreen" />
+                                                                             <Setter Property="FontWeight" Value="Medium" />
+                                                                         </DataTrigger>
+                                                                     </Style.Triggers>
+                                                                 </Style>
+                                                             </TextBlock.Style>
+                                                         </TextBlock>
+                                                     </DataTemplate>
+                                                 </ComboBox.ItemTemplate>
                                             </ComboBox>
                                             <!--  DisplayMemberPath="description"  -->
                                             <CheckBox
@@ -979,12 +979,12 @@
                                                 </DataGrid.RowValidationRules>
                                                 <DataGrid.Columns>
                                                     <DataGridTextColumn
-                                                        Binding="{Binding secondary_id}"
+                                                        Binding="{Binding Secondary_id}"
                                                         Header="secondary_id"
                                                         IsReadOnly="True"
                                                         Visibility="Collapsed" />
                                                     <DataGridTextColumn
-                                                        Binding="{Binding incid}"
+                                                        Binding="{Binding Incid}"
                                                         Header="INCID"
                                                         IsReadOnly="True"
                                                         Visibility="Collapsed" />
@@ -996,7 +996,7 @@
                                                         DisplayMemberPath="description"
                                                         Header="Group"
                                                         IsReadOnly="True"
-                                                        SelectedValueBinding="{Binding secondary_group, Mode=TwoWay, ConverterParameter=code^description^sort_order, Converter={StaticResource codeDescriptionConverter}, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                                                        SelectedValueBinding="{Binding Secondary_group, Mode=TwoWay, ConverterParameter=code^description^sort_order, Converter={StaticResource codeDescriptionConverter}, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
                                                         SelectedValuePath="code">
                                                         <DataGridComboBoxColumn.EditingElementStyle>
                                                             <Style TargetType="ComboBox">
@@ -1019,7 +1019,7 @@
                                                         DisplayMemberPath="description"
                                                         Header="Code"
                                                         IsReadOnly="True"
-                                                        SelectedValueBinding="{Binding secondary_habitat, Mode=TwoWay, ConverterParameter=code^description^sort_order, Converter={StaticResource codeDescriptionConverter}, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                                                        SelectedValueBinding="{Binding Secondary_habitat, Mode=TwoWay, ConverterParameter=code^description^sort_order, Converter={StaticResource codeDescriptionConverter}, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
                                                         SelectedValuePath="code"
                                                         SortDirection="Ascending">
                                                         <DataGridComboBoxColumn.EditingElementStyle>
@@ -1635,12 +1635,12 @@
 
                                                 <DataGrid.Columns>
                                                     <DataGridTextColumn
-                                                        Binding="{Binding bap_id}"
+                                                        Binding="{Binding Bap_id}"
                                                         Header="bap_id"
                                                         IsReadOnly="True"
                                                         Visibility="Collapsed" />
                                                     <DataGridTextColumn
-                                                        Binding="{Binding incid}"
+                                                        Binding="{Binding Incid}"
                                                         Header="INCID"
                                                         IsReadOnly="True"
                                                         Visibility="Collapsed" />
@@ -1652,7 +1652,7 @@
                                                         DisplayMemberPath="description"
                                                         Header="Habitat"
                                                         IsReadOnly="True"
-                                                        SelectedValueBinding="{Binding bap_habitat, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"
+                                                        SelectedValueBinding="{Binding Bap_habitat, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"
                                                         SelectedValuePath="code">
                                                         <DataGridComboBoxColumn.EditingElementStyle>
                                                             <Style TargetType="ComboBox">
@@ -1675,7 +1675,7 @@
                                                         CanUserResize="True"
                                                         DisplayMemberPath="description"
                                                         Header="Determ. Quality"
-                                                        SelectedValueBinding="{Binding quality_determination, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"
+                                                        SelectedValueBinding="{Binding Quality_determination, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"
                                                         SelectedValuePath="code">
                                                         <DataGridComboBoxColumn.EditingElementStyle>
                                                             <Style TargetType="ComboBox">
@@ -1698,7 +1698,7 @@
                                                         CanUserResize="True"
                                                         DisplayMemberPath="description"
                                                         Header="Interp. Quality"
-                                                        SelectedValueBinding="{Binding quality_interpretation, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"
+                                                        SelectedValueBinding="{Binding Quality_interpretation, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"
                                                         SelectedValuePath="code">
                                                         <DataGridComboBoxColumn.EditingElementStyle>
                                                             <Style TargetType="ComboBox">
@@ -1718,7 +1718,7 @@
                                                     <DataGridTextColumn
                                                         Width="SizeToHeader"
                                                         MinWidth="100"
-                                                        Binding="{Binding interpretation_comments, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"
+                                                        Binding="{Binding Interpretation_comments, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"
                                                         CanUserResize="True"
                                                         Header="Interp. Comments">
                                                         <DataGridTextColumn.ElementStyle>
@@ -1813,12 +1813,12 @@
 
                                                 <DataGrid.Columns>
                                                     <DataGridTextColumn
-                                                        Binding="{Binding bap_id}"
+                                                        Binding="{Binding Bap_id}"
                                                         Header="bap_id"
                                                         IsReadOnly="True"
                                                         Visibility="Collapsed" />
                                                     <DataGridTextColumn
-                                                        Binding="{Binding incid}"
+                                                        Binding="{Binding Incid}"
                                                         Header="INCID"
                                                         IsReadOnly="True"
                                                         Visibility="Collapsed" />
@@ -1830,7 +1830,7 @@
                                                         DisplayMemberPath="description"
                                                         Header="Habitat"
                                                         IsReadOnly="False"
-                                                        SelectedValueBinding="{Binding bap_habitat, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"
+                                                        SelectedValueBinding="{Binding Bap_habitat, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"
                                                         SelectedValuePath="code">
                                                         <DataGridComboBoxColumn.EditingElementStyle>
                                                             <Style TargetType="ComboBox">
@@ -1853,7 +1853,7 @@
                                                         CanUserResize="True"
                                                         DisplayMemberPath="description"
                                                         Header="Determ. Quality"
-                                                        SelectedValueBinding="{Binding quality_determination, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"
+                                                        SelectedValueBinding="{Binding Quality_determination, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"
                                                         SelectedValuePath="code">
                                                         <DataGridComboBoxColumn.EditingElementStyle>
                                                             <Style TargetType="ComboBox">
@@ -1876,7 +1876,7 @@
                                                         CanUserResize="True"
                                                         DisplayMemberPath="description"
                                                         Header="Interp. Quality"
-                                                        SelectedValueBinding="{Binding quality_interpretation, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"
+                                                        SelectedValueBinding="{Binding Quality_interpretation, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"
                                                         SelectedValuePath="code">
                                                         <DataGridComboBoxColumn.EditingElementStyle>
                                                             <Style TargetType="ComboBox">
@@ -1895,7 +1895,7 @@
                                                     <DataGridTextColumn
                                                         Width="*"
                                                         MinWidth="100"
-                                                        Binding="{Binding interpretation_comments, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"
+                                                        Binding="{Binding Interpretation_comments, UpdateSourceTrigger=PropertyChanged, NotifyOnValidationError=True}"
                                                         CanUserResize="True"
                                                         Header="Interp. Comments">
                                                         <DataGridTextColumn.ElementStyle>
@@ -3191,13 +3191,7 @@
                                             MinHeight="280"
                                             Margin="0,0,0,0"
                                             BorderThickness="2"
-                                            ItemsSource="{Binding IncidHistory}">
-                                            <!-- <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                                <hlu:UniformGrid2 Orientation="Horizontal" Columns="1" />
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>-->
-                                        </ItemsControl>
+                                            ItemsSource="{Binding IncidHistory}" />
                                     </ScrollViewer>
                                 </GroupBox>
                             </Grid>
