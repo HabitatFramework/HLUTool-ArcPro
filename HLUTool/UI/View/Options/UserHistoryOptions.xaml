@@ -60,7 +60,7 @@
                             Grid.Column="1"
                             Margin="0,0,0,0"
                             Description="Select which additional columns from the GIS layer are displayed in the History tab for each update. If the checkbox for a column is selected the column will be displayed."
-                            Header="History Display Columns" />
+                            Header="Display History Columns" />
 
                     </Grid>
 
@@ -80,6 +80,33 @@
                         </ListBox.ItemTemplate>
 
                     </ListBox>
+
+                </Grid>
+
+            </Expander>
+
+            <Expander
+                Margin="6,10,0,0"
+                Header="Display Geometry"
+                IsExpanded="True">
+
+                <Grid Margin="12,4,4,2" HorizontalAlignment="Left">
+
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <CheckBox
+                        Grid.Column="0"
+                        VerticalAlignment="Center"
+                        Content="Show geometry measurements (length and area)"
+                        IsChecked="{Binding HistoryDisplayGeometry, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <controls:InfoButton
+                        Grid.Column="1"
+                        Margin="5,0,0,0"
+                        Description="When checked, the modified length [km] and area [ha] are shown for each entry in the History tab."
+                        Header="Display Geometry Measurements" />
 
                 </Grid>
 

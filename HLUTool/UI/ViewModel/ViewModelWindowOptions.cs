@@ -121,6 +121,7 @@ namespace HLU.UI.ViewModel
         // User History options
         private SelectionList<string> _historyColumns;
         private int? _historyDisplayLastN;
+        private bool _historyDisplayGeometry;
 
         // User Interface options
         private bool _showGroupHeaders;
@@ -244,6 +245,9 @@ namespace HLU.UI.ViewModel
 
             // Set the history display last number of records option.
             _historyDisplayLastN = Settings.Default.HistoryDisplayLastN;
+
+            // Set the history display geometry option.
+            _historyDisplayGeometry = Settings.Default.HistoryDisplayGeometry;
 
             // Set the user interface options
             _showGroupHeaders = Settings.Default.ShowGroupHeaders;
@@ -711,6 +715,9 @@ namespace HLU.UI.ViewModel
 
             // Update the history display last number of records option.
             Settings.Default.HistoryDisplayLastN = (int)_historyDisplayLastN;
+
+            // Update the history display geometry option.
+            Settings.Default.HistoryDisplayGeometry = _historyDisplayGeometry;
 
             // Update user interface options
             Settings.Default.PreferredHabitatClass = _preferredHabitatClass;
@@ -2197,6 +2204,24 @@ namespace HLU.UI.ViewModel
             get
             {
                 return 50;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets whether to show geometry measurements (length and area) in the history display.
+        /// </summary>
+        /// <value><c>true</c> if geometry measurements should be shown; otherwise, <c>false</c>.</value>
+        public bool HistoryDisplayGeometry
+        {
+            get
+            {
+                return _historyDisplayGeometry;
+            }
+            set
+            {
+                _historyDisplayGeometry = value;
+                OnPropertyChanged(nameof(HistoryDisplayGeometry));
+                NotifyNavigationItemErrorsChanged();
             }
         }
 

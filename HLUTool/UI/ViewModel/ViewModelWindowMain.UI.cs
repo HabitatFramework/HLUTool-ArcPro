@@ -137,9 +137,6 @@ namespace HLU.UI.ViewModel
         // Dictionary to track auto-dismiss timers per message
         private Dictionary<string, System.Timers.Timer> _messageTimers = [];
 
-        private string _statusMessage;
-        private MessageType _messageLevel;
-
         #endregion Fields - Messages
 
         #region Fields - Tab Control
@@ -4590,14 +4587,14 @@ namespace HLU.UI.ViewModel
         /// Gets the incid history and formats it ready for display in the form.
         /// </summary>
         /// <value>
-        /// The incid history for the current record, formatted as a list of strings with each
-        /// string representing a history entry. The history entries are ordered from most recent
-        /// to least recent, and grouped by history_id to avoid duplicate entries when multiple
-        /// columns were modified in the same update. Each history entry includes the modified
-        /// date and time, user, process, reason, operation, and any modified values that are
-        /// configured to be displayed based on the user options. The modified length and area
-        /// values are shown in kilometres and hectares respectively in the history. If there
-        /// is no history for the current record, this property returns null.
+        /// The incid history for the current record, formatted as a list of
+        /// strings, each representing a history entry ordered from most recent
+        /// to least recent, and grouped by history_id to avoid duplicate entries
+        /// when multiple columns were modified in the same update. Each entry
+        /// includes the modified date and time, user, process, reason, operation,
+        /// and any modified values configured to display based on user options.
+        /// Geometry values (length and area) are shown in kilometres and hectares
+        /// when the user option is enabled. Returns null if no history exists.
         /// </value>
         public IEnumerable<string> IncidHistory
         {
@@ -4605,81 +4602,199 @@ namespace HLU.UI.ViewModel
             {
                 if (_incidHistoryRows == null)
                     return null;
-                else
-                {
-                    // Figure out which history columns to display based on the user options
-                    // now that all the available history columns are always updated when
-                    // creating history even if the user only wants to display some of them.
-                    DataColumn[] displayHistoryColumns;
-                    int result;
-                    displayHistoryColumns =
-                    [
-                        .. _gisIDColumns,
-                        .. (from s in Settings.Default.HistoryColumnOrdinals.Cast<string>()
-                                                                      where Int32.TryParse(s, out result) && (result >= 0) &&
-                                                                           (result < _hluDS.incid_mm_polygons.Columns.Count) &&
-                                                                           !_gisIDColumnOrdinals.Contains(result)
-                                                                      select _hluDS.incid_mm_polygons.Columns[Int32.Parse(s)]),
-                    ];
 
-                    return (from r in _incidHistoryRows.OrderByDescending(r => r.history_id)
-                            group r by new
-                            {
-                                r.incid,
-                                // Display the modified_date column from the history with both the
-                                // date and time to avoid separate updates with identical details
-                                // (except the time) being merged together when displayed.
-                                modified_date = !r.Ismodified_dateNull() ?
-                                    r.modified_date.ToShortDateString() : String.Empty,
-                                modified_time = (!r.Ismodified_dateNull() && r.modified_date != r.modified_date.Date) ?
-                                    @" at " + r.modified_date.ToLongTimeString() : String.Empty,
-                                modified_user_id = r.lut_userRow != null ? r.lut_userRow.user_name :
-                                    !r.Ismodified_user_idNull() ? r.modified_user_id : String.Empty,
+                DataColumn[] displayColumns =
+                    BuildDisplayHistoryColumns();
 
-                                modified_process = r.lut_processRow != null ? r.lut_processRow.description : String.Empty,
-                                modified_reason = r.lut_reasonRow != null ? r.lut_reasonRow.description : String.Empty,
-                                modified_operation = r.lut_operationRow != null ? r.lut_operationRow.description : String.Empty,
-
-                                // Only show the previous incid if it was different
-                                modified_incid = !r.Ismodified_incidNull() ? String.Format("{0}", r.modified_incid == r.incid ? null : "\n\tPrevious INCID: " + r.modified_incid) : String.Empty,
-
-                                //modified_primary = displayHistoryColumns.Count(hc => hc.ColumnName == "habprimary") == 1 ?
-                                //    !r.Ismodified_habprimaryNull() ? String.Format("\n\tPrevious Primary: {0}", r.modified_habprimary) : String.Empty : String.Empty,
-                                //modified_secondaries = displayHistoryColumns.Count(hc => hc.ColumnName == "habsecond") == 1 ?
-                                //    !r.Ismodified_habsecondNull() ? String.Format("\n\tPrevious Secondaries: {0}", r.modified_habsecond) : String.Empty : String.Empty,
-                                modified_primary = displayHistoryColumns.Count(hc => hc.ColumnName == "habprimary") == 1 ?
-                                    String.Format("\n\tPrevious Primary: {0}", r.modified_habprimary) : String.Empty,
-                                modified_secondaries = displayHistoryColumns.Count(hc => hc.ColumnName == "habsecond") == 1 ?
-                                    String.Format("\n\tPrevious Secondaries: {0}", r.modified_habsecond) : String.Empty,
-
-                                // Only show the previous values if they are not null
-                                modified_determination = displayHistoryColumns.Count(hc => hc.ColumnName == "determqty") == 1 ?
-                                    r.lut_quality_determinationRow != null ? String.Format("\n\tPrevious Determination: {0}", r.lut_quality_determinationRow.description) : String.Empty : String.Empty,
-                                modified_intepretation = displayHistoryColumns.Count(hc => hc.ColumnName == "interpqty") == 1 ?
-                                    r.lut_quality_interpretationRow != null ? String.Format("\n\tPrevious Interpretation: {0}", r.lut_quality_interpretationRow.description) : String.Empty : String.Empty,
-
-                            } into g
-                            select
-                                String.Format("{0} on {1}{2} by {3}:", g.Key.modified_operation, g.Key.modified_date, g.Key.modified_time, g.Key.modified_user_id) +
-
-                                String.Format("\n\tProcess: {0}", g.Key.modified_process) +
-                                String.Format("\n\tReason: {0}", g.Key.modified_reason) +
-
-                                g.Key.modified_incid +
-                                g.Key.modified_primary +
-                                g.Key.modified_secondaries +
-                                g.Key.modified_determination +
-                                g.Key.modified_intepretation +
-
-                                // Show the area and length values in the history as hectares and metres.
-                                String.Format("\n\tModified Length: {0} [km]", g.Distinct(_histRowEqComp)
-                                    .Sum(r => !r.Ismodified_lengthNull() ? Math.Round(r.modified_length / 1000, 3) : 0).ToString("f3")) +
-                                String.Format("\n\tModified Area: {0} [ha]", g.Distinct(_histRowEqComp)
-                                    .Sum(r => !r.Ismodified_areaNull() ? Math.Round(r.modified_area / 10000, 4) : 0).ToString("f4")))
-                                .Take(_historyDisplayLastN);
-
-                }
+                return _incidHistoryRows
+                    .OrderByDescending(r => r.history_id)
+                    .GroupBy(r => BuildHistoryGroupKey(r, displayColumns))
+                    .Select(g => FormatHistoryEntry(g))
+                    .Take(_historyDisplayLastN);
             }
+        }
+
+        /// <summary>
+        /// Builds the array of columns to display in the history tab, combining
+        /// the GIS ID columns with any user-selected additional columns (excluding
+        /// GIS ID column ordinals and shape columns).
+        /// </summary>
+        /// <returns>
+        /// An array of <see cref="DataColumn"/> instances representing the columns
+        /// to display in the history tab.
+        /// </returns>
+        private DataColumn[] BuildDisplayHistoryColumns()
+        {
+            int result;
+            return
+            [
+                .. _gisIDColumns,
+                .. (from s in Settings.Default.HistoryColumnOrdinals.Cast<string>()
+                    where Int32.TryParse(s, out result)
+                        && result >= 0
+                        && result < _hluDS.incid_mm_polygons.Columns.Count
+                        && !_gisIDColumnOrdinals.Contains(result)
+                    select _hluDS.incid_mm_polygons.Columns[Int32.Parse(s)]),
+            ];
+        }
+
+        /// <summary>
+        /// Builds the anonymous group key for a history row, capturing all the
+        /// fields that must be identical for two rows to be considered part of the
+        /// same logical history entry.
+        /// </summary>
+        /// <param name="r">The history row to derive the key from.</param>
+        /// <param name="displayColumns">
+        /// The display columns used to determine which optional fields to include.
+        /// </param>
+        /// <returns>An anonymous object suitable for use as a LINQ group key.</returns>
+        private static object BuildHistoryGroupKey(
+            HluDataSet.historyRow r,
+            DataColumn[] displayColumns)
+        {
+            return new
+            {
+                r.incid,
+
+                // Include time to prevent separate updates with identical details
+                // (except the time) being merged together when displayed.
+                modified_date = !r.Ismodified_dateNull()
+                    ? r.modified_date.ToShortDateString()
+                    : String.Empty,
+                modified_time = (!r.Ismodified_dateNull()
+                    && r.modified_date != r.modified_date.Date)
+                    ? @" at " + r.modified_date.ToLongTimeString()
+                    : String.Empty,
+
+                modified_user_id = r.lut_userRow != null
+                    ? r.lut_userRow.user_name
+                    : !r.Ismodified_user_idNull() ? r.modified_user_id : String.Empty,
+
+                modified_process = r.lut_processRow != null
+                    ? r.lut_processRow.description
+                    : String.Empty,
+                modified_reason = r.lut_reasonRow != null
+                    ? r.lut_reasonRow.description
+                    : String.Empty,
+                modified_operation = r.lut_operationRow != null
+                    ? r.lut_operationRow.description
+                    : String.Empty,
+
+                // Only show the previous incid when it differs from the current.
+                modified_incid = !r.Ismodified_incidNull()
+                    ? String.Format("{0}", r.modified_incid == r.incid
+                        ? null
+                        : "\n\tPrevious INCID: " + r.modified_incid)
+                    : String.Empty,
+
+                // Optional habitat columns - only included when the column is selected.
+                modified_primary = HasColumn(displayColumns, "habprimary")
+                    ? String.Format("\n\tPrevious Primary: {0}", r.modified_habprimary)
+                    : String.Empty,
+                modified_secondaries = HasColumn(displayColumns, "habsecond")
+                    ? String.Format("\n\tPrevious Secondaries: {0}", r.modified_habsecond)
+                    : String.Empty,
+
+                // Optional quality columns - only included when not null.
+                modified_determination = HasColumn(displayColumns, "determqty")
+                    ? r.lut_quality_determinationRow != null
+                        ? String.Format("\n\tPrevious Determination: {0}",
+                            r.lut_quality_determinationRow.description)
+                        : String.Empty
+                    : String.Empty,
+                modified_interpretation = HasColumn(displayColumns, "interpqty")
+                    ? r.lut_quality_interpretationRow != null
+                        ? String.Format("\n\tPrevious Interpretation: {0}",
+                            r.lut_quality_interpretationRow.description)
+                        : String.Empty
+                    : String.Empty,
+            };
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"/> if <paramref name="columns"/> contains
+        /// exactly one column whose name matches <paramref name="columnName"/>.
+        /// </summary>
+        /// <param name="columns">The display column array to search.</param>
+        /// <param name="columnName">The column name to look for.</param>
+        /// <returns>
+        /// <see langword="true"/> if the column is present; otherwise,
+        /// <see langword="false"/>.
+        /// </returns>
+        private static bool HasColumn(DataColumn[] columns, string columnName)
+        {
+            return columns.Count(c => c.ColumnName == columnName) == 1;
+        }
+
+        /// <summary>
+        /// Formats a grouped set of history rows into a single display string.
+        /// </summary>
+        /// <param name="g">
+        /// The group produced by <see cref="IncidHistory"/>, keyed on the fields
+        /// built by <see cref="BuildHistoryGroupKey"/>.
+        /// </param>
+        /// <returns>
+        /// A multi-line string representing a single history entry, including the
+        /// operation header, process, reason, any changed field values, and
+        /// (when the user option is enabled) the modified length and area.
+        /// </returns>
+        private string FormatHistoryEntry(
+            IGrouping<dynamic, HluDataSet.historyRow> g)
+        {
+            string header =
+                String.Format("{0} on {1}{2} by {3}:",
+                    g.Key.modified_operation,
+                    g.Key.modified_date,
+                    g.Key.modified_time,
+                    g.Key.modified_user_id);
+
+            string processReason =
+                String.Format("\n\tProcess: {0}", g.Key.modified_process) +
+                String.Format("\n\tReason: {0}", g.Key.modified_reason);
+
+            string changedFields =
+                g.Key.modified_incid +
+                g.Key.modified_primary +
+                g.Key.modified_secondaries +
+                g.Key.modified_determination +
+                g.Key.modified_interpretation;
+
+            string geometry = Settings.Default.HistoryDisplayGeometry
+                ? FormatHistoryGeometry(g)
+                : String.Empty;
+
+            return header + processReason + changedFields + geometry;
+        }
+
+        /// <summary>
+        /// Formats the modified length and area values for a history entry,
+        /// summing distinct polygon rows and expressing the totals in kilometres
+        /// and hectares respectively.
+        /// </summary>
+        /// <param name="g">The grouped history rows for one logical history entry.</param>
+        /// <returns>
+        /// A two-line string containing the modified length [km] and area [ha],
+        /// or an empty string when no geometry data is available.
+        /// </returns>
+        private string FormatHistoryGeometry(
+            IGrouping<dynamic, HluDataSet.historyRow> g)
+        {
+            IEnumerable<HluDataSet.historyRow> distinctRows =
+                g.Distinct(_histRowEqComp);
+
+            double lengthKm = Math.Round(
+                distinctRows.Sum(r => !r.Ismodified_lengthNull()
+                    ? r.modified_length / 1000 : 0), 3);
+
+            double areaHa = Math.Round(
+                distinctRows.Sum(r => !r.Ismodified_areaNull()
+                    ? r.modified_area / 10000 : 0), 4);
+
+            return
+                String.Format("\n\tModified Length: {0} [km]",
+                    lengthKm.ToString("f3")) +
+                String.Format("\n\tModified Area: {0} [ha]",
+                    areaHa.ToString("f4"));
         }
 
         #endregion Properties - History Tab
@@ -5862,7 +5977,6 @@ namespace HLU.UI.ViewModel
 
         #region Properties - About
 
-        //TODO: Fix AssemblyCopyright
         /// <summary>
         /// Gets the copyright notice for the assembly to display with the
         /// current userid and name in the 'About' box.
