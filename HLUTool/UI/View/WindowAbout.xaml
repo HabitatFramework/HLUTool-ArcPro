@@ -37,7 +37,7 @@
         Margin="4,4,4,4"
         HorizontalAlignment="Stretch"
         VerticalAlignment="Stretch"
-        FocusManager.FocusedElement="{Binding ElementName=TextBoxQueryIncid}">
+        FocusManager.FocusedElement="{Binding ElementName=TextAppVersion}">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />

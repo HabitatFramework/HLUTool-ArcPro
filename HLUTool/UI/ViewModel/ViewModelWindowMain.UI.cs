@@ -5867,7 +5867,7 @@ namespace HLU.UI.ViewModel
         /// Gets the copyright notice for the assembly to display with the
         /// current userid and name in the 'About' box.
         /// </summary>
-        /// <value>The assembly copyright notice with the current user info.</value>
+        /// <value>The assembly copyright notice.</value>
         public string AssemblyCopyright
         {
             get
@@ -5879,9 +5879,8 @@ namespace HLU.UI.ViewModel
                 if (attributes.Length == 0)
                     return null;
 
-                // Split the copyright statement at each full stop and
-                // wrap it to a new line.
-                String copyright = String.Join(Environment.NewLine, ((AssemblyCopyrightAttribute)attributes[0]).Copyright.Split('.'));
+                // Split the copyright statement at each full stop, trim spaces and wrap it to a new line.
+                String copyright = String.Join(Environment.NewLine, ((AssemblyCopyrightAttribute)attributes[0]).Copyright.Split('.').Select(s => s.Trim()));
 
                 // If there is a Copyright attribute, return its value
                 return copyright;
