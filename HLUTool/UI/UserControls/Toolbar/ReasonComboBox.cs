@@ -218,12 +218,12 @@ namespace HLU.UI.UserControls.Toolbar
         }
 
         /// <summary>
-        /// Sets the selected item in the ComboBox based on the reason code.
+        /// Sets the selected item in the ComboBox based on the reason description.
         /// </summary>
-        /// <param name="reasonCode">The code of the reason to select.</param>
-        public void SetSelectedItem(string reasonCode)
+        /// <param name="reasonDescription">The description of the reason to select.</param>
+        public void SetSelectedItem(string reasonDescription)
         {
-            if (string.IsNullOrEmpty(reasonCode))
+            if (string.IsNullOrEmpty(reasonDescription))
             {
                 SelectedItem = null;
 
@@ -233,33 +233,25 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            // Find the matching reason code in the ViewModel
-            var matchingReason = _viewModel?.ReasonCodes?.FirstOrDefault(r =>
-                string.Equals(r.code, reasonCode, StringComparison.Ordinal));
+            // Find the ComboBox item by matching the description directly
+            var item = ItemCollection.FirstOrDefault(i =>
+                string.Equals((i as ComboBoxItem)?.Text, reasonDescription, StringComparison.Ordinal));
 
-            // If the reason code matches one of the options
-            if (matchingReason != null)
+            if (item != null)
             {
-                // Find the ComboBox item by matching the description
-                var item = ItemCollection.FirstOrDefault(i =>
-                    string.Equals((i as ComboBoxItem)?.Text, matchingReason.description, StringComparison.Ordinal));
+                // Temporarily store the previous value to prevent circular updates
+                string temp = _previousReason;
+                _previousReason = reasonDescription;
 
-                if (item != null)
-                {
-                    // Temporarily store the previous value to prevent circular updates
-                    string temp = _previousReason;
-                    _previousReason = matchingReason.description;
+                // Set the selected item
+                SelectedItem = item;
 
-                    // Set the selected item
-                    SelectedItem = item;
-
-                    // Restore if the selection failed
-                    if (SelectedItem != item)
-                        _previousReason = temp;
-                }
+                // Restore if the selection failed
+                if (SelectedItem != item)
+                    _previousReason = temp;
             }
 
-            // Update error state when clearing selection
+            // Update error state
             UpdateErrorState();
         }
 

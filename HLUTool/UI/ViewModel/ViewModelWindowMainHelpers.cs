@@ -253,15 +253,19 @@ namespace HLU.UI.ViewModel
             // If the hluDS is null or the lut_reason is null then return null.
             if ((hluDS == null) || (hluDS.lut_reason == null)) return null;
 
-            // Find the reason code that matches the description.
-            var o = hluDS.lut_reason
+            // Try matching by description first (normal case).
+            var byDesc = hluDS.lut_reason
                 .Where(r => r.description == reasonDescription);
+            if (byDesc.Count() == 1)
+                return byDesc.First().code;
 
-            // If there is exactly one match then return the code.
-            if (o.Count() == 1)
-                return o.First().code;
-            else
-                return null;
+            // Fall back to matching by code directly (e.g. if a code was stored).
+            var byCode = hluDS.lut_reason
+                .Where(r => r.code == reasonDescription);
+            if (byCode.Count() == 1)
+                return byCode.First().code;
+
+            return null;
         }
 
         /// <summary>
@@ -275,15 +279,19 @@ namespace HLU.UI.ViewModel
             // If the hluDS is null or the lut_process is null then return null.
             if ((hluDS == null) || (hluDS.lut_process == null)) return null;
 
-            // Find the process code that matches the description.
-            var o = hluDS.lut_process
+            // Try matching by description first (normal case).
+            var byDesc = hluDS.lut_process
                 .Where(r => r.description == processDescription);
+            if (byDesc.Count() == 1)
+                return byDesc.First().code;
 
-            // If there is exactly one match then return the code.
-            if (o.Count() == 1)
-                return o.First().code;
-            else
-                return null;
+            // Fall back to matching by code directly (e.g. if a code was stored).
+            var byCode = hluDS.lut_process
+                .Where(r => r.code == processDescription);
+            if (byCode.Count() == 1)
+                return byCode.First().code;
+
+            return null;
         }
 
         #endregion Helpers

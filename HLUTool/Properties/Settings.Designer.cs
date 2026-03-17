@@ -332,14 +332,14 @@ namespace HLU.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("ICAT")]
+        [global::System.Configuration.DefaultSettingValueAttribute("UKHab")]
         [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public string PreferredHabitatClass {
+        public string DefaultHabitatClass {
             get {
-                return ((string)(this["PreferredHabitatClass"]));
+                return ((string)(this["DefaultHabitatClass"]));
             }
             set {
-                this["PreferredHabitatClass"] = value;
+                this["DefaultHabitatClass"] = value;
             }
         }
         
@@ -593,12 +593,12 @@ namespace HLU.Properties {
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("<All>")]
         [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public string PreferredSecondaryGroup {
+        public string DefaultSecondaryGroup {
             get {
-                return ((string)(this["PreferredSecondaryGroup"]));
+                return ((string)(this["DefaultSecondaryGroup"]));
             }
             set {
-                this["PreferredSecondaryGroup"] = value;
+                this["DefaultSecondaryGroup"] = value;
             }
         }
         
@@ -923,6 +923,58 @@ namespace HLU.Properties {
             }
             set {
                 this["HistoryDisplayGeometry"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
+        public int MessageAutoDismissError {
+            get {
+                return ((int)(this["MessageAutoDismissError"]));
+            }
+            set {
+                this["MessageAutoDismissError"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
+        public int MessageAutoDismissWarning {
+            get {
+                return ((int)(this["MessageAutoDismissWarning"]));
+            }
+            set {
+                this["MessageAutoDismissWarning"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("5")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
+        public int MessageAutoDismissInfo {
+            get {
+                return ((int)(this["MessageAutoDismissInfo"]));
+            }
+            set {
+                this["MessageAutoDismissInfo"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("5")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
+        public int MessageAutoDismissSuccess {
+            get {
+                return ((int)(this["MessageAutoDismissSuccess"]));
+            }
+            set {
+                this["MessageAutoDismissSuccess"] = value;
             }
         }
     }

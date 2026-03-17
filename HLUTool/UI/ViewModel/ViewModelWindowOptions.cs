@@ -132,14 +132,18 @@ namespace HLU.UI.ViewModel
         private bool _showHabitatSummary;
         private string[] _showOSMMUpdatesOptions;
         private string _showOSMMUpdatesOption;
-        private string _preferredHabitatClass;
-        private string _preferredSecondaryGroup;
-        private string[] _secondaryCodeOrderOptions;
-        private string _secondaryCodeOrder;
+        private int? _messageAutoDismissError;
+        private int? _messageAutoDismissWarning;
+        private int? _messageAutoDismissInfo;
+        private int? _messageAutoDismissSuccess;
 
         // User Update options
         private string _defaultReason;
         private string _defaultProcess;
+        private string _defaultHabitatClass;
+        private string _defaultSecondaryGroup;
+        private string[] _secondaryCodeOrderOptions;
+        private string _secondaryCodeOrder;
         private bool _notifyOnSplitMerge;
 
         // User SQL options
@@ -257,13 +261,17 @@ namespace HLU.UI.ViewModel
             _showNVCCodes = Settings.Default.ShowNVCCodes;
             _showHabitatSummary = Settings.Default.ShowHabitatSummary;
             _showOSMMUpdatesOption = Settings.Default.ShowOSMMUpdatesOption;
-            _preferredHabitatClass = Settings.Default.PreferredHabitatClass;
-            _preferredSecondaryGroup = Settings.Default.PreferredSecondaryGroup;
-            _secondaryCodeOrder = Settings.Default.SecondaryCodeOrder;
+            _messageAutoDismissError = Settings.Default.MessageAutoDismissError;
+            _messageAutoDismissWarning = Settings.Default.MessageAutoDismissWarning;
+            _messageAutoDismissInfo = Settings.Default.MessageAutoDismissInfo;
+            _messageAutoDismissSuccess = Settings.Default.MessageAutoDismissSuccess;
 
             // Set the user update options
             _defaultReason = Settings.Default.DefaultReason;
             _defaultProcess = Settings.Default.DefaultProcess;
+            _defaultHabitatClass = Settings.Default.DefaultHabitatClass;
+            _defaultSecondaryGroup = Settings.Default.DefaultSecondaryGroup;
+            _secondaryCodeOrder = Settings.Default.SecondaryCodeOrder;
             _notifyOnSplitMerge = Settings.Default.NotifyOnSplitMerge;
 
             // Set the user SQL options
@@ -720,7 +728,6 @@ namespace HLU.UI.ViewModel
             Settings.Default.HistoryDisplayGeometry = _historyDisplayGeometry;
 
             // Update user interface options
-            Settings.Default.PreferredHabitatClass = _preferredHabitatClass;
             Settings.Default.ShowGroupHeaders = _showGroupHeaders;
             Settings.Default.ShowIHSTab = _showIHSTab;
             Settings.Default.ShowSourceHabitatGroup = _showSourceHabitatGroup;
@@ -728,9 +735,18 @@ namespace HLU.UI.ViewModel
             Settings.Default.ShowNVCCodes = _showNVCCodes;
             Settings.Default.ShowHabitatSummary = _showHabitatSummary;
             Settings.Default.ShowOSMMUpdatesOption = _showOSMMUpdatesOption;
+            Settings.Default.MessageAutoDismissError = (int)_messageAutoDismissError;
+            Settings.Default.MessageAutoDismissWarning = (int)_messageAutoDismissWarning;
+            Settings.Default.MessageAutoDismissInfo = (int)_messageAutoDismissInfo;
+            Settings.Default.MessageAutoDismissSuccess = (int)_messageAutoDismissSuccess;
 
-            Settings.Default.PreferredSecondaryGroup = _preferredSecondaryGroup;
+            // Update user update options
+            Settings.Default.DefaultReason = _defaultReason;
+            Settings.Default.DefaultProcess = _defaultProcess;
+            Settings.Default.DefaultHabitatClass = _defaultHabitatClass;
+            Settings.Default.DefaultSecondaryGroup = _defaultSecondaryGroup;
             Settings.Default.SecondaryCodeOrder = _secondaryCodeOrder;
+            Settings.Default.NotifyOnSplitMerge = _notifyOnSplitMerge;
 
             // Update user SQL options
             Settings.Default.GetValueRows = (int)_getValueRows;
@@ -738,11 +754,6 @@ namespace HLU.UI.ViewModel
 
             // Update user export options
             Settings.Default.ExportPath = _exportPath;
-
-            // Update user update options
-            Settings.Default.DefaultReason = _defaultReason;
-            Settings.Default.DefaultProcess = _defaultProcess;
-            Settings.Default.NotifyOnSplitMerge = _notifyOnSplitMerge;
 
             // Save changes to the settings.
             Settings.Default.Save();
@@ -1587,6 +1598,90 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
+        /// Gets or sets the auto-dismiss timeout in seconds for error messages.
+        /// 0 means do not auto-dismiss.
+        /// </summary>
+        /// <value>
+        /// The auto-dismiss timeout for error messages (0–60 seconds).
+        /// </value>
+        public int? MessageAutoDismissError
+        {
+            get
+            {
+                return _messageAutoDismissError;
+            }
+            set
+            {
+                _messageAutoDismissError = value;
+                OnPropertyChanged(nameof(MessageAutoDismissError));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the auto-dismiss timeout in seconds for warning messages.
+        /// 0 means do not auto-dismiss.
+        /// </summary>
+        /// <value>
+        /// The auto-dismiss timeout for warning messages (0–60 seconds).
+        /// </value>
+        public int? MessageAutoDismissWarning
+        {
+            get
+            {
+                return _messageAutoDismissWarning;
+            }
+            set
+            {
+                _messageAutoDismissWarning = value;
+                OnPropertyChanged(nameof(MessageAutoDismissWarning));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the auto-dismiss timeout in seconds for info messages.
+        /// 0 means do not auto-dismiss.
+        /// </summary>
+        /// <value>
+        /// The auto-dismiss timeout for info messages (0–60 seconds).
+        /// </value>
+        public int? MessageAutoDismissInfo
+        {
+            get
+            {
+                return _messageAutoDismissInfo;
+            }
+            set
+            {
+                _messageAutoDismissInfo = value;
+                OnPropertyChanged(nameof(MessageAutoDismissInfo));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the auto-dismiss timeout in seconds for success messages.
+        /// 0 means do not auto-dismiss.
+        /// </summary>
+        /// <value>
+        /// The auto-dismiss timeout for success messages (0–60 seconds).
+        /// </value>
+        public int? MessageAutoDismissSuccess
+        {
+            get
+            {
+                return _messageAutoDismissSuccess;
+            }
+            set
+            {
+                _messageAutoDismissSuccess = value;
+                OnPropertyChanged(nameof(MessageAutoDismissSuccess));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
         /// Gets the list of possible habitat class codes.
         /// </summary>
         /// <value>
@@ -1601,25 +1696,25 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets or sets the preferred habitat class.
+        /// Gets or sets the default habitat class.
         /// </summary>
         /// <value>
-        /// The preferred habitat class.
+        /// The default habitat class.
         /// </value>
-        public string PreferredHabitatClass
+        public string DefaultHabitatClass
         {
             get
             {
-                var q = HabitatClassCodes.Where(h => h.code == _preferredHabitatClass);
+                var q = HabitatClassCodes.Where(h => h.code == _defaultHabitatClass);
                 if (q.Any())
-                    return _preferredHabitatClass;
+                    return _defaultHabitatClass;
                 else
                     return null;
             }
             set
             {
-                _preferredHabitatClass = value;
-                OnPropertyChanged(nameof(PreferredHabitatClass));
+                _defaultHabitatClass = value;
+                OnPropertyChanged(nameof(DefaultHabitatClass));
                 NotifyNavigationItemErrorsChanged();
             }
         }
@@ -1639,25 +1734,25 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets or sets the preferred secondary group.
+        /// Gets or sets the default secondary group.
         /// </summary>
         /// <value>
-        /// The preferred secondary group.
+        /// The default secondary group.
         /// </value>
-        public string PreferredSecondaryGroup
+        public string DefaultSecondaryGroup
         {
             get
             {
-                var q = SecondaryGroupCodes.Where(h => h.code == _preferredSecondaryGroup);
+                var q = SecondaryGroupCodes.Where(h => h.code == _defaultSecondaryGroup);
                 if (q.Any())
-                    return _preferredSecondaryGroup;
+                    return _defaultSecondaryGroup;
                 else
                     return null;
             }
             set
             {
-                _preferredSecondaryGroup = value;
-                OnPropertyChanged(nameof(PreferredSecondaryGroup));
+                _defaultSecondaryGroup = value;
+                OnPropertyChanged(nameof(DefaultSecondaryGroup));
                 NotifyNavigationItemErrorsChanged();
             }
         }
@@ -2383,10 +2478,40 @@ namespace HLU.UI.ViewModel
                 // User - Interface options
                 "ShowOSMMUpdatesOption" when ShowOSMMUpdatesOption == null
                     => "Error: Select option of when to display any OSMM Updates.",
-                "PreferredHabitatClass" when PreferredHabitatClass == null
-                    => "Error: Select your preferred habitat class.",
-                "PreferredSecondaryGroup" when PreferredSecondaryGroup == null
-                    => "Error: Select your preferred secondary group.",
+
+                "MessageAutoDismissError" when MessageAutoDismissError == null
+                    => "Error: Enter a timeout for error messages.",
+                "MessageAutoDismissError" when MessageAutoDismissError < 0
+                    => "Error: Error message timeout must be 0 (never) or between 1 and 60 seconds.",
+                "MessageAutoDismissError" when MessageAutoDismissError > 60
+                    => "Error: Error message timeout must not be greater than 60 seconds.",
+
+                "MessageAutoDismissWarning" when MessageAutoDismissWarning == null
+                    => "Error: Enter a timeout for warning messages.",
+                "MessageAutoDismissWarning" when MessageAutoDismissWarning < 0
+                    => "Error: Warning message timeout must be 0 (never) or between 1 and 60 seconds.",
+                "MessageAutoDismissWarning" when MessageAutoDismissWarning > 60
+                    => "Error: Warning message timeout must not be greater than 60 seconds.",
+
+                "MessageAutoDismissInfo" when MessageAutoDismissInfo == null
+                    => "Error: Enter a timeout for info messages.",
+                "MessageAutoDismissInfo" when MessageAutoDismissInfo < 0
+                    => "Error: Info message timeout must be 0 (never) or between 1 and 60 seconds.",
+                "MessageAutoDismissInfo" when MessageAutoDismissInfo > 60
+                    => "Error: Info message timeout must not be greater than 60 seconds.",
+
+                "MessageAutoDismissSuccess" when MessageAutoDismissSuccess == null
+                    => "Error: Enter a timeout for success messages.",
+                "MessageAutoDismissSuccess" when MessageAutoDismissSuccess < 0
+                    => "Error: Success message timeout must be 0 (never) or between 1 and 60 seconds.",
+                "MessageAutoDismissSuccess" when MessageAutoDismissSuccess > 60
+                    => "Error: Success message timeout must not be greater than 60 seconds.",
+
+                // User - Interface preferences (now in Updates tab)
+                "DefaultHabitatClass" when DefaultHabitatClass == null
+                    => "Error: Select your default habitat class.",
+                "DefaultSecondaryGroup" when DefaultSecondaryGroup == null
+                    => "Error: Select your default secondary group.",
                 "SecondaryCodeOrder" when SecondaryCodeOrder == null
                     => "Error: Select display order of secondary codes.",
 
@@ -2471,11 +2596,11 @@ namespace HLU.UI.ViewModel
                 ("Application", "Validation") => ["HabitatSecondaryCodeValidation", "PrimarySecondaryCodeValidation", "QualityValidation", "PotentialPriorityDetermQtyValidation"],
                 ("Application", "Updates") => ["SubsetUpdateAction", "ClearIHSUpdateAction", "SecondaryCodeDelimiter"],
                 ("Application", "Bulk Update") => ["BulkDeterminationQuality", "BulkInterpretationQuality", "OSMMSourceId"],
-                ("User", "Interface") => ["PreferredHabitatClass", "ShowOSMMUpdatesOption", "PreferredSecondaryGroup"],
+                ("User", "Interface") => ["ShowOSMMUpdatesOption", "MessageAutoDismissError", "MessageAutoDismissWarning", "MessageAutoDismissInfo", "MessageAutoDismissSuccess"],
                 ("User", "GIS") => ["AutoZoomToSelectionOption", "MinAutoZoom", "MaxFeaturesGISSelect", "WorkingFileGDBPath"],
-                ("User", "Updates") => ["DefaultReason", "DefaultProcess", "NotifyOnSplitMerge"],
+                ("User", "Updates") => ["DefaultReason", "DefaultProcess", "DefaultHabitatClass", "DefaultSecondaryGroup", "SecondaryCodeOrder", "NotifyOnSplitMerge"],
                 ("User", "SQL") => ["GetValueRows", "SQLPath"],
-                ("User", "History") => ["HistoryDisplayLastN"],
+                ("User", "History") => ["HistoryColumns", "HistoryDisplayGeometry", "HistoryDisplayLastN"],
                 ("User", "Export") => ["ExportPath"],
                 _ => []
             };

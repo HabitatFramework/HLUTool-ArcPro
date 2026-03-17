@@ -1317,7 +1317,7 @@ namespace HLU.UI.ViewModel
 
             OnPropertyChanged(nameof(SecondaryGroupCodesValid));
             OnPropertyChanged(nameof(SecondaryGroupEnabled));
-            SecondaryGroup = _preferredSecondaryGroup;
+            SecondaryGroup = _defaultSecondaryGroup;
             OnPropertyChanged(nameof(SecondaryGroup));
 
             OnPropertyChanged(nameof(CanAddSecondaryHabitat));

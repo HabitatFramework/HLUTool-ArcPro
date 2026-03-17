@@ -1180,7 +1180,7 @@ namespace HLU.UI.ViewModel
             {
                 // Set the habitat class when there are OSMM updates to process.
                 if (_habitatClass == null && _osmmUpdatesEmpty == false)
-                    _habitatClass = _preferredHabitatClass;
+                    _habitatClass = _defaultHabitatClass;
 
                 return _habitatClass;
             }
@@ -6128,6 +6128,7 @@ namespace HLU.UI.ViewModel
         public string ShowMessage(string msg, MessageType messageLevel, string category = null,
             bool isDismissible = true, int autoDismissSeconds = 0)
         {
+            // If the message is null or whitespace, do not add it to the queue
             if (string.IsNullOrWhiteSpace(msg))
                 return null;
 
@@ -6190,11 +6191,6 @@ namespace HLU.UI.ViewModel
             if (autoDismissSeconds > 0)
             {
                 SetupAutoDismiss(messageId, autoDismissSeconds);
-            }
-            // Default auto-dismiss for informational messages
-            else if (messageLevel == MessageType.Information && isDismissible)
-            {
-                SetupAutoDismiss(messageId, 5); // 5 seconds default
             }
 
             return messageId;
@@ -6382,35 +6378,39 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Shows an error message.
+        /// Shows an error message. Error messages do not auto-dismiss by default.
         /// </summary>
         public string ShowError(string message, string category = null, bool isDismissible = true)
         {
-            return ShowMessage(message, MessageType.Error, category ?? MessageCategory.General, isDismissible);
+            return ShowMessage(message, MessageType.Error, category ?? MessageCategory.General,
+                isDismissible, Settings.Default.MessageAutoDismissError);
         }
 
         /// <summary>
-        /// Shows a warning message.
+        /// Shows a warning message with auto-dismiss based on user preference.
         /// </summary>
-        public string ShowWarning(string message, string category = null, bool isDismissible = true, int autoDismissSeconds = 5)
+        public string ShowWarning(string message, string category = null, bool isDismissible = true)
         {
-            return ShowMessage(message, MessageType.Warning, category ?? MessageCategory.General, isDismissible, autoDismissSeconds);
+            return ShowMessage(message, MessageType.Warning, category ?? MessageCategory.General,
+                isDismissible, Settings.Default.MessageAutoDismissWarning);
         }
 
         /// <summary>
-        /// Shows an informational message with auto-dismiss.
+        /// Shows an info message with auto-dismiss based on user preference.
         /// </summary>
-        public string ShowInfo(string message, string category = null, bool isDismissible = true, int autoDismissSeconds = 5)
+        public string ShowInfo(string message, string category = null, bool isDismissible = true)
         {
-            return ShowMessage(message, MessageType.Information, category ?? MessageCategory.General, isDismissible, autoDismissSeconds);
+            return ShowMessage(message, MessageType.Information, category ?? MessageCategory.General,
+                isDismissible, Settings.Default.MessageAutoDismissInfo);
         }
 
         /// <summary>
-        /// Shows a success message with auto-dismiss.
+        /// Shows a success message with auto-dismiss based on user preference.
         /// </summary>
-        public string ShowSuccess(string message, string category = null, bool isDismissible = true, int autoDismissSeconds = 5)
+        public string ShowSuccess(string message, string category = null, bool isDismissible = true)
         {
-            return ShowMessage(message, MessageType.Information, category ?? MessageCategory.General, isDismissible, autoDismissSeconds);
+            return ShowMessage(message, MessageType.Information, category ?? MessageCategory.General,
+                isDismissible, Settings.Default.MessageAutoDismissSuccess);
         }
 
         #endregion Message Queue

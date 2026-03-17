@@ -4,5 +4,6 @@
     xmlns:hlu="clr-namespace:HLU.Converters">
 
     <hlu:ErrorMessageConverter x:Key="errorMessageConverter" />
+    <hlu:NullableValueConverter x:Key="nullableValueConverter" />
 
 </ResourceDictionary>

@@ -153,7 +153,6 @@ namespace HLU.UI.ViewModel
         private int _historyDisplayLastN;
 
         // Interface options
-        private string _preferredHabitatClass;
         private bool _showGroupHeaders;
         private bool _showIHSTab;
         private bool _showSourceHabitatGroup;
@@ -161,16 +160,19 @@ namespace HLU.UI.ViewModel
         private bool _showNVCCodes;
         private bool _showHabitatSummary;
         private string _showOSMMUpdates;
-        private string _preferredSecondaryGroup;
-        private string _secondaryCodeOrder;
-        private string _secondaryCodeDelimiter;
 
         // Updates options
         private int _subsetUpdateAction;
         private string _clearIHSUpdateAction;
         private string _defaultReason;
         private string _defaultProcess;
+        private string _defaultHabitatClass;
+        private string _defaultSecondaryGroup;
+        private string _secondaryCodeOrder;
+        private string _secondaryCodeDelimiter;
         private bool _notifyOnSplitMerge;
+
+        // Validation options
         private bool _resetOSMMUpdatesStatus;
         private int _habitatSecondaryCodeValidation;
         private int _primarySecondaryCodeValidation;
@@ -1922,11 +1924,23 @@ namespace HLU.UI.ViewModel
                 BapEnvironment.PotentialPriorityDetermQtyValidation = _potentialPriorityDetermQtyValidation;
 
                 // Set default reason and process from settings and update toolbar combo boxes
-                if (!String.IsNullOrWhiteSpace(_defaultReason) && _defaultReason != "<None>")
-                    Reason = _defaultReason;
+                if (!string.IsNullOrWhiteSpace(_defaultReason) && _defaultReason != "<None>")
+                {
+                    // _defaultReason stores the code; resolve to description for the VM.
+                    var reasonRow = _lutReason?.FirstOrDefault(r =>
+                        string.Equals(r.code, _defaultReason, StringComparison.Ordinal));
+                    if (reasonRow != null)
+                        Reason = reasonRow.description;
+                }
 
-                if (!String.IsNullOrWhiteSpace(_defaultProcess) && _defaultProcess != "<None>")
-                    Process = _defaultProcess;
+                if (!string.IsNullOrWhiteSpace(_defaultProcess) && _defaultProcess != "<None>")
+                {
+                    // _defaultProcess stores the code; resolve to description for the VM.
+                    var processRow = _lutProcess?.FirstOrDefault(r =>
+                        string.Equals(r.code, _defaultProcess, StringComparison.Ordinal));
+                    if (processRow != null)
+                        Process = processRow.description;
+                }
 
                 // Force all ribbon controls to re-evaluate their enabled state
                 RefreshRibbonControls();
@@ -2107,22 +2121,31 @@ namespace HLU.UI.ViewModel
             // Set the list of valid HLU layer names.
             AvailableHLULayerNames = new ObservableCollection<string>(_gisApp.ValidHluLayerNames);
 
-            // Preserve the current active HLU layer name if it's still valid
+            // Determine the target layer name without assigning it yet
+            // (IsEditable is not set until IsHluLayerAsync activates the layer).
+            string targetLayerName;
             if (!string.IsNullOrEmpty(currentActiveLayerName) &&
                 _gisApp.ValidHluLayerNames.Contains(currentActiveLayerName))
             {
-                // Keep the current active layer if it's still valid
-                ActiveLayerName = currentActiveLayerName;
+                // Keep the current active layer if it's still valid.
+                targetLayerName = currentActiveLayerName;
             }
             else
             {
-                // Use the layer determined by the GIS application (e.g., first valid layer)
-                ActiveLayerName = _gisApp.ActiveHluLayer?.LayerName ?? string.Empty;
+                // Use the layer determined by the GIS application (e.g., first valid layer).
+                targetLayerName = _gisApp.ActiveHluLayer?.LayerName ?? string.Empty;
             }
 
-            // Activate the current active HLU layer so GIS internals are set.
-            var isActiveHluLayer = !String.IsNullOrEmpty(ActiveLayerName) &&
-                await _gisApp.IsHluLayerAsync(ActiveLayerName, true);
+            // Activate the current active HLU layer so GIS internals are set,
+            // including _hluActiveLayer.IsEditable, BEFORE assigning ActiveLayerName.
+            // ActiveLayerName.set calls UpdateDockPaneCaption(), which reads IsEditable,
+            // so IsEditable must be up-to-date first.
+            var isActiveHluLayer = !string.IsNullOrEmpty(targetLayerName) &&
+                await _gisApp.IsHluLayerAsync(targetLayerName, true);
+
+            // Now assign ActiveLayerName — IsEditable is correctly set so
+            // UpdateDockPaneCaption() and RefreshEditCapability() see the right value.
+            ActiveLayerName = targetLayerName;
 
             // Recomputes whether editing is currently possible.
             RefreshEditCapability();
@@ -3055,15 +3078,28 @@ namespace HLU.UI.ViewModel
 
             // Set the default reason for updates if not already set.
             if ((String.IsNullOrWhiteSpace(Reason)) && (_defaultReason != "<None>"))
-                Reason = _defaultReason;
+            {
+                // _defaultReason stores the code; resolve to description for the VM.
+                var reasonRow = _lutReason?.FirstOrDefault(r =>
+                    string.Equals(r.code, _defaultReason, StringComparison.Ordinal));
+                if (reasonRow != null)
+                    Reason = reasonRow.description;
+            }
 
             // Set the default process for updates if not already set.
             if ((String.IsNullOrWhiteSpace(Process)) && (_defaultProcess != "<None>"))
-                Process = _defaultProcess;
+            {
+                // _defaultProcess stores the code; resolve to description for the VM.
+                var processRow = _lutProcess?.FirstOrDefault(r =>
+                    string.Equals(r.code, _defaultProcess, StringComparison.Ordinal));
+                if (processRow != null)
+                    Process = processRow.description;
+            }
 
-            // Refresh the user interface
+            // Refresh the group headers to reflect the new settings.
             RefreshGroupHeaders();
 
+            // Refresh the visibility of controls affected by settings changes.
             OnPropertyChanged(nameof(ShowSourceHabitatGroup));
             OnPropertyChanged(nameof(ShowHabitatSecondariesSuggested));
             OnPropertyChanged(nameof(ShowNVCCodes));
@@ -3071,14 +3107,15 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(ShowIHSTab));
             OnPropertyChanged(nameof(ShowIncidOSMMPendingGroup));
 
+            // Refresh the validity of secondary group codes based on the new settings.
             OnPropertyChanged(nameof(SecondaryGroupCodesValid));
-            SecondaryGroup = _preferredSecondaryGroup;
+            SecondaryGroup = _defaultSecondaryGroup;
             OnPropertyChanged(nameof(SecondaryGroup));
 
             // Refresh secondary table to re-trigger the validation.
             RefreshSecondaryHabitats();
 
-            //OnPropertyChanged(nameof(HabitatTabLabel)); //TODO: No need to refresh?
+            // Refresh current incid properties affected by settings changes.
             OnPropertyChanged(nameof(IncidSecondarySummary));
 
             OnPropertyChanged(nameof(IncidCondition));
@@ -3089,8 +3126,10 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(IncidQualityInterpretation));
             OnPropertyChanged(nameof(IncidQualityComments));
 
+            OnPropertyChanged(nameof(IncidHistory));
+
+            // Refresh the edit capability based on the new settings.
             OnPropertyChanged(nameof(CanUpdate));
-            //OnPropertyChanged(nameof(CanUserBulkUpdate)); // Not needed as this is cached.
         }
 
         /// <summary>
@@ -3139,7 +3178,6 @@ namespace HLU.UI.ViewModel
             _historyDisplayLastN = Settings.Default.HistoryDisplayLastN;
 
             // Get user interface options
-            _preferredHabitatClass = Settings.Default.PreferredHabitatClass;
             _showGroupHeaders = Settings.Default.ShowGroupHeaders;
             _showIHSTab = Settings.Default.ShowIHSTab;
             _showSourceHabitatGroup = Settings.Default.ShowSourceHabitatGroup;
@@ -3147,12 +3185,13 @@ namespace HLU.UI.ViewModel
             _showNVCCodes = Settings.Default.ShowNVCCodes;
             _showHabitatSummary = Settings.Default.ShowHabitatSummary;
             _showOSMMUpdates = Settings.Default.ShowOSMMUpdatesOption;
-            _preferredSecondaryGroup = Settings.Default.PreferredSecondaryGroup;
-            _secondaryCodeOrder = Settings.Default.SecondaryCodeOrder;
 
             // Get user updates options
             _defaultReason = Settings.Default.DefaultReason;
             _defaultProcess = Settings.Default.DefaultProcess;
+            _defaultHabitatClass = Settings.Default.DefaultHabitatClass;
+            _defaultSecondaryGroup = Settings.Default.DefaultSecondaryGroup;
+            _secondaryCodeOrder = Settings.Default.SecondaryCodeOrder;
             _notifyOnSplitMerge = Settings.Default.NotifyOnSplitMerge;
         }
 

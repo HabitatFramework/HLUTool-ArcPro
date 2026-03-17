@@ -214,14 +214,13 @@ namespace HLU.UI.UserControls.Toolbar
         {
             get { return (SelectedItem as ComboBoxItem)?.Text; }
         }
-
         /// <summary>
-        /// Sets the selected item in the ComboBox based on the process code.
+        /// Sets the selected item in the ComboBox based on the process description.
         /// </summary>
-        /// <param name="processCode">The code of the process to select.</param>
-        public void SetSelectedItem(string processCode)
+        /// <param name="processDescription">The description of the process to select.</param>
+        public void SetSelectedItem(string processDescription)
         {
-            if (string.IsNullOrEmpty(processCode))
+            if (string.IsNullOrEmpty(processDescription))
             {
                 SelectedItem = null;
 
@@ -231,32 +230,25 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            // Find the matching process code in the ViewModel
-            var matchingProcess = _viewModel?.ProcessCodes?.FirstOrDefault(p =>
-                string.Equals(p.code, processCode, StringComparison.Ordinal));
+            // Find the ComboBox item by matching the description directly
+            var item = ItemCollection.FirstOrDefault(i =>
+                string.Equals((i as ComboBoxItem)?.Text, processDescription, StringComparison.Ordinal));
 
-            if (matchingProcess != null)
+            if (item != null)
             {
-                // Find the ComboBox item by matching the description
-                var item = ItemCollection.FirstOrDefault(i =>
-                    string.Equals((i as ComboBoxItem)?.Text, matchingProcess.description, StringComparison.Ordinal));
+                // Temporarily store the previous value to prevent circular updates
+                string temp = _previousProcess;
+                _previousProcess = processDescription;
 
-                if (item != null)
-                {
-                    // Temporarily store the previous value to prevent circular updates
-                    string temp = _previousProcess;
-                    _previousProcess = matchingProcess.description;
+                // Set the selected item
+                SelectedItem = item;
 
-                    // Set the selected item
-                    SelectedItem = item;
-
-                    // Restore if the selection failed
-                    if (SelectedItem != item)
-                        _previousProcess = temp;
-                }
+                // Restore if the selection failed
+                if (SelectedItem != item)
+                    _previousProcess = temp;
             }
 
-            // Update error state when clearing selection
+            // Update error state
             UpdateErrorState();
         }
 
