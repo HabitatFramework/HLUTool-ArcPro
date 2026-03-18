@@ -278,7 +278,7 @@
                                 Margin="6,0,0,4"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Center"
-                                Content="Area [ha]" />
+                                Content="{Binding IncidAreaLabel}" />
                             <TextBox
                                 x:Name="TextBoxIncidArea"
                                 Grid.Row="0"
@@ -296,7 +296,7 @@
                                 Margin="6,0,0,4"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Center"
-                                Content="Length [km]" />
+                                Content="{Binding IncidLengthLabel}" />
                             <TextBox
                                 x:Name="TextBoxIncidLength"
                                 Grid.Row="0"

@@ -28,6 +28,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using HLU.Data.Connection;
+using HLU.Exceptions;
 
 namespace HLU.Data.Model
 {

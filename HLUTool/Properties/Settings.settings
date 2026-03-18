@@ -316,5 +316,11 @@
     <Setting Name="MessageAutoDismissSuccess" Roaming="true" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">5</Value>
     </Setting>
+    <Setting Name="DisplayAreaUnits" Roaming="true" Type="System.String" Scope="User">
+      <Value Profile="(Default)">ha</Value>
+    </Setting>
+    <Setting Name="DisplayDistanceUnits" Roaming="true" Type="System.String" Scope="User">
+      <Value Profile="(Default)">km</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -31,6 +31,7 @@ using HLU.Data;
 using HLU.Data.Connection;
 using HLU.Data.Model;
 using HLU.Enums;
+using HLU.Exceptions;
 using HLU.Properties;
 using HLU.UI.View;
 using System.Windows.Threading;

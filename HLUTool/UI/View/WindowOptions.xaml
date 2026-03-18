@@ -10,7 +10,7 @@
     xmlns:viewModel="clr-namespace:HLU.UI.ViewModel"
     Title="{Binding WindowTitle}"
     MinWidth="750"
-    MinHeight="500"
+    MinHeight="535"
     MaxWidth="1000"
     MaxHeight="800"
     d:DataContext="{d:DesignInstance Type=local:ViewModelWindowOptions}"

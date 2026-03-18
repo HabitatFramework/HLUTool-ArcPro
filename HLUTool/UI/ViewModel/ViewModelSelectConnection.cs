@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Windows.Input;
 using HLU.Data.Connection;
+using HLU.Enums;
 using HLU.Properties;
 
 namespace HLU.UI.ViewModel
@@ -46,7 +47,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public ViewModelSelectConnection()
         {
-            _connectionTypes = [.. Enum.GetValues(typeof(ConnectionTypes)).Cast<ConnectionTypes>().Where(t => t != Data.Connection.ConnectionTypes.Unknown)];
+            _connectionTypes = [.. Enum.GetValues(typeof(ConnectionTypes)).Cast<ConnectionTypes>().Where(t => t != ConnectionTypes.Unknown)];
             object initVal = Enum.Parse(typeof(ConnectionTypes), Settings.Default.DefaultConnectionType, true);
             if (initVal != null) _connectionType = (ConnectionTypes)initVal;
         }
@@ -122,7 +123,7 @@ namespace HLU.UI.ViewModel
         /// connection type is selected.
         /// </summary>
         /// <value><c>true</c> if the Ok command can execute; otherwise, <c>false</c>.</value>
-        private bool CanOk { get { return _connectionType != Data.Connection.ConnectionTypes.Unknown; } }
+        private bool CanOk { get { return _connectionType != ConnectionTypes.Unknown; } }
 
         #endregion Ok Command
 
@@ -153,7 +154,7 @@ namespace HLU.UI.ViewModel
         /// <param name="param">The command parameter.</param>
         private void CancelCommandClick(object param)
         {
-            RequestClose?.Invoke(Data.Connection.ConnectionTypes.Unknown, null);
+            RequestClose?.Invoke(ConnectionTypes.Unknown, null);
         }
 
         #endregion Cancel Command
@@ -165,7 +166,7 @@ namespace HLU.UI.ViewModel
         /// enum excluding the Unknown type.
         /// </summary>
         /// <value>The connection types.</value>
-        public ConnectionTypes[] ConnectionTypes
+        public ConnectionTypes[] AvailableConnectionTypes
         {
             get { return _connectionTypes; }
             set { }
@@ -221,7 +222,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_connectionType == Data.Connection.ConnectionTypes.Unknown)
+                if (_connectionType == ConnectionTypes.Unknown)
                     return "Please choose a connection type";
                 else
                     return null;
@@ -245,7 +246,7 @@ namespace HLU.UI.ViewModel
                 switch (columnName)
                 {
                     case "ConnectionType":
-                        if (_connectionType == Data.Connection.ConnectionTypes.Unknown)
+                        if (_connectionType == ConnectionTypes.Unknown)
                             error = "Error: You must choose a connection type";
                         break;
                 }

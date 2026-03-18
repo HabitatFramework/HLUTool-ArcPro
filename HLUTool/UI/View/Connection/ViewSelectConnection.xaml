@@ -37,7 +37,7 @@
                 Margin="0,4,0,0"
                 IsEditable="True"
                 IsReadOnly="True"
-                ItemsSource="{Binding Path=ConnectionTypes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                ItemsSource="{Binding Path=AvailableConnectionTypes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                 SelectedItem="{Binding ConnectionType}"
                 TabIndex="0"
                 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"

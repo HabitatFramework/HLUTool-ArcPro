@@ -115,6 +115,8 @@ namespace HLU.UI.ViewModel
         private string _autoZoomToSelection;
         private int? _minAutoZoom;
         private int _maxAutoZoom;
+        private string _displayAreaUnits;
+        private string _displayDistanceUnits;
         private int? _maxFeaturesGISSelect;
         private string _workingFileGDBPath;
 
@@ -225,6 +227,8 @@ namespace HLU.UI.ViewModel
             _autoZoomToSelection = AutoZoomToSelectionString(enumValue);
             _minAutoZoom = Settings.Default.MinAutoZoom;
             _maxAutoZoom = Settings.Default.MaxAutoZoom;
+            _displayAreaUnits = Settings.Default.DisplayAreaUnits;
+            _displayDistanceUnits = Settings.Default.DisplayDistanceUnits;
             _maxFeaturesGISSelect = Settings.Default.MaxFeaturesGISSelect;
             _workingFileGDBPath = Settings.Default.WorkingFileGDBPath;
 
@@ -289,7 +293,7 @@ namespace HLU.UI.ViewModel
                 new () { Name = "Dates", Category = "Application", Content = new AppDatesOptions() },
                 new () { Name = "Validation", Category = "Application", Content = new AppValidationOptions() },
                 new () { Name = "Updates", Category = "Application", Content = new AppUpdatesOptions() },
-                new () { Name = "Bulk Update", Category = "Application", Content = new AppBulkUpdateOptions() },
+                new () { Name = "Bulk Updates", Category = "Application", Content = new AppBulkUpdateOptions() },
                 new () { Name = "Interface", Category = "User", Content = new UserInterfaceOptions() },
                 new () { Name = "GIS", Category = "User", Content = new UserGISOptions() },
                 new () { Name = "Updates", Category = "User", Content = new UserUpdatesOptions() },
@@ -711,6 +715,8 @@ namespace HLU.UI.ViewModel
             var enumValue = AutoZoomToSelectionEnum(_autoZoomToSelection);
             Settings.Default.AutoZoomToSelection = (int)enumValue;
             Settings.Default.MinAutoZoom = (int)_minAutoZoom;
+            Settings.Default.DisplayAreaUnits = _displayAreaUnits;
+            Settings.Default.DisplayDistanceUnits = _displayDistanceUnits;
             Settings.Default.MaxFeaturesGISSelect = (int)_maxFeaturesGISSelect;
             Settings.Default.WorkingFileGDBPath = _workingFileGDBPath;
 
@@ -1935,6 +1941,50 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
+        /// Gets the available display area unit options.
+        /// </summary>
+        /// <value>The list of supported area unit strings.</value>
+        public static string[] DisplayAreaUnitOptions =>
+            ["m²", "km²", "ha", "ac", "ft²", "mi²"];
+
+        /// <summary>
+        /// Gets or sets the display area units choice.
+        /// </summary>
+        /// <value>The display area units string (e.g. "ha").</value>
+        public string DisplayAreaUnits
+        {
+            get => _displayAreaUnits;
+            set
+            {
+                _displayAreaUnits = value;
+                OnPropertyChanged(nameof(DisplayAreaUnits));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
+        /// Gets the available display distance unit options.
+        /// </summary>
+        /// <value>The list of supported distance unit strings.</value>
+        public static string[] DisplayDistanceUnitOptions =>
+            ["m", "km", "ft", "mi", "yd"];
+
+        /// <summary>
+        /// Gets or sets the display distance units choice.
+        /// </summary>
+        /// <value>The display distance units string (e.g. "km").</value>
+        public string DisplayDistanceUnits
+        {
+            get => _displayDistanceUnits;
+            set
+            {
+                _displayDistanceUnits = value;
+                OnPropertyChanged(nameof(DisplayDistanceUnits));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the maximum number of features at which to warn the user before selecting.
         /// </summary>
         /// <value>The maximum number of features at which to warn the user before selecting.</value>
@@ -2522,6 +2572,14 @@ namespace HLU.UI.ViewModel
                     => "Error: Minimum auto zoom scale must be at least 100.",
                 "MinAutoZoom" when Convert.ToInt32(MinAutoZoom) > Settings.Default.MaxAutoZoom
                     => $"Error: Minimum auto zoom scale must not be greater than {Settings.Default.MaxAutoZoom}.",
+                "DisplayAreaUnits" when String.IsNullOrEmpty(DisplayAreaUnits)
+                    => "Error: Select the area units to use for display.",
+                "DisplayAreaUnits" when !DisplayAreaUnitOptions.Contains(DisplayAreaUnits)
+                    => "Error: Select a valid area unit.",
+                "DisplayDistanceUnits" when String.IsNullOrEmpty(DisplayDistanceUnits)
+                    => "Error: Select the distance units to use for display.",
+                "DisplayDistanceUnits" when !DisplayDistanceUnitOptions.Contains(DisplayDistanceUnits)
+                    => "Error: Select a valid distance unit.",
                 "MaxFeaturesGISSelect" when (Convert.ToInt32(MaxFeaturesGISSelect) < 0 || MaxFeaturesGISSelect == null)
                     => "Error: Maximum features expected before warning on select must be zero or greater.",
                 "MaxFeaturesGISSelect" when Convert.ToInt32(MaxFeaturesGISSelect) > 100000
@@ -2595,9 +2653,9 @@ namespace HLU.UI.ViewModel
                 ("Application", "Dates") => ["SeasonSpring", "SeasonSummer", "SeasonAutumn", "SeasonWinter", "VagueDateDelimiter"],
                 ("Application", "Validation") => ["HabitatSecondaryCodeValidation", "PrimarySecondaryCodeValidation", "QualityValidation", "PotentialPriorityDetermQtyValidation"],
                 ("Application", "Updates") => ["SubsetUpdateAction", "ClearIHSUpdateAction", "SecondaryCodeDelimiter"],
-                ("Application", "Bulk Update") => ["BulkDeterminationQuality", "BulkInterpretationQuality", "OSMMSourceId"],
+                ("Application", "Bulk Updates") => ["BulkDeterminationQuality", "BulkInterpretationQuality", "OSMMSourceId"],
                 ("User", "Interface") => ["ShowOSMMUpdatesOption", "MessageAutoDismissError", "MessageAutoDismissWarning", "MessageAutoDismissInfo", "MessageAutoDismissSuccess"],
-                ("User", "GIS") => ["AutoZoomToSelectionOption", "MinAutoZoom", "MaxFeaturesGISSelect", "WorkingFileGDBPath"],
+                ("User", "GIS") => ["AutoZoomToSelectionOption", "MinAutoZoom", "DisplayAreaUnits", "DisplayDistanceUnits", "MaxFeaturesGISSelect", "WorkingFileGDBPath"],
                 ("User", "Updates") => ["DefaultReason", "DefaultProcess", "DefaultHabitatClass", "DefaultSecondaryGroup", "SecondaryCodeOrder", "NotifyOnSplitMerge"],
                 ("User", "SQL") => ["GetValueRows", "SQLPath"],
                 ("User", "History") => ["HistoryColumns", "HistoryDisplayGeometry", "HistoryDisplayLastN"],

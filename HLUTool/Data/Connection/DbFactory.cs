@@ -19,6 +19,7 @@
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using ActiproSoftware.Windows.Controls;
+using HLU.Enums;
 using HLU.Properties;
 using HLU.UI.View.Connection;
 using HLU.UI.ViewModel;

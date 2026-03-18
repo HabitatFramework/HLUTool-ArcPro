@@ -968,5 +968,31 @@ namespace HLU.Properties {
                 this["MessageAutoDismissSuccess"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("ha")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
+        public string DisplayAreaUnits {
+            get {
+                return ((string)(this["DisplayAreaUnits"]));
+            }
+            set {
+                this["DisplayAreaUnits"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("km")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
+        public string DisplayDistanceUnits {
+            get {
+                return ((string)(this["DisplayDistanceUnits"]));
+            }
+            set {
+                this["DisplayDistanceUnits"] = value;
+            }
+        }
     }
 }

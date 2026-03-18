@@ -44,10 +44,6 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="6" />
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="6" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="6" />
-                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <Grid Grid.Row="0">
@@ -105,7 +101,92 @@
 
                     </Grid>
 
-                    <Grid x:Name="GridMaxFeaturesGISSelect" Grid.Row="4">
+                </Grid>
+            </Expander>
+
+            <Expander
+                Margin="6,10,0,0"
+                Header="Display Units"
+                IsExpanded="True">
+
+                <Grid Margin="12,4,4,2" HorizontalAlignment="Left">
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="6" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="Auto" MinWidth="80" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Label
+                            Grid.Column="0"
+                            HorizontalAlignment="Left"
+                            Content="Display Area Units" />
+                        <ComboBox
+                            Grid.Column="1"
+                            ItemsSource="{Binding DisplayAreaUnitOptions}"
+                            SelectedValue="{Binding DisplayAreaUnits, ValidatesOnDataErrors=True}"
+                            Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                            ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}" />
+                        <controls:InfoButton
+                            Grid.Column="2"
+                            Margin="5,0,0,0"
+                            Description="Select the units used to display the area of the current INCID in the main interface and in history records."
+                            Header="Display Area Units" />
+
+                    </Grid>
+
+                    <Grid Grid.Row="2">
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="Auto" MinWidth="80" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Label
+                            Grid.Column="0"
+                            HorizontalAlignment="Left"
+                            Content="Display Distance Units" />
+                        <ComboBox
+                            Grid.Column="1"
+                            ItemsSource="{Binding DisplayDistanceUnitOptions}"
+                            SelectedValue="{Binding DisplayDistanceUnits, ValidatesOnDataErrors=True}"
+                            Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                            ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}" />
+                        <controls:InfoButton
+                            Grid.Column="2"
+                            Margin="5,0,0,0"
+                            Description="Select the units used to display the perimeter length of the current INCID in the main interface and in history records."
+                            Header="Display Distance Units" />
+
+                    </Grid>
+
+                </Grid>
+
+            </Expander>
+
+            <Expander
+                Margin="6,10,0,0"
+                Header="GIS Options"
+                IsExpanded="True">
+
+                <Grid Margin="12,4,4,2" HorizontalAlignment="Left">
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="6" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid x:Name="GridMaxFeaturesGISSelect" Grid.Row="0">
 
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
@@ -135,7 +216,7 @@
                             Header="Warn Before GIS Select" />
                     </Grid>
 
-                    <Grid x:Name="GridWorkingFileGDBPath" Grid.Row="6">
+                    <Grid x:Name="GridWorkingFileGDBPath" Grid.Row="2">
 
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />

@@ -29,7 +29,7 @@
 
             <Label
                 HorizontalAlignment="Left"
-                Content="Set user options for update operations"
+                Content="Set user options for updates"
                 FontSize="14"
                 FontWeight="Medium" />
 

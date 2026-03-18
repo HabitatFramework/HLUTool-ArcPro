@@ -19,6 +19,7 @@
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using ArcGIS.Desktop.Framework;
+using HLU.Enums;
 using HLU.Properties;
 using Microsoft.Data.SqlClient;
 using System;

@@ -30,7 +30,7 @@
 
             <Label
                 HorizontalAlignment="Left"
-                Content="Set user options for Export"
+                Content="Set user options for export"
                 FontSize="14"
                 FontWeight="Medium" />
 

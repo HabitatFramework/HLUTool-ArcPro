@@ -27,6 +27,7 @@ using System.Windows;
 using System.Windows.Input;
 using HLU.Data.Connection;
 using HLU.Properties;
+using HLU.Enums;
 using Oracle.ManagedDataAccess.Client;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 

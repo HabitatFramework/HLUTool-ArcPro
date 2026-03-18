@@ -21,6 +21,7 @@ using System;
 using System.Globalization;
 using System.Windows.Data;
 using HLU.Date;
+using HLU.Enums;
 
 namespace HLU.Converters
 {
@@ -49,9 +50,9 @@ namespace HLU.Converters
                 if (vd.IsBad)
                     return vd.UserEntry;
                 else if (vd.IsUnknown)
-                    return VagueDate.VagueDateTypes.Unknown.ToString();
+                    return VagueDateTypes.Unknown.ToString();
                 else
-                    return Date.VagueDate.FromVagueDateInstance(vd, VagueDate.DateType.Vague);
+                    return Date.VagueDate.FromVagueDateInstance(vd, DateType.Vague);
             }
             catch { }
 
@@ -77,8 +78,8 @@ namespace HLU.Converters
                 string dateType = VagueDate.GetType(vagueDateString, out formattedDateString);
 
                 // Set the start and end dates.
-                int startDate = Date.VagueDate.ToTimeSpanDays(formattedDateString, dateType, VagueDate.DateType.Start);
-                int endDate = Date.VagueDate.ToTimeSpanDays(formattedDateString, dateType, VagueDate.DateType.End);
+                int startDate = Date.VagueDate.ToTimeSpanDays(formattedDateString, dateType, DateType.Start);
+                int endDate = Date.VagueDate.ToTimeSpanDays(formattedDateString, dateType, DateType.End);
 
                 return new Date.VagueDateInstance(startDate, endDate, dateType, vagueDateString);
             }

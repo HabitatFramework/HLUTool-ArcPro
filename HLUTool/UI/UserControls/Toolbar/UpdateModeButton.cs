@@ -19,6 +19,7 @@
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using HLU.UI.ViewModel;
+using HLU.Enums;
 using System;
 using System.Windows;
 

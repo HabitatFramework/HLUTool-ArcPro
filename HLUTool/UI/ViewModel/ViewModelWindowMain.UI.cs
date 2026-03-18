@@ -458,12 +458,45 @@ namespace HLU.UI.ViewModel
                 if ((IsNotBulkMode) && (IsNotOsmmReviewMode || _osmmUpdatesEmpty == false))
                 {
                     GetIncidMeasures();
-                    return _incidArea.ToString();
+                    return _incidArea.ToString(AreaFormatString);
                 }
                 else
                 {
                     return null;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Gets the area field label reflecting the configured display area units.
+        /// </summary>
+        public string IncidAreaLabel
+        {
+            get
+            {
+                return $"Area [{Settings.Default.DisplayAreaUnits}]";
+            }
+        }
+
+        /// <summary>
+        /// Gets the numeric format string for the configured display area unit,
+        /// selecting decimal places appropriate to the unit's typical magnitude
+        /// for habitat polygon data.
+        /// </summary>
+        private static string AreaFormatString
+        {
+            get
+            {
+                return Settings.Default.DisplayAreaUnits switch
+                {
+                    "m²" => "N0", // integer — m² values are large whole numbers
+                    "km²" => "N6", // small features are tiny fractions of km²
+                    "ha" => "N4", // standard precision for habitat mapping
+                    "ac" => "N3", // common convention for acres
+                    "ft²" => "N0", // integer
+                    "mi²" => "N6", // small features are tiny fractions of mi²
+                    _ => "N4"  // fallback
+                };
             }
         }
 
@@ -480,7 +513,7 @@ namespace HLU.UI.ViewModel
                 if ((IsNotBulkMode) && (IsNotOsmmReviewMode || _osmmUpdatesEmpty == false))
                 {
                     GetIncidMeasures();
-                    return _incidLength.ToString();
+                    return _incidLength.ToString(LengthFormatString);
                 }
                 else
                 {
@@ -488,6 +521,40 @@ namespace HLU.UI.ViewModel
                 }
             }
         }
+
+        /// <summary>
+        /// Gets the length field label reflecting the configured display distance units.
+        /// </summary>
+        public string IncidLengthLabel
+        {
+            get
+            {
+                return $"Length [{Settings.Default.DisplayDistanceUnits}]";
+            }
+        }
+
+        /// <summary>
+        /// Gets the numeric format string for the configured display distance unit,
+        /// selecting decimal places appropriate to the unit's typical magnitude
+        /// for habitat polygon perimeters.
+        /// </summary>
+        private static string LengthFormatString
+        {
+            get
+            {
+                return Settings.Default.DisplayDistanceUnits switch
+                {
+                    "m" => "N0", // integer metres
+                    "km" => "N3", // standard for perimeter lengths
+                    "ft" => "N0", // integer feet
+                    "mi" => "N4", // small perimeters are fractions of a mile
+                    "yd" => "N1", // one decimal is sufficient
+                    _ => "N3"  // fallback
+                };
+            }
+        }
+
+
 
         /// <summary>
         /// Gets or sets the created date of the current incid.
@@ -4770,33 +4837,44 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Formats the modified length and area values for a history entry,
-        /// summing distinct polygon rows and expressing the totals in kilometres
-        /// and hectares respectively.
+        /// summing distinct polygon rows and expressing the totals in the
+        /// configured display units.
         /// </summary>
-        /// <param name="g">The grouped history rows for one logical history entry.</param>
+        /// <param name="g">The grouped history rows for one logical
+        /// history entry.</param>
         /// <returns>
-        /// A two-line string containing the modified length [km] and area [ha],
-        /// or an empty string when no geometry data is available.
+        /// A two-line string containing the modified length and area in
+        /// the configured display units, or an empty string when no
+        /// geometry data is available.
         /// </returns>
         private string FormatHistoryGeometry(
             IGrouping<dynamic, HluDataSet.historyRow> g)
         {
+            // Get the distinct set of history rows that have geometry changes to avoid double
+            // counting when multiple columns were updated in the same operation.
             IEnumerable<HluDataSet.historyRow> distinctRows =
                 g.Distinct(_histRowEqComp);
 
-            double lengthKm = Math.Round(
+            // Convert the length and area from the history rows to the display units, summing
+            // across all distinct rows for the entry.
+            double length = ConvertLength(
                 distinctRows.Sum(r => !r.Ismodified_lengthNull()
-                    ? r.modified_length / 1000 : 0), 3);
+                    ? r.modified_length : 0));
 
-            double areaHa = Math.Round(
+            double area = ConvertArea(
                 distinctRows.Sum(r => !r.Ismodified_areaNull()
-                    ? r.modified_area / 10000 : 0), 4);
+                    ? r.modified_area : 0));
+            // Get the display units for length and area from user settings.
+            string areaUnits = Settings.Default.DisplayAreaUnits;
+            string lengthUnits = Settings.Default.DisplayDistanceUnits;
 
+            // Format the geometry string with the converted values and units, or return an empty
+            // string if no geometry data is available.
             return
-                String.Format("\n\tModified Length: {0} [km]",
-                    lengthKm.ToString("f3")) +
-                String.Format("\n\tModified Area: {0} [ha]",
-                    areaHa.ToString("f4"));
+                String.Format("\n\tModified Length: {0} [{1}]",
+                    length.ToString(LengthFormatString), lengthUnits) +
+                String.Format("\n\tModified Area: {0} [{1}]",
+                    area.ToString(AreaFormatString), areaUnits);
         }
 
         #endregion Properties - History Tab
@@ -8562,7 +8640,7 @@ namespace HLU.UI.ViewModel
         /// Open the OSMM Updates query window when in OSMM Update mode.
         /// </summary>
         /// <param name="initialise">Whether to initialise the window.</param>
-        public void OpenWindowQueryOSMM(bool initialise)
+        public async void OpenWindowQueryOSMM(bool initialise)
         {
             if (initialise)
             {
@@ -8581,7 +8659,7 @@ namespace HLU.UI.ViewModel
                 //ClearForm();      // Already cleared
 
                 // Clear the map selection.
-                _gisApp.ClearMapSelection();
+                await _gisApp.ClearMapSelectionAsync();
 
                 // Reset the map counters
                 _selectedIncidsInGISCount = 0;
@@ -8673,7 +8751,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="initialise">if set to <c>true</c> [initialise].</param>
         /// <exception cref="Exception">No parent window loaded</exception>
-        public void OpenWindowQueryOSMMAdvanced(bool initialise)
+        public async void OpenWindowQueryOSMMAdvanced(bool initialise)
         {
             if (initialise)
             {
@@ -8692,7 +8770,7 @@ namespace HLU.UI.ViewModel
                 ClearForm();
 
                 // Clear the map selection.
-                _gisApp.ClearMapSelection();
+                await _gisApp.ClearMapSelectionAsync();
 
                 // Reset the map counters
                 _selectedIncidsInGISCount = 0;
@@ -9453,8 +9531,7 @@ namespace HLU.UI.ViewModel
             _incidMMPolygonsIncidFilter.Value = Incid;
             HluDataSet.incid_mm_polygonsDataTable table = HluDataset.incid_mm_polygons;
 
-            List<SqlFilterCondition> incidCond =
-                new([_incidMMPolygonsIncidFilter]);
+            List<SqlFilterCondition> incidCond = new([_incidMMPolygonsIncidFilter]);
             List<List<SqlFilterCondition>> incidCondList = [incidCond];
             GetIncidMMPolygonRows(incidCondList, ref table);
 
@@ -9466,8 +9543,49 @@ namespace HLU.UI.ViewModel
                 _incidLength += r.shape_length;
             }
 
-            _incidArea = Math.Round(_incidArea / 10000, 4);
-            _incidLength = Math.Round(_incidLength / 1000, 3);
+            // Convert from native storage units (m² / m) to configured
+            // display units. No rounding here — deferred to display.
+            _incidArea = ConvertArea(_incidArea);
+            _incidLength = ConvertLength(_incidLength);
+        }
+
+        /// <summary>
+        /// Converts an area value from square metres to the configured
+        /// display unit.
+        /// </summary>
+        /// <param name="squareMetres">The area in square metres.</param>
+        /// <returns>The area in the configured display unit.</returns>
+        private static double ConvertArea(double squareMetres)
+        {
+            return Settings.Default.DisplayAreaUnits switch
+            {
+                "m²" => squareMetres,
+                "km²" => squareMetres / 1_000_000d,
+                "ha" => squareMetres / 10_000d,
+                "ac" => squareMetres / 4_046.8564d,
+                "ft²" => squareMetres * 10.76391d,
+                "mi²" => squareMetres / 2_589_988.11d,
+                _ => squareMetres / 10_000d // fallback: ha
+            };
+        }
+
+        /// <summary>
+        /// Converts a length value from metres to the configured display
+        /// unit.
+        /// </summary>
+        /// <param name="metres">The length in metres.</param>
+        /// <returns>The length in the configured display unit.</returns>
+        private static double ConvertLength(double metres)
+        {
+            return Settings.Default.DisplayDistanceUnits switch
+            {
+                "m" => metres,
+                "km" => metres / 1_000d,
+                "ft" => metres * 3.280839895d,
+                "mi" => metres / 1_609.344d,
+                "yd" => metres * 1.093613d,
+                _ => metres / 1_000d // fallback: km
+            };
         }
 
         #endregion Formatting Helpers

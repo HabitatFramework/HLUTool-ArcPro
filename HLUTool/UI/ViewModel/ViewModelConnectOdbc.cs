@@ -26,6 +26,7 @@ using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Input;
+using HLU.Enums;
 using HLU.Data.Connection;
 using Microsoft.Win32;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;

@@ -67,6 +67,7 @@ using LinearUnit = ArcGIS.Core.Geometry.LinearUnit;
 using QueryFilter = ArcGIS.Core.Data.QueryFilter;
 using SpatialReference = ArcGIS.Core.Geometry.SpatialReference;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
+using HLU.Enums;
 using HLU.Helpers;
 using HLU.Exceptions;
 //using ArcGIS.Core.Internal.CIM;
@@ -78,23 +79,6 @@ namespace HLU.GISApplication
     /// </summary>
     internal partial class ArcProApp : SqlBuilder
     {
-        #region Enums
-
-        public enum DistanceUnits
-        {
-            Chains, Centimeters, Feet, Inches, Kilometers, Links, Meters,
-            Miles, Millimeters, NauticalMiles, Rods, SurveyFeet, Yards
-        }
-
-        public enum AreaUnits
-        {
-            Acres, Hectares, Perches, Roods, SquareChains, SquareCentimeters,
-            SquareFeet, SquareInches, SquareKilometers, SquareLinks, SquareMeters,
-            SquareMiles, SquareMillimeters, SquareRods, SquareSurveyFeet, SquareYards
-        }
-
-        #endregion Enums
-
         #region Fields
 
         /// <summary>
@@ -123,27 +107,25 @@ namespace HLU.GISApplication
         private string _dateFormatString = null;
 
         /// <summary>
+        /// Workspace-dependent wildcard character for single-character matches in SQL queries.
+        /// </summary>
+        private string _wildcardSingleMatch = null;
+
+        /// <summary>
+        /// Workspace-dependent wildcard character for multi-character matches in SQL queries.
+        /// </summary>
+        private string _wildcardManyMatch = null;
+
+        /// <summary>
         /// Number format to the ToString() method when adding floating point numbers to SQL queries.
         /// ArcGIS expect a decimal point regardless of regional settings.
         /// </summary>
         private NumberFormatInfo _numberFormatInfo;
 
-        //TODO: ArcGIS
-        ///// <summary>
-        ///// Dictionay of ESRI SQL predicates and their string equivalents.
-        ///// </summary>
-        //private Dictionary<String, esriSQLPredicates> _sqlPredicates;
-
         /// <summary>
         /// Template of the HLU layer's data structure.
         /// </summary>
         private HluGISLayer.incid_mm_polygonsDataTable _hluLayerStructure;
-
-        //TODO: ArcGIS
-        ///// <summary>
-        ///// The workspace of the feature class of the HLU layer.
-        ///// </summary>
-        //private IFeatureWorkspace _hluWS;
 
         /// <summary>
         /// The HLU map layer.
@@ -160,30 +142,16 @@ namespace HLU.GISApplication
         /// </summary>
         private HLULayer _hluActiveLayer;
 
-        //TODO: ArcGIS
-        ///// <summary>
-        ///// Persisted HLU layer that is cloned every time the application starts.
-        ///// </summary>
-        //private IGeoFeatureLayer _templateLayer;
-
         /// <summary>
         /// The feature class of the HLU layer.
         /// </summary>
         private FeatureClass _hluFeatureClass;
 
-        //TODO: ArcPro
         /// <summary>
         /// The map of the HLU layer cast as IActiveView.
         /// </summary>
         private MapView _hluView;
 
-        //TODO: ArcGIS
-        ///// <summary>
-        ///// SQL syntax supported by the HLU workspace.
-        ///// </summary>
-        //private ISQLSyntax _hluWSSqlSyntax;
-
-        //TODO: Is _hluFeatureClass Needed?
         /// <summary>
         /// Maps the _hluFeatureClass data structure onto _hluLayerStructure.
         /// This is required by shapefiles with potentially truncated field names.
@@ -196,21 +164,6 @@ namespace HLU.GISApplication
         /// Field names of the HLU feature class, in the same order as in _hluFieldMap
         /// </summary>
         private string[] _hluFieldNames;
-
-        /// <summary>
-        /// Area unit of measurement (currently unused).
-        /// </summary>
-        private int _unitArea;
-
-        /// <summary>
-        /// Distance unit of measurement (currently unused.)
-        /// </summary>
-        private int _unitDistance;
-
-        /// <summary>
-        /// Maximum (nominal) allowable length of a SQL query.
-        /// </summary>
-        private int _maxSqlLength = Settings.Default.MaxSqlLengthArcGIS;
 
         #endregion Fields
 
@@ -310,6 +263,12 @@ namespace HLU.GISApplication
         {
             _quotePrefix = string.Empty;
             _quoteSuffix = string.Empty;
+            _wildcardSingleMatch = "_";
+            _wildcardManyMatch = "%";
+
+            // Set a default number format string that should work for most sources. This is used when
+            // formatting number values to strings for inclusion in SQL queries.
+            _numberFormatInfo = NumberFormatInfo.InvariantInfo;
 
             var map = MapView.Active?.Map;
             if (map == null)
@@ -340,6 +299,8 @@ namespace HLU.GISApplication
                 {
                     _quotePrefix = "[";
                     _quoteSuffix = "]";
+                    _wildcardSingleMatch = "_";
+                    _wildcardManyMatch = "%";
                     return;
                 }
 
@@ -347,6 +308,8 @@ namespace HLU.GISApplication
                 {
                     _quotePrefix = "\"";
                     _quoteSuffix = "\"";
+                    _wildcardSingleMatch = "_";
+                    _wildcardManyMatch = "%";
                     return;
                 }
             }
@@ -439,9 +402,7 @@ namespace HLU.GISApplication
         {
             get
             {
-                //TODO: ArcGIS
-                //return SQLSyntax.GetSpecialCharacter(esriSQLSpecialCharacters.esriSQL_WildcardSingleMatch);
-                return null;
+                return _wildcardSingleMatch;
             }
         }
 
@@ -453,9 +414,7 @@ namespace HLU.GISApplication
         {
             get
             {
-                //TODO: ArcGIS
-                //return SQLSyntax.GetSpecialCharacter(esriSQLSpecialCharacters.esriSQL_WildcardManyMatch);
-                return null;
+                return _wildcardManyMatch;
             }
         }
 
@@ -464,22 +423,6 @@ namespace HLU.GISApplication
         /// </summary>
         /// <value>The concatenate operator string.</value>
         public override string ConcatenateOperator { get { return "&"; } }
-
-        //TODO: Remove?
-        ///// <summary>
-        ///// The the quote character for ArcGIS Pro.
-        ///// </summary>
-        ///// <param name="identifier"></param>
-        ///// <returns></returns>
-        //public override string QuoteIdentifier(string identifier)
-        //{
-        //    if (!String.IsNullOrEmpty(identifier))
-        //    {
-        //        if (!identifier.StartsWith(QuotePrefix)) identifier = identifier.Insert(0, QuotePrefix);
-        //        if (!identifier.EndsWith(QuoteSuffix)) identifier += QuoteSuffix;
-        //    }
-        //    return identifier;
-        //}
 
         /// <summary>
         /// Quotes a value for use in a SQL query, based on its type and the requirements of ArcGIS Pro.
@@ -625,10 +568,11 @@ namespace HLU.GISApplication
         public override DataTable SqlSelect(bool selectDistinct,
             DataColumn[] targetList, List<SqlFilterCondition> whereConds)
         {
-            //TODO: _arcMap
+            /// Checks for valid input parameters. If any are invalid, an empty DataTable is returned.
             if ((_hluLayer == null) || (_hluView == null) ||
                 (targetList == null) || (targetList.Length == 0)) return new();
 
+            // Try to perform the SQL select operation, catching any exceptions and displaying an error message if it fails.
             try
             {
                 DataTable resultTable;
@@ -661,10 +605,11 @@ namespace HLU.GISApplication
         public DataTable SqlSelect(bool selectDistinct, bool addGeometryInfo,
             DataColumn[] targetList, List<SqlFilterCondition> whereConds)
         {
-            //TODO: _arcMap
+            // Checks for valid input parameters. If any are invalid, an empty DataTable is returned.
             if ((_hluLayer == null) || (_hluView == null) ||
                 (targetList == null) || (targetList.Length == 0)) return new();
 
+            // Try to perform the SQL select operation, catching any exceptions and displaying an error message if it fails.
             try
             {
                 DataTable resultTable;
@@ -695,10 +640,11 @@ namespace HLU.GISApplication
         public override DataTable SqlSelect(bool selectDistinct,
             DataTable[] targetTables, List<SqlFilterCondition> whereConds)
         {
-            //TODO: _arcMap
+            // Checks for valid input parameters. If any are invalid, an empty DataTable is returned.
             if ((_hluLayer == null) || (_hluView == null) || (targetTables == null) ||
                 (targetTables.Length == 0) || (targetTables[0].Columns.Count == 0)) return new();
 
+            // Try to perform the SQL select operation, catching any exceptions and displaying an error message if it fails.
             try
             {
                 DataTable resultTable;
@@ -780,82 +726,6 @@ namespace HLU.GISApplication
         #region Other Public Methods
 
         public static readonly string HistoryAdditionalFieldsDelimiter = Settings.Default.HistoryAdditionalFieldsDelimiter;
-
-        /// <summary>
-        /// Asynchronous method to read the map selection using a SQL select and populate the DataTable.
-        /// </summary>
-        /// <param name="scratchMdbPath">The path to the scratch geodatabase.</param>
-        /// <param name="selectionTableName">The name of the selection table.</param>
-        /// <param name="targetColumns">The array of target columns for the SQL select.</param>
-        /// <returns>The resulting DataTable with the selected data.</returns>
-        public DataTable SqlSelect(string scratchMdbPath,
-            string selectionTableName, DataColumn[] targetColumns)
-        {
-            //try
-            //{
-            //    bool qualifyColumns = false;
-            //    DataTable resultTable;
-            //    string subFields = TargetList(targetColumns, false, true,
-            //        ref qualifyColumns, out resultTable);
-
-            //    List<string> selectionList = IpcArcMap([ "sj", scratchMdbPath,
-            //        selectionTableName, subFields, "false" ]);
-
-            //    ThrowPipeError(selectionList);
-
-            //    foreach (string s in selectionList)
-            //    {
-            //        string[] items = s.Split(PipeFieldDelimiter);
-            //        resultTable.Rows.Add(items);
-            //    }
-
-            //    return resultTable;
-            //}
-            //catch (Exception ex)
-            //{
-            //    MessageBox.Show(String.Format("Map selection failed. " +
-            //        "ArcMap returned the following error message:\n\n{0}", ex.Message),
-            //        "HLU: Selection Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            //    return null;
-            //}
-            return null;
-        }
-
-        /// <summary>
-        /// Calculate the approximate length of the SQL statement that will be
-        /// used in GIS so that it can be determined if the selection can be
-        /// performed using a direct query or if a table join is needed.
-        /// </summary>
-        /// <param name="targetList">The target list of data columns.</param>
-        /// <param name="whereConds">The SQL WHERE conditions.</param>
-        /// <returns>Integer of the approximate length of the SQL statement that will
-        /// meet the where conditions.</returns>
-        public int SqlLength(DataColumn[] targetList, List<SqlFilterCondition> whereConds)
-        {
-            //TODO: _arcMap
-            if ((_hluLayer == null) || (_hluView == null) ||
-                (targetList == null) || (targetList.Length == 0))
-                return 0;
-
-            try
-            {
-                bool qualifyColumns = false;
-                bool additionalTables;
-                DataTable resultTable = null;
-
-                string subFields = TargetList(targetList, false, true, ref qualifyColumns, out resultTable);
-                string fromList = qualifyColumns ?
-                    FromList(false, targetList, false, ref whereConds, out additionalTables) : _hluLayer.Name;
-
-                int sqlLen = WhereClause(false, false, true, MapWhereClauseFields(_hluLayerStructure, whereConds)).Length;
-
-                return sqlLen;
-            }
-            catch
-            {
-                return 0;
-            }
-        }
 
         /// <summary>
         /// Asynchronous method to read the map selection and populate the DataTable.
@@ -1676,19 +1546,6 @@ namespace HLU.GISApplication
 
         #endregion Zoom
 
-        #region OLD?
-
-        //TODO: Replace calls with ClearMapSelectionAsync
-        /// <summary>
-        /// Clears the currently selected map features.
-        /// </summary>
-        public void ClearMapSelection()
-        {
-            //IpcArcMap(["cs"]);
-        }
-
-        #endregion Selection
-
         #region Helpers
 
         /// <summary>
@@ -2237,14 +2094,15 @@ namespace HLU.GISApplication
                         // Update geometry fields if they exist (primarily shapefiles).
                         if (row is Feature feature)
                         {
-                            //TODO: Can this use GetGeometryHistoryValues() instead?
                             Geometry shape = feature.GetShape();
 
                             if (shape != null)
                             {
                                 // Only tries for shapefile-style fields; failures are ignored.
-                                TrySetRowValue(row, shapeLengthFieldIndex, GeometryEngine.Instance.Length(shape));
-                                TrySetRowValue(row, shapeAreaFieldIndex, GeometryEngine.Instance.Area(shape));
+                                (double geom1, double geom2) =
+                                    GetGeometryHistoryValues(shape);
+                                TrySetRowValue(row, shapeLengthFieldIndex, geom1);
+                                TrySetRowValue(row, shapeAreaFieldIndex, geom2);
                             }
                         }
 
@@ -3230,10 +3088,6 @@ namespace HLU.GISApplication
             DataColumn[] historyColumns,
             List<SqlFilterCondition> selectionWhereClause)
         {
-            //TODO: Needed?
-            // Ensure selection event handlers do not interfere
-            //_selectFieldOrdinals = null;
-
             // Create a query filter for selecting features
             QueryFilter queryFilter = new()
             {
@@ -3330,10 +3184,7 @@ namespace HLU.GISApplication
             List<SqlFilterCondition> selectionWhereClause,
             EditOperation editOperation)
         {
-            //TODO: Needed?
-            // Ensure selection event handlers do not interfere.
-            //_selectFieldOrdinals = null;
-
+            // Check parameters.
             ArgumentNullException.ThrowIfNull(editOperation);
 
             // Create a query filter for selecting features.
@@ -4075,301 +3926,6 @@ namespace HLU.GISApplication
 
         #endregion Export
 
-        #region Private Methods
-
-        //TODO: ArcGIS
-        //private ITable CreateQueryTable(IWorkspace workspace, IQueryDef queryDef, String tableName)
-        //{
-        //    // create a reference to a TableQueryName object.
-        //    IQueryName2 queryName2 = (IQueryName2)CreateArcObject<TableQueryNameClass>(Settings.Default.UseObjectFactory);
-        //    queryName2.PrimaryKey = "";
-
-        //    // specify the query definition.
-        //    queryName2.QueryDef = queryDef;
-
-        //    // get a name object for the workspace.
-        //    IDataset dataset = (IDataset)workspace;
-        //    IWorkspaceName workspaceName = (IWorkspaceName)dataset.FullName;
-
-        //    // cast the TableQueryName object to the IDatasetName interface and open it.
-        //    IDatasetName datasetName = (IDatasetName)queryName2;
-        //    datasetName.WorkspaceName = workspaceName;
-        //    datasetName.Name = tableName;
-        //    IName name = (IName)datasetName;
-
-        //    // open the name object and get a reference to a table object.
-        //    ITable table = (ITable)name.Open();
-        //    return table;
-        //}
-
-        private int[] OutputFieldOrdinals(DataTable resultTable)
-        {
-            int[] ordinals = new int[resultTable.Columns.Count];
-            for (int i = 0; i < ordinals.Length; i++)
-                ordinals[i] = GetFieldOrdinal(resultTable.Columns[i].ColumnName);
-            return ordinals;
-        }
-
-        //TODO: ArcGIS
-        //private void SelectionSetToTable(ISelectionSet selectionSet, ref DataTable resultTable)
-        //{
-        //    using (ComReleaser comReleaser = new())
-        //    {
-        //        ICursor resultCursor;
-        //        selectionSet.Search(null, true, out resultCursor);
-        //        comReleaser.ManageLifetime(resultCursor);
-        //        int[] ordinals = OutputFieldOrdinals(resultTable);
-        //        IRow selectRow;
-        //        DataRow resultRow;
-        //        while ((selectRow = resultCursor.NextRow()) != null)
-        //        {
-        //            resultRow = resultTable.NewRow();
-        //            for (int i = 0; i < ordinals.Length; i++)
-        //                resultRow[i] = selectRow.get_Value(ordinals[i]);
-        //            resultTable.Rows.Add(resultRow);
-        //            selectRow = resultCursor.NextRow();
-        //        }
-        //        resultCursor.Flush();
-        //    }
-        //}
-
-        //TODO: ArcGIS
-        //private void CursorToDataTable(ICursor cursor, ref DataTable resultTable)
-        //{
-        //    DataRow resultRow;
-        //    IRow selectRow;
-        //    using (ComReleaser comReleaser = new())
-        //    {
-        //        comReleaser.ManageLifetime(cursor);
-        //        while ((selectRow = cursor.NextRow()) != null)
-        //        {
-        //            resultRow = resultTable.NewRow();
-        //            for (int i = 0; i < selectRow.Fields.FieldCount; i++)
-        //                resultRow[i] = selectRow.get_Value(i);
-        //            resultTable.Rows.Add(resultRow);
-        //            selectRow = cursor.NextRow();
-        //        }
-        //        cursor.Flush();
-        //    }
-        //}
-
-        //TODO: ArcGIS
-        //private void SelectedIDs(ISelectionSet selectionSet, ref DataTable resultTable)
-        //{
-        //    if ((selectionSet == null) || (selectionSet.Count == 0) || (resultTable == null) ||
-        //        (resultTable.Columns[0].DataType != typeof(System.Int32))) return;
-
-        //    DataRow resultRow;
-        //    IEnumIDs selIDs = selectionSet.IDs;
-        //    for (int i = 0; i < selectionSet.Count; i++)
-        //    {
-        //        resultRow = resultTable.NewRow();
-        //        resultRow[0] = selIDs.Next();
-        //        resultTable.Rows.Add(resultRow);
-        //    }
-        //}
-
-        //TODO: ArcGIS
-        //private DataTable SelectedIDsTable(ISelectionSet selectionSet)
-        //{
-        //    DataTable resultTable = new();
-
-        //    if (selectionSet != null)
-        //    {
-        //        resultTable.Columns.Add(new DataColumn("OBJECTID", typeof(System.Int32)));
-        //        SelectedIDs(selectionSet, ref resultTable);
-        //    }
-        //    return resultTable;
-        //}
-
-        //TODO: ArcGIS
-        //private int[] SelectedIDs(ISelectionSet selectionSet)
-        //{
-        //    if ((selectionSet == null) || (!selectionSet.Any())) return [];
-
-        //    int[] resultIDs = new int[selectionSet.Count()];
-        //    IEnumIDs selIDs = selectionSet.IDs;
-        //    for (int i = 0; i < resultIDs.Length; i++)
-        //        resultIDs[i] = selIDs.Next();
-
-        //    return resultIDs;
-        //}
-
-        //TODO: ArcGIS
-        //private ISQLSyntax SQLSyntax
-        //{
-        //    get
-        //    {
-        //        if (_hluWSSqlSyntax != null)
-        //        {
-        //            return _hluWSSqlSyntax;
-        //        }
-        //        else if (_hluWS != null)
-        //        {
-        //            _hluWSSqlSyntax = (ISQLSyntax)_hluWS;
-        //            return _hluWSSqlSyntax;
-        //        }
-        //        else
-        //        {
-        //            return null;
-        //        }
-        //    }
-        //}
-
-        //TODO: ArcGIS
-        //private bool IsPredicateSupported(esriSQLPredicates predicate)
-        //{
-        //    if (SQLSyntax == null) return false;
-
-        //    int supportedPredicates = SQLSyntax.GetSupportedPredicates();
-
-        //    // cast the predicate value to an integer and use bitwise arithmetic to check for support.
-        //    int predicateValue = (int)predicate;
-        //    int supportedValue = predicateValue & supportedPredicates;
-
-        //    return supportedValue > 0;
-        //}
-
-        //TODO: ArcGIS
-        //private bool IsSQLClauseSupported(IWorkspace workspace, esriSQLClauses sqlClause)
-        //{
-        //    // cast workspace to the ISQLSyntax interface.
-        //    ISQLSyntax sqlSyntax = (ISQLSyntax)workspace;
-
-        //    // use a bitwise AND to check if the clause is supported.
-        //    int supportedSQLClauses = sqlSyntax.GetSupportedClauses();
-        //    int clauseCheck = supportedSQLClauses & (int)sqlClause;
-
-        //    // if the result of a bitwise AND is greater than 0, the clause is supported.
-        //    return (clauseCheck > 0);
-        //}
-
-        #endregion
-
-        /// <summary>
-        /// Units in which history reports polygon areas.  Defaults to squared linear unit of HLU layer.
-        /// </summary>
-        public AreaUnits AreaUnit
-        {
-            set
-            {
-                //TODO: ArcPro
-                switch (value)
-                {
-                    case AreaUnits.SquareCentimeters:
-                        //_unitArea = (int)esriSRUnit2Type.esriSRUnit_Centimeter;
-                        _unitArea = ((int)LinearUnit.Centimeters.FactoryCode);
-                        break;
-                    //case AreaUnits.SquareChains:
-                    //    _unitArea = (int)esriSRUnit2Type.esriSRUnit_InternationalChain;
-                    //    break;
-                    case AreaUnits.SquareFeet:
-                        //_unitArea = (int)esriSRUnitType.esriSRUnit_Foot;
-                        _unitArea = ((int)LinearUnit.Feet.FactoryCode);
-                        break;
-                    case AreaUnits.SquareInches:
-                        //_unitArea = (int)esriSRUnit2Type.esriSRUnit_InternationalInch;
-                        _unitArea = ((int)LinearUnit.Inches.FactoryCode);
-                        break;
-                    case AreaUnits.SquareKilometers:
-                        //_unitArea = (int)esriSRUnitType.esriSRUnit_Kilometer;
-                        _unitArea = ((int)LinearUnit.Kilometers.FactoryCode);
-                        break;
-                    //case AreaUnits.SquareLinks:
-                    //    _unitArea = (int)esriSRUnit2Type.esriSRUnit_InternationalLink;
-                    //    break;
-                    case AreaUnits.SquareMeters:
-                        //_unitArea = (int)esriSRUnitType.esriSRUnit_Meter;
-                        _unitArea = ((int)LinearUnit.Meters.FactoryCode);
-                        break;
-                    case AreaUnits.SquareMiles:
-                        //_unitArea = (int)esriSRUnit2Type.esriSRUnit_StatuteMile;
-                        _unitArea = ((int)LinearUnit.Miles.FactoryCode);
-                        break;
-                    case AreaUnits.SquareMillimeters:
-                        //_unitArea = (int)esriSRUnit2Type.esriSRUnit_Millimeter;
-                        _unitArea = ((int)LinearUnit.Millimeters.FactoryCode);
-                        break;
-                    //case AreaUnits.SquareRods:
-                    //    _unitArea = (int)esriSRUnit2Type.esriSRUnit_InternationalRod;
-                    //    break;
-                    //case AreaUnits.SquareSurveyFeet:
-                    //    _unitArea = (int)esriSRUnitType.esriSRUnit_SurveyFoot;
-                    //    break;
-                    case AreaUnits.SquareYards:
-                        //_unitArea = (int)esriSRUnit2Type.esriSRUnit_InternationalYard;
-                        _unitArea = ((int)LinearUnit.Yards.FactoryCode);
-                        break;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Units in which history reports polyline lengths and polygon perimeters. Defaults to linear unit of HLU layer.
-        /// </summary>
-        public DistanceUnits DistanceUnit
-        {
-            set
-            {
-                //TODO: ArcPro
-                switch (value)
-                {
-                    case DistanceUnits.Centimeters:
-                        //_unitDistance = (int)esriSRUnit2Type.esriSRUnit_Centimeter;
-                        _unitDistance = ((int)LinearUnit.Centimeters.FactoryCode);
-                        break;
-                    //case DistanceUnits.Chains:
-                    //    _unitDistance = (int)esriSRUnit2Type.esriSRUnit_InternationalChain;
-                    //    break;
-                    case DistanceUnits.Feet:
-                        //_unitDistance = (int)esriSRUnitType.esriSRUnit_Foot;
-                        _unitDistance = ((int)LinearUnit.Feet.FactoryCode);
-                        break;
-                    case DistanceUnits.Inches:
-                        //_unitDistance = (int)esriSRUnit2Type.esriSRUnit_InternationalInch;
-                        _unitDistance = ((int)LinearUnit.Inches.FactoryCode);
-                        break;
-                    case DistanceUnits.Kilometers:
-                        //_unitDistance = (int)esriSRUnitType.esriSRUnit_Kilometer;
-                        _unitDistance = ((int)LinearUnit.Kilometers.FactoryCode);
-                        break;
-                    //case DistanceUnits.Links:
-                    //    _unitDistance = (int)esriSRUnit2Type.esriSRUnit_InternationalLink;
-                    //    break;
-                    case DistanceUnits.Meters:
-                        //_unitDistance = (int)esriSRUnitType.esriSRUnit_Meter;
-                        _unitDistance = ((int)LinearUnit.Meters.FactoryCode);
-                        break;
-                    case DistanceUnits.Miles:
-                        //_unitDistance = (int)esriSRUnit2Type.esriSRUnit_StatuteMile;
-                        _unitDistance = ((int)LinearUnit.Miles.FactoryCode);
-                        break;
-                    case DistanceUnits.Millimeters:
-                        //_unitDistance = (int)esriSRUnit2Type.esriSRUnit_Millimeter;
-                        _unitDistance = ((int)LinearUnit.Millimeters.FactoryCode);
-                        break;
-                    //case DistanceUnits.NauticalMiles:
-                    //    _unitDistance = (int)esriSRUnitType.esriSRUnit_NauticalMile;
-                    //    break;
-                    //case DistanceUnits.SurveyFeet:
-                    //    _unitDistance = (int)esriSRUnitType.esriSRUnit_SurveyFoot;
-                    //    break;
-                    case DistanceUnits.Yards:
-                        //_unitDistance = (int)esriSRUnit2Type.esriSRUnit_InternationalYard;
-                        _unitDistance = ((int)LinearUnit.Yards.FactoryCode);
-                        break;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets the maximum length of SQL statements supported by the current HLU layer's workspace.
-        /// </summary>
-        public int MaxSqlLength
-        {
-            get { return _maxSqlLength; }
-        }
-
         /// <summary>
         /// Gets the name of the active HLU layer on which the tool is operating, or null if no active layer.
         /// This is the name as displayed in the table of contents and used in ArcGIS Pro geoprocessing parameters,
@@ -4576,13 +4132,11 @@ namespace HLU.GISApplication
             _hluFieldMap = null;
             _hluFieldNames = null;
 
-            //TODO: Needed?
-            //_hluFeatureClass = null;
+            _hluFeatureClass = null;
 
             _hluView = null;
         }
 
-        //TODO: Is _hluFeatureClass Needed?
         /// <summary>
         /// Retrieves the name of the field of _hluFeatureClass that corresponds to the column of
         /// _hluLayerStructure whose ordinal is passed in.
@@ -4595,42 +4149,6 @@ namespace HLU.GISApplication
                 (columnOrdinal > _hluFieldNames.Length - 1)) return null;
             else
                 return _hluFieldNames[columnOrdinal];
-        }
-
-        //TODO: Is _hluFeatureClass Needed?
-        /// <summary>
-        /// Retrieves the ordinal of the field of _hluFeatureClass that corresponds to the column of
-        /// _hluLayerStructure whose ordinal is passed in.
-        /// </summary>
-        /// <param name="columnName">Name of the column in _hluLayerStructure.</param>
-        /// <returns>Ordinal of the field of _hluFeatureClass corresponding to column
-        /// _hluLayerStructure.Columns[columnName].</returns>
-        private int GetFieldOrdinal(string columnName)
-        {
-            if ((_hluFieldMap == null) || (_hluLayerStructure == null) ||
-                String.IsNullOrEmpty(columnName)) return -1;
-            int columnOrdinal = _hluLayerStructure.Columns[columnName.Trim()].Ordinal;
-            if (columnOrdinal == -1)
-                return -1;
-            else
-                return _hluFieldMap[columnOrdinal];
-        }
-
-        //TODO: Is _hluFeatureClass Needed?
-        /// <summary>
-        /// Retrieves the ordinal of the field of _hluFeatureClass that corresponds to the column of
-        /// _hluLayerStructure whose ordinal is passed in.
-        /// </summary>
-        /// <param name="columnOrdinal">Ordinal of the column in _hluLayerStructure.</param>
-        /// <returns>Ordinal of the field of _hluFeatureClass corresponding to column
-        /// _hluLayerStructure.Columns[columnOrdinal].</returns>
-        private int GetFieldOrdinal(int columnOrdinal)
-        {
-            if ((_hluFieldMap == null) || (_hluLayerStructure == null) ||
-                (columnOrdinal < 0) || (columnOrdinal > _hluFieldMap.Length))
-                return -1;
-            else
-                return _hluFieldMap[columnOrdinal];
         }
 
         /// <summary>
@@ -4674,40 +4192,6 @@ namespace HLU.GISApplication
             }
             else
                 return null;
-        }
-
-        /// <summary>
-        /// Retrieves the field of _hluFeatureClass that corresponds to the column of _hluLayerStructure whose ordinal is passed in.
-        /// </summary>
-        /// <param name="columnOrdinal">Ordinal of the column in _hluLayerStructure.</param>
-        /// <returns>The field of _hluFeatureClass corresponding to column _hluLayerStructure[columnOrdinal].</returns>
-        private Field GetField(int columnOrdinal)  // ⚠️ Changed to synchronous
-        {
-            if ((_hluFeatureClass == null) || (_hluFieldMap == null) ||
-                (columnOrdinal < 0) || (columnOrdinal >= _hluFieldMap.Length))
-                return null;
-
-            int fieldOrdinal = _hluFieldMap[columnOrdinal];
-
-            if (fieldOrdinal >= 0)
-            {
-                try
-                {
-                    // No QueuedTask.Run() - we're already on the MCT
-                    using FeatureClassDefinition hluFeatureClassDefinition = _hluFeatureClass.GetDefinition();
-
-                    int fieldCnt = hluFeatureClassDefinition.GetFields().Count;
-
-                    if (fieldOrdinal < fieldCnt)
-                        return hluFeatureClassDefinition.GetFields()[fieldOrdinal];
-                }
-                catch
-                {
-                    return null;
-                }
-            }
-
-            return null;
         }
 
         /// <summary>
@@ -4819,124 +4303,6 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Get a field position in a feature class by name, type and length.
-        /// </summary>
-        /// <param name="featurelayer">The feature layer to search.</param>
-        /// <param name="fieldName">The name of the field to find.</param>
-        /// <param name="fieldType">The type of the field to find.</param>
-        /// <param name="fieldMaxLength">The maximum length of the field to find (optional).</param>
-        /// <returns>The ordinal of the field if found, otherwise -1.</returns>
-        public async Task<int> GetFieldOrdinalAsync(FeatureLayer featurelayer, string fieldName, esriFieldType fieldType, int fieldMaxLength = 0)
-        {
-            // Check there is an input feature featureLayer.
-            if (featurelayer == null)
-                return -1;
-
-            // Check there is an input field name.
-            if (String.IsNullOrEmpty(fieldName))
-                return -1;
-
-            // Check there is an input field type.
-            if (fieldType == 0)
-                return -1;
-
-            try
-            {
-                int fieldOrd = -1;
-
-                await QueuedTask.Run(() =>
-                {
-                    // Get the underlying feature class as a table.
-                    using Table table = featurelayer.GetTable();
-                    if (table != null)
-                    {
-                        // Get the table definition of the table.
-                        using TableDefinition tableDef = table.GetDefinition();
-
-                        // Get the fields in the table.
-                        IReadOnlyList<Field> fields = tableDef.GetFields();
-
-                        // Loop through all fields looking for a name match.
-                        int fieldNum = 0;
-                        foreach (Field fld in fields)
-                        {
-                            // Get the field names.
-                            string fldName = fld.Name;
-                            string fldAlias = fld.AliasName;
-
-                            // Get the esri field type.
-                            esriFieldType esriFldType = (esriFieldType)fld.FieldType;
-
-                            // Get the field length.
-                            int fldLength = 0;
-                            if (fld.FieldType == FieldType.String)
-                                fldLength = fld.Length;
-
-                            if (((fldName.Equals(fieldName, StringComparison.OrdinalIgnoreCase) ||
-                                fldAlias.Equals(fieldName, StringComparison.OrdinalIgnoreCase)))
-                                && (esriFldType == fieldType)
-                                && (fldLength == fieldMaxLength))
-                            {
-                                fieldOrd = fieldNum;
-                                break;
-                            }
-
-                            fieldNum += 1;
-                        }
-                    }
-                });
-
-                return fieldOrd;
-            }
-            catch
-            {
-                // Handle Exception.
-                return -1;
-            }
-        }
-
-        //TODO: Is _hluFeatureClass Needed?
-        /// <summary>
-        /// Retrieves the column of _hluLayerStructure that corresponds to the field of _hluFeatureClass whose ordinal is passed in.
-        /// </summary>
-        /// <param name="fieldOrdinal">The ordinal of the field of _hluFeatureClass.</param>
-        /// <returns>The column of _hluLayerStructure corresponding to the field with ordinal fieldOrdinal in _hluFeatureClass.</returns>
-        private DataColumn GetColumn(int fieldOrdinal)
-        {
-            if ((_hluLayerStructure == null) || (_hluFieldMap == null) ||
-                (fieldOrdinal <= 0) || (fieldOrdinal >= _hluFieldMap.Length)) return null;
-            int columnOrdinal = System.Array.IndexOf(_hluFieldMap, fieldOrdinal);
-            if (columnOrdinal != -1)
-                return _hluLayerStructure.Columns[columnOrdinal];
-            else
-                return null;
-        }
-
-        //TODO: Is _hluFeatureClass Needed?
-        //TODO: ArcPro
-        /// <summary>
-        /// Retrieves the column of _hluLayerStructure that corresponds to the field of _hluFeatureClass whose name is passed in.
-        /// </summary>
-        /// <param name="fieldName">The name of the field of _hluFeatureClass.</param>
-        /// <returns>The column of _hluLayerStructure corresponding to the field named fieldName in _hluFeatureClass.</returns>
-        private async Task<DataColumn> GetColumnAsync(string fieldName)
-        {
-            if ((_hluLayerStructure == null) || (_hluFieldMap == null) ||
-                (_hluFeatureClass == null) || String.IsNullOrEmpty(fieldName)) return null;
-
-            //TODO: ArcPro
-            int fieldOrdinal = await GetFieldOrdinalAsync(_hluFeatureClass.GetName(), fieldName);
-            //int fieldOrdinal = _hluFeatureClass.Fields.FindField(fieldName);
-
-            if (fieldOrdinal == -1) return null;
-            int columnOrdinal = System.Array.IndexOf(_hluFieldMap, fieldOrdinal);
-            if ((columnOrdinal >= 0) && (columnOrdinal <= _hluLayerStructure.Columns.Count))
-                return _hluLayerStructure.Columns[columnOrdinal];
-            else
-                return null;
-        }
-
-        /// <summary>
         /// Formats a DateTime value as a string according to the date format string for the current HLU layer's workspace.
         /// </summary>
         /// <param name="value"></param>
@@ -4968,60 +4334,6 @@ namespace HLU.GISApplication
         private string FormatNumber(float number)
         {
             return number.ToString(_numberFormatInfo);
-        }
-
-        private void SetDefaults()
-        {
-            //TODO: ArcGIS
-            //if (_hluWS == null) return;
-
-            // ArcGIS expects decimal point regardless of regional settings
-            _numberFormatInfo = new()
-            {
-                NumberDecimalSeparator = ".",
-                NumberGroupSeparator = ""
-            };
-
-            //TODO: ArcGIS
-            //IWorkspace ws = _hluWS as IWorkspace;
-
-            //TODO: ArcGIS
-            //switch (ws.WorkspaceFactory.GetClassID().Value.ToString())
-            //{
-            //    case "{DD48C96A-D92A-11D1-AA81-00C04FA33A15}":
-            //        //[Datefield] = #mm-dd-yyyy hh:mm:ss# or [Datefield] = #mm-dd-yyyy# or [Datefield] = #yyyy/mm/dd#
-            //        _dateLiteralPrefix = "#";
-            //        _dateLiteralSuffix = "#";
-            //        _dateFormatString = "yyyy-MM-dd HH:mm:ss"; // "MM-dd-yyyy HH:mm:ss";
-            //        break;
-            //    case "{71FE75F0-EA0C-4406-873E-B7D53748AE7E}":
-            //        //"Datefield" = date 'yyyy-mm-dd hh:mm:ss' // File geodatabases support the use of a time in the date field
-            //        _dateLiteralPrefix = "date '";
-            //        _dateLiteralSuffix = "'";
-            //        _dateFormatString = "yyyy-MM-dd HH:mm:ss";
-            //        break;
-            //    case "{A06ADB96-D95C-11D1-AA81-00C04FA33A15}":
-            //        //"Datefield" = date 'yyyy-mm-dd' // Shapefiles and coverages do not support the use of time in a date field
-            //        _dateLiteralPrefix = "date '";
-            //        _dateLiteralSuffix = "'";
-            //        _dateFormatString = "yyyy-MM-dd";
-            //        break;
-            //    case "{1D887452-D9F2-11D1-AA81-00C04FA33A15}":
-            //        //"Datefield" = date 'yyyy-mm-dd' // Shapefiles and coverages do not support the use of time in a date field
-            //        _dateLiteralPrefix = "date '";
-            //        _dateLiteralSuffix = "'";
-            //        _dateFormatString = "yyyy-MM-dd";
-            //        break;
-            //    case "{6DE812D2-9AB6-11D2-B0D7-0000F8780820}":
-            //        //"Datefield" = date 'yyyy-mm-dd' // Shapefiles and coverages do not support the use of time in a date field
-            //        _dateLiteralPrefix = "date '";
-            //        _dateLiteralSuffix = "'";
-            //        _dateFormatString = "yyyy-MM-dd";
-            //        break;
-            //    case "{D9B4FA40-D6D9-11D1-AA81-00C04FA33A15}":
-            //        SetDefaultsSde(ws);
-            //        break;
-            //}
         }
 
         /// <summary>

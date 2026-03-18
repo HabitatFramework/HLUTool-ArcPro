@@ -31,6 +31,7 @@ using HLU.Data;
 using HLU.Data.Connection;
 using HLU.Data.Model;
 using HLU.Date;
+using HLU.Enums;
 using HLU.GISApplication;
 using HLU.Helpers;
 using HLU.Properties;
@@ -1026,7 +1027,7 @@ namespace HLU.UI.ViewModel
                     if ((vd == null) || (vd.IsBad) || (vd.IsUnknown))
                         return null;
 
-                    string itemStr = VagueDate.FromVagueDateInstance(vd, VagueDate.DateType.Vague);
+                    string itemStr = VagueDate.FromVagueDateInstance(vd, DateType.Vague);
                     if (DateTime.TryParseExact(itemStr, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime newCached))
                     {
                         _vagueDateCache[inInt] = newCached;
@@ -1051,7 +1052,7 @@ namespace HLU.UI.ViewModel
                     if ((vd == null) || (vd.IsBad) || (vd.IsUnknown))
                         return null;
 
-                    string itemStr = VagueDate.FromVagueDateInstance(vd, VagueDate.DateType.Vague);
+                    string itemStr = VagueDate.FromVagueDateInstance(vd, DateType.Vague);
                     if (DateTime.TryParseExact(itemStr, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime newCached))
                     {
                         _vagueDateCache[inInt] = newCached;
@@ -1089,45 +1090,45 @@ namespace HLU.UI.ViewModel
                     if ((vd == null) || (vd.IsBad))
                         return null;
                     if (vd.IsUnknown)
-                        return VagueDate.VagueDateTypes.Unknown.ToString();
+                        return VagueDateTypes.Unknown.ToString();
 
                     if (outFormat.Equals("v", StringComparison.CurrentCultureIgnoreCase))
                     {
-                        return VagueDate.FromVagueDateInstance(vd, VagueDate.DateType.Vague);
+                        return VagueDate.FromVagueDateInstance(vd, DateType.Vague);
                     }
                     else if (String.IsNullOrEmpty(outFormat))
                     {
                         if (_sourceDateStartOrdinals.Contains(inOrdinal))
-                            return VagueDate.FromVagueDateInstance(vd, VagueDate.DateType.Start);
+                            return VagueDate.FromVagueDateInstance(vd, DateType.Start);
                         else if (_sourceDateEndOrdinals.Contains(inOrdinal))
-                            return VagueDate.FromVagueDateInstance(vd, VagueDate.DateType.End);
+                            return VagueDate.FromVagueDateInstance(vd, DateType.End);
                         else
                             return null;
                     }
-                    else if (VagueDate.FromCode(outFormat) != VagueDate.VagueDateTypes.Unknown)
+                    else if (VagueDate.FromCode(outFormat) != VagueDateTypes.Unknown)
                     {
                         if (_sourceDateStartOrdinals.Contains(inOrdinal))
                         {
                             string dateType = outFormat.Substring(0, 1);
                             return VagueDate.FromVagueDateInstance(
                                 new VagueDateInstance(sourceDateStart, sourceDateEnd, dateType),
-                                VagueDate.DateType.Start);
+                                DateType.Start);
                         }
                         else if (_sourceDateEndOrdinals.Contains(inOrdinal))
                         {
                             vd.DateType = outFormat.Length == 1 ? outFormat + outFormat : outFormat;
-                            return VagueDate.FromVagueDateInstance(vd, VagueDate.DateType.End);
+                            return VagueDate.FromVagueDateInstance(vd, DateType.End);
                         }
                         else
                             return null;
                     }
                     else
                     {
-                        VagueDate.DateType dateType = VagueDate.DateType.Vague;
+                        DateType dateType = DateType.Vague;
                         if (_sourceDateStartOrdinals.Contains(inOrdinal))
-                            dateType = VagueDate.DateType.Start;
+                            dateType = DateType.Start;
                         else if (_sourceDateEndOrdinals.Contains(inOrdinal))
-                            dateType = VagueDate.DateType.End;
+                            dateType = DateType.End;
 
                         string inStr = VagueDate.FromVagueDateInstance(
                             new VagueDateInstance(sourceDateStart, sourceDateEnd, "D"), dateType);
@@ -1146,45 +1147,45 @@ namespace HLU.UI.ViewModel
                     if ((vd == null) || (vd.IsBad))
                         return null;
                     if (vd.IsUnknown)
-                        return VagueDate.VagueDateTypes.Unknown.ToString();
+                        return VagueDateTypes.Unknown.ToString();
 
                     if (outFormat.Equals("v", StringComparison.CurrentCultureIgnoreCase))
                     {
-                        return VagueDate.FromVagueDateInstance(vd, VagueDate.DateType.Vague);
+                        return VagueDate.FromVagueDateInstance(vd, DateType.Vague);
                     }
                     else if (String.IsNullOrEmpty(outFormat))
                     {
                         if (_conditionDateStartOrdinal == inOrdinal)
-                            return VagueDate.FromVagueDateInstance(vd, VagueDate.DateType.Start);
+                            return VagueDate.FromVagueDateInstance(vd, DateType.Start);
                         else if (_conditionDateEndOrdinal == inOrdinal)
-                            return VagueDate.FromVagueDateInstance(vd, VagueDate.DateType.End);
+                            return VagueDate.FromVagueDateInstance(vd, DateType.End);
                         else
                             return null;
                     }
-                    else if (VagueDate.FromCode(outFormat) != VagueDate.VagueDateTypes.Unknown)
+                    else if (VagueDate.FromCode(outFormat) != VagueDateTypes.Unknown)
                     {
                         if (_conditionDateStartOrdinal == inOrdinal)
                         {
                             string dateType = outFormat.Substring(0, 1);
                             return VagueDate.FromVagueDateInstance(
                                 new VagueDateInstance(conditionDateStart, conditionDateEnd, dateType),
-                                VagueDate.DateType.Start);
+                                DateType.Start);
                         }
                         else if (_conditionDateEndOrdinal == inOrdinal)
                         {
                             vd.DateType = outFormat.Length == 1 ? outFormat + outFormat : outFormat;
-                            return VagueDate.FromVagueDateInstance(vd, VagueDate.DateType.End);
+                            return VagueDate.FromVagueDateInstance(vd, DateType.End);
                         }
                         else
                             return null;
                     }
                     else
                     {
-                        VagueDate.DateType dateType = VagueDate.DateType.Vague;
+                        DateType dateType = DateType.Vague;
                         if (_conditionDateStartOrdinal == inOrdinal)
-                            dateType = VagueDate.DateType.Start;
+                            dateType = DateType.Start;
                         else if (_conditionDateEndOrdinal == inOrdinal)
-                            dateType = VagueDate.DateType.End;
+                            dateType = DateType.End;
 
                         string inStr = VagueDate.FromVagueDateInstance(
                             new VagueDateInstance(conditionDateStart, conditionDateEnd, "D"), dateType);
