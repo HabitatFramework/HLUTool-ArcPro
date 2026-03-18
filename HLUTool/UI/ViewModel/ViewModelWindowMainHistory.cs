@@ -25,6 +25,7 @@ using System.Linq;
 using HLU.Data;
 using HLU.Data.Model;
 using HLU.Enums;
+using HLU.Exceptions;
 
 namespace HLU.UI.ViewModel
 {
@@ -216,13 +217,13 @@ namespace HLU.UI.ViewModel
             if (table == null) return;
             switch (_viewModelMain.GisLayerType)
             {
-                case GeometryTypes.Point:
+                case HluGeometryTypes.Point:
                     break;
-                case GeometryTypes.Line:
+                case HluGeometryTypes.Line:
                     if (table.Columns.Contains(ViewModelWindowMain.HistoryGeometry1ColumnName))
                         table.Columns[ViewModelWindowMain.HistoryGeometry1ColumnName].ColumnName = newGeom1ColumnName;
                     break;
-                case GeometryTypes.Polygon:
+                case HluGeometryTypes.Polygon:
                     if (table.Columns.Contains(ViewModelWindowMain.HistoryGeometry1ColumnName))
                         table.Columns[ViewModelWindowMain.HistoryGeometry1ColumnName].ColumnName = newGeom1ColumnName;
                     if (table.Columns.Contains(ViewModelWindowMain.HistoryGeometry2ColumnName))

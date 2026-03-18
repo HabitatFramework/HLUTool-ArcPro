@@ -23,6 +23,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using HLU.Data;
 using HLU.Data.Model;
 using HLU.Enums;
 using HLU.Helpers;

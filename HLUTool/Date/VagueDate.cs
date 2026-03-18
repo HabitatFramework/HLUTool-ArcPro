@@ -24,6 +24,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using HLU.Enums;
 using HLU.Helpers;
 
 namespace HLU.Date
@@ -91,7 +92,7 @@ namespace HLU.Date
             get
             {
                 return String.IsNullOrEmpty(this.DateType) ||
-                    (this.DateType == VagueDate.ToCode(VagueDate.VagueDateTypes.Unknown)) && !this.IsBad;
+                    (this.DateType == VagueDate.ToCode(VagueDateTypes.Unknown)) && !this.IsBad;
             }
         }
 
@@ -102,7 +103,7 @@ namespace HLU.Date
         {
             get
             {
-                return String.IsNullOrEmpty(this.DateType) || (this.DateType == VagueDate.ToCode(VagueDate.VagueDateTypes.Unknown)) &&
+                return String.IsNullOrEmpty(this.DateType) || (this.DateType == VagueDate.ToCode(VagueDateTypes.Unknown)) &&
                     !VagueDate.IsUnknownDate(this.UserEntry);
             }
         }
@@ -115,8 +116,8 @@ namespace HLU.Date
     /// </summary>
     partial class VagueDate
     {
-        private static Dictionary<string, VagueDate.VagueDateTypes> _codeValueDictionary = Enum<VagueDate.VagueDateTypes>.ToCodeValueDictionary();
-        private static Dictionary<VagueDate.VagueDateTypes, string> _valueCodeDictionary = Enum<VagueDate.VagueDateTypes>.ToValueCodeDictionary();
+        private static Dictionary<string, VagueDateTypes> _codeValueDictionary = Enum<VagueDateTypes>.ToCodeValueDictionary();
+        private static Dictionary<VagueDateTypes, string> _valueCodeDictionary = Enum<VagueDateTypes>.ToValueCodeDictionary();
 
         /// <summary>
         /// Base date for vague dates (COM base date).
@@ -129,50 +130,6 @@ namespace HLU.Date
         /// </summary>
         //public static readonly int DateUnknown = -693593;
         public static readonly int DateUnknown = 0;
-
-        #region Enums
-
-        public enum DateType { Start, End, Vague };
-
-        public enum VagueDateTypes
-        {
-            [EnumCode("D")]
-            StartDate,
-            [EnumCode("DD")]
-            StartAndEndDates,
-            [EnumCode("D-")]
-            StartDateRange,
-            [EnumCode("-D")]
-            EndDateRange,
-            [EnumCode("O")]
-            StartMonthAndYear,
-            [EnumCode("OO")]
-            StartAndEndMonthAndYear,
-            [EnumCode("O-")]
-            StartMonthRange,
-            [EnumCode("-O")]
-            EndMonthRange,
-            [EnumCode("Y")]
-            StartYear,
-            [EnumCode("YY")]
-            StartAndEndYear,
-            [EnumCode("Y-")]
-            StartYearRange,
-            [EnumCode("-Y")]
-            EndYearRange,
-            [EnumCode("P")]
-            StartSeason,
-            [EnumCode("PP")]
-            StartAndEndSeason,
-            [EnumCode("P-")]
-            StartSeasonRange,
-            [EnumCode("-P")]
-            EndSeasonRange,
-            [EnumCode("U")]
-            Unknown
-        }
-
-        #endregion Enums
 
         #region Properties
 

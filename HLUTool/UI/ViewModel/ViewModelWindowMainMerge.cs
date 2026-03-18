@@ -795,7 +795,7 @@ namespace HLU.UI.ViewModel
             switch (_viewModelMain.GisLayerType)
             {
                 // Update just the toidfragid for point geometries.
-                case GeometryTypes.Point:
+                case HluGeometryTypes.Point:
                     updateStatement = String.Format("UPDATE {0} SET {1} = {2} WHERE {3}",
                         _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
                         _viewModelMain.DataBase.QuoteIdentifier(
@@ -804,7 +804,7 @@ namespace HLU.UI.ViewModel
                     break;
 
                 // Update toidfragid and shape_length for line geometries.
-                case GeometryTypes.Line:
+                case HluGeometryTypes.Line:
                     double plineLength = resultTable.Rows[0].Field<double>(ViewModelWindowMain.HistoryGeometry1ColumnName);
                     updateStatement = String.Format("UPDATE {0} SET {1} = {2}, {3} = {4} WHERE {5}",
                         _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
@@ -817,7 +817,7 @@ namespace HLU.UI.ViewModel
                     break;
 
                 // Update toidfragid, shape_length and shape_area for polygon geometries.
-                case GeometryTypes.Polygon:
+                case HluGeometryTypes.Polygon:
                     double shapeLength = resultTable.Rows[0].Field<double>(ViewModelWindowMain.HistoryGeometry1ColumnName);
                     double shapeArea = resultTable.Rows[0].Field<double>(ViewModelWindowMain.HistoryGeometry2ColumnName);
                     updateStatement = String.Format("UPDATE {0} SET {1} = {2}, {3} = {4}, {5} = {6} WHERE {7}",

@@ -24,6 +24,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Windows.Input;
+using HLU.Data;
 using HLU.Data.Model;
 using HLU.GISApplication;
 using HLU.UI.View;

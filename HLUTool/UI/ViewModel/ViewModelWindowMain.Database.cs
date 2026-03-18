@@ -24,6 +24,7 @@ using HLU.Data;
 using HLU.Data.Connection;
 using HLU.Data.Model;
 using HLU.Date;
+using HLU.Enums;
 using HLU.Helpers;
 using HLU.Properties;
 using System;
@@ -2155,8 +2156,8 @@ namespace HLU.UI.ViewModel
             {
                 string defaultDate;
                 string dateType = VagueDate.GetType(rows.ElementAt(0).source_date_default, out defaultDate);
-                int startDate = VagueDate.ToTimeSpanDays(defaultDate, dateType, VagueDate.DateType.Start);
-                int endDate = VagueDate.ToTimeSpanDays(defaultDate, dateType, VagueDate.DateType.End);
+                int startDate = VagueDate.ToTimeSpanDays(defaultDate, dateType, DateType.Start);
+                int endDate = VagueDate.ToTimeSpanDays(defaultDate, dateType, DateType.End);
                 return new Date.VagueDateInstance(startDate, endDate, dateType);
             }
 
@@ -2250,9 +2251,9 @@ namespace HLU.UI.ViewModel
                             string defaultDateString;
                             string formatString = VagueDate.GetType(lutRow.source_date_default, out defaultDateString);
                             int defaultStartDate = VagueDate.ToTimeSpanDays(defaultDateString,
-                                formatString, VagueDate.DateType.Start);
+                                formatString, DateType.Start);
                             int defaultEndDate = VagueDate.ToTimeSpanDays(defaultDateString,
-                                formatString, VagueDate.DateType.End);
+                                formatString, DateType.End);
                             _incidSourcesRows[rowNumber].source_date_start = defaultStartDate;
                             _incidSourcesRows[rowNumber].source_date_end = defaultEndDate;
                         }

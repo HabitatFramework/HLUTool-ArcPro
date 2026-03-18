@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
+using HLU.Data;
 using HLU.Data.Connection;
 
 namespace HLU.Helpers

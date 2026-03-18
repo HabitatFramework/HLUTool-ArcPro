@@ -21,10 +21,10 @@
 using System;
 using System.Windows;
 using HLU.UI.View;
-using HLU.UI.ViewModel;
 using ArcGIS.Desktop.Framework;
+using HLU.UI.ViewModel;
 
-namespace HLU
+namespace HLU.UI.Services
 {
     internal static class ShowMessageWindow
     {
@@ -48,7 +48,7 @@ namespace HLU
             _messageWindow = new()
             {
                 // Set ArcGIS Pro as the parent
-                Owner = FrameworkApplication.Current.MainWindow,
+                Owner = Application.Current.MainWindow,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Topmost = true
             };

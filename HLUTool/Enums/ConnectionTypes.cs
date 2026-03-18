@@ -26,19 +26,27 @@ namespace HLU.Enums
 {
     #region Enums
 
-    /// <summary>
-    /// Update operations.
-    /// </summary>
-    public enum Operations
+    public enum ConnectionTypes
     {
-        PhysicalMerge,
-        PhysicalSplit,
-        LogicalMerge,
-        LogicalSplit,
-        AttributeUpdate,
-        BulkUpdate,
-        OSMMUpdate
-    };
+        ODBC = 2,
+        OleDb = 4,
+        Oracle = 8,
+        PostgreSQL = 16,
+        SQLServer = 32,
+        Unknown = 0
+    }
+
+    public enum Backends : int
+    {
+        Undetermined = 0,
+        Access = 2,
+        SqlServer = 4,
+        Oracle = 8,
+        PostgreSql = 16,
+        DB2 = 32,
+        UndeterminedOdbc = 64,
+        UndeterminedOleDb = 128
+    }
 
     #endregion Enums
 }

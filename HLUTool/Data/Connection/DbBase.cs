@@ -32,37 +32,12 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using HLU.Enums;
 using CommandType = System.Data.CommandType;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.Data.Connection
 {
-    #region Enums
-
-    public enum ConnectionTypes
-    {
-        ODBC = 2,
-        OleDb = 4,
-        Oracle = 8,
-        PostgreSQL = 16,
-        SQLServer = 32,
-        Unknown = 0
-    }
-
-    public enum Backends : int
-    {
-        Undetermined = 0,
-        Access = 2,
-        SqlServer = 4,
-        Oracle = 8,
-        PostgreSql = 16,
-        DB2 = 32,
-        UndeterminedOdbc = 64,
-        UndeterminedOleDb = 128
-    }
-
-    #endregion Enums
-
     /// <summary>
     /// This abstract class provides the base for database connections and operations. It defines
     /// common properties and methods for handling connection strings, schemas, data types, and

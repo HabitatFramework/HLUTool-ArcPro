@@ -21,7 +21,7 @@
 using System;
 using System.Text;
 
-namespace HLU
+namespace HLU.Helpers
 {
     #region Exceptions
 
@@ -155,13 +155,13 @@ namespace HLU
 		{
 			get
 			{
-				return Base36.NumberToBase36(_numericValue);
+				return NumberToBase36(_numericValue);
 			}
 			set
 			{
 				try
 				{
-					_numericValue = Base36.Base36ToNumber(value);
+					_numericValue = Base36ToNumber(value);
 				}
 				catch
 				{
@@ -210,7 +210,7 @@ namespace HLU
 				//up increasing powers as we go.
 				for(int i = 1; i < Base36Value.Length; i++)
 				{
-					returnValue += ((long)Math.Pow(36, i) * Base36DigitToNumber(Base36Value[^(i + 1)]));
+					returnValue += (long)Math.Pow(36, i) * Base36DigitToNumber(Base36Value[^(i + 1)]);
 				}
 
 				//Do negative correction if required:
@@ -304,7 +304,7 @@ namespace HLU
 			else
 			{
 				//Handles A - Z
-				return (byte)((int)Base36Digit - 55);
+				return (byte)(Base36Digit - 55);
 			}
 		}
 
@@ -566,7 +566,7 @@ namespace HLU
         /// <returns>A string representation</returns>
         public override string ToString()
 		{
-			return Base36.NumberToBase36(_numericValue);
+			return NumberToBase36(_numericValue);
 		}
 
 		/// <summary>
@@ -608,7 +608,7 @@ namespace HLU
         /// <returns>The padded string representation</returns>
         public string ToString(int MinimumDigits)
 		{
-			string base36Value = Base36.NumberToBase36(_numericValue);
+			string base36Value = NumberToBase36(_numericValue);
 
 			if(base36Value.Length >= MinimumDigits)
 			{
@@ -616,7 +616,7 @@ namespace HLU
 			}
 			else
 			{
-				string padding = new('0', (MinimumDigits - base36Value.Length));
+				string padding = new('0', MinimumDigits - base36Value.Length);
 				return string.Format("{0}{1}", padding, base36Value);
 			}
 		}

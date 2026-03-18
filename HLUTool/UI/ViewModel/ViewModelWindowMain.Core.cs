@@ -31,9 +31,12 @@ using HLU.Data;
 using HLU.Data.Connection;
 using HLU.Data.Model;
 using HLU.Date;
+using HLU.Enums;
+using HLU.Exceptions;
 using HLU.GISApplication;
 using HLU.Helpers;
 using HLU.Properties;
+using HLU.UI.Services;
 using HLU.UI.UserControls.Toolbar;
 using System;
 using System.Collections.Generic;
@@ -1143,14 +1146,6 @@ namespace HLU.UI.ViewModel
                     (_incidCurrentRow.RowState == DataRowState.Detached && IsNotBulkMode)) return null;
 
                 StringBuilder error = new();
-
-                //TODO: Remove from error checking now on ribbon?
-                if (String.IsNullOrEmpty(Reason))
-                    error.Append(Environment.NewLine).Append("Reason is mandatory for the history trail of every update");
-
-                //TODO: Remove from error checking now on ribbon?
-                if (String.IsNullOrEmpty(Process))
-                    error.Append(Environment.NewLine).Append("Process is mandatory for the history trail of every update");
 
                 // If not in bulk update mode.
                 if (IsNotBulkMode)
@@ -3061,10 +3056,6 @@ namespace HLU.UI.ViewModel
 
             // Apply user settings.
             ApplyUserSettings();
-
-            //TODO: Not needed - done in initialisation and doesn't change on the fly?
-            // Get columns to be saved in the history table when records are updated.
-            //_historyColumns = InitializeHistoryColumns(_historyColumns);
 
             // If the show source habitat group value has changed and
             // is now true, set the habitat class to null to force

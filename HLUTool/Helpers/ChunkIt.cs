@@ -18,12 +18,13 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Data;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace HLU
+namespace HLU.Helpers
 {
     /// <summary>
     /// Provides extension methods for chunking sequences of items.
@@ -372,11 +373,11 @@ namespace HLU
 
                 // Safe boundary: about to start a new top-level OR term.
                 bool safeBoundary =
-                    (parenDepth == 0) &&
+                    parenDepth == 0 &&
                     next.BooleanOperator.Equals("OR", StringComparison.OrdinalIgnoreCase);
 
                 // Preferred split: reached target size and we are at a safe boundary.
-                if (safeBoundary && (chunk.Count >= chunkSize))
+                if (safeBoundary && chunk.Count >= chunkSize)
                 {
                     yield return chunk;
                     chunk = [];
@@ -384,7 +385,7 @@ namespace HLU
                 }
 
                 // Hard max protection: if requested, split even if not safe.
-                if (hardMaxChunkSize.HasValue && (chunk.Count >= hardMaxChunkSize.Value))
+                if (hardMaxChunkSize.HasValue && chunk.Count >= hardMaxChunkSize.Value)
                 {
                     yield return chunk;
                     chunk = [];
@@ -408,7 +409,7 @@ namespace HLU
         /// <returns>The number of occurrences of the character in the string.</returns>
         private static int CountChar(string value, char c)
         {
-            if (String.IsNullOrEmpty(value))
+            if (string.IsNullOrEmpty(value))
                 return 0;
 
             int count = 0;

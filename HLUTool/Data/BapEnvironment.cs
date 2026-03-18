@@ -327,9 +327,6 @@ namespace HLU.Data
         /// <param name="propertyName">The name of the property for which the validation errors have changed.</param>
         private void OnErrorsChanged(string propertyName)
         {
-            //TODO: Debug
-            System.Diagnostics.Debug.WriteLine($"ErrorsChanged fired for property={propertyName}, bap_id={_bap_id}, HasErrors={HasErrors}");
-
             ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
 
             // Also notify for empty string to trigger row-level validation update

@@ -22,18 +22,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using HLU.Enums;
 
 namespace HLU.Data
 {
-    #region Enums
-
-    /// <summary>
-    /// Geometry types.
-    /// </summary>
-    public enum GeometryTypes { Point, Line, Polygon, Unknown };
-
-    #endregion
-
     /// <summary>
     /// Enable the user to switch between different HLU layers, where
     /// there is more than one valid layer in the current document.

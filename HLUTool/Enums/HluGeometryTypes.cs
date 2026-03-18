@@ -27,18 +27,9 @@ namespace HLU.Enums
     #region Enums
 
     /// <summary>
-    /// Update operations.
+    /// HLU layer geometry types.
     /// </summary>
-    public enum Operations
-    {
-        PhysicalMerge,
-        PhysicalSplit,
-        LogicalMerge,
-        LogicalSplit,
-        AttributeUpdate,
-        BulkUpdate,
-        OSMMUpdate
-    };
+    public enum HluGeometryTypes { Point, Line, Polygon, Unknown };
 
     #endregion Enums
 }

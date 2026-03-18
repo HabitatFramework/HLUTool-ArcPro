@@ -24,21 +24,25 @@ using System.Threading.Tasks;
 
 namespace HLU.Enums
 {
-    #region Enums
-
     /// <summary>
-    /// Update operations.
+    /// A static class containing extension methods for the WorkMode enum to facilitate checking for specific flags.
     /// </summary>
-    public enum Operations
+    public static class WorkModeExtensions
     {
-        PhysicalMerge,
-        PhysicalSplit,
-        LogicalMerge,
-        LogicalSplit,
-        AttributeUpdate,
-        BulkUpdate,
-        OSMMUpdate
-    };
+        /// <summary>
+        /// Returns true if any of the specified flags are present.
+        /// </summary>
+        public static bool HasAny(this WorkMode value, WorkMode flags)
+        {
+            return (value & flags) != WorkMode.None;
+        }
 
-    #endregion Enums
+        /// <summary>
+        /// Returns true if all of the specified flags are present.
+        /// </summary>
+        public static bool HasAll(this WorkMode value, WorkMode flags)
+        {
+            return (value & flags) == flags;
+        }
+    }
 }

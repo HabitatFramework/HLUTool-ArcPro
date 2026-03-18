@@ -22,8 +22,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HLU
+namespace HLU.Enums
 {
+    #region enums
+
     /// <summary>
     /// Represents the current operational state(s) of the HLU tool.
     ///
@@ -93,25 +95,5 @@ namespace HLU
         EditReady = CanEdit | HasReasonAndProcess
     }
 
-    /// <summary>
-    /// A static class containing extension methods for the WorkMode enum to facilitate checking for specific flags.
-    /// </summary>
-    public static class WorkModeExtensions
-    {
-        /// <summary>
-        /// Returns true if any of the specified flags are present.
-        /// </summary>
-        public static bool HasAny(this WorkMode value, WorkMode flags)
-        {
-            return (value & flags) != WorkMode.None;
-        }
-
-        /// <summary>
-        /// Returns true if all of the specified flags are present.
-        /// </summary>
-        public static bool HasAll(this WorkMode value, WorkMode flags)
-        {
-            return (value & flags) == flags;
-        }
-    }
+    #endregion enums
 }

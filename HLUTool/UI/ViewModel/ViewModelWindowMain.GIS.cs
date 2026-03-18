@@ -27,7 +27,10 @@ using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using HLU.Data;
 using HLU.Data.Model;
+using HLU.Enums;
+using HLU.Exceptions;
 using HLU.GISApplication;
+using HLU.Helpers;
 using HLU.Properties;
 using System;
 using System.Collections.Generic;
@@ -54,7 +57,7 @@ namespace HLU.UI.ViewModel
         #region Fields - GIS
 
         private ArcProApp _gisApp;
-        private GeometryTypes _gisLayerType = GeometryTypes.Polygon;
+        private HluGeometryTypes _gisLayerType = HluGeometryTypes.Polygon;
 
         private DataColumn[] _gisIDColumns;
         private int[] _gisIDColumnOrdinals;
@@ -125,7 +128,7 @@ namespace HLU.UI.ViewModel
         /// polygon) associated with the GIS layer. The value can be used to guide rendering, analysis, or data
         /// processing operations that depend on the layer's geometry.</remarks>
         /// <value>The geometry type of the GIS layer.</value>
-        public GeometryTypes GisLayerType { get { return _gisLayerType; } }
+        public HluGeometryTypes GisLayerType { get { return _gisLayerType; } }
 
         #endregion Properties - GIS Info
 

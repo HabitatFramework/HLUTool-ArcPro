@@ -19,6 +19,7 @@
 
 using HLU.Data.Connection;
 using HLU.Data.Model;
+using HLU.Enums;
 using HLU.UI.ViewModel;
 using System;
 using System.Data;
@@ -34,7 +35,7 @@ namespace HLU.Data
         private string _siteID;
         DbBase _db;
         HluDataSet _hluDataset;
-        GeometryTypes _gisLayerType;
+        HluGeometryTypes _gisLayerType;
         TableAdapterManager _hluTableAdapterMgr;
         private string _habitatVersion;
         private int _incidCurrentNumber = -1;
@@ -56,7 +57,7 @@ namespace HLU.Data
         /// <param name="gisLayerType"></param>
         /// <exception cref="ArgumentException"></exception>
         public RecordIds(DbBase db, HluDataSet hluDataset,
-            TableAdapterManager hluTableAdapterMgr, GeometryTypes gisLayerType)
+            TableAdapterManager hluTableAdapterMgr, HluGeometryTypes gisLayerType)
         {
             // Check parameters.
             _db = db ?? throw new ArgumentException("db is null", nameof(db));
@@ -149,13 +150,13 @@ namespace HLU.Data
                     {
                         switch (_gisLayerType)
                         {
-                            case GeometryTypes.Point:
+                            case HluGeometryTypes.Point:
                                 _siteID = _hluDataset.lut_site_id.ElementAt(_hluDataset.lut_site_id.Count - 1).site_id_point;
                                 break;
-                            case GeometryTypes.Line:
+                            case HluGeometryTypes.Line:
                                 _siteID = _hluDataset.lut_site_id.ElementAt(_hluDataset.lut_site_id.Count - 1).site_id_line;
                                 break;
-                            case GeometryTypes.Polygon:
+                            case HluGeometryTypes.Polygon:
                                 _siteID = _hluDataset.lut_site_id.ElementAt(_hluDataset.lut_site_id.Count - 1).site_id_polygon;
                                 break;
                         }

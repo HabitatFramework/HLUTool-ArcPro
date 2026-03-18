@@ -30,6 +30,7 @@ using ArcGIS.Desktop.Mapping.Events;
 using HLU.Data;
 using HLU.Data.Model;
 using HLU.Date;
+using HLU.Enums;
 using HLU.Helpers;
 using HLU.Properties;
 using HLU.UI.UserControls;
@@ -56,6 +57,7 @@ using System.Timers;
 using ComboBox = ArcGIS.Desktop.Framework.Contracts.ComboBox;
 using CommandType = System.Data.CommandType;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
+using HLU.Exceptions;
 
 namespace HLU.UI.ViewModel
 {
@@ -8507,7 +8509,7 @@ namespace HLU.UI.ViewModel
 
                 // Create ViewModel to which main window binds
                 _viewModelWinWarnGISSelect = new ViewModelWindowWarnOnGISSelect(
-                    expectedNumFeatures, expectedNumIncids, expectedNumFeatures > -1 ? _gisLayerType : GeometryTypes.Unknown, _warnBeforeMaxFeatures);
+                    expectedNumFeatures, expectedNumIncids, expectedNumFeatures > -1 ? _gisLayerType : HluGeometryTypes.Unknown, _warnBeforeMaxFeatures);
 
                 // When ViewModel asks to be closed, close window
                 _viewModelWinWarnGISSelect.RequestClose -= ViewModelWinWarnGISSelect_RequestClose; // Safety: avoid double subscription.
@@ -8852,8 +8854,6 @@ namespace HLU.UI.ViewModel
                             // incids, toids and fragments selected.
                             AnalyzeGisSelectionSet(true);
 
-                            //TODO: Now doing this before SetFilterAsync() otherwise _selectedFragsInGISCount may
-                            // have been changed when auto selecting the first incid.
                             // Check if the counts returned are less than those expected.
                             if (_selectedFragsInGISCount < _selectedFragsInDBCount)
                             {

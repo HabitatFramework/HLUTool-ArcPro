@@ -68,6 +68,7 @@ using QueryFilter = ArcGIS.Core.Data.QueryFilter;
 using SpatialReference = ArcGIS.Core.Geometry.SpatialReference;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 using HLU.Helpers;
+using HLU.Exceptions;
 //using ArcGIS.Core.Internal.CIM;
 
 namespace HLU.GISApplication
@@ -1451,7 +1452,6 @@ namespace HLU.GISApplication
 
         #region Zoom
 
-        //TODO: Remove minZoom and distUnits if not needed
         /// <summary>
         /// Zooms the active map view to the current selection in the active HLU layer,
         /// with ArcMap-compatible behaviour:

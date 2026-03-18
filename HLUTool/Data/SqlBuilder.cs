@@ -24,11 +24,11 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using HLU.Data;
 using HLU.Data.Connection;
+using HLU.Helpers;
 using HLU.Properties;
 
-namespace HLU
+namespace HLU.Data
 {
     /// <summary>
     /// Represents a condition in a SQL where clause.
@@ -131,13 +131,13 @@ namespace HLU
         /// their intended defaults.</remarks>
         private void SetDefaults()
         {
-            if (String.IsNullOrEmpty(_booleanOperator))
+            if (string.IsNullOrEmpty(_booleanOperator))
                 _booleanOperator = "AND";
-            if (String.IsNullOrEmpty(_openParentheses))
-                _openParentheses = String.Empty;
+            if (string.IsNullOrEmpty(_openParentheses))
+                _openParentheses = string.Empty;
             _operator = "=";
-            if (String.IsNullOrEmpty(_closeParentheses))
-                _closeParentheses = String.Empty;
+            if (string.IsNullOrEmpty(_closeParentheses))
+                _closeParentheses = string.Empty;
         }
 
         /// <summary>
@@ -160,7 +160,7 @@ namespace HLU
         /// <returns>A new object that is a shallow copy of this instance.</returns>
         object ICloneable.Clone()
         {
-            return this.MemberwiseClone();
+            return MemberwiseClone();
         }
 
         /// <summary>
@@ -292,9 +292,9 @@ namespace HLU
 
         #region Protected
 
-        protected Dictionary<Type, Int32> _typeMapSystemToSQL;
+        protected Dictionary<Type, int> _typeMapSystemToSQL;
 
-        protected Dictionary<Int32, Type> _typeMapSQLToSystem;
+        protected Dictionary<int, Type> _typeMapSQLToSystem;
 
         /// <summary>
         /// Maps a database type code to its corresponding .NET system type.
@@ -352,7 +352,7 @@ namespace HLU
         /// <returns>true if the columns are from multiple tables; otherwise, false.</returns>
         public virtual bool QualifyColumnNames(DataColumn[] targetColumns)
         {
-            if ((targetColumns == null) || (targetColumns.Length == 0)) return false;
+            if (targetColumns == null || targetColumns.Length == 0) return false;
 
             return (from c in targetColumns
                     group c by c.Table.TableName into g
@@ -368,7 +368,7 @@ namespace HLU
         public virtual string ColumnAlias(DataColumn c)
         {
             if (c == null)
-                return String.Empty;
+                return string.Empty;
             else
                 return ColumnAlias(c.Table.TableName, c.ColumnName);
         }
@@ -387,9 +387,9 @@ namespace HLU
         /// separated by the configured separator.</returns>
         public virtual string ColumnAlias(string tableName, string columnName)
         {
-            if (String.IsNullOrEmpty(columnName))
-                return String.Empty;
-            else if (String.IsNullOrEmpty(tableName))
+            if (string.IsNullOrEmpty(columnName))
+                return string.Empty;
+            else if (string.IsNullOrEmpty(tableName))
                 return columnName;
             else
                 return tableName + Settings.Default.ColumnTableNameSeparator + columnName;
@@ -435,10 +435,10 @@ namespace HLU
         public string TargetList(DataTable[] targetTables, bool quoteIdentifiers,
             ref bool qualifyColumns, out DataTable resultTable)
         {
-            if ((targetTables == null) || (targetTables.Length == 0) || (targetTables[0].Columns.Count == 0))
+            if (targetTables == null || targetTables.Length == 0 || targetTables[0].Columns.Count == 0)
             {
                 resultTable = new DataTable();
-                return String.Empty;
+                return string.Empty;
             }
 
             resultTable = null;
@@ -450,7 +450,7 @@ namespace HLU
                 return TargetList(targetList, quoteIdentifiers, false, ref qualifyColumns, out resultTable);
             }
             catch { resultTable = new DataTable(); }
-            return String.Empty;
+            return string.Empty;
         }
 
         /// <summary>
@@ -542,7 +542,7 @@ namespace HLU
         /// string if tableNames is null or empty.</returns>
         public string FromList(bool includeFrom, bool quoteIdentifiers, string[] tableNames)
         {
-            if ((tableNames == null) || (tableNames.Length == 0)) return String.Empty;
+            if (tableNames == null || tableNames.Length == 0) return string.Empty;
             StringBuilder sbFromList = new();
             if (quoteIdentifiers)
             {
@@ -552,7 +552,7 @@ namespace HLU
             }
             else
             {
-                return (includeFrom ? " FROM " : "") + String.Join(",", tableNames);
+                return (includeFrom ? " FROM " : "") + string.Join(",", tableNames);
             }
         }
 
@@ -573,7 +573,7 @@ namespace HLU
             List<List<SqlFilterCondition>> outWhereClause = [];
             foreach (List<SqlFilterCondition> oneWhereClause in inWhereClause)
             {
-                if ((outWhereClause.Count == 0) || (oneWhereClause[0].BooleanOperator.Equals("OR", StringComparison.CurrentCultureIgnoreCase)))
+                if (outWhereClause.Count == 0 || oneWhereClause[0].BooleanOperator.Equals("OR", StringComparison.CurrentCultureIgnoreCase))
                     outWhereClause.Add(oneWhereClause);
                 else
                     outWhereClause[^1].AddRange(oneWhereClause);
@@ -617,7 +617,7 @@ namespace HLU
             bool qualifyColumns, List<SqlFilterCondition> whereConds)
         {
             // Check parameters.
-            if ((whereConds == null) || (whereConds.Count == 0))
+            if (whereConds == null || whereConds.Count == 0)
                 return string.Empty;
 
             StringBuilder sbWhereClause = new(includeWhere ? " WHERE " : " ");
@@ -631,8 +631,8 @@ namespace HLU
             {
                 // Check if all conditions are simple equality or OR
                 bool allEquality = whereConds.All(c =>
-                    (String.IsNullOrEmpty(c.Operator) || c.Operator == "=") &&
-                    (String.IsNullOrEmpty(c.BooleanOperator) ||
+                    (string.IsNullOrEmpty(c.Operator) || c.Operator == "=") &&
+                    (string.IsNullOrEmpty(c.BooleanOperator) ||
                      c.BooleanOperator.Equals("AND", StringComparison.OrdinalIgnoreCase) ||
                      c.BooleanOperator.Equals("OR", StringComparison.OrdinalIgnoreCase)));
 
@@ -642,15 +642,15 @@ namespace HLU
                     SqlFilterCondition firstCond = whereConds[0];
 
                     // Collect all values
-                    List<string> values = [.. whereConds.Where(c => c.Value != null).Select(c => c.Value.ToString()).Where(v => !String.IsNullOrEmpty(v)).Distinct()];
+                    List<string> values = [.. whereConds.Where(c => c.Value != null).Select(c => c.Value.ToString()).Where(v => !string.IsNullOrEmpty(v)).Distinct()];
 
                     if (values.Count > 0)
                     {
                         // Add column name
                         if (quoteIdentifiers)
                         {
-                            if (qualifyColumns && !String.IsNullOrEmpty(firstCond.Table.TableName))
-                                sbWhereClause.Append(String.Format("{0}.{1}",
+                            if (qualifyColumns && !string.IsNullOrEmpty(firstCond.Table.TableName))
+                                sbWhereClause.Append(string.Format("{0}.{1}",
                                     QuoteIdentifier(firstCond.Table.TableName),
                                     QuoteIdentifier(firstCond.Column.ColumnName)));
                             else
@@ -658,8 +658,8 @@ namespace HLU
                         }
                         else
                         {
-                            if (qualifyColumns && !String.IsNullOrEmpty(firstCond.Table.TableName))
-                                sbWhereClause.Append(String.Format("{0}.{1}",
+                            if (qualifyColumns && !string.IsNullOrEmpty(firstCond.Table.TableName))
+                                sbWhereClause.Append(string.Format("{0}.{1}",
                                     firstCond.Table.TableName,
                                     firstCond.Column.ColumnName));
                             else
@@ -704,8 +704,8 @@ namespace HLU
 
                 if (i != 0)
                 {
-                    if (!String.IsNullOrEmpty(sqlCond.BooleanOperator))
-                        sbWhereClause.Append(String.Format(" {0} ", sqlCond.BooleanOperator));
+                    if (!string.IsNullOrEmpty(sqlCond.BooleanOperator))
+                        sbWhereClause.Append(string.Format(" {0} ", sqlCond.BooleanOperator));
                     else
                         sbWhereClause.Append(" AND ");
                 }
@@ -714,82 +714,82 @@ namespace HLU
 
                 if (quoteIdentifiers)
                 {
-                    if (qualifyColumns && !String.IsNullOrEmpty(sqlCond.Table.TableName))
-                        sbWhereClause.Append(String.Format("{0}.{1}", QuoteIdentifier(sqlCond.Table.TableName),
+                    if (qualifyColumns && !string.IsNullOrEmpty(sqlCond.Table.TableName))
+                        sbWhereClause.Append(string.Format("{0}.{1}", QuoteIdentifier(sqlCond.Table.TableName),
                     QuoteIdentifier(sqlCond.Column.ColumnName)));
                     else
                         sbWhereClause.Append(QuoteIdentifier(sqlCond.Column.ColumnName));
                 }
                 else
                 {
-                    if (qualifyColumns && !String.IsNullOrEmpty(sqlCond.Table.TableName))
-                        sbWhereClause.Append(String.Format("{0}.{1}", sqlCond.Table.TableName, sqlCond.Column.ColumnName));
+                    if (qualifyColumns && !string.IsNullOrEmpty(sqlCond.Table.TableName))
+                        sbWhereClause.Append(string.Format("{0}.{1}", sqlCond.Table.TableName, sqlCond.Column.ColumnName));
                     else
                         sbWhereClause.Append(sqlCond.Column.ColumnName);
                 }
 
-                if (!String.IsNullOrEmpty(sqlCond.Operator))
+                if (!string.IsNullOrEmpty(sqlCond.Operator))
                 {
-                    if ((sqlCond.ColumnSystemType == typeof(DataColumn)) &&
-                        (sqlCond.Value is DataColumn c)) // table relation
+                    if (sqlCond.ColumnSystemType == typeof(DataColumn) &&
+                        sqlCond.Value is DataColumn c) // table relation
                     {
                         if (quoteIdentifiers)
                         {
                             if (qualifyColumns)
-                                sbWhereClause.Append(String.Format(" {0} {1}", sqlCond.Operator,
+                                sbWhereClause.Append(string.Format(" {0} {1}", sqlCond.Operator,
                             QuoteIdentifier(c.Table.TableName) + "." + QuoteIdentifier(c.ColumnName)));
                             else
-                                sbWhereClause.Append(String.Format(" {0} {1}",
+                                sbWhereClause.Append(string.Format(" {0} {1}",
                             sqlCond.Operator, QuoteIdentifier(c.ColumnName)));
                         }
                         else
                         {
                             if (qualifyColumns)
-                                sbWhereClause.Append(String.Format(" {0} {1}",
+                                sbWhereClause.Append(string.Format(" {0} {1}",
                             sqlCond.Operator, c.Table.TableName + "." + c.ColumnName));
                             else
-                                sbWhereClause.Append(String.Format(" {0} {1}", sqlCond.Operator, c.ColumnName));
+                                sbWhereClause.Append(string.Format(" {0} {1}", sqlCond.Operator, c.ColumnName));
                         }
                     }
                     else if (sqlCond.Operator.ToUpper().EndsWith("NULL"))
                     {
-                        sbWhereClause.Append(String.Format(" {0} ", sqlCond.Operator));
+                        sbWhereClause.Append(string.Format(" {0} ", sqlCond.Operator));
                     }
-                    else if (sqlCond.ColumnSystemType == typeof(System.String))
+                    else if (sqlCond.ColumnSystemType == typeof(string))
                     {
                         switch (sqlCond.Operator.ToUpper())
                         {
                             case "IN ()":
                             case "NOT IN ()":
-                                sbWhereClause.Append(String.Format(" {0}",
+                                sbWhereClause.Append(string.Format(" {0}",
                             sqlCond.Operator.Remove(sqlCond.Operator.Length - 1, 1)));
                                 Regex r = new(QuotePrefix + @"[^" + QuotePrefix + "]*" + QuoteSuffix + "|[^,]+",
                                 RegexOptions.IgnorePatternWhitespace);
                                 sbWhereClause.Append(r.Matches(sqlCond.Value.ToString()).Cast<Match>()
-                            .Aggregate(new StringBuilder(), (sb, m) => sb.Append(String.Format("{0},",
+                            .Aggregate(new StringBuilder(), (sb, m) => sb.Append(string.Format("{0},",
                                 QuoteValue(m.Value)))));
                                 sbWhereClause.Remove(sbWhereClause.Length - 1, 1);
                                 sbWhereClause.Append(')');
                                 break;
                             case "BEGINS WITH":
-                                sbWhereClause.Append(" LIKE " + QuoteValue(String.Format("{0}{1}",
+                                sbWhereClause.Append(" LIKE " + QuoteValue(string.Format("{0}{1}",
                             sqlCond.Value, WildcardManyMatch)));
                                 break;
                             case "ENDS WITH":
-                                sbWhereClause.Append(" LIKE " + QuoteValue(String.Format("{1}{0}",
+                                sbWhereClause.Append(" LIKE " + QuoteValue(string.Format("{1}{0}",
                             sqlCond.Value, WildcardManyMatch)));
                                 break;
                             case "CONTAINS":
-                                sbWhereClause.Append(" LIKE " + QuoteValue(String.Format("{1}{0}{1}",
+                                sbWhereClause.Append(" LIKE " + QuoteValue(string.Format("{1}{0}{1}",
                             sqlCond.Value, WildcardManyMatch)));
                                 break;
                             default:
                                 // Avoid repeated calls to 'GetUnderlyingType' for string fields.
                                 if (condString)
-                                    sbWhereClause.Append(String.Format(" {0} {1}", sqlCond.Operator,
+                                    sbWhereClause.Append(string.Format(" {0} {1}", sqlCond.Operator,
                                 QuoteValue(sqlCond.Value)));
                                 else
-                                    sbWhereClause.Append(String.Format(" {0} {1}", sqlCond.Operator,
+                                    sbWhereClause.Append(string.Format(" {0} {1}", sqlCond.Operator,
                                 QuoteValue(GetUnderlyingType(sqlCond))));
                                 break;
                         }
@@ -822,7 +822,7 @@ namespace HLU
         }
 
         /// <summary>
-        /// Creates a list of optimized SQL filter conditions from a DataTable of 
+        /// Creates a list of optimized SQL filter conditions from a DataTable of
         /// selected Incids by grouping continuous ranges.
         /// </summary>
         /// <param name="incidSelection">A DataTable containing the selected Incids.</param>
@@ -841,7 +841,7 @@ namespace HLU
             // Split the table of selected Incids into chunks of continuous Incids
             var query = incidSelection
                 .AsEnumerable()
-                .Where(r => !String.IsNullOrWhiteSpace(r.Field<string>(0)))
+                .Where(r => !string.IsNullOrWhiteSpace(r.Field<string>(0)))
                 .Select((r, index) => new
                 {
                     RowIndex = RecordIds.IncidNumber(r.Field<string>(0)) - index,
@@ -874,14 +874,14 @@ namespace HLU
                         ColumnSystemType = incidColumn.DataType,
                         Operator = ">=",
                         Value = item.First().Incid,
-                        CloseParentheses = String.Empty
+                        CloseParentheses = string.Empty
                     };
                     whereClause.Add(cond);
 
                     cond = new()
                     {
                         BooleanOperator = "AND",
-                        OpenParentheses = String.Empty,
+                        OpenParentheses = string.Empty,
                         Column = incidColumn,
                         Table = condTable,
                         ColumnSystemType = incidColumn.DataType,
@@ -909,7 +909,7 @@ namespace HLU
                     Table = condTable,
                     ColumnSystemType = incidColumn.DataType,
                     Operator = inList.Count == 1 ? "=" : "IN ()",
-                    Value = String.Join(",", oneList),
+                    Value = string.Join(",", oneList),
                     CloseParentheses = ")"
                 };
                 whereClause.Add(cond);
@@ -922,17 +922,17 @@ namespace HLU
 
         /// <summary>
         /// Builds a UNION query from a list of SqlFilterCondition objects.
-        /// All constituent SELECT statements use the same target list and FROM 
+        /// All constituent SELECT statements use the same target list and FROM
         /// clause but different WHERE clauses.
         /// </summary>
         /// <param name="targetList">Target list for union query.</param>
         /// <param name="fromClause">From clause for union query.</param>
-        /// <param name="sortOrdinals">Ordinals of columns to order by. Negative 
+        /// <param name="sortOrdinals">Ordinals of columns to order by. Negative
         /// values indicate descending order.</param>
-        /// <param name="whereClause">List of where clauses to build UNION query 
+        /// <param name="whereClause">List of where clauses to build UNION query
         /// from.</param>
         /// <param name="db">Database against which UNION query will be run.</param>
-        /// <param name="tableAliases">Optional dictionary mapping qualified table 
+        /// <param name="tableAliases">Optional dictionary mapping qualified table
         /// names to their aliases.</param>
         /// <returns>The complete SQL query string.</returns>
         public string BuildUnionQuery(
@@ -982,7 +982,7 @@ namespace HLU
             }
 
             // Build the SELECT statement with WHERE clause
-            sql.Append(String.Format("SELECT {0} FROM {1}{2}",
+            sql.Append(string.Format("SELECT {0} FROM {1}{2}",
                 targetList,
                 fromClause,
                 db.WhereClause(true, true, true, adjustedWhereClause)));
@@ -990,10 +990,10 @@ namespace HLU
             // Add ORDER BY clause if specified
             if (sortOrdinals != null)
             {
-                sql.Append(String.Format(" ORDER BY {0}",
+                sql.Append(string.Format(" ORDER BY {0}",
                     string.Join(", ", [.. sortOrdinals.Select(x =>
                 x < 0
-                    ? String.Format("{0} DESC", Math.Abs(x).ToString())
+                    ? string.Format("{0} DESC", Math.Abs(x).ToString())
                     : x.ToString())])));
             }
 
@@ -1015,7 +1015,7 @@ namespace HLU
         /// tables are provided or if the array is empty.</returns>
         private List<SqlFilterCondition> JoinClause(DataTable[] queryTables)
         {
-            if ((queryTables == null) || (queryTables.Length == 0)) return null;
+            if (queryTables == null || queryTables.Length == 0) return null;
 
             List<SqlFilterCondition> joinClause = [];
 
@@ -1034,7 +1034,7 @@ namespace HLU
                         {
                             SqlFilterCondition joinWhere = new()
                             {
-                                BooleanOperator = String.Empty
+                                BooleanOperator = string.Empty
                             };
                             if (k == 0)
                             {

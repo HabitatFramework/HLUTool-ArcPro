@@ -22,8 +22,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace HLU
+namespace HLU.Enums
 {
+    #region Enums
+
     /// <summary>
     /// Custom attribute to associate a string code with an enum value. This allows for more
     /// flexible mapping between enum values and external representations, such as database codes or
@@ -75,11 +77,11 @@ namespace HLU
         public static string GetCode(T en)
         {
             MemberInfo[] memberInfo = typeof(T).GetMember(en.ToString());
-            if ((memberInfo != null) && (memberInfo.Length > 0))
+            if (memberInfo != null && memberInfo.Length > 0)
             {
                 object[] attributes;
                 attributes = memberInfo[0].GetCustomAttributes(typeof(EnumCode), false);
-                if ((null != attributes) && (attributes.Length > 0))
+                if (null != attributes && attributes.Length > 0)
                 {
                     return ((EnumCode)attributes[0]).Code;
                 }
@@ -107,4 +109,6 @@ namespace HLU
             return Enum.GetValues(typeof(T)).Cast<T>().ToDictionary(k => Enum.GetName(typeof(T), k), v => GetCode(v));
         }
     }
+
+    #endregion Enums
 }

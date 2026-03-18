@@ -24,7 +24,7 @@ using System.Threading.Tasks;
 
 namespace HLU.Enums
 {
-    #region enums
+    #region Enums
 
     /// <summary>
     /// An enumeration of the different options for what to do when
@@ -90,6 +90,5 @@ namespace HLU.Enums
         Error
     };
 
-    #endregion enums
-
+    #endregion Enums
 }

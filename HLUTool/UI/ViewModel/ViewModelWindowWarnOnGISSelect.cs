@@ -24,6 +24,7 @@ using System.Globalization;
 using System.Windows.Input;
 using HLU.Properties;
 using HLU.Data;
+using HLU.Enums;
 
 namespace HLU.UI.ViewModel
 {
@@ -53,7 +54,7 @@ namespace HLU.UI.ViewModel
         /// <param name="numIncids">The expected number of incids to be selected in GIS (or -1 if unknown).</param>
         /// <param name="typeFeatures">The type of features expected to be selected in GIS.</param>
         /// <param name="maxFeaturesGISSelect">The maximum number of features to be selected in GIS before a warning dialog is displayed, based on user settings.</param>
-        public ViewModelWindowWarnOnGISSelect(int numFeatures, int numIncids, GeometryTypes typeFeatures, int maxFeaturesGISSelect)
+        public ViewModelWindowWarnOnGISSelect(int numFeatures, int numIncids, HluGeometryTypes typeFeatures, int maxFeaturesGISSelect)
         {
             // Store the expected number of features to be selected in GIS.
             _gisFeaturesNum = numFeatures;
@@ -62,7 +63,7 @@ namespace HLU.UI.ViewModel
             _gisIncidNum = numIncids;
 
             // If the type of feature is not known then just use 'feature'.
-            if (typeFeatures != GeometryTypes.Unknown)
+            if (typeFeatures != HluGeometryTypes.Unknown)
                 _gisFeaturesType = typeFeatures.ToString().ToLower();
             else
                 _gisFeaturesType = "feature";

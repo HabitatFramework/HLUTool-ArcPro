@@ -20,7 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace HLU
+namespace HLU.Exceptions
 {
     /// <summary>
     /// Base exception for HLU Tool failures that should be shown to the user.

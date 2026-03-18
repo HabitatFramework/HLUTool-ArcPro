@@ -22,6 +22,7 @@ using System.Globalization;
 using System.Windows.Input;
 using HLU.Properties;
 using HLU.Data;
+using HLU.Enums;
 
 namespace HLU.UI.ViewModel
 {
@@ -35,7 +36,7 @@ namespace HLU.UI.ViewModel
         private string _displayName = "Attribute UpdateAsync";
         private int _numFrags;
         private int _numTotalFrags;
-        private GeometryTypes _gisFeaturesType;
+        private HluGeometryTypes _gisFeaturesType;
         private ICommand _yesCommand;
         private ICommand _noCommand;
         private ICommand _cancelCommand;
@@ -51,7 +52,7 @@ namespace HLU.UI.ViewModel
         /// <param name="numFrags">The number of fragments.</param>
         /// <param name="numTotalFrags">The total number of fragments.</param>
         /// <param name="typeFeatures">The type of features.</param>
-        public ViewModelWindowWarnOnSubsetUpdate(int numFrags, int numTotalFrags, GeometryTypes typeFeatures)
+        public ViewModelWindowWarnOnSubsetUpdate(int numFrags, int numTotalFrags, HluGeometryTypes typeFeatures)
         {
             _numFrags = numFrags;
             _numTotalFrags = numTotalFrags;
