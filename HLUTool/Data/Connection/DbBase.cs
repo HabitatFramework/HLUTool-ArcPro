@@ -495,7 +495,7 @@ namespace HLU.Data.Connection
         /// <param name="targetColumns">The target database columns.</param>
         /// <param name="whereConds">The list of where conds.</param>
         /// <returns>An integer of the number of rows matching the SQL.</returns>
-        public async Task<int> SqlCount(DataColumn[] targetColumns, List<SqlFilterCondition> whereConds)
+        public async Task<int> SqlCountAsync(DataColumn[] targetColumns, List<SqlFilterCondition> whereConds)
         {
             if ((targetColumns == null) || (targetColumns.Length == 0)) return 0;
 
@@ -530,7 +530,7 @@ namespace HLU.Data.Connection
         /// <param name="countColumns">The columns to count unique values for.</param>
         /// <param name="whereConds">The list of where conds.</param>
         /// <returns>An integer of the number of rows matching the SQL.</returns>
-        public async Task<int> SqlCount(DataTable[] targetTables, string countColumns, List<SqlFilterCondition> whereConds)
+        public async Task<int> SqlCountAsync(DataTable[] targetTables, string countColumns, List<SqlFilterCondition> whereConds)
         {
             if ((targetTables == null) || (targetTables.Length == 0) ||
                 (targetTables[0].Columns.Count == 0)) return 0;
@@ -567,7 +567,7 @@ namespace HLU.Data.Connection
         /// <param name="whereConds">The list of where conds.</param>
         /// <param name="sqlWhereClause">The string of where clauses.</param>
         /// <returns>An integer of the number of rows matching the SQL.</returns>
-        public async Task<int> SqlCount(DataTable[] targetTables, string countColumns, List<SqlFilterCondition> whereConds, string sqlWhereClause)
+        public async Task<int> SqlCountAsync(DataTable[] targetTables, string countColumns, List<SqlFilterCondition> whereConds, string sqlWhereClause)
         {
             if ((targetTables == null) || (targetTables.Length == 0)) return 0;
 

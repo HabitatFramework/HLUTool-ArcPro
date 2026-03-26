@@ -225,8 +225,6 @@ namespace HLU.UI.ViewModel
             // perform the update using the options set.
             if (apply == true)
             {
-                //DispatcherHelper.DoEvents();
-
                 // Set the options for processing the bulk update
                 _bulkDeleteOrphanBapHabitats = bulkDeleteOrphanBapHabitats;
                 _bulkDeletePotentialBapHabitats = bulkDeletePotentialBapHabitats;

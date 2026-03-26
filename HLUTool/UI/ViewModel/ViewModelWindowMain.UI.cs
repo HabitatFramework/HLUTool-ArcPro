@@ -163,7 +163,6 @@ namespace HLU.UI.ViewModel
 
         #region Fields - General
 
-        private bool _windowEnabled = true;
         private bool _pasting = false;
         private Cursor _windowCursor = Cursors.Arrow;
 
@@ -216,10 +215,7 @@ namespace HLU.UI.ViewModel
 
         #region Fields - Progress
 
-        private double _progressValue;
-        private double _maxProgressValue;
         private string _processStatus;
-        private string _progressText;
 
         #endregion Fields - Progress
 
@@ -279,8 +275,14 @@ namespace HLU.UI.ViewModel
         /// <value><c>true</c> if the form is loading; otherwise, <c>false</c>.</value>
         public bool FormLoading
         {
-            get { return _formLoading; }
-            set { _formLoading = value; }
+            get
+            {
+                return _formLoading;
+            }
+            set
+            {
+                _formLoading = value;
+            }
         }
 
         /// <summary>
@@ -289,8 +291,14 @@ namespace HLU.UI.ViewModel
         /// <value>The URL of the help page.</value>
         public string HelpURL
         {
-            get { return _helpURL; }
-            set { _helpURL = value; }
+            get
+            {
+                return _helpURL;
+            }
+            set
+            {
+                _helpURL = value;
+            }
         }
 
         /// <summary>
@@ -299,8 +307,14 @@ namespace HLU.UI.ViewModel
         /// <value>The add-in settings.</value>
         public AddInSettings AddInSettings
         {
-            get { return _addInSettings; }
-            set { _addInSettings = value; }
+            get
+            {
+                return _addInSettings;
+            }
+            set
+            {
+                _addInSettings = value;
+            }
         }
 
         #endregion Properties - DockPane/View
@@ -325,8 +339,14 @@ namespace HLU.UI.ViewModel
         /// <value>The user-friendly name of this object.</value>
         public override string DisplayName
         {
-            get { return _displayName; }
-            set { _displayName = value; }
+            get
+            {
+                return _displayName;
+            }
+            set
+            {
+                _displayName = value;
+            }
         }
 
         /// <summary>
@@ -379,7 +399,10 @@ namespace HLU.UI.ViewModel
         /// <value>The available HLU layers.</value>
         public ObservableCollection<string> AvailableHLULayerNames
         {
-            get { return _availableHLULayerNames; }
+            get
+            {
+                return _availableHLULayerNames;
+            }
             set
             {
                 _availableHLULayerNames = value;
@@ -412,7 +435,10 @@ namespace HLU.UI.ViewModel
         /// <value>The current user's name.</value>
         public string UserName
         {
-            get { return _userName; }
+            get
+            {
+                return _userName;
+            }
         }
 
         #endregion Properties - User
@@ -423,7 +449,19 @@ namespace HLU.UI.ViewModel
         /// Gets the cursor to use for the window, which can be set to indicate different states (e.g. waiting, default).
         /// </summary>
         /// <value>The cursor to use for the window.</value>
-        public Cursor WindowCursor { get { return _windowCursor; } }
+        public Cursor WindowCursor
+        {
+            get
+            {
+                return _windowCursor;
+            }
+            set
+            {
+                _windowCursor = value;
+                OnPropertyChanged(nameof(WindowCursor));
+                OnPropertyChanged(nameof(TabControlDataEnabled));
+            }
+        }
 
         #endregion Properties - Cursor
 
@@ -442,7 +480,11 @@ namespace HLU.UI.ViewModel
                 else
                     return null;
             }
-            set { if ((IncidCurrentRow != null) && (value != null)) IncidCurrentRow.incid = value; }
+            set
+            {
+                if ((IncidCurrentRow != null) && (value != null))
+                    IncidCurrentRow.incid = value;
+            }
         }
 
         /// <summary>
@@ -630,7 +672,11 @@ namespace HLU.UI.ViewModel
                 else
                     return null;
             }
-            set { if ((IncidCurrentRow != null) && (value != null)) IncidCurrentRow.created_user_id = value; }
+            set
+            {
+                if ((IncidCurrentRow != null) && (value != null))
+                    IncidCurrentRow.created_user_id = value;
+            }
         }
 
         /// <summary>
@@ -649,7 +695,11 @@ namespace HLU.UI.ViewModel
                 else
                     return null;
             }
-            set { if ((IncidCurrentRow != null) && (value != null)) _incidLastModifiedUser = value; }
+            set
+            {
+                if ((IncidCurrentRow != null) && (value != null))
+                    _incidLastModifiedUser = value;
+            }
         }
 
         /// <summary>
@@ -687,7 +737,9 @@ namespace HLU.UI.ViewModel
                     return Visibility.Collapsed;
                 }
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -769,7 +821,8 @@ namespace HLU.UI.ViewModel
             {
                 // If there are no OSMM proposed updates or the proposed update
                 // for this incid has already been processed then return null.
-                if (_osmmUpdatesEmpty == true || _incidOSMMUpdatesOSMMXref <= 0) return null;
+                if (_osmmUpdatesEmpty == true || _incidOSMMUpdatesOSMMXref <= 0)
+                    return null;
 
                 // Return the first proposed update primary code for this incid
                 // (there should only be one).
@@ -797,7 +850,8 @@ namespace HLU.UI.ViewModel
             {
                 // If there are no OSMM proposed updates or the proposed update
                 // for this incid has already been processed then return null.
-                if (_osmmUpdatesEmpty == true || _incidOSMMUpdatesOSMMXref <= 0) return null;
+                if (_osmmUpdatesEmpty == true || _incidOSMMUpdatesOSMMXref <= 0)
+                    return null;
 
                 // Return the first proposed update secondary codes for this incid
                 // (there should only be one).
@@ -876,8 +930,14 @@ namespace HLU.UI.ViewModel
         /// </value>
         public bool ResetOSMMUpdatesStatus
         {
-            get { return _resetOSMMUpdatesStatus; }
-            set { _resetOSMMUpdatesStatus = value; }
+            get
+            {
+                return _resetOSMMUpdatesStatus;
+            }
+            set
+            {
+                _resetOSMMUpdatesStatus = value;
+            }
         }
 
         /// <summary>
@@ -1046,9 +1106,12 @@ namespace HLU.UI.ViewModel
                 if ((IsNotBulkMode) && IncidCurrentRow == null)
                     return false;
 
-                return _windowEnabled && _tabControlDataEnabled;
+                return _tabControlDataEnabled;
             }
-            set { _tabControlDataEnabled = value; }
+            set
+            {
+                _tabControlDataEnabled = value;
+            }
         }
 
         /// <summary>
@@ -1056,74 +1119,146 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public int TabItemSelected
         {
-            get { return _tabItemSelected; }
-            set { _tabItemSelected = value; }
+            get
+            {
+                return _tabItemSelected;
+            }
+            set
+            {
+                _tabItemSelected = value;
+            }
         }
 
         public bool TabItemHabitatEnabled
         {
-            get { return _tabItemHabitatEnabled; }
-            set { _tabItemHabitatEnabled = value; }
+            get
+            {
+                return _tabItemHabitatEnabled;
+            }
+            set
+            {
+                _tabItemHabitatEnabled = value;
+            }
         }
 
         public bool TabItemPriorityEnabled
         {
-            get { return _tabItemPriorityEnabled; }
-            set { _tabItemPriorityEnabled = value; }
+            get
+            {
+                return _tabItemPriorityEnabled;
+            }
+            set
+            {
+                _tabItemPriorityEnabled = value;
+            }
         }
 
         public bool TabItemDetailsEnabled
         {
-            get { return _tabItemDetailsEnabled; }
-            set { _tabItemDetailsEnabled = value; }
+            get
+            {
+                return _tabItemDetailsEnabled;
+            }
+            set
+            {
+                _tabItemDetailsEnabled = value;
+            }
         }
 
         public bool TabItemIHSEnabled
         {
-            get { return _tabItemIHSEnabled; }
-            set { _tabItemIHSEnabled = value; }
+            get
+            {
+                return _tabItemIHSEnabled;
+            }
+            set
+            {
+                _tabItemIHSEnabled = value;
+            }
         }
 
         public bool TabItemSourcesEnabled
         {
-            get { return _tabItemSourcesEnabled; }
-            set { _tabItemSourcesEnabled = value; }
+            get
+            {
+                return _tabItemSourcesEnabled;
+            }
+            set
+            {
+                _tabItemSourcesEnabled = value;
+            }
         }
 
         public bool TabItemHistoryEnabled
         {
-            get { return _tabItemHistoryEnabled; }
-            set { _tabItemHistoryEnabled = value; }
+            get
+            {
+                return _tabItemHistoryEnabled;
+            }
+            set
+            {
+                _tabItemHistoryEnabled = value;
+            }
         }
 
         public bool TabHabitatControlsEnabled
         {
-            get { return _tabHabitatControlsEnabled; }
-            set { _tabHabitatControlsEnabled = value; }
+            get
+            {
+                return _tabHabitatControlsEnabled;
+            }
+            set
+            {
+                _tabHabitatControlsEnabled = value;
+            }
         }
 
         public bool TabIhsControlsEnabled
         {
-            get { return _tabIhsControlsEnabled; }
-            set { _tabIhsControlsEnabled = value; }
+            get
+            {
+                return _tabIhsControlsEnabled;
+            }
+            set
+            {
+                _tabIhsControlsEnabled = value;
+            }
         }
 
         public bool TabPriorityControlsEnabled
         {
-            get { return _tabPriorityControlsEnabled; }
-            set { _tabPriorityControlsEnabled = value; }
+            get
+            {
+                return _tabPriorityControlsEnabled;
+            }
+            set
+            {
+                _tabPriorityControlsEnabled = value;
+            }
         }
 
         public bool TabDetailsControlsEnabled
         {
-            get { return _tabDetailsControlsEnabled; }
-            set { _tabDetailsControlsEnabled = value; }
+            get
+            {
+                return _tabDetailsControlsEnabled;
+            }
+            set
+            {
+                _tabDetailsControlsEnabled = value;
+            }
         }
 
         public bool TabSourcesControlsEnabled
         {
-            get { return _tabSourcesControlsEnabled; }
-            set { _tabSourcesControlsEnabled = value; }
+            get
+            {
+                return _tabSourcesControlsEnabled;
+            }
+            set
+            {
+                _tabSourcesControlsEnabled = value;
+            }
         }
 
 
@@ -1140,7 +1275,10 @@ namespace HLU.UI.ViewModel
         /// <value>The label for the habitat tab.</value>
         public string HabitatTabLabel
         {
-            get { return "Habitats"; }
+            get
+            {
+                return "Habitats";
+            }
         }
 
         /// <summary>
@@ -1181,7 +1319,9 @@ namespace HLU.UI.ViewModel
                     return Visibility.Collapsed;
                 }
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -1316,7 +1456,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public string HabitatType
         {
-            get { return _habitatType; }
+            get
+            {
+                return _habitatType;
+            }
             set
             {
                 // Check if the habitat type has changed.
@@ -1497,7 +1640,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public ObservableCollection<CodeDescriptionBool> PrimaryCodes
         {
-            get { return _primaryCodes; }
+            get
+            {
+                return _primaryCodes;
+            }
         }
 
         /// <summary>
@@ -1507,7 +1653,10 @@ namespace HLU.UI.ViewModel
         /// <value>The primary habitat code.</value>
         public string IncidPrimary
         {
-            get { return _incidPrimary; }
+            get
+            {
+                return _incidPrimary;
+            }
             set
             {
                 if (IncidCurrentRow != null)
@@ -1608,7 +1757,10 @@ namespace HLU.UI.ViewModel
         /// <value>The primary habitat category that relates to the selected primary habitat code.</value>
         public string IncidPrimaryCategory
         {
-            get { return _incidPrimaryCategory; }
+            get
+            {
+                return _incidPrimaryCategory;
+            }
         }
 
         #endregion Properties - Primary Habitat
@@ -1629,7 +1781,9 @@ namespace HLU.UI.ViewModel
                 else
                     return Visibility.Hidden;
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -1670,7 +1824,9 @@ namespace HLU.UI.ViewModel
                     return Visibility.Collapsed;
                 }
             }
-            set { }
+            set
+            {
+            }
         }
 
         //TODO: Include optional secondary codes in the suggested list?
@@ -1783,7 +1939,7 @@ namespace HLU.UI.ViewModel
                 // Set the dictionary of local secondary group codes.
                 if (SecondaryHabitat.SecondaryGroupCodes == null || SecondaryHabitat.SecondaryGroupCodes.Count == 0)
                     SecondaryHabitat.SecondaryGroupCodes = (from sg in _lutSecondary
-                                                        select sg).OrderBy(r => r.code).ThenBy(r => r.code_group).ToDictionary(r => r.code, r => r.code_group);
+                                                            select sg).OrderBy(r => r.code).ThenBy(r => r.code_group).ToDictionary(r => r.code, r => r.code_group);
 
                 // If there is a primary habitat code selected, set the list of valid secondary groups to
                 // those that relate to the primary code, otherwise set to all secondary groups.
@@ -1876,7 +2032,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public string SecondaryGroup
         {
-            get { return _secondaryGroup; }
+            get
+            {
+                return _secondaryGroup;
+            }
             set
             {
                 _secondaryGroup = value;
@@ -1973,7 +2132,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public string SecondaryHabitatCode
         {
-            get { return _secondaryHabitat; }
+            get
+            {
+                return _secondaryHabitat;
+            }
             set
             {
                 _secondaryHabitat = value;
@@ -1987,7 +2149,10 @@ namespace HLU.UI.ViewModel
         /// <value>The collection of secondary habitats.</value>
         public ObservableCollection<SecondaryHabitat> IncidSecondaryHabitats
         {
-            get { return _incidSecondaryHabitats; }
+            get
+            {
+                return _incidSecondaryHabitats;
+            }
             set
             {
                 _incidSecondaryHabitats = value;
@@ -2035,7 +2200,9 @@ namespace HLU.UI.ViewModel
                     return Visibility.Collapsed;
                 }
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -2116,7 +2283,9 @@ namespace HLU.UI.ViewModel
                     return Visibility.Collapsed;
                 }
             }
-            set { }
+            set
+            {
+            }
         }
 
         #endregion Properties - Habitat Summary
@@ -2233,7 +2402,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public string IHSTabLabel
         {
-            get { return "IHS"; }
+            get
+            {
+                return "IHS";
+            }
         }
 
         /// <summary>
@@ -2282,7 +2454,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public string IncidIhsHabitat
         {
-            get { return _incidIhsHabitat; }
+            get
+            {
+                return _incidIhsHabitat;
+            }
         }
 
         /// <summary>
@@ -2341,7 +2516,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckIhsMatrix()) return null;
+                if (!CheckIhsMatrix())
+                    return null;
                 if ((_incidIhsMatrixRows.Length > 0) && (_incidIhsMatrixRows[0] != null) &&
                     !_incidIhsMatrixRows[0].IsNull(_hluDS.incid_ihs_matrix.matrixColumn.Ordinal))
                     return _incidIhsMatrixRows[0].matrix;
@@ -2384,7 +2560,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckIhsMatrix()) return null;
+                if (!CheckIhsMatrix())
+                    return null;
                 if ((_incidIhsMatrixRows.Length > 1) && (_incidIhsMatrixRows[1] != null) &&
                     !_incidIhsMatrixRows[1].IsNull(_hluDS.incid_ihs_matrix.matrixColumn.Ordinal))
                     return _incidIhsMatrixRows[1].matrix;
@@ -2427,7 +2604,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckIhsMatrix()) return null;
+                if (!CheckIhsMatrix())
+                    return null;
                 if ((_incidIhsMatrixRows.Length > 2) && (_incidIhsMatrixRows[2] != null) &&
                     !_incidIhsMatrixRows[2].IsNull(_hluDS.incid_ihs_matrix.matrixColumn.Ordinal))
                     return _incidIhsMatrixRows[2].matrix;
@@ -2492,7 +2670,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckIhsFormation()) return null;
+                if (!CheckIhsFormation())
+                    return null;
                 if ((_incidIhsFormationRows.Length > 0) && (_incidIhsFormationRows[0] != null) &&
                     !_incidIhsFormationRows[0].IsNull(_hluDS.incid_ihs_formation.formationColumn.Ordinal))
                     return _incidIhsFormationRows[0].formation;
@@ -2535,7 +2714,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckIhsFormation()) return null;
+                if (!CheckIhsFormation())
+                    return null;
                 if ((_incidIhsFormationRows.Length > 1) && (_incidIhsFormationRows[1] != null) &&
                     !_incidIhsFormationRows[1].IsNull(_hluDS.incid_ihs_formation.formationColumn.Ordinal))
                     return _incidIhsFormationRows[1].formation;
@@ -2600,7 +2780,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckIhsManagement()) return null;
+                if (!CheckIhsManagement())
+                    return null;
                 if ((_incidIhsManagementRows.Length > 0) && (_incidIhsManagementRows[0] != null) &&
                     !_incidIhsManagementRows[0].IsNull(_hluDS.incid_ihs_management.managementColumn.Ordinal))
                     return _incidIhsManagementRows[0].management;
@@ -2643,7 +2824,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckIhsManagement()) return null;
+                if (!CheckIhsManagement())
+                    return null;
                 if ((_incidIhsManagementRows.Length > 1) && (_incidIhsManagementRows[1] != null) &&
                     !_incidIhsManagementRows[1].IsNull(_hluDS.incid_ihs_management.managementColumn.Ordinal))
                     return _incidIhsManagementRows[1].management;
@@ -2708,7 +2890,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckIhsComplex()) return null;
+                if (!CheckIhsComplex())
+                    return null;
                 if ((_incidIhsComplexRows.Length > 0) && (_incidIhsComplexRows[0] != null) &&
                     !_incidIhsComplexRows[0].IsNull(_hluDS.incid_ihs_complex.complexColumn.Ordinal))
                     return _incidIhsComplexRows[0].complex;
@@ -2751,7 +2934,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckIhsComplex()) return null;
+                if (!CheckIhsComplex())
+                    return null;
                 if ((_incidIhsComplexRows.Length > 1) && (_incidIhsComplexRows[1] != null) &&
                     !_incidIhsComplexRows[1].IsNull(_hluDS.incid_ihs_complex.complexColumn.Ordinal))
                     return _incidIhsComplexRows[1].complex;
@@ -2846,7 +3030,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public string PriorityTabLabel
         {
-            get { return "Priority"; }
+            get
+            {
+                return "Priority";
+            }
         }
 
         #endregion Properties - Priority Label/Header
@@ -2962,7 +3149,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public ObservableCollection<BapEnvironment> IncidBapHabitatsAuto
         {
-            get { return _incidBapRowsAuto; }
+            get
+            {
+                return _incidBapRowsAuto;
+            }
             set
             {
                 _incidBapRowsAuto = value;
@@ -2982,7 +3172,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public ObservableCollection<BapEnvironment> IncidBapHabitatsUser
         {
-            get { return _incidBapRowsUser; }
+            get
+            {
+                return _incidBapRowsUser;
+            }
             set
             {
                 _incidBapRowsUser = value;
@@ -3000,7 +3193,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public bool BapHabitatsAutoEnabled
         {
-            get { return IncidBapHabitatsAuto != null && IncidBapHabitatsAuto.Count > 0; } // return IsNotBulkMode; }
+            get
+            {
+                return IncidBapHabitatsAuto != null && IncidBapHabitatsAuto.Count > 0;
+            } // return IsNotBulkMode; }
         }
 
         /// <summary>
@@ -3034,7 +3230,10 @@ namespace HLU.UI.ViewModel
         /// <value>The Details tab label.</value>
         public string DetailsTabLabel
         {
-            get { return "Details"; }
+            get
+            {
+                return "Details";
+            }
         }
 
         #endregion Properties - Details Label/Header
@@ -3311,7 +3510,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckCondition()) return null;
+                if (!CheckCondition())
+                    return null;
 
                 if (_incidConditionRows.Length < 1)
                 {
@@ -3389,7 +3589,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckCondition()) return null;
+                if (!CheckCondition())
+                    return null;
                 if ((_incidConditionRows.Length > 0) && (_incidConditionRows[0] != null) &&
                     !_incidConditionRows[0].IsNull(HluDataset.incid_condition.condition_qualifierColumn))
                     return _incidConditionRows[0].condition_qualifier;
@@ -3416,7 +3617,8 @@ namespace HLU.UI.ViewModel
             get
             {
                 // Check if there are any valid condition rows.
-                if (!CheckCondition()) return null;
+                if (!CheckCondition())
+                    return null;
 
 
                 if ((_incidConditionRows.Length > 0) && (_incidConditionRows[0] != null) &&
@@ -3453,7 +3655,10 @@ namespace HLU.UI.ViewModel
         public bool IncidConditionEnabled
         {
             // Disable remaining condition fields when condition is blank
-            get { return (IncidCondition != null); }
+            get
+            {
+                return (IncidCondition != null);
+            }
         }
 
         #endregion Properties - Details Condition
@@ -3669,7 +3874,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public string SourcesTabLabel
         {
-            get { return "Sources"; }
+            get
+            {
+                return "Sources";
+            }
         }
 
         #endregion Properties - Sources Label/Header
@@ -3824,7 +4032,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckSources()) return null;
+                if (!CheckSources())
+                    return null;
 
                 if (_incidSourcesRows.Length < 3)
                 {
@@ -3862,7 +4071,8 @@ namespace HLU.UI.ViewModel
                     UpdateIncidSourcesRow(0, IncidSourcesTable.source_idColumn.Ordinal, value);
                     IncidSource1Date = DefaultSourceDate(IncidSource1Date, IncidSource1Id);
                     // if row added refresh source names list
-                    if (wasNull && (_incidSourcesRows[0] != null)) OnPropertyChanged(nameof(Source1Names));
+                    if (wasNull && (_incidSourcesRows[0] != null))
+                        OnPropertyChanged(nameof(Source1Names));
                 }
                 OnPropertyChanged(nameof(IncidSource1Date));
                 OnPropertyChanged(nameof(IncidSource1HabitatClass));
@@ -3884,7 +4094,10 @@ namespace HLU.UI.ViewModel
         public bool IncidSource1Enabled
         {
             // Disable remaining source fields when source name is blank
-            get { return (IncidSource1Id != null); }
+            get
+            {
+                return (IncidSource1Id != null);
+            }
         }
 
         /// <summary>
@@ -3897,7 +4110,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckSources()) return null;
+                if (!CheckSources())
+                    return null;
                 if ((_incidSourcesRows.Length > 0) && (_incidSourcesRows[0] != null) &&
                     !_incidSourcesRows[0].IsNull(HluDataset.incid_sources.source_date_startColumn) &&
                     !_incidSourcesRows[0].IsNull(HluDataset.incid_sources.source_date_endColumn) &&
@@ -3933,7 +4147,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckSources()) return null;
+                if (!CheckSources())
+                    return null;
                 if ((_incidSourcesRows.Length > 0) && (_incidSourcesRows[0] != null) &&
                     !_incidSourcesRows[0].IsNull(HluDataset.incid_sources.source_habitat_classColumn))
                     return _incidSourcesRows[0].source_habitat_class;
@@ -3991,7 +4206,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckSources()) return null;
+                if (!CheckSources())
+                    return null;
                 if ((_incidSourcesRows.Length > 0) && (_incidSourcesRows[0] != null) &&
                     !_incidSourcesRows[0].IsNull(HluDataset.incid_sources.source_habitat_typeColumn))
                     return _incidSourcesRows[0].source_habitat_type;
@@ -4016,7 +4232,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckSources()) return null;
+                if (!CheckSources())
+                    return null;
                 if ((_incidSourcesRows.Length > 0) && (_incidSourcesRows[0] != null) &&
                     !_incidSourcesRows[0].IsNull(HluDataset.incid_sources.source_boundary_importanceColumn))
                     return _incidSourcesRows[0].source_boundary_importance;
@@ -4044,7 +4261,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckSources()) return null;
+                if (!CheckSources())
+                    return null;
                 if ((_incidSourcesRows.Length > 0) && (_incidSourcesRows[0] != null) &&
                     !_incidSourcesRows[0].IsNull(HluDataset.incid_sources.source_habitat_importanceColumn))
                     return _incidSourcesRows[0].source_habitat_importance;
@@ -4120,7 +4338,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckSources()) return null;
+                if (!CheckSources())
+                    return null;
 
                 if (_incidSourcesRows.Length < 3)
                 {
@@ -4157,7 +4376,8 @@ namespace HLU.UI.ViewModel
                     UpdateIncidSourcesRow(1, IncidSourcesTable.source_idColumn.Ordinal, value);
                     IncidSource2Date = DefaultSourceDate(IncidSource2Date, IncidSource2Id);
                     // if row added refresh source names list
-                    if (wasNull && (_incidSourcesRows[1] != null)) OnPropertyChanged(nameof(Source2Names));
+                    if (wasNull && (_incidSourcesRows[1] != null))
+                        OnPropertyChanged(nameof(Source2Names));
                 }
                 OnPropertyChanged(nameof(IncidSource2Date));
                 OnPropertyChanged(nameof(IncidSource2HabitatClass));
@@ -4179,7 +4399,10 @@ namespace HLU.UI.ViewModel
         public bool IncidSource2Enabled
         {
             // Disable remaining source fields when source name is blank
-            get { return (IncidSource2Id != null); }
+            get
+            {
+                return (IncidSource2Id != null);
+            }
         }
 
         /// <summary>
@@ -4191,7 +4414,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckSources()) return null;
+                if (!CheckSources())
+                    return null;
                 if ((_incidSourcesRows.Length > 1) && (_incidSourcesRows[1] != null) &&
                     !_incidSourcesRows[1].IsNull(HluDataset.incid_sources.source_date_startColumn) &&
                     !_incidSourcesRows[1].IsNull(HluDataset.incid_sources.source_date_endColumn) &&
@@ -4227,7 +4451,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckSources()) return null;
+                if (!CheckSources())
+                    return null;
                 if ((_incidSourcesRows.Length > 1) && (_incidSourcesRows[1] != null) &&
                     !_incidSourcesRows[1].IsNull(HluDataset.incid_sources.source_habitat_classColumn))
                     return _incidSourcesRows[1].source_habitat_class;
@@ -4283,7 +4508,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckSources()) return null;
+                if (!CheckSources())
+                    return null;
                 if ((_incidSourcesRows.Length > 1) && (_incidSourcesRows[1] != null) &&
                     !_incidSourcesRows[1].IsNull(HluDataset.incid_sources.source_habitat_typeColumn))
                     return _incidSourcesRows[1].source_habitat_type;
@@ -4308,7 +4534,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckSources()) return null;
+                if (!CheckSources())
+                    return null;
                 if ((_incidSourcesRows.Length > 1) && (_incidSourcesRows[1] != null) &&
                     !_incidSourcesRows[1].IsNull(HluDataset.incid_sources.source_boundary_importanceColumn))
                     return _incidSourcesRows[1].source_boundary_importance;
@@ -4336,7 +4563,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckSources()) return null;
+                if (!CheckSources())
+                    return null;
                 if ((_incidSourcesRows.Length > 1) && (_incidSourcesRows[1] != null) &&
                     !_incidSourcesRows[1].IsNull(HluDataset.incid_sources.source_habitat_importanceColumn))
                     return _incidSourcesRows[1].source_habitat_importance;
@@ -4412,7 +4640,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckSources()) return null;
+                if (!CheckSources())
+                    return null;
 
                 if (_incidSourcesRows.Length < 3)
                 {
@@ -4449,7 +4678,8 @@ namespace HLU.UI.ViewModel
                     UpdateIncidSourcesRow(2, IncidSourcesTable.source_idColumn.Ordinal, value);
                     IncidSource3Date = DefaultSourceDate(IncidSource3Date, IncidSource3Id);
                     // if row added refresh source names lists (all three)
-                    if (wasNull && (_incidSourcesRows[2] != null)) OnPropertyChanged(nameof(Source3Names));
+                    if (wasNull && (_incidSourcesRows[2] != null))
+                        OnPropertyChanged(nameof(Source3Names));
                 }
                 OnPropertyChanged(nameof(IncidSource3Date));
                 OnPropertyChanged(nameof(IncidSource3HabitatClass));
@@ -4471,7 +4701,10 @@ namespace HLU.UI.ViewModel
         public bool IncidSource3Enabled
         {
             // Disable remaining source fields when source name is blank
-            get { return (IncidSource3Id != null); }
+            get
+            {
+                return (IncidSource3Id != null);
+            }
         }
 
         /// <summary>
@@ -4483,7 +4716,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckSources()) return null;
+                if (!CheckSources())
+                    return null;
                 if ((_incidSourcesRows.Length > 2) && (_incidSourcesRows[2] != null) &&
                     !_incidSourcesRows[2].IsNull(HluDataset.incid_sources.source_date_startColumn) &&
                     !_incidSourcesRows[2].IsNull(HluDataset.incid_sources.source_date_endColumn) &&
@@ -4519,7 +4753,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckSources()) return null;
+                if (!CheckSources())
+                    return null;
                 if ((_incidSourcesRows.Length > 2) && (_incidSourcesRows[2] != null) &&
                     !_incidSourcesRows[2].IsNull(HluDataset.incid_sources.source_habitat_classColumn))
                     return _incidSourcesRows[2].source_habitat_class;
@@ -4545,7 +4780,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckSources()) return null;
+                if (!CheckSources())
+                    return null;
                 if ((_incidSourcesRows.Length > 2) && (_incidSourcesRows[2] != null) &&
                     !_incidSourcesRows[2].IsNull(HluDataset.incid_sources.source_habitat_typeColumn))
                     return _incidSourcesRows[2].source_habitat_type;
@@ -4599,7 +4835,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckSources()) return null;
+                if (!CheckSources())
+                    return null;
                 if ((_incidSourcesRows.Length > 2) && (_incidSourcesRows[2] != null) &&
                     !_incidSourcesRows[2].IsNull(HluDataset.incid_sources.source_boundary_importanceColumn))
                     return _incidSourcesRows[2].source_boundary_importance;
@@ -4627,7 +4864,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (!CheckSources()) return null;
+                if (!CheckSources())
+                    return null;
                 if ((_incidSourcesRows.Length > 2) && (_incidSourcesRows[2] != null) &&
                     !_incidSourcesRows[2].IsNull(HluDataset.incid_sources.source_habitat_importanceColumn))
                     return _incidSourcesRows[2].source_habitat_importance;
@@ -4889,7 +5127,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public string HistoryTabLabel
         {
-            get { return "History"; }
+            get
+            {
+                return "History";
+            }
         }
 
         #endregion Properties - History Label/Header
@@ -4900,17 +5141,29 @@ namespace HLU.UI.ViewModel
         /// Gets the Site ID for the current record.
         /// </summary>
         /// <value>The Site ID for the current record.</value>
-        public string SiteID { get { return _recIDs.SiteID; } }
+        public string SiteID
+        {
+            get
+            {
+                return _recIDs.SiteID;
+            }
+        }
 
         /// <summary>
         /// Gets the Habitat Version for the current record.
         /// </summary>
         /// <value>The Habitat Version for the current record.</value>
-        public string HabitatVersion { get { return _recIDs.HabitatVersion; } }
+        public string HabitatVersion
+        {
+            get
+            {
+                return _recIDs.HabitatVersion;
+            }
+        }
 
         #endregion Properties - Site Info
 
-        #region Properties - Status Bar
+        #region Properties - Status Incid
 
         /// <summary>
         /// Gets the status string for the current Incid selection.
@@ -4977,16 +5230,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        /// <summary>
-        /// Gets the status string for the current map selection, which is shown in the status bar.
-        /// </summary>
-        /// <value>The status string for the current map selection.</value>
-        public string StatusBar
-        {
-            get { return _windowCursor == Cursors.Wait ? _processingMsg : String.Empty; }
-        }
-
-        #endregion Properties - Status Bar
+        #endregion Properties - Status Incid
 
         #region Properties - Priority Habitats
 
@@ -5013,7 +5257,10 @@ namespace HLU.UI.ViewModel
         /// <value><c>true</c> if the priority habitats can be edited; otherwise, <c>false</c>.</value>
         public bool CanEditPriorityHabitats
         {
-            get { return IsNotBulkMode && IsNotOsmmReviewMode && BapHabitatsAutoEnabled; }
+            get
+            {
+                return IsNotBulkMode && IsNotOsmmReviewMode && BapHabitatsAutoEnabled;
+            }
         }
 
         /// <summary>
@@ -5039,7 +5286,10 @@ namespace HLU.UI.ViewModel
         /// <value><c>true</c> if the potential priority habitats can be edited; otherwise, <c>false</c>.</value>
         public bool CanEditPotentialHabitats
         {
-            get { return IsNotBulkMode && IsNotOsmmReviewMode && BapHabitatsUserEnabled; }
+            get
+            {
+                return IsNotBulkMode && IsNotOsmmReviewMode && BapHabitatsUserEnabled;
+            }
         }
 
         /// <summary>
@@ -5115,7 +5365,13 @@ namespace HLU.UI.ViewModel
         /// enable or disable the export command.
         /// </summary>
         /// <value><c>true</c> if an export can be performed; otherwise, <c>false</c>.</value>
-        public bool CanExport { get { return IsNotBulkMode && IsNotOsmmReviewMode && _hluDS != null; } }
+        public bool CanExport
+        {
+            get
+            {
+                return IsNotBulkMode && IsNotOsmmReviewMode && _hluDS != null;
+            }
+        }
 
         #endregion Properties - Export
 
@@ -5147,7 +5403,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public bool CanFilterByIncid
         {
-            get { return IsNotBulkMode && IsNotOsmmReviewMode && IncidCurrentRow != null; }
+            get
+            {
+                return IsNotBulkMode && IsNotOsmmReviewMode && IncidCurrentRow != null;
+            }
         }
 
         /// <summary>
@@ -5201,58 +5460,7 @@ namespace HLU.UI.ViewModel
 
         #endregion Properties - Filter
 
-        #region Properties - Progress/Status
-
-        /// <summary>
-        /// Gets a value indicating whether the form is processing.
-        /// </summary>
-        /// <value><c>true</c> if the form is processing; otherwise, <c>false</c>.</value>
-        public Visibility IsProcessing
-        {
-            get
-            {
-                if (_processStatus != null)
-                    return Visibility.Visible;
-                else
-                    return Visibility.Collapsed;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the value to set on the progress bar.
-        /// </summary>
-        /// <value>The value to set on the progress bar.</value>
-        public double ProgressValue
-        {
-            get
-            {
-                return _progressValue;
-            }
-            set
-            {
-                _progressValue = value;
-
-                OnPropertyChanged(nameof(ProgressValue));
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the maximum value for the progress bar.
-        /// </summary>
-        /// <value>The maximum value for the progress bar.</value>
-        public double MaxProgressValue
-        {
-            get
-            {
-                return _maxProgressValue;
-            }
-            set
-            {
-                _maxProgressValue = value;
-
-                OnPropertyChanged(nameof(MaxProgressValue));
-            }
-        }
+        #region Properties - Progress
 
         /// <summary>
         /// Gets or sets the process status text to be shown in the status bar when processing.
@@ -5271,45 +5479,36 @@ namespace HLU.UI.ViewModel
 
                 OnPropertyChanged(nameof(ProcessStatus));
                 OnPropertyChanged(nameof(IsProcessing));
-                OnPropertyChanged(nameof(ProgressText));
-                OnPropertyChanged(nameof(ProgressAnimating));
+                OnPropertyChanged(nameof(IsToolProcessing));
             }
         }
 
         /// <summary>
-        /// Gets or sets the text to display on the progress bar.
+        /// Gets a value indicating whether the form is processing.
         /// </summary>
-        /// <value>The text to display on the progress bar.</value>
-        public string ProgressText
+        /// <value><c>true</c> if the form is processing; otherwise, <c>false</c>.</value>
+        public Visibility IsProcessing
         {
             get
             {
-                return _progressText;
-            }
-            set
-            {
-                _progressText = value;
-
-                OnPropertyChanged(nameof(ProgressText));
-            }
-        }
-
-        /// <summary>
-        /// Gets a value indicating whether the progress wheel is animating.
-        /// </summary>
-        /// <value><c>true</c> if the progress wheel is animating; otherwise, <c>false</c>.</value>
-        public Visibility ProgressAnimating
-        {
-            get
-            {
-                if (_progressText != null)
+                if (_processStatus != null)
                     return Visibility.Visible;
                 else
                     return Visibility.Collapsed;
             }
         }
 
-        #endregion Properties - Progress/Status
+        /// <summary>
+        /// Gets a value indicating whether the tool is currently
+        /// busy processing an operation.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if the tool is processing; otherwise,
+        /// <c>false</c>.
+        /// </value>
+        public bool IsToolProcessing => _processStatus != null;
+
+        #endregion Properties - Progress
 
         #region Properties - Navigation
 
@@ -5353,7 +5552,10 @@ namespace HLU.UI.ViewModel
         /// <value><c>true</c> if the user can navigate backward; otherwise, <c>false</c>.</value>
         public bool CanNavigateBackward
         {
-            get { return IncidCurrentRowIndex > 1; }
+            get
+            {
+                return IncidCurrentRowIndex > 1;
+            }
         }
 
         /// <summary>
@@ -5506,7 +5708,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_canUserBulkUpdate == null) GetUserInfo();
+                if (_canUserBulkUpdate == null)
+                    GetUserInfo();
 
                 return _canUserBulkUpdate == true;
             }
@@ -5537,7 +5740,13 @@ namespace HLU.UI.ViewModel
         /// <value>
         ///   <c>true</c> if this instance can cancel bulk update; otherwise, <c>false</c>.
         /// </value>
-        public bool CanCancelBulkUpdate { get { return IsBulkMode; } }
+        public bool CanCancelBulkUpdate
+        {
+            get
+            {
+                return IsBulkMode;
+            }
+        }
 
         /// <summary>
         /// Indicates whether the Bulk Update workflow is active.
@@ -5572,7 +5781,9 @@ namespace HLU.UI.ViewModel
                 else
                     return Visibility.Visible;
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -5588,7 +5799,9 @@ namespace HLU.UI.ViewModel
                 else
                     return Visibility.Hidden;
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -5637,7 +5850,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public string OSMMAcceptTag
         {
-            get { return _osmmAcceptTag; }
+            get
+            {
+                return _osmmAcceptTag;
+            }
             set
             {
                 _osmmAcceptTag = value;
@@ -5656,7 +5872,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public string OSMMRejectTag
         {
-            get { return _osmmRejectTag; }
+            get
+            {
+                return _osmmRejectTag;
+            }
             set
             {
                 _osmmRejectTag = value;
@@ -5688,7 +5907,13 @@ namespace HLU.UI.ViewModel
         /// Can the OSMM Update be cancelled.
         /// </summary>
         /// <value><c>true</c> if this instance can cancel OSMM update; otherwise, <c>false</c>.</value>
-        public bool CanCancelOSMMUpdate { get { return IsOsmmReviewMode; } }
+        public bool CanCancelOSMMUpdate
+        {
+            get
+            {
+                return IsOsmmReviewMode;
+            }
+        }
 
         /// <summary>
         /// OSMM Skip command.
@@ -5811,7 +6036,9 @@ namespace HLU.UI.ViewModel
                 else
                     return Visibility.Visible;
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -5832,7 +6059,9 @@ namespace HLU.UI.ViewModel
                     return Visibility.Collapsed;
                 }
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -5841,8 +6070,14 @@ namespace HLU.UI.ViewModel
         /// <value><c>true</c> to create incid history for processing OSMM Updates; otherwise, <c>false</c>.</value>
         public bool OSMMUpdateCreateHistory
         {
-            get { return _osmmUpdateCreateHistory; }
-            set { _osmmUpdateCreateHistory = value; }
+            get
+            {
+                return _osmmUpdateCreateHistory;
+            }
+            set
+            {
+                _osmmUpdateCreateHistory = value;
+            }
         }
 
         /// <summary>
@@ -5852,7 +6087,10 @@ namespace HLU.UI.ViewModel
         /// <value>The text for the OSMM Accept button.</value>
         public string OSMMAcceptText
         {
-            get { return OSMMAcceptTag == "Ctrl" ? "A_ccept All" : "A_ccept"; }
+            get
+            {
+                return OSMMAcceptTag == "Ctrl" ? "A_ccept All" : "A_ccept";
+            }
         }
 
         /// <summary>
@@ -5862,7 +6100,10 @@ namespace HLU.UI.ViewModel
         /// <value>The text for the OSMM Reject button.</value>
         public string OSMMRejectText
         {
-            get { return OSMMRejectTag == "Ctrl" ? "Re_ject All" : "Re_ject"; }
+            get
+            {
+                return OSMMRejectTag == "Ctrl" ? "Re_ject All" : "Re_ject";
+            }
         }
 
         /// <summary>
@@ -5923,7 +6164,10 @@ namespace HLU.UI.ViewModel
         /// <value>The row counter for the current incid.</value>
         public int OSMMIncidCurrentRowIndex
         {
-            get { return _osmmUpdatesEmpty ? 0 : _incidCurrentRowIndex; }
+            get
+            {
+                return _osmmUpdatesEmpty ? 0 : _incidCurrentRowIndex;
+            }
         }
 
         #endregion Properties - OSMM Update
@@ -5954,7 +6198,13 @@ namespace HLU.UI.ViewModel
         /// Can the OSMM Bulk Update be cancelled.
         /// </summary>
         /// <value><c>true</c> if the OSMM Bulk Update can be cancelled; otherwise, <c>false</c>.</value>
-        public bool CanCancelOSMMBulkUpdate { get { return IsOsmmBulkMode; } }
+        public bool CanCancelOSMMBulkUpdate
+        {
+            get
+            {
+                return IsOsmmBulkMode;
+            }
+        }
 
         /// <summary>
         /// Gets or sets a value indicating whether the OSMM bulk apply workflow is active.
@@ -5995,8 +6245,14 @@ namespace HLU.UI.ViewModel
         /// <value>The last modified date for the current Incid.</value>
         internal DateTime IncidLastModifiedDateVal
         {
-            get { return _incidLastModifiedDate; }
-            set { _incidLastModifiedDate = value; }
+            get
+            {
+                return _incidLastModifiedDate;
+            }
+            set
+            {
+                _incidLastModifiedDate = value;
+            }
         }
 
         /// <summary>
@@ -6005,8 +6261,15 @@ namespace HLU.UI.ViewModel
         /// <value>The last modified user for the current Incid.</value>
         internal string IncidLastModifiedUserId
         {
-            get { return _incidLastModifiedUser; }
-            set { if ((IncidCurrentRow != null) && (value != null)) _incidLastModifiedUser = value; }
+            get
+            {
+                return _incidLastModifiedUser;
+            }
+            set
+            {
+                if ((IncidCurrentRow != null) && (value != null))
+                    _incidLastModifiedUser = value;
+            }
         }
 
         #endregion Properties - Display Values
@@ -6019,8 +6282,14 @@ namespace HLU.UI.ViewModel
         /// <value>The copy switches for the window.</value>
         public WindowMainCopySwitches CopySwitches
         {
-            get { return _copySwitches; }
-            set { _copySwitches = value; }
+            get
+            {
+                return _copySwitches;
+            }
+            set
+            {
+                _copySwitches = value;
+            }
         }
 
         /// <summary>
@@ -6606,68 +6875,19 @@ namespace HLU.UI.ViewModel
         /// current operation.</param>
         public void ChangeCursor(Cursor cursorType, string processingMessage)
         {
-            //TODO: ChangeCursor
-            ProgressUpdate(processingMessage, -1, -1);
+            // Set the process status
+            ProcessStatus = processingMessage;
 
-            //_windowCursor = cursorType;
-            //_windowEnabled = cursorType != Cursors.Wait;
+            // Set the window cursor
+            WindowCursor = cursorType;
 
-            //OnPropertyChanged(nameof(TabControlDataEnabled));
-            //if (cursorType == Cursors.Arrow)
-            //    _processingMsg = "Processing ...";
-            //else
-            //    _processingMsg = processingMessage;
+            // Skip DoEvents during initialization to avoid reentrancy issues.
+            if (!Initialised)
+                return;
 
-            //OnPropertyChanged(nameof(StatusBar));
-            //if (cursorType == Cursors.Wait)
-            //    DispatcherHelper.DoEvents();
-        }
-
-        //TODO: Check if still correct approach with dispatcher
-        /// <summary>
-        /// Update the progress bar.
-        /// </summary>
-        /// <param name="processText">The text to display for the current process.</param>
-        /// <param name="progressValue">The current progress value.</param>
-        /// <param name="maxProgressValue">The maximum progress value.</param>
-        public void ProgressUpdate(string processText = null, int progressValue = -1, int maxProgressValue = -1)
-        {
-            if (Application.Current.Dispatcher.CheckAccess())
-            {
-                // Check if the values have changed and update them if they have.
-                if (progressValue >= 0)
-                    ProgressValue = progressValue;
-
-                if (maxProgressValue != 0)
-                    MaxProgressValue = maxProgressValue;
-
-                if (_maxProgressValue > 0)
-                    ProgressText = _progressValue == _maxProgressValue ? "Done" : $@"{_progressValue * 100 / _maxProgressValue:0}%";
-                else
-                    ProgressText = null;
-
-                ProcessStatus = processText;
-            }
-            else
-            {
-                Application.Current.Dispatcher.BeginInvoke(DispatcherPriority.Background,
-                  () =>
-                  {
-                      // Check if the values have changed and update them if they have.
-                      if (progressValue >= 0)
-                          ProgressValue = progressValue;
-
-                      if (maxProgressValue != 0)
-                          MaxProgressValue = maxProgressValue;
-
-                      if (_maxProgressValue > 0)
-                          ProgressText = _progressValue == _maxProgressValue ? "Done" : $@"{_progressValue * 100 / _maxProgressValue:0}%";
-                      else
-                          ProgressText = null;
-
-                      ProcessStatus = processText;
-                  });
-            }
+            // Only call DoEvents if the cursor is set to Wait to allow the UI to update.
+            if (cursorType == Cursors.Wait)
+                DispatcherHelper.DoEvents();
         }
 
         /// <summary>
@@ -6889,7 +7109,6 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(IncidCurrentRowIndex));
             OnPropertyChanged(nameof(OSMMIncidCurrentRowIndex));
             OnPropertyChanged(nameof(StatusIncid));
-            OnPropertyChanged(nameof(StatusBar));
             OnPropertyChanged(nameof(ActiveLayerName));
             OnPropertyChanged(nameof(CanZoomToSelection));
             OnPropertyChanged(nameof(CanUpdate));
@@ -8416,6 +8635,8 @@ namespace HLU.UI.ViewModel
             {
                 ChangeCursor(Cursors.Wait, "Validating ...");
 
+                await Task.Yield();
+
                 // Get a list of all the possible query tables.
                 List<DataTable> tables = [];
                 if ((ViewModelWindowQueryAdvanced.HluDatasetStatic != null))
@@ -8452,7 +8673,13 @@ namespace HLU.UI.ViewModel
                 if (whereTables.Count > 0)
                 {
                     // Create a selection DataTable of PK values of IncidTable.
-                    _incidSelection = _db.SqlSelect(true, IncidTable.PrimaryKey, whereTables, newWhereClause);
+                    //_incidSelection = _db.SqlSelect(true, IncidTable.PrimaryKey, whereTables, newWhereClause);
+                    _incidSelection = await Task.Run(() =>
+                        _db.SqlSelect(
+                            true,
+                            IncidTable.PrimaryKey,
+                            whereTables,
+                            newWhereClause));
 
                     // Get a list of all the incids in the selection.
                     _incidsSelectedMap = _incidSelection.AsEnumerable()
@@ -8478,9 +8705,6 @@ namespace HLU.UI.ViewModel
 
                     // Find the expected number of features to be selected from GIS.
                     (_selectedIncidsInGISCount, _selectedToidsInGISCount, _selectedFragsInGISCount) = await _gisApp.ExpectedSelectionGISFeaturesAsync(_incidSelection);
-
-                    // Reset the cursor back to normal.
-                    ChangeCursor(Cursors.Arrow, null);
 
                     // Check if the counts returned are less than those expected.
                     if (_selectedFragsInGISCount < _selectedFragsInDBCount)
@@ -8668,8 +8892,6 @@ namespace HLU.UI.ViewModel
 
                 // Refresh all the controls
                 RefreshAll();
-
-                DispatcherHelper.DoEvents(); //TODO: Replace with modern equivalent?
             }
 
             try
@@ -8779,8 +9001,6 @@ namespace HLU.UI.ViewModel
 
                 // Refresh all the controls
                 RefreshAll();
-
-                DispatcherHelper.DoEvents(); //TODO: Replace with modern equivalent?
             }
 
             try
@@ -8894,7 +9114,13 @@ namespace HLU.UI.ViewModel
                     _osmmUpdateWhereClause = null;
 
                     // Create a selection DataTable of PK values of IncidTable.
-                    _incidSelection = _db.SqlSelect(true, IncidTable.PrimaryKey, whereTables, newWhereClause);
+                    //_incidSelection = _db.SqlSelect(true, IncidTable.PrimaryKey, whereTables, newWhereClause);
+                    _incidSelection = await Task.Run(() =>
+                        _db.SqlSelect(
+                            true,
+                            IncidTable.PrimaryKey,
+                            whereTables,
+                            newWhereClause));
 
                     // Get a list of all the incids in the selection.
                     _incidsSelectedMap = _incidSelection.AsEnumerable()
@@ -9079,7 +9305,8 @@ namespace HLU.UI.ViewModel
                         q = (from s in SecondaryHabitatCodesAll
                              where s.code == _secondaryHabitat
                              select s.code_group);
-                        if ((q != null) && (q.Any())) secondaryGroup = q.First();
+                        if ((q != null) && (q.Any()))
+                            secondaryGroup = q.First();
                     }
 
                     // Add secondary habitat to table if it isn't already in the table
@@ -9525,7 +9752,8 @@ namespace HLU.UI.ViewModel
         private void GetIncidMeasures()
         {
             // If the measures have already been calculated or there is no current incid, exit the method.
-            if (((_incidArea != -1) && (_incidLength != -1)) || (IncidCurrentRow == null)) return;
+            if (((_incidArea != -1) && (_incidLength != -1)) || (IncidCurrentRow == null))
+                return;
 
             // Calculate the area and length measures for the current incid based on associated polygon data.
             _incidMMPolygonsIncidFilter.Value = Incid;
@@ -9591,6 +9819,5 @@ namespace HLU.UI.ViewModel
         #endregion Formatting Helpers
 
         #endregion Methods
-
-    }
+   }
 }

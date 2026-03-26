@@ -2388,7 +2388,13 @@ namespace HLU.UI.ViewModel
                 newWhereClause = ReplaceStringQualifiers(sqlWhereClause);
 
                 // Create a selection DataTable of PK values of IncidTable.
-                _incidSelection = _db.SqlSelect(true, IncidTable.PrimaryKey, whereTables, newWhereClause);
+                //_incidSelection = _db.SqlSelect(true, IncidTable.PrimaryKey, whereTables, newWhereClause);
+                _incidSelection = await Task.Run(() =>
+                        _db.SqlSelect(
+                            true,
+                            IncidTable.PrimaryKey,
+                            whereTables,
+                            newWhereClause));
 
                 // Get a list of all the incids in the selection.
                 _incidsSelectedMap = _incidSelection.AsEnumerable()
@@ -2568,7 +2574,13 @@ namespace HLU.UI.ViewModel
                 _osmmUpdateWhereClause = newWhereClause;
 
                 // Create a selection DataTable of PK values of IncidTable.
-                _incidSelection = _db.SqlSelect(true, IncidTable.PrimaryKey, whereTables, newWhereClause);
+                //_incidSelection = _db.SqlSelect(true, IncidTable.PrimaryKey, whereTables, newWhereClause);
+                _incidSelection = await Task.Run(() =>
+                        _db.SqlSelect(
+                            true,
+                            IncidTable.PrimaryKey,
+                            whereTables,
+                            newWhereClause));
 
                 // Get a list of all the incids in the selection.
                 _incidsSelectedMap = _incidSelection.AsEnumerable()

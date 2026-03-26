@@ -88,6 +88,14 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
+            // If the tool is processing, disable the ComboBox and show a tooltip indicating why.
+            if (_viewModel.IsToolProcessing)
+            {
+                Enabled = false;
+                DisabledTooltip = "Unavailable while the tool is processing.";
+                return;
+            }
+
             // Initialize the ComboBox if it's not already.
             if (!_isInitialized)
                 Initialize();

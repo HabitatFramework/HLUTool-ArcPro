@@ -101,6 +101,14 @@ namespace HLU.UI.UserControls.Toolbar
             if (!_isInitialized)
                 Initialize();
 
+            // If the tool is processing, disable the ComboBox and show a tooltip indicating why.
+            if (_viewModel.IsToolProcessing)
+            {
+                Enabled = false;
+                DisabledTooltip = "Unavailable while the tool is processing.";
+                return;
+            }
+
             // Enable or disable the ComboBox based on ReasonProcessEnabled and main grid visibility.
             bool reasonProcessEnabled = _viewModel.ReasonProcessEnabled && _viewModel.GridMainVisibility == Visibility.Visible;
             Enabled = reasonProcessEnabled;

@@ -233,7 +233,6 @@ namespace HLU.UI.ViewModel
         /// <param name="param">The parameter passed to the command.</param>
         private void ManageDsnCommandClick(object param)
         {
-            //DispatcherHelper.DoEvents();
             OdbcCP32 odbccp32 = new();
             odbccp32.ManageDatasources(_windowHandle);
             OnPropertyChanged(nameof(DsnList));

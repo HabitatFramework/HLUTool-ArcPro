@@ -83,6 +83,14 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
+            // If the tool is processing, disable the button and show a tooltip indicating why.
+            if (_viewModel.IsToolProcessing)
+            {
+                Enabled = false;
+                DisabledTooltip = "Unavailable while the tool is processing.";
+                return;
+            }
+
             // Update checked state based on current work mode
             IsChecked = _viewModel.WorkMode.HasFlag(WorkMode.OSMMReview);
 

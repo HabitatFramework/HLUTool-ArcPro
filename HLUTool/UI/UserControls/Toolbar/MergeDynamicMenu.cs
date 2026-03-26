@@ -72,6 +72,14 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
+            // If the tool is processing, disable the menu and show a tooltip indicating why.
+            if (_viewModel.IsToolProcessing)
+            {
+                Enabled = false;
+                DisabledTooltip = "Unavailable while the tool is processing.";
+                return;
+            }
+
             // Enable or disable the button based on CanMerge and main grid visibility.
             bool CanMerge = (_viewModel.CanMerge && _viewModel.GridMainVisibility == Visibility.Visible);
             Enabled = CanMerge;

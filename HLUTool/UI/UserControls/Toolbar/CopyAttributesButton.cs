@@ -90,6 +90,14 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
+            // If the tool is processing, disable the button and show a tooltip indicating why.
+            if (_viewModel.IsToolProcessing)
+            {
+                Enabled = false;
+                DisabledTooltip = "Unavailable while the tool is processing.";
+                return;
+            }
+
             // Enable or disable the button based on CanCopy and main grid visibility.
             bool canCopy = _viewModel.CanCopy && _viewModel.GridMainVisibility == Visibility.Visible;
             Enabled = canCopy;

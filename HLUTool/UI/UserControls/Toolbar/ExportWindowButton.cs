@@ -94,6 +94,14 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
+            // If the tool is processing, disable the button and show a tooltip indicating why.
+            if (_viewModel.IsToolProcessing)
+            {
+                Enabled = false;
+                DisabledTooltip = "Unavailable while the tool is processing.";
+                return;
+            }
+
             // Enable or disable the button based on CanExport and main grid visibility.
             bool canExport = _viewModel.CanExport && _viewModel.GridMainVisibility == Visibility.Visible;
             Enabled = canExport;

@@ -792,12 +792,6 @@ namespace HLU.GISApplication
                             dataRow[c.ColumnName] = feature[c.ColumnName];
                         }
 
-                        //// Populate the DataRow with feature attributes
-                        //for (int i = 0; i < resultTable.Columns.Count; i++)
-                        //{
-                        //    dataRow[i] = feature[i];
-                        //}
-
                         // Add the DataRow to the DataTable
                         resultTable.Rows.Add(dataRow);
                     }

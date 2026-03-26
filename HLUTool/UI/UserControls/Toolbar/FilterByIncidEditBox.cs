@@ -115,6 +115,14 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
+            // If the tool is processing, disable the edit box and show a tooltip indicating why.
+            if (_viewModel.IsToolProcessing)
+            {
+                Enabled = false;
+                DisabledTooltip = "Unavailable while the tool is processing.";
+                return;
+            }
+
             // Enable or disable the button based on CanFilterByIncid and main grid visibility.
             bool canFilterByIncid = _viewModel.CanFilterByIncid && _viewModel.GridMainVisibility == Visibility.Visible;
             Enabled = canFilterByIncid;

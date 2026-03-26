@@ -1086,7 +1086,6 @@ namespace HLU.UI.ViewModel
                     DataTable[] selTables = [t];
 
                     IEnumerable<DataTable> queryTables = whereClause.SelectMany(cond => cond.Select(c => c.Table)).Distinct();
-                    //DataTable[] selTables = new DataTable[] { t }.Union(queryTables).ToArray();
 
                     var fromTables = queryTables.Distinct().Where(q => !selTables.Select(s => s.TableName).Contains(q.TableName));
                     DataTable[] whereTables = [.. selTables, .. fromTables];
@@ -1138,7 +1137,7 @@ namespace HLU.UI.ViewModel
                             cond.CloseParentheses = "))";
                         }
 
-                        numFragments += await _db.SqlCount(selTables, "*", [.. joinCond, .. whereClause[i]]);
+                        numFragments += await _db.SqlCountAsync(selTables, "*", [.. joinCond, .. whereClause[i]]);
                     }
                 }
                 catch
@@ -1180,10 +1179,16 @@ namespace HLU.UI.ViewModel
                         (rel = GetRelation(_hluDS.incid, st)) != null ?
                         new SqlFilterCondition("AND", t, t.incidColumn, typeof(DataColumn), "(", ")", rel.ChildColumns[0]) : null).Where(c => c != null);
 
-                    numFragments = await _db.SqlCount(whereTables, "*", [.. joinCond], sqlWhereClause);
+                    numFragments = await _db.SqlCountAsync(whereTables, "*", [.. joinCond], sqlWhereClause);
 
                     // Create a selection DataTable of PK values of IncidMMPolygons.
-                    _incidMMPolygonSelection = _db.SqlSelect(true, false, _hluDS.incid_mm_polygons.PrimaryKey, [.. whereTables], [.. joinCond], sqlWhereClause);
+                    //_incidMMPolygonSelection = _db.SqlSelect(true, false, _hluDS.incid_mm_polygons.PrimaryKey, [.. whereTables], [.. joinCond], sqlWhereClause);
+                    _incidMMPolygonSelection = await Task.Run(() =>
+                        _db.SqlSelect(
+                            true,
+                            false,
+                            _hluDS.incid_mm_polygons.PrimaryKey,
+                            [.. whereTables], [.. joinCond], sqlWhereClause));
 
                     //TODO: Temporary check.
                     if (numFragments != _incidMMPolygonSelection.Rows.Count)
@@ -1696,6 +1701,5 @@ namespace HLU.UI.ViewModel
         #endregion Split/Merge Action
 
         #endregion Methods
-
-    }
+   }
 }

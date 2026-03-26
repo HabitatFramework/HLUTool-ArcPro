@@ -266,7 +266,6 @@ namespace HLU.UI.ViewModel
         private HluDataSet.lut_reasonRow _noneReasonRow;
         private HluDataSet.lut_processRow _noneProcessRow;
 
-        private string _processingMsg = "Processing ...";
         private bool _saved = false;
         private bool _savingAttempted;
 
@@ -3579,13 +3578,22 @@ namespace HLU.UI.ViewModel
             // required row from that page.
             try
             {
+                // Get the incids for the new page.
                 string[] incids = new string[start == stop ? 1 : stop - start + 1];
 
+                // Quote the incids for use in the SQL IN clause.
                 for (int i = 0; i < incids.Length; i++)
                     incids[i] = _db.QuoteValue(_incidSelection.DefaultView[start + i][0]);
 
-                _hluTableAdapterMgr.incidTableAdapter.Fill(_hluDS.incid, String.Format("{0} IN ({1}) ORDER BY {0}",
-                    _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName), String.Join(",", incids)));
+                // Set up the SQL to load the page of incids based on the incids in the selection.
+                string fillSql = String.Format("{0} IN ({1}) ORDER BY {0}",
+                    _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName),
+                    String.Join(",", incids));
+
+                // Load the page of incids from the database.
+                await Task.Run(() =>
+                    _hluTableAdapterMgr.incidTableAdapter.Fill(
+                        _hluDS.incid, fillSql));
 
                 // If no records were loaded, warn the user and move to the first or last record in
                 // the current page as appropriate.
@@ -4120,6 +4128,5 @@ namespace HLU.UI.ViewModel
         #endregion Child Row Retrieval
 
         #endregion Methods
-
-    }
+   }
 }

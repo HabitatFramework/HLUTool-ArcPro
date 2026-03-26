@@ -247,7 +247,6 @@
 						  className="HLU.UI.UserControls.Toolbar.ReasonComboBox"
 						  itemWidth="220"
 						  isEditable="true"
-						  condition="esri_mapping_mapPane"
 						  isReadOnly="true"
 						  resizable="true"
 						  keytip="RC">
@@ -263,7 +262,6 @@
 						  className="HLU.UI.UserControls.Toolbar.ProcessComboBox"
 						  itemWidth="220"
 						  isEditable="true"
-						  condition="esri_mapping_mapPane"
 						  isReadOnly="true"
 						  resizable="true"
 						  keytip="PC">

@@ -59,7 +59,6 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <!--  GroupBoxTopControlsBulkUpdate  -->
@@ -3475,7 +3474,7 @@
                     Margin="0,0,0,0"
                     VerticalAlignment="Top"
                     Visibility="Collapsed">
-                    <Grid x:Name="GridStatusBar">
+                    <Grid x:Name="GridActiveLayerName">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
@@ -3529,34 +3528,6 @@
                         Margin="5,0,0,0"
                         VerticalAlignment="Center"
                         Text="{Binding ProcessStatus}" />
-                </Grid>
-
-                <!--  GridProgressAnimation  -->
-                <Grid
-                    Name="GridProgressAnimation"
-                    Grid.Row="7"
-                    Margin="6,6,6,6"
-                    Visibility="{Binding ProgressAnimating}">
-
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-
-                    <ProgressBar
-                        x:Name="ProgressBar"
-                        Grid.Column="0"
-                        Height="Auto"
-                        Margin="0,0,6,0"
-                        HorizontalAlignment="Stretch"
-                        Maximum="{Binding Path=MaxProgressValue, Mode=OneWay}"
-                        Minimum="0"
-                        Value="{Binding Path=ProgressValue, Mode=OneWay}" />
-                    <TextBlock
-                        Grid.Column="0"
-                        Margin="0,0,6,0"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Text="{Binding ProgressText}" />
                 </Grid>
             </Grid>
 

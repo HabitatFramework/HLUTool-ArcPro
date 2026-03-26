@@ -96,8 +96,13 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            //// Update checked state based on setting
-            //IsChecked = Settings.Default.AutoSelectOnGis;
+            // If the tool is processing, disable the button and show a tooltip indicating why.
+            if (_viewModel.IsToolProcessing)
+            {
+                Enabled = false;
+                DisabledTooltip = "Unavailable while the tool is processing.";
+                return;
+            }
 
             // Enable or disable the button based on the main grid visibility.
             bool isEnabled = _viewModel.GridMainVisibility == Visibility.Visible;

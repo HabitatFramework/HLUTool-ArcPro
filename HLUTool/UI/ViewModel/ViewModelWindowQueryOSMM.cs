@@ -979,11 +979,11 @@ namespace HLU.UI.ViewModel
         {
             _windowCursor = cursorType;
             OnPropertyChanged(nameof(WindowCursor));
+
             if (cursorType == Cursors.Wait)
-                DispatcherHelper.DoEvents(); //TODO: Replace with modern equivalent?
+                DispatcherHelper.DoEvents();
         }
 
         #endregion Cursor
-
     }
 }

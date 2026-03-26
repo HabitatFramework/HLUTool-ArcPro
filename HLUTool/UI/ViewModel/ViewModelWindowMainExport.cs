@@ -444,6 +444,7 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.DataBase, exportFields, attributeTable, sortOrdinals, conditionOrdinals,
                     matrixOrdinals, formationOrdinals, managementOrdinals, complexOrdinals, bapOrdinals,
                     sourceOrdinals, fieldMapTemplate, tableAliases);
+
                 // Exit if no rows were exported.
                 if (exportRowCount == 0)
                     return;
@@ -473,7 +474,6 @@ namespace HLU.UI.ViewModel
                 if (!exportSuccess)
                 {
                     //TODO: Report failure?
-                    DispatcherHelper.DoEvents();
                     return;
                 }
 

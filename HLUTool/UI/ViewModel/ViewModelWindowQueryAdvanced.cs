@@ -1694,12 +1694,17 @@ namespace HLU.UI.ViewModel
         /// </value>
         public Cursor WindowCursor { get { return _windowCursor; } }
 
+        /// <summary>
+        /// Changes the cursor type to use when the cursor is over the window.
+        /// </summary>
+        /// <param name="cursorType">The cursor type to set.</param>
         public void ChangeCursor(Cursor cursorType)
         {
             _windowCursor = cursorType;
             OnPropertyChanged(nameof(WindowCursor));
+
             if (cursorType == Cursors.Wait)
-                DispatcherHelper.DoEvents(); //TODO: Replace with modern equivalent?
+                DispatcherHelper.DoEvents();
         }
 
         #endregion Cursor
@@ -1741,6 +1746,5 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion IDataErrorInfo Members
-
-    }
+   }
 }
