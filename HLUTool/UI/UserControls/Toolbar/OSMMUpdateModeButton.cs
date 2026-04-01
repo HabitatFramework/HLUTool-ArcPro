@@ -57,12 +57,12 @@ namespace HLU.UI.UserControls.Toolbar
         /// <summary>
         /// Override OnClick to toggle the work mode in the main view model.
         /// </summary>
-        protected override void OnClick()
+        protected override async void OnClick()
         {
             // Set the work mode to OSMM Review.
             try
             {
-                _viewModel.SetWorkMode(WorkMode.Edit | WorkMode.OSMMReview);
+                await _viewModel.SetWorkMode(WorkMode.Edit | WorkMode.OSMMReview);
             }
             catch (Exception ex)
             {
@@ -79,7 +79,7 @@ namespace HLU.UI.UserControls.Toolbar
             if (_viewModel == null)
             {
                 Enabled = false;
-                DisabledTooltip = "HLU main window is not available.";
+                DisabledTooltip = "Unavailable when the main window is not visible.";
                 return;
             }
 
@@ -96,6 +96,9 @@ namespace HLU.UI.UserControls.Toolbar
 
             // Enable or disable the button if OSMM Update mode can be activated.
             Enabled = _viewModel.CanOSMMUpdateMode;
+
+            // Set the disabled tool tip text (for when it is disabled).
+            DisabledTooltip = "Unavailable when there are no OSMM updates pending, when the user is not authorised, or when bulk update mode is active.";
         }
 
         #endregion Overrides

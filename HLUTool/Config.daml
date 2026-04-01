@@ -26,11 +26,6 @@
 		<insertCondition id="HLUTool_Tab1_condition" caption="Toggle HLUTool_Tab1">
 			<state id="HLUTool_tab_state" />
 		</insertCondition>
-
-		<!-- Enable/disable Split & Merge menus. -->
-		<insertCondition id="HLUTool_MainGrid_condition" caption="Toggle HLUTool_MainGrid">
-			<state id="HLUTool_maingrid_state" />
-		</insertCondition>
 	</conditions>
 
 	<modules>
@@ -81,41 +76,41 @@
 					<button refID="HLUTool_btnPaste" size="middle" />
 				</group>
 
-				<!-- Map Tools group -->
+				<!-- ESRI Map Tools group -->
 				<group id="HLUTool_Group_MapTools" caption="Map Tools" keytip="G4">
 					<toolPalette refID="esri_mapping_selectToolPalette" />
 					<button refID="esri_mapping_clearSelectionButton" size="middle" />
 					<button refID="esri_editing_SplitCommand" size ="middle" />
-					<button refID="HLUTool_btnGetMapSelection" size="large" />
 				</group>
 
 				<!-- Filter Incids group -->
-				<group id="HLUTool_Group_FilterIncids" caption="Filter INCIDs" keytip="G5" launcherButtonID="HLUTool_btnFilterIncidsOptionsLauncher">
+				<group id="HLUTool_Group_FilterIncids" caption="Filter INCIDs" keytip="G6" launcherButtonID="HLUTool_btnFilterIncidsOptionsLauncher">
 					<button refID="HLUTool_btnFilterByAttributes" size="large" />
-					<button refID="HLUTool_btnClearFilter" size="large" />
+					<button refID="HLUTool_btnClearFilter" size="middle" />
 					<editBox refID="HLUTool_edbFilterByIncid" size="large" />
 				</group>
 
 				<!-- INCID Selection group -->
-				<group id="HLUTool_Group_SelectIncids" caption="Select INCIDs" keytip="G6">
+				<group id="HLUTool_Group_SelectIncids" caption="Select INCIDs" keytip="G7">
+					<button refID="HLUTool_btnGetMapSelection" size="large" />
 					<button refID="HLUTool_btnSelectCurrentIncid" size="middle" />
 					<button refID="HLUTool_btnSelectFilteredIncids" size="middle" />
 					<button refID="HLUTool_btnAutoSelectOnGis" size="middle" />
 				</group>
 
 				<!-- Split/Merge group -->
-				<group id="HLUTool_Group_SplitMerge" caption="Split/Merge" keytip="G7" launcherButtonID="HLUTool_btnUpdatesOptionsLauncher">
+				<group id="HLUTool_Group_SplitMerge" caption="Split/Merge" keytip="G8" launcherButtonID="HLUTool_btnUpdatesOptionsLauncher">
 					<dynamicMenu refID="HLUTool_SplitMenu" size="large" />
 					<dynamicMenu refID="HLUTool_MergeMenu" size="large" />
 				</group>
 
 				<!-- Export group -->
-				<group id="HLUTool_Group_Export" caption="Export" keytip="G8" launcherButtonID="HLUTool_btnExportOptionsLauncher">
+				<group id="HLUTool_Group_Export" caption="Export" keytip="G9" launcherButtonID="HLUTool_btnExportOptionsLauncher">
 					<button refID="HLUTool_btnExport" size="large" />
 				</group>
 
 				<!-- Info group -->
-				<group id="HLUTool_Group_Info" caption="Info" keytip="G9">
+				<group id="HLUTool_Group_Info" caption="Info" keytip="G10">
 					<button refID="HLUTool_btnOptions" size="middle" />
 					<button refID="HLUTool_btnAbout" size="middle" />
 				</group>

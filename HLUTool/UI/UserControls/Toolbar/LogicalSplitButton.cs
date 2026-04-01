@@ -87,7 +87,7 @@ namespace HLU.UI.UserControls.Toolbar
             if (_viewModel == null)
             {
                 Enabled = false;
-                DisabledTooltip = "HLU main window is not available.";
+                DisabledTooltip = "Unavailable when the main window is not visible.";
                 return;
             }
 
@@ -99,9 +99,12 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            // Enable or disable the button based on CanLogicallySplit and main grid visibility.
+            // Enable or disable the button based on CanLogicallySplit and main window visibility.
             bool canLogicallySplit = _viewModel.CanLogicallySplit && _viewModel.GridMainVisibility == Visibility.Visible;
             Enabled = canLogicallySplit;
+
+            // Set the disabled tool tip text (for when it is disabled).
+            DisabledTooltip = "Unavailable when there are no features to split, or when the main window is not visible.";
         }
 
         #endregion Overrides

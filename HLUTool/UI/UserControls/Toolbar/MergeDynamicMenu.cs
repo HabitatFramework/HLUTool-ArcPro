@@ -68,7 +68,7 @@ namespace HLU.UI.UserControls.Toolbar
             if (_viewModel == null)
             {
                 Enabled = false;
-                DisabledTooltip = "HLU main window is not available.";
+                DisabledTooltip = "Unavailable when the main window is not visible.";
                 return;
             }
 
@@ -80,12 +80,12 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            // Enable or disable the button based on CanMerge and main grid visibility.
+            // Enable or disable the button based on CanMerge and main window visibility.
             bool CanMerge = (_viewModel.CanMerge && _viewModel.GridMainVisibility == Visibility.Visible);
             Enabled = CanMerge;
 
             // Set the disabled tool tip text (for when it is disabled).
-            DisabledTooltip = "Available only when a physical or logical merge is possible.";
+            DisabledTooltip = "Unavailable when a physical or logical merge is not possible, or when the main window is not visible.";
         }
 
         /// <summary>

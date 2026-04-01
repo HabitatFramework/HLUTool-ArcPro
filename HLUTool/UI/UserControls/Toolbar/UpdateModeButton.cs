@@ -58,16 +58,17 @@ namespace HLU.UI.UserControls.Toolbar
         /// <summary>
         /// Override OnClick to toggle the work mode in the main view model.
         /// </summary>
-        protected override void OnClick()
+        protected override async void OnClick()
         {
             // Set the work mode to Edit.
             try
             {
-                _viewModel.SetWorkMode(WorkMode.Edit);
+                await _viewModel.SetWorkMode(WorkMode.Edit);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error setting Update Mode: {ex}");
+                System.Diagnostics.Debug.WriteLine(
+                    $"Error setting Update Mode: {ex}");
             }
         }
 
@@ -80,7 +81,7 @@ namespace HLU.UI.UserControls.Toolbar
             if (_viewModel == null)
             {
                 Enabled = false;
-                DisabledTooltip = "HLU main window is not available.";
+                DisabledTooltip = "Unavailable when the main window is not visible.";
                 return;
             }
 
@@ -93,10 +94,15 @@ namespace HLU.UI.UserControls.Toolbar
             }
 
             // Update checked state based on current work mode
-            IsChecked = (_viewModel.WorkMode == WorkMode.Edit);
+            IsChecked = _viewModel.WorkMode.HasAll(WorkMode.Edit) &&
+                        !_viewModel.WorkMode.HasAny(
+                            WorkMode.Bulk | WorkMode.OSMMReview | WorkMode.OSMMBulk);
 
-            // Enable or disable the button based on the main grid visibility.
+            // Enable or disable the button based on the main window visibility.
             Enabled = (_viewModel.GridMainVisibility == Visibility.Visible);
+
+            // Set the disabled tool tip text (for when it is disabled).
+            DisabledTooltip = "Unavailable when the main window is not visible.";
         }
 
         #endregion Overrides

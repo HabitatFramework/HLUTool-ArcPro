@@ -57,16 +57,17 @@ namespace HLU.UI.UserControls.Toolbar
         /// <summary>
         /// Override OnClick to toggle the work mode in the main view model.
         /// </summary>
-        protected override void OnClick()
+        protected override async void OnClick()
         {
             // Set the work mode to Bulk Update.
             try
             {
-                _viewModel.SetWorkMode(WorkMode.Edit | WorkMode.Bulk);
+                await _viewModel.SetWorkMode(WorkMode.Edit | WorkMode.Bulk);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error setting Bulk Update Mode: {ex}");
+                System.Diagnostics.Debug.WriteLine(
+                    $"Error setting Bulk Update Mode: {ex}");
             }
         }
 
@@ -79,7 +80,7 @@ namespace HLU.UI.UserControls.Toolbar
             if (_viewModel == null)
             {
                 Enabled = false;
-                DisabledTooltip = "HLU main window is not available.";
+                DisabledTooltip = "Unavailable when the main window is not visible.";
                 return;
             }
 
@@ -92,11 +93,14 @@ namespace HLU.UI.UserControls.Toolbar
             }
 
             // Update checked state based on current work mode
-            IsChecked = _viewModel.WorkMode.HasFlag(WorkMode.Bulk) &&
-                        !_viewModel.WorkMode.HasFlag(WorkMode.OSMMBulk);
+            IsChecked = _viewModel.WorkMode.HasAll(WorkMode.Bulk) &&
+                        !_viewModel.WorkMode.HasAny(WorkMode.OSMMBulk);
 
             // Enable or disable the button if Bulk Update mode can be activated.
             Enabled = _viewModel.CanBulkUpdate;
+
+            // Set the disabled tool tip text (for when it is disabled).
+            DisabledTooltip = "Unavailable when already in bulk update mode, when the user is not authorised, when a reason and process aren't selected, when there isn't a valid selection, or when the main window is not visible.";
         }
 
         #endregion Overrides
