@@ -148,11 +148,6 @@ namespace HLU.GISApplication
         private FeatureClass _hluFeatureClass;
 
         /// <summary>
-        /// The map of the HLU layer cast as IActiveView.
-        /// </summary>
-        private MapView _hluView;
-
-        /// <summary>
         /// Maps the _hluFeatureClass data structure onto _hluLayerStructure.
         /// This is required by shapefiles with potentially truncated field names.
         /// The positions in this array correspond to the ordinals of columns in _hluLayerStructure;
@@ -569,7 +564,7 @@ namespace HLU.GISApplication
             DataColumn[] targetList, List<SqlFilterCondition> whereConds)
         {
             /// Checks for valid input parameters. If any are invalid, an empty DataTable is returned.
-            if ((_hluLayer == null) || (_hluView == null) ||
+            if ((_hluLayer == null) ||
                 (targetList == null) || (targetList.Length == 0)) return new();
 
             // Try to perform the SQL select operation, catching any exceptions and displaying an error message if it fails.
@@ -606,7 +601,7 @@ namespace HLU.GISApplication
             DataColumn[] targetList, List<SqlFilterCondition> whereConds)
         {
             // Checks for valid input parameters. If any are invalid, an empty DataTable is returned.
-            if ((_hluLayer == null) || (_hluView == null) ||
+            if ((_hluLayer == null) ||
                 (targetList == null) || (targetList.Length == 0)) return new();
 
             // Try to perform the SQL select operation, catching any exceptions and displaying an error message if it fails.
@@ -641,7 +636,7 @@ namespace HLU.GISApplication
             DataTable[] targetTables, List<SqlFilterCondition> whereConds)
         {
             // Checks for valid input parameters. If any are invalid, an empty DataTable is returned.
-            if ((_hluLayer == null) || (_hluView == null) || (targetTables == null) ||
+            if ((_hluLayer == null) || (targetTables == null) ||
                 (targetTables.Length == 0) || (targetTables[0].Columns.Count == 0)) return new();
 
             // Try to perform the SQL select operation, catching any exceptions and displaying an error message if it fails.
@@ -666,59 +661,100 @@ namespace HLU.GISApplication
 
         /// <summary>
         /// Shared code for SQL select methods. Joins are supported using WHERE syntax.
+        /// Queries the HLU feature class directly using the ArcGIS Pro SDK and
+        /// populates <paramref name="resultTable"/> with the matching rows.
         /// </summary>
-        /// <param name="fromList">The list of tables for the SQL FROM clause.</param>
+        /// <param name="fromList">
+        /// The list of tables for the SQL FROM clause (unused for single-table
+        /// queries against the feature class; retained for signature compatibility).
+        /// </param>
         /// <param name="whereConds">The SQL WHERE conditions.</param>
-        /// <param name="resultTable">The resulting DataTable with the selected data.</param>
-        /// <param name="qualifyColumns">Indicates whether to qualify column names.</param>
-        /// <param name="subFields">The list of subfields for the SQL SELECT clause.</param>
+        /// <param name="resultTable">
+        /// The resulting DataTable with the selected data.
+        /// Its columns define which feature-class fields are read.
+        /// </param>
+        /// <param name="qualifyColumns">
+        /// Indicates whether column names are qualified with a table name
+        /// (i.e. a joined / multi-table query).
+        /// </param>
+        /// <param name="subFields">
+        /// The comma-separated list of field names for the SQL SELECT clause.
+        /// </param>
         private void SqlSelectShared(string fromList, List<SqlFilterCondition> whereConds,
             ref DataTable resultTable, bool qualifyColumns, string subFields)
         {
-            List<string> selectionList = [];
+            // Check parameters and state.
+            if (_hluFeatureClass == null || resultTable == null)
+                return;
 
-            if (qualifyColumns) // joined tables
+            // Build the WHERE clause string, mapping layer-structure column names
+            // to the actual field names used in the feature class.
+            string whereClauseStr = WhereClause(
+                false, false, qualifyColumns,
+                MapWhereClauseFields(_hluLayerStructure, whereConds));
+
+            // Resolve which feature-class field index corresponds to each
+            // result-table column.  An index of -1 means the field is absent
+            // in the feature class and the cell will remain DBNull.
+            DataColumn[] resultColumns = [.. resultTable.Columns.Cast<DataColumn>()];
+            int[] fieldIndexes = new int[resultColumns.Length];
+
+            // Capture the ref parameter in a local variable so it can be
+            // used inside the QueuedTask lambda (CS1628).
+            DataTable localTable = resultTable;
+
+            QueuedTask.Run(() =>
             {
-                //TODO: ArcPro
-                //string oidColumnAlias = ColumnAlias(((IDataset)_hluLayer.FeatureClass).Name,
-                //    _hluLayer.FeatureClass.OIDFieldName);
+                // Get the feature class definition.
+                FeatureClassDefinition definition =
+                    _hluFeatureClass.GetDefinition();
 
-                //int oidOrdinalTable = resultTable.Columns.Contains(oidColumnAlias) ?
-                //    resultTable.Columns[oidColumnAlias].Ordinal : -1;
+                // Resolve which feature-class field index corresponds to each
+                // result-table column. An index of -1 means the field is absent
+                // in the feature class and the cell will remain DBNull.
+                for (int i = 0; i < resultColumns.Length; i++)
+                    fieldIndexes[i] = definition.FindField(resultColumns[i].ColumnName);
 
-                //if (oidOrdinalTable != -1)
-                //{
-                //    selectionList = IpcArcMap([ "qd", fromList, subFields,
-                //        WhereClause(false, false, true, MapWhereClauseFields(_hluLayerStructure, whereConds)),
-                //        oidColumnAlias, "false" ]);
-                //}
-            }
-            else // single table
-            {
-                //    selectionList = IpcArcMap([ "qf", subFields,
-                //        WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, whereConds)), "false" ]);
+                // Build a QueryFilter that reads only the required sub-fields.
+                QueryFilter queryFilter = new()
+                {
+                    WhereClause = whereClauseStr,
+                    SubFields = String.IsNullOrWhiteSpace(subFields)
+                        ? "*"
+                        : subFields
+                };
 
-                //    try
-                //    {
-                //        CreateSelectionFieldList(_pipeData[1]);
-                //        IQueryFilter queryFilter = new QueryFilterClass();
-                //        queryFilter.SubFields = String.Join(",", _selectFields);
-                //        queryFilter.WhereClause = _pipeData[2];
-                //        _sendColumnHeaders = _pipeData[3] == "true";
-                //        _pipeData.Clear();
+                try
+                {
+                    using RowCursor rowCursor =
+                        _hluFeatureClass.Search(queryFilter, false);
 
-                //        _dummyControl.Invoke(_selByQFilterDel, new object[] { queryFilter });
-                //    }
-                //    catch (Exception ex) { PipeException(ex); }
-            }
+                    while (rowCursor.MoveNext())
+                    {
+                        using Row row = rowCursor.Current;
 
-            //ThrowPipeError(selectionList);
+                        DataRow dataRow = localTable.NewRow();
 
-            //foreach (string s in selectionList)
-            //{
-            //    string[] items = s.Split(PipeFieldDelimiter);
-            //    resultTable.Rows.Add(items);
-            //}
+                        for (int i = 0; i < resultColumns.Length; i++)
+                        {
+                            int fieldIndex = fieldIndexes[i];
+                            dataRow[i] = fieldIndex >= 0
+                                ? row[fieldIndex] ?? DBNull.Value
+                                : DBNull.Value;
+                        }
+
+                        localTable.Rows.Add(dataRow);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new HLUToolException(
+                        "Error querying GIS features.", ex);
+                }
+            }).Wait();
+
+            // Write back to the ref parameter so callers see the populated table.
+            resultTable = localTable;
         }
 
         #endregion Implementation of SqlBuilder
@@ -3461,158 +3497,134 @@ namespace HLU.GISApplication
         #region Export
 
         /// <summary>
-        /// Prompts the user for export location and validates the export.
+        /// Prompts the user for the export location and feature class name.
+        /// The output format is already known from the Export window, so the
+        /// appropriate dialog is shown directly without a format-chooser step.
+        /// For the GDB branch a single combined dialog collects both the
+        /// target geodatabase path and the feature class name.
         /// </summary>
-        /// <param name="initialDirectory">The initial directory for the save dialog. If null/empty, uses project home or My Documents.</param>
-        /// <returns>A tuple containing the output workspace and feature class name for the export, or null values if the user cancels.</returns>
-        public async Task<(string outputWorkspace, string outputFeatureClassName)> ExportPromptAsync(
-            string initialDirectory)
+        /// <param name="initialDirectory">
+        /// The initial directory for the dialogs.
+        /// Falls back to the project home folder, then My Documents.
+        /// </param>
+        /// <param name="isGdb">
+        /// True to show the File Geodatabase combined dialog;
+        /// false to show the Shapefile Save dialog.
+        /// </param>
+        /// <returns>
+        /// A tuple of (outputWorkspace, outputFeatureClassName),
+        /// both null if the user cancels.
+        /// </returns>
+        public async Task<(string outputWorkspace, string outputFeatureClassName)>
+            ExportPromptAsync(string initialDirectory, bool isGdb = false)
         {
-            string outputPath = null;
             string outputWorkspace = null;
             string outputFeatureClassName = null;
 
             await FrameworkApplication.Current.Dispatcher.InvokeAsync(() =>
             {
-                // The the initial directory with fallback logic.
+                // Resolve the initial directory with fallback logic.
                 string dialogInitialDir = initialDirectory;
 
                 if (String.IsNullOrWhiteSpace(dialogInitialDir))
-                {
-                    // Fallback 1: Project home folder
                     dialogInitialDir = Project.Current?.HomeFolderPath;
-                }
 
                 if (String.IsNullOrWhiteSpace(dialogInitialDir))
+                    dialogInitialDir = Environment.GetFolderPath(
+                        Environment.SpecialFolder.MyDocuments);
+
+                if (!isGdb)
                 {
-                    // Fallback 2: My Documents
-                    dialogInitialDir = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                    // ── Shapefile branch ──────────────────────────────────
+                    SaveFileDialog shpDialog = new()
+                    {
+                        Title = "Export Features – Shapefile",
+                        Filter = "Shapefile (*.shp)|*.shp",
+                        DefaultExt = "shp",
+                        FileName = "HLU_Export",
+                        InitialDirectory = dialogInitialDir
+                    };
+
+                    if (shpDialog.ShowDialog() != true)
+                        return;
+
+                    string shpPath = shpDialog.FileName;
+
+                    if (!shpPath.EndsWith(".shp", StringComparison.OrdinalIgnoreCase))
+                        shpPath += ".shp";
+
+                    outputWorkspace = System.IO.Path.GetDirectoryName(shpPath);
+                    outputFeatureClassName = System.IO.Path.GetFileName(shpPath);
+                    return;
                 }
 
-                // Prompt the user for the export location and type (shapefile or geodatabase feature class).
-                SaveFileDialog saveDialog = new()
-                {
-                    Title = "Export Features",
-                    Filter = "Shapefile (*.shp)|*.shp|File Geodatabase Feature Class (*.gdb)|*.gdb",
-                    DefaultExt = "shp",
-                    FileName = "HLU_Export",
-                    InitialDirectory = dialogInitialDir
-                };
+                // ── GDB branch ────────────────────────────────────────────
+                // A single combined dialog collects both the .gdb workspace
+                // path (via an inline Browse button) and the feature class name.
+                // This avoids the confusing two-dialog sequence.
 
-                // If the user confirmed the dialog, determine the output path, workspace,
-                // and feature class name based on their selection.
-                if (saveDialog.ShowDialog() == true)
-                {
-                    // Store the output path.
-                    outputPath = saveDialog.FileName;
+                // If the initial directory is itself a .gdb, pre-populate it.
+                string initialGdbPath =
+                    dialogInitialDir.EndsWith(".gdb", StringComparison.OrdinalIgnoreCase) &&
+                    System.IO.Directory.Exists(dialogInitialDir)
+                        ? dialogInitialDir
+                        : String.Empty;
 
-                    // Determine if output is shapefile or geodatabase feature class.
-                    if (outputPath.EndsWith(".gdb", StringComparison.OrdinalIgnoreCase))
-                    {
-                        // Prompt for feature class name since geodatabase export requires both a workspace and feature class name.
-                        string featureClassName = PromptForFeatureClassName();
+                string initialFeatureName = String.IsNullOrWhiteSpace(initialGdbPath)
+                    ? "HLU_Export"
+                    : System.IO.Path.GetFileNameWithoutExtension(initialGdbPath);
 
-                        // If no valid feature class name was provided, show a warning and do not proceed with the export.
-                        if (String.IsNullOrWhiteSpace(featureClassName))
-                        {
-                            MessageBox.Show("Feature class name is required for geodatabase export.",
-                                "Export Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                            return;
-                        }
+                var (gdbPath, featureClassName) = PromptForGdbExport(
+                    initialGdbPath,
+                    initialFeatureName,
+                    dialogInitialDir);
 
-                        // Store the output workspace and feature class name for geodatabase export.
-                        outputWorkspace = outputPath;
-                        outputFeatureClassName = featureClassName;
-                    }
-                    else
-                    {
-                        // For shapefile export, the output path is the full path to the shapefile, and the workspace is the containing folder.
-                        outputWorkspace = System.IO.Path.GetDirectoryName(outputPath);
-                        outputFeatureClassName = System.IO.Path.GetFileName(outputPath);
-                    }
-                }
+                if (String.IsNullOrWhiteSpace(gdbPath) ||
+                    String.IsNullOrWhiteSpace(featureClassName))
+                    return;
+
+                outputWorkspace = gdbPath;
+                outputFeatureClassName = featureClassName;
             });
 
             return (outputWorkspace, outputFeatureClassName);
         }
 
         /// <summary>
-        /// Shows a simple input dialog and returns the entered text.
+        /// Shows a single combined dialog that lets the user choose a File
+        /// Geodatabase workspace and enter a feature class name.
         /// </summary>
-        private string PromptForFeatureClassName()
+        /// <param name="initialGdbPath">
+        /// Pre-populated .gdb folder path, or empty string for none.
+        /// </param>
+        /// <param name="initialFeatureName">
+        /// Pre-populated feature class name suggestion.
+        /// </param>
+        /// <param name="browserInitialDir">
+        /// The directory the folder browser opens in when Browse is clicked.
+        /// Unused — the window derives the start directory from the GDB path.
+        /// </param>
+        /// <returns>
+        /// A tuple of (gdbPath, featureClassName); both empty if cancelled.
+        /// </returns>
+        private static (string gdbPath, string featureClassName)
+            PromptForGdbExport(
+                string initialGdbPath,
+                string initialFeatureName,
+                string browserInitialDir)
         {
-            // Create a custom WPF window for input
-            var inputDialog = new Window
+            var dialog = new HLU.UI.View.WindowGdbExport(
+                initialGdbPath,
+                initialFeatureName)
             {
-                Title = "Export to Geodatabase",
-                Width = 400,
-                Height = 200,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Owner = FrameworkApplication.Current.MainWindow,
-                ResizeMode = ResizeMode.NoResize
+                Owner = FrameworkApplication.Current.MainWindow
             };
 
-            var stackPanel = new System.Windows.Controls.StackPanel
-            {
-                Margin = new Thickness(20)
-            };
+            bool? result = dialog.ShowDialog();
 
-            // Instructions text
-            stackPanel.Children.Add(new System.Windows.Controls.TextBlock
-            {
-                Text = "Enter feature class name:\n\nRules:\n" +
-                       "• Must start with a letter\n" +
-                       "• Only letters, numbers, and underscores\n" +
-                       "• Maximum 64 characters",
-                TextWrapping = TextWrapping.Wrap,
-                Margin = new Thickness(0, 0, 0, 10)
-            });
-
-            // Input text box
-            var textBox = new System.Windows.Controls.TextBox
-            {
-                Text = "HLU_Export",
-                Margin = new Thickness(0, 0, 0, 10)
-            };
-            stackPanel.Children.Add(textBox);
-
-            // Buttons panel
-            var buttonPanel = new System.Windows.Controls.StackPanel
-            {
-                Orientation = System.Windows.Controls.Orientation.Horizontal,
-                HorizontalAlignment = System.Windows.HorizontalAlignment.Right
-            };
-
-            var okButton = new System.Windows.Controls.Button
-            {
-                Content = "OK",
-                Width = 75,
-                Margin = new Thickness(0, 0, 10, 0),
-                IsDefault = true
-            };
-            okButton.Click += (s, e) => { inputDialog.DialogResult = true; inputDialog.Close(); };
-
-            var cancelButton = new System.Windows.Controls.Button
-            {
-                Content = "Cancel",
-                Width = 75,
-                IsCancel = true
-            };
-            cancelButton.Click += (s, e) => { inputDialog.DialogResult = false; inputDialog.Close(); };
-
-            buttonPanel.Children.Add(okButton);
-            buttonPanel.Children.Add(cancelButton);
-            stackPanel.Children.Add(buttonPanel);
-
-            inputDialog.Content = stackPanel;
-
-            // Focus the text box
-            textBox.Focus();
-            textBox.SelectAll();
-
-            // Show dialog and return result
-            bool? result = inputDialog.ShowDialog();
-            return result == true ? textBox.Text?.Trim() : null;
+            return result == true
+                ? (dialog.GdbPath, dialog.FeatureClassName)
+                : (String.Empty, String.Empty);
         }
 
         /// <summary>
@@ -3699,6 +3711,10 @@ namespace HLU.GISApplication
                 if (!copySuccess)
                     throw new HLUToolException("Failed to create temporary feature class.");
 
+                // Save any edits started by the geoprocessing tool to release
+                // the geodatabase schema lock before the next operation.
+                await ArcGIS.Desktop.Core.Project.Current.SaveEditsAsync();
+
                 // STEP 2: Delete unwanted GIS fields from temp FC
 
                 // Create a list of fields to delete from the temp FC
@@ -3767,6 +3783,10 @@ namespace HLU.GISApplication
 
                 if (!joinSuccess)
                     throw new HLUToolException("Failed to join attribute table.");
+
+                // Save any edits started by the geoprocessing tool to release
+                // the geodatabase schema lock before the next operation.
+                await ArcGIS.Desktop.Core.Project.Current.SaveEditsAsync();
 
                 // STEP 3: Delete duplicate join key field if it was added by the join
                 await ArcGISProHelpers.DeleteDuplicateJoinFieldAsync(tempFcPath, joinKeyField);
@@ -4127,8 +4147,6 @@ namespace HLU.GISApplication
             _hluFieldNames = null;
 
             _hluFeatureClass = null;
-
-            _hluView = null;
         }
 
         /// <summary>
@@ -4370,7 +4388,6 @@ namespace HLU.GISApplication
             return outWhereClause;
         }
 
-        //TODO: ArcGIS
         /// <summary>
         /// Gets the type maps between system types and Esri field types for the current HLU layer's workspace.
         /// </summary>

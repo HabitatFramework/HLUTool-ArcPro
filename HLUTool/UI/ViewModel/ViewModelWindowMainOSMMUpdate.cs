@@ -182,7 +182,8 @@ namespace HLU.UI.ViewModel
             }
             finally
             {
-                _viewModelMain.ChangeCursor(Cursors.Arrow, null);
+                // Reset the cursor back to normal.
+                _viewModelMain.ChangeCursor(Cursors.Arrow);
             }
         }
 
@@ -230,7 +231,8 @@ namespace HLU.UI.ViewModel
             }
             finally
             {
-                _viewModelMain.ChangeCursor(Cursors.Arrow, String.Empty);
+                // Reset the cursor back to normal.
+                _viewModelMain.ChangeCursor(Cursors.Arrow);
             }
         }
 
@@ -369,7 +371,13 @@ namespace HLU.UI.ViewModel
         /// ensures that any related controls are reset to their default state.</remarks>
         public async Task CancelOSMMUpdateAsync()
         {
+            _viewModelMain.ChangeCursor(Cursors.Wait, "Stopping OSMM update mode ...");
+
+            // Stop the OSMM update mode and reset all the controls
             await OSMMUpdateResetControlsAsync();
+
+            // Reset the cursor back to normal.
+            _viewModelMain.ChangeCursor(Cursors.Arrow);
         }
 
         #endregion Cancel OSMM Update
@@ -387,7 +395,19 @@ namespace HLU.UI.ViewModel
         /// to exit the OSMM update mode and restore the default application state.</remarks>
         private async Task OSMMUpdateResetControlsAsync()
         {
-            // Stop the bulk update mode
+            // Enable all the tabs
+            _viewModelMain.TabHabitatControlsEnabled = true;
+            _viewModelMain.TabIhsControlsEnabled = true;
+            _viewModelMain.TabDetailsControlsEnabled = true;
+            _viewModelMain.TabSourcesControlsEnabled = true;
+
+            // Show the history tab
+            _viewModelMain.ShowHistoryTab = true;
+
+            // Select the habitat tab
+            _viewModelMain.TabItemSelected = 0;
+
+            // Stop the OSMM update mode
             _viewModelMain.OSMMUpdateMode = false;
 
             // Reset the incid filter
@@ -395,18 +415,8 @@ namespace HLU.UI.ViewModel
             await _viewModelMain.MoveIncidCurrentRowIndexAsync(1);
             _viewModelMain.SuppressUserNotifications = false;
 
-            // Enable all the tabs
-            _viewModelMain.TabHabitatControlsEnabled = true;
-            _viewModelMain.TabIhsControlsEnabled = true;
-            _viewModelMain.TabDetailsControlsEnabled = true;
-            _viewModelMain.TabSourcesControlsEnabled = true;
-            _viewModelMain.TabItemHistoryEnabled = true;
-
-            // Refresh all the controls
-            _viewModelMain.RefreshAll();
-
-            // Reset the cursor
-            _viewModelMain.ChangeCursor(Cursors.Arrow, String.Empty);
+            // Re-read the current map selection.
+            await _viewModelMain.GetMapSelectionAsync(false);
         }
 
         #endregion Reset Controls

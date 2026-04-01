@@ -23,9 +23,11 @@
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework;
 using HLU.Data;
+using HLU.Data.Connection;
 using HLU.Data.Model;
-using HLU.Enums;
 using HLU.Date;
+using HLU.Enums;
+using HLU.Exceptions;
 using HLU.GISApplication;
 using HLU.Properties;
 using HLU.UI.View;
@@ -107,17 +109,25 @@ namespace HLU.UI.ViewModel
             // Update the modes in the main view model
             _viewModelMain.BulkUpdateMode = true;
 
-            // Clear all the form fields.
+            // Clear the changed flag
+            _viewModelMain.Changed = false;
+
+            // Clear all the form fields
             _viewModelMain.ClearForm();
 
-            // Select another tab if the currently selected tab
-            // will be disabled.
-            if (_viewModelMain.TabItemSelected == 5)
-                _viewModelMain.TabItemSelected = 0;
+            // Clone the blank row as the dirty-check baseline.
+            // Any field the user subsequently edits will differ
+            // from this clone, making IsDirtyIncid() return true.
+            _viewModelMain.CloneIncidCurrentRow();
+
+            // Select the habitat tab
+            _viewModelMain.TabItemSelected = 0;
 
             // Clear any interface warning and error messages
             _viewModelMain.ResetWarningsErrors();
-            //_viewModelMain.RefreshAll(); // Now done when setting mode.
+
+            // RefreshAll is called by SetWorkModeFlag when BulkUpdateMode is set above.
+            _viewModelMain.RefreshAll();
         }
 
         /// <summary>
@@ -248,9 +258,17 @@ namespace HLU.UI.ViewModel
         /// <returns>A task that represents the asynchronous operation.</returns>
         public async Task ApplyBulkUpdateAsync()
         {
-            _viewModelMain.ChangeCursor(Cursors.Wait, "Bulk updating ...");
+            _viewModelMain.ChangeCursor(Cursors.Wait, "Applying bulk update ...");
 
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
+
+            bool success = false;
+
+            // Start a GIS edit operation
+            EditOperation editOperation = new()
+            {
+                Name = "Bulk Update GIS Features"
+            };
 
             try
             {
@@ -292,7 +310,7 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.DataBase.QuoteIdentifier(c.ColumnName),
                     _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidCurrentRow[c.Ordinal]))));
 
-                string updateStatementIncid = incidUpdateCols.Any() ? String.Empty :
+                string updateStatementIncid = !incidUpdateCols.Any() ? String.Empty :
                     String.Format("UPDATE {0} SET {1}", _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid.TableName), updateVals);
 
                 // If all secondary codes are to be deleted then add
@@ -395,22 +413,34 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Perform the bulk updates on the GIS data, shadow copy in DB and history
-                await BulkUpdateGisAsync(incidOrdinal, _viewModelMain.IncidSelection, _bulkDeleteSecondaryCodes, _bulkCreateHistory, Operations.BulkUpdate, nowDtTm);
+                await BulkUpdateGisAsync(incidOrdinal, _viewModelMain.IncidSelection, _bulkDeleteSecondaryCodes, _bulkCreateHistory, Operations.BulkUpdate, nowDtTm, editOperation);
 
                 // Commit the transaction and accept the changes ???
                 _viewModelMain.DataBase.CommitTransaction();
                 _viewModelMain.HluDataset.AcceptChanges();
 
-                // force re-loading data from db
+                // Force re-loading data from db
                 _viewModelMain.IncidTable.Clear();
 
-                // Show success message
-                _viewModelMain.ShowInfo("Bulk update succeeded.", MessageCategory.BulkUpdate);
+                success = true;
             }
             catch (Exception ex)
             {
                 // Rollback the transaction
                 _viewModelMain.DataBase.RollbackTransaction();
+
+                try
+                {
+                    // Abort the GIS updates
+                    editOperation.Abort();
+                }
+                catch
+                {
+                    // Ignore abort failures.
+                }
+
+                // Get the SQL error message (if it is one) or the exception message.
+                string exMessage = DbBase.GetSqlErrorMessage(ex);
 
                 // Show error message
                 MessageBox.Show(String.Format("Bulk update failed. The error message returned was:\n\n{0}",
@@ -421,6 +451,10 @@ namespace HLU.UI.ViewModel
                 // Stop the bulk update mode and reset all the controls
                 await BulkUpdateResetControlsAsync();
             }
+
+            // Show success message
+            if (success)
+                _viewModelMain.ShowSuccess("Bulk update succeeded.", MessageCategory.BulkUpdate);
         }
 
         /// <summary>
@@ -429,8 +463,13 @@ namespace HLU.UI.ViewModel
         /// <returns>A task that represents the asynchronous operation.</returns>
         public async Task CancelBulkUpdateAsync()
         {
+            _viewModelMain.ChangeCursor(Cursors.Wait, "Stopping bulk update mode ...");
+
             // Stop the bulk update mode and reset all the controls
             await BulkUpdateResetControlsAsync();
+
+            // Reset the cursor back to normal.
+            _viewModelMain.ChangeCursor(Cursors.Arrow);
         }
 
         /// <summary>
@@ -445,6 +484,18 @@ namespace HLU.UI.ViewModel
             // local copy.
             _viewModelMain.RefillIncidTable = true;
 
+            // Re-enable the tab control and individual tabs.
+            _viewModelMain.TabControlDataEnabled = true;
+            _viewModelMain.TabItemHabitatEnabled = true;
+            _viewModelMain.TabItemIHSEnabled = true;
+
+            // Show the history tab
+            _viewModelMain.ShowHistoryTab = true;
+            _viewModelMain.ShowIHSTab = true;
+
+            // Select the habitat tab
+            _viewModelMain.TabItemSelected = 0;
+
             // Stop the bulk update mode
             _viewModelMain.BulkUpdateMode = false;
 
@@ -453,14 +504,8 @@ namespace HLU.UI.ViewModel
             await _viewModelMain.ClearFilterAsync(true);
             _viewModelMain.SuppressUserNotifications = false;
 
-            // Enable the history tab
-            _viewModelMain.TabItemHistoryEnabled = true;
-
-            // Refresh all the controls
-            //_viewModelMain.RefreshAll(); // Now done when setting mode.
-
-            // Reset the cursor
-            _viewModelMain.ChangeCursor(Cursors.Arrow, String.Empty);
+            // Re-read the current map selection.
+            await _viewModelMain.GetMapSelectionAsync(false);
         }
 
         #endregion Bulk Update
@@ -489,12 +534,8 @@ namespace HLU.UI.ViewModel
             // Clear the selection (filter).
             _viewModelMain.IncidSelection = null;
 
-            // If the habitat, IHS or history tab is currently selected then
-            // select the priority habitats tab
-            if (_viewModelMain.TabItemSelected == 0 ||
-                _viewModelMain.TabItemSelected == 1 ||
-                _viewModelMain.TabItemSelected == 5)
-                _viewModelMain.TabItemSelected = 2;
+            // Select the priority habitats tab
+            _viewModelMain.TabItemSelected = 2;
 
             // Clear any interface warning and error messages
             _viewModelMain.ResetWarningsErrors();
@@ -526,9 +567,17 @@ namespace HLU.UI.ViewModel
         /// <returns>A task that represents the asynchronous operation.</returns>
         public async Task ApplyOSMMBulkUpdateAsync()
         {
-            _viewModelMain.ChangeCursor(Cursors.Wait, "OSMM Bulk updating ...");
+            _viewModelMain.ChangeCursor(Cursors.Wait, "Applying OSMM bulk update ...");
 
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
+
+            bool success = false;
+
+            // Start a GIS edit operation
+            EditOperation editOperation = new()
+            {
+                Name = "OSMM Bulk Update GIS Features"
+            };
 
             try
             {
@@ -621,7 +670,7 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.DataBase.QuoteValue(nowDtTm),
                     _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_osmm_updates.last_modified_user_idColumn.ColumnName),
                     _viewModelMain.DataBase.QuoteValue(_viewModelMain.UserID))
-                    .Concat(incidWhereClause).ToString();
+                    + incidWhereClause;
 
                 // Get the column ordinal for the incid column on the incid table
                 int incidOrdinal =
@@ -748,13 +797,13 @@ namespace HLU.UI.ViewModel
                         }
 
                         // Add the secondary habitat update to the update command
-                        updateStatementIncid = updateStatementIncid.Concat(updateHabitatSecondaries).ToString();
+                        updateStatementIncid += updateHabitatSecondaries;
 
                         // Add the IHS habitat update string to the update command
-                        updateStatementIncid = updateStatementIncid.Concat(updateIHSHabitat).ToString();
+                        updateStatementIncid += updateIHSHabitat;
 
                         // Finally, add the where clause to the update command
-                        updateStatementIncid = updateStatementIncid.Concat(incidWhereClause).ToString();
+                        updateStatementIncid += incidWhereClause;
 
                         // Filter out any rows not set (because the maximum number of blank rows are
                         // created above so any not used need to be removed)
@@ -777,7 +826,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Perform the bulk updates on the GIS data, shadow copy in DB and history
-                await BulkUpdateGisAsync(incidOrdinal, _viewModelMain.IncidSelection, _bulkDeleteSecondaryCodes, _bulkCreateHistory, Operations.OSMMUpdate, nowDtTm);
+                await BulkUpdateGisAsync(incidOrdinal, _viewModelMain.IncidSelection, _bulkDeleteSecondaryCodes, _bulkCreateHistory, Operations.OSMMUpdate, nowDtTm, editOperation);
 
                 // Commit the transaction and accept the changes ???
                 _viewModelMain.DataBase.CommitTransaction();
@@ -786,12 +835,25 @@ namespace HLU.UI.ViewModel
                 // force re-loading data from db
                 _viewModelMain.IncidTable.Clear();
 
-                _viewModelMain.ShowInfo("OSMM Bulk update succeeded.", MessageCategory.BulkUpdate);
+                success = true;
             }
             catch (Exception ex)
             {
                 // Rollback the transaction
                 _viewModelMain.DataBase.RollbackTransaction();
+
+                try
+                {
+                    // Abort the GIS updates
+                    editOperation.Abort();
+                }
+                catch
+                {
+                    // Ignore abort failures.
+                }
+
+                // Get the SQL error message (if it is one) or the exception message.
+                string exMessage = DbBase.GetSqlErrorMessage(ex);
 
                 // Show error message
                 MessageBox.Show(String.Format("OSMM Bulk update failed. The error message returned was:\n\n{0}",
@@ -802,6 +864,10 @@ namespace HLU.UI.ViewModel
                 // Stop the bulk update mode and reset all the controls
                 await OSMMBulkUpdateResetControlsAsync();
             }
+
+            // Show success message
+            if (success)
+                _viewModelMain.ShowSuccess("OSMM Bulk update succeeded.", MessageCategory.BulkUpdate);
         }
 
         /// <summary>
@@ -810,8 +876,13 @@ namespace HLU.UI.ViewModel
         /// <returns>A task that represents the asynchronous operation.</returns>
         public async Task CancelOSMMBulkUpdateAsync()
         {
+            _viewModelMain.ChangeCursor(Cursors.Wait, "Stopping OSMM bulk update mode ...");
+
             // Stop the osmm bulk update mode and reset all the controls
             await OSMMBulkUpdateResetControlsAsync();
+
+            // Reset the cursor back to normal.
+            _viewModelMain.ChangeCursor(Cursors.Arrow);
         }
 
         /// <summary>
@@ -826,31 +897,27 @@ namespace HLU.UI.ViewModel
             // local copy.
             _viewModelMain.RefillIncidTable = true;
 
-            // Reset the incid and map selections and move
-            // to the first incid in the database.
+            // Re-enable the tab control and individual tabs.
+            _viewModelMain.TabControlDataEnabled = true;
+            _viewModelMain.TabItemHabitatEnabled = true;
+            _viewModelMain.TabItemIHSEnabled = true;
 
-            // Stop the bulk update mode
-            _viewModelMain.BulkUpdateMode = false;
+            // Show the history tab
+            _viewModelMain.ShowHistoryTab = true;
+
+            // Stop the OSMM bulk update mode
             _viewModelMain.OSMMBulkUpdateMode = false;
+
+            // Select the habitat tab
+            _viewModelMain.TabItemSelected = 0;
 
             // Clear the active filter.
             _viewModelMain.SuppressUserNotifications = true;
             await _viewModelMain.ClearFilterAsync(true);
             _viewModelMain.SuppressUserNotifications = false;
 
-            // Enable the habitat, IHS and history tabs
-            _viewModelMain.TabItemHabitatEnabled = true;
-            _viewModelMain.TabItemIHSEnabled = true;
-            _viewModelMain.TabItemHistoryEnabled = true;
-
-            // Select the habitat tab
-            _viewModelMain.TabItemSelected = 0;
-
-            // Refresh all the controls
-            //_viewModelMain.RefreshAll(); // Now done when setting mode.
-
-            // Reset the cursor
-            _viewModelMain.ChangeCursor(Cursors.Arrow, String.Empty);
+            // Re-read the current map selection.
+            await _viewModelMain.GetMapSelectionAsync(false);
         }
 
         #endregion OSMM Bulk Update
@@ -923,6 +990,7 @@ namespace HLU.UI.ViewModel
             // ---------------------------------------------------------------------
             // Delete any orphaned IHS multiplex rows
             // ---------------------------------------------------------------------
+            // Execute the DELETE incid_ihs_xxx statements for the current row
             if (ihsMultiplexDeleteStatements != null)
             {
                 foreach (string s in ihsMultiplexDeleteStatements)
@@ -1362,7 +1430,7 @@ namespace HLU.UI.ViewModel
         /// Failed to update GIS layer for incid
         /// </exception>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        private async Task BulkUpdateGisAsync(int incidOrdinal, DataTable incidSelection, bool deleteSecondaryCodes, bool createHistory, Operations operation, DateTime nowDtTm)
+        private async Task BulkUpdateGisAsync(int incidOrdinal, DataTable incidSelection, bool deleteSecondaryCodes, bool createHistory, Operations operation, DateTime nowDtTm, EditOperation editOperation)
         {
             // Get the columns and values to be updated in GIS
             DataColumn[] updateColumns;
@@ -1412,12 +1480,15 @@ namespace HLU.UI.ViewModel
             else
             {
                 // Build an UPDATE statement for the DB shadow copy of GIS layer
-                string updateVals = String.Join(",",
-                    updateColumns.Select((c, index) => new string[] { _viewModelMain.DataBase.QuoteIdentifier(c.ColumnName),
-                    _viewModelMain.DataBase.QuoteValue(updateDBValues[index]) }).Select(a =>String.Format(", {0} = {1}", a[0], a[1])));
+                string updateVals = String.Join(", ",
+                    updateColumns.Select((c, index) => String.Format("{0} = {1}",
+                        _viewModelMain.DataBase.QuoteIdentifier(c.ColumnName),
+                        _viewModelMain.DataBase.QuoteValue(updateDBValues[index]))));
 
-                string incidMMPolygonsUpdateCmdTemplate = String.Format("UPDATE {0} SET {1} WHERE {2}",
-                    _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
+                string incidMMPolygonsUpdateCmdTemplate = String.Format(
+                    "UPDATE {0} SET {1} WHERE {2}",
+                    _viewModelMain.DataBase.QualifyTableName(
+                        _viewModelMain.HluDataset.incid_mm_polygons.TableName),
                     updateVals, "{0}");
 
                 // Build a WHERE clause for the rows to update in the DB shadow copy of GIS layer
@@ -1441,24 +1512,16 @@ namespace HLU.UI.ViewModel
                         throw new Exception($"Failed to update GIS layer shadow copy in table [{_viewModelMain.HluDataset.incid_mm_polygons.TableName}].", ex);
                     }
 
-                    // Start a GIS edit operation
-                    EditOperation editOperation = new()
-                    {
-                        Name = "Update GIS Features"
-                    };
-
-                    //TODO: Catch exceptions?
                     // Get the current values from the GIS layer
                     DataTable historyTmp = await _viewModelMain.GISApplication.GetHistoryAsync(
-                         _viewModelMain.HistoryColumns, whereClause);
-
-                    //TODO: Catch exceptions?
-                    // Update GIS layer row by row; no need for a joined scratch table
-                    await _viewModelMain.GISApplication.UpdateFeaturesAsync(updateColumns,
-                        updateGISValues, _viewModelMain.HistoryColumns, whereClause, editOperation);
+                        _viewModelMain.HistoryColumns, whereClause);
 
                     if (historyTmp == null)
-                        throw new Exception($"Failed to update GIS layer for incid '{whereClause[0].Value}'");
+                        throw new Exception($"Failed to retrieve GIS history for incid '{whereClause[0].Value}'");
+
+                    // Queue the GIS feature updates onto the shared edit operation
+                    await _viewModelMain.GISApplication.UpdateFeaturesAsync(updateColumns,
+                        updateGISValues, _viewModelMain.HistoryColumns, whereClause, editOperation);
 
                     // Append history rows to the history table
                     if (createHistory)
@@ -1474,6 +1537,22 @@ namespace HLU.UI.ViewModel
                         }
                     }
                 }
+
+                // Execute (commit) all queued GIS feature updates in one operation
+                bool executed = await editOperation.ExecuteAsync();
+                if (!executed)
+                {
+                    string details = editOperation.ErrorMessage;
+                    if (String.IsNullOrWhiteSpace(details))
+                        details = "No additional details were provided by the edit operation.";
+
+                    throw new HLUToolException($"Failed to update GIS layer. {details}");
+                }
+
+                // Save edits to clear the pending edit state
+                bool saved = await ArcGIS.Desktop.Core.Project.Current.SaveEditsAsync();
+                if (!saved)
+                    throw new HLUToolException("GIS edits were applied but could not be saved.");
             }
 
             // Write history for the affected incids
@@ -1627,8 +1706,10 @@ namespace HLU.UI.ViewModel
                 new Action<R>(r => adapter.Delete(r)));
 
             // Set the property name for the primary key
-            string recordIdPropertyName = String.Concat(dbRows.TableName.Split('_').Select(s => String.Format("{0}{1}", char.ToUpper(s[0]), s.Substring(1))))
-                .Insert(0, "Next").Concat("Id").ToString();
+            // Set the property name for the primary key
+            string recordIdPropertyName = String.Concat(dbRows.TableName.Split('_')
+                .Select(s => String.Format("{0}{1}", char.ToUpper(s[0]), s.Substring(1))))
+                .Insert(0, "Next") + "Id";
 
             // Set the property info for the primary key property name
             PropertyInfo recordIDPropInfo = typeof(RecordIds).GetProperty(recordIdPropertyName);

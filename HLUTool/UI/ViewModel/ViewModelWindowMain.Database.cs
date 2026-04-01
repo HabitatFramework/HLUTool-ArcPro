@@ -20,6 +20,8 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ActiproSoftware.Windows.Shapes;
+using ArcGIS.Core.Internal.CIM;
 using HLU.Data;
 using HLU.Data.Connection;
 using HLU.Data.Model;
@@ -38,6 +40,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -464,19 +467,46 @@ namespace HLU.UI.ViewModel
         #region Dirty Checks
 
         /// <summary>
-        /// Determines whether any of the incid tables are dirty].
+        /// Determines whether any of the incid tables are dirty.
         /// </summary>
         /// <returns>
         ///   <c>true</c> if dirty otherwise, <c>false</c>.
         /// </returns>
         internal bool IsDirtyIncid()
         {
-            // If anything has changed in any of the data tables
-            return ((_incidCurrentRow != null) && (_incidCurrentRow.RowState != DataRowState.Detached) &&
-                ((_incidCurrentRow.Ishabitat_primaryNull() && !String.IsNullOrEmpty(_incidPrimary)) ||
-                (!_incidCurrentRow.Ishabitat_primaryNull() && String.IsNullOrEmpty(_incidPrimary)) ||
-                (_incidPrimary != _incidCurrentRow.habitat_primary) ||
-                !CompareIncidCurrentRowClone()));
+            // If there is no current row there can't be any changes. This also prevents false
+            // positives for changes when the current row is null in bulk update mode.
+            if (_incidCurrentRow == null)
+                return false;
+
+            // In bulk update mode the current row is Detached (created via
+            // NewincidRow). The clone is taken of the blank row after ClearForm,
+            // so CompareIncidCurrentRowClone detects any field the user has
+            // touched — identical to how normal mode works.
+            // In normal mode the row must be attached to avoid false positives.
+            bool rowIsUsable = BulkUpdateMode
+                ? _incidCurrentRowClone != null
+                : _incidCurrentRow.RowState != DataRowState.Detached;
+
+            if (!rowIsUsable)
+                return false;
+
+            //// In bulk update mode the current row is always Detached (created via
+            //// NewincidRow and never added to the table). Treat any non-null field
+            //// value as a pending change rather than requiring a row-state check.
+            //if (BulkUpdateMode)
+            //    return !String.IsNullOrEmpty(_incidPrimary) ||
+            //        !String.IsNullOrEmpty(_incidLegacyHabitat) ||
+            //        (_incidSecondaryHabitats != null && _incidSecondaryHabitats.Count > 0);
+
+            // Normal mode: row must be attached and either the primary has changed
+            // or the row clone differs from the current row.
+            return (_incidCurrentRow.Ishabitat_primaryNull() &&
+                        !String.IsNullOrEmpty(_incidPrimary)) ||
+                   (!_incidCurrentRow.Ishabitat_primaryNull() &&
+                        String.IsNullOrEmpty(_incidPrimary)) ||
+                   (_incidPrimary != _incidCurrentRow.habitat_primary) ||
+                   !CompareIncidCurrentRowClone();
         }
 
         /// <summary>
@@ -487,6 +517,8 @@ namespace HLU.UI.ViewModel
         /// </returns>
         internal bool IsDirtyIncidIhsMatrix()
         {
+            //TODO: Check this works/is needed
+
             if (_incidIhsMatrixRows != null)
             {
                 if (_incidIhsMatrixRows.Count(r => r != null) != _origIncidIhsMatrixCount) return true;
@@ -507,6 +539,8 @@ namespace HLU.UI.ViewModel
         /// </returns>
         internal bool IsDirtyIncidIhsFormation()
         {
+            //TODO: Check this works/is needed
+
             if (_incidIhsFormationRows != null)
             {
                 if (_incidIhsFormationRows.Count(r => r != null) != _origIncidIhsFormationCount) return true;
@@ -527,6 +561,8 @@ namespace HLU.UI.ViewModel
         /// </returns>
         internal bool IsDirtyIncidIhsManagement()
         {
+            //TODO: Check this works/is needed
+
             if (_incidIhsManagementRows != null)
             {
                 if (_incidIhsManagementRows.Count(r => r != null) != _origIncidIhsManagementCount) return true;
@@ -547,6 +583,8 @@ namespace HLU.UI.ViewModel
         /// </returns>
         internal bool IsDirtyIncidIhsComplex()
         {
+            //TODO: Check this works/is needed
+
             if (_incidIhsComplexRows != null)
             {
                 if (_incidIhsComplexRows.Count(r => r != null) != _origIncidIhsComplexCount) return true;
@@ -568,19 +606,29 @@ namespace HLU.UI.ViewModel
         internal bool IsDirtyIncidSecondary()
         {
             //TODO: Check this works/is needed
+
+            // If there are no secondary habitats there can't be any changes. This also prevents false
+            // positives for changes when the secondary habitats are null in bulk update mode.
             if (_incidSecondaryHabitats == null)
                 return false;
 
+            // If any secondary habitat rows have been marked for deletion consider the table dirty
+            // without further checks.
             if (_incidSecondaryRows.Any(r => r.RowState == DataRowState.Deleted)) return true;
 
+            // If there are any secondary habitat rows that are new or have unsaved changes consider
+            // the table dirty without further checks.
             if (_incidSecondaryHabitats != null)
             {
                 if (_incidSecondaryHabitats.Any(sh => IncidSecondaryRowDirty(sh))) return true;
             }
 
+            // If the number of secondary habitat rows doesn't match the number of secondary
+            // habitats consider the table dirty without further checks.
             if ((_incidSecondaryRows != null) && (_incidSecondaryHabitats.Count !=
                 _incidSecondaryRows.Length)) return true;
 
+            // If any of the secondary habitat rows have unsaved changes consider the table dirty.
             if (_incidSecondaryRows != null)
             {
                 foreach (DataRow r in _incidSecondaryRows)
@@ -597,15 +645,31 @@ namespace HLU.UI.ViewModel
         /// </returns>
         internal bool IsDirtyIncidCondition()
         {
+            //TODO: Check if works/is needed
+
+            // In bulk update mode condition rows are always Detached so RowIsDirty
+            // returns false and the count always matches _origIncidConditionCount.
+            // Instead treat any row with a non-null condition value as a pending change.
+            if (BulkUpdateMode)
+                return _incidConditionRows != null &&
+                    _incidConditionRows.Any(r => r != null && !r.IsNull(r.Table.Columns["condition"].Ordinal));
+
+            // If there are any condition rows then check for changes.
             if (_incidConditionRows != null)
             {
-                if (_incidConditionRows.Count(r => r != null) != _origIncidConditionCount) return true;
+                // If the number of condition rows doesn't match the original count consider the table dirty without further checks.
+                if (_incidConditionRows.Count(r => r != null) != _origIncidConditionCount)
+                    return true;
 
+                // If any of the condition rows have unsaved changes consider the table dirty.
                 foreach (DataRow r in _incidConditionRows)
-                    if (ViewModelWindowMainHelpers.RowIsDirty(r)) return true;
+                    if (ViewModelWindowMainHelpers.RowIsDirty(r))
+                        return true;
 
                 return false;
             }
+
+            // No condition rows, consider the table dirty if there were originally any condition rows.
             return _origIncidConditionCount != 0;
         }
 
@@ -618,17 +682,26 @@ namespace HLU.UI.ViewModel
         internal bool IsDirtyIncidBap()
         {
             //TODO: Check if works/is needed
+
+            // If there are no BAP environments there can't be any changes. This also prevents false
+            // positives for changes when the BAP environments are null in bulk update mode.
             if (_incidBapRowsAuto == null)
                 return false;
 
+            // If any BAP environment rows have been marked for deletion consider the table dirty
             if (_incidBapRows.Any(r => r.RowState == DataRowState.Deleted)) return true;
 
+            // If there are any BAP environment rows that are new or have unsaved changes consider
+            // the table dirty without further checks.
             int incidBapRowsAutoNum = 0;
             if (_incidBapRowsAuto != null)
             {
                 incidBapRowsAutoNum = _incidBapRowsAuto.Count;
                 if (_incidBapRowsAuto.Any(be => IncidBapRowDirty(be))) return true;
             }
+
+            // If there are any user-added BAP environment rows that are new or have unsaved changes
+            // consider the table dirty without further checks.
             int incidBapRowsAutoUserNum = 0;
             if (_incidBapRowsUser != null)
             {
@@ -636,14 +709,18 @@ namespace HLU.UI.ViewModel
                 if (_incidBapRowsUser.Any(be => IncidBapRowDirty(be))) return true;
             }
 
+            // If the number of BAP environment rows doesn't match the number of BAP environments
+            // consider the table dirty without further checks.
             if ((_incidBapRows != null) && (incidBapRowsAutoNum + incidBapRowsAutoUserNum !=
                 _incidBapRows.Length)) return true;
 
+            // If any of the BAP environment rows have unsaved changes consider the table dirty.
             if (_incidBapRows != null)
             {
                 foreach (DataRow r in _incidBapRows)
                     if (ViewModelWindowMainHelpers.RowIsDirty(r)) return true;
             }
+
             return false;
         }
 
@@ -655,15 +732,33 @@ namespace HLU.UI.ViewModel
         /// </returns>
         private bool IsDirtyIncidSources()
         {
+            //TODO: Check if works/is needed
+
+            // In bulk update mode source rows are always Detached so RowIsDirty
+            // returns false and _incidSourcesRows is empty so the count always
+            // matches _origIncidSourcesCount (0). Instead treat any row with a
+            // real source_id (i.e. not the sentinel Int32.MinValue) as a pending change.
+            if (BulkUpdateMode)
+                return _incidSourcesRows != null &&
+                    _incidSourcesRows.Any(r => r != null && r.source_id != Int32.MinValue);
+
+            // If there are any source rows then check for changes.
             if (_incidSourcesRows != null)
             {
-                if (_incidSourcesRows.Count(r => r != null) != _origIncidSourcesCount) return true;
+                // If the number of source rows doesn't match the original count consider the table
+                // dirty without further checks.
+                if (_incidSourcesRows.Count(r => r != null) != _origIncidSourcesCount)
+                    return true;
 
+                // Check if any of the source rows have unsaved changes. If so consider the table dirty.
                 foreach (DataRow r in _incidSourcesRows)
-                    if (ViewModelWindowMainHelpers.RowIsDirty(r)) return true;
+                    if (ViewModelWindowMainHelpers.RowIsDirty(r))
+                        return true;
 
                 return false;
             }
+
+            // No source rows, consider the table dirty if there were originally any source rows.
             return _origIncidSourcesCount != 0;
         }
 
@@ -675,11 +770,14 @@ namespace HLU.UI.ViewModel
         /// </returns>
         internal bool IsDirtyIncidOSMMUpdates()
         {
+            // If there are any osmm updates rows then check for changes.
             if (_incidOSMMUpdatesRows != null)
             {
+                // Check if any of the osmm updates rows have unsaved changes. If so consider the table dirty.
                 foreach (DataRow r in _incidOSMMUpdatesRows)
                     if (ViewModelWindowMainHelpers.RowIsDirty(r)) return true;
             }
+
             return false;
         }
 
@@ -694,13 +792,16 @@ namespace HLU.UI.ViewModel
         /// <returns><c>true</c> if the row is new or has unsaved changes; otherwise, <c>false</c>.</returns>
         private bool IncidSecondaryRowDirty(SecondaryHabitat sh)
         {
-            // deleted secondary habitat row
+            // Get non-deleted rows with the same secondary_id as the specified row.
             var q = _incidSecondaryRows.Where(r => r.RowState != DataRowState.Deleted && r.secondary_id == sh.Secondary_id);
             switch (q.Count())
             {
                 case 0:
-                    return true; // new row;
+                    // If there are no such rows then the specified row must be new.
+                    return true;
                 case 1:
+                    // If there is one such row then compare it to the specified row to determine if
+                    // there are unsaved changes.
                     if (!sh.IsValid() && sh.IsAdded) return true;
 
                     HluDataSet.incid_secondaryRow oldRow = q.ElementAt(0);
@@ -718,7 +819,9 @@ namespace HLU.UI.ViewModel
                     }
                     return false;
                 default:
-                    return true; // duplicate row must be new or altered
+                    // If there are multiple such rows then there must be a duplicate secondary
+                    // habitat and the specified row must be new or have unsaved changes.
+                    return true;
             }
         }
 
@@ -730,12 +833,13 @@ namespace HLU.UI.ViewModel
         /// <returns><c>true</c> if the row is new or has unsaved changes; otherwise, <c>false</c>.</returns>
         private bool IncidBapRowDirty(BapEnvironment be)
         {
-            // deleted user BAP row
+            // Get non-deleted rows with the same bap_id as the specified row.
             var q = _incidBapRows.Where(r => r.RowState != DataRowState.Deleted && r.bap_id == be.Bap_id);
             switch (q.Count())
             {
                 case 0:
-                    return true; // new row;
+                    // If there are no such rows then the specified row must be new.
+                    return true;
                 case 1:
                     // Only flag an incid_bap row that is invalid as dirty if it has
                     // been added by the user. This allows existing records to be
@@ -758,7 +862,8 @@ namespace HLU.UI.ViewModel
                     }
                     return false;
                 default:
-                    return true; // duplicate row must be new or altered
+                    // If there are multiple such rows then there must be a duplicate BAP environment
+                    return true;
             }
         }
 
@@ -2185,7 +2290,7 @@ namespace HLU.UI.ViewModel
                         // Set the row id
                         HluDataSet.incid_sourcesRow newRow = IncidSourcesTable.Newincid_sourcesRow();
                         newRow.incid_source_id = NextIncidSourcesId;
-                        newRow.incid = IncidCurrentRow.incid;
+                        newRow.incid = IncidCurrentRow.incid; //TODO: Error here in bulk update mode
                         newRow.sort_order = rowNumber + 1;
                         _incidSourcesRows[rowNumber] = newRow;
                     }
@@ -2434,7 +2539,7 @@ namespace HLU.UI.ViewModel
                         await SetFilterAsync();
 
                         // Reset the cursor back to normal.
-                        ChangeCursor(Cursors.Arrow, null);
+                        ChangeCursor(Cursors.Arrow);
 
                         // Check if the GIS and database are in sync.
                         if ((_currentIncidToidsInGISCount > _currentIncidToidsInDBCount) ||
@@ -2466,7 +2571,7 @@ namespace HLU.UI.ViewModel
                         await SetFilterAsync();
 
                         // Reset the cursor back to normal.
-                        ChangeCursor(Cursors.Arrow, null);
+                        ChangeCursor(Cursors.Arrow);
 
                         // Warn the user that no records were found.
                         ShowInfo("Map feature not found in active layer.", MessageCategory.GIS);
@@ -2487,7 +2592,7 @@ namespace HLU.UI.ViewModel
                     await SetFilterAsync();
 
                     // Reset the cursor back to normal
-                    ChangeCursor(Cursors.Arrow, null);
+                    ChangeCursor(Cursors.Arrow);
 
                     // Warn the user that the record was not found
                     ShowInfo("Record not found in database.", MessageCategory.Database);
@@ -2496,7 +2601,10 @@ namespace HLU.UI.ViewModel
             catch (Exception ex)
             {
                 _incidSelection = null;
-                ChangeCursor(Cursors.Arrow, null);
+
+                // Reset the cursor back to normal.
+                ChangeCursor(Cursors.Arrow);
+
                 MessageBox.Show(ex.Message, "HLU: Apply Query",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
@@ -2637,7 +2745,7 @@ namespace HLU.UI.ViewModel
                         RefreshAll();
 
                         // Reset the cursor back to normal.
-                        ChangeCursor(Cursors.Arrow, null);
+                        ChangeCursor(Cursors.Arrow);
                     }
                     else
                     {
@@ -2670,7 +2778,7 @@ namespace HLU.UI.ViewModel
                         }
 
                         // Reset the cursor back to normal.
-                        ChangeCursor(Cursors.Arrow, null);
+                        ChangeCursor(Cursors.Arrow);
 
                         // Warn the user that no records were found.
                         ShowInfo("No map features found in active layer.", MessageCategory.GIS);
@@ -2711,7 +2819,7 @@ namespace HLU.UI.ViewModel
                     }
 
                     // Reset the cursor back to normal.
-                    ChangeCursor(Cursors.Arrow, null);
+                    ChangeCursor(Cursors.Arrow);
 
                     // Warn the user that no records were found (if the caller has requested to
                     // select the records in GIS).
@@ -2723,7 +2831,8 @@ namespace HLU.UI.ViewModel
             {
                 _incidSelection = null;
 
-                ChangeCursor(Cursors.Arrow, null);
+                // Reset the cursor back to normal.
+                ChangeCursor(Cursors.Arrow);
 
                 MessageBox.Show(ex.Message, "HLU: Apply Query",
                     MessageBoxButton.OK, MessageBoxImage.Error);
@@ -2776,14 +2885,7 @@ namespace HLU.UI.ViewModel
             // the calling method.
             if (resetRowIndex)
             {
-                // Show the wait cursor and processing message in the status area
-                // whilst moving to the new Incid.
-                //ChangeCursor(Cursors.Wait, "Processing ...");
-
                 _incidCurrentRowIndex = 1;
-                //IncidCurrentRowIndex = 1;
-
-                //ChangeCursor(Cursors.Arrow, null);
             }
 
             // Suggest the selection came from the map so that
@@ -2807,7 +2909,7 @@ namespace HLU.UI.ViewModel
             RefreshStatus();
 
             // Reset the cursor back to normal.
-            ChangeCursor(Cursors.Arrow, null);
+            ChangeCursor(Cursors.Arrow);
         }
 
         #endregion Clear Filter Operation
@@ -3029,11 +3131,9 @@ namespace HLU.UI.ViewModel
 
             if (canMove)
             {
-                // Clone the current row to use to check for changes later
-                CloneIncidCurrentRow();
-
-                _incidArea = -1;
-                _incidLength = -1;
+                //TODO: Needed?
+                //_incidArea = -1;
+                //_incidLength = -1;
 
                 // Flag that the current record has not been changed yet so that the
                 // apply button does not appear.
@@ -3043,40 +3143,54 @@ namespace HLU.UI.ViewModel
                 HabitatType = null;
                 OnPropertyChanged(nameof(HabitatType));
 
-                // Get the incid table values
-                IncidCurrentRowDerivedValuesRetrieve();
-
-                // Get the incid child rows
-                GetIncidChildRows(IncidCurrentRow);
-
-                // If there are any OSMM Updates for this incid then store the values.
-                if (_incidOSMMUpdatesRows.Length > 0)
+                if (_incidCurrentRow != null)
                 {
-                    _incidOSMMUpdatesOSMMXref = _incidOSMMUpdatesRows[0].osmm_xref_id;
-                    _incidOSMMUpdatesProcessFlag = _incidOSMMUpdatesRows[0].process_flag;
-                    _incidOSMMUpdatesSpatialFlag = _incidOSMMUpdatesRows[0].Isspatial_flagNull() ? null : _incidOSMMUpdatesRows[0].spatial_flag;
-                    _incidOSMMUpdatesChangeFlag = _incidOSMMUpdatesRows[0].Ischange_flagNull() ? null : _incidOSMMUpdatesRows[0].change_flag;
-                    _incidOSMMUpdatesStatus = _incidOSMMUpdatesRows[0].status;
+                    // Clone the current row to use to check for changes later
+                    CloneIncidCurrentRow();
+
+                    // Get the incid table values
+                    IncidCurrentRowDerivedValuesRetrieve();
+
+                    // Get the incid child rows
+                    GetIncidChildRows(IncidCurrentRow);
+
+                    // If there are any OSMM Updates for this incid then store the values.
+                    if (_incidOSMMUpdatesRows.Length > 0)
+                    {
+                        _incidOSMMUpdatesOSMMXref = _incidOSMMUpdatesRows[0].osmm_xref_id;
+                        _incidOSMMUpdatesProcessFlag = _incidOSMMUpdatesRows[0].process_flag;
+                        _incidOSMMUpdatesSpatialFlag = _incidOSMMUpdatesRows[0].Isspatial_flagNull() ? null : _incidOSMMUpdatesRows[0].spatial_flag;
+                        _incidOSMMUpdatesChangeFlag = _incidOSMMUpdatesRows[0].Ischange_flagNull() ? null : _incidOSMMUpdatesRows[0].change_flag;
+                        _incidOSMMUpdatesStatus = _incidOSMMUpdatesRows[0].status;
+                    }
+                    else
+                    {
+                        _incidOSMMUpdatesOSMMXref = 0;
+                        _incidOSMMUpdatesProcessFlag = 0;
+                        _incidOSMMUpdatesSpatialFlag = null;
+                        _incidOSMMUpdatesChangeFlag = null;
+                        _incidOSMMUpdatesStatus = null;
+                    }
+
+                    // If auto select of features on change of incid is enabled.
+                    if (_autoSelectOnGis && IsNotBulkMode && !_filteredByMap)
+                    {
+                        // Select the current incid record on the Map.
+                        await SelectOnMapAsync(false);
+                    }
+
+                    // Count the number of toids and fragments for the current incid
+                    // selected in the GIS and in the database.
+                    CountCurrentIncidToidFrags();
                 }
                 else
                 {
-                    _incidOSMMUpdatesOSMMXref = 0;
-                    _incidOSMMUpdatesProcessFlag = 0;
-                    _incidOSMMUpdatesSpatialFlag = null;
-                    _incidOSMMUpdatesChangeFlag = null;
-                    _incidOSMMUpdatesStatus = null;
+                    // No database record was retrieved — clear the form so that
+                    // stale values from the previous record are not displayed.
+                    // ClearForm() uses fresh detached DataRows so IsDirty is
+                    // never triggered.
+                    ClearForm();
                 }
-
-                // If auto select of features on change of incid is enabled.
-                if (_autoSelectOnGis && IsNotBulkMode && !_filteredByMap)
-                {
-                    // Select the current incid record on the Map.
-                    await SelectOnMapAsync(false);
-                }
-
-                // Count the number of toids and fragments for the current incid
-                // selected in the GIS and in the database.
-                CountCurrentIncidToidFrags();
 
                 OnPropertyChanged(nameof(IncidCurrentRowIndex));
                 OnPropertyChanged(nameof(OSMMIncidCurrentRowIndex));

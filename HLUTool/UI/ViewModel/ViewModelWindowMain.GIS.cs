@@ -655,7 +655,7 @@ namespace HLU.UI.ViewModel
             finally
             {
                 // Reset the cursor back to normal
-                ChangeCursor(Cursors.Arrow, null);
+                ChangeCursor(Cursors.Arrow);
 
                 // Refreshes the status-related properties and notifies listeners of property changes.
                 RefreshStatus();
@@ -782,7 +782,8 @@ namespace HLU.UI.ViewModel
                 }
                 else
                 {
-                    ClearMessage();
+                    // Clear any existing GIS warning messages
+                    ClearMessage(category: MessageCategory.GIS, level: MessageType.Warning);
                 }
 
                 // Zoom to the GIS selection (if auto zoom configured).
@@ -898,13 +899,11 @@ namespace HLU.UI.ViewModel
                     // Reset the flag again.
                     _readingMap = false;
 
-                    ChangeCursor(Cursors.Arrow, null);
+                    // Reset the cursor back to normal.
+                    ChangeCursor(Cursors.Arrow);
 
                     // Check if the GIS and database are in sync.
                     CheckInSync("Selection", "Map", showMessage: showMessage);
-
-                    // Clear any messages.
-                    ClearMessage();
                 }
                 else
                 {
@@ -917,7 +916,8 @@ namespace HLU.UI.ViewModel
                     // the map doesn't auto zoom to the incid).
                     _filteredByMap = false;
 
-                    ChangeCursor(Cursors.Arrow, null);
+                    // Reset the cursor back to normal.
+                    ChangeCursor(Cursors.Arrow);
 
                     // Display a warning message.
                     ShowWarning("No map features selected in active layer.", MessageCategory.GIS);
@@ -931,7 +931,7 @@ namespace HLU.UI.ViewModel
             finally
             {
                 // Reset the cursor back to normal
-                ChangeCursor(Cursors.Arrow, null);
+                ChangeCursor(Cursors.Arrow);
 
                 // Refreshes the status-related properties and notifies listeners of property changes.
                 RefreshStatus();
@@ -1037,7 +1037,7 @@ namespace HLU.UI.ViewModel
             finally
             {
                 // Reset the cursor back to normal
-                ChangeCursor(Cursors.Arrow, null);
+                ChangeCursor(Cursors.Arrow);
 
                 // Refreshes the status-related properties and notifies listeners of property changes.
                 RefreshStatus();

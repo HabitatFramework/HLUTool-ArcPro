@@ -88,13 +88,13 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="100" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="100" />
+                                <ColumnDefinition Width="6" />
                             </Grid.ColumnDefinitions>
 
                             <Label
@@ -117,27 +117,8 @@
                                 TextAlignment="Left" />
 
                             <Label
-                                x:Name="LabelBulkUpdateStatusToidDB"
-                                Grid.Row="1"
-                                Grid.Column="0"
-                                Margin="0,0,0,4"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Center"
-                                Content="Database TOIDs" />
-                            <TextBox
-                                x:Name="TextBoxBulkUpdateStatusToidDB"
-                                Grid.Row="1"
-                                Grid.Column="1"
-                                Margin="0,0,6,4"
-                                VerticalAlignment="Center"
-                                IsEnabled="False"
-                                IsReadOnly="True"
-                                Text="{Binding SelectedToidsInDBCount, Mode=OneWay}"
-                                TextAlignment="Left" />
-
-                            <Label
                                 x:Name="LabelBulkUpdateStatusFragDB"
-                                Grid.Row="2"
+                                Grid.Row="1"
                                 Grid.Column="0"
                                 Margin="0,0,0,2"
                                 HorizontalAlignment="Right"
@@ -145,7 +126,7 @@
                                 Content="Database Fragments" />
                             <TextBox
                                 x:Name="TextBoxBulkUpdateStatusFragDB"
-                                Grid.Row="2"
+                                Grid.Row="1"
                                 Grid.Column="1"
                                 Margin="0,0,0,2"
                                 VerticalAlignment="Center"
@@ -177,29 +158,8 @@
                                 ToolTipService.ShowOnDisabled="True" />
 
                             <Label
-                                x:Name="LabelBulkUpdateStatusToidMap"
-                                Grid.Row="1"
-                                Grid.Column="2"
-                                Margin="0,0,0,4"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Center"
-                                Content="Map TOIDs" />
-                            <TextBox
-                                x:Name="TextBoxBulkUpdateStatusToidMap"
-                                Grid.Row="1"
-                                Grid.Column="3"
-                                Margin="8,0,8,4"
-                                VerticalAlignment="Center"
-                                IsEnabled="False"
-                                IsReadOnly="True"
-                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
-                                Text="{Binding SelectedToidsInGISCount, Mode=OneWay, ValidatesOnDataErrors=True}"
-                                TextAlignment="Left"
-                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
-                                ToolTipService.ShowOnDisabled="True" />
-                            <Label
                                 x:Name="LabelBulkUpdateStatusFragMap"
-                                Grid.Row="2"
+                                Grid.Row="1"
                                 Grid.Column="2"
                                 Margin="0,0,0,2"
                                 HorizontalAlignment="Right"
@@ -207,9 +167,9 @@
                                 Content="Map Fragments" />
                             <TextBox
                                 x:Name="TextBoxBulkUpdateStatusFragMap"
-                                Grid.Row="2"
+                                Grid.Row="1"
                                 Grid.Column="3"
-                                Margin="0,0,6,2"
+                                Margin="0,0,0,2"
                                 VerticalAlignment="Center"
                                 IsEnabled="False"
                                 IsReadOnly="True"
@@ -945,7 +905,6 @@
                                                     Source="{Binding ButtonAddSecondaryHabitatImg}" />
                                             </Button>
 
-                                            <!-- <ScrollViewer VerticalScrollBarVisibility="Auto"> -->
                                             <DataGrid
                                                 x:Name="DataGridSecondaryHabitats"
                                                 Grid.Row="3"
@@ -1034,10 +993,8 @@
                                                             </Style>
                                                         </DataGridComboBoxColumn.ElementStyle>
                                                     </DataGridComboBoxColumn>
-                                                    <!--  EditingElementStyle="{DynamicResource ComboBoxStyle}"  -->
                                                 </DataGrid.Columns>
                                             </DataGrid>
-                                            <!-- </ScrollViewer> -->
 
                                             <!--  ButtonAddSecondaryHabitatList  -->
                                             <Button
@@ -1122,7 +1079,6 @@
                                         VerticalAlignment="Stretch"
                                         Header="{Binding LegacyHeader}"
                                         IsEnabled="{Binding TabHabitatControlsEnabled}">
-                                        <!--  Margin="0"  -->
                                         <Grid x:Name="GridLegacy" Margin="0,2,0,0">
                                             <Grid.RowDefinitions>
                                                 <RowDefinition />
@@ -1174,7 +1130,7 @@
                     <TabItem
                         x:Name="TabItemIHS"
                         IsEnabled="{Binding TabItemIHSEnabled}"
-                        Visibility="{Binding ShowIHSTab}">
+                        Visibility="{Binding IHSTabVisibility}">
 
                         <TabItem.Header>
                             <StackPanel>
@@ -1712,7 +1668,6 @@
                                                             </Style>
                                                         </DataGridComboBoxColumn.ElementStyle>
                                                     </DataGridComboBoxColumn>
-                                                    <!--  EditingElementStyle="{DynamicResource ComboBoxStyle}"  -->
 
                                                     <DataGridTextColumn
                                                         Width="SizeToHeader"
@@ -1733,7 +1688,6 @@
                                                         </DataGridTextColumn.EditingElementStyle>
                                                     </DataGridTextColumn>
 
-                                                    <!--  EditingElementStyle="{DynamicResource TextBoxStyle}"  -->
                                                 </DataGrid.Columns>
                                             </DataGrid>
 
@@ -1844,7 +1798,6 @@
                                                             </Style>
                                                         </DataGridComboBoxColumn.ElementStyle>
                                                     </DataGridComboBoxColumn>
-                                                    <!--  EditingElementStyle="{DynamicResource ComboBoxStyle}"  -->
                                                     <DataGridComboBoxColumn
                                                         x:Name="DataGridComboBoxSecondaryBapDeterminationQualityCodesUser"
                                                         Width="SizeToHeader"
@@ -1867,7 +1820,6 @@
                                                             </Style>
                                                         </DataGridComboBoxColumn.ElementStyle>
                                                     </DataGridComboBoxColumn>
-                                                    <!--  EditingElementStyle="{DynamicResource ComboBoxStyle}"  -->
                                                     <DataGridComboBoxColumn
                                                         x:Name="DataGridComboBoxSecondaryBapInterpretationQualityCodes"
                                                         Width="SizeToHeader"
@@ -1890,7 +1842,6 @@
                                                             </Style>
                                                         </DataGridComboBoxColumn.ElementStyle>
                                                     </DataGridComboBoxColumn>
-                                                    <!--  EditingElementStyle="{DynamicResource ComboBoxStyle}"  -->
                                                     <DataGridTextColumn
                                                         Width="*"
                                                         MinWidth="100"
@@ -1909,7 +1860,6 @@
                                                             </Style>
                                                         </DataGridTextColumn.EditingElementStyle>
                                                     </DataGridTextColumn>
-                                                    <!--  EditingElementStyle="{DynamicResource TextBoxStyle}"  -->
                                                 </DataGrid.Columns>
                                             </DataGrid>
 
@@ -3147,7 +3097,8 @@
                     </TabItem>
 
                     <!--  TabItemHistory  -->
-                    <TabItem x:Name="TabItemHistory" IsEnabled="{Binding TabItemHistoryEnabled}">
+                    <TabItem x:Name="TabItemHistory"
+                             Visibility="{Binding HistoryTabVisibility}">
                         <TabItem.Header>
                             <StackPanel>
                                 <Label
@@ -3234,26 +3185,6 @@
                     </Grid.ColumnDefinitions>
 
                     <Grid
-                        x:Name="GridBulkUpdate"
-                        Grid.Column="0"
-                        Height="Auto"
-                        VerticalAlignment="Bottom"
-                        Visibility="{Binding ShowInBulkUpdateMode}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                        <Label
-                            x:Name="LabelBulkUpdate"
-                            Margin="0,0,4,0"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center"
-                            Content="Bulk Update Affected:"
-                            FontStretch="UltraExpanded"
-                            FontWeight="Bold" />
-                        <!--  Style="{DynamicResource LabelReverseStyle}" />  -->
-                    </Grid>
-
-                    <Grid
                         x:Name="GridNavigation"
                         Grid.Column="0"
                         Height="Auto"
@@ -3274,7 +3205,7 @@
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center"
                             Content="INCID:" />
-                        <!--  Style="{DynamicResource LabelReverseStyle}" />  -->
+
                         <Button
                             x:Name="ButtonFirstRecord"
                             Grid.Column="1"
@@ -3322,6 +3253,23 @@
                             ToolTip="Last record" />
                     </Grid>
 
+                    <Grid x:Name="GridBulkUpdate"
+                          Grid.Column="0"
+                          Height="23"
+                          VerticalAlignment="Bottom"
+                          Visibility="{Binding Path=ShowInBulkUpdateMode}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Label x:Name="LabelBulkUpdate"
+                               Margin="0,0,0,0"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               Content="Bulk Update Involved:"
+                               FontStretch="UltraExpanded"
+                               FontWeight="Bold" />
+                    </Grid>
+
                     <Grid
                         x:Name="GridLabelStatusIncid"
                         Grid.Column="1"
@@ -3345,23 +3293,11 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="80" />
-                            <ColumnDefinition Width="80" />
                         </Grid.ColumnDefinitions>
 
                         <Button
-                            x:Name="ButtonCancelBulkUpdate"
-                            Grid.Column="1"
-                            MinWidth="0"
-                            Margin="0,0,2,0"
-                            HorizontalAlignment="Center"
-                            Command="{Binding CancelBulkUpdateCommand}"
-                            Style="{DynamicResource Esri_Button}"
-                            Visibility="{Binding ShowInBulkUpdateMode}">
-                            _Cancel
-                        </Button>
-                        <Button
                             x:Name="ButtonUpdate"
-                            Grid.Column="2"
+                            Grid.Column="1"
                             MinWidth="0"
                             Margin="2,0,0,0"
                             HorizontalAlignment="Center"
@@ -3403,7 +3339,7 @@
                             HorizontalAlignment="Right"
                             VerticalAlignment="Center"
                             Content="INCID:" />
-                        <!--  Style="{DynamicResource LabelReverseStyle}" />  -->
+
                         <TextBox
                             x:Name="TextBoxOSMMRecordNumber"
                             Grid.Column="1"
@@ -3516,6 +3452,7 @@
                     </Grid.ColumnDefinitions>
 
                     <controls:CircularAnimationControl
+                        Name="CircularAnimationProcess"
                         Grid.Column="0"
                         Width="22"
                         Height="22"

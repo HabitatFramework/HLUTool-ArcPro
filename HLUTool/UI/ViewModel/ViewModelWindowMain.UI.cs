@@ -152,12 +152,12 @@ namespace HLU.UI.ViewModel
         private bool _tabItemPriorityEnabled = true;
         private bool _tabItemDetailsEnabled = true;
         private bool _tabItemSourcesEnabled = true;
-        private bool _tabItemHistoryEnabled = true;
         private bool _tabHabitatControlsEnabled = true;
         private bool _tabIhsControlsEnabled = true;
         private bool _tabPriorityControlsEnabled = true;
         private bool _tabDetailsControlsEnabled = true;
         private bool _tabSourcesControlsEnabled = true;
+        private bool _showHistoryTab = true;
 
         #endregion Fields - Tab Control
 
@@ -380,12 +380,6 @@ namespace HLU.UI.ViewModel
             {
                 _gridmainVisibility = value;
                 OnPropertyChanged(nameof(GridMainVisibility));
-
-                // Toggle the maingrid state to enabled or disabled.
-                if (_gridmainVisibility == Visibility.Visible)
-                    ToggleState("HLUTool_maingrid_state", true);
-                else
-                    ToggleState("HLUTool_maingrid_state", false);
             }
         }
 
@@ -496,8 +490,9 @@ namespace HLU.UI.ViewModel
             get
             {
                 // Don't show the area when in OSMM Update mode and there are no
-                // updates to process.
-                if ((IsNotBulkMode) && (IsNotOsmmReviewMode || _osmmUpdatesEmpty == false))
+                // updates to process, or when the form has been cleared.
+                if ((IsNotBulkMode) && (IsNotOsmmReviewMode || _osmmUpdatesEmpty == false)
+                    && IncidCurrentRow?.RowState != DataRowState.Detached)
                 {
                     GetIncidMeasures();
                     return _incidArea.ToString(AreaFormatString);
@@ -551,8 +546,9 @@ namespace HLU.UI.ViewModel
             get
             {
                 // Don't show the length when in OSMM Update mode and there are no
-                // updates to process.
-                if ((IsNotBulkMode) && (IsNotOsmmReviewMode || _osmmUpdatesEmpty == false))
+                // updates to process, or when the form has been cleared.
+                if ((IsNotBulkMode) && (IsNotOsmmReviewMode || _osmmUpdatesEmpty == false)
+                    && IncidCurrentRow?.RowState != DataRowState.Detached)
                 {
                     GetIncidMeasures();
                     return _incidLength.ToString(LengthFormatString);
@@ -1080,7 +1076,6 @@ namespace HLU.UI.ViewModel
             get
             {
                 // Enable when not in bulk/OSMM mode AND there is a current row
-                // Disable when not in bulk/OSMM mode AND there is NO current row
                 if (IsNotBulkMode && IsNotOsmmReviewMode)
                     _reasonProcessEnabled = IncidCurrentRow != null;
 
@@ -1096,14 +1091,16 @@ namespace HLU.UI.ViewModel
         /// Gets or sets a value indicating whether the data tab control is enabled.
         /// </summary>
         /// <remarks>The property returns <see langword="false"/> if the control is not in bulk mode and
-        /// there is no current row selected, regardless of the underlying value. Setting this property does not
-        /// override these conditions.</remarks>
+        /// there is no current row selected or the form has been cleared, regardless of the underlying
+        /// value. Setting this property does not override these conditions.</remarks>
         /// <value><see langword="true"/> if the data tab control is enabled; otherwise, <see langword="false"/>.</value>
         public bool TabControlDataEnabled
         {
             get
             {
-                if ((IsNotBulkMode) && IncidCurrentRow == null)
+                if ((IsNotBulkMode) &&
+                    (IncidCurrentRow == null ||
+                     IncidCurrentRow.RowState == DataRowState.Detached))
                     return false;
 
                 return _tabControlDataEnabled;
@@ -1126,6 +1123,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _tabItemSelected = value;
+                OnPropertyChanged(nameof(TabItemSelected));
             }
         }
 
@@ -1138,6 +1136,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _tabItemHabitatEnabled = value;
+                OnPropertyChanged(nameof(TabItemHabitatEnabled));
             }
         }
 
@@ -1174,6 +1173,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 _tabItemIHSEnabled = value;
+                OnPropertyChanged(nameof(TabItemIHSEnabled));
             }
         }
 
@@ -1186,18 +1186,6 @@ namespace HLU.UI.ViewModel
             set
             {
                 _tabItemSourcesEnabled = value;
-            }
-        }
-
-        public bool TabItemHistoryEnabled
-        {
-            get
-            {
-                return _tabItemHistoryEnabled;
-            }
-            set
-            {
-                _tabItemHistoryEnabled = value;
             }
         }
 
@@ -2414,7 +2402,7 @@ namespace HLU.UI.ViewModel
         /// <value>
         /// The visibility of the IHS tab.
         /// </value>
-        public Visibility ShowIHSTab
+        public Visibility IHSTabVisibility
         {
             get
             {
@@ -2422,6 +2410,24 @@ namespace HLU.UI.ViewModel
                     return Visibility.Visible;
                 else
                     return Visibility.Collapsed;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value indicating whether the IHS tab should be shown. Setting
+        /// this property will also trigger a property changed notification for the
+        /// IHSTabVisibility property.
+        /// </summary>
+        public bool ShowIHSTab
+        {
+            get
+            {
+                return _showHistoryTab;
+            }
+            set
+            {
+                _showIHSTab = value;
+                OnPropertyChanged(nameof(IHSTabVisibility));
             }
         }
 
@@ -4032,15 +4038,19 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                // If there are no valid source rows then return null.
                 if (!CheckSources())
                     return null;
 
+                // If there are less than 3 rows in the incid_sources table then create a temporary
+                // array with 3 elements to avoid index out of range errors.
                 if (_incidSourcesRows.Length < 3)
                 {
                     HluDataSet.incid_sourcesRow[] tmpRows = new HluDataSet.incid_sourcesRow[3 - _incidSourcesRows.Length];
                     _incidSourcesRows = [.. _incidSourcesRows, .. tmpRows];
                 }
 
+                // If the source_id field is not null then return the value, otherwise return null
                 if (_incidSourcesRows[0] != null)
                     return _incidSourcesRows[0].source_id;
                 else
@@ -4048,38 +4058,48 @@ namespace HLU.UI.ViewModel
             }
             set
             {
+                // If the value is -1 then the source will be cleared (i.e. the row will be deleted)
+                // and all source 1 fields will be cleared.
                 if (value == -1)
                 {
-                    // delete the row
+                    // Delete the row
                     UpdateIncidSourcesRow(0, IncidSourcesTable.source_idColumn.Ordinal, (Nullable<int>)null);
 
-                    // refresh source names list
+                    // Refresh source names list
                     OnPropertyChanged(nameof(Source1Names));
 
-                    // clear all fields of Source 1
+                    // Clear all fields of Source 1
                     IncidSource1Date = null;
                     IncidSource1HabitatClass = null;
                     IncidSource1HabitatType = null;
                     IncidSource1BoundaryImportance = null;
                     IncidSource1HabitatImportance = null;
                 }
+                // If the value is not null then update the source_id field and set default values
+                // for the other source 1 fields.
                 else if (value != null)
                 {
                     // Check for equivalent null value when in bulk update mode
                     bool wasNull = (_incidSourcesRows[0] == null || (int)_incidSourcesRows[0]["source_id"] == Int32.MinValue);
 
+                    // Update the source ID
                     UpdateIncidSourcesRow(0, IncidSourcesTable.source_idColumn.Ordinal, value);
+
+                    // Set the default date for the source
                     IncidSource1Date = DefaultSourceDate(IncidSource1Date, IncidSource1Id);
-                    // if row added refresh source names list
+
+                    // If row added refresh source names list
                     if (wasNull && (_incidSourcesRows[0] != null))
                         OnPropertyChanged(nameof(Source1Names));
                 }
+
                 OnPropertyChanged(nameof(IncidSource1Date));
                 OnPropertyChanged(nameof(IncidSource1HabitatClass));
                 OnPropertyChanged(nameof(IncidSource1HabitatType));
                 OnPropertyChanged(nameof(IncidSource1BoundaryImportance));
                 OnPropertyChanged(nameof(IncidSource1HabitatImportance));
                 OnPropertyChanged(nameof(IncidSource1Enabled));
+
                 // Flag that the current record has changed so that the apply button
                 // will appear.
                 Changed = true;
@@ -4096,7 +4116,7 @@ namespace HLU.UI.ViewModel
             // Disable remaining source fields when source name is blank
             get
             {
-                return (IncidSource1Id != null);
+                return (IncidSource1Id != null && IncidSource1Id != Int32.MinValue);
             }
         }
 
@@ -4338,14 +4358,19 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                // If there are no valid source rows then return null.
                 if (!CheckSources())
                     return null;
 
+                // If there are less than 3 rows in the incid_sources table then create a temporary
+                // array with 3 elements to avoid index out of range errors.
                 if (_incidSourcesRows.Length < 3)
                 {
                     HluDataSet.incid_sourcesRow[] tmpRows = new HluDataSet.incid_sourcesRow[3 - _incidSourcesRows.Length];
                     _incidSourcesRows = [.. _incidSourcesRows, .. tmpRows];
                 }
+
+                // If the source_id field is not null then return the value, otherwise return null
                 if (_incidSourcesRows[1] != null)
                     return _incidSourcesRows[1].source_id;
                 else
@@ -4353,38 +4378,48 @@ namespace HLU.UI.ViewModel
             }
             set
             {
+                // If the value is -1 then the source will be cleared (i.e. the row will be deleted)
+                // and all source 2 fields will be cleared.
                 if (value == -1)
                 {
-                    // delete the row
+                    // Delete the row
                     UpdateIncidSourcesRow(1, IncidSourcesTable.source_idColumn.Ordinal, (Nullable<int>)null);
 
-                    // refresh source names list
+                    // Refresh source names list
                     OnPropertyChanged(nameof(Source2Names));
 
-                    // clear all fields of Source 2
+                    // Clear all fields of Source 2
                     IncidSource2Date = null;
                     IncidSource2HabitatClass = null;
                     IncidSource2HabitatType = null;
                     IncidSource2BoundaryImportance = null;
                     IncidSource2HabitatImportance = null;
                 }
+                // If the value is not null then update the source_id field. If a new source is
+                // selected then set default values for the other source 2 fields.
                 else if (value != null)
                 {
                     // Check for equivalent null value when in bulk update mode
                     bool wasNull = (_incidSourcesRows[1] == null || (int)_incidSourcesRows[1]["source_id"] == Int32.MinValue);
 
+                    // Update the source ID
                     UpdateIncidSourcesRow(1, IncidSourcesTable.source_idColumn.Ordinal, value);
+
+                    // Set the default date for the source
                     IncidSource2Date = DefaultSourceDate(IncidSource2Date, IncidSource2Id);
-                    // if row added refresh source names list
+
+                    // If row added refresh source names list
                     if (wasNull && (_incidSourcesRows[1] != null))
                         OnPropertyChanged(nameof(Source2Names));
                 }
+
                 OnPropertyChanged(nameof(IncidSource2Date));
                 OnPropertyChanged(nameof(IncidSource2HabitatClass));
                 OnPropertyChanged(nameof(IncidSource2HabitatType));
                 OnPropertyChanged(nameof(IncidSource2BoundaryImportance));
                 OnPropertyChanged(nameof(IncidSource2HabitatImportance));
                 OnPropertyChanged(nameof(IncidSource2Enabled));
+
                 // Flag that the current record has changed so that the apply button
                 // will appear.
                 Changed = true;
@@ -4401,7 +4436,7 @@ namespace HLU.UI.ViewModel
             // Disable remaining source fields when source name is blank
             get
             {
-                return (IncidSource2Id != null);
+                return (IncidSource2Id != null && IncidSource2Id != Int32.MinValue);
             }
         }
 
@@ -4640,14 +4675,19 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                // If there are no valid source rows then return null.
                 if (!CheckSources())
                     return null;
 
+                // If there are less than 3 rows in the incid_sources table then create a temporary
+                // array with 3 elements to avoid index out of range errors.
                 if (_incidSourcesRows.Length < 3)
                 {
                     HluDataSet.incid_sourcesRow[] tmpRows = new HluDataSet.incid_sourcesRow[3 - _incidSourcesRows.Length];
                     _incidSourcesRows = [.. _incidSourcesRows, .. tmpRows];
                 }
+
+                // If the source_id field is not null then return the value, otherwise return null.
                 if (_incidSourcesRows[2] != null)
                     return _incidSourcesRows[2].source_id;
                 else
@@ -4655,38 +4695,48 @@ namespace HLU.UI.ViewModel
             }
             set
             {
+                // If the value is -1 then the source will be cleared (i.e. the row will be deleted)
+                // and all source 3 fields will be cleared.
                 if (value == -1)
                 {
-                    // delete the row
+                    // Delete the row
                     UpdateIncidSourcesRow(2, IncidSourcesTable.source_idColumn.Ordinal, (Nullable<int>)null);
 
-                    // refresh source names lists (all three)
+                    // Refresh source names lists (all three)
                     OnPropertyChanged(nameof(Source3Names));
 
-                    // clear all fields of Source 3
+                    // Clear all fields of Source 3
                     IncidSource3Date = null;
                     IncidSource3HabitatClass = null;
                     IncidSource3HabitatType = null;
                     IncidSource3BoundaryImportance = null;
                     IncidSource3HabitatImportance = null;
                 }
+                // If the value is not null then update the source_id field. If a new source is
+                // selected then set default values for the other source 3 fields.
                 else if (value != null)
                 {
                     // Check for equivalent null value when in bulk update mode
                     bool wasNull = (_incidSourcesRows[2] == null || (int)_incidSourcesRows[2]["source_id"] == Int32.MinValue);
 
+                    // Update the source ID
                     UpdateIncidSourcesRow(2, IncidSourcesTable.source_idColumn.Ordinal, value);
+
+                    // Set the default date for the source
                     IncidSource3Date = DefaultSourceDate(IncidSource3Date, IncidSource3Id);
-                    // if row added refresh source names lists (all three)
+
+                    // If row added refresh source names lists (all three)
                     if (wasNull && (_incidSourcesRows[2] != null))
                         OnPropertyChanged(nameof(Source3Names));
                 }
+
                 OnPropertyChanged(nameof(IncidSource3Date));
                 OnPropertyChanged(nameof(IncidSource3HabitatClass));
                 OnPropertyChanged(nameof(IncidSource3HabitatType));
                 OnPropertyChanged(nameof(IncidSource3BoundaryImportance));
                 OnPropertyChanged(nameof(IncidSource3HabitatImportance));
                 OnPropertyChanged(nameof(IncidSource3Enabled));
+
                 // Flag that the current record has changed so that the apply button
                 // will appear.
                 Changed = true;
@@ -4703,7 +4753,7 @@ namespace HLU.UI.ViewModel
             // Disable remaining source fields when source name is blank
             get
             {
-                return (IncidSource3Id != null);
+                return (IncidSource3Id != null && IncidSource3Id != Int32.MinValue);
             }
         }
 
@@ -5133,6 +5183,41 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Show or hide the History tab.
+        /// </summary>
+        /// <value>
+        /// The visibility of the History tab.
+        /// </value>
+        public Visibility HistoryTabVisibility
+        {
+            get
+            {
+                if ((bool)_showHistoryTab)
+                    return Visibility.Visible;
+                else
+                    return Visibility.Collapsed;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value indicating whether the History tab should be shown. Setting
+        /// this property will also trigger a property changed notification for the
+        /// HistoryTabVisibility property.
+        /// </summary>
+        public bool ShowHistoryTab
+        {
+            get
+            {
+                return _showHistoryTab;
+            }
+            set
+            {
+                _showHistoryTab = value;
+                OnPropertyChanged(nameof(HistoryTabVisibility));
+            }
+        }
+
         #endregion Properties - History Label/Header
 
         #region Properties - Site Info
@@ -5259,7 +5344,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return IsNotBulkMode && IsNotOsmmReviewMode && BapHabitatsAutoEnabled;
+                //return IsNotBulkMode && IsNotOsmmReviewMode && BapHabitatsAutoEnabled;
+                return IsNotOsmmReviewMode && BapHabitatsAutoEnabled;
             }
         }
 
@@ -5288,7 +5374,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return IsNotBulkMode && IsNotOsmmReviewMode && BapHabitatsUserEnabled;
+                //return IsNotBulkMode && IsNotOsmmReviewMode && BapHabitatsUserEnabled;
+                return IsNotOsmmReviewMode && BapHabitatsUserEnabled;
             }
         }
 
@@ -5369,6 +5456,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                // Allow export when not in bulk mode or OSMM bulk update mode with a selection.
                 return IsNotBulkMode && IsNotOsmmReviewMode && _hluDS != null;
             }
         }
@@ -5388,7 +5476,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Enable filter when in OSMM bulk update mode
+                // Enable filter when not in bulk update mode.
                 return (IsNotBulkMode || (IsBulkMode && IsOsmmBulkMode))
                 && IncidCurrentRow != null;
             }
@@ -5669,11 +5757,17 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Must be in a mode that allows edits and ready for edit operations (includes CanEdit + Reason/Process selection).
-                if (!IsEditOperationModeReady)
-                    return false;
+                // In bulk update mode: allow update if there is a selection
+                // and there are no errors.
+                if ((BulkUpdateMode) &&
+                    (Changed == true))
+                    return (_incidSelection != null) &&
+                        String.IsNullOrEmpty(this.Error);
 
-                return (Changed == true) &&
+                // In normal mode: must be fully edit-ready (includes CanEdit
+                // + Reason/Process selection), have pending changes, and no errors.
+                return IsEditOperationModeReady &&
+                    (Changed == true) &&
                     String.IsNullOrEmpty(this.Error);
             }
         }
@@ -6222,16 +6316,10 @@ namespace HLU.UI.ViewModel
             }
             set
             {
-                // If to be set on add the OSMM Bulk flag and also the bulk flag because OSMM bulk implies bulk.
-                if (value)
-                {
-                    SetWorkModeFlag(WorkMode.OSMMBulk, value);
-                    SetWorkModeFlag(WorkMode.Bulk, value);
-                    return;
-                }
-
-                // Otherwise clear the OSMM Bulk flag (but leave the Bulk flag to be cleared directly).
-                SetWorkModeFlag(WorkMode.OSMMBulk, value);
+                // OSMMBulk always implies Bulk, so both flags are always set or
+                // cleared together as a single atomic operation to avoid a double
+                // refresh cycle.
+                SetWorkModeFlags(value, WorkMode.OSMMBulk, WorkMode.Bulk);
             }
         }
 
@@ -6873,10 +6961,10 @@ namespace HLU.UI.ViewModel
         /// state, such as a wait or arrow cursor.</param>
         /// <param name="processingMessage">The message to display to the user while processing is in progress. This message provides feedback about the
         /// current operation.</param>
-        public void ChangeCursor(Cursor cursorType, string processingMessage)
+        public void ChangeCursor(Cursor cursorType, string processingMessage = null)
         {
             // Set the process status
-            ProcessStatus = processingMessage;
+            ProcessStatus = string.IsNullOrEmpty(processingMessage) ? null : processingMessage;
 
             // Set the window cursor
             WindowCursor = cursorType;
@@ -6895,8 +6983,9 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public void ClearForm()
         {
-            // Disable the History tab
-            TabItemHistoryEnabled = false;
+            // Hide the IHS and History tabs
+            ShowHistoryTab = false;
+            ShowIHSTab = false;
 
             // Clear the habitat fields
             _incidIhsHabitat = null;
@@ -6904,10 +6993,13 @@ namespace HLU.UI.ViewModel
             _incidNVCCodes = null;
             //_incidSecondarySummary = null;
 
-            // Clear the input habitat class and type (the class will be reset
-            // to the default class later).
-            HabitatClass = null;
-            //HabitatType = null;
+            // In bulk update mode set the default habitat class immediately so that
+            // HabitatTypeCodes is populated when RefreshHabitatTab() fires.
+            // In normal mode the class is reset via the HabitatClass getter.
+            if (BulkUpdateMode)
+                HabitatClass = _defaultHabitatClass;
+            else
+                HabitatClass = null;
 
             // Get a new incid row.
             IncidCurrentRow = HluDataset.incid.NewincidRow();
@@ -6972,6 +7064,26 @@ namespace HLU.UI.ViewModel
             _incidOSMMUpdatesSpatialFlag = null;
             _incidOSMMUpdatesChangeFlag = null;
             _incidOSMMUpdatesStatus = null;
+
+            // Reset the original row counts and backing arrays so that the
+            // dirty checks compare against the cleared state rather than the
+            // previous record's data, preventing a false IsDirty on the next
+            // navigation.
+            _origIncidConditionCount = IncidConditionRows.Length;
+            _origIncidSourcesCount = 0;
+            _origIncidIhsMatrixCount = 0;
+            _origIncidIhsFormationCount = 0;
+            _origIncidIhsManagementCount = 0;
+            _origIncidIhsComplexCount = 0;
+
+            // Reset the last modified date so the cleared form does not show
+            // the previous record's value.
+            _incidLastModifiedDate = DateTime.MinValue;
+
+            // Reset area/length to the sentinel value so GetIncidMeasures()
+            // won't recalculate and so the getters return null (blank).
+            _incidArea = -1;
+            _incidLength = -1;
         }
 
         #endregion UI State
@@ -7070,7 +7182,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(HideInBulkUpdateMode));
 
             OnPropertyChanged(nameof(TopControlsGroupHeader));
-            OnPropertyChanged(nameof(TabItemHistoryEnabled));
+            OnPropertyChanged(nameof(HistoryTabVisibility));
 
             OnPropertyChanged(nameof(SelectedIncidsInDBCount));
             OnPropertyChanged(nameof(SelectedFragsInDBCount));
@@ -7169,7 +7281,8 @@ namespace HLU.UI.ViewModel
             }
             else
             {
-                ClearMessage();
+                // Clear any existing GIS error messages
+                ClearMessage(category: MessageCategory.GIS, level: MessageType.Error);
             }
         }
 
@@ -7257,17 +7370,15 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(TabItemHabitatEnabled));
             OnPropertyChanged(nameof(TabHabitatControlsEnabled));
             OnPropertyChanged(nameof(HabitatTabLabel));
-            //OnPropertyChanged(nameof(HabitatClassCodes));
+            OnPropertyChanged(nameof(HabitatClass));
             OnPropertyChanged(nameof(HabitatTypeCodes));
             OnPropertyChanged(nameof(HabitatType));
             OnPropertyChanged(nameof(HabitatSecondariesMandatory));
             OnPropertyChanged(nameof(HabitatSecondariesSuggested));
             OnPropertyChanged(nameof(HabitatTips));
-            OnPropertyChanged(nameof(HabitatClass));
             OnPropertyChanged(nameof(IncidPrimary));
             OnPropertyChanged(nameof(NvcCodes));
             OnPropertyChanged(nameof(IncidSecondaryHabitats));
-            //OnPropertyChanged(nameof(HabitatSecondariesMandatory)); //TODO: Needed twice?
             OnPropertyChanged(nameof(IncidSecondarySummary));
             OnPropertyChanged(nameof(LegacyHabitatCodes));
             OnPropertyChanged(nameof(IncidLegacyHabitat));
@@ -7282,7 +7393,7 @@ namespace HLU.UI.ViewModel
         /// updates multiplexed values as needed.</remarks>
         private void RefreshIHSTab()
         {
-            OnPropertyChanged(nameof(ShowIHSTab));
+            OnPropertyChanged(nameof(IHSTabVisibility));
             OnPropertyChanged(nameof(TabItemIHSEnabled));
             OnPropertyChanged(nameof(TabIhsControlsEnabled));
             OnPropertyChanged(nameof(IHSTabLabel));
@@ -7442,7 +7553,7 @@ namespace HLU.UI.ViewModel
         /// history tab are updated to reflect the current state of the underlying data.</remarks>
         private void RefreshHistory()
         {
-            OnPropertyChanged(nameof(TabItemHistoryEnabled));
+            OnPropertyChanged(nameof(HistoryTabVisibility));
             OnPropertyChanged(nameof(IncidHistory));
         }
 
@@ -7574,7 +7685,8 @@ namespace HLU.UI.ViewModel
             // Move to the first record.
             await MoveIncidCurrentRowIndexAsync(value);
 
-            ChangeCursor(Cursors.Arrow, null);
+            // Reset the cursor back to normal.
+            ChangeCursor(Cursors.Arrow);
 
             // Check if the GIS and database are in sync.
             CheckInSync("Selection", "Map");
@@ -7638,7 +7750,7 @@ namespace HLU.UI.ViewModel
                     if (_selectedIncidsInGISCount <= 0)
                     {
                         // Reset the cursor back to normal
-                        ChangeCursor(Cursors.Arrow, null);
+                        ChangeCursor(Cursors.Arrow);
 
                         return;
                     }
@@ -7651,7 +7763,7 @@ namespace HLU.UI.ViewModel
                     RefreshStatus();
 
                     // Reset the cursor back to normal
-                    ChangeCursor(Cursors.Arrow, null);
+                    ChangeCursor(Cursors.Arrow);
                 }
                 else
                 {
@@ -7735,7 +7847,8 @@ namespace HLU.UI.ViewModel
             // Refresh all the status type fields.
             RefreshStatus();
 
-            ChangeCursor(Cursors.Arrow, null);
+            // Reset the cursor back to normal.
+            ChangeCursor(Cursors.Arrow);
 
             // If there are no features for the current incid
             // selected in GIS then cancel the update.
@@ -7784,8 +7897,8 @@ namespace HLU.UI.ViewModel
                         // it was.
                         if (_updateCancelled == true)
                         {
-                            // Reset the status message and the cursor.
-                            ChangeCursor(Cursors.Arrow, null);
+                            // Reset the cursor back to normal.
+                            ChangeCursor(Cursors.Arrow);
                             return;
                         }
 
@@ -7976,7 +8089,9 @@ namespace HLU.UI.ViewModel
             {
                 _updateCancelled = true;
             }
-            ChangeCursor(Cursors.Arrow, null);
+
+            // Reset the cursor back to normal.
+            ChangeCursor(Cursors.Arrow);
         }
 
         #endregion Update Handler
@@ -7988,18 +8103,9 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public void StartBulkUpdate()
         {
-            _saving = false;
-            _viewModelBulkUpdate ??= new ViewModelWindowMainBulkUpdate(this, _addInSettings);
+            ChangeCursor(Cursors.Wait, "Starting bulk update mode ...");
 
-            //TODO: Needed?
-            //// If already in bulk update mode then perform the bulk update
-            //// (only possible when this method was called after the 'Apply'
-            //// button was clicked.
-            //if (IsBulkMode)
-            //{
-            //    _viewModelBulkUpdate.ShowBulkUpdateWindow();
-            //}
-            //else
+            _saving = false;
 
             // Check there are no outstanding edits.
             _readingMap = false;
@@ -8019,7 +8125,11 @@ namespace HLU.UI.ViewModel
             }
 
             // Start the standard bulk update process.
+            _viewModelBulkUpdate ??= new ViewModelWindowMainBulkUpdate(this, _addInSettings);
             _viewModelBulkUpdate.StartStandardBulkUpdate();
+
+            // Reset the cursor back to normal.
+            ChangeCursor(Cursors.Arrow);
         }
 
         /// <summary>
@@ -8036,59 +8146,15 @@ namespace HLU.UI.ViewModel
                 _viewModelBulkUpdate.ShowBulkUpdateWindow();
         }
 
-        /// <summary>
-        /// Cancel the bulk update.
-        /// </summary>
-        /// <param name="param">The parameter passed to the command.</param>
-        private async void CancelBulkUpdateClicked(object param)
-        {
-            if (_viewModelBulkUpdate != null)
-            {
-                // If the Cancel button has been clicked then we need
-                // to work out which mode was active and cancel the
-                // right one
-                if (IsOsmmBulkMode)
-                    await _viewModelBulkUpdate.CancelOSMMBulkUpdateAsync();
-                else
-                    // Cancels the bulk update mode
-                    await _viewModelBulkUpdate.CancelBulkUpdateAsync();
-
-                // Refreshes the status-related properties and notifies listeners of property changes.
-                RefreshStatus();
-
-                // Reset to normal Edit mode (clears flags and updates button)
-                SetWorkMode(WorkMode.Edit);
-            }
-        }
-
         #endregion Bulk Update Handler
 
         #region OSMM Update Handler
 
         /// <summary>
-        /// Start or cancel the OSMM Update mode (as appropriate).
-        /// </summary>
-        /// <param name="param">The parameter passed to the command.</param>
-        private void OSMMUpdateCommandMenuClicked(object param)
-        {
-            // If already in OSMM update mode
-            if (IsOsmmReviewMode)
-            {
-                // Cancel the OSMM update mode
-                CancelOSMMUpdateClicked(param);
-            }
-            else
-            {
-                // Start the OSMM update mode
-                OSMMUpdateClicked(param);
-            }
-        }
-
-        /// <summary>
         /// Start the OSMM Update mode.
         /// </summary>
         /// <param name="param">The parameter passed to the command.</param>
-        private void OSMMUpdateClicked(object param)
+        private void StartOSMMUpdateClicked(object param)
         {
             // Can't start OSMM Update mode if the bulk OSMM source hasn't been set.
             if (_addInSettings.BulkOSMMSourceId == null)
@@ -8122,6 +8188,8 @@ namespace HLU.UI.ViewModel
                         return;
                 }
 
+                ChangeCursor(Cursors.Wait, "Starting OSMM update mode ...");
+
                 // Prevent OSMM updates being actioned too quickly.
                 _osmmUpdating = false;
 
@@ -8142,29 +8210,10 @@ namespace HLU.UI.ViewModel
 
                 // Start the OSMM update mode
                 _viewModelOSMMUpdate.StartOSMMUpdate();
+
+                // Reset the cursor back to normal.
+                ChangeCursor(Cursors.Arrow);
             }
-        }
-
-        /// <summary>
-        /// Cancel the OSMM Update mode.
-        /// </summary>
-        /// <param name="param">The parameter passed to the command.</param>
-        private async void CancelOSMMUpdateClicked(object param)
-        {
-            if (_viewModelOSMMUpdate != null)
-            {
-                _osmmUpdatesEmpty = false;
-
-                await _viewModelOSMMUpdate.CancelOSMMUpdateAsync();
-
-                _viewModelOSMMUpdate = null;
-
-                // Prevent OSMM updates being actioned too quickly.
-                _osmmUpdating = false;
-            }
-
-            // Reset to normal Edit mode (clears flags and updates button)
-            SetWorkMode(WorkMode.Edit);
         }
 
         /// <summary>
@@ -8214,7 +8263,7 @@ namespace HLU.UI.ViewModel
                 RefreshStatus();
 
                 // Reset the cursor back to normal.
-                ChangeCursor(Cursors.Arrow, null);
+                ChangeCursor(Cursors.Arrow);
 
                 // Check if the GIS and database are in sync.
                 CheckInSync("Selection", "Map");
@@ -8255,7 +8304,7 @@ namespace HLU.UI.ViewModel
                     RefreshStatus();
 
                     // Reset the cursor back to normal.
-                    ChangeCursor(Cursors.Arrow, null);
+                    ChangeCursor(Cursors.Arrow);
                 }
                 else
                 {
@@ -8310,7 +8359,7 @@ namespace HLU.UI.ViewModel
                     RefreshStatus();
 
                     // Reset the cursor back to normal.
-                    ChangeCursor(Cursors.Arrow, null);
+                    ChangeCursor(Cursors.Arrow);
                 }
                 else
                 {
@@ -8402,21 +8451,6 @@ namespace HLU.UI.ViewModel
         #region OSMM Bulk Update Handlers
 
         /// <summary>
-        /// Start or cancel the OSMM Bulk Update mode (as appropriate).
-        /// </summary>
-        /// <param name="param">The parameter passed to the command.</param>
-        private void OSMMBulkUpdateCommandMenuClicked(object param)
-        {
-            // If already in OSMM Bulk update mode
-            if (IsOsmmBulkMode)
-                // Cancel the OSMM Bulk update mode
-                CancelOSMMBulkUpdateClicked(param);
-            else
-                // Start the OSMM Bulk update mode
-                StartOSMMBulkUpdateClicked(param);
-        }
-
-        /// <summary>
         /// Start the OSMM Bulk Update mode.
         /// </summary>
         /// <param name="param">The parameter passed to the command.</param>
@@ -8435,7 +8469,6 @@ namespace HLU.UI.ViewModel
                 switch (userResponse)
                 {
                     case MessageBoxResult.Yes:
-                        //if (!_viewModelUpd.Update()) return;
                         break;
                     case MessageBoxResult.No:
                         break;
@@ -8443,25 +8476,14 @@ namespace HLU.UI.ViewModel
                         return;
                 }
 
+                ChangeCursor(Cursors.Wait, "Starting bulk OSMM update mode ...");
+
                 // Start the OSMM update mode
                 _viewModelBulkUpdate.StartOSMMBulkUpdate();
-            }
-        }
 
-        /// <summary>
-        /// Cancel the OSMM Bulk Update mode.
-        /// </summary>
-        /// <param name="param">The parameter passed to the command.</param>
-        private async void CancelOSMMBulkUpdateClicked(object param)
-        {
-            if (_viewModelBulkUpdate != null)
-            {
-                await _viewModelBulkUpdate.CancelOSMMBulkUpdateAsync();
-                _viewModelBulkUpdate = null;
+                // Reset the cursor back to normal.
+                ChangeCursor(Cursors.Arrow);
             }
-
-            // Reset to normal Edit mode (clears flags and updates button)
-            SetWorkMode(WorkMode.Edit);
         }
 
         #endregion OSMM Bulk Update Handlers
@@ -8727,7 +8749,7 @@ namespace HLU.UI.ViewModel
                         await SetFilterAsync();
 
                         // Reset the cursor back to normal.
-                        ChangeCursor(Cursors.Arrow, null);
+                        ChangeCursor(Cursors.Arrow);
 
                         // Check if the GIS and database are in sync.
                         CheckInSync("Selection", "Expected", "Not all expected");
@@ -8749,7 +8771,7 @@ namespace HLU.UI.ViewModel
                         await SetFilterAsync();
 
                         // Reset the cursor back to normal.
-                        ChangeCursor(Cursors.Arrow, null);
+                        ChangeCursor(Cursors.Arrow);
 
                         // Warn the user that no records were found.
                         ShowInfo("No map features found in active layer.", MessageCategory.GIS);
@@ -8770,7 +8792,7 @@ namespace HLU.UI.ViewModel
                     await SetFilterAsync();
 
                     // Reset the cursor back to normal
-                    ChangeCursor(Cursors.Arrow, null);
+                    ChangeCursor(Cursors.Arrow);
 
                     // Warn the user that no records were found
                     ShowInfo("No records found in database.", MessageCategory.Database);
@@ -8779,7 +8801,9 @@ namespace HLU.UI.ViewModel
             catch (Exception ex)
             {
                 _incidSelection = null;
-                ChangeCursor(Cursors.Arrow, null);
+
+                // Reset the cursor back to normal.
+                ChangeCursor(Cursors.Arrow);
 
                 // Show error message
                 ShowError(ex.Message, MessageCategory.Filter);
@@ -8852,7 +8876,9 @@ namespace HLU.UI.ViewModel
             {
                 _incidSelectionWhereClause = null;
                 _incidSelection = null;
-                ChangeCursor(Cursors.Arrow, null);
+
+                // Reset the cursor back to normal.
+                ChangeCursor(Cursors.Arrow);
             }
         }
 
@@ -9186,7 +9212,7 @@ namespace HLU.UI.ViewModel
                             RefreshAll();
 
                             // Reset the cursor back to normal.
-                            ChangeCursor(Cursors.Arrow, null);
+                            ChangeCursor(Cursors.Arrow);
                         }
                         else
                         {
@@ -9219,7 +9245,7 @@ namespace HLU.UI.ViewModel
                             }
 
                             // Reset the cursor back to normal.
-                            ChangeCursor(Cursors.Arrow, null);
+                            ChangeCursor(Cursors.Arrow);
 
                             // Warn the user that no records were found.
                             ShowInfo("No map features found in active layer.", MessageCategory.GIS);
@@ -9260,7 +9286,7 @@ namespace HLU.UI.ViewModel
                         }
 
                         // Reset the cursor back to normal.
-                        ChangeCursor(Cursors.Arrow, null);
+                        ChangeCursor(Cursors.Arrow);
 
                         // Warn the user that no records were found.
                         ShowInfo("No records found in database.", MessageCategory.Database);
@@ -9270,7 +9296,9 @@ namespace HLU.UI.ViewModel
             catch (Exception ex)
             {
                 _incidSelection = null;
-                ChangeCursor(Cursors.Arrow, null);
+
+                // Reset the cursor back to normal.
+                ChangeCursor(Cursors.Arrow);
 
                 // Show error message
                 ShowError(ex.Message, MessageCategory.Filter);
@@ -9478,7 +9506,8 @@ namespace HLU.UI.ViewModel
             }
             catch (Exception ex)
             {
-                ChangeCursor(Cursors.Arrow, null);
+                // Reset the cursor back to normal.
+                ChangeCursor(Cursors.Arrow);
 
                 // Show error message
                 ShowError(ex.Message, MessageCategory.Update);
