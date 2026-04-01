@@ -223,6 +223,11 @@ namespace HLU.UI.ViewModel
                     throw new HLUToolException($"Failed to update GIS layer. {details}");
                 }
 
+                // Save edits to clear the pending edit state
+                bool saved = await ArcGIS.Desktop.Core.Project.Current.SaveEditsAsync();
+                if (!saved)
+                    throw new HLUToolException("GIS edits were applied but could not be saved.");
+
                 // Commit the transation and accept the changes
                 _viewModelMain.DataBase.CommitTransaction();
                 _viewModelMain.HluDataset.AcceptChanges();
@@ -267,7 +272,9 @@ namespace HLU.UI.ViewModel
             {
                 _viewModelMain.SavingAttempted = true;
                 _viewModelMain.Saving = false;
-                _viewModelMain.ChangeCursor(Cursors.Arrow, null);
+
+                // Reset the cursor back to normal.
+                _viewModelMain.ChangeCursor(Cursors.Arrow);
             }
         }
 

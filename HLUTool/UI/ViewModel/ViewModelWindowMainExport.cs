@@ -115,90 +115,105 @@ namespace HLU.UI.ViewModel
         #region Initiate Export
 
         /// <summary>
-        /// Displays the export dialog, allowing the user to select and initiate an export operation based on available
-        /// export formats.
+        /// Subscribes to the export window request-close event and shows the window allowing the
+        /// user to select and initiate an export operation based on available export formats.
         /// </summary>
-        /// <remarks>If no export formats with defined export fields are available, the method displays a
-        /// message and does not proceed with the export dialog. The method is asynchronous but returns void, so
-        /// exceptions may not be observed by callers. This method is intended to be called from the UI
-        /// thread.</remarks>
+        /// <remarks>
+        /// If no export formats with defined export fields are available, the method displays a
+        /// message and does not proceed with the export dialog. The method is asynchronous but
+        /// returns void, so exceptions may not be observed by callers. This method is intended to
+        /// be called from the UI thread.
+        /// </remarks>
         public async void InitiateExport()
         {
             // Create the export window.
             _windowExport = new WindowExport
             {
-                // Set ArcGIS Pro as the parent
                 Owner = FrameworkApplication.Current.MainWindow,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Topmost = true
             };
 
-            // Fill all export formats if there are any export fields
-            // defined for the export format.
+            // Fill all export formats that have at least one export field defined.
             _viewModelMain.HluTableAdapterManager.exportsTableAdapter.ClearBeforeFill = true;
-            _viewModelMain.HluTableAdapterManager.exportsTableAdapter.Fill(_viewModelMain.HluDataset.exports,
-                String.Format("EXISTS (SELECT {0}.{1} FROM {0} WHERE {0}.{1} = {2}.{3})",
-                _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.exports_fields.TableName),
-                _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.exports_fields.export_idColumn.ColumnName),
-                _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.exports.TableName),
-                _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.exports.export_idColumn.ColumnName)));
+            _viewModelMain.HluTableAdapterManager.exportsTableAdapter.Fill(
+                _viewModelMain.HluDataset.exports,
+                String.Format(
+                    "EXISTS (SELECT {0}.{1} FROM {0} WHERE {0}.{1} = {2}.{3})",
+                    _viewModelMain.DataBase.QuoteIdentifier(
+                        _viewModelMain.HluDataset.exports_fields.TableName),
+                    _viewModelMain.DataBase.QuoteIdentifier(
+                        _viewModelMain.HluDataset.exports_fields.export_idColumn.ColumnName),
+                    _viewModelMain.DataBase.QuoteIdentifier(
+                        _viewModelMain.HluDataset.exports.TableName),
+                    _viewModelMain.DataBase.QuoteIdentifier(
+                        _viewModelMain.HluDataset.exports.export_idColumn.ColumnName)));
 
-            // If there are no exports formats defined that have any
-            // export fields then exit.
+            // If there are no export formats defined, exit.
             if (_viewModelMain.HluDataset.exports.Count == 0)
             {
-                MessageBox.Show("Cannot export: There are no export formats defined.",
-                    "HLU: Export", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                MessageBox.Show(
+                    "Cannot export: There are no export formats defined.",
+                    "HLU: Export",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Exclamation);
                 return;
             }
 
-            // Display the export interface to prompt the user
-            // to select which export format they want to use.
+            // Count features for the dialog display.
             int fragCount = await _viewModelMain.GISApplication.CountMapSelectionAsync();
             long totalCount = await _viewModelMain.GISApplication.CountMapFeaturesAsync();
 
-            //_viewModelExport = new ViewModelExport(_viewModelMain.GisSelection == null ? 0 :
-            //_viewModelMain.GisSelection.Rows.Count, _viewModelMain.GISApplication.HluLayerName,
-            //_viewModelMain.GISApplication.ApplicationType, _viewModelMain.HluDataset.exports);
-            _viewModelExport = new(_viewModelMain.GisSelection == null ? 0 :
-                fragCount, totalCount, _viewModelMain.GISApplication.HluLayerName,
+            _viewModelExport = new(
+                _viewModelMain.GisSelection == null ? 0 : fragCount,
+                totalCount,
+                _viewModelMain.GISApplication.HluLayerName,
                 _viewModelMain.HluDataset.exports)
             {
                 DisplayName = "Export"
             };
 
-            // Subscribe to the export window request close event.
-            _viewModelExport.RequestClose -= ViewModelExport_RequestClose; // Safety: avoid double subscription.
-            _viewModelExport.RequestClose += new ViewModelWindowExport.RequestCloseEventHandler(ViewModelExport_RequestClose);
+            // Subscribe to the request-close event (guard against double subscription).
+            _viewModelExport.RequestClose -= ViewModelExport_RequestClose;
+            _viewModelExport.RequestClose +=
+                new ViewModelWindowExport.RequestCloseEventHandler(
+                    ViewModelExport_RequestClose);
 
-            // Set the data context for the export window.
             _windowExport.DataContext = _viewModelExport;
-
-            // Show the export window.
             _windowExport.ShowDialog();
         }
 
-        #endregion Initiate Export
-
-        #region Export Request Close
-
         /// <summary>
-        /// Handles the RequestClose event of the _viewModelExport control.
+        /// Handles the RequestClose event of the export view model.
+        /// Closes the export window and, if the user confirmed, starts the export.
         /// </summary>
-        /// <param name="exportID">The ID of the selected export format.</param>
-        /// <param name="selectedOnly">Indicates whether only selected features should be exported.</param>
-        private async void ViewModelExport_RequestClose(int exportID, bool selectedOnly)
+        /// <param name="exportID">The ID of the selected export format, or -1 if cancelled.</param>
+        /// <param name="selectedOnly">
+        /// Indicates whether only selected features should be exported.
+        /// </param>
+        /// <param name="outputType">The GIS output format chosen by the user.</param>
+        private async void ViewModelExport_RequestClose(
+            int exportID,
+            bool selectedOnly,
+            ViewModelWindowExport.ExportOutputType outputType)
         {
             _viewModelExport.RequestClose -= ViewModelExport_RequestClose;
             _windowExport.Close();
 
+            // Get the default export path.
             string exportPath = Settings.Default.ExportPath;
 
-            // If the user selected an export format then
-            // perform the export using that format.
+            // If not cancelled, proceed with the export using the selected format and options.
             if (exportID != -1)
             {
-                await ProcessExportAsync(exportID, exportPath, selectedOnly);
+                await ProcessExportAsync(exportID, exportPath, selectedOnly, outputType);
+            }
+            else
+            {
+                // Show info message
+                _viewModelMain.ShowInfo(
+                    "Export cancelled by user.",
+                    MessageCategory.Export);
             }
         }
 
@@ -212,22 +227,57 @@ namespace HLU.UI.ViewModel
         /// <param name="userExportId">The export format selected by the user.</param>
         /// <param name="exportPath">The path to export the data to.</param>
         /// <param name="selectedOnly">If set to <c>true</c> export only selected incids/features.</param>
+        /// <param name="outputType">The GIS output format (shapefile or file geodatabase).</param>
         /// <returns>A task that represents the asynchronous export operation.</returns>
-        private async Task ProcessExportAsync(int userExportId, string exportPath, bool selectedOnly)
+        private async Task ProcessExportAsync(
+            int userExportId,
+            string exportPath,
+            bool selectedOnly,
+            ViewModelWindowExport.ExportOutputType outputType)
         {
+            bool exportSuccess = false;
+
             // Check parameters.
             if (userExportId == -1)
             {
-                MessageBox.Show("No export format was selected.",
-                    "HLU: Export", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                MessageBox.Show(
+                    "No export format was selected.",
+                    "HLU: Export",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Exclamation);
                 return;
             }
 
             if (string.IsNullOrEmpty(exportPath) || !Directory.Exists(exportPath))
             {
-                MessageBox.Show("The export path is not valid.",
-                    "HLU: Export", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                MessageBox.Show(
+                    "The export path is not valid.",
+                    "HLU: Export",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Exclamation);
                 return;
+            }
+
+            // If exporting only selected features, always synchronise the internal
+            // selection cache with the live GIS selection. The user may have selected
+            // features directly in GIS without clicking 'Get Map Selection', leaving
+            // _gisSelection stale, null, or pointing to a different set of features.
+            if (selectedOnly)
+            {
+                await _viewModelMain.GetMapSelectionAsync(false);
+
+                // Abort if the sync produced no usable selection.
+                if (_viewModelMain.GisSelection == null ||
+                    _viewModelMain.GisSelection.Rows.Count == 0)
+                {
+                    MessageBox.Show(
+                        "No features are selected in the active GIS layer.\n\n" +
+                        "Please select the features you want to export and try again.",
+                        "HLU: Export",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Exclamation);
+                    return;
+                }
             }
 
             // Get the working file geodatabase path (created at initialization)
@@ -236,22 +286,39 @@ namespace HLU.UI.ViewModel
             // Check the path to the working file geodatabase
             if (string.IsNullOrEmpty(workingFileGDBpath))
             {
-                MessageBox.Show("Working geodatabase is not available. Please restart the tool.",
-                    "HLU: Export", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(
+                    "Working geodatabase is not available. Please restart the tool.",
+                    "HLU: Export",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
                 return;
             }
 
-            // Prompt user for export details.
+            // Prompt the user for the output location and feature class name,
+            // passing the format they already chose in the Export window so the
+            // correct dialog is shown immediately.
             var exportDetails = await _viewModelMain.GISApplication.ExportPromptAsync(
-                exportPath);
+                exportPath,
+                outputType == ViewModelWindowExport.ExportOutputType.FileGeodatabase);
 
             // If the user didn't provide export details then exit.
             if (exportDetails == default)
+            {
+                // Show info message
+                _viewModelMain.ShowInfo(
+                    "Export cancelled by user.",
+                    MessageCategory.Export);
+
                 return;
+            }
 
             // Extract the export details.
             string exportWorkspace = exportDetails.outputWorkspace;
             string exportFeatureClassName = exportDetails.outputFeatureClassName;
+
+            // Discard any pending edits left by geoprocessing tools to release
+            // geodatabase schema locks before creating new tables.
+            await ArcGIS.Desktop.Core.Project.Current.DiscardEditsAsync();
 
             // Clean up all tables and feature classes before starting
             await ArcGISProHelpers.CleanupGeodatabaseAsync(workingFileGDBpath);
@@ -266,24 +333,35 @@ namespace HLU.UI.ViewModel
                 // Create a new unique table name to export to.
                 string tableAlias = GetTableAlias();
                 if (tableAlias == null)
-                    throw new Exception("Failed to find a table alias that does not match a table name in the HLU dataset");
+                    throw new Exception(
+                        "Failed to find a table alias that does not match a table name in the HLU dataset");
 
                 // Retrieve the export fields for the export format selected by the user from the database.
                 _viewModelMain.HluTableAdapterManager.exports_fieldsTableAdapter.ClearBeforeFill = true;
                 _viewModelMain.HluTableAdapterManager.exports_fieldsTableAdapter.Fill(
-                    _viewModelMain.HluDataset.exports_fields, String.Format("{0} = {1} ORDER BY {2}, {3}",
-                    _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.exports_fields.export_idColumn.ColumnName),
+                    _viewModelMain.HluDataset.exports_fields,
+                    String.Format("{0} = {1} ORDER BY {2}, {3}",
+                        _viewModelMain.DataBase.QuoteIdentifier(
+                            _viewModelMain.HluDataset.exports_fields.export_idColumn.ColumnName),
                     userExportId,
-                    _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.exports_fields.table_nameColumn.ColumnName),
-                    _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.exports_fields.field_ordinalColumn.ColumnName)));
+                        _viewModelMain.DataBase.QuoteIdentifier(
+                            _viewModelMain.HluDataset.exports_fields.table_nameColumn.ColumnName),
+                        _viewModelMain.DataBase.QuoteIdentifier(
+                            _viewModelMain.HluDataset.exports_fields.field_ordinalColumn.ColumnName)));
 
                 // Exit if there are no export fields for this format.
                 if (_viewModelMain.HluDataset.exports_fields.Count == 0)
-                    throw new Exception($"No export fields are defined for format '{_viewModelMain.HluDataset.exports.FindByexport_id(userExportId).export_name}'");
+                    throw new Exception(
+                        $"No export fields are defined for format " +
+                        $"'{_viewModelMain.HluDataset.exports.FindByexport_id(userExportId).export_name}'");
 
                 // Exit if there is no incid field for this format.
-                if (!_viewModelMain.HluDataset.exports_fields.Any(f => f.column_name == _viewModelMain.IncidTable.incidColumn.ColumnName))
-                    throw new Exception($"The export format '{_viewModelMain.HluDataset.exports.FindByexport_id(userExportId).export_name}' does not contain the column 'incid'");
+                if (!_viewModelMain.HluDataset.exports_fields.Any(
+                    f => f.column_name == _viewModelMain.IncidTable.incidColumn.ColumnName))
+                    throw new Exception(
+                        $"The export format " +
+                        $"'{_viewModelMain.HluDataset.exports.FindByexport_id(userExportId).export_name}' " +
+                        $"does not contain the column 'incid'");
 
                 // Build a new export data table and determine field mappings.
                 DataTable attributeTable;
@@ -305,20 +383,25 @@ namespace HLU.UI.ViewModel
                 string layerName = _viewModelMain.GISApplication.HluLayerName;
 
                 // Get the field names for the GIS layer to check for any naming conflicts with the export table name alias and to help determine field mappings.
-                List<string> gisFieldNames = await _viewModelMain.GISApplication.GetFCFieldNamesAsync(layerName);
+                List<string> gisFieldNames =
+                    await _viewModelMain.GISApplication.GetFCFieldNamesAsync(layerName);
 
                 // Get the fields for the GIS layer to help determine field mappings and to calculate the total
                 // length of the attributes in the export for setting appropriate field lengths in the export table.
-                IReadOnlyList<Field> gisFields = await _viewModelMain.GISApplication.GetFCFieldsAsync(layerName);
+                IReadOnlyList<Field> gisFields =
+                    await _viewModelMain.GISApplication.GetFCFieldsAsync(layerName);
 
                 // Construct the export table structure and field mappings based on the export fields defined for this export format.
-                ExportJoins(tableAlias, gisFieldNames, gisFields, ref exportFields, out attributeTable,
-                    out fieldMapTemplate, out targetList, out fromClause, out sortOrdinals, out conditionOrdinals,
-                    out matrixOrdinals, out formationOrdinals, out managementOrdinals, out complexOrdinals,
-                    out bapOrdinals, out sourceOrdinals, out tableAliases);
+                ExportJoins(tableAlias, gisFieldNames, gisFields, ref exportFields,
+                    out attributeTable, out fieldMapTemplate, out targetList,
+                    out fromClause, out sortOrdinals, out conditionOrdinals,
+                    out matrixOrdinals, out formationOrdinals, out managementOrdinals,
+                    out complexOrdinals, out bapOrdinals, out sourceOrdinals,
+                    out tableAliases);
 
                 // Check if output is a shapefile (based on file extension)
-                bool isShapefile = exportFeatureClassName.EndsWith(".shp", StringComparison.OrdinalIgnoreCase);
+                bool isShapefile = exportFeatureClassName.EndsWith(
+                    ".shp", StringComparison.OrdinalIgnoreCase);
 
                 if (isShapefile)
                 {
@@ -329,7 +412,8 @@ namespace HLU.UI.ViewModel
                     if (_attributesLength > 4000)
                     {
                         MessageBoxResult result = MessageBox.Show(
-                            $"Warning: The total attribute length ({_attributesLength} bytes) exceeds the recommended shapefile limit (4000 bytes).\n\n" +
+                            $"Warning: The total attribute length ({_attributesLength} bytes) " +
+                            $"exceeds the recommended shapefile limit (4000 bytes).\n\n" +
                             $"This may cause issues with some GIS applications.\n\n" +
                             $"Do you want to continue anyway?",
                             "HLU: Export",
@@ -342,7 +426,9 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Count the number of incids to be exported.
-                int rowCount = selectedOnly ? _viewModelMain.SelectedIncidsInGISCount : _viewModelMain.IncidRowCount(false);
+                int rowCount = selectedOnly
+                    ? _viewModelMain.SelectedIncidsInGISCount
+                    : _viewModelMain.IncidRowCount(false);
 
                 //TODO: Set this in options?
                 // Warn the user if the export is very large.
@@ -350,7 +436,9 @@ namespace HLU.UI.ViewModel
                 {
                     MessageBoxResult userResponse = MessageBox.Show(
                         "This export operation may take some time.\n\nDo you wish to proceed?",
-                        "HLU: Export", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                        "HLU: Export",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Question);
 
                     if (userResponse != MessageBoxResult.Yes)
                         return;
@@ -361,20 +449,27 @@ namespace HLU.UI.ViewModel
                 if (selectedOnly)
                 {
                     if ((_viewModelMain.IncidSelectionWhereClause == null) &&
-                        (_viewModelMain.GisSelection != null) && (_viewModelMain.GisSelection.Rows.Count > 0))
+                        (_viewModelMain.GisSelection != null) &&
+                        (_viewModelMain.GisSelection.Rows.Count > 0))
                     {
                         int incidOrd = _viewModelMain.IncidTable.incidColumn.Ordinal;
-                        IEnumerable<string> incidsSelected = _viewModelMain.GisSelection.AsEnumerable()
-                            .GroupBy(r => r.Field<string>(_viewModelMain.GisSelection.Columns[0].ColumnName))
+                        IEnumerable<string> incidsSelected = _viewModelMain.GisSelection
+                            .AsEnumerable()
+                            .GroupBy(r => r.Field<string>(
+                                _viewModelMain.GisSelection.Columns[0].ColumnName))
                             .Select(g => g.Key).OrderBy(s => s);
 
-                        _viewModelMain.IncidSelectionWhereClause = ViewModelWindowMainHelpers.IncidSelectionToWhereClause(
-                            250, incidOrd, _viewModelMain.IncidTable, incidsSelected);
+                        _viewModelMain.IncidSelectionWhereClause =
+                            ViewModelWindowMainHelpers.IncidSelectionToWhereClause(
+                                250, incidOrd,
+                                _viewModelMain.IncidTable,
+                                incidsSelected);
                         exportFilter = _viewModelMain.IncidSelectionWhereClause;
                     }
                     else
                     {
-                        exportFilter = [[.. _viewModelMain.IncidSelectionWhereClause.SelectMany(l => l)]];
+                        exportFilter =
+                            [[.. _viewModelMain.IncidSelectionWhereClause.SelectMany(l => l)]];
                     }
                 }
                 else
@@ -383,10 +478,12 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.ChangeCursor(Cursors.Wait, "Filtering from GIS ...");
 
                     // Get the INCID field name
-                    string incidFieldName = await _viewModelMain.GISApplication.IncidFieldNameAsync();
+                    string incidFieldName =
+                        await _viewModelMain.GISApplication.IncidFieldNameAsync();
 
                     // Get distinct INCIDs from the GIS layer
-                    HashSet<string> layerIncids = await ArcGISProHelpers.GetDistinctIncidValuesAsync(
+                    HashSet<string> layerIncids =
+                        await ArcGISProHelpers.GetDistinctIncidValuesAsync(
                         _viewModelMain.GISApplication.HluFeatureClass,
                         incidFieldName);
 
@@ -405,16 +502,20 @@ namespace HLU.UI.ViewModel
                             int incidOrd = _viewModelMain.IncidTable.incidColumn.Ordinal;
 
                             exportFilter = ViewModelWindowMainHelpers.IncidSelectionToWhereClause(
-                                250, incidOrd, _viewModelMain.IncidTable, layerIncids.OrderBy(s => s));
+                                250, incidOrd,
+                                _viewModelMain.IncidTable,
+                                layerIncids.OrderBy(s => s));
                         }
                         else
                         {
                             // Use ALL records - filtering overhead not worth it
                             SqlFilterCondition cond = new("AND",
-                                _viewModelMain.IncidTable, _viewModelMain.IncidTable.incidColumn, null)
+                                _viewModelMain.IncidTable,
+                                _viewModelMain.IncidTable.incidColumn, null)
                             {
                                 Operator = "IS NOT NULL"
                             };
+
                             exportFilter = new List<List<SqlFilterCondition>>([
                                 new List<SqlFilterCondition>([cond])]);
                         }
@@ -423,27 +524,33 @@ namespace HLU.UI.ViewModel
                     {
                         // Fallback: export all INCIDs if we couldn't get layer INCIDs
                         SqlFilterCondition cond = new("AND",
-                            _viewModelMain.IncidTable, _viewModelMain.IncidTable.incidColumn, null)
+                            _viewModelMain.IncidTable,
+                            _viewModelMain.IncidTable.incidColumn, null)
                         {
                             Operator = "IS NOT NULL"
                         };
+
                         exportFilter = new List<List<SqlFilterCondition>>([
                             new List<SqlFilterCondition>([cond])]);
                     }
                 }
 
                 // Create export attribute table in the existing working geodatabase.
-                if (!await CreateExportTableAsync(workingFileGDBpath, attributeTable, attributeTableName))
+                if (!await CreateExportTableAsync(
+                    workingFileGDBpath, attributeTable, attributeTableName))
                     return;
 
-                _viewModelMain.ChangeCursor(Cursors.Wait, "Exporting to temporary table ...");
+                _viewModelMain.ChangeCursor(
+                    Cursors.Wait, "Exporting to temporary table ...");
 
                 // Export the attribute data to the working geodatabase.
-                int exportRowCount = await ExportToTableAsync(workingFileGDBpath, attributeTableName,
+                int exportRowCount = await ExportToTableAsync(
+                    workingFileGDBpath, attributeTableName,
                     targetList.ToString(), fromClause.ToString(), exportFilter,
-                    _viewModelMain.DataBase, exportFields, attributeTable, sortOrdinals, conditionOrdinals,
-                    matrixOrdinals, formationOrdinals, managementOrdinals, complexOrdinals, bapOrdinals,
-                    sourceOrdinals, fieldMapTemplate, tableAliases);
+                    _viewModelMain.DataBase, exportFields, attributeTable,
+                    sortOrdinals, conditionOrdinals, matrixOrdinals,
+                    formationOrdinals, managementOrdinals, complexOrdinals,
+                    bapOrdinals, sourceOrdinals, fieldMapTemplate, tableAliases);
 
                 // Exit if no rows were exported.
                 if (exportRowCount == 0)
@@ -454,12 +561,13 @@ namespace HLU.UI.ViewModel
                 // Extract the list of GIS fields to include from exportFields
                 // Use ColumnName (source name in the GIS layer), not FieldName (export name)
                 List<string> gisFieldsToInclude = [.. exportFields
-                    .Where(f => f.TableName != null && f.TableName.Equals("<gis>", StringComparison.OrdinalIgnoreCase))
+                    .Where(f => f.TableName != null &&
+                        f.TableName.Equals("<gis>", StringComparison.OrdinalIgnoreCase))
                     .Select(f => f.ColumnName)  // Use ColumnName here
                     .Distinct()];
 
                 // Call the new export method with field filtering and ordering
-                bool exportSuccess = await _viewModelMain.GISApplication.ExportWithJoinAsync(
+                exportSuccess = await _viewModelMain.GISApplication.ExportWithJoinAsync(
                     _viewModelMain.GISApplication.HluLayerName,  // Source layer path
                     workingFileGDBpath,                          // Working geodatabase path
                     attributeTableName,                          // Attribute table name
@@ -473,27 +581,50 @@ namespace HLU.UI.ViewModel
 
                 if (!exportSuccess)
                 {
-                    //TODO: Report failure?
+                    MessageBox.Show(
+                        "Export failed. The GIS export operation did not complete successfully.",
+                        "HLU: Export",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
                     return;
                 }
 
                 // Inform the user of success and that the output has been added to the current map
-                MessageBox.Show($"Export successful! {exportRowCount} records were exported.\n\n" +
+                MessageBox.Show(
+                    $"Export successful! {exportRowCount} records were exported.\n\n" +
                     $"The exported data has been added to the current map.",
-                    "HLU: Export", MessageBoxButton.OK, MessageBoxImage.Information);
+                    "HLU: Export",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+
+                exportSuccess = true;
             }
             catch (Exception ex)
             {
-                MessageBox.Show(String.Format("Export failed. The error message was:\n\n{0}",
-                    ex.Message), "HLU: Export", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(
+                    String.Format("Export failed. The error message was:\n\n{0}", ex.Message),
+                    "HLU: Export",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
             finally
             {
-               // Clean up all tables and feature classes after export
-               await ArcGISProHelpers.CleanupGeodatabaseAsync(workingFileGDBpath);
+                // Discard any pending edits before schema cleanup to release
+                // any geodatabase schema locks left by geoprocessing tools.
+                await ArcGIS.Desktop.Core.Project.Current.DiscardEditsAsync();
 
-                _viewModelMain.ChangeCursor(Cursors.Arrow, null);
+                // Clean up all tables and feature classes after export
+                await ArcGISProHelpers.CleanupGeodatabaseAsync(workingFileGDBpath);
+
+                // Reset the cursor back to normal.
+                _viewModelMain.ChangeCursor(Cursors.Arrow);
             }
+
+            // Show success message
+            if (exportSuccess)
+                _viewModelMain.ShowSuccess(
+                    "Export succeeded. Output added to the current map.",
+                    MessageCategory.Export);
         }
 
         #endregion Export

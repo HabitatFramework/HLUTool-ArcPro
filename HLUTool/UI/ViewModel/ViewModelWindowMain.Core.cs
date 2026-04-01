@@ -1,9 +1,9 @@
-// HLUTool is used to view and maintain habitat and land use GIS data.
-// Copyright � 2011 Hampshire Biodiversity Information Centre
-// Copyright � 2014 Sussex Biodiversity Record Centre
-// Copyright � 2019 London & South East Record Centres (LaSER)
-// Copyright � 2019-2022 Greenspace Information for Greater London CIC
-// Copyright � 2025-2026 Andy Foy Consulting
+﻿// HLUTool is used to view and maintain habitat and land use GIS data.
+// Copyright © 2011 Hampshire Biodiversity Information Centre
+// Copyright © 2014 Sussex Biodiversity Record Centre
+// Copyright © 2019 London & South East Record Centres (LaSER)
+// Copyright © 2019-2022 Greenspace Information for Greater London CIC
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -962,9 +962,6 @@ namespace HLU.UI.ViewModel
 
                 // Refresh the state of the active layer combo box.
                 UpdateActiveLayerComboBoxEnabledState();
-
-                // Refresh all properties.
-                RefreshAll();
             }
         }
 
@@ -1939,8 +1936,8 @@ namespace HLU.UI.ViewModel
                 // Force all ribbon controls to re-evaluate their enabled state
                 RefreshRibbonControls();
 
-                // Clear the status bar (or reset the cursor to an arrow)
-                ChangeCursor(Cursors.Arrow, null);
+                // Reset the cursor back to normal.
+                ChangeCursor(Cursors.Arrow);
 
                 return true;
             }
@@ -2068,8 +2065,8 @@ namespace HLU.UI.ViewModel
             // Check if there is no active map.
             if (_gisApp.MapName == null)
             {
-                // Clear the status bar (or reset the cursor to an arrow)
-                ChangeCursor(Cursors.Arrow, null);
+                // Reset the cursor back to normal.
+                ChangeCursor(Cursors.Arrow);
 
                 // Recomputes whether editing is currently possible.
                 RefreshEditCapability();
@@ -2090,8 +2087,8 @@ namespace HLU.UI.ViewModel
             // Check if the GIS map is valid (pass the current active layer name to validate)
             if (!await _gisApp.IsHluMapAsync(currentActiveLayerName))
             {
-                // Clear the status bar (or reset the cursor to an arrow)
-                ChangeCursor(Cursors.Arrow, null);
+                // Reset the cursor back to normal.
+                ChangeCursor(Cursors.Arrow);
 
                 // Recomputes whether editing is currently possible.
                 RefreshEditCapability();
@@ -2137,7 +2134,7 @@ namespace HLU.UI.ViewModel
             var isActiveHluLayer = !string.IsNullOrEmpty(targetLayerName) &&
                 await _gisApp.IsHluLayerAsync(targetLayerName, true);
 
-            // Now assign ActiveLayerName � IsEditable is correctly set so
+            // Now assign ActiveLayerName — IsEditable is correctly set so
             // UpdateDockPaneCaption() and RefreshEditCapability() see the right value.
             ActiveLayerName = targetLayerName;
 
@@ -2164,8 +2161,8 @@ namespace HLU.UI.ViewModel
                 _activeLayerComboBox.SetSelectedItem(ActiveLayerName, true);
             }
 
-            // Clear the status bar (or reset the cursor to an arrow)
-            ChangeCursor(Cursors.Arrow, null);
+            // Reset the cursor back to normal.
+            ChangeCursor(Cursors.Arrow);
 
             return true;
         }
@@ -2883,18 +2880,11 @@ namespace HLU.UI.ViewModel
             // If the dockpane is visible.
             if (isVisible == true)
             {
-                //TODO: Needed?
-                //base.OnShow(isVisible);
-
                 // Toggle the tab state to visible.
                 ToggleState("HLUTool_tab_state", true);
 
                 // Clear any messages.
                 ClearMessage();
-
-                //TODO: Needed here or at end of initialisation?
-                // Refresh all controls
-                //RefreshAll();
 
                 // Make the UI controls visible.
                 GridMainVisibility = Visibility.Visible;
@@ -2916,11 +2906,30 @@ namespace HLU.UI.ViewModel
                 ? (WorkMode | flag)
                 : (WorkMode & ~flag);
 
-            // Recomputes whether editing is currently possible.
+            // Recompute edit capability and refresh ribbon/UI once.
             RefreshEditCapability();
-
-            // Refresh ribbon controls to reflect the new work mode.
             RefreshRibbonControls();
+            RefreshAll();
+        }
+
+        /// <summary>
+        /// Sets or clears multiple <see cref="ViewModel.WorkMode"/> flags atomically,
+        /// triggering the refresh cycle only once.
+        /// </summary>
+        /// <param name="isEnabled">A value indicating whether to set or clear the flags.</param>
+        /// <param name="flags">One or more work mode flags to set or clear together.</param>
+        private void SetWorkModeFlags(bool isEnabled, params WorkMode[] flags)
+        {
+            WorkMode combined = flags.Aggregate(WorkMode.None, (acc, f) => acc | f);
+
+            WorkMode = isEnabled
+                ? (WorkMode | combined)
+                : (WorkMode & ~combined);
+
+            // Recompute edit capability and refresh ribbon/UI once.
+            RefreshEditCapability();
+            RefreshRibbonControls();
+            RefreshAll();
         }
 
         /// <summary>
@@ -2928,24 +2937,47 @@ namespace HLU.UI.ViewModel
         /// Also updates the work mode button to reflect the new mode.
         /// </summary>
         /// <param name="newMode">The target work mode flags to activate</param>
-        public void SetWorkMode(WorkMode newMode)
+        public async Task SetWorkMode(WorkMode newMode)
         {
             // If switching to normal Edit mode (Update Mode)
             if (newMode == WorkMode.Edit)
             {
-                // Clear all special mode flags
-                SetWorkModeFlag(WorkMode.Bulk, false);
-                SetWorkModeFlag(WorkMode.OSMMReview, false);
-                SetWorkModeFlag(WorkMode.OSMMBulk, false);
-
-                // Refresh the UI
-                RefreshAll();
+                // Delegate to the appropriate reset method so that the filter,
+                // GIS selection, tabs and cursor are all properly restored.
+                if (IsOsmmBulkMode)
+                {
+                    // Switching from OSMM Bulk mode → cancel it cleanly.
+                    _viewModelBulkUpdate ??=
+                        new ViewModelWindowMainBulkUpdate(this, _addInSettings);
+                    await _viewModelBulkUpdate.CancelOSMMBulkUpdateAsync();
+                }
+                else if (IsBulkMode)
+                {
+                    // Switching from standard Bulk mode → cancel it cleanly.
+                    _viewModelBulkUpdate ??=
+                        new ViewModelWindowMainBulkUpdate(this, _addInSettings);
+                    await _viewModelBulkUpdate.CancelBulkUpdateAsync();
+                }
+                else if (IsOsmmReviewMode)
+                {
+                    // Switching from OSMM Review mode → cancel it cleanly.
+                    _viewModelOSMMUpdate ??=
+                        new ViewModelWindowMainOSMMUpdate(this);
+                    await _viewModelOSMMUpdate.CancelOSMMUpdateAsync();
+                }
+                else
+                {
+                    // Already in plain Edit mode – nothing to change.
+                    RefreshEditCapability();
+                    RefreshRibbonControls();
+                    RefreshAll();
+                }
             }
             // If switching to OSMM Review mode
             else if (newMode.HasFlag(WorkMode.OSMMReview))
             {
                 // Start OSMM Update mode (which will set the flags)
-                OSMMUpdateClicked(null);
+                StartOSMMUpdateClicked(null);
             }
             // If switching to Bulk OSMM mode
             else if (newMode.HasFlag(WorkMode.OSMMBulk))
@@ -2959,6 +2991,8 @@ namespace HLU.UI.ViewModel
                 // Start Bulk Update mode (which will set the flags)
                 StartBulkUpdate();
             }
+
+            DispatcherHelper.DoEvents();
         }
 
         #endregion Work Mode
@@ -3094,7 +3128,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(ShowHabitatSecondariesSuggested));
             OnPropertyChanged(nameof(ShowNVCCodes));
             OnPropertyChanged(nameof(ShowHabitatSummary));
-            OnPropertyChanged(nameof(ShowIHSTab));
+            OnPropertyChanged(nameof(IHSTabVisibility));
             OnPropertyChanged(nameof(ShowIncidOSMMPendingGroup));
 
             // Refresh the validity of secondary group codes based on the new settings.
@@ -3267,7 +3301,7 @@ namespace HLU.UI.ViewModel
                         RefreshAll();
 
                         // Reset the cursor back to normal.
-                        ChangeCursor(Cursors.Arrow, null);
+                        ChangeCursor(Cursors.Arrow);
 
                         // Warn the user that no more records were found.
                         ShowWarning("No more records found.",MessageCategory.Navigation);
@@ -3290,6 +3324,9 @@ namespace HLU.UI.ViewModel
                         {
                             // Set the new current row index.
                             _incidCurrentRowIndex = value;
+
+                            // Clear any existing navigation warning messages
+                            ClearMessage(category: MessageCategory.Navigation, level: MessageType.Warning);
                         }
                         else
                         {
@@ -3599,15 +3636,20 @@ namespace HLU.UI.ViewModel
                 // the current page as appropriate.
                 if (_hluDS.incid.Count == 0)
                 {
-                    ShowWarning("Nodatabase record retrieved.", MessageCategory.Database);
+                    ShowWarning("No database record retrieved.", MessageCategory.Database);
 
-                    // Reset the incid and map selections and move
-                    // to the first incid in the database.
-                    await ClearFilterAsync(true);
+                    // Clear the current row without abandoning the active filter
+                    // or the GIS selection — the filter is still valid even though
+                    // this particular page load returned nothing.
+                    _incidCurrentRow = null;
+
                     return _incidCurrentRow;
                 }
                 else
                 {
+                    // Clear any existing database warning messages
+                    ClearMessage(category: MessageCategory.Database, level: MessageType.Warning);
+
                     // If the table has paged backwards (because the required incid
                     // is lower than the page minimum) and if the row number being
                     // sought is the first (i.e. zero) then return the lowest incid.
@@ -3715,7 +3757,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Creates a clone of the current row, which can be used to restore the original values if needed.
         /// </summary>
-        private void CloneIncidCurrentRow()
+        public void CloneIncidCurrentRow()
         {
             _incidCurrentRowClone = _hluDS.incid.NewincidRow(); // IncidTable.NewincidRow();
             for (int i = 0; i < IncidTable.Columns.Count; i++)
