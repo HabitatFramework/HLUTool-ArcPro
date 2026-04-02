@@ -97,7 +97,7 @@ namespace HLU.UI.ViewModel
         private int _selectedIncidsInDBCount = 0;
         private int _selectedFragsInDBCount = 0;
 
-        // How many toids and fragments are selected in GIS and the database for the current incid (set in CountToidFrags).
+        // How many toids and fragments are selected in GIS and the database for the current incid (set in CountFrags).
         private int _currentIncidToidsInGISCount = 0;
         private int _currentIncidFragsInGISCount = 0;
         private int _currentIncidToidsInDBCount = 0;
@@ -632,6 +632,9 @@ namespace HLU.UI.ViewModel
                 // Warn the user that no features were found in GIS.
                 if (_gisSelection == null || _gisSelection.Rows.Count == 0)
                 {
+                    // Clear any existing navigation warning messages
+                    ClearMessage(category: MessageCategory.GIS, level: MessageType.Warning);
+
                     // Display a warning message.
                     ShowWarning("No features for incid found in active layer.", MessageCategory.GIS);
 
@@ -776,8 +779,12 @@ namespace HLU.UI.ViewModel
                 // Warn the user that no features were found in GIS.
                 if (_gisSelection == null || _gisSelection.Rows.Count == 0)
                 {
+                    // Clear any existing navigation warning messages
+                    ClearMessage(category: MessageCategory.GIS, level: MessageType.Warning);
+
                     // Display a warning message.
                     ShowWarning("No features for incid found in active layer.", MessageCategory.GIS);
+
                     return;
                 }
                 else
@@ -918,6 +925,9 @@ namespace HLU.UI.ViewModel
 
                     // Reset the cursor back to normal.
                     ChangeCursor(Cursors.Arrow);
+
+                    // Clear any existing navigation warning messages
+                    ClearMessage(category: MessageCategory.GIS, level: MessageType.Warning);
 
                     // Display a warning message.
                     ShowWarning("No map features selected in active layer.", MessageCategory.GIS);
@@ -1198,12 +1208,12 @@ namespace HLU.UI.ViewModel
                     // Count the number of fragments from the selection table.
                     numFragments = _incidMMPolygonSelection.Rows.Count;
 
-                    //TODO: Change "*" to distinct concatenation of incid, toid and toid fragments?
+                    //TODO: Change "*" to distinct concatenation of incid, toid and fragments?
                     //numFragments = _db.SqlCount(whereTables, String.Format("Distinct Convert(varchar, {0}.{1}) + Convert(varchar, {0}.{2}) + Convert(varchar, {0}.{3})",
                     //    _db.QuoteIdentifier(_hluDS.incid_mm_polygons.TableName),
                     //    _db.QuoteIdentifier(_hluDS.incid_mm_polygons.incidColumn.ColumnName),
                     //    _db.QuoteIdentifier(_hluDS.incid_mm_polygons.toidColumn.ColumnName),
-                    //    _db.QuoteIdentifier(_hluDS.incid_mm_polygons.toidfragidColumn.ColumnName)),
+                    //    _db.QuoteIdentifier(_hluDS.incid_mm_polygons.fragidColumn.ColumnName)),
                     //    joinCond.ToList(), sqlWhereClause);
                 }
                 catch { }
@@ -1279,7 +1289,7 @@ namespace HLU.UI.ViewModel
         /// Count the number of toids and fragments for the current incid
         /// selected in the GIS and in the database.
         /// </summary>
-        public void CountCurrentIncidToidFrags()
+        public void CountCurrentIncidFrags()
         {
             // Count the number of toids and fragments for this incid selected
             // in the GIS. They are counted here, once when the incid changes,
@@ -1321,14 +1331,14 @@ namespace HLU.UI.ViewModel
         #region Check Selected Features
 
         /// <summary>
-        /// Checks the selected toid frags for the current selection in GIS against the database counts,
+        /// Checks the selected frags for the current selection in GIS against the database counts,
         /// and returns false if there are more toids or frags in GIS than in the database, or if there
         /// are no frags in the database for a physical split.
         /// <param name="physicalSplit">if set to <c>true</c> [physical split].</param>
         /// <returns>
-        /// <c>true</c> if the selected toid frags are valid; otherwise, <c>false</c>.
+        /// <c>true</c> if the selected frags are valid; otherwise, <c>false</c>.
         /// </returns>
-        public bool CheckSelectedToidFrags(bool physicalSplit)
+        public bool CheckSelectedFrags(bool physicalSplit)
         {
             foreach (DataRow row in _incidSelection.Rows)
             {
@@ -1403,7 +1413,7 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Computes whether a logical split operation can be performed based on the current state.
-        /// At least one feature in selection that share the same incid, but *not* toid and toidfragid.
+        /// At least one feature in selection that share the same incid, but *not* toid and fragid.
         /// </summary>
         /// <returns><c>true</c> if a logical split can be performed; otherwise, <c>false</c>.</returns>
         private bool ComputeCanLogicallySplit()
@@ -1422,7 +1432,7 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Computes whether a logical merge operation can be performed based on the current state.
-        /// At least one feature in selection that do not share the same incid or toidfragid.
+        /// At least one feature in selection that do not share the same incid or fragid.
         /// </summary>
         /// <returns><c>true</c> if a logical merge can be performed; otherwise, <c>false</c>.</returns>
         private bool ComputeCanLogicallyMerge()
@@ -1438,7 +1448,7 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Computes whether a physical split operation can be performed based on the current state.
-        /// At least two features in selection that share the same incid, toid and toidfragid.
+        /// At least two features in selection that share the same incid, toid and fragid.
         /// </summary>
         /// <returns><c>true</c> if a physical split can be performed; otherwise, <c>false</c>.</returns>
         public bool ComputeCanPhysicallySplit()
@@ -1454,7 +1464,7 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Computes whether a physical merge operation can be performed based on the current state.
-        /// At least one feature in selection that share the same incid and toid but *not* the same toidfragid.
+        /// At least one feature in selection that share the same incid and toid but *not* the same fragid.
         /// </summary>
         /// <returns><c>true</c> if a physical merge operation can be performed; otherwise, <c>false</c>.</returns>
         public bool ComputeCanPhysicallyMerge()

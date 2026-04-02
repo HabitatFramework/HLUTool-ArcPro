@@ -46,13 +46,13 @@ namespace HLU.Data
                 if (!x.toid.Equals(y.toid)) return false;
             }
 
-            if (x.toidfragid == null)
+            if (x.fragid == null)
             {
-                if (y.toidfragid != null) return false;
+                if (y.fragid != null) return false;
             }
             else
             {
-                if (!x.toidfragid.Equals(y.toidfragid)) return false;
+                if (!x.fragid.Equals(y.fragid)) return false;
             }
 
             return true;
@@ -60,7 +60,7 @@ namespace HLU.Data
 
         public int GetHashCode(HluDataSet.historyRow obj)
         {
-            return obj.incid.GetHashCode() ^ obj.toid.GetHashCode() ^ obj.toidfragid.GetHashCode();
+            return obj.incid.GetHashCode() ^ obj.toid.GetHashCode() ^ obj.fragid.GetHashCode();
         }
 
         #endregion

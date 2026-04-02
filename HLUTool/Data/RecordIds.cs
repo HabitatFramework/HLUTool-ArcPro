@@ -306,11 +306,11 @@ namespace HLU.Data
         }
 
         /// <summary>
-        /// Gets the maximum toid fragment ID for a given TOID.
+        /// Gets the maximum fragment ID for a given TOID.
         /// </summary>
         /// <param name="toid">The TOID to get the maximum fragment ID for.</param>
-        /// <returns>The maximum toid fragment ID, or null if the TOID is invalid.</returns>
-        public string MaxToidFragmentId(string toid)
+        /// <returns>The maximum fragment ID, or null if the TOID is invalid.</returns>
+        public string MaxFragmentId(string toid)
         {
             // Check parameter.
             if (String.IsNullOrEmpty(toid))
@@ -319,7 +319,7 @@ namespace HLU.Data
             try
             {
                 object retVal = _db.ExecuteScalar(String.Format("SELECT MAX({0}) FROM {1} WHERE {2} = {3}",
-                    _db.QuoteIdentifier(_hluDataset.incid_mm_polygons.toidfragidColumn.ColumnName),
+                    _db.QuoteIdentifier(_hluDataset.incid_mm_polygons.fragidColumn.ColumnName),
                     _db.QualifyTableName(_hluDataset.incid_mm_polygons.TableName),
                     _db.QuoteIdentifier(_hluDataset.incid_mm_polygons.toidColumn.ColumnName),
                     _db.QuoteValue(toid)), _db.Connection.ConnectionTimeout, CommandType.Text);

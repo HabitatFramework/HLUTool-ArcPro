@@ -34,6 +34,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Data;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -2900,7 +2901,7 @@ namespace HLU.UI.ViewModel
             else
                 // Count the number of toids and fragments for the current incid
                 // selected in the GIS and in the database.
-                CountCurrentIncidToidFrags();
+                CountCurrentIncidFrags();
 
             // Indicate the selection didn't come from the map.
             _filteredByMap = false;
@@ -3114,104 +3115,116 @@ namespace HLU.UI.ViewModel
             //    AnalyzeGisSelectionSet(false);
             //}
 
-            bool canMove = false;
-            if (!IsFiltered)
+            try
             {
-                //TODO: Bug here sometimes?
-                int newRowIndex = SeekIncid(_incidCurrentRowIndex);
-                if ((canMove = newRowIndex != -1))
-                    _incidCurrentRow = _hluDS.incid[newRowIndex];
-            }
-            else
-            {
-                if ((canMove = (_incidCurrentRowIndex != -1) &&
-                    (_incidCurrentRowIndex <= _incidSelection.Rows.Count)))
-                    _incidCurrentRow = await SeekIncidFiltered(_incidCurrentRowIndex);
-            }
+                // Determine if we can move
+                bool canMove = false;
 
-            if (canMove)
-            {
-                //TODO: Needed?
-                //_incidArea = -1;
-                //_incidLength = -1;
-
-                // Flag that the current record has not been changed yet so that the
-                // apply button does not appear.
-                Changed = false;
-
-                // Clear the habitat type.
-                HabitatType = null;
-                OnPropertyChanged(nameof(HabitatType));
-
-                if (_incidCurrentRow != null)
+                if (!IsFiltered)
                 {
-                    // Clone the current row to use to check for changes later
-                    CloneIncidCurrentRow();
-
-                    // Get the incid table values
-                    IncidCurrentRowDerivedValuesRetrieve();
-
-                    // Get the incid child rows
-                    GetIncidChildRows(IncidCurrentRow);
-
-                    // If there are any OSMM Updates for this incid then store the values.
-                    if (_incidOSMMUpdatesRows.Length > 0)
-                    {
-                        _incidOSMMUpdatesOSMMXref = _incidOSMMUpdatesRows[0].osmm_xref_id;
-                        _incidOSMMUpdatesProcessFlag = _incidOSMMUpdatesRows[0].process_flag;
-                        _incidOSMMUpdatesSpatialFlag = _incidOSMMUpdatesRows[0].Isspatial_flagNull() ? null : _incidOSMMUpdatesRows[0].spatial_flag;
-                        _incidOSMMUpdatesChangeFlag = _incidOSMMUpdatesRows[0].Ischange_flagNull() ? null : _incidOSMMUpdatesRows[0].change_flag;
-                        _incidOSMMUpdatesStatus = _incidOSMMUpdatesRows[0].status;
-                    }
-                    else
-                    {
-                        _incidOSMMUpdatesOSMMXref = 0;
-                        _incidOSMMUpdatesProcessFlag = 0;
-                        _incidOSMMUpdatesSpatialFlag = null;
-                        _incidOSMMUpdatesChangeFlag = null;
-                        _incidOSMMUpdatesStatus = null;
-                    }
-
-                    // If auto select of features on change of incid is enabled.
-                    if (_autoSelectOnGis && IsNotBulkMode && !_filteredByMap)
-                    {
-                        // Select the current incid record on the Map.
-                        await SelectOnMapAsync(false);
-                    }
-
-                    // Count the number of toids and fragments for the current incid
-                    // selected in the GIS and in the database.
-                    CountCurrentIncidToidFrags();
+                    //TODO: Bug here sometimes?
+                    int newRowIndex = SeekIncid(_incidCurrentRowIndex);
+                    if ((canMove = newRowIndex != -1))
+                        _incidCurrentRow = _hluDS.incid[newRowIndex];
                 }
                 else
                 {
-                    // No database record was retrieved — clear the form so that
-                    // stale values from the previous record are not displayed.
-                    // ClearForm() uses fresh detached DataRows so IsDirty is
-                    // never triggered.
-                    ClearForm();
+                    if ((canMove = (_incidCurrentRowIndex != -1) &&
+                        (_incidCurrentRowIndex <= _incidSelection.Rows.Count)))
+                        _incidCurrentRow = await SeekIncidFiltered(_incidCurrentRowIndex);
                 }
 
-                OnPropertyChanged(nameof(IncidCurrentRowIndex));
-                OnPropertyChanged(nameof(OSMMIncidCurrentRowIndex));
-                OnPropertyChanged(nameof(IncidCurrentRow));
+                if (canMove)
+                {
+                    //TODO: Needed?
+                    //_incidArea = -1;
+                    //_incidLength = -1;
 
-                // Refresh all statuses, headers and fields
-                RefreshStatus();
-                RefreshHeader();
-                RefreshOSMMUpdate();
-                RefreshHabitatTab();
-                RefreshIHSTab();
-                RefreshPriorityTab();
-                RefreshDetailsTab();
-                RefreshSource1();
-                RefreshSource2();
-                RefreshSource3();
-                RefreshHistory();
+                    // Flag that the current record has not been changed yet so that the
+                    // apply button does not appear.
+                    Changed = false;
+
+                    // Clear the habitat type.
+                    HabitatType = null;
+                    OnPropertyChanged(nameof(HabitatType));
+
+                    if (_incidCurrentRow != null)
+                    {
+                        // Clone the current row to use to check for changes later
+                        CloneIncidCurrentRow();
+
+                        // Get the incid table values
+                        IncidCurrentRowDerivedValuesRetrieve();
+
+                        // Get the incid child rows
+                        GetIncidChildRows(IncidCurrentRow);
+
+                        // If there are any OSMM Updates for this incid then store the values.
+                        if (_incidOSMMUpdatesRows.Length > 0)
+                        {
+                            _incidOSMMUpdatesOSMMXref = _incidOSMMUpdatesRows[0].osmm_xref_id;
+                            _incidOSMMUpdatesProcessFlag = _incidOSMMUpdatesRows[0].process_flag;
+                            _incidOSMMUpdatesSpatialFlag = _incidOSMMUpdatesRows[0].Isspatial_flagNull() ? null : _incidOSMMUpdatesRows[0].spatial_flag;
+                            _incidOSMMUpdatesChangeFlag = _incidOSMMUpdatesRows[0].Ischange_flagNull() ? null : _incidOSMMUpdatesRows[0].change_flag;
+                            _incidOSMMUpdatesStatus = _incidOSMMUpdatesRows[0].status;
+                        }
+                        else
+                        {
+                            _incidOSMMUpdatesOSMMXref = 0;
+                            _incidOSMMUpdatesProcessFlag = 0;
+                            _incidOSMMUpdatesSpatialFlag = null;
+                            _incidOSMMUpdatesChangeFlag = null;
+                            _incidOSMMUpdatesStatus = null;
+                        }
+
+                        // If auto select of features on change of incid is enabled.
+                        if (_autoSelectOnGis && IsNotBulkMode && !_filteredByMap)
+                        {
+                            // Select the current incid record on the Map.
+                            await SelectOnMapAsync(false);
+                        }
+
+                        // Count the number of toids and fragments for the current incid
+                        // selected in the GIS and in the database.
+                        CountCurrentIncidFrags();
+                    }
+                    else
+                    {
+                        // No database record was retrieved — clear the form so that
+                        // stale values from the previous record are not displayed.
+                        // ClearForm() uses fresh detached DataRows so IsDirty is
+                        // never triggered.
+                        ClearForm();
+                    }
+
+                    OnPropertyChanged(nameof(IncidCurrentRowIndex));
+                    OnPropertyChanged(nameof(OSMMIncidCurrentRowIndex));
+                    OnPropertyChanged(nameof(IncidCurrentRow));
+
+                    // Refresh all statuses, headers and fields
+                    RefreshStatus();
+                    RefreshHeader();
+                    RefreshOSMMUpdate();
+                    RefreshHabitatTab();
+                    RefreshIHSTab();
+                    RefreshPriorityTab();
+                    RefreshDetailsTab();
+                    RefreshSource1();
+                    RefreshSource2();
+                    RefreshSource3();
+                    RefreshHistory();
+                }
+
+                // Update the editing control state
+                CheckEditingControlState();
             }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"NewIncidCurrentRowAsync error: {ex.Message}");
 
-            // Update the editing control state
-            CheckEditingControlState();
+                // Re-throw so MoveIncidCurrentRowIndexAsync can handle/report it.
+                throw;
+            }
         }
 
         #endregion New Row

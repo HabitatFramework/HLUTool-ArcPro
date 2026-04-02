@@ -65,7 +65,7 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// There must be either more than one feature in the selection that share the same incid,
-        /// but *not* the same toid or toidfragid, or there must be only one feature in the selection.
+        /// but *not* the same toid or fragid, or there must be only one feature in the selection.
         /// </summary>
         /// <returns>
         /// A task that represents the asynchronous operation. The task result contains a boolean
@@ -85,7 +85,7 @@ namespace HLU.UI.ViewModel
             }
 
             // Check all selected features exist in the database.
-            if (!_viewModelMain.CheckSelectedToidFrags(false))
+            if (!_viewModelMain.CheckSelectedFrags(false))
             {
                 // Show warning message
                 _viewModelMain.ShowWarning("Cannot logically split: One or more selected map features missing from database.",
@@ -141,7 +141,7 @@ namespace HLU.UI.ViewModel
                 }
             }
 
-            // All features in selection share same incid, but *not* toid and toidfragid.
+            // All features in selection share same incid, but *not* toid and fragid.
             return await PerformLogicalSplitAsync();
         }
 
@@ -204,18 +204,18 @@ namespace HLU.UI.ViewModel
                 string newIncid = _viewModelMain.RecIDs.CurrentIncid;
 
                 // Prepare the history columns for the split operation.
-                // This adds an additional history request column that maps "modified_toidfragid"
-                // to the source GIS field "toidfragid" using the delimiter mechanism.
+                // This adds an additional history request column that maps "modified_fragid"
+                // to the source GIS field "fragid" using the delimiter mechanism.
                 DataColumn[] historyColumns =
                     [
                         .. _viewModelMain.HistoryColumns,
                         new(
-                        _viewModelMain.HluDataset.history.modified_toidfragidColumn.ColumnName.Replace(
-                        _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.ColumnName,
+                        _viewModelMain.HluDataset.history.modified_fragidColumn.ColumnName.Replace(
+                        _viewModelMain.HluDataset.incid_mm_polygons.fragidColumn.ColumnName,
                         String.Empty) +
                         ArcProApp.HistoryAdditionalFieldsDelimiter +
-                        _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.ColumnName,
-                        _viewModelMain.HluDataset.history.modified_toidfragidColumn.DataType)
+                        _viewModelMain.HluDataset.incid_mm_polygons.fragidColumn.ColumnName,
+                        _viewModelMain.HluDataset.history.modified_fragidColumn.DataType)
                     ];
 
                 // Update the GIS layer and retrieve the history of changes made.
@@ -247,11 +247,11 @@ namespace HLU.UI.ViewModel
                 historyTable.PrimaryKey = [.. historyTable.Columns.Cast<DataColumn>().Where(c => _viewModelMain.GisIDColumnOrdinals.Contains(c.Ordinal))];
 
                 // Loop through the shadow copy of the incid_mm_polygons rows and update
-                // the toidfragid and incid where necessary.
+                // the fragid and incid where necessary.
                 foreach (HluDataSet.incid_mm_polygonsRow r in polygons)
                 {
                     // If the feature in GIS belongs to the current incid then update the
-                    // toidfragid and incid.
+                    // fragid and incid.
                     if (r.incid == _viewModelMain.Incid)
                     {
                         // Get the key values in the same order as the history table primary key columns.
@@ -269,9 +269,9 @@ namespace HLU.UI.ViewModel
                             throw new HLUToolException($"Failed to match GIS history row for split feature. Key: {keyText}");
                         }
 
-                        // Update the toidfragid and incid from the history row.
-                        r.toidfragid = historyRow.Field<string>(
-                            _viewModelMain.HluDataset.history.modified_toidfragidColumn.ColumnName);
+                        // Update the fragid and incid from the history row.
+                        r.fragid = historyRow.Field<string>(
+                            _viewModelMain.HluDataset.history.modified_fragidColumn.ColumnName);
                         r.incid = newIncid;
                     }
                 }
@@ -379,7 +379,7 @@ namespace HLU.UI.ViewModel
         #region Physical Split
 
         /// <summary>
-        /// There must be more than one feature in the selection that share the same incid, toid and toidfragid.
+        /// There must be more than one feature in the selection that share the same incid, toid and fragid.
         /// </summary>
         /// <returns>A </returns>
         /// A task that represents the asynchronous operation. The task result contains a boolean
@@ -396,7 +396,7 @@ namespace HLU.UI.ViewModel
                 return false;
             }
             // Check all selected features exist in the database.
-            else if (!_viewModelMain.CheckSelectedToidFrags(true))
+            else if (!_viewModelMain.CheckSelectedFrags(true))
             {
                 // Show warning message
                 _viewModelMain.ShowWarning("Cannot physically split: One or more selected map features missing from database.", MessageCategory.Split);
@@ -408,7 +408,7 @@ namespace HLU.UI.ViewModel
             if ((_viewModelMain.GisSelection.Rows.Count > 1) && (_viewModelMain.SelectedIncidsInGISCount == 1) &&
                 (_viewModelMain.SelectedToidsInGISCount == 1) && (_viewModelMain.SelectedFragsInGISCount == 1))
             {
-                // All features in selection share same incid, toid and toidfragid.
+                // All features in selection share same incid, toid and fragid.
                 return await PerformPhysicalSplitAsync();
             }
             else
@@ -458,8 +458,8 @@ namespace HLU.UI.ViewModel
                 DateTime currDtTm = DateTime.Now;
                 DateTime nowDtTm = new(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
 
-                // find the last used toidfragid for the selected toid
-                string lastToidFragmentID = _viewModelMain.RecIDs.MaxToidFragmentId(_viewModelMain.ToidsSelectedMap.ElementAt(0));
+                // find the last used fragid for the selected toid
+                string lastFragID = _viewModelMain.RecIDs.MaxFragmentId(_viewModelMain.ToidsSelectedMap.ElementAt(0));
 
                 // Skip all but one of the GIS select criteria as they are all the same in the case of a physical split anyway
                 int skipCount = _viewModelMain.GisSelection.Rows.Count - 1;
@@ -472,13 +472,13 @@ namespace HLU.UI.ViewModel
                 if (featuresFilter.Count != 1)
                     throw new Exception("Error finding features in database.");
 
-                // Find the current toidfragid for the selected toid (there should be only one)
-                string currentToidFragmentID = _viewModelMain.FragsSelectedMap.ElementAt(0);
+                // Find the current fragid for the selected toid (there should be only one)
+                string currentFragmentID = _viewModelMain.FragsSelectedMap.ElementAt(0);
 
                 // Update the GIS layer and collect new features resulting from split.
                 // This queues the GIS edits into the provided EditOperation but does not execute it.
-                DataTable newFeatures = await _viewModelMain.GISApplication.SplitFeaturesPhysicallyAsync(currentToidFragmentID,
-                    lastToidFragmentID, featuresFilter[0],
+                DataTable newFeatures = await _viewModelMain.GISApplication.SplitFeaturesPhysicallyAsync(currentFragmentID,
+                    lastFragID, featuresFilter[0],
                     [.. _viewModelMain.HluDataset.incid_mm_polygons.Columns.Cast<DataColumn>().Where(c =>
                         c.ColumnName != _viewModelMain.HluDataset.incid_mm_polygons.shape_lengthColumn.ColumnName &&
                         c.ColumnName != _viewModelMain.HluDataset.incid_mm_polygons.shape_areaColumn.ColumnName)],
@@ -559,8 +559,8 @@ namespace HLU.UI.ViewModel
                     String.Join(",", [.. newFeatures.Columns.Cast<DataColumn>().Select(c =>
                     _viewModelMain.DataBase.QuoteIdentifier(c.ColumnName))])) + "{0})";
 
-                int toidFragID = Int32.Parse(lastToidFragmentID);
-                string numFormat = String.Format("D{0}", updTable.toidfragidColumn.MaxLength);
+                int fragID = Int32.Parse(lastFragID);
+                string numFormat = String.Format("D{0}", updTable.fragidColumn.MaxLength);
 
                 // insert new features returned from GIS into DB shadow copy of GIS layer
                 for (int i = 1; i < newFeatures.Rows.Count; i++)
@@ -568,8 +568,8 @@ namespace HLU.UI.ViewModel
                     String insertStatement = String.Format(insertCommand, String.Join(",",
                         [.. newFeatures.Rows[i].ItemArray.Select((item, index) =>
                             _viewModelMain.DataBase.QuoteValue(newFeatures.Columns[index].ColumnName ==
-                            updTable.toidfragidColumn.ColumnName ?
-                            (toidFragID + i).ToString(numFormat) : String.IsNullOrEmpty(item.ToString()) ? null : item))]));
+                            updTable.fragidColumn.ColumnName ?
+                            (fragID + i).ToString(numFormat) : String.IsNullOrEmpty(item.ToString()) ? null : item))]));
 
                     try
                     {

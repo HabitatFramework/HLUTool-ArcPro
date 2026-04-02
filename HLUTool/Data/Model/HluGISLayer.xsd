@@ -15,49 +15,49 @@
         <xs:element name="incid_mm_polygons" msprop:Generator_RowEvHandlerName="incid_mm_polygonsRowChangeEventHandler" msprop:Generator_RowDeletedName="incid_mm_polygonsRowDeleted" msprop:Generator_RowDeletingName="incid_mm_polygonsRowDeleting" msprop:Generator_RowEvArgName="incid_mm_polygonsRowChangeEvent" msprop:Generator_TablePropName="incid_mm_polygons" msprop:Generator_RowChangedName="incid_mm_polygonsRowChanged" msprop:Generator_UserTableName="incid_mm_polygons" msprop:Generator_RowChangingName="incid_mm_polygonsRowChanging" msprop:Generator_RowClassName="incid_mm_polygonsRow" msprop:Generator_TableClassName="incid_mm_polygonsDataTable" msprop:Generator_TableVarName="tableincid_mm_polygons">
           <xs:complexType>
             <xs:sequence>
-              <xs:element name="incid" msprop:Generator_UserColumnName="incid" msprop:Generator_ColumnPropNameInTable="incidColumn" msprop:Generator_ColumnPropNameInRow="incid" msprop:Generator_ColumnVarNameInTable="columnincid">
+              <xs:element name="incid" msprop:Generator_ColumnPropNameInTable="incidColumn" msprop:Generator_ColumnPropNameInRow="incid" msprop:Generator_UserColumnName="incid" msprop:Generator_ColumnVarNameInTable="columnincid">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:maxLength value="12" />
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
-              <xs:element name="toid" msprop:Generator_UserColumnName="toid" msprop:Generator_ColumnPropNameInTable="toidColumn" msprop:Generator_ColumnPropNameInRow="toid" msprop:Generator_ColumnVarNameInTable="columntoid">
+              <xs:element name="toid" msprop:Generator_ColumnPropNameInTable="toidColumn" msprop:Generator_ColumnPropNameInRow="toid" msprop:Generator_UserColumnName="toid" msprop:Generator_ColumnVarNameInTable="columntoid">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:maxLength value="20" />
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
-              <xs:element name="toidfragid" msprop:Generator_UserColumnName="toidfragid" msprop:Generator_ColumnPropNameInTable="toidfragidColumn" msprop:Generator_ColumnPropNameInRow="toidfragid" msprop:Generator_ColumnVarNameInTable="columntoidfragid">
+              <xs:element name="fragid" msprop:Generator_ColumnPropNameInTable="fragidColumn" msprop:Generator_ColumnPropNameInRow="fragid" msprop:Generator_UserColumnName="fragid" msprop:Generator_ColumnVarNameInTable="columnfragid">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:maxLength value="5" />
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
-              <xs:element name="habprimary" msprop:Generator_UserColumnName="habprimary" msprop:Generator_ColumnPropNameInTable="habprimaryColumn" msprop:Generator_ColumnPropNameInRow="habprimary" msprop:Generator_ColumnVarNameInTable="columnhabprimary" minOccurs="0">
+              <xs:element name="habprimary" msprop:Generator_ColumnPropNameInTable="habprimaryColumn" msprop:Generator_ColumnPropNameInRow="habprimary" msprop:Generator_UserColumnName="habprimary" msprop:Generator_ColumnVarNameInTable="columnhabprimary" minOccurs="0">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:maxLength value="8" />
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
-              <xs:element name="habsecond" msprop:Generator_UserColumnName="habsecond" msprop:Generator_ColumnPropNameInTable="habsecondColumn" msprop:Generator_ColumnPropNameInRow="habsecond" msprop:Generator_ColumnVarNameInTable="columnhabsecond" minOccurs="0">
+              <xs:element name="habsecond" msprop:Generator_ColumnPropNameInTable="habsecondColumn" msprop:Generator_ColumnPropNameInRow="habsecond" msprop:Generator_UserColumnName="habsecond" msprop:Generator_ColumnVarNameInTable="columnhabsecond" minOccurs="0">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:maxLength value="80" />
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
-              <xs:element name="determqty" msprop:Generator_UserColumnName="determqty" msprop:Generator_ColumnPropNameInTable="determqtyColumn" msprop:Generator_ColumnPropNameInRow="determqty" msprop:Generator_ColumnVarNameInTable="columndetermqty" minOccurs="0">
+              <xs:element name="determqty" msprop:Generator_ColumnPropNameInTable="determqtyColumn" msprop:Generator_ColumnPropNameInRow="determqty" msprop:Generator_UserColumnName="determqty" msprop:Generator_ColumnVarNameInTable="columndetermqty" minOccurs="0">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:maxLength value="2" />
                   </xs:restriction>
                 </xs:simpleType>
               </xs:element>
-              <xs:element name="interpqty" msprop:Generator_UserColumnName="interpqty" msprop:Generator_ColumnPropNameInTable="interpqtyColumn" msprop:Generator_ColumnPropNameInRow="interpqty" msprop:Generator_ColumnVarNameInTable="columninterpqty" minOccurs="0">
+              <xs:element name="interpqty" msprop:Generator_ColumnPropNameInTable="interpqtyColumn" msprop:Generator_ColumnPropNameInRow="interpqty" msprop:Generator_UserColumnName="interpqty" msprop:Generator_ColumnVarNameInTable="columninterpqty" minOccurs="0">
                 <xs:simpleType>
                   <xs:restriction base="xs:string">
                     <xs:maxLength value="2" />
@@ -73,7 +73,7 @@
       <xs:selector xpath=".//mstns:incid_mm_polygons" />
       <xs:field xpath="mstns:incid" />
       <xs:field xpath="mstns:toid" />
-      <xs:field xpath="mstns:toidfragid" />
+      <xs:field xpath="mstns:fragid" />
     </xs:unique>
   </xs:element>
 </xs:schema>

@@ -1,19 +1,20 @@
-﻿<controls:ProWindow x:Class="HLU.UI.View.WindowGdbExport"
-                    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
-                    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                    xmlns:local="clr-namespace:HLU.UI.ViewModel"
-                    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                    Title="Export to File Geodatabase"
-                    Width="480"
-                    d:DataContext="{d:DesignInstance Type=local:ViewModelWindowGdbExport}"
-                    ResizeMode="NoResize"
-                    ShowInTaskbar="False"
-                    SizeToContent="Height"
-                    Style="{DynamicResource ProWindowStyle}"
-                    WindowStartupLocation="CenterOwner"
-                    mc:Ignorable="d">
+﻿<controls:ProWindow
+    x:Class="HLU.UI.View.WindowGdbExport"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:HLU.UI.ViewModel"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="Export to File Geodatabase"
+    Width="480"
+    d:DataContext="{d:DesignInstance Type=local:ViewModelWindowGdbExport}"
+    ResizeMode="NoResize"
+    ShowInTaskbar="False"
+    SizeToContent="Height"
+    Style="{DynamicResource ProWindowStyle}"
+    WindowStartupLocation="CenterOwner"
+    mc:Ignorable="d">
 
     <controls:ProWindow.Resources>
         <ResourceDictionary>
@@ -35,71 +36,65 @@
             </Grid.RowDefinitions>
 
             <!--  File Geodatabase label  -->
-            <Label Grid.Row="0"
-                   Margin="0,0,0,2"
-                   Padding="0"
-                   Content="File Geodatabase:" />
+            <Label
+                Grid.Row="0"
+                Margin="0,0,0,2"
+                Padding="0"
+                Content="File Geodatabase:" />
 
             <!--  GDB path box + Browse button  -->
-            <Grid Grid.Row="1"
-                  Margin="0,0,6,10">
+            <Grid Grid.Row="1" Margin="0,0,6,10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBox x:Name="TextBoxGdbPath"
-                         Grid.Column="0"
-                         VerticalContentAlignment="Center"
-                         IsReadOnly="True"
-                         Tag="{Binding RelativeSource={RelativeSource Self},
-                                  Path=(Validation.Errors).CurrentItem.ErrorContent,
-                                  Converter={StaticResource errorMessageConverter}}"
-                         Text="{Binding GdbPath,
-                                   Mode=TwoWay,
-                                   UpdateSourceTrigger=PropertyChanged,
-                                   ValidatesOnDataErrors=True}"
-                         ToolTip="{Binding RelativeSource={RelativeSource Self},
-                                      Path=(Validation.Errors).CurrentItem.ErrorContent}"
-                         Validation.ErrorTemplate="{StaticResource ErrorTemplate}" />
-                <Button x:Name="ButtonBrowse"
-                        Grid.Column="1"
-                        Width="70"
-                        Margin="6,0,0,0"
-                        Click="ButtonBrowse_Click"
-                        Content="Browse…"
-                        Style="{DynamicResource Esri_Button}" />
+                <TextBox
+                    x:Name="TextBoxGdbPath"
+                    Grid.Column="0"
+                    VerticalContentAlignment="Center"
+                    IsReadOnly="True"
+                    Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                    Text="{Binding GdbPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
+                    Validation.ErrorTemplate="{StaticResource ErrorTemplate}" />
+                <Button
+                    x:Name="ButtonBrowse"
+                    Grid.Column="1"
+                    Width="70"
+                    Margin="6,0,0,0"
+                    Click="ButtonBrowse_Click"
+                    Content="Browse…"
+                    Style="{DynamicResource Esri_Button}" />
             </Grid>
 
             <!--  Feature class name label  -->
-            <Label Grid.Row="2"
-                   Margin="0,0,0,2"
-                   Padding="0"
-                   Content="Feature class name:" />
+            <Label
+                Grid.Row="2"
+                Margin="0,0,0,2"
+                Padding="0"
+                Content="Feature class name:" />
 
             <!--  Feature class name text box + rules  -->
-            <StackPanel Grid.Row="3"
-                        Margin="0,0,6,4">
-                <TextBox x:Name="TextBoxFeatureClassName"
-                         Margin="0,0,0,6"
-                         Tag="{Binding RelativeSource={RelativeSource Self},
-                                  Path=(Validation.Errors).CurrentItem.ErrorContent,
-                                  Converter={StaticResource errorMessageConverter}}"
-                         Text="{Binding FeatureClassName,
-                                   Mode=TwoWay,
-                                   UpdateSourceTrigger=PropertyChanged,
-                                   ValidatesOnDataErrors=True}"
-                         ToolTip="{Binding RelativeSource={RelativeSource Self},
-                                      Path=(Validation.Errors).CurrentItem.ErrorContent}"
-                         Validation.ErrorTemplate="{StaticResource ErrorTemplate}" />
-                <TextBlock FontSize="11"
-                           Text="• Must start with a letter"
-                           TextWrapping="Wrap" />
-                <TextBlock FontSize="11"
-                           Text="• Letters, numbers, and underscores only"
-                           TextWrapping="Wrap" />
-                <TextBlock FontSize="11"
-                           Text="• Maximum 64 characters"
-                           TextWrapping="Wrap" />
+            <StackPanel Grid.Row="3" Margin="0,0,6,4">
+                <TextBox
+                    x:Name="TextBoxFeatureClassName"
+                    Margin="0,0,0,6"
+                    Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                    Text="{Binding FeatureClassName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
+                    Validation.ErrorTemplate="{StaticResource ErrorTemplate}" />
+                <TextBlock
+                    FontSize="11"
+                    Text="• Must start with a letter"
+                    TextWrapping="Wrap" />
+                <TextBlock
+                    FontSize="11"
+                    Text="• Letters, numbers, and underscores only"
+                    TextWrapping="Wrap" />
+                <TextBlock
+                    FontSize="11"
+                    Text="• Maximum 64 characters"
+                    TextWrapping="Wrap" />
             </StackPanel>
 
             <!--  Spacer (row 4)  -->
@@ -111,21 +106,23 @@
                     <ColumnDefinition Width="82" />
                     <ColumnDefinition Width="82" />
                 </Grid.ColumnDefinitions>
-                <Button x:Name="ButtonOk"
-                        Grid.Column="1"
-                        Margin="0,0,2,0"
-                        Click="ButtonOk_Click"
-                        Content="_OK"
-                        IsDefault="True"
-                        IsEnabled="{Binding IsValid}"
-                        Style="{DynamicResource Esri_Button}" />
-                <Button x:Name="ButtonCancel"
-                        Grid.Column="2"
-                        Margin="2,0,0,0"
-                        Click="ButtonCancel_Click"
-                        Content="_Cancel"
-                        IsCancel="True"
-                        Style="{DynamicResource Esri_Button}" />
+                <Button
+                    x:Name="ButtonOk"
+                    Grid.Column="1"
+                    Margin="0,0,2,0"
+                    Click="ButtonOk_Click"
+                    Content="_OK"
+                    IsDefault="True"
+                    IsEnabled="{Binding IsValid}"
+                    Style="{DynamicResource Esri_Button}" />
+                <Button
+                    x:Name="ButtonCancel"
+                    Grid.Column="2"
+                    Margin="2,0,0,0"
+                    Click="ButtonCancel_Click"
+                    Content="_Cancel"
+                    IsCancel="True"
+                    Style="{DynamicResource Esri_Button}" />
             </Grid>
         </Grid>
     </DockPanel>

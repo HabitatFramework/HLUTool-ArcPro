@@ -285,7 +285,7 @@ namespace HLU.Data.Model {
             
             private global::System.Data.DataColumn columntoid;
             
-            private global::System.Data.DataColumn columntoidfragid;
+            private global::System.Data.DataColumn columnfragid;
             
             private global::System.Data.DataColumn columnhabprimary;
             
@@ -348,9 +348,9 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public global::System.Data.DataColumn toidfragidColumn {
+            public global::System.Data.DataColumn fragidColumn {
                 get {
-                    return this.columntoidfragid;
+                    return this.columnfragid;
                 }
             }
             
@@ -423,12 +423,12 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public incid_mm_polygonsRow Addincid_mm_polygonsRow(string incid, string toid, string toidfragid, string habprimary, string habsecond, string determqty, string interpqty) {
+            public incid_mm_polygonsRow Addincid_mm_polygonsRow(string incid, string toid, string fragid, string habprimary, string habsecond, string determqty, string interpqty) {
                 incid_mm_polygonsRow rowincid_mm_polygonsRow = ((incid_mm_polygonsRow)(this.NewRow()));
                 object[] columnValuesArray = new object[] {
                         incid,
                         toid,
-                        toidfragid,
+                        fragid,
                         habprimary,
                         habsecond,
                         determqty,
@@ -440,11 +440,11 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public incid_mm_polygonsRow FindByincidtoidtoidfragid(string incid, string toid, string toidfragid) {
+            public incid_mm_polygonsRow FindByincidtoidfragid(string incid, string toid, string fragid) {
                 return ((incid_mm_polygonsRow)(this.Rows.Find(new object[] {
                             incid,
                             toid,
-                            toidfragid})));
+                            fragid})));
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -466,7 +466,7 @@ namespace HLU.Data.Model {
             internal void InitVars() {
                 this.columnincid = base.Columns["incid"];
                 this.columntoid = base.Columns["toid"];
-                this.columntoidfragid = base.Columns["toidfragid"];
+                this.columnfragid = base.Columns["fragid"];
                 this.columnhabprimary = base.Columns["habprimary"];
                 this.columnhabsecond = base.Columns["habsecond"];
                 this.columndetermqty = base.Columns["determqty"];
@@ -480,8 +480,8 @@ namespace HLU.Data.Model {
                 base.Columns.Add(this.columnincid);
                 this.columntoid = new global::System.Data.DataColumn("toid", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columntoid);
-                this.columntoidfragid = new global::System.Data.DataColumn("toidfragid", typeof(string), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columntoidfragid);
+                this.columnfragid = new global::System.Data.DataColumn("fragid", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnfragid);
                 this.columnhabprimary = new global::System.Data.DataColumn("habprimary", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnhabprimary);
                 this.columnhabsecond = new global::System.Data.DataColumn("habsecond", typeof(string), null, global::System.Data.MappingType.Element);
@@ -493,13 +493,13 @@ namespace HLU.Data.Model {
                 this.Constraints.Add(new global::System.Data.UniqueConstraint("PK_INCID_MM_Polygons", new global::System.Data.DataColumn[] {
                                 this.columnincid,
                                 this.columntoid,
-                                this.columntoidfragid}, true));
+                                this.columnfragid}, true));
                 this.columnincid.AllowDBNull = false;
                 this.columnincid.MaxLength = 12;
                 this.columntoid.AllowDBNull = false;
                 this.columntoid.MaxLength = 20;
-                this.columntoidfragid.AllowDBNull = false;
-                this.columntoidfragid.MaxLength = 5;
+                this.columnfragid.AllowDBNull = false;
+                this.columnfragid.MaxLength = 5;
                 this.columnhabprimary.MaxLength = 8;
                 this.columnhabsecond.MaxLength = 80;
                 this.columndetermqty.MaxLength = 2;
@@ -668,12 +668,12 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public string toidfragid {
+            public string fragid {
                 get {
-                    return ((string)(this[this.tableincid_mm_polygons.toidfragidColumn]));
+                    return ((string)(this[this.tableincid_mm_polygons.fragidColumn]));
                 }
                 set {
-                    this[this.tableincid_mm_polygons.toidfragidColumn] = value;
+                    this[this.tableincid_mm_polygons.fragidColumn] = value;
                 }
             }
             

@@ -7757,7 +7757,7 @@ namespace HLU.UI.ViewModel
 
                     // Count the number of toids and fragments for the current incid
                     // selected in the GIS and in the database.
-                    CountCurrentIncidToidFrags();
+                    CountCurrentIncidFrags();
 
                     // Refresh all the status type fields.
                     RefreshStatus();
@@ -7842,7 +7842,7 @@ namespace HLU.UI.ViewModel
 
             // Count the number of toids and fragments for the current incid
             // selected in the GIS and in the database.
-            CountCurrentIncidToidFrags();
+            CountCurrentIncidFrags();
 
             // Refresh all the status type fields.
             RefreshStatus();
@@ -7913,7 +7913,7 @@ namespace HLU.UI.ViewModel
 
                     // Recount the number of toids and fragments for the current incid
                     // selected in the GIS and in the database.
-                    CountCurrentIncidToidFrags();
+                    CountCurrentIncidFrags();
 
                     // Refresh all the status type fields.
                     RefreshStatus();

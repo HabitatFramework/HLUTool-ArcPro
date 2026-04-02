@@ -99,7 +99,7 @@ namespace HLU.UI.ViewModel
             }
 
             // Check all selected features are in the database.
-            if (!_viewModelMain.CheckSelectedToidFrags(false))
+            if (!_viewModelMain.CheckSelectedFrags(false))
             {
                 // Show warning message
                 _viewModelMain.ShowWarning("Cannot logically merge: One or more selected map features missing from database.", MessageCategory.Merge);
@@ -243,12 +243,12 @@ namespace HLU.UI.ViewModel
                 List<HluDataSet.incid_mm_polygonsRow> polygonsToUpdate = [.. selectTable.Where(r => !String.Equals(r.incid, keepIncid, StringComparison.Ordinal))];
 
                 // Update existing history rows only for polygons that are being moved.
-                List<(string Incid, string Toid, string ToidFragId)> losingPolygonKeys = [.. polygonsToUpdate
-                    .Select(r => (r.incid, r.toid, r.toidfragid))
+                List<(string Incid, string Toid, string FragId)> losingPolygonKeys = [.. polygonsToUpdate
+                    .Select(r => (r.incid, r.toid, r.fragid))
                     .Where(k =>
                         !String.IsNullOrWhiteSpace(k.incid) &&
                         !String.IsNullOrWhiteSpace(k.toid) &&
-                        !String.IsNullOrWhiteSpace(k.toidfragid))
+                        !String.IsNullOrWhiteSpace(k.fragid))
                     .Distinct()];
 
                 //// Update the history for the losing polygons.
@@ -279,7 +279,7 @@ namespace HLU.UI.ViewModel
                     updateFields = [.. (from c in selectTable.Columns.Cast<DataColumn>()
                                     where (c.Ordinal != _viewModelMain.HluDataset.incid_mm_polygons.incidColumn.Ordinal) &&
                                         (c.Ordinal != _viewModelMain.HluDataset.incid_mm_polygons.toidColumn.Ordinal) &&
-                                        (c.Ordinal != _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.Ordinal) &&
+                                        (c.Ordinal != _viewModelMain.HluDataset.incid_mm_polygons.fragidColumn.Ordinal) &&
                                         (c.Ordinal != _viewModelMain.HluDataset.incid_mm_polygons.shape_lengthColumn.Ordinal) &&
                                         (c.Ordinal != _viewModelMain.HluDataset.incid_mm_polygons.shape_areaColumn.Ordinal)
                                     select new KeyValuePair<int, object>(c.Ordinal, keepPolygon[c.Ordinal]))];
@@ -488,7 +488,7 @@ namespace HLU.UI.ViewModel
             }
 
             // Check all selected features are in the database.
-            if (!_viewModelMain.CheckSelectedToidFrags(false))
+            if (!_viewModelMain.CheckSelectedFrags(false))
             {
                 // Show warning message
                 _viewModelMain.ShowWarning("Cannot physically merge: One or more selected map features missing from database.", MessageCategory.Merge);
@@ -530,15 +530,15 @@ namespace HLU.UI.ViewModel
             if (selectTable.Count != _viewModelMain.GisSelection.Rows.Count)
                 throw new Exception($"GIS Layer and database are out of sync:\n{_viewModelMain.SelectedFragsInGISCount} map polygons, {selectTable.Count} rows in table {_viewModelMain.HluDataset.incid_mm_polygons.TableName}.");
 
-            // Get the lowest toidfragid in selection to assign to the result feature.
-            string newToidFragmentID = selectTable.Min(r => r.toidfragid);
+            // Get the lowest fragid in selection to assign to the result feature.
+            string newFragmentID = selectTable.Min(r => r.fragid);
 
             // Choose (or prompt user to select) which feature to keep
             if (selectTable.GroupBy(r => r.incid).Count() == 1)
             {
-                int minFragmID = Int32.Parse(newToidFragmentID);
+                int minFragmID = Int32.Parse(newFragmentID);
                 _mergeResultFeatureIndex = selectTable.Select((r, index) =>
-                    Int32.Parse(r.toidfragid) == minFragmID ? index : -1).First(i => i != -1);
+                    Int32.Parse(r.fragid) == minFragmID ? index : -1).First(i => i != -1);
             }
             else
             {
@@ -627,11 +627,11 @@ namespace HLU.UI.ViewModel
                     throw new Exception("Error getting merge feature(s) from database.");
 
                 // HistoryTable contains rows of features merged into result feature (i.e. no longer existing)
-                // and last row with data of result feature (remaining in GIS, lowest toidfragid of merged features)
+                // and last row with data of result feature (remaining in GIS, lowest fragid of merged features)
                 // this last row must be removed before writing history
                 // but is needed to update geometry fields in incid_mm_polygons.
                 DataTable historyTable = await _viewModelMain.GISApplication.MergeFeaturesPhysicallyAsync(
-                    newToidFragmentID,
+                    newFragmentID,
                     [.. resultFeatureWhereClause[0].Select(c => c.Clone())],
                     _viewModelMain.HistoryColumns,
                     editOperation);
@@ -643,7 +643,7 @@ namespace HLU.UI.ViewModel
                 // Update the history table to reflect there is now only one feature.
                 DataTable resultTable = historyTable.Clone();
                 DataRow resultRow = historyTable.AsEnumerable().FirstOrDefault(r =>
-                    r.Field<string>(_viewModelMain.HluDataset.history.toidfragidColumn.ColumnName) == newToidFragmentID);
+                    r.Field<string>(_viewModelMain.HluDataset.history.fragidColumn.ColumnName) == newFragmentID);
 
                 if (resultRow == null)
                     throw new Exception("Failed to obtain geometry data of result feature from GIS.");
@@ -653,10 +653,10 @@ namespace HLU.UI.ViewModel
                 resultRow.Delete();
                 historyTable.AcceptChanges();
 
-                // Build a list of merged toidfragids (excluding the kept fragment).
-                List<string> mergedToidFragIds = [.. selectTable
+                // Build a list of merged fragids (excluding the kept fragment).
+                List<string> mergedFragIds = [.. selectTable
                     .Where((r, index) => index != _mergeResultFeatureIndex)
-                    .Select(r => r.toidfragid)
+                    .Select(r => r.fragid)
                     .Where(f => !String.IsNullOrWhiteSpace(f))
                     .Distinct()];
 
@@ -665,11 +665,11 @@ namespace HLU.UI.ViewModel
                 UpdateHistoryForPhysicalMerge(
                     selectTable[0].incid,
                     selectTable[0].toid,
-                    mergedToidFragIds,
-                    newToidFragmentID);
+                    mergedFragIds,
+                    newFragmentID);
 
                 // Synchronize the DB shadow copy of the GIS layer.
-                MergeSynchronizeIncidMMPolygons(selectTable, resultTable, newToidFragmentID,
+                MergeSynchronizeIncidMMPolygons(selectTable, resultTable, newFragmentID,
                     resultFeatureWhereClause[0], mergeFeaturesWhereClause);
 
                 // Create fixed values for history write.
@@ -677,7 +677,7 @@ namespace HLU.UI.ViewModel
                     {
                         { _viewModelMain.HluDataset.history.incidColumn.Ordinal, selectTable[0].incid },
                         { _viewModelMain.HluDataset.history.toidColumn.Ordinal, selectTable[0].toid },
-                        { _viewModelMain.HluDataset.history.toidfragidColumn.Ordinal, newToidFragmentID }
+                        { _viewModelMain.HluDataset.history.fragidColumn.Ordinal, newFragmentID }
                     };
 
                 // Write the history records.
@@ -793,51 +793,51 @@ namespace HLU.UI.ViewModel
         /// types (point, line, polygon) and adjusts the update logic accordingly.</remarks>
         /// <param name="selectTable">The source table containing the polygon features to be merged.</param>
         /// <param name="resultTable">The table containing the result feature to be updated with the merged attributes.</param>
-        /// <param name="newToidFragmentID">The new identifier to assign to the result feature after the merge.</param>
+        /// <param name="newFragmentID">The new identifier to assign to the result feature after the merge.</param>
         /// <param name="resultFeatureWhereClause">A list of conditions used to identify the result feature to be updated.</param>
         /// <param name="mergeFeaturesWhereClause">A collection of condition lists, where each list specifies the criteria for identifying the features to be
         /// merged and removed from the dataset.</param>
         private void MergeSynchronizeIncidMMPolygons(HluDataSet.incid_mm_polygonsDataTable selectTable,
-            DataTable resultTable, string newToidFragmentID, List<SqlFilterCondition> resultFeatureWhereClause,
+            DataTable resultTable, string newFragmentID, List<SqlFilterCondition> resultFeatureWhereClause,
             List<List<SqlFilterCondition>> mergeFeaturesWhereClause)
         {
-            // Create an update statement for the result feature: lowest toidfragid
+            // Create an update statement for the result feature: lowest fragid
             // in the selection set and sum of shape_length/shape_area of merged features
             string updateWhereClause = _viewModelMain.DataBase.WhereClause(false, true, true, resultFeatureWhereClause);
             string updateStatement = null;
             switch (_viewModelMain.GisLayerType)
             {
-                // Update just the toidfragid for point geometries.
+                // Update just the fragid for point geometries.
                 case HluGeometryTypes.Point:
                     updateStatement = String.Format("UPDATE {0} SET {1} = {2} WHERE {3}",
                         _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
                         _viewModelMain.DataBase.QuoteIdentifier(
-                            _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.ColumnName),
-                        _viewModelMain.DataBase.QuoteValue(newToidFragmentID), updateWhereClause);
+                            _viewModelMain.HluDataset.incid_mm_polygons.fragidColumn.ColumnName),
+                        _viewModelMain.DataBase.QuoteValue(newFragmentID), updateWhereClause);
                     break;
 
-                // Update toidfragid and shape_length for line geometries.
+                // Update fragid and shape_length for line geometries.
                 case HluGeometryTypes.Line:
                     double plineLength = resultTable.Rows[0].Field<double>(ViewModelWindowMain.HistoryGeometry1ColumnName);
                     updateStatement = String.Format("UPDATE {0} SET {1} = {2}, {3} = {4} WHERE {5}",
                         _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
                         _viewModelMain.DataBase.QuoteIdentifier(
-                            _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.ColumnName),
-                        _viewModelMain.DataBase.QuoteValue(newToidFragmentID),
+                            _viewModelMain.HluDataset.incid_mm_polygons.fragidColumn.ColumnName),
+                        _viewModelMain.DataBase.QuoteValue(newFragmentID),
                         _viewModelMain.DataBase.QuoteIdentifier(
                             _viewModelMain.HluDataset.incid_mm_polygons.shape_lengthColumn.ColumnName),
                         plineLength, updateWhereClause);
                     break;
 
-                // Update toidfragid, shape_length and shape_area for polygon geometries.
+                // Update fragid, shape_length and shape_area for polygon geometries.
                 case HluGeometryTypes.Polygon:
                     double shapeLength = resultTable.Rows[0].Field<double>(ViewModelWindowMain.HistoryGeometry1ColumnName);
                     double shapeArea = resultTable.Rows[0].Field<double>(ViewModelWindowMain.HistoryGeometry2ColumnName);
                     updateStatement = String.Format("UPDATE {0} SET {1} = {2}, {3} = {4}, {5} = {6} WHERE {7}",
                         _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
                         _viewModelMain.DataBase.QuoteIdentifier(
-                            _viewModelMain.HluDataset.incid_mm_polygons.toidfragidColumn.ColumnName),
-                        _viewModelMain.DataBase.QuoteValue(newToidFragmentID),
+                            _viewModelMain.HluDataset.incid_mm_polygons.fragidColumn.ColumnName),
+                        _viewModelMain.DataBase.QuoteValue(newFragmentID),
                         _viewModelMain.DataBase.QuoteIdentifier(
                             _viewModelMain.HluDataset.incid_mm_polygons.shape_lengthColumn.ColumnName), shapeLength,
                         _viewModelMain.DataBase.QuoteIdentifier(
@@ -903,14 +903,14 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Updates existing history rows for a logical merge so that history belonging to the losing polygon keys
-        /// (incid + toid + toidfragid) is reassigned to the kept incid.
+        /// (incid + toid + fragid) is reassigned to the kept incid.
         /// </summary>
         /// <param name="losingPolygonKeys">
-        /// The polygon keys (losing incid + toid + toidfragid) that are being merged into the kept incid.
+        /// The polygon keys (losing incid + toid + fragid) that are being merged into the kept incid.
         /// </param>
         /// <param name="keepIncid">The kept incid.</param>
         private void UpdateHistoryForLogicalMerge(
-            List<(string Incid, string Toid, string ToidFragId)> losingPolygonKeys,
+            List<(string Incid, string Toid, string FragId)> losingPolygonKeys,
             string keepIncid)
         {
             // Check parameters
@@ -931,21 +931,21 @@ namespace HLU.UI.ViewModel
                     "({0}, {1}, {2})",
                     _viewModelMain.DataBase.QuoteValue(k.Incid),
                     _viewModelMain.DataBase.QuoteValue(k.Toid),
-                    _viewModelMain.DataBase.QuoteValue(k.ToidFragId))));
+                    _viewModelMain.DataBase.QuoteValue(k.FragId))));
 
             // Build the update statement (more efficient and safer than multiple OR conditions).
             string updateStatement = String.Format(
                 "UPDATE h SET {0} = {1} " +
                 "FROM {2} h " +
-                "INNER JOIN (VALUES {3}) v(old_incid, old_toid, old_toidfragid) " +
-                "ON h.{4} = v.old_incid AND h.{5} = v.old_toid AND h.{6} = v.old_toidfragid",
+                "INNER JOIN (VALUES {3}) v(old_incid, old_toid, old_fragid) " +
+                "ON h.{4} = v.old_incid AND h.{5} = v.old_toid AND h.{6} = v.old_fragid",
                 _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.history.incidColumn.ColumnName),
                 _viewModelMain.DataBase.QuoteValue(keepIncid),
                 _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.history.TableName),
                 valuesClause,
                 _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.history.incidColumn.ColumnName),
                 _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.history.toidColumn.ColumnName),
-                _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.history.toidfragidColumn.ColumnName));
+                _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.history.fragidColumn.ColumnName));
 
             // Execute the update statement within the caller's transaction.
             try
@@ -967,38 +967,38 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="incid">The incid shared by all merged features.</param>
         /// <param name="toid">The toid shared by all merged features.</param>
-        /// <param name="oldToidFragIds">The fragment IDs that will be deleted from incid_mm_polygons.</param>
-        /// <param name="newToidFragId">The fragment ID that remains after the merge.</param>
+        /// <param name="oldFragIds">The fragment IDs that will be deleted from incid_mm_polygons.</param>
+        /// <param name="newFragId">The fragment ID that remains after the merge.</param>
         private void UpdateHistoryForPhysicalMerge(
             string incid,
             string toid,
-            List<string> oldToidFragIds,
-            string newToidFragId)
+            List<string> oldFragIds,
+            string newFragId)
         {
             // Check parameters
             if (String.IsNullOrWhiteSpace(incid)) return;
             if (String.IsNullOrWhiteSpace(toid)) return;
-            if (String.IsNullOrWhiteSpace(newToidFragId)) return;
-            if ((oldToidFragIds == null) || (oldToidFragIds.Count == 0)) return;
+            if (String.IsNullOrWhiteSpace(newFragId)) return;
+            if ((oldFragIds == null) || (oldFragIds.Count == 0)) return;
 
             // Remove the kept frag id if it accidentally appears in the list.
-            oldToidFragIds = [.. oldToidFragIds
-                .Where(f => !String.IsNullOrWhiteSpace(f) && !String.Equals(f, newToidFragId, StringComparison.Ordinal))
+            oldFragIds = [.. oldFragIds
+                .Where(f => !String.IsNullOrWhiteSpace(f) && !String.Equals(f, newFragId, StringComparison.Ordinal))
                 .Distinct()];
 
             // If no old frag ids remain, exit.
-            if (oldToidFragIds.Count == 0) return;
+            if (oldFragIds.Count == 0) return;
 
             // Build the IN list for the update statement.
             string inList = String.Join(",",
-                [.. oldToidFragIds.Select(f => _viewModelMain.DataBase.QuoteValue(f))]);
+                [.. oldFragIds.Select(f => _viewModelMain.DataBase.QuoteValue(f))]);
 
             // Build the update statement.
             string updateStatement = String.Format(
                 "UPDATE {0} SET {1} = {2} WHERE {3} = {4} AND {5} = {6} AND {1} IN ({7})",
                 _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.history.TableName),
-                _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.history.toidfragidColumn.ColumnName),
-                _viewModelMain.DataBase.QuoteValue(newToidFragId),
+                _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.history.fragidColumn.ColumnName),
+                _viewModelMain.DataBase.QuoteValue(newFragId),
                 _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.history.incidColumn.ColumnName),
                 _viewModelMain.DataBase.QuoteValue(incid),
                 _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.history.toidColumn.ColumnName),

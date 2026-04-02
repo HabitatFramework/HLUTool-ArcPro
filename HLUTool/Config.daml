@@ -444,7 +444,7 @@
 						smallImage="pack://application:,,,/HLUTool;component/Images/PhysicalSplit16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/PhysicalSplit32.png">
 					<tooltip heading="Physical Split">
-						Sub-divide a single feature, that has already been split in the active GIS layer, into one or more new TOID fragments by assigning new TOID fragment identifiers. The fragments can then be assigned different attributes (once they have been logically split from one another).
+						Sub-divide a single feature, that has already been split in the active GIS layer, into one or more new fragments by assigning new fragment identifiers. The fragments can then be assigned different attributes (once they have been logically split from one another).
 						<disabledText>Available only when not in bulk or OSMM update mode, editing is active, and more than one feature is selected that share the same INCID, TOID, and fragment ID.</disabledText>
 					</tooltip>
 				</button>
@@ -457,7 +457,7 @@
 						smallImage="pack://application:,,,/HLUTool;component/Images/PhysicalMerge16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/PhysicalMerge32.png">
 					<tooltip heading="Physical Merge">
-						Merge two or more fragments of a single TOID in the active GIS layer, that are also associated with the same INCID, into a new single feature and assigns them to the same TOID fragment identifier.
+						Merge two or more fragments of a single TOID in the active GIS layer, that are also associated with the same INCID, into a new single feature and assigns them to the same fragment identifier.
 						<disabledText>Available only when not in bulk or OSMM update mode, editing is active, and multiple features are selected for the same INCID and TOID but different fragments.</disabledText>
 					</tooltip>
 				</button>

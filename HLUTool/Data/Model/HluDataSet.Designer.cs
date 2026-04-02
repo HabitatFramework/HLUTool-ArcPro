@@ -242,8 +242,6 @@ namespace HLU.Data.Model {
         
         private global::System.Data.DataRelation relationfk_incid_mm_polygons_lut_primary;
         
-        private global::System.Data.DataRelation relationfk_history_incid_mm_polygons;
-        
         private global::System.Data.DataRelation relationlut_secondary_lut_secondary_bap_habitat;
         
         private global::System.Data.DataRelation relationlut_primary_lut_primary_bap_habitat;
@@ -255,6 +253,8 @@ namespace HLU.Data.Model {
         private global::System.Data.DataRelation relationfk_incid_osmm_updates_lut_osmm_habitat_xref;
         
         private global::System.Data.DataRelation relationlut_primary_lut_primary_secondary;
+        
+        private global::System.Data.DataRelation relationfk_history_incid_mm_polygons;
         
         private global::System.Data.SchemaSerializationMode _schemaSerializationMode = global::System.Data.SchemaSerializationMode.IncludeSchema;
         
@@ -1584,13 +1584,13 @@ namespace HLU.Data.Model {
             this.relationfk_incid_mm_polygons_lut_quality_interpretation = this.Relations["fk_incid_mm_polygons_lut_quality_interpretation"];
             this.relationfk_incid_mm_polygons_lut_quality_determination = this.Relations["fk_incid_mm_polygons_lut_quality_determination"];
             this.relationfk_incid_mm_polygons_lut_primary = this.Relations["fk_incid_mm_polygons_lut_primary"];
-            this.relationfk_history_incid_mm_polygons = this.Relations["fk_history_incid_mm_polygons"];
             this.relationlut_secondary_lut_secondary_bap_habitat = this.Relations["lut_secondary_lut_secondary_bap_habitat"];
             this.relationlut_primary_lut_primary_bap_habitat = this.Relations["lut_primary_lut_primary_bap_habitat"];
             this.relationfk_history_lut_quality_determination = this.Relations["fk_history_lut_quality_determination"];
             this.relationfk_history_lut_quality_interpretation = this.Relations["fk_history_lut_quality_interpretation"];
             this.relationfk_incid_osmm_updates_lut_osmm_habitat_xref = this.Relations["fk_incid_osmm_updates_lut_osmm_habitat_xref"];
             this.relationlut_primary_lut_primary_secondary = this.Relations["lut_primary_lut_primary_secondary"];
+            this.relationfk_history_incid_mm_polygons = this.Relations["fk_history_incid_mm_polygons"];
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -1943,14 +1943,6 @@ namespace HLU.Data.Model {
                         this.tablelut_primary.codeColumn}, new global::System.Data.DataColumn[] {
                         this.tableincid_mm_polygons.habprimaryColumn}, false);
             this.Relations.Add(this.relationfk_incid_mm_polygons_lut_primary);
-            this.relationfk_history_incid_mm_polygons = new global::System.Data.DataRelation("fk_history_incid_mm_polygons", new global::System.Data.DataColumn[] {
-                        this.tableincid_mm_polygons.incidColumn,
-                        this.tableincid_mm_polygons.toidColumn,
-                        this.tableincid_mm_polygons.toidfragidColumn}, new global::System.Data.DataColumn[] {
-                        this.tablehistory.incidColumn,
-                        this.tablehistory.toidColumn,
-                        this.tablehistory.toidfragidColumn}, false);
-            this.Relations.Add(this.relationfk_history_incid_mm_polygons);
             this.relationlut_secondary_lut_secondary_bap_habitat = new global::System.Data.DataRelation("lut_secondary_lut_secondary_bap_habitat", new global::System.Data.DataColumn[] {
                         this.tablelut_secondary.codeColumn}, new global::System.Data.DataColumn[] {
                         this.tablelut_secondary_bap_habitat.code_secondaryColumn}, false);
@@ -1975,6 +1967,14 @@ namespace HLU.Data.Model {
                         this.tablelut_primary.codeColumn}, new global::System.Data.DataColumn[] {
                         this.tablelut_primary_secondary.code_primaryColumn}, false);
             this.Relations.Add(this.relationlut_primary_lut_primary_secondary);
+            this.relationfk_history_incid_mm_polygons = new global::System.Data.DataRelation("fk_history_incid_mm_polygons", new global::System.Data.DataColumn[] {
+                        this.tableincid_mm_polygons.incidColumn,
+                        this.tableincid_mm_polygons.toidColumn,
+                        this.tableincid_mm_polygons.fragidColumn}, new global::System.Data.DataColumn[] {
+                        this.tablehistory.incidColumn,
+                        this.tablehistory.toidColumn,
+                        this.tablehistory.fragidColumn}, false);
+            this.Relations.Add(this.relationfk_history_incid_mm_polygons);
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -3504,7 +3504,7 @@ namespace HLU.Data.Model {
             
             private global::System.Data.DataColumn columntoid;
             
-            private global::System.Data.DataColumn columntoidfragid;
+            private global::System.Data.DataColumn columnfragid;
             
             private global::System.Data.DataColumn columnmodified_user_id;
             
@@ -3518,7 +3518,7 @@ namespace HLU.Data.Model {
             
             private global::System.Data.DataColumn columnmodified_incid;
             
-            private global::System.Data.DataColumn columnmodified_toidfragid;
+            private global::System.Data.DataColumn columnmodified_fragid;
             
             private global::System.Data.DataColumn columnmodified_length;
             
@@ -3593,9 +3593,9 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public global::System.Data.DataColumn toidfragidColumn {
+            public global::System.Data.DataColumn fragidColumn {
                 get {
-                    return this.columntoidfragid;
+                    return this.columnfragid;
                 }
             }
             
@@ -3649,9 +3649,9 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public global::System.Data.DataColumn modified_toidfragidColumn {
+            public global::System.Data.DataColumn modified_fragidColumn {
                 get {
-                    return this.columnmodified_toidfragid;
+                    return this.columnmodified_fragid;
                 }
             }
             
@@ -3744,14 +3744,14 @@ namespace HLU.Data.Model {
                         int history_id, 
                         incidRow parentincidRowByfk_habitat_history_incid, 
                         string toid, 
-                        string toidfragid, 
+                        string fragid, 
                         lut_userRow parentlut_userRowByfk_habitat_history_user, 
                         System.DateTime modified_date, 
                         lut_processRow parentlut_processRowByfk_habitat_history_lut_process, 
                         lut_reasonRow parentlut_reasonRowByfk_habitat_history_lut_reason, 
                         lut_operationRow parentlut_operationRowByfk_history_lut_operation, 
                         string modified_incid, 
-                        string modified_toidfragid, 
+                        string modified_fragid, 
                         double modified_length, 
                         double modified_area, 
                         string modified_habprimary, 
@@ -3763,14 +3763,14 @@ namespace HLU.Data.Model {
                         history_id,
                         null,
                         toid,
-                        toidfragid,
+                        fragid,
                         null,
                         modified_date,
                         null,
                         null,
                         null,
                         modified_incid,
-                        modified_toidfragid,
+                        modified_fragid,
                         modified_length,
                         modified_area,
                         modified_habprimary,
@@ -3830,14 +3830,14 @@ namespace HLU.Data.Model {
                 this.columnhistory_id = base.Columns["history_id"];
                 this.columnincid = base.Columns["incid"];
                 this.columntoid = base.Columns["toid"];
-                this.columntoidfragid = base.Columns["toidfragid"];
+                this.columnfragid = base.Columns["fragid"];
                 this.columnmodified_user_id = base.Columns["modified_user_id"];
                 this.columnmodified_date = base.Columns["modified_date"];
                 this.columnmodified_process = base.Columns["modified_process"];
                 this.columnmodified_reason = base.Columns["modified_reason"];
                 this.columnmodified_operation = base.Columns["modified_operation"];
                 this.columnmodified_incid = base.Columns["modified_incid"];
-                this.columnmodified_toidfragid = base.Columns["modified_toidfragid"];
+                this.columnmodified_fragid = base.Columns["modified_fragid"];
                 this.columnmodified_length = base.Columns["modified_length"];
                 this.columnmodified_area = base.Columns["modified_area"];
                 this.columnmodified_habprimary = base.Columns["modified_habprimary"];
@@ -3855,8 +3855,8 @@ namespace HLU.Data.Model {
                 base.Columns.Add(this.columnincid);
                 this.columntoid = new global::System.Data.DataColumn("toid", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columntoid);
-                this.columntoidfragid = new global::System.Data.DataColumn("toidfragid", typeof(string), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columntoidfragid);
+                this.columnfragid = new global::System.Data.DataColumn("fragid", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnfragid);
                 this.columnmodified_user_id = new global::System.Data.DataColumn("modified_user_id", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnmodified_user_id);
                 this.columnmodified_date = new global::System.Data.DataColumn("modified_date", typeof(global::System.DateTime), null, global::System.Data.MappingType.Element);
@@ -3869,8 +3869,8 @@ namespace HLU.Data.Model {
                 base.Columns.Add(this.columnmodified_operation);
                 this.columnmodified_incid = new global::System.Data.DataColumn("modified_incid", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnmodified_incid);
-                this.columnmodified_toidfragid = new global::System.Data.DataColumn("modified_toidfragid", typeof(string), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnmodified_toidfragid);
+                this.columnmodified_fragid = new global::System.Data.DataColumn("modified_fragid", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnmodified_fragid);
                 this.columnmodified_length = new global::System.Data.DataColumn("modified_length", typeof(double), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnmodified_length);
                 this.columnmodified_area = new global::System.Data.DataColumn("modified_area", typeof(double), null, global::System.Data.MappingType.Element);
@@ -3891,14 +3891,14 @@ namespace HLU.Data.Model {
                 this.columnincid.MaxLength = 12;
                 this.columntoid.AllowDBNull = false;
                 this.columntoid.MaxLength = 20;
-                this.columntoidfragid.AllowDBNull = false;
-                this.columntoidfragid.MaxLength = 5;
+                this.columnfragid.AllowDBNull = false;
+                this.columnfragid.MaxLength = 5;
                 this.columnmodified_user_id.MaxLength = 40;
                 this.columnmodified_process.MaxLength = 3;
                 this.columnmodified_reason.MaxLength = 3;
                 this.columnmodified_operation.MaxLength = 2;
                 this.columnmodified_incid.MaxLength = 12;
-                this.columnmodified_toidfragid.MaxLength = 5;
+                this.columnmodified_fragid.MaxLength = 5;
                 this.columnmodified_habprimary.MaxLength = 8;
                 this.columnmodified_habsecond.MaxLength = 80;
                 this.columnmodified_determqty.MaxLength = 2;
@@ -6160,7 +6160,7 @@ namespace HLU.Data.Model {
             
             private global::System.Data.DataColumn columntoid;
             
-            private global::System.Data.DataColumn columntoidfragid;
+            private global::System.Data.DataColumn columnfragid;
             
             private global::System.Data.DataColumn columnhabprimary;
             
@@ -6227,9 +6227,9 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public global::System.Data.DataColumn toidfragidColumn {
+            public global::System.Data.DataColumn fragidColumn {
                 get {
-                    return this.columntoidfragid;
+                    return this.columnfragid;
                 }
             }
             
@@ -6318,12 +6318,12 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public incid_mm_polygonsRow Addincid_mm_polygonsRow(string incid, string toid, string toidfragid, lut_primaryRow parentlut_primaryRowByfk_incid_mm_polygons_lut_primary, string habsecond, lut_quality_determinationRow parentlut_quality_determinationRowByfk_incid_mm_polygons_lut_quality_determination, lut_quality_interpretationRow parentlut_quality_interpretationRowByfk_incid_mm_polygons_lut_quality_interpretation, double shape_length, double shape_area) {
+            public incid_mm_polygonsRow Addincid_mm_polygonsRow(string incid, string toid, string fragid, lut_primaryRow parentlut_primaryRowByfk_incid_mm_polygons_lut_primary, string habsecond, lut_quality_determinationRow parentlut_quality_determinationRowByfk_incid_mm_polygons_lut_quality_determination, lut_quality_interpretationRow parentlut_quality_interpretationRowByfk_incid_mm_polygons_lut_quality_interpretation, double shape_length, double shape_area) {
                 incid_mm_polygonsRow rowincid_mm_polygonsRow = ((incid_mm_polygonsRow)(this.NewRow()));
                 object[] columnValuesArray = new object[] {
                         incid,
                         toid,
-                        toidfragid,
+                        fragid,
                         null,
                         habsecond,
                         null,
@@ -6346,11 +6346,11 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public incid_mm_polygonsRow FindByincidtoidtoidfragid(string incid, string toid, string toidfragid) {
+            public incid_mm_polygonsRow FindByincidtoidfragid(string incid, string toid, string fragid) {
                 return ((incid_mm_polygonsRow)(this.Rows.Find(new object[] {
                             incid,
                             toid,
-                            toidfragid})));
+                            fragid})));
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -6372,7 +6372,7 @@ namespace HLU.Data.Model {
             internal void InitVars() {
                 this.columnincid = base.Columns["incid"];
                 this.columntoid = base.Columns["toid"];
-                this.columntoidfragid = base.Columns["toidfragid"];
+                this.columnfragid = base.Columns["fragid"];
                 this.columnhabprimary = base.Columns["habprimary"];
                 this.columnhabsecond = base.Columns["habsecond"];
                 this.columndetermqty = base.Columns["determqty"];
@@ -6388,8 +6388,8 @@ namespace HLU.Data.Model {
                 base.Columns.Add(this.columnincid);
                 this.columntoid = new global::System.Data.DataColumn("toid", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columntoid);
-                this.columntoidfragid = new global::System.Data.DataColumn("toidfragid", typeof(string), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columntoidfragid);
+                this.columnfragid = new global::System.Data.DataColumn("fragid", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnfragid);
                 this.columnhabprimary = new global::System.Data.DataColumn("habprimary", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnhabprimary);
                 this.columnhabsecond = new global::System.Data.DataColumn("habsecond", typeof(string), null, global::System.Data.MappingType.Element);
@@ -6405,15 +6405,15 @@ namespace HLU.Data.Model {
                 this.Constraints.Add(new global::System.Data.UniqueConstraint("Constraint1", new global::System.Data.DataColumn[] {
                                 this.columnincid,
                                 this.columntoid,
-                                this.columntoidfragid}, true));
+                                this.columnfragid}, true));
                 this.columnincid.AllowDBNull = false;
                 this.columnincid.Caption = "Incid";
                 this.columnincid.MaxLength = 12;
                 this.columntoid.AllowDBNull = false;
                 this.columntoid.Caption = "Toid";
                 this.columntoid.MaxLength = 20;
-                this.columntoidfragid.AllowDBNull = false;
-                this.columntoidfragid.MaxLength = 5;
+                this.columnfragid.AllowDBNull = false;
+                this.columnfragid.MaxLength = 5;
                 this.columnhabprimary.MaxLength = 8;
                 this.columnhabsecond.MaxLength = 80;
                 this.columndetermqty.MaxLength = 2;
@@ -19511,12 +19511,12 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public string toidfragid {
+            public string fragid {
                 get {
-                    return ((string)(this[this.tablehistory.toidfragidColumn]));
+                    return ((string)(this[this.tablehistory.fragidColumn]));
                 }
                 set {
-                    this[this.tablehistory.toidfragidColumn] = value;
+                    this[this.tablehistory.fragidColumn] = value;
                 }
             }
             
@@ -19618,17 +19618,17 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public string modified_toidfragid {
+            public string modified_fragid {
                 get {
                     try {
-                        return ((string)(this[this.tablehistory.modified_toidfragidColumn]));
+                        return ((string)(this[this.tablehistory.modified_fragidColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'modified_toidfragid\' in table \'history\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'modified_fragid\' in table \'history\' is DBNull.", e);
                     }
                 }
                 set {
-                    this[this.tablehistory.modified_toidfragidColumn] = value;
+                    this[this.tablehistory.modified_fragidColumn] = value;
                 }
             }
             
@@ -19785,17 +19785,6 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public incid_mm_polygonsRow incid_mm_polygonsRowParent {
-                get {
-                    return ((incid_mm_polygonsRow)(this.GetParentRow(this.Table.ParentRelations["fk_history_incid_mm_polygons"])));
-                }
-                set {
-                    this.SetParentRow(value, this.Table.ParentRelations["fk_history_incid_mm_polygons"]);
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             public lut_quality_determinationRow lut_quality_determinationRow {
                 get {
                     return ((lut_quality_determinationRow)(this.GetParentRow(this.Table.ParentRelations["fk_history_lut_quality_determination"])));
@@ -19813,6 +19802,17 @@ namespace HLU.Data.Model {
                 }
                 set {
                     this.SetParentRow(value, this.Table.ParentRelations["fk_history_lut_quality_interpretation"]);
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public incid_mm_polygonsRow incid_mm_polygonsRowParent {
+                get {
+                    return ((incid_mm_polygonsRow)(this.GetParentRow(this.Table.ParentRelations["fk_history_incid_mm_polygons"])));
+                }
+                set {
+                    this.SetParentRow(value, this.Table.ParentRelations["fk_history_incid_mm_polygons"]);
                 }
             }
             
@@ -19890,14 +19890,14 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public bool Ismodified_toidfragidNull() {
-                return this.IsNull(this.tablehistory.modified_toidfragidColumn);
+            public bool Ismodified_fragidNull() {
+                return this.IsNull(this.tablehistory.modified_fragidColumn);
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public void Setmodified_toidfragidNull() {
-                this[this.tablehistory.modified_toidfragidColumn] = global::System.Convert.DBNull;
+            public void Setmodified_fragidNull() {
+                this[this.tablehistory.modified_fragidColumn] = global::System.Convert.DBNull;
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -21031,12 +21031,12 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public string toidfragid {
+            public string fragid {
                 get {
-                    return ((string)(this[this.tableincid_mm_polygons.toidfragidColumn]));
+                    return ((string)(this[this.tableincid_mm_polygons.fragidColumn]));
                 }
                 set {
-                    this[this.tableincid_mm_polygons.toidfragidColumn] = value;
+                    this[this.tableincid_mm_polygons.fragidColumn] = value;
                 }
             }
             
@@ -27004,7 +27004,7 @@ namespace HLU.Data.Model {
         }
     }
 }
-namespace HLU.Data.Model {
+namespace HLU.Data.Model.HluDataSetTableAdapters {
     
     
     /// <summary>
@@ -27183,7 +27183,7 @@ namespace HLU.Data.Model {
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -27573,7 +27573,7 @@ SELECT app_version, db_version, habitat_version, data_version FROM lut_version W
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v401ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -27917,65 +27917,65 @@ SELECT app_version, db_version, habitat_version, data_version FROM lut_version W
             this._adapter.DeleteCommand.Connection = this.Connection;
             this._adapter.DeleteCommand.CommandText = "DELETE FROM exports_fields\r\nWHERE        (export_field_id = @Original_export_fiel" +
                 "d_id) AND (export_id = @Original_export_id) AND (table_name = @Original_table_na" +
-                "me) AND \r\n                         (column_name = @Original_column_name) AND (co" +
-                "lumn_ordinal = @Original_column_ordinal) AND (@IsNull_field_name = 1) AND (field" +
-                "_name IS NULL) AND \r\n                         (field_ordinal = @Original_field_o" +
-                "rdinal) AND (@IsNull_fields_count = 1) AND (fields_count IS NULL) AND (field_typ" +
-                "e = @Original_field_type) AND \r\n                         (field_length = @Origin" +
-                "al_field_length) AND (@IsNull_field_format = 1) AND (field_format IS NULL) OR\r\n " +
-                "                        (export_field_id = @Original_export_field_id) AND (expor" +
-                "t_id = @Original_export_id) AND (table_name = @Original_table_name) AND \r\n      " +
-                "                   (column_name = @Original_column_name) AND (column_ordinal = @" +
-                "Original_column_ordinal) AND (field_name = @Original_field_name) AND \r\n         " +
-                "                (field_ordinal = @Original_field_ordinal) AND (@IsNull_fields_co" +
-                "unt = 1) AND (fields_count IS NULL) AND (field_type = @Original_field_type) AND " +
-                "\r\n                         (field_length = @Original_field_length) AND (@IsNull_" +
-                "field_format = 1) AND (field_format IS NULL) OR\r\n                         (expor" +
-                "t_field_id = @Original_export_field_id) AND (export_id = @Original_export_id) AN" +
-                "D (table_name = @Original_table_name) AND \r\n                         (column_nam" +
-                "e = @Original_column_name) AND (column_ordinal = @Original_column_ordinal) AND (" +
-                "@IsNull_field_name = 1) AND (field_name IS NULL) AND \r\n                         " +
-                "(field_ordinal = @Original_field_ordinal) AND (fields_count = @Original_fields_c" +
-                "ount) AND (field_type = @Original_field_type) AND \r\n                         (fi" +
-                "eld_length = @Original_field_length) AND (@IsNull_field_format = 1) AND (field_f" +
-                "ormat IS NULL) OR\r\n                         (export_field_id = @Original_export_" +
-                "field_id) AND (export_id = @Original_export_id) AND (table_name = @Original_tabl" +
-                "e_name) AND \r\n                         (column_name = @Original_column_name) AND" +
-                " (column_ordinal = @Original_column_ordinal) AND (field_name = @Original_field_n" +
-                "ame) AND \r\n                         (field_ordinal = @Original_field_ordinal) AN" +
-                "D (fields_count = @Original_fields_count) AND (field_type = @Original_field_type" +
-                ") AND \r\n                         (field_length = @Original_field_length) AND (@I" +
-                "sNull_field_format = 1) AND (field_format IS NULL) OR\r\n                         " +
-                "(export_field_id = @Original_export_field_id) AND (export_id = @Original_export_" +
-                "id) AND (table_name = @Original_table_name) AND \r\n                         (colu" +
-                "mn_name = @Original_column_name) AND (column_ordinal = @Original_column_ordinal)" +
-                " AND (@IsNull_field_name = 1) AND (field_name IS NULL) AND \r\n                   " +
-                "      (field_ordinal = @Original_field_ordinal) AND (@IsNull_fields_count = 1) A" +
-                "ND (fields_count IS NULL) AND (field_type = @Original_field_type) AND \r\n        " +
-                "                 (field_length = @Original_field_length) AND (field_format = @Or" +
-                "iginal_field_format) OR\r\n                         (export_field_id = @Original_e" +
-                "xport_field_id) AND (export_id = @Original_export_id) AND (table_name = @Origina" +
-                "l_table_name) AND \r\n                         (column_name = @Original_column_nam" +
-                "e) AND (column_ordinal = @Original_column_ordinal) AND (field_name = @Original_f" +
-                "ield_name) AND \r\n                         (field_ordinal = @Original_field_ordin" +
-                "al) AND (@IsNull_fields_count = 1) AND (fields_count IS NULL) AND (field_type = " +
-                "@Original_field_type) AND \r\n                         (field_length = @Original_f" +
-                "ield_length) AND (field_format = @Original_field_format) OR\r\n                   " +
-                "      (export_field_id = @Original_export_field_id) AND (export_id = @Original_e" +
-                "xport_id) AND (table_name = @Original_table_name) AND \r\n                        " +
-                " (column_name = @Original_column_name) AND (column_ordinal = @Original_column_or" +
-                "dinal) AND (@IsNull_field_name = 1) AND (field_name IS NULL) AND \r\n             " +
-                "            (field_ordinal = @Original_field_ordinal) AND (fields_count = @Origi" +
-                "nal_fields_count) AND (field_type = @Original_field_type) AND \r\n                " +
-                "         (field_length = @Original_field_length) AND (field_format = @Original_f" +
-                "ield_format) OR\r\n                         (export_field_id = @Original_export_fi" +
-                "eld_id) AND (export_id = @Original_export_id) AND (table_name = @Original_table_" +
-                "name) AND \r\n                         (column_name = @Original_column_name) AND (" +
-                "column_ordinal = @Original_column_ordinal) AND (field_name = @Original_field_nam" +
-                "e) AND \r\n                         (field_ordinal = @Original_field_ordinal) AND " +
-                "(fields_count = @Original_fields_count) AND (field_type = @Original_field_type) " +
-                "AND \r\n                         (field_length = @Original_field_length) AND (fiel" +
-                "d_format = @Original_field_format)";
+                "me) AND\r\n                         (column_name = @Original_column_name) AND (col" +
+                "umn_ordinal = @Original_column_ordinal) AND (@IsNull_field_name = 1) AND (field_" +
+                "name IS NULL) AND\r\n                         (field_ordinal = @Original_field_ord" +
+                "inal) AND (@IsNull_fields_count = 1) AND (fields_count IS NULL) AND (field_type " +
+                "= @Original_field_type) AND\r\n                         (field_length = @Original_" +
+                "field_length) AND (@IsNull_field_format = 1) AND (field_format IS NULL) OR\r\n    " +
+                "                     (export_field_id = @Original_export_field_id) AND (export_i" +
+                "d = @Original_export_id) AND (table_name = @Original_table_name) AND\r\n          " +
+                "               (column_name = @Original_column_name) AND (column_ordinal = @Orig" +
+                "inal_column_ordinal) AND (field_name = @Original_field_name) AND\r\n              " +
+                "           (field_ordinal = @Original_field_ordinal) AND (@IsNull_fields_count =" +
+                " 1) AND (fields_count IS NULL) AND (field_type = @Original_field_type) AND\r\n    " +
+                "                     (field_length = @Original_field_length) AND (@IsNull_field_" +
+                "format = 1) AND (field_format IS NULL) OR\r\n                         (export_fiel" +
+                "d_id = @Original_export_field_id) AND (export_id = @Original_export_id) AND (tab" +
+                "le_name = @Original_table_name) AND\r\n                         (column_name = @Or" +
+                "iginal_column_name) AND (column_ordinal = @Original_column_ordinal) AND (@IsNull" +
+                "_field_name = 1) AND (field_name IS NULL) AND\r\n                         (field_o" +
+                "rdinal = @Original_field_ordinal) AND (fields_count = @Original_fields_count) AN" +
+                "D (field_type = @Original_field_type) AND\r\n                         (field_lengt" +
+                "h = @Original_field_length) AND (@IsNull_field_format = 1) AND (field_format IS " +
+                "NULL) OR\r\n                         (export_field_id = @Original_export_field_id)" +
+                " AND (export_id = @Original_export_id) AND (table_name = @Original_table_name) A" +
+                "ND\r\n                         (column_name = @Original_column_name) AND (column_o" +
+                "rdinal = @Original_column_ordinal) AND (field_name = @Original_field_name) AND\r\n" +
+                "                         (field_ordinal = @Original_field_ordinal) AND (fields_c" +
+                "ount = @Original_fields_count) AND (field_type = @Original_field_type) AND\r\n    " +
+                "                     (field_length = @Original_field_length) AND (@IsNull_field_" +
+                "format = 1) AND (field_format IS NULL) OR\r\n                         (export_fiel" +
+                "d_id = @Original_export_field_id) AND (export_id = @Original_export_id) AND (tab" +
+                "le_name = @Original_table_name) AND\r\n                         (column_name = @Or" +
+                "iginal_column_name) AND (column_ordinal = @Original_column_ordinal) AND (@IsNull" +
+                "_field_name = 1) AND (field_name IS NULL) AND\r\n                         (field_o" +
+                "rdinal = @Original_field_ordinal) AND (@IsNull_fields_count = 1) AND (fields_cou" +
+                "nt IS NULL) AND (field_type = @Original_field_type) AND\r\n                       " +
+                "  (field_length = @Original_field_length) AND (field_format = @Original_field_fo" +
+                "rmat) OR\r\n                         (export_field_id = @Original_export_field_id)" +
+                " AND (export_id = @Original_export_id) AND (table_name = @Original_table_name) A" +
+                "ND\r\n                         (column_name = @Original_column_name) AND (column_o" +
+                "rdinal = @Original_column_ordinal) AND (field_name = @Original_field_name) AND\r\n" +
+                "                         (field_ordinal = @Original_field_ordinal) AND (@IsNull_" +
+                "fields_count = 1) AND (fields_count IS NULL) AND (field_type = @Original_field_t" +
+                "ype) AND\r\n                         (field_length = @Original_field_length) AND (" +
+                "field_format = @Original_field_format) OR\r\n                         (export_fiel" +
+                "d_id = @Original_export_field_id) AND (export_id = @Original_export_id) AND (tab" +
+                "le_name = @Original_table_name) AND\r\n                         (column_name = @Or" +
+                "iginal_column_name) AND (column_ordinal = @Original_column_ordinal) AND (@IsNull" +
+                "_field_name = 1) AND (field_name IS NULL) AND\r\n                         (field_o" +
+                "rdinal = @Original_field_ordinal) AND (fields_count = @Original_fields_count) AN" +
+                "D (field_type = @Original_field_type) AND\r\n                         (field_lengt" +
+                "h = @Original_field_length) AND (field_format = @Original_field_format) OR\r\n    " +
+                "                     (export_field_id = @Original_export_field_id) AND (export_i" +
+                "d = @Original_export_id) AND (table_name = @Original_table_name) AND\r\n          " +
+                "               (column_name = @Original_column_name) AND (column_ordinal = @Orig" +
+                "inal_column_ordinal) AND (field_name = @Original_field_name) AND\r\n              " +
+                "           (field_ordinal = @Original_field_ordinal) AND (fields_count = @Origin" +
+                "al_fields_count) AND (field_type = @Original_field_type) AND\r\n                  " +
+                "       (field_length = @Original_field_length) AND (field_format = @Original_fie" +
+                "ld_format)";
             this._adapter.DeleteCommand.CommandType = global::System.Data.CommandType.Text;
             global::Microsoft.Data.SqlClient.SqlParameter param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@Original_export_field_id";
@@ -28372,7 +28372,7 @@ SELECT export_field_id, export_id, table_name, column_name, column_ordinal, fiel
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -28827,14 +28827,14 @@ SELECT export_field_id, export_id, table_name, column_name, column_ordinal, fiel
             tableMapping.ColumnMappings.Add("history_id", "history_id");
             tableMapping.ColumnMappings.Add("incid", "incid");
             tableMapping.ColumnMappings.Add("toid", "toid");
-            tableMapping.ColumnMappings.Add("toidfragid", "toidfragid");
+            tableMapping.ColumnMappings.Add("fragid", "fragid");
             tableMapping.ColumnMappings.Add("modified_user_id", "modified_user_id");
             tableMapping.ColumnMappings.Add("modified_date", "modified_date");
             tableMapping.ColumnMappings.Add("modified_process", "modified_process");
             tableMapping.ColumnMappings.Add("modified_reason", "modified_reason");
             tableMapping.ColumnMappings.Add("modified_operation", "modified_operation");
             tableMapping.ColumnMappings.Add("modified_incid", "modified_incid");
-            tableMapping.ColumnMappings.Add("modified_toidfragid", "modified_toidfragid");
+            tableMapping.ColumnMappings.Add("modified_fragid", "modified_fragid");
             tableMapping.ColumnMappings.Add("modified_area", "modified_area");
             tableMapping.ColumnMappings.Add("modified_length", "modified_length");
             tableMapping.ColumnMappings.Add("modified_habprimary", "modified_habprimary");
@@ -28844,28 +28844,31 @@ SELECT export_field_id, export_id, table_name, column_name, column_ordinal, fiel
             this._adapter.TableMappings.Add(tableMapping);
             this._adapter.DeleteCommand = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._adapter.DeleteCommand.Connection = this.Connection;
-            this._adapter.DeleteCommand.CommandText = "DELETE FROM [history] WHERE (([history_id] = @Original_history_id) AND ([incid] =" +
-                " @Original_incid) AND ([toid] = @Original_toid) AND ([toidfragid] = @Original_to" +
-                "idfragid) AND ((@IsNull_modified_user_id = 1 AND [modified_user_id] IS NULL) OR " +
-                "([modified_user_id] = @Original_modified_user_id)) AND ((@IsNull_modified_date =" +
-                " 1 AND [modified_date] IS NULL) OR ([modified_date] = @Original_modified_date)) " +
-                "AND ((@IsNull_modified_process = 1 AND [modified_process] IS NULL) OR ([modified" +
-                "_process] = @Original_modified_process)) AND ((@IsNull_modified_reason = 1 AND [" +
-                "modified_reason] IS NULL) OR ([modified_reason] = @Original_modified_reason)) AN" +
-                "D ((@IsNull_modified_habprimary = 1 AND [modified_habprimary] IS NULL) OR ([modi" +
-                "fied_habprimary] = @Original_modified_habprimary)) AND ((@IsNull_modified_habsec" +
-                "ond = 1 AND [modified_habsecond] IS NULL) OR ([modified_habsecond] = @Original_m" +
-                "odified_habsecond)) AND ((@IsNull_modified_determqty = 1 AND [modified_determqty" +
-                "] IS NULL) OR ([modified_determqty] = @Original_modified_determqty)) AND ((@IsNu" +
-                "ll_modified_interpqty = 1 AND [modified_interpqty] IS NULL) OR ([modified_interp" +
-                "qty] = @Original_modified_interpqty)) AND ((@IsNull_modified_operation = 1 AND [" +
-                "modified_operation] IS NULL) OR ([modified_operation] = @Original_modified_opera" +
-                "tion)) AND ((@IsNull_modified_incid = 1 AND [modified_incid] IS NULL) OR ([modif" +
-                "ied_incid] = @Original_modified_incid)) AND ((@IsNull_modified_toidfragid = 1 AN" +
-                "D [modified_toidfragid] IS NULL) OR ([modified_toidfragid] = @Original_modified_" +
-                "toidfragid)) AND ((@IsNull_modified_length = 1 AND [modified_length] IS NULL) OR" +
-                " ([modified_length] = @Original_modified_length)) AND ((@IsNull_modified_area = " +
-                "1 AND [modified_area] IS NULL) OR ([modified_area] = @Original_modified_area)))";
+            this._adapter.DeleteCommand.CommandText = "DELETE FROM history\r\nWHERE        (history_id = @Original_history_id) AND (incid " +
+                "= @Original_incid) AND (toid = @Original_toid) AND (@IsNull_modified_user_id = 1" +
+                " AND modified_user_id IS NULL OR\r\n                         modified_user_id = @O" +
+                "riginal_modified_user_id) AND (@IsNull_modified_date = 1 AND modified_date IS NU" +
+                "LL OR\r\n                         modified_date = @Original_modified_date) AND (@I" +
+                "sNull_modified_process = 1 AND modified_process IS NULL OR\r\n                    " +
+                "     modified_process = @Original_modified_process) AND (@IsNull_modified_reason" +
+                " = 1 AND modified_reason IS NULL OR\r\n                         modified_reason = " +
+                "@Original_modified_reason) AND (@IsNull_modified_habprimary = 1 AND modified_hab" +
+                "primary IS NULL OR\r\n                         modified_habprimary = @Original_mod" +
+                "ified_habprimary) AND (@IsNull_modified_habsecond = 1 AND modified_habsecond IS " +
+                "NULL OR\r\n                         modified_habsecond = @Original_modified_habsec" +
+                "ond) AND (@IsNull_modified_determqty = 1 AND modified_determqty IS NULL OR\r\n    " +
+                "                     modified_determqty = @Original_modified_determqty) AND (@Is" +
+                "Null_modified_interpqty = 1 AND modified_interpqty IS NULL OR\r\n                 " +
+                "        modified_interpqty = @Original_modified_interpqty) AND (@IsNull_modified" +
+                "_operation = 1 AND modified_operation IS NULL OR\r\n                         modif" +
+                "ied_operation = @Original_modified_operation) AND (@IsNull_modified_incid = 1 AN" +
+                "D modified_incid IS NULL OR\r\n                         modified_incid = @Original" +
+                "_modified_incid) AND (@IsNull_modified_length = 1 AND modified_length IS NULL OR" +
+                "\r\n                         modified_length = @Original_modified_length) AND (@Is" +
+                "Null_modified_area = 1 AND modified_area IS NULL OR\r\n                         mo" +
+                "dified_area = @Original_modified_area) AND (fragid = @Original_fragid) AND (@IsN" +
+                "ull_modified_fragid = 1 AND modified_fragid IS NULL OR\r\n                        " +
+                " modified_fragid = @Original_modified_fragid)";
             this._adapter.DeleteCommand.CommandType = global::System.Data.CommandType.Text;
             global::Microsoft.Data.SqlClient.SqlParameter param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@Original_history_id";
@@ -28890,10 +28893,10 @@ SELECT export_field_id, export_id, table_name, column_name, column_ordinal, fiel
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.DeleteCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
-            param.ParameterName = "@Original_toidfragid";
+            param.ParameterName = "@Original_fragid";
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
             param.IsNullable = true;
-            param.SourceColumn = "toidfragid";
+            param.SourceColumn = "fragid";
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.DeleteCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
@@ -29058,19 +29061,19 @@ SELECT export_field_id, export_id, table_name, column_name, column_ordinal, fiel
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.DeleteCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
-            param.ParameterName = "@IsNull_modified_toidfragid";
+            param.ParameterName = "@IsNull_modified_fragid";
             param.DbType = global::System.Data.DbType.Int32;
             param.SqlDbType = global::System.Data.SqlDbType.Int;
             param.IsNullable = true;
-            param.SourceColumn = "modified_toidfragid";
+            param.SourceColumn = "modified_fragid";
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             param.SourceColumnNullMapping = true;
             this._adapter.DeleteCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
-            param.ParameterName = "@Original_modified_toidfragid";
+            param.ParameterName = "@Original_modified_fragid";
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
             param.IsNullable = true;
-            param.SourceColumn = "modified_toidfragid";
+            param.SourceColumn = "modified_fragid";
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.DeleteCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
@@ -29109,8 +29112,11 @@ SELECT export_field_id, export_id, table_name, column_name, column_ordinal, fiel
             this._adapter.DeleteCommand.Parameters.Add(param);
             this._adapter.InsertCommand = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._adapter.InsertCommand.Connection = this.Connection;
-            this._adapter.InsertCommand.CommandText = @"INSERT INTO [history] ([history_id], [incid], [toid], [toidfragid], [modified_user_id], [modified_date], [modified_process], [modified_reason], [modified_habprimary], [modified_habsecond], [modified_determqty], [modified_interpqty], [modified_operation], [modified_incid], [modified_toidfragid], [modified_length], [modified_area]) VALUES (@history_id, @incid, @toid, @toidfragid, @modified_user_id, @modified_date, @modified_process, @modified_reason, @modified_habprimary, @modified_habsecond, @modified_determqty, @modified_interpqty, @modified_operation, @modified_incid, @modified_toidfragid, @modified_length, @modified_area);
-SELECT history_id, incid, toid, toidfragid, modified_user_id, modified_date, modified_process, modified_reason, modified_habprimary, modified_habsecond, modified_determqty, modified_interpqty, modified_operation, modified_incid, modified_toidfragid, modified_length, modified_area FROM history WHERE (history_id = @history_id)";
+            this._adapter.InsertCommand.CommandText = @"INSERT INTO history
+                         (history_id, incid, toid, fragid, modified_user_id, modified_date, modified_process, modified_reason, modified_habprimary, modified_habsecond, modified_determqty, modified_interpqty, modified_operation, modified_incid,
+                         modified_fragid, modified_length, modified_area)
+VALUES        (@history_id,@incid,@toid,@fragid,@modified_user_id,@modified_date,@modified_process,@modified_reason,@modified_habprimary,@modified_habsecond,@modified_determqty,@modified_interpqty,@modified_operation,@modified_incid,@modified_fragid,@modified_length,@modified_area);
+SELECT history_id, incid, toid, fragid, modified_user_id, modified_date, modified_process, modified_reason, modified_habprimary, modified_habsecond, modified_determqty, modified_interpqty, modified_operation, modified_incid, modified_fragid, modified_length, modified_area FROM history WHERE (history_id = @history_id)";
             this._adapter.InsertCommand.CommandType = global::System.Data.CommandType.Text;
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@history_id";
@@ -29132,10 +29138,10 @@ SELECT history_id, incid, toid, toidfragid, modified_user_id, modified_date, mod
             param.SourceColumn = "toid";
             this._adapter.InsertCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
-            param.ParameterName = "@toidfragid";
+            param.ParameterName = "@fragid";
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
             param.IsNullable = true;
-            param.SourceColumn = "toidfragid";
+            param.SourceColumn = "fragid";
             this._adapter.InsertCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@modified_user_id";
@@ -29199,10 +29205,10 @@ SELECT history_id, incid, toid, toidfragid, modified_user_id, modified_date, mod
             param.SourceColumn = "modified_incid";
             this._adapter.InsertCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
-            param.ParameterName = "@modified_toidfragid";
+            param.ParameterName = "@modified_fragid";
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
             param.IsNullable = true;
-            param.SourceColumn = "modified_toidfragid";
+            param.SourceColumn = "modified_fragid";
             this._adapter.InsertCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@modified_length";
@@ -29220,40 +29226,43 @@ SELECT history_id, incid, toid, toidfragid, modified_user_id, modified_date, mod
             this._adapter.InsertCommand.Parameters.Add(param);
             this._adapter.UpdateCommand = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._adapter.UpdateCommand.Connection = this.Connection;
-            this._adapter.UpdateCommand.CommandText = "UPDATE [history] SET [history_id] = @history_id, [incid] = @incid, [toid] = @toid" +
-                ", [toidfragid] = @toidfragid, [modified_user_id] = @modified_user_id, [modified_" +
-                "date] = @modified_date, [modified_process] = @modified_process, [modified_reason" +
-                "] = @modified_reason, [modified_habprimary] = @modified_habprimary, [modified_ha" +
-                "bsecond] = @modified_habsecond, [modified_determqty] = @modified_determqty, [mod" +
-                "ified_interpqty] = @modified_interpqty, [modified_operation] = @modified_operati" +
-                "on, [modified_incid] = @modified_incid, [modified_toidfragid] = @modified_toidfr" +
-                "agid, [modified_length] = @modified_length, [modified_area] = @modified_area WHE" +
-                "RE (([history_id] = @Original_history_id) AND ([incid] = @Original_incid) AND ([" +
-                "toid] = @Original_toid) AND ([toidfragid] = @Original_toidfragid) AND ((@IsNull_" +
-                "modified_user_id = 1 AND [modified_user_id] IS NULL) OR ([modified_user_id] = @O" +
-                "riginal_modified_user_id)) AND ((@IsNull_modified_date = 1 AND [modified_date] I" +
-                "S NULL) OR ([modified_date] = @Original_modified_date)) AND ((@IsNull_modified_p" +
-                "rocess = 1 AND [modified_process] IS NULL) OR ([modified_process] = @Original_mo" +
-                "dified_process)) AND ((@IsNull_modified_reason = 1 AND [modified_reason] IS NULL" +
-                ") OR ([modified_reason] = @Original_modified_reason)) AND ((@IsNull_modified_hab" +
-                "primary = 1 AND [modified_habprimary] IS NULL) OR ([modified_habprimary] = @Orig" +
-                "inal_modified_habprimary)) AND ((@IsNull_modified_habsecond = 1 AND [modified_ha" +
-                "bsecond] IS NULL) OR ([modified_habsecond] = @Original_modified_habsecond)) AND " +
-                "((@IsNull_modified_determqty = 1 AND [modified_determqty] IS NULL) OR ([modified" +
-                "_determqty] = @Original_modified_determqty)) AND ((@IsNull_modified_interpqty = " +
-                "1 AND [modified_interpqty] IS NULL) OR ([modified_interpqty] = @Original_modifie" +
-                "d_interpqty)) AND ((@IsNull_modified_operation = 1 AND [modified_operation] IS N" +
-                "ULL) OR ([modified_operation] = @Original_modified_operation)) AND ((@IsNull_mod" +
-                "ified_incid = 1 AND [modified_incid] IS NULL) OR ([modified_incid] = @Original_m" +
-                "odified_incid)) AND ((@IsNull_modified_toidfragid = 1 AND [modified_toidfragid] " +
-                "IS NULL) OR ([modified_toidfragid] = @Original_modified_toidfragid)) AND ((@IsNu" +
-                "ll_modified_length = 1 AND [modified_length] IS NULL) OR ([modified_length] = @O" +
-                "riginal_modified_length)) AND ((@IsNull_modified_area = 1 AND [modified_area] IS" +
-                " NULL) OR ([modified_area] = @Original_modified_area)));\r\nSELECT history_id, inc" +
-                "id, toid, toidfragid, modified_user_id, modified_date, modified_process, modifie" +
-                "d_reason, modified_habprimary, modified_habsecond, modified_determqty, modified_" +
-                "interpqty, modified_operation, modified_incid, modified_toidfragid, modified_len" +
-                "gth, modified_area FROM history WHERE (history_id = @history_id)";
+            this._adapter.UpdateCommand.CommandText = "UPDATE       history\r\nSET                history_id = @history_id, incid = @incid" +
+                ", toid = @toid, fragid = @fragid, modified_user_id = @modified_user_id, modified" +
+                "_date = @modified_date, modified_process = @modified_process, modified_reason = " +
+                "@modified_reason,\r\n                          modified_habprimary = @modified_hab" +
+                "primary, modified_habsecond = @modified_habsecond, modified_determqty = @modifie" +
+                "d_determqty, modified_interpqty = @modified_interpqty,\r\n                        " +
+                " modified_operation = @modified_operation, modified_incid = @modified_incid, mod" +
+                "ified_fragid = @modified_fragid, modified_length = @modified_length, modified_ar" +
+                "ea = @modified_area\r\nWHERE        (history_id = @Original_history_id) AND (incid" +
+                " = @Original_incid) AND (toid = @Original_toid) AND (@IsNull_modified_user_id = " +
+                "1 AND modified_user_id IS NULL OR\r\n                         modified_user_id = @" +
+                "Original_modified_user_id) AND (@IsNull_modified_date = 1 AND modified_date IS N" +
+                "ULL OR\r\n                         modified_date = @Original_modified_date) AND (@" +
+                "IsNull_modified_process = 1 AND modified_process IS NULL OR\r\n                   " +
+                "      modified_process = @Original_modified_process) AND (@IsNull_modified_reaso" +
+                "n = 1 AND modified_reason IS NULL OR\r\n                         modified_reason =" +
+                " @Original_modified_reason) AND (@IsNull_modified_habprimary = 1 AND modified_ha" +
+                "bprimary IS NULL OR\r\n                         modified_habprimary = @Original_mo" +
+                "dified_habprimary) AND (@IsNull_modified_habsecond = 1 AND modified_habsecond IS" +
+                " NULL OR\r\n                         modified_habsecond = @Original_modified_habse" +
+                "cond) AND (@IsNull_modified_determqty = 1 AND modified_determqty IS NULL OR\r\n   " +
+                "                      modified_determqty = @Original_modified_determqty) AND (@I" +
+                "sNull_modified_interpqty = 1 AND modified_interpqty IS NULL OR\r\n                " +
+                "         modified_interpqty = @Original_modified_interpqty) AND (@IsNull_modifie" +
+                "d_operation = 1 AND modified_operation IS NULL OR\r\n                         modi" +
+                "fied_operation = @Original_modified_operation) AND (@IsNull_modified_incid = 1 A" +
+                "ND modified_incid IS NULL OR\r\n                         modified_incid = @Origina" +
+                "l_modified_incid) AND (@IsNull_modified_length = 1 AND modified_length IS NULL O" +
+                "R\r\n                         modified_length = @Original_modified_length) AND (@I" +
+                "sNull_modified_area = 1 AND modified_area IS NULL OR\r\n                         m" +
+                "odified_area = @Original_modified_area) AND (@IsNull_modified_fragid = 1 AND mod" +
+                "ified_fragid IS NULL OR\r\n                         modified_fragid = @Original_mo" +
+                "dified_fragid) AND (fragid = @Original_fragid);\r\nSELECT history_id, incid, toid," +
+                " fragid, modified_user_id, modified_date, modified_process, modified_reason, mod" +
+                "ified_habprimary, modified_habsecond, modified_determqty, modified_interpqty, mo" +
+                "dified_operation, modified_incid, modified_fragid, modified_length, modified_are" +
+                "a FROM history WHERE (history_id = @history_id)";
             this._adapter.UpdateCommand.CommandType = global::System.Data.CommandType.Text;
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@history_id";
@@ -29275,10 +29284,10 @@ SELECT history_id, incid, toid, toidfragid, modified_user_id, modified_date, mod
             param.SourceColumn = "toid";
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
-            param.ParameterName = "@toidfragid";
+            param.ParameterName = "@fragid";
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
             param.IsNullable = true;
-            param.SourceColumn = "toidfragid";
+            param.SourceColumn = "fragid";
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@modified_user_id";
@@ -29342,10 +29351,10 @@ SELECT history_id, incid, toid, toidfragid, modified_user_id, modified_date, mod
             param.SourceColumn = "modified_incid";
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
-            param.ParameterName = "@modified_toidfragid";
+            param.ParameterName = "@modified_fragid";
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
             param.IsNullable = true;
-            param.SourceColumn = "modified_toidfragid";
+            param.SourceColumn = "modified_fragid";
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@modified_length";
@@ -29384,10 +29393,10 @@ SELECT history_id, incid, toid, toidfragid, modified_user_id, modified_date, mod
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
-            param.ParameterName = "@Original_toidfragid";
+            param.ParameterName = "@Original_fragid";
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
             param.IsNullable = true;
-            param.SourceColumn = "toidfragid";
+            param.SourceColumn = "fragid";
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
@@ -29552,19 +29561,19 @@ SELECT history_id, incid, toid, toidfragid, modified_user_id, modified_date, mod
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
-            param.ParameterName = "@IsNull_modified_toidfragid";
+            param.ParameterName = "@IsNull_modified_fragid";
             param.DbType = global::System.Data.DbType.Int32;
             param.SqlDbType = global::System.Data.SqlDbType.Int;
             param.IsNullable = true;
-            param.SourceColumn = "modified_toidfragid";
+            param.SourceColumn = "modified_fragid";
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             param.SourceColumnNullMapping = true;
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
-            param.ParameterName = "@Original_modified_toidfragid";
+            param.ParameterName = "@Original_modified_fragid";
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
             param.IsNullable = true;
-            param.SourceColumn = "modified_toidfragid";
+            param.SourceColumn = "modified_fragid";
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
@@ -29607,7 +29616,7 @@ SELECT history_id, incid, toid, toidfragid, modified_user_id, modified_date, mod
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -29616,8 +29625,8 @@ SELECT history_id, incid, toid, toidfragid, modified_user_id, modified_date, mod
             this._commandCollection = new global::Microsoft.Data.SqlClient.SqlCommand[1];
             this._commandCollection[0] = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._commandCollection[0].Connection = this.Connection;
-            this._commandCollection[0].CommandText = @"SELECT        history_id, incid, toid, toidfragid, modified_user_id, modified_date, modified_process, modified_reason, modified_habprimary, modified_habsecond, modified_determqty, 
-                         modified_interpqty, modified_operation, modified_incid, modified_toidfragid, modified_length, modified_area
+            this._commandCollection[0].CommandText = @"SELECT        history_id, incid, toid, fragid, modified_user_id, modified_date, modified_process, modified_reason, modified_habprimary, modified_habsecond, modified_determqty, modified_interpqty, modified_operation, modified_incid,
+                         modified_fragid, modified_length, modified_area
 FROM            history";
             this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;
         }
@@ -29683,7 +29692,7 @@ FROM            history";
                     int Original_history_id, 
                     string Original_incid, 
                     string Original_toid, 
-                    string Original_toidfragid, 
+                    string Original_fragid, 
                     string Original_modified_user_id, 
                     global::System.Nullable<global::System.DateTime> Original_modified_date, 
                     string Original_modified_process, 
@@ -29694,7 +29703,7 @@ FROM            history";
                     string Original_modified_interpqty, 
                     string Original_modified_operation, 
                     string Original_modified_incid, 
-                    string Original_modified_toidfragid, 
+                    string Original_modified_fragid, 
                     global::System.Nullable<double> Original_modified_length, 
                     global::System.Nullable<double> Original_modified_area) {
             this.Adapter.DeleteCommand.Parameters[0].Value = ((int)(Original_history_id));
@@ -29710,11 +29719,11 @@ FROM            history";
             else {
                 this.Adapter.DeleteCommand.Parameters[2].Value = ((string)(Original_toid));
             }
-            if ((Original_toidfragid == null)) {
-                throw new global::System.ArgumentNullException("Original_toidfragid");
+            if ((Original_fragid == null)) {
+                throw new global::System.ArgumentNullException("Original_fragid");
             }
             else {
-                this.Adapter.DeleteCommand.Parameters[3].Value = ((string)(Original_toidfragid));
+                this.Adapter.DeleteCommand.Parameters[3].Value = ((string)(Original_fragid));
             }
             if ((Original_modified_user_id == null)) {
                 this.Adapter.DeleteCommand.Parameters[4].Value = ((object)(1));
@@ -29796,13 +29805,13 @@ FROM            history";
                 this.Adapter.DeleteCommand.Parameters[22].Value = ((object)(0));
                 this.Adapter.DeleteCommand.Parameters[23].Value = ((string)(Original_modified_incid));
             }
-            if ((Original_modified_toidfragid == null)) {
+            if ((Original_modified_fragid == null)) {
                 this.Adapter.DeleteCommand.Parameters[24].Value = ((object)(1));
                 this.Adapter.DeleteCommand.Parameters[25].Value = global::System.DBNull.Value;
             }
             else {
                 this.Adapter.DeleteCommand.Parameters[24].Value = ((object)(0));
-                this.Adapter.DeleteCommand.Parameters[25].Value = ((string)(Original_modified_toidfragid));
+                this.Adapter.DeleteCommand.Parameters[25].Value = ((string)(Original_modified_fragid));
             }
             if ((Original_modified_length.HasValue == true)) {
                 this.Adapter.DeleteCommand.Parameters[26].Value = ((object)(0));
@@ -29844,7 +29853,7 @@ FROM            history";
                     int history_id, 
                     string incid, 
                     string toid, 
-                    string toidfragid, 
+                    string fragid, 
                     string modified_user_id, 
                     global::System.Nullable<global::System.DateTime> modified_date, 
                     string modified_process, 
@@ -29855,7 +29864,7 @@ FROM            history";
                     string modified_interpqty, 
                     string modified_operation, 
                     string modified_incid, 
-                    string modified_toidfragid, 
+                    string modified_fragid, 
                     global::System.Nullable<double> modified_length, 
                     global::System.Nullable<double> modified_area) {
             this.Adapter.InsertCommand.Parameters[0].Value = ((int)(history_id));
@@ -29871,11 +29880,11 @@ FROM            history";
             else {
                 this.Adapter.InsertCommand.Parameters[2].Value = ((string)(toid));
             }
-            if ((toidfragid == null)) {
-                throw new global::System.ArgumentNullException("toidfragid");
+            if ((fragid == null)) {
+                throw new global::System.ArgumentNullException("fragid");
             }
             else {
-                this.Adapter.InsertCommand.Parameters[3].Value = ((string)(toidfragid));
+                this.Adapter.InsertCommand.Parameters[3].Value = ((string)(fragid));
             }
             if ((modified_user_id == null)) {
                 this.Adapter.InsertCommand.Parameters[4].Value = global::System.DBNull.Value;
@@ -29937,11 +29946,11 @@ FROM            history";
             else {
                 this.Adapter.InsertCommand.Parameters[13].Value = ((string)(modified_incid));
             }
-            if ((modified_toidfragid == null)) {
+            if ((modified_fragid == null)) {
                 this.Adapter.InsertCommand.Parameters[14].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.InsertCommand.Parameters[14].Value = ((string)(modified_toidfragid));
+                this.Adapter.InsertCommand.Parameters[14].Value = ((string)(modified_fragid));
             }
             if ((modified_length.HasValue == true)) {
                 this.Adapter.InsertCommand.Parameters[15].Value = ((double)(modified_length.Value));
@@ -29979,7 +29988,7 @@ FROM            history";
                     int history_id, 
                     string incid, 
                     string toid, 
-                    string toidfragid, 
+                    string fragid, 
                     string modified_user_id, 
                     global::System.Nullable<global::System.DateTime> modified_date, 
                     string modified_process, 
@@ -29990,13 +29999,13 @@ FROM            history";
                     string modified_interpqty, 
                     string modified_operation, 
                     string modified_incid, 
-                    string modified_toidfragid, 
+                    string modified_fragid, 
                     global::System.Nullable<double> modified_length, 
                     global::System.Nullable<double> modified_area, 
                     int Original_history_id, 
                     string Original_incid, 
                     string Original_toid, 
-                    string Original_toidfragid, 
+                    string Original_fragid, 
                     string Original_modified_user_id, 
                     global::System.Nullable<global::System.DateTime> Original_modified_date, 
                     string Original_modified_process, 
@@ -30007,7 +30016,7 @@ FROM            history";
                     string Original_modified_interpqty, 
                     string Original_modified_operation, 
                     string Original_modified_incid, 
-                    string Original_modified_toidfragid, 
+                    string Original_modified_fragid, 
                     global::System.Nullable<double> Original_modified_length, 
                     global::System.Nullable<double> Original_modified_area) {
             this.Adapter.UpdateCommand.Parameters[0].Value = ((int)(history_id));
@@ -30023,11 +30032,11 @@ FROM            history";
             else {
                 this.Adapter.UpdateCommand.Parameters[2].Value = ((string)(toid));
             }
-            if ((toidfragid == null)) {
-                throw new global::System.ArgumentNullException("toidfragid");
+            if ((fragid == null)) {
+                throw new global::System.ArgumentNullException("fragid");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[3].Value = ((string)(toidfragid));
+                this.Adapter.UpdateCommand.Parameters[3].Value = ((string)(fragid));
             }
             if ((modified_user_id == null)) {
                 this.Adapter.UpdateCommand.Parameters[4].Value = global::System.DBNull.Value;
@@ -30089,11 +30098,11 @@ FROM            history";
             else {
                 this.Adapter.UpdateCommand.Parameters[13].Value = ((string)(modified_incid));
             }
-            if ((modified_toidfragid == null)) {
+            if ((modified_fragid == null)) {
                 this.Adapter.UpdateCommand.Parameters[14].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[14].Value = ((string)(modified_toidfragid));
+                this.Adapter.UpdateCommand.Parameters[14].Value = ((string)(modified_fragid));
             }
             if ((modified_length.HasValue == true)) {
                 this.Adapter.UpdateCommand.Parameters[15].Value = ((double)(modified_length.Value));
@@ -30120,11 +30129,11 @@ FROM            history";
             else {
                 this.Adapter.UpdateCommand.Parameters[19].Value = ((string)(Original_toid));
             }
-            if ((Original_toidfragid == null)) {
-                throw new global::System.ArgumentNullException("Original_toidfragid");
+            if ((Original_fragid == null)) {
+                throw new global::System.ArgumentNullException("Original_fragid");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[20].Value = ((string)(Original_toidfragid));
+                this.Adapter.UpdateCommand.Parameters[20].Value = ((string)(Original_fragid));
             }
             if ((Original_modified_user_id == null)) {
                 this.Adapter.UpdateCommand.Parameters[21].Value = ((object)(1));
@@ -30206,13 +30215,13 @@ FROM            history";
                 this.Adapter.UpdateCommand.Parameters[39].Value = ((object)(0));
                 this.Adapter.UpdateCommand.Parameters[40].Value = ((string)(Original_modified_incid));
             }
-            if ((Original_modified_toidfragid == null)) {
+            if ((Original_modified_fragid == null)) {
                 this.Adapter.UpdateCommand.Parameters[41].Value = ((object)(1));
                 this.Adapter.UpdateCommand.Parameters[42].Value = global::System.DBNull.Value;
             }
             else {
                 this.Adapter.UpdateCommand.Parameters[41].Value = ((object)(0));
-                this.Adapter.UpdateCommand.Parameters[42].Value = ((string)(Original_modified_toidfragid));
+                this.Adapter.UpdateCommand.Parameters[42].Value = ((string)(Original_modified_fragid));
             }
             if ((Original_modified_length.HasValue == true)) {
                 this.Adapter.UpdateCommand.Parameters[43].Value = ((object)(0));
@@ -30253,7 +30262,7 @@ FROM            history";
         public virtual int Update(
                     string incid, 
                     string toid, 
-                    string toidfragid, 
+                    string fragid, 
                     string modified_user_id, 
                     global::System.Nullable<global::System.DateTime> modified_date, 
                     string modified_process, 
@@ -30264,13 +30273,13 @@ FROM            history";
                     string modified_interpqty, 
                     string modified_operation, 
                     string modified_incid, 
-                    string modified_toidfragid, 
+                    string modified_fragid, 
                     global::System.Nullable<double> modified_length, 
                     global::System.Nullable<double> modified_area, 
                     int Original_history_id, 
                     string Original_incid, 
                     string Original_toid, 
-                    string Original_toidfragid, 
+                    string Original_fragid, 
                     string Original_modified_user_id, 
                     global::System.Nullable<global::System.DateTime> Original_modified_date, 
                     string Original_modified_process, 
@@ -30281,10 +30290,10 @@ FROM            history";
                     string Original_modified_interpqty, 
                     string Original_modified_operation, 
                     string Original_modified_incid, 
-                    string Original_modified_toidfragid, 
+                    string Original_modified_fragid, 
                     global::System.Nullable<double> Original_modified_length, 
                     global::System.Nullable<double> Original_modified_area) {
-            return this.Update(Original_history_id, incid, toid, toidfragid, modified_user_id, modified_date, modified_process, modified_reason, modified_habprimary, modified_habsecond, modified_determqty, modified_interpqty, modified_operation, modified_incid, modified_toidfragid, modified_length, modified_area, Original_history_id, Original_incid, Original_toid, Original_toidfragid, Original_modified_user_id, Original_modified_date, Original_modified_process, Original_modified_reason, Original_modified_habprimary, Original_modified_habsecond, Original_modified_determqty, Original_modified_interpqty, Original_modified_operation, Original_modified_incid, Original_modified_toidfragid, Original_modified_length, Original_modified_area);
+            return this.Update(Original_history_id, incid, toid, fragid, modified_user_id, modified_date, modified_process, modified_reason, modified_habprimary, modified_habsecond, modified_determqty, modified_interpqty, modified_operation, modified_incid, modified_fragid, modified_length, modified_area, Original_history_id, Original_incid, Original_toid, Original_fragid, Original_modified_user_id, Original_modified_date, Original_modified_process, Original_modified_reason, Original_modified_habprimary, Original_modified_habsecond, Original_modified_determqty, Original_modified_interpqty, Original_modified_operation, Original_modified_incid, Original_modified_fragid, Original_modified_length, Original_modified_area);
         }
     }
     
@@ -31148,7 +31157,7 @@ SELECT incid, habitat_primary, habitat_secondaries, habitat_version, site_ref, s
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -31157,7 +31166,7 @@ SELECT incid, habitat_primary, habitat_secondaries, habitat_version, site_ref, s
             this._commandCollection = new global::Microsoft.Data.SqlClient.SqlCommand[1];
             this._commandCollection[0] = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._commandCollection[0].Connection = this.Connection;
-            this._commandCollection[0].CommandText = @"SELECT        incid, habitat_primary, habitat_secondaries, habitat_version, site_ref, site_name, general_comments, quality_determination, quality_interpretation, interpretation_comments, boundary_base_map, digitisation_base_map, 
+            this._commandCollection[0].CommandText = @"SELECT        incid, habitat_primary, habitat_secondaries, habitat_version, site_ref, site_name, general_comments, quality_determination, quality_interpretation, interpretation_comments, boundary_base_map, digitisation_base_map,
                          ihs_habitat, legacy_habitat, created_date, created_user_id, last_modified_date, last_modified_user_id
 FROM            incid";
             this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;
@@ -32129,7 +32138,7 @@ SELECT bap_id, incid, bap_habitat, quality_determination, quality_interpretation
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -32616,7 +32625,7 @@ SELECT complex_id, incid, complex FROM incid_ihs_complex WHERE (complex_id = @co
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -33028,7 +33037,7 @@ SELECT matrix_id, incid, formation FROM incid_ihs_formation WHERE (matrix_id = @
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -33432,7 +33441,7 @@ SELECT management_id, incid, management FROM incid_ihs_management WHERE (managem
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -33844,7 +33853,7 @@ SELECT matrix_id, incid, matrix FROM incid_ihs_matrix WHERE (matrix_id = @matrix
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -34131,7 +34140,7 @@ SELECT matrix_id, incid, matrix FROM incid_ihs_matrix WHERE (matrix_id = @matrix
             tableMapping.DataSetTable = "incid_mm_polygons";
             tableMapping.ColumnMappings.Add("incid", "incid");
             tableMapping.ColumnMappings.Add("toid", "toid");
-            tableMapping.ColumnMappings.Add("toidfragid", "toidfragid");
+            tableMapping.ColumnMappings.Add("fragid", "fragid");
             tableMapping.ColumnMappings.Add("habprimary", "habprimary");
             tableMapping.ColumnMappings.Add("habsecond", "habsecond");
             tableMapping.ColumnMappings.Add("determqty", "determqty");
@@ -34141,7 +34150,14 @@ SELECT matrix_id, incid, matrix FROM incid_ihs_matrix WHERE (matrix_id = @matrix
             this._adapter.TableMappings.Add(tableMapping);
             this._adapter.DeleteCommand = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._adapter.DeleteCommand.Connection = this.Connection;
-            this._adapter.DeleteCommand.CommandText = @"DELETE FROM [incid_mm_polygons] WHERE (([incid] = @Original_incid) AND ([toid] = @Original_toid) AND ([toidfragid] = @Original_toidfragid) AND ((@IsNull_habprimary = 1 AND [habprimary] IS NULL) OR ([habprimary] = @Original_habprimary)) AND ((@IsNull_habsecond = 1 AND [habsecond] IS NULL) OR ([habsecond] = @Original_habsecond)) AND ((@IsNull_determqty = 1 AND [determqty] IS NULL) OR ([determqty] = @Original_determqty)) AND ((@IsNull_interpqty = 1 AND [interpqty] IS NULL) OR ([interpqty] = @Original_interpqty)) AND ((@IsNull_shape_length = 1 AND [shape_length] IS NULL) OR ([shape_length] = @Original_shape_length)) AND ((@IsNull_shape_area = 1 AND [shape_area] IS NULL) OR ([shape_area] = @Original_shape_area)))";
+            this._adapter.DeleteCommand.CommandText = @"DELETE FROM incid_mm_polygons
+WHERE        (incid = @Original_incid) AND (toid = @Original_toid) AND (@IsNull_habprimary = 1 AND habprimary IS NULL OR
+                         habprimary = @Original_habprimary) AND (@IsNull_habsecond = 1 AND habsecond IS NULL OR
+                         habsecond = @Original_habsecond) AND (@IsNull_determqty = 1 AND determqty IS NULL OR
+                         determqty = @Original_determqty) AND (@IsNull_interpqty = 1 AND interpqty IS NULL OR
+                         interpqty = @Original_interpqty) AND (@IsNull_shape_length = 1 AND shape_length IS NULL OR
+                         shape_length = @Original_shape_length) AND (@IsNull_shape_area = 1 AND shape_area IS NULL OR
+                         shape_area = @Original_shape_area) AND (fragid = @Original_fragid)";
             this._adapter.DeleteCommand.CommandType = global::System.Data.CommandType.Text;
             global::Microsoft.Data.SqlClient.SqlParameter param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@Original_incid";
@@ -34158,10 +34174,10 @@ SELECT matrix_id, incid, matrix FROM incid_ihs_matrix WHERE (matrix_id = @matrix
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.DeleteCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
-            param.ParameterName = "@Original_toidfragid";
+            param.ParameterName = "@Original_fragid";
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
             param.IsNullable = true;
-            param.SourceColumn = "toidfragid";
+            param.SourceColumn = "fragid";
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.DeleteCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
@@ -34264,8 +34280,10 @@ SELECT matrix_id, incid, matrix FROM incid_ihs_matrix WHERE (matrix_id = @matrix
             this._adapter.DeleteCommand.Parameters.Add(param);
             this._adapter.InsertCommand = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._adapter.InsertCommand.Connection = this.Connection;
-            this._adapter.InsertCommand.CommandText = @"INSERT INTO [incid_mm_polygons] ([incid], [toid], [toidfragid], [habprimary], [habsecond], [determqty], [interpqty], [shape_length], [shape_area]) VALUES (@incid, @toid, @toidfragid, @habprimary, @habsecond, @determqty, @interpqty, @shape_length, @shape_area);
-SELECT incid, toid, toidfragid, habprimary, habsecond, determqty, interpqty, shape_length, shape_area FROM incid_mm_polygons WHERE (incid = @incid) AND (toid = @toid) AND (toidfragid = @toidfragid)";
+            this._adapter.InsertCommand.CommandText = @"INSERT INTO incid_mm_polygons
+                         (incid, toid, fragid, habprimary, habsecond, determqty, interpqty, shape_length, shape_area)
+VALUES        (@incid,@toid,@fragid,@habprimary,@habsecond,@determqty,@interpqty,@shape_length,@shape_area);
+SELECT incid, toid, fragid, habprimary, habsecond, determqty, interpqty, shape_length, shape_area FROM incid_mm_polygons WHERE (incid = @incid) AND (toid = @toid) AND (fragid = @fragid)";
             this._adapter.InsertCommand.CommandType = global::System.Data.CommandType.Text;
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@incid";
@@ -34280,10 +34298,10 @@ SELECT incid, toid, toidfragid, habprimary, habsecond, determqty, interpqty, sha
             param.SourceColumn = "toid";
             this._adapter.InsertCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
-            param.ParameterName = "@toidfragid";
+            param.ParameterName = "@fragid";
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
             param.IsNullable = true;
-            param.SourceColumn = "toidfragid";
+            param.SourceColumn = "fragid";
             this._adapter.InsertCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@habprimary";
@@ -34325,8 +34343,16 @@ SELECT incid, toid, toidfragid, habprimary, habsecond, determqty, interpqty, sha
             this._adapter.InsertCommand.Parameters.Add(param);
             this._adapter.UpdateCommand = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._adapter.UpdateCommand.Connection = this.Connection;
-            this._adapter.UpdateCommand.CommandText = @"UPDATE [incid_mm_polygons] SET [incid] = @incid, [toid] = @toid, [toidfragid] = @toidfragid, [habprimary] = @habprimary, [habsecond] = @habsecond, [determqty] = @determqty, [interpqty] = @interpqty, [shape_length] = @shape_length, [shape_area] = @shape_area WHERE (([incid] = @Original_incid) AND ([toid] = @Original_toid) AND ([toidfragid] = @Original_toidfragid) AND ((@IsNull_habprimary = 1 AND [habprimary] IS NULL) OR ([habprimary] = @Original_habprimary)) AND ((@IsNull_habsecond = 1 AND [habsecond] IS NULL) OR ([habsecond] = @Original_habsecond)) AND ((@IsNull_determqty = 1 AND [determqty] IS NULL) OR ([determqty] = @Original_determqty)) AND ((@IsNull_interpqty = 1 AND [interpqty] IS NULL) OR ([interpqty] = @Original_interpqty)) AND ((@IsNull_shape_length = 1 AND [shape_length] IS NULL) OR ([shape_length] = @Original_shape_length)) AND ((@IsNull_shape_area = 1 AND [shape_area] IS NULL) OR ([shape_area] = @Original_shape_area)));
-SELECT incid, toid, toidfragid, habprimary, habsecond, determqty, interpqty, shape_length, shape_area FROM incid_mm_polygons WHERE (incid = @incid) AND (toid = @toid) AND (toidfragid = @toidfragid)";
+            this._adapter.UpdateCommand.CommandText = @"UPDATE       incid_mm_polygons
+SET                incid = @incid, toid = @toid, fragid = @fragid, habprimary = @habprimary, habsecond = @habsecond, determqty = @determqty, interpqty = @interpqty, shape_length = @shape_length, shape_area = @shape_area
+WHERE        (incid = @Original_incid) AND (toid = @Original_toid) AND (@IsNull_habprimary = 1 AND habprimary IS NULL OR
+                         habprimary = @Original_habprimary) AND (@IsNull_habsecond = 1 AND habsecond IS NULL OR
+                         habsecond = @Original_habsecond) AND (@IsNull_determqty = 1 AND determqty IS NULL OR
+                         determqty = @Original_determqty) AND (@IsNull_interpqty = 1 AND interpqty IS NULL OR
+                         interpqty = @Original_interpqty) AND (@IsNull_shape_length = 1 AND shape_length IS NULL OR
+                         shape_length = @Original_shape_length) AND (@IsNull_shape_area = 1 AND shape_area IS NULL OR
+                         shape_area = @Original_shape_area) AND (fragid = @Original_fragid);
+SELECT incid, toid, fragid, habprimary, habsecond, determqty, interpqty, shape_length, shape_area FROM incid_mm_polygons WHERE (incid = @incid) AND (toid = @toid) AND (fragid = @fragid)";
             this._adapter.UpdateCommand.CommandType = global::System.Data.CommandType.Text;
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@incid";
@@ -34341,10 +34367,10 @@ SELECT incid, toid, toidfragid, habprimary, habsecond, determqty, interpqty, sha
             param.SourceColumn = "toid";
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
-            param.ParameterName = "@toidfragid";
+            param.ParameterName = "@fragid";
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
             param.IsNullable = true;
-            param.SourceColumn = "toidfragid";
+            param.SourceColumn = "fragid";
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@habprimary";
@@ -34399,10 +34425,10 @@ SELECT incid, toid, toidfragid, habprimary, habsecond, determqty, interpqty, sha
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
-            param.ParameterName = "@Original_toidfragid";
+            param.ParameterName = "@Original_fragid";
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
             param.IsNullable = true;
-            param.SourceColumn = "toidfragid";
+            param.SourceColumn = "fragid";
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
@@ -34509,7 +34535,7 @@ SELECT incid, toid, toidfragid, habprimary, habsecond, determqty, interpqty, sha
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -34518,8 +34544,8 @@ SELECT incid, toid, toidfragid, habprimary, habsecond, determqty, interpqty, sha
             this._commandCollection = new global::Microsoft.Data.SqlClient.SqlCommand[1];
             this._commandCollection[0] = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._commandCollection[0].Connection = this.Connection;
-            this._commandCollection[0].CommandText = "SELECT        incid, toid, toidfragid, habprimary, habsecond, determqty, interpqt" +
-                "y, shape_length, shape_area\r\nFROM            incid_mm_polygons";
+            this._commandCollection[0].CommandText = "SELECT        incid, toid, fragid, habprimary, habsecond, determqty, interpqty, s" +
+                "hape_length, shape_area\r\nFROM            incid_mm_polygons";
             this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;
         }
         
@@ -35166,7 +35192,7 @@ SELECT incid_source_id, incid, source_id, source_date_start, source_date_end, so
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -35781,7 +35807,7 @@ SELECT code, description, sort_order FROM lut_boundary_map WHERE (code = @code)"
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -36078,8 +36104,8 @@ SELECT code, description, sort_order FROM lut_boundary_map WHERE (code = @code)"
             this._adapter.InsertCommand = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._adapter.InsertCommand.Connection = this.Connection;
             this._adapter.InsertCommand.CommandText = "INSERT INTO lut_habitat_class\r\n                         (code, description, is_lo" +
-                "cal, sort_order)\r\nVALUES        (@code,@description,@is_local,@sort_order);  \r\nS" +
-                "ELECT code, description, sort_order FROM lut_habitat_class WHERE (code = @code)";
+                "cal, sort_order)\r\nVALUES        (@code,@description,@is_local,@sort_order);\r\nSEL" +
+                "ECT code, description, sort_order FROM lut_habitat_class WHERE (code = @code)";
             this._adapter.InsertCommand.CommandType = global::System.Data.CommandType.Text;
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@code";
@@ -36115,7 +36141,7 @@ SELECT code, description, sort_order FROM lut_boundary_map WHERE (code = @code)"
             this._adapter.UpdateCommand.Connection = this.Connection;
             this._adapter.UpdateCommand.CommandText = @"UPDATE       lut_habitat_class
 SET                code = @code, description = @description, is_local = @is_local, sort_order = @sort_order
-WHERE        (code = @Original_code) AND (description = @Original_description) AND (is_local = @Original_is_local) AND (sort_order = @Original_sort_order);  
+WHERE        (code = @Original_code) AND (description = @Original_description) AND (is_local = @Original_is_local) AND (sort_order = @Original_sort_order);
 SELECT code, description, is_local, sort_order FROM lut_habitat_class WHERE (code = @code)";
             this._adapter.UpdateCommand.CommandType = global::System.Data.CommandType.Text;
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
@@ -36188,7 +36214,7 @@ SELECT code, description, is_local, sort_order FROM lut_habitat_class WHERE (cod
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -36704,7 +36730,7 @@ SELECT habitat_class_code, code, name, description, bap_priority, is_local, sort
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -37102,7 +37128,7 @@ SELECT code, description, sort_order FROM lut_ihs_complex WHERE (code = @code)";
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -37434,7 +37460,7 @@ SELECT code, description, sort_order FROM lut_ihs_formation WHERE (code = @code)
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -38008,7 +38034,7 @@ SELECT code, description, category, man_formation, man_management, default_compl
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -38469,7 +38495,7 @@ SELECT code, description, sort_order FROM lut_ihs_management WHERE (code = @code
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -38801,7 +38827,7 @@ SELECT code, description, sort_order FROM lut_ihs_matrix WHERE (code = @code)";
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -39158,7 +39184,7 @@ SELECT code, description, sort_order FROM lut_importance WHERE (code = @code)";
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -39490,7 +39516,7 @@ SELECT code, description, sort_order FROM lut_importance WHERE (code = @code)";
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -39853,7 +39879,7 @@ SELECT code, operation, sort_order FROM lut_operation WHERE (code = @code)";
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -40244,7 +40270,7 @@ SELECT code, description, sort_order FROM lut_process WHERE (code = @code)";
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -40635,7 +40661,7 @@ SELECT code, description, sort_order FROM lut_reason WHERE (code = @code)";
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -40951,7 +40977,7 @@ SELECT code, description, sort_order FROM lut_reason WHERE (code = @code)";
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -41263,7 +41289,7 @@ SELECT source_id, source_name, sort_order FROM lut_sources WHERE (source_id = @s
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -41635,7 +41661,7 @@ SELECT user_id, user_name, sort_order FROM lut_user WHERE (user_id = @user_id)";
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -42005,7 +42031,7 @@ SELECT code, description, sort_order FROM lut_legacy_habitat WHERE (code = @code
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -42383,7 +42409,7 @@ SELECT code, description, sort_order FROM lut_osmm_updates_process WHERE (code =
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -42652,7 +42678,7 @@ SELECT code, description, sort_order FROM lut_osmm_updates_spatial WHERE (code =
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -43044,7 +43070,7 @@ SELECT code, description, sort_order FROM lut_osmm_updates_change WHERE (code = 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -43711,7 +43737,7 @@ SELECT incid_osmm_update_id, incid, spatial_flag, process_flag, change_flag, sta
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v401ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -44491,7 +44517,7 @@ SELECT incid_condition_id, incid, condition, condition_qualifier, condition_date
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -45018,7 +45044,7 @@ SELECT secondary_id, incid, secondary FROM incid_secondary WHERE (secondary_id =
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -45391,7 +45417,7 @@ SELECT code, description, sort_order FROM lut_condition WHERE (code = @code)";
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -45726,7 +45752,7 @@ SELECT code, description, sort_order FROM lut_condition_qualifier WHERE (code = 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -46252,7 +46278,7 @@ SELECT code, description, category, nvc_codes, polygon, line, point, comments, i
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -46673,7 +46699,7 @@ SELECT code_primary, bap_habitat FROM lut_primary_bap_habitat WHERE (bap_habitat
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -46916,7 +46942,7 @@ SELECT code, description, sort_order FROM lut_primary_category WHERE (code = @co
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -47249,7 +47275,7 @@ SELECT code_primary, code_secondary, is_local FROM lut_primary_secondary WHERE (
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v401ConnectionString_2017;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -47698,7 +47724,7 @@ SELECT code, code_group, description, polygon, line, point, is_local, sort_order
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -48052,7 +48078,7 @@ SELECT code_secondary, bap_habitat FROM lut_secondary_bap_habitat WHERE (bap_hab
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -48295,7 +48321,7 @@ SELECT code, description, sort_order FROM lut_secondary_group WHERE (code = @cod
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -48728,7 +48754,7 @@ SELECT code_habitat_type, code_primary, preferred, habitat_secondaries, comments
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v401ConnectionString_2017;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -49133,7 +49159,7 @@ SELECT code_habitat_type, code_secondary, mandatory, is_local FROM lut_habitat_t
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -49435,7 +49461,11 @@ SELECT code_habitat_type, code_secondary, mandatory, is_local FROM lut_habitat_t
             this._adapter.DeleteCommand.Parameters.Add(param);
             this._adapter.UpdateCommand = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._adapter.UpdateCommand.Connection = this.Connection;
-            this._adapter.UpdateCommand.CommandText = @"UPDATE [lut_ihs_primary_secondary] SET [ihs_summary_id] = @ihs_summary_id, [ihs_summary] = @ihs_summary, [habitat_primary] = @habitat_primary, [habitat_secondaries] = @habitat_secondaries WHERE (([ihs_summary_id] = @Original_ihs_summary_id) AND ([ihs_summary] = @Original_ihs_summary) AND ([habitat_primary] = @Original_habitat_primary) AND ((@IsNull_habitat_secondaries = 1 AND [habitat_secondaries] IS NULL) OR ([habitat_secondaries] = @Original_habitat_secondaries)));
+            this._adapter.UpdateCommand.CommandText = @"UPDATE       lut_ihs_primary_secondary
+SET                ihs_summary_id = @ihs_summary_id, ihs_summary = @ihs_summary, habitat_primary = @habitat_primary, habitat_secondaries = @habitat_secondaries
+WHERE        (ihs_summary_id = @Original_ihs_summary_id) AND (ihs_summary = @Original_ihs_summary) AND (habitat_primary = @Original_habitat_primary) AND (@IsNull_habitat_secondaries = 1) AND
+                         (habitat_secondaries IS NULL) OR
+                         (ihs_summary_id = @Original_ihs_summary_id) AND (ihs_summary = @Original_ihs_summary) AND (habitat_primary = @Original_habitat_primary) AND (habitat_secondaries = @Original_habitat_secondaries);
 SELECT ihs_summary_id, ihs_summary, habitat_primary, habitat_secondaries FROM lut_ihs_primary_secondary WHERE (ihs_summary_id = @ihs_summary_id)";
             this._adapter.UpdateCommand.CommandType = global::System.Data.CommandType.Text;
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
@@ -49507,7 +49537,7 @@ SELECT ihs_summary_id, ihs_summary, habitat_primary, habitat_secondaries FROM lu
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -49862,7 +49892,7 @@ SELECT code, description, sort_order FROM lut_quality_determination WHERE (code 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -50195,7 +50225,7 @@ SELECT code, description, sort_order FROM lut_quality_interpretation WHERE (code
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -50526,7 +50556,7 @@ SELECT field_type, field_description FROM exports_field_types WHERE (field_type 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v400ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -50827,7 +50857,7 @@ SELECT field_type, field_description FROM exports_field_types WHERE (field_type 
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private void InitConnection() {
             this._connection = new global::Microsoft.Data.SqlClient.SqlConnection();
-            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HLUData_v401ConnectionString;
+            this._connection.ConnectionString = global::HLU.Properties.Settings.Default.HluConnectionString;
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]

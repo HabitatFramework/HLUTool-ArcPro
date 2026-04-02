@@ -1090,7 +1090,7 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Checks whether the selected rows are unique by (incid,toid,toidfragid) in the active HLU layer.
+        /// Checks whether the selected rows are unique by (incid,toid,fragid) in the active HLU layer.
         /// </summary>
         /// <remarks>
         /// Check if all selected rows have unique keys to avoid any potential data integrity problems.
@@ -1114,7 +1114,7 @@ namespace HLU.GISApplication
                 // Resolve field names from structure ordinals.
                 string incidField = GetFieldName(_hluLayerStructure.incidColumn.Ordinal);
                 string toidField = GetFieldName(_hluLayerStructure.toidColumn.Ordinal);
-                string fragField = GetFieldName(_hluLayerStructure.toidfragidColumn.Ordinal);
+                string fragField = GetFieldName(_hluLayerStructure.fragidColumn.Ordinal);
 
                 // If any of the required fields can't be resolved, we can't perform the check,
                 // but we also can't find duplicates, so return true.
@@ -1917,35 +1917,35 @@ namespace HLU.GISApplication
         #region Split
 
         /// <summary>
-        /// Performs a physical split of the currently selected features by updating their toidfragid values
+        /// Performs a physical split of the currently selected features by updating their fragid values
         /// and tracking the changes in a history table.
         /// </summary>
         /// <remarks>
         /// This performs edits using an <see cref="EditOperation"/> so it works for all supported ArcGIS Pro data sources
         /// and supports undo/redo.
         /// </remarks>
-        /// <param name="currentToidFragmentID">The current toidfragid value.</param>
-        /// <param name="lastToidFragmentID">The last used toidfragid value.</param>
+        /// <param name="currentFragmentID">The current fragid value.</param>
+        /// <param name="lastFragmentID">The last used fragid value.</param>
         /// <param name="selectionWhereClause">The selection where clause conditions.</param>
         /// <param name="historyColumns">The history columns to be used for tracking changes.</param>
         /// <returns>A task representing the asynchronous operation, with a DataTable result containing the split features.</returns>
         /// <exception cref="ArgumentException"></exception>
         /// <exception cref="HLUToolException"></exception>
         public async Task<DataTable> SplitFeaturesPhysicallyAsync(
-            string currentToidFragmentID,
-            string lastToidFragmentID,
+            string currentFragmentID,
+            string lastFragmentID,
             List<SqlFilterCondition> selectionWhereClause,
             DataColumn[] historyColumns,
             EditOperation editOperation)
         {
             // Check parameters.
             // Note: Uses the current map selection rather than rebuilding a QueryFilter from
-            // selectionWhereClause / currentToidFragmentID. The view model already ensures the selection is valid.
-            if (String.IsNullOrEmpty(currentToidFragmentID))
-                throw new ArgumentException("Current toidfragid is required.", nameof(currentToidFragmentID));
+            // selectionWhereClause / currentFragmentID. The view model already ensures the selection is valid.
+            if (String.IsNullOrEmpty(currentFragmentID))
+                throw new ArgumentException("Current fragid is required.", nameof(currentFragmentID));
 
-            if (String.IsNullOrEmpty(lastToidFragmentID))
-                throw new ArgumentException("Last toidfragid is required.", nameof(lastToidFragmentID));
+            if (String.IsNullOrEmpty(lastFragmentID))
+                throw new ArgumentException("Last fragid is required.", nameof(lastFragmentID));
 
             if (historyColumns == null || historyColumns.Length == 0)
                 throw new ArgumentException("History columns are required.", nameof(historyColumns));
@@ -1986,19 +1986,19 @@ namespace HLU.GISApplication
             if (!historyTable.Columns.Contains(ViewModelWindowMain.HistoryGeometry2ColumnName))
                 historyTable.Columns.Add(new DataColumn(ViewModelWindowMain.HistoryGeometry2ColumnName, typeof(double)));
 
-            // Resolve toidfragid field index.
-            int toidFragFieldIndex = MapField(_hluLayerStructure.toidfragidColumn.ColumnName);
-            if (toidFragFieldIndex == -1)
-                toidFragFieldIndex = FuzzyFieldOrdinal(_hluLayerStructure.toidfragidColumn.ColumnName);
+            // Resolve fragid field index.
+            int fragFieldIndex = MapField(_hluLayerStructure.fragidColumn.ColumnName);
+            if (fragFieldIndex == -1)
+                fragFieldIndex = FuzzyFieldOrdinal(_hluLayerStructure.fragidColumn.ColumnName);
 
-            if (toidFragFieldIndex == -1)
-                throw new HLUToolException("Failed to resolve toidfragid field index for the active HLU layer.");
+            if (fragFieldIndex == -1)
+                throw new HLUToolException("Failed to resolve fragid field index for the active HLU layer.");
 
             // Parse the last used fragment id (e.g. "0007") and keep its width for formatting.
-            if (!Int32.TryParse(lastToidFragmentID, out int lastFragNum))
-                throw new HLUToolException("Last toidfragid could not be parsed as an integer: " + lastToidFragmentID);
+            if (!Int32.TryParse(lastFragmentID, out int lastFragNum))
+                throw new HLUToolException("Last fragid could not be parsed as an integer: " + lastFragmentID);
 
-            string numFormat = String.Format("D{0}", lastToidFragmentID.Length);
+            string numFormat = String.Format("D{0}", lastFragmentID.Length);
 
             // Determine the selection, build history rows (post-update values), and queue the update using an EditOperation.
             await QueuedTask.Run(() =>
@@ -2012,7 +2012,7 @@ namespace HLU.GISApplication
                     return;
 
                 // Order OIDs to ensure the "original" feature (with the smallest OID) is processed
-                // first and retains the current toidfragid, while the others get new fragment IDs.
+                // first and retains the current fragid, while the others get new fragment IDs.
                 List<long> orderedOids = [.. selectedObjectIds.OrderBy(o => o)];
                 long minOid = orderedOids[0];
 
@@ -2021,8 +2021,8 @@ namespace HLU.GISApplication
                 int shapeLengthFieldIndex = TryResolveEditableNumericFieldIndex(_hluFeatureClass, "shape_leng", "Shape_Leng", "SHAPE_LENG");
                 int shapeAreaFieldIndex = TryResolveEditableNumericFieldIndex(_hluFeatureClass, "shape_area", "Shape_Area", "SHAPE_AREA");
 
-                // Prepare the new toidfragid values for all but the first (min OID) feature.
-                Dictionary<long, string> newToidFragByOid = [];
+                // Prepare the new fragid values for all but the first (min OID) feature.
+                Dictionary<long, string> newFragByOid = [];
                 int nextFragNum = lastFragNum;
 
                 foreach (long oid in orderedOids)
@@ -2031,7 +2031,7 @@ namespace HLU.GISApplication
                         continue;
 
                     nextFragNum++;
-                    newToidFragByOid[oid] = nextFragNum.ToString(numFormat);
+                    newFragByOid[oid] = nextFragNum.ToString(numFormat);
                 }
 
                 // Build history rows in OID order, ensuring the "original" feature (min OID) is first.
@@ -2069,11 +2069,11 @@ namespace HLU.GISApplication
                         DataRow historyRow = historyTable.NewRow();
 
                         // Loop through the history bindings to populate the history row with source field values,
-                        // applying any necessary transformations (e.g. for toidfragid).
+                        // applying any necessary transformations (e.g. for fragid).
                         foreach (var b in historyBindings)
                         {
-                            // If this is the toidfragid field and it will be updated, return the new value.
-                            if ((b.SourceFieldIndex == toidFragFieldIndex) && newToidFragByOid.TryGetValue(oid, out string newFrag))
+                            // If this is the fragid field and it will be updated, return the new value.
+                            if ((b.SourceFieldIndex == fragFieldIndex) && newFragByOid.TryGetValue(oid, out string newFrag))
                             {
                                 historyRow[b.OutputColumnName] = newFrag;
                             }
@@ -2095,8 +2095,8 @@ namespace HLU.GISApplication
                     }
                 }
 
-                // Queue edits: update toidfragid for all but the min OID feature.
-                if (newToidFragByOid.Count == 0)
+                // Queue edits: update fragid for all but the min OID feature.
+                if (newFragByOid.Count == 0)
                     return;
 
                 Table hluTable = _hluFeatureClass as Table;
@@ -2105,7 +2105,7 @@ namespace HLU.GISApplication
                 {
                     QueryFilter updateFilter = new()
                     {
-                        ObjectIDs = [.. newToidFragByOid.Keys]
+                        ObjectIDs = [.. newFragByOid.Keys]
                     };
 
                     using RowCursor updateCursor = _hluFeatureClass.Search(updateFilter, false);
@@ -2115,11 +2115,11 @@ namespace HLU.GISApplication
                         using Row row = updateCursor.Current;
 
                         long oid = row.GetObjectID();
-                        if (!newToidFragByOid.TryGetValue(oid, out string newFrag))
+                        if (!newFragByOid.TryGetValue(oid, out string newFrag))
                             continue;
 
-                        // Update toidfragid.
-                        row[toidFragFieldIndex] = newFrag;
+                        // Update fragid.
+                        row[fragFieldIndex] = newFrag;
 
                         // Update geometry fields if they exist (primarily shapefiles).
                         if (row is Feature feature)
@@ -2388,7 +2388,7 @@ namespace HLU.GISApplication
             int ix;
 
             // Map each requested history column to a GIS field ordinal (feature class field index).
-            // Output column name removes the delimiter so "modified_|toidfragid" becomes "modified_toidfragid".
+            // Output column name removes the delimiter so "modified_|fragid" becomes "modified_fragid".
             var bindings =
                 from c in historyColumns
                 let requestedName = c.ColumnName
@@ -2420,7 +2420,7 @@ namespace HLU.GISApplication
                 int delimIx = raw.IndexOf(HistoryAdditionalFieldsDelimiter, StringComparison.Ordinal);
                 if (delimIx >= 0)
                 {
-                    // Example raw: "modified_" + delim + "toidfragid"
+                    // Example raw: "modified_" + delim + "fragid"
                     string prefix = raw.Substring(0, delimIx);
                     sourceFieldName = raw.Substring(delimIx + HistoryAdditionalFieldsDelimiter.Length);
 
@@ -2585,8 +2585,8 @@ namespace HLU.GISApplication
 
         /// <summary>
         /// Physically merges the currently selected features by unioning their geometries into a single result feature,
-        /// deleting the other selected features, and setting the result feature's toidfragid to
-        /// <paramref name="newToidFragmentID"/>.
+        /// deleting the other selected features, and setting the result feature's fragid to
+        /// <paramref name="newFragmentID"/>.
         /// </summary>
         /// <remarks>
         /// This performs edits using an <see cref="EditOperation"/> so it works for all supported ArcGIS Pro data sources
@@ -2602,20 +2602,20 @@ namespace HLU.GISApplication
         /// The view model removes the final row before writing history, but uses it to update the database geometry
         /// fields (shape_length/shape_area etc.).
         /// </remarks>
-        /// <param name="newToidFragmentID">The toidfragid value to assign to the remaining feature.</param>
+        /// <param name="newFragmentID">The fragid value to assign to the remaining feature.</param>
         /// <param name="resultWhereClause">Where clause conditions that identify the result feature within the selection.</param>
         /// <param name="historyColumns">The history columns requested by the view model.</param>
         /// <param name="editOperation">The edit operation to queue edits onto.</param>
         /// <returns>A history table for the merged/deleted features plus the updated result feature.</returns>
         public async Task<DataTable> MergeFeaturesPhysicallyAsync(
-            string newToidFragmentID,
+            string newFragmentID,
             List<SqlFilterCondition> resultWhereClause,
             DataColumn[] historyColumns,
             EditOperation editOperation)
         {
             // Check parameters.
-            if (String.IsNullOrEmpty(newToidFragmentID))
-                throw new ArgumentException("New toidfragid is required.", nameof(newToidFragmentID));
+            if (String.IsNullOrEmpty(newFragmentID))
+                throw new ArgumentException("New fragid is required.", nameof(newFragmentID));
 
             if (resultWhereClause == null || resultWhereClause.Count == 0)
                 throw new ArgumentException("Result where clause is required.", nameof(resultWhereClause));
@@ -2673,7 +2673,7 @@ namespace HLU.GISApplication
                     Geometry mergedGeometry = null;
 
                     // Resolve required/optional field indices.
-                    int toidFragFieldIndex = ResolveRequiredFieldIndex(_hluLayerStructure.toidfragidColumn.ColumnName);
+                    int toidFieldIndex = ResolveRequiredFieldIndex(_hluLayerStructure.fragidColumn.ColumnName);
 
                     // Resolve optional shape fields for shapefile-based layers where length/area are stored in normal fields.
                     // On geodatabase feature classes, Shape_Length/Shape_Area are system-maintained and typically not editable.
@@ -2687,7 +2687,7 @@ namespace HLU.GISApplication
                     };
 
                     // Loop through the features matching the result filter and find the first one that is in the current selection.
-                    // This is the feature that will remain after the merge and receive the new toidfragid.
+                    // This is the feature that will remain after the merge and receive the new fragid.
                     using (RowCursor resultCursor = _hluFeatureClass.Search(resultFilter, false))
                     {
                         while (resultCursor.MoveNext())
@@ -2780,8 +2780,8 @@ namespace HLU.GISApplication
                             resultHistoryRow[b.OutputColumnName] = value ?? DBNull.Value;
                         }
 
-                        // Override toidfragid because it is updated as part of the merge.
-                        resultHistoryRow[_hluLayerStructure.toidfragidColumn.ColumnName] = newToidFragmentID;
+                        // Override fragid because it is updated as part of the merge.
+                        resultHistoryRow[_hluLayerStructure.fragidColumn.ColumnName] = newFragmentID;
 
                         // Get geometry history values (length/area or X/Y) and add to the history row.
                         (double geom1, double geom2) = GetGeometryHistoryValues(mergedGeometry);
@@ -2805,15 +2805,15 @@ namespace HLU.GISApplication
                             });
                         }
 
-                        // Update the result feature geometry and toidfragid.
+                        // Update the result feature geometry and fragid.
                         ArcGISProHelpers.WithRowByObjectId(_hluFeatureClass, resultObjectId, row =>
                         {
                             // Update the geometry to the merged geometry.
                             if (row is Feature feature)
                                 feature.SetShape(mergedGeometry);
 
-                            // Update toidfragid to the new value.
-                            row[toidFragFieldIndex] = newToidFragmentID;
+                            // Update fragid to the new value.
+                            row[toidFieldIndex] = newFragmentID;
 
                             // Get geometry history values (length/area or X/Y) and update the history fields if they exist.
                             // This ensures that the final history row for the result feature contains the correct geometry values after the merge.
@@ -2910,7 +2910,7 @@ namespace HLU.GISApplication
                 // Specific HLU key fields.
                 _hluLayerStructure.incidColumn.ColumnName,
                 _hluLayerStructure.toidColumn.ColumnName,
-                _hluLayerStructure.toidfragidColumn.ColumnName,
+                _hluLayerStructure.fragidColumn.ColumnName,
                 // Common GIS/system fields (don’t rely on typed dataset columns).
                 "FID",
                 "OBJECTID",

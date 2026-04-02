@@ -3251,100 +3251,111 @@ namespace HLU.UI.ViewModel
             if (_moving)
                 return;
 
-            //TODO: Somehow/Sometime this is being set but not reset
             // Flag that we are moving
             _moving = true;
 
-            MessageBoxResult userResponse = MessageBoxResult.No;
-
-            // Check there are no outstanding edits (unless this has
-            // already been checked before reading the map selection).
-            if (!_readingMap)
-                userResponse = CheckDirty();
-
-            // Process based on the response ...
-            // Yes = move to the new incid
-            // No = move to the new incid
-            // Cancel = don't move to the new incid
-            switch (userResponse)
+            try
             {
-                case MessageBoxResult.Yes:
-                    break;
-                case MessageBoxResult.No:
-                    // Clear the form and warn the user when there are no more records
-                    // when in OSMM Update mode.
-                    if (IsOsmmReviewMode && ((value > 0) &&
-                        (IsFiltered && ((_incidSelection == null) || (value > _incidSelection.Rows.Count)))))
-                    {
-                        // Clear the selection (filter).
-                        _incidSelection = null;
+                MessageBoxResult userResponse = MessageBoxResult.No;
 
-                        // Indicate the selection didn't come from the map.
-                        _filteredByMap = false;
+                // Check there are no outstanding edits (unless this has
+                // already been checked before reading the map selection).
+                if (!_readingMap)
+                    userResponse = CheckDirty();
 
-                        // Indicate there are no more OSMM updates to review.
-                        _osmmUpdatesEmpty = true;
-
-                        // Clear all the form fields (except the habitat class
-                        // and habitat type).
-                        ClearForm();
-
-                        // Clear the map selection.
-                        await _gisApp.ClearMapSelectionAsync();
-
-                        // Reset the map counters
-                        _selectedIncidsInGISCount = 0;
-                        _selectedToidsInGISCount = 0;
-                        _selectedFragsInGISCount = 0;
-
-                        // Refresh all the controls
-                        RefreshAll();
-
-                        // Reset the cursor back to normal.
-                        ChangeCursor(Cursors.Arrow);
-
-                        // Warn the user that no more records were found.
-                        ShowWarning("No more records found.",MessageCategory.Navigation);
-
+                // Process based on the response ...
+                // Yes = move to the new incid
+                // No = move to the new incid
+                // Cancel = don't move to the new incid
+                switch (userResponse)
+                {
+                    case MessageBoxResult.Yes:
                         break;
-                    }
+                    case MessageBoxResult.No:
+                        // Clear the form and warn the user when there are no more records
+                        // when in OSMM Update mode.
+                        if (IsOsmmReviewMode && ((value > 0) &&
+                            (IsFiltered && ((_incidSelection == null) || (value > _incidSelection.Rows.Count)))))
+                        {
+                            // Clear the selection (filter).
+                            _incidSelection = null;
 
-                    // If in bulk update mode.
-                    if (IsBulkMode)
-                    {
-                        // Set the new current row index.
-                        _incidCurrentRowIndex = value;
-                    }
-                    else
-                    {
-                        // If the record number is valid.
-                        if ((value > 0) &&
-                        (IsFiltered && ((_incidSelection == null) || (value <= _incidSelection.Rows.Count))) ||
-                        (!IsFiltered && ((_incidSelection == null) || (value <= _incidRowCount))))
+                            // Indicate the selection didn't come from the map.
+                            _filteredByMap = false;
+
+                            // Indicate there are no more OSMM updates to review.
+                            _osmmUpdatesEmpty = true;
+
+                            // Clear all the form fields (except the habitat class
+                            // and habitat type).
+                            ClearForm();
+
+                            // Clear the map selection.
+                            await _gisApp.ClearMapSelectionAsync();
+
+                            // Reset the map counters
+                            _selectedIncidsInGISCount = 0;
+                            _selectedToidsInGISCount = 0;
+                            _selectedFragsInGISCount = 0;
+
+                            // Refresh all the controls
+                            RefreshAll();
+
+                            // Reset the cursor back to normal.
+                            ChangeCursor(Cursors.Arrow);
+
+                            // Warn the user that no more records were found.
+                            ShowWarning("No more records found.", MessageCategory.Navigation);
+
+                            break;
+                        }
+
+                        // If in bulk update mode.
+                        if (IsBulkMode)
                         {
                             // Set the new current row index.
                             _incidCurrentRowIndex = value;
-
-                            // Clear any existing navigation warning messages
-                            ClearMessage(category: MessageCategory.Navigation, level: MessageType.Warning);
                         }
                         else
                         {
-                            // Warn the user that record is not found.
-                            ShowWarning("Record not found in filtered records.", MessageCategory.Navigation);
+                            // If the record number is valid.
+                            if ((value > 0) &&
+                            (IsFiltered && ((_incidSelection == null) || (value <= _incidSelection.Rows.Count))) ||
+                            (!IsFiltered && ((_incidSelection == null) || (value <= _incidRowCount))))
+                            {
+                                // Set the new current row index.
+                                _incidCurrentRowIndex = value;
+
+                                // Clear any existing navigation warning messages
+                                ClearMessage(category: MessageCategory.Navigation, level: MessageType.Warning);
+                            }
+                            else
+                            {
+                                // Warn the user that record is not found.
+                                ShowWarning("Record not found in filtered records.", MessageCategory.Navigation);
+                            }
                         }
-                    }
 
-                    // Move to the new incid
-                    await NewIncidCurrentRowAsync();
+                        // Move to the new incid
+                        await NewIncidCurrentRowAsync();
 
-                    break;
-                case MessageBoxResult.Cancel:
-                    break;
+                        break;
+                    case MessageBoxResult.Cancel:
+                        break;
+                }
             }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"MoveIncidCurrentRowIndexAsync error: {ex.Message}");
 
-            // Unflag that we are moving
-            _moving = false;
+                // Display an error message.
+                ShowError(ex.Message, MessageCategory.Navigation);
+            }
+            finally
+            {
+                // Always reset the moving flag, even if an exception occurred.
+                _moving = false;
+            }
         }
 
         #endregion Record Navigation
@@ -3429,7 +3440,7 @@ namespace HLU.UI.ViewModel
             {
                 int seekIncidNumber = seekRowNumber;
 
-                // If seeking the very early in the table.
+                // If seeking very early in the table.
                 if (seekRowNumber < 2)
                 {
                     // Get the first record.
@@ -3446,9 +3457,9 @@ namespace HLU.UI.ViewModel
                             _db.QuoteValue(_recIDs.IncidString(seekIncidNumber)),
                             _db.QuoteValue(_recIDs.IncidString(seekIncidNumber + IncidPageSize))), true);
 
-                    // Store the min and max row numbers in the page.
+                    // Store the min and max row numbers in the page (max is inclusive).
                     _incidPageRowNoMin = seekRowNumber;
-                    _incidPageRowNoMax = _incidPageRowNoMin + _hluDS.incid.Count;
+                    _incidPageRowNoMax = _incidPageRowNoMin + _hluDS.incid.Count - 1;
 
                     // Return the index of the first record in the page.
                     _incidPageRowNo = 0;
@@ -3474,23 +3485,15 @@ namespace HLU.UI.ViewModel
                             _db.QuoteValue(_recIDs.IncidString(seekIncidNumber)),
                             _db.QuoteValue(_recIDs.IncidString(seekIncidNumber + IncidPageSize))), true);
 
-                    // Move the seek row number back by the number of rows in the page.
-                    seekRowNumber -= _hluDS.incid.Count;
-
-                    // Store the min and max row numbers in the page.
-                    _incidPageRowNoMin = seekRowNumber;
-                    _incidPageRowNoMax = _incidPageRowNoMin + _hluDS.incid.Count;
+                    // Store the min and max row numbers in the page (the last page ends at _incidRowCount).
+                    _incidPageRowNoMin = _incidRowCount - _hluDS.incid.Count + 1;
+                    _incidPageRowNoMax = _incidRowCount;
 
                     // Return the index of the last record in the page.
                     _incidPageRowNo = _hluDS.incid.Count - 1;
                 }
                 else
                 {
-                    //_incidRowCount = (int)_db.ExecuteScalar(
-                    //    String.Format("SELECT COUNT(*) FROM {0}",
-                    //        _db.QualifyTableName(_hluDS.incid.TableName)),
-                    //    _db.Connection.ConnectionTimeout, CommandType.Text);
-
                     // Set-up the SQL count clause.
                     string countSql = String.Format("SELECT COUNT(*) FROM {0} WHERE {1} <= {{0}}",
                         _db.QualifyTableName(_hluDS.incid.TableName),
@@ -3505,17 +3508,7 @@ namespace HLU.UI.ViewModel
                             _db.Connection.ConnectionTimeout, CommandType.Text);
 
                         seekIncidNumber += seekRowNumber - count;
-
-                    }
-                    ;
-
-                    // If moving backwards.
-                    //if (seekRowNumber == oldRowNumber - 1)
-                    //{
-                    //    // Move back by the page size.
-                    //    if (seekIncidNumber > IncidPageSize)
-                    //        seekIncidNumber -= IncidPageSize;
-                    //}
+                    };
 
                     // Fetch records
                     _hluTableAdapterMgr.Fill(_hluDS, typeof(HluDataSet.incidDataTable),
@@ -3523,8 +3516,9 @@ namespace HLU.UI.ViewModel
                             _db.QuoteValue(_recIDs.IncidString(seekIncidNumber)),
                             _db.QuoteValue(_recIDs.IncidString(seekIncidNumber + IncidPageSize))), true);
 
+                    // Store the min and max row numbers in the page (max is inclusive).
                     _incidPageRowNoMin = seekRowNumber;
-                    _incidPageRowNoMax = _incidPageRowNoMin + _hluDS.incid.Count;
+                    _incidPageRowNoMax = _incidPageRowNoMin + _hluDS.incid.Count - 1;
 
                     _incidPageRowNo = 0;
                 }

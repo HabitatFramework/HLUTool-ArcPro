@@ -657,32 +657,11 @@ namespace HLU.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=ZIPY\\SQLEXPRESS2016;Initial Catalog=HLUData;Integrated Security=True")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=localhost;Initial Catalog=HLUData;Integrated Security=True;TrustServe" +
+            "rCertificate=True")]
         public string HluConnectionString {
             get {
                 return ((string)(this["HluConnectionString"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=zipy\\sqldeveloper2016;Initial Catalog=HLUData;Integrated Security=Tru" +
-            "e")]
-        public string HLUDataConnectionString {
-            get {
-                return ((string)(this["HLUDataConnectionString"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=ZIPY\\SQLDEVELOPER2016;Initial Catalog=HLUData_V401;Integrated Securit" +
-            "y=True")]
-        public string HLUData_v400ConnectionString {
-            get {
-                return ((string)(this["HLUData_v400ConnectionString"]));
             }
         }
         
@@ -806,26 +785,6 @@ namespace HLU.Properties {
             }
             set {
                 this["CallXMLUpgrade"] = value;
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=localhost;Initial Catalog=HLUData;Integrated Security=True")]
-        public string HLUData_v401ConnectionString {
-            get {
-                return ((string)(this["HLUData_v401ConnectionString"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=localhost;Initial Catalog=HLUData;Integrated Security=True")]
-        public string HLUData_v401ConnectionString_2017 {
-            get {
-                return ((string)(this["HLUData_v401ConnectionString_2017"]));
             }
         }
         
