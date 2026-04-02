@@ -35,7 +35,7 @@
 
             <Expander
                 Margin="6,10,0,0"
-                Header="Database timeout"
+                Header="Database Options"
                 IsExpanded="True">
 
                 <Grid Margin="12,4,4,2" HorizontalAlignment="Left">
@@ -71,7 +71,7 @@
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
-                            Description="Sets the amount of time the tool will wait (in seconds) for the database to respond. The default value is 15.&#10;&#10;This value should be increased if an error occurs such as ‘The connection to the database timed out’ or if the network and/or database connection is known to be slow."
+                            Description="The amount of time the tool will wait (in seconds) for the database to respond. The default value is 15.&#10;&#10;This value should be increased if an error occurs such as ‘The connection to the database timed out’ or if the network and/or database connection is known to be slow."
                             Header="Timeout" />
 
                     </Grid>
@@ -100,7 +100,7 @@
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
-                            Description="Sets how many rows are retrieved from the database and stored in memory. The default value is 100.&#10;&#10;Increasing this value can improve performance when browsing records, however this will increase the amount of RAM required by the application and significant increases in the page size value could cause the tool to stop responding."
+                            Description="How many rows are retrieved from the database at a time and stored in memory. The default value is 100.&#10;&#10;Increasing this value can improve performance when browsing records, however this will increase the amount of RAM required by the application and significant increases in the page size value could cause the tool to stop responding."
                             Header="Incid Table Page Size" />
 
                     </Grid>

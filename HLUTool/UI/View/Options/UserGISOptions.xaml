@@ -67,7 +67,7 @@
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
-                            Description="Select when to automatically zoom to the GIS features in the active GIS layer whenever the INCID selection is changed."
+                            Description="When to automatically zoom to the GIS features in the active GIS layer whenever the INCID selection is changed."
                             Header="Auto Zoom To Selection" />
 
                     </Grid>
@@ -96,7 +96,7 @@
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
-                            Description="Sets the minimum zoom level at which the auto-zoom function activates. Select a scale value (e.g. 1000). Lower values zoom in closer, while higher values zoom out."
+                            Description="The minimum zoom level at which the auto-zoom function activates. Select a scale value (e.g. 1000). Lower values zoom in closer, while higher values zoom out."
                             Header="Minimum Auto Zoom" />
 
                     </Grid>
@@ -138,7 +138,7 @@
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
-                            Description="Select the units used to display the area of the current INCID in the main interface and in history records."
+                            Description="The units used to display the area of the current INCID in the main interface and in history records."
                             Header="Display Area Units" />
 
                     </Grid>
@@ -164,7 +164,7 @@
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
-                            Description="Select the units used to display the perimeter length of the current INCID in the main interface and in history records."
+                            Description="The units used to display the perimeter length of the current INCID in the main interface and in history records."
                             Header="Display Distance Units" />
 
                     </Grid>
@@ -212,7 +212,7 @@
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
-                            Description="Sets the maximum number of features that are expected to be found in GIS when performing a selection before the user is warned. Set to zero to disable warnings."
+                            Description="The maximum number of features that are expected to be found in GIS when performing a selection before the user is warned. Set to zero to disable warnings."
                             Header="Warn Before GIS Select" />
                     </Grid>
 
@@ -241,7 +241,7 @@
                                 Grid.Row="0"
                                 Grid.Column="1"
                                 Margin="0,0,0,0"
-                                Description="Set a folder path for the working File Geodatabase that will be used when peforming large or complex GIS queries."
+                                Description="The folder path for the working File Geodatabase that will be used when peforming large or complex GIS queries."
                                 Header="Working File Geodatabase Directory" />
 
                         </Grid>

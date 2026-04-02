@@ -1647,41 +1647,11 @@ namespace HLU.UI.ViewModel
             }
             set
             {
-                if (IncidCurrentRow != null)
+                // If there is a current record and the primary habitat code has changed
+                if ((IncidCurrentRow != null) && (!string.Equals(_incidPrimary, value, StringComparison.Ordinal)))
                 {
-                    // Guard: if the value hasn't actually changed, skip all the expensive
-                    // downstream work (NewPrimaryHabitat, GetBapEnvironments, etc.) that
-                    // would otherwise be re-triggered every time WPF pushes back the same
-                    // value via the two-way SelectedValue binding during a refresh.
-                    if (string.Equals(_incidPrimary, value, StringComparison.Ordinal))
-                        return;
-
-                    //TODO: What does this actually do?
-                    if (_pasting && (_primaryCodes == null || !_primaryCodes.Any(r => r.Code == value)))
-                    {
-                        _pasting = false;
-                    }
-
+                    // Set the primary habitat code.
                     _incidPrimary = value;
-
-                    //TODO: Why are these being set here? Commented out until figured out!
-                    //_primaryCodes = (
-                    //     from p in _lutPrimary
-                    //     join pc in _lutPrimaryCategory on p.category equals pc.code // Needed to only include local categories.
-                    //     from htp in _lutHabitatTypePrimary
-                    //     where htp.code_habitat_type == _habitatType
-                    //     && (p.code == htp.code_primary
-                    //     || (htp.code_primary.EndsWith('*') && Regex.IsMatch(p.code, @"\A" + htp.code_primary.TrimEnd('*') + @"")))
-                    //     select new CodeDescriptionBool
-                    //     {
-                    //         code = p.code,
-                    //         description = p.description,
-                    //         nvc_codes = p.nvc_codes,
-                    //         preferred = htp.preferred
-                    //     })
-                    //    .OrderByDescending(x => x.preferred) // Preferred = true first.
-                    //    .ThenBy(x => x.code) // Then sort by code.
-                    //    .ToArray();
 
                     // Set the secondary habitat suggested and tips based on the current
                     // primary code and habitat type.
@@ -7814,9 +7784,12 @@ namespace HLU.UI.ViewModel
                     _saving = true;
                     _savingAttempted = false;
 
-                    //TODO: Catch exceptions?
-                    await _viewModelUpd.PerformUpdateAsync();
+                    // Perform the update. Error handling is done in the PerformUpdateAsync method.
+                    bool success = await _viewModelUpd.PerformUpdateAsync();
+                    if (!success)
+                        return;
                 }
+
                 return;
             }
 
@@ -7865,8 +7838,10 @@ namespace HLU.UI.ViewModel
                 _saving = true;
                 _savingAttempted = false;
 
-                //TODO: Catch exceptions?
-                await _viewModelUpd.PerformUpdateAsync();
+                // Perform the update. Error handling is done in the PerformUpdateAsync method.
+                bool success = await _viewModelUpd.PerformUpdateAsync();
+                if (!success)
+                    return;
             }
             else
             {
@@ -7908,8 +7883,10 @@ namespace HLU.UI.ViewModel
                     _saving = true;
                     _savingAttempted = false;
 
-                    //TODO: Catch exceptions?
-                    await _viewModelUpd.PerformUpdateAsync();
+                    // Perform the update. Error handling is done in the PerformUpdateAsync method.
+                    bool success = await _viewModelUpd.PerformUpdateAsync();
+                    if (!success)
+                        return;
 
                     // Recount the number of toids and fragments for the current incid
                     // selected in the GIS and in the database.

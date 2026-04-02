@@ -32,6 +32,15 @@ namespace HLU.Exceptions
     }
 
     /// <summary>
+    /// Thrown when the user cancels an operation (e.g. declines
+    /// to connect to another database). Not shown as an error.
+    /// </summary>
+    public sealed class UserCancelledException : HLUToolException
+    {
+        public UserCancelledException() : base("Operation cancelled by user.") { }
+    }
+
+    /// <summary>
     /// Thrown when a GIS selection cannot be read or is invalid.
     /// </summary>
     public sealed class GisSelectionException : HLUToolException

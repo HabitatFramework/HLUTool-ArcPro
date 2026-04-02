@@ -155,6 +155,7 @@ namespace HLU.UI.ViewModel
 
         // User Export options
         private string _exportPath;
+        private int? _maxFeaturesExport;
 
         // Backup variables
         private string _bakSQLPath;
@@ -285,6 +286,7 @@ namespace HLU.UI.ViewModel
 
             // Set the user Export options
             _exportPath = Settings.Default.ExportPath;
+            _maxFeaturesExport = Settings.Default.MaxFeaturesExport;
 
             // Load the navigation items (the individual options pages).
             NavigationItems =
@@ -760,6 +762,7 @@ namespace HLU.UI.ViewModel
 
             // Update user export options
             Settings.Default.ExportPath = _exportPath;
+            Settings.Default.MaxFeaturesExport = (int)_maxFeaturesExport;
 
             // Save changes to the settings.
             Settings.Default.Save();
@@ -2455,6 +2458,28 @@ namespace HLU.UI.ViewModel
             return null;
         }
 
+        /// <summary>
+        /// Gets or sets the maximum number of features to export before
+        /// warning the user that the operation may take some time.
+        /// 0 disables the warning.
+        /// </summary>
+        /// <value>
+        /// The maximum number of features before the export warning is shown.
+        /// </value>
+        public int? MaxFeaturesExport
+        {
+            get
+            {
+                return _maxFeaturesExport;
+            }
+            set
+            {
+                _maxFeaturesExport = value;
+                OnPropertyChanged(nameof(MaxFeaturesExport));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
         #endregion User Export
 
         #region Error Handling
@@ -2610,6 +2635,13 @@ namespace HLU.UI.ViewModel
                 "ExportPath" when String.IsNullOrEmpty(ExportPath)
                     => "Error: You must enter a default export path.",
 
+                "MaxFeaturesExport" when MaxFeaturesExport == null
+                    => "Error: Enter a maximum features count for the export warning.",
+                "MaxFeaturesExport" when MaxFeaturesExport < 0
+                    => "Error: Maximum features for export warning must be 0 (disabled) or greater.",
+                "MaxFeaturesExport" when MaxFeaturesExport > 1000000
+                    => "Error: Maximum features for export warning must not exceed 1,000,000.",
+
                 _ => null
             };
         }
@@ -2659,7 +2691,7 @@ namespace HLU.UI.ViewModel
                 ("User", "Updates") => ["DefaultReason", "DefaultProcess", "DefaultHabitatClass", "DefaultSecondaryGroup", "SecondaryCodeOrder", "NotifyOnSplitMerge"],
                 ("User", "SQL") => ["GetValueRows", "SQLPath"],
                 ("User", "History") => ["HistoryColumns", "HistoryDisplayGeometry", "HistoryDisplayLastN"],
-                ("User", "Export") => ["ExportPath"],
+                ("User", "Export") => ["ExportPath", "MaxFeaturesExport"],
                 _ => []
             };
         }

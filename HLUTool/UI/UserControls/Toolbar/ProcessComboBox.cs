@@ -43,7 +43,6 @@ namespace HLU.UI.UserControls.Toolbar
         private ViewModelWindowMain _viewModel;
 
         private bool _isInitialized;
-        private bool _isEnabled;
 
         private string _previousProcess;
 
@@ -173,8 +172,6 @@ namespace HLU.UI.UserControls.Toolbar
             this.SelectedItem = null;
             OnSelectionChange(null);
 
-            _isEnabled = false;
-
             // Load the processs into the ComboBox list.
             LoadProcesss();
 
@@ -203,18 +200,7 @@ namespace HLU.UI.UserControls.Toolbar
                 {
                     Add(new ComboBoxItem(processCode.description));
                 }
-
-                _isEnabled = true;
             }
-        }
-
-        /// <summary>
-        /// Updates the state of the ComboBox.
-        /// </summary>
-        /// <param name="enabled"></param>
-        public void UpdateState(bool enabled)
-        {
-            _isEnabled = enabled;
         }
 
         /// <summary>
@@ -225,6 +211,7 @@ namespace HLU.UI.UserControls.Toolbar
         {
             get { return (SelectedItem as ComboBoxItem)?.Text; }
         }
+
         /// <summary>
         /// Sets the selected item in the ComboBox based on the process description.
         /// </summary>

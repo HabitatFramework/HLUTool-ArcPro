@@ -50,7 +50,7 @@
                     <Grid x:Name="GridSQLSelect" Grid.Row="0">
 
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" MinWidth="140" />
+                            <ColumnDefinition Width="Auto" MinWidth="100" />
                             <ColumnDefinition Width="Auto" MinWidth="70" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
@@ -67,12 +67,12 @@
                             HorizontalContentAlignment="Right"
                             BorderThickness="1"
                             Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
-                                 Text="{Binding GetValueRows, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource nullableValueConverter}}"
+                            Text="{Binding GetValueRows, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource nullableValueConverter}}"
                             ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}" />
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
-                            Description="Select the maximum number of unique field values that will be retrieved each time the 'Get Values' button is pressed when using the 'Advanced Query Builder'. The maximum number cannot exceed 100,000.&#10;&#10;This number should be reduced if performance issues are experienced."
+                            Description="The maximum number of unique field values that will be retrieved each time the 'Get Values' button is pressed when using the 'Advanced Query Builder'. The maximum number cannot exceed 100,000.&#10;&#10;This number should be reduced if performance issues are experienced."
                             Header="Get Values Count" />
                     </Grid>
 
@@ -101,7 +101,7 @@
                                 Grid.Row="0"
                                 Grid.Column="1"
                                 Margin="0,0,0,0"
-                                Description="Set a default folder path that will be used when saving or loading queries with the 'Advanced Query Builder'. A different path to the default can still be selected during the save and load process."
+                                Description="The default folder path that will be used when saving or loading queries with the 'Advanced Query Builder'. A different path to the default can still be selected during the save and load process."
                                 Header="Default Query Directory" />
 
                         </Grid>

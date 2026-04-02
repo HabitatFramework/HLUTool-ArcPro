@@ -78,7 +78,7 @@
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
-                            Description="Select what action to take if they attempt to apply attribute changes to only a subset of features for an INCID (see :ref:`attribute_update` for more details). The available actions are:&#10;&#10;  * Prompt - Always **prompt** the user when attempting to update a subset of INCID features.&#10;  * Split - Always perform a logical split before applying the attribute updates.&#10;  * All - Always apply the attribute update to all features belonging to the INCID regardless of which features of the INCID are currently selected."
+                            Description="What action to take if they attempt to apply attribute changes to only a subset of features for an INCID (see :ref:`attribute_update` for more details). The available actions are:&#10;&#10;  * Prompt - Always **prompt** the user when attempting to update a subset of INCID features.&#10;  * Split - Always perform a logical split before applying the attribute updates.&#10;  * All - Always apply the attribute update to all features belonging to the INCID regardless of which features of the INCID are currently selected."
                             Header="Action to Take When Updating Subset" />
                     </Grid>
 
@@ -110,7 +110,7 @@
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
-                            Description="Select when existing IHS Codes should be cleared when attribute updates are applied. The available options are:&#10;&#10;  * Do not clear - Leave any existing IHS habitat and multiplex codes following an attribute update.&#10;  * Clear on change in primary code only - Clear any existing IHS habitat and multiplex codes only following a change to the primary habitat code.&#10;  * Clear on change in primary or secondary codes only - Clear any existing IHS habitat and multiplex codes following a change to either the primary or secondary habitat codes.&#10;  * Clear on any change - Clear any existing IHS habitat and multiplex codes following any change in an attribute update."
+                            Description="When existing IHS Codes should be cleared when attribute updates are applied. The available options are:&#10;&#10;  * Do not clear - Leave any existing IHS habitat and multiplex codes following an attribute update.&#10;  * Clear on change in primary code only - Clear any existing IHS habitat and multiplex codes only following a change to the primary habitat code.&#10;  * Clear on change in primary or secondary codes only - Clear any existing IHS habitat and multiplex codes following a change to either the primary or secondary habitat codes.&#10;  * Clear on any change - Clear any existing IHS habitat and multiplex codes following any change in an attribute update."
                             Header="When To Clear IHS Codes After Update" />
                     </Grid>
 
@@ -142,7 +142,7 @@
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
-                            Description="Set the delimiter characters (e.g. '.' or ', ') that are used to separate any secondary habitat codes in the Summary field. Up to 2 non-alphanumeric characters can be entered."
+                            Description="The delimiter characters (e.g. '.' or ', ') that are used to separate any secondary habitat codes in the Summary field. Up to 2 non-alphanumeric characters can be entered."
                             Header="Secondary Code Delimiter" />
                     </Grid>
 
@@ -166,7 +166,7 @@
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="0,0,0,0"
-                            Description="Select if the status of any pending OSMM Updates for the current INCID should be reset to 'Ignored' when an update is applied."
+                            Description="If the status of any pending OSMM Updates for the current INCID should be reset to 'Ignored' when an update is applied."
                             Header="Reset Pending OSMM Update Status On Manual Update" />
 
                     </Grid>

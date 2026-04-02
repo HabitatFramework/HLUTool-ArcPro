@@ -111,7 +111,7 @@ namespace HLU.UI.ViewModel
                     (HluDataSet.incidDataTable)_viewModelMain.HluDataset.incid.GetChanges()) == -1)
                     throw new Exception($"Failed to update table [{_viewModelMain.HluDataset.incid.TableName}].");
 
-                // Update IHS tables
+                // Update IHS tables to remove any cleared codes and to enable undo of IHS code changes if update cancelled.
                 UpdateIHSTables();
 
                 // Update condition rows
@@ -128,7 +128,6 @@ namespace HLU.UI.ViewModel
                 // Update the BAP rows
                 if (_viewModelMain.IsDirtyIncidBap()) UpdateBap();
 
-                //TODO: Check if the source rows are dirty?
                 // Update the source rows
                 if (_viewModelMain.IncidSourcesRows != null)
                 {
@@ -199,7 +198,6 @@ namespace HLU.UI.ViewModel
                         _viewModelMain.IncidQualityDetermination ?? "",
                         _viewModelMain.IncidQualityInterpretation ?? ""];
 
-                //TODO: Catch exceptions?
                 // Queue updates to the GIS layer
                 await _viewModelMain.GISApplication.UpdateFeaturesAsync(updateColumns, updateValues,
                      _viewModelMain.HistoryColumns, incidCond, editOperation);
@@ -278,9 +276,8 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        //TODO: Needed?
         /// <summary>
-        /// Update the related IHS tables.
+        /// Update the related IHS tables to apply any changes to the IHS codes and to enable undo of IHS code changes if the update is cancelled.
         /// </summary>
         private void UpdateIHSTables()
         {

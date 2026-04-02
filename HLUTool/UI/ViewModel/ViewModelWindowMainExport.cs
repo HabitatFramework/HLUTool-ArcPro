@@ -430,9 +430,8 @@ namespace HLU.UI.ViewModel
                     ? _viewModelMain.SelectedIncidsInGISCount
                     : _viewModelMain.IncidRowCount(false);
 
-                //TODO: Set this in options?
                 // Warn the user if the export is very large.
-                if (rowCount > 50000)
+                if (rowCount > Settings.Default.MaxFeaturesExport)
                 {
                     MessageBoxResult userResponse = MessageBox.Show(
                         "This export operation may take some time.\n\nDo you wish to proceed?",
@@ -622,9 +621,7 @@ namespace HLU.UI.ViewModel
 
             // Show success message
             if (exportSuccess)
-                _viewModelMain.ShowSuccess(
-                    "Export succeeded. Output added to the current map.",
-                    MessageCategory.Export);
+                _viewModelMain.ShowSuccess("Export succeeded. Output added to the current map.", MessageCategory.Export);
         }
 
         #endregion Export

@@ -76,7 +76,7 @@
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
-                            Description="Select which Reason in the toolbar, used for updates when applying attribute changes, is automatically selected when the HLU Tool is loaded."
+                            Description="Which Reason (used for updates when applying attribute changes) is automatically selected in the toolbar when the HLU Tool is loaded."
                             Header="Default Reason for Updates" />
                     </Grid>
 
@@ -110,7 +110,7 @@
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
-                            Description="Select which Process in the toolbar, used for updates when applying attribute changes, is automatically selected when the HLU Tool is loaded."
+                            Description="Which Process (used for updates when applying attribute changes) is automatically selected in the toolbar when the HLU Tool is loaded."
                             Header="Default Process for Updates" />
                     </Grid>
 
@@ -159,7 +159,7 @@
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
-                            Description="Select which Habitat Class in the Habitat tab is automatically selected when the HLU Tool is loaded."
+                            Description="Which Habitat Class in the Habitat tab is automatically selected when the HLU Tool is loaded."
                             Header="Default Habitat Class" />
                     </Grid>
 
@@ -189,7 +189,7 @@
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
-                            Description="Select which Secondary Group in the Habitat tab is automatically selected when the HLU Tool is loaded."
+                            Description="Which Secondary Group in the Habitat tab is automatically selected when the HLU Tool is loaded."
                             Header="Default Secondary Group" />
                     </Grid>
 
@@ -220,7 +220,7 @@
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
-                            Description="Select the order that any secondary habitats appear in the secondary table.&#10;&#10;This doesn't affect the order that the secondaries appear in the Summary field."
+                            Description="The order that any secondary habitats appear in the secondary table.&#10;&#10;This doesn't affect the order that the secondaries appear in the Summary field."
                             Header="Secondary Table Order" />
                     </Grid>
 
@@ -262,7 +262,7 @@
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="0,0,0,0"
-                            Description="Select if a pop-up message should be displayed following the completion of any of the split or merge operations."
+                            Description="If a message window should be displayed following the completion of any of the split or merge operations."
                             Header="Notify After Completing Split/Merge" />
 
                     </Grid>

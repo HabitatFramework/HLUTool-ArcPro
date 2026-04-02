@@ -107,15 +107,11 @@ namespace HLU.UI.UserControls.Toolbar
                 OnSelectionChange(SelectedItem);
             }
 
-            //TODO: Fix CanSwitchGISLayer
-            bool canSwitchGISLayer = _viewModel.CanSwitchGISLayer;
-            canSwitchGISLayer = true;
-
             // Enable or disable the combobox based on CanSwitchGISLayer and main window visibility.
-            Enabled = canSwitchGISLayer && _viewModel.GridMainVisibility == Visibility.Visible;
+            Enabled = _viewModel.CanSwitchGISLayer && _viewModel.GridMainVisibility == Visibility.Visible;
 
             // Set the disabled tool tip text (for when it is disabled).
-            DisabledTooltip = "Unavailable when in bulk update mode or OSMM review mode are active, or when the main window is not visible.";
+            DisabledTooltip = "Unavailable when in bulk update mode or OSMM review mode are active, when there is only one HLU layer in the map, or when the main window is not visible.";
         }
 
         /// <summary>

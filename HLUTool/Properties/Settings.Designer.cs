@@ -953,5 +953,18 @@ namespace HLU.Properties {
                 this["DisplayDistanceUnits"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("50000")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
+        public int MaxFeaturesExport {
+            get {
+                return ((int)(this["MaxFeaturesExport"]));
+            }
+            set {
+                this["MaxFeaturesExport"] = value;
+            }
+        }
     }
 }

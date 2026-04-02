@@ -438,17 +438,6 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Load the data table if not already loaded.
-                if (HluDataset.incid.IsInitialized && (HluDataset.incid.Rows.Count == 0))
-                {
-                    _hluTableAdapterMgr.incidTableAdapter ??=
-                        new HluTableAdapter<HluDataSet.incidDataTable, HluDataSet.incidRow>(_db);
-
-                    //TODO: Commented out until it's determined this if clause is ever true.
-                    // Go to the first incid in the table.
-                    //MoveIncidCurrentRowIndexAsync(1);
-                }
-
                 return _hluDS.incid;
             }
         }
@@ -1245,20 +1234,6 @@ namespace HLU.UI.ViewModel
 
                 string error = null;
 
-                //TODO: Remove from error checking now on ribbon?
-                switch (columnName)
-                {
-                    case "Reason":
-                        if (String.IsNullOrEmpty(Reason))
-                            error = "Error: Reason is mandatory for the history trail of every INCID";
-                        break;
-                    case "Process":
-                        if (String.IsNullOrEmpty(Process))
-                            error = "Error: Process is mandatory for the history trail of every INCID";
-                        break;
-
-                }
-
                 // Check the individual field errors to see if their parent tab label
                 // should be flagged as also in error.
                 switch (columnName)
@@ -1429,19 +1404,14 @@ namespace HLU.UI.ViewModel
                 // Warnings with in Bulk Update mode.
                 switch (columnName)
                 {
-                    case "NumIncidSelectedMap":
+                    case "SelectedIncidsInGISCount":
                         if (_selectedIncidsInGISCount == 0)
                             error = "Warning: No database incids are selected in map";
                         else if (_selectedIncidsInGISCount < _selectedIncidsInDBCount)
                             error = "Warning: Not all database incids are selected in map";
                         break;
 
-                    case "NumToidSelectedMap":
-                        if (_selectedToidsInGISCount == 0)
-                            error = "Warning: No database toids are selected in map";
-                        break;
-
-                    case "NumFragmentsSelectedMap":
+                    case "SelectedFragsInGISCount":
                         if (_selectedFragsInGISCount == 0)
                             error = "Warning: No database fragments are selected in map";
                         else if (_selectedFragsInGISCount < _selectedFragsInDBCount)
@@ -1642,7 +1612,6 @@ namespace HLU.UI.ViewModel
                 // Set the help URL.
                 _dockPane.HelpURL = _addInSettings.HelpURL;
 
-                //TODO: What to do if the upgrade fails?
                 // Upgrade the user settings if necessary.
                 UpgradeUserSettings();
 
@@ -1678,8 +1647,11 @@ namespace HLU.UI.ViewModel
         /// </summary>
         private void UpgradeXMLSettings()
         {
-            // If the XML settings haven't been upgrade yet then upgrade them.
-            if (Settings.Default.CallXMLUpgrade)
+            // If the XML settings don't need upgrading then exit.
+            if (!Settings.Default.CallXMLUpgrade)
+                return;
+
+            try
             {
                 // Remove the following nodes from the XML file:
                 _xmlSettingsManager.RemoveNode("HelpPages");
@@ -1690,6 +1662,12 @@ namespace HLU.UI.ViewModel
                 // Save the settings.
                 Settings.Default.Save();
             }
+            catch (Exception ex)
+            {
+                // Non-fatal: log and continue with existing XML settings.
+                Debug.WriteLine(
+                    $"UpgradeXMLSettings failed: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -1697,8 +1675,11 @@ namespace HLU.UI.ViewModel
         /// </summary>
         private void UpgradeUserSettings()
         {
-            // If the settings haven't been upgrade yet then upgrade them.
-            if (Settings.Default.CallUpgrade)
+            // If the settings don't need upgrading then exit.
+            if (!Settings.Default.CallUpgrade)
+                return;
+
+            try
             {
                 // Upgrade the settings.
                 Settings.Default.Upgrade();
@@ -1709,13 +1690,19 @@ namespace HLU.UI.ViewModel
                 // Save the settings.
                 Settings.Default.Save();
             }
-        }
+            catch (Exception ex)
+            {
+                // Non-fatal: log and continue with existing user settings.
+                Debug.WriteLine(
+                    $"UpgradeUserSettings failed: {ex.Message}");
+            }
+}
 
-        /// <summary>
-        /// Creates the working geodatabase for exports and advanced queries.
-        /// </summary>
-        /// <returns>A task that represents the asynchronous operation.</returns>
-        private async Task CreateWorkingGeodatabaseAsync()
+/// <summary>
+/// Creates the working geodatabase for exports and advanced queries.
+/// </summary>
+/// <returns>A task that represents the asynchronous operation.</returns>
+private async Task CreateWorkingGeodatabaseAsync()
         {
             try
             {
@@ -1776,6 +1763,8 @@ namespace HLU.UI.ViewModel
             {
                 while (true)
                 {
+                    // If the database connection settings are not valid then this will throw an
+                    // exception which is caught and handled by prompting the user to enter new settings.
                     if ((_db = DbFactory.CreateConnection(DbConnectionTimeout)) == null)
                         throw new HLUToolException("No database connection.");
 
@@ -1787,6 +1776,9 @@ namespace HLU.UI.ViewModel
                         // Clear the current database settings as they are clearly not valid.
                         DbFactory.ClearSettings();
 
+                        // Handle any error message returned from the dataset validation - if it's
+                        // very long offer to show it in a separate window to avoid overwhelming the
+                        // user with a message box.
                         if (String.IsNullOrEmpty(errorMessage))
                         {
                             errorMessage = String.Empty;
@@ -1800,10 +1792,11 @@ namespace HLU.UI.ViewModel
 
                             errorMessage = String.Empty;
                         }
+
                         if (MessageBox.Show("There were errors loading data from the database." +
                             errorMessage + "\n\nWould you like to connect to another database?", "HLU: Initialise Dataset",
                             MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.No)
-                            throw new HLUToolException("cancelled");
+                            throw new UserCancelledException();
                     }
                     else
                     {
@@ -1941,80 +1934,15 @@ namespace HLU.UI.ViewModel
 
                 return true;
             }
-            catch (Exception ex)
+            catch (UserCancelledException)
             {
-                //TODO: Check exception type instead
-                if (ex.Message != "cancelled")
-                    MessageBox.Show(ex.Message, "HLU: Initialise Application",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
-
+                // User declined to connect — not an error; return false silently.
                 return false;
             }
-        }
-
-        /// <summary>
-        /// Load the sources for the data grid combo boxes.
-        /// </summary>
-        /// <returns><c>true</c> if the combo box sources were loaded successfully; <c>false</c> otherwise.</returns>
-        internal bool LoadComboBoxSources()
-        {
-            try
-            {
-                // Open database connection and test whether it points to a valid HLU database
-                while (true)
-                {
-                    if ((_db = DbFactory.CreateConnection(DbConnectionTimeout)) == null)
-                        throw new HLUToolException("No database connection.");
-
-                    _hluDS = new HluDataSet();
-
-                    string errorMessage;
-                    if (!_db.ContainsDataSet(_hluDS, out errorMessage))
-                    {
-                        // Clear the current database settings as they are clearly not valid.
-                        DbFactory.ClearSettings();
-
-                        if (String.IsNullOrEmpty(errorMessage))
-                        {
-                            errorMessage = String.Empty;
-                        }
-                        else if (errorMessage.Length > 200)
-                        {
-                            if (MessageBox.Show("There were errors loading data from the database." +
-                                "\n\nWould like to see a list of those errors?", "HLU: Initialise Dataset",
-                                MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.Yes)
-                                ShowMessageWindow.ShowMessageDialog(errorMessage, "HLU Dataset");
-
-                            errorMessage = String.Empty;
-                        }
-                        if (MessageBox.Show("There were errors loading data from the database." +
-                            errorMessage + "\n\nWould you like to connect to another database?", "HLU: Initialise Dataset",
-                            MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.No)
-                            throw new HLUToolException("cancelled");
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                // Create table adapter manager for the dataset and connection
-                _hluTableAdapterMgr = new TableAdapterManager(_db, TableAdapterManager.Scope.AllButMMPolygonsHistory);
-
-                // Fill lookup tables (at least lut_site_id must be filled at this point)
-                _hluTableAdapterMgr.Fill(_hluDS, TableAdapterManager.Scope.Lookup, false);
-
-                // Load all of the lookup tables
-                LoadLookupTables();
-
-                return true;
-            }
             catch (Exception ex)
             {
-                //TODO: Check exception type instead
-                if (ex.Message != "cancelled")
-                    MessageBox.Show(ex.Message, "HLU: Initialise Application",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(ex.Message, "HLU: Initialise Application",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
 
                 return false;
             }
@@ -3547,7 +3475,7 @@ namespace HLU.UI.ViewModel
         /// If loading of a new page fails, null is returned.</returns>
         private async Task<HluDataSet.incidRow> SeekIncidFiltered(int seekRowNumber)
         {
-            //TODO: Error in here sometimes (e.g. when moving to first/last water polygon when whole layer selected/filtered
+            // Adjust the seek row number to be zero-based instead of one-based.
             seekRowNumber--;
 
             // If the seek row number is out of bounds, set it to the nearest valid value.
@@ -3568,8 +3496,10 @@ namespace HLU.UI.ViewModel
                 return returnRow;
             }
 
-            _refillIncidTable = false;
+            // Get the incid number from the incid string.
             int seekIncidNumber = RecordIds.IncidNumber(seekIncid);
+
+            _refillIncidTable = false;
             int incidNumberPageMin;
             int incidNumberPageMax;
 
@@ -3586,11 +3516,13 @@ namespace HLU.UI.ViewModel
                 incidNumberPageMax = RecordIds.IncidNumber(_hluDS.incid[^1].incid);
             }
 
+            // Set the start and stop row numbers for the page to be loaded based on the seek row
+            // number and the current page, and set the direction of movement.
             int start = _incidCurrentRowIndex > 0 ? _incidCurrentRowIndex - 1 : 0;
             int stop = start;
             bool moveForward = true;
 
-            //TODO: Check if seekIncidNumber is not -1 first?
+            // If the seek incid number is outside the current page, set the start and stop row numbers for the new page to be loaded
             if (seekIncidNumber < incidNumberPageMin) // moving backward
             {
                 start = seekRowNumber - IncidPageSize > 0 ? seekRowNumber - IncidPageSize : 0;

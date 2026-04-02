@@ -43,7 +43,6 @@ namespace HLU.UI.UserControls.Toolbar
         private ViewModelWindowMain _viewModel;
 
         private bool _isInitialized;
-        private bool _isEnabled; //TODO: Needed?
 
         private string _previousReason;
 
@@ -173,9 +172,6 @@ namespace HLU.UI.UserControls.Toolbar
             SelectedItem = null;
             OnSelectionChange(null);
 
-            //TODO: Needed?
-            _isEnabled = false;
-
             // Load the reasons into the ComboBox list.
             LoadReasons();
 
@@ -204,19 +200,7 @@ namespace HLU.UI.UserControls.Toolbar
                 {
                     Add(new ComboBoxItem(reasonCode.description));
                 }
-
-                //TODO: Needed?
-                _isEnabled = true;
             }
-        }
-
-        /// <summary>
-        /// Updates the state of the ComboBox.
-        /// </summary>
-        /// <param name="enabled"></param>
-        public void UpdateState(bool enabled)
-        {
-            _isEnabled = enabled;
         }
 
         /// <summary>

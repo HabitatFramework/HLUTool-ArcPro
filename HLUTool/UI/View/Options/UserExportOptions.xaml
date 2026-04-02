@@ -47,7 +47,7 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <Grid x:Name="GridExportPath" Grid.Row="2">
+                    <Grid x:Name="GridExportPath" Grid.Row="0">
 
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -72,7 +72,7 @@
                                 Grid.Row="0"
                                 Grid.Column="1"
                                 Margin="0,0,0,0"
-                                Description="Set a default folder path that will be used when exporting data. A different path to the default can still be selected during the export process."
+                                Description="The default folder path that will be used when exporting data. A different path to the default can still be selected during the export process."
                                 Header="Default Export Directory" />
 
                         </Grid>
@@ -118,6 +118,37 @@
 
                         </Grid>
                     </Grid>
+
+                    <Grid x:Name="GridMaxFeaturesExport" Grid.Row="2">
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" MinWidth="100" />
+                            <ColumnDefinition Width="Auto" MinWidth="70" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Label
+                            x:Name="LabelMaxFeaturesExport"
+                            Grid.Column="0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Content="Warning Before Exporting Features" />
+                        <TextBox
+                            x:Name="TextBoxMaxFeaturesExport"
+                            Grid.Column="1"
+                            Height="24"
+                            HorizontalContentAlignment="Right"
+                            BorderThickness="1"
+                            Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                            Text="{Binding MaxFeaturesExport, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource nullableValueConverter}}"
+                            ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
+                            ToolTipService.ShowOnDisabled="True" />
+                        <controls:InfoButton
+                            Grid.Column="2"
+                            Margin="0,0,0,0"
+                            Description="The number of features above which a warning will be shown before starting an export, as the operation may take some time. Set to 0 to disable the warning."
+                            Header="Warning Before Exporting Features" />
+                    </Grid>
+
                 </Grid>
 
             </Expander>

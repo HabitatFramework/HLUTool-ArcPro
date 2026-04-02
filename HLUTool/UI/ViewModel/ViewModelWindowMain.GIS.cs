@@ -208,14 +208,11 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Enable switching only when not in bulk update mode or OSMM update mode.
+                // Enable switching only when not in bulk update mode or OSMM update mode and there
+                // is more than one HLU layer in the map (otherwise there is nothing to switch to).
                 if (IsNotBulkMode && IsNotOsmmReviewMode)
                 {
-                    // Get the total number of map layers
-                    int mapLayersCount = _gisApp.ListHluLayers();
-
-                    // Return true if there is more than one map layer
-                    return mapLayersCount > 1;
+                    return _gisApp?.HluLayerCount > 1;
                 }
                 else
                     return false;
@@ -1189,20 +1186,16 @@ namespace HLU.UI.ViewModel
                         (rel = GetRelation(_hluDS.incid, st)) != null ?
                         new SqlFilterCondition("AND", t, t.incidColumn, typeof(DataColumn), "(", ")", rel.ChildColumns[0]) : null).Where(c => c != null);
 
+                    // Count the number of fragments from the database.
                     numFragments = await _db.SqlCountAsync(whereTables, "*", [.. joinCond], sqlWhereClause);
 
                     // Create a selection DataTable of PK values of IncidMMPolygons.
-                    //_incidMMPolygonSelection = _db.SqlSelect(true, false, _hluDS.incid_mm_polygons.PrimaryKey, [.. whereTables], [.. joinCond], sqlWhereClause);
                     _incidMMPolygonSelection = await Task.Run(() =>
                         _db.SqlSelect(
                             true,
                             false,
                             _hluDS.incid_mm_polygons.PrimaryKey,
                             [.. whereTables], [.. joinCond], sqlWhereClause));
-
-                    //TODO: Temporary check.
-                    if (numFragments != _incidMMPolygonSelection.Rows.Count)
-                        Debug.Print("Diff");
 
                     //TODO: Why is this set twice?
                     // Count the number of fragments from the selection table.
@@ -1576,7 +1569,12 @@ namespace HLU.UI.ViewModel
             // Execute the logical split and wait for the result.
             // Notify the user following the completion of the split.
             if (await vmSplit.LogicalSplitAsync())
+            {
+                // Show success message
+                ShowSuccess("Logical split completed.", MessageCategory.Split);
+
                 NotifySplitMerge("Logical split completed.");
+            }
         }
 
         /// <summary>
@@ -1597,7 +1595,12 @@ namespace HLU.UI.ViewModel
             // Execute the physical split and wait for the result.
             // Notify the user following the completion of the split.
             if (await vmSplit.PhysicalSplitAsync())
+            {
+                // Show success message
+                ShowSuccess("Physical split completed.", MessageCategory.Split);
+
                 NotifySplitMerge("Physical split completed.");
+            }
         }
 
         /// <summary>
@@ -1627,7 +1630,12 @@ namespace HLU.UI.ViewModel
             // Execute the logical merge and wait for the result.
             // Notify the user following the completion of the merge.
             if (await vmMerge.LogicalMergeAsync())
+            {
+                // Show success message
+                ShowSuccess("Logical merge completed.", MessageCategory.Merge);
+
                 NotifySplitMerge("Logical merge completed.");
+            }
         }
 
         /// <summary>
@@ -1657,7 +1665,12 @@ namespace HLU.UI.ViewModel
             // Execute the physical merge and wait for the result.
             // Notify the user following the completion of the split.
             if (await vmMerge.PhysicalMergeAsync())
+            {
+                // Show success message
+                ShowSuccess("Physical merge completed.", MessageCategory.Merge);
+
                 NotifySplitMerge("Physical merge completed.");
+            }
         }
 
         /// <summary>

@@ -4076,62 +4076,6 @@ namespace HLU.GISApplication
             return true;
         }
 
-        //TODO: ArcGIS
-        /// <summary>
-        /// Determines which of the layers in all the maps are valid HLU layers
-        /// and stores these in a list so the user can switch between them.
-        /// Called before displaying the list of layers for the user to switch
-        /// between.
-        /// </summary>
-        /// <returns>The number of valid HLU layers in the list</returns>
-        public int ListHluLayers()
-        {
-            //if (_hluLayerStructure == null)
-            //    _hluLayerStructure = new HluGISLayer.incid_mm_polygonsDataTable();
-
-            //if (_hluLayerNamesList == null)
-            //    _hluLayerNamesList = [];
-
-            //try
-            //{
-            //    List<string> retList = IpcArcMap(["ll"]);
-            //    if ((retList != null) && (retList.Count > 3))
-            //    {
-            //        if (Int32.Parse(retList[0]) > 0)
-            //        {
-            //            // Store the total number of map windows.
-            //            _mapWindowsCount = Int32.Parse(retList[1]);
-
-            //            // Split each layer into constituent parts and add them to the list
-            //            // of valid layers.
-            //            if (_hluLayerNamesList == null)
-            //                _hluLayerNamesList = [];
-            //            else
-            //                _hluLayerNamesList.Clear();
-
-            //            for (int i = 3; i < retList.Count; i++)
-            //            {
-            //                // Increment the map number by 1 so that it starts with 1 instead
-            //                // of 0 to be more user-friendly when displayed.
-            //                string[] layerParts = retList[i].ToString().Split(["::"], StringSplitOptions.None);
-            //                _hluLayerNamesList.Add(new GISLayer(Int32.Parse(layerParts[0]) + 1, layerParts[1], Int32.Parse(layerParts[2]), layerParts[3]));
-            //            }
-            //        }
-            //    }
-            //    else
-            //    {
-            //        _hluCurrentLayer = null;
-            //        return 0;
-            //    }
-            //}
-            //catch { }
-
-            //if (_hluCurrentLayer == null)
-            //    _hluCurrentLayer = _hluLayerNamesList[0];
-            //return _hluLayerNamesList.Count;
-            return 0;
-        }
-
         /// <summary>
         /// Releases all resources associated with the HLU layer and resets related fields to their default state.
         /// </summary>

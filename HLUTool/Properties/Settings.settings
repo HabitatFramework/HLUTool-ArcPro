@@ -290,5 +290,8 @@
     <Setting Name="DisplayDistanceUnits" Roaming="true" Type="System.String" Scope="User">
       <Value Profile="(Default)">km</Value>
     </Setting>
+    <Setting Name="MaxFeaturesExport" Roaming="true" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">50000</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

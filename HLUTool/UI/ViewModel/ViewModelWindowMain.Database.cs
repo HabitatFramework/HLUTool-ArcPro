@@ -443,7 +443,7 @@ namespace HLU.UI.ViewModel
                     _hluTableAdapterMgr.incid_ihs_complexTableAdapter, ref ihsComplexTable);
             }
 
-            return _incidIhsManagementRows != null;
+            return _incidIhsComplexRows != null;
         }
 
         /// <summary>
@@ -518,17 +518,21 @@ namespace HLU.UI.ViewModel
         /// </returns>
         internal bool IsDirtyIncidIhsMatrix()
         {
-            //TODO: Check this works/is needed
-
+            // If there are no ihs matrix rows there can't be any changes. This also prevents false
+            // positives for changes when the ihs matrix rows are null in bulk update mode.
             if (_incidIhsMatrixRows != null)
             {
+                // If the number of ihs matrix rows doesn't match the original count consider the
+                // table dirty without further checks.
                 if (_incidIhsMatrixRows.Count(r => r != null) != _origIncidIhsMatrixCount) return true;
 
+                // If any of the ihs matrix rows have unsaved changes consider the table dirty.
                 foreach (DataRow r in _incidIhsMatrixRows)
                     if (ViewModelWindowMainHelpers.RowIsDirty(r)) return true;
 
                 return false;
             }
+
             return _origIncidIhsMatrixCount != 0;
         }
 
@@ -540,12 +544,15 @@ namespace HLU.UI.ViewModel
         /// </returns>
         internal bool IsDirtyIncidIhsFormation()
         {
-            //TODO: Check this works/is needed
-
+            // If there are no ihs formation rows there can't be any changes. This also prevents
+            // false positives for changes when the ihs formation rows are null in bulk update mode.
             if (_incidIhsFormationRows != null)
             {
+                // If the number of ihs formation rows doesn't match the original count consider the
+                // table dirty without further checks.
                 if (_incidIhsFormationRows.Count(r => r != null) != _origIncidIhsFormationCount) return true;
 
+                // If any of the ihs formation rows have unsaved changes consider the table dirty.
                 foreach (DataRow r in _incidIhsFormationRows)
                     if (ViewModelWindowMainHelpers.RowIsDirty(r)) return true;
 
@@ -562,12 +569,15 @@ namespace HLU.UI.ViewModel
         /// </returns>
         internal bool IsDirtyIncidIhsManagement()
         {
-            //TODO: Check this works/is needed
-
+            // If there are no ihs management rows there can't be any changes. This also prevents
+            // false positives for changes when the ihs management rows are null in bulk update mode.
             if (_incidIhsManagementRows != null)
             {
+                // If the number of ihs management rows doesn't match the original count consider
+                // the table dirty without further checks.
                 if (_incidIhsManagementRows.Count(r => r != null) != _origIncidIhsManagementCount) return true;
 
+                // If any of the ihs management rows have unsaved changes consider the table dirty.
                 foreach (DataRow r in _incidIhsManagementRows)
                     if (ViewModelWindowMainHelpers.RowIsDirty(r)) return true;
 
@@ -584,12 +594,15 @@ namespace HLU.UI.ViewModel
         /// </returns>
         internal bool IsDirtyIncidIhsComplex()
         {
-            //TODO: Check this works/is needed
-
+            // If there are no ihs complex rows there can't be any changes. This also prevents false
+            // positives for changes when the ihs complex rows are null in bulk update mode.
             if (_incidIhsComplexRows != null)
             {
+                // If the number of ihs complex rows doesn't match the original count consider the
+                // table dirty without further checks.
                 if (_incidIhsComplexRows.Count(r => r != null) != _origIncidIhsComplexCount) return true;
 
+                // If any of the ihs complex rows have unsaved changes consider the table dirty.
                 foreach (DataRow r in _incidIhsComplexRows)
                     if (ViewModelWindowMainHelpers.RowIsDirty(r)) return true;
 
@@ -606,8 +619,6 @@ namespace HLU.UI.ViewModel
         /// </returns>
         internal bool IsDirtyIncidSecondary()
         {
-            //TODO: Check this works/is needed
-
             // If there are no secondary habitats there can't be any changes. This also prevents false
             // positives for changes when the secondary habitats are null in bulk update mode.
             if (_incidSecondaryHabitats == null)
@@ -646,8 +657,6 @@ namespace HLU.UI.ViewModel
         /// </returns>
         internal bool IsDirtyIncidCondition()
         {
-            //TODO: Check if works/is needed
-
             // In bulk update mode condition rows are always Detached so RowIsDirty
             // returns false and the count always matches _origIncidConditionCount.
             // Instead treat any row with a non-null condition value as a pending change.
@@ -682,8 +691,6 @@ namespace HLU.UI.ViewModel
         /// </returns>
         internal bool IsDirtyIncidBap()
         {
-            //TODO: Check if works/is needed
-
             // If there are no BAP environments there can't be any changes. This also prevents false
             // positives for changes when the BAP environments are null in bulk update mode.
             if (_incidBapRowsAuto == null)
@@ -733,8 +740,6 @@ namespace HLU.UI.ViewModel
         /// </returns>
         private bool IsDirtyIncidSources()
         {
-            //TODO: Check if works/is needed
-
             // In bulk update mode source rows are always Detached so RowIsDirty
             // returns false and _incidSourcesRows is empty so the count always
             // matches _origIncidSourcesCount (0). Instead treat any row with a
@@ -2291,7 +2296,7 @@ namespace HLU.UI.ViewModel
                         // Set the row id
                         HluDataSet.incid_sourcesRow newRow = IncidSourcesTable.Newincid_sourcesRow();
                         newRow.incid_source_id = NextIncidSourcesId;
-                        newRow.incid = IncidCurrentRow.incid; //TODO: Error here in bulk update mode
+                        newRow.incid = IncidCurrentRow.incid;
                         newRow.sort_order = rowNumber + 1;
                         _incidSourcesRows[rowNumber] = newRow;
                     }
@@ -3089,57 +3094,31 @@ namespace HLU.UI.ViewModel
         /// <returns>A task that represents the asynchronous operation.</returns>
         private async Task NewIncidCurrentRowAsync()
         {
-            //TODO: Check if the selection is already being read so it
-            // doesn't repeat itself.
-            //// Re-check GIS selection in case it has changed.
-            //if (_gisApp != null)
-            //{
-            //    // Initialise the GIS selection table.
-            //    _gisSelection = NewGisSelectionTable();
-
-            //    // Recheck the selected features in GIS (passing a new GIS
-            //    // selection table so that it knows the columns to return.
-            //    try
-            //    {
-            //        _gisSelection = await _gisApp.ReadMapSelectionAsync(_gisSelection);
-            //    }
-            //    catch (HLUToolException ex)
-            //    {
-            //        // Preserve stack trace and wrap in a meaningful type
-            //        MessageBox.Show(ex.Message, "HLU Tool", MessageBoxButton.OK, MessageBoxImage.Warning);
-            //        return;
-            //    }
-
-            //    _incidSelectionWhereClause = null;
-
-            //    AnalyzeGisSelectionSet(false);
-            //}
-
             try
             {
                 // Determine if we can move
                 bool canMove = false;
-
                 if (!IsFiltered)
                 {
-                    //TODO: Bug here sometimes?
+                    // If not filtered then seek to the current row index in the incid table and set
+                    // the current row.
                     int newRowIndex = SeekIncid(_incidCurrentRowIndex);
                     if ((canMove = newRowIndex != -1))
                         _incidCurrentRow = _hluDS.incid[newRowIndex];
                 }
                 else
                 {
+                    // If filtered then seek to the current row index in the selection table and set
+                    // the current row based on the incid value in the selection table.
                     if ((canMove = (_incidCurrentRowIndex != -1) &&
                         (_incidCurrentRowIndex <= _incidSelection.Rows.Count)))
                         _incidCurrentRow = await SeekIncidFiltered(_incidCurrentRowIndex);
                 }
 
+                // If we can move to a new record then retrieve the values for the new record and
+                // update the form.
                 if (canMove)
                 {
-                    //TODO: Needed?
-                    //_incidArea = -1;
-                    //_incidLength = -1;
-
                     // Flag that the current record has not been changed yet so that the
                     // apply button does not appear.
                     Changed = false;
