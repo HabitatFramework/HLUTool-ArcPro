@@ -182,9 +182,9 @@ namespace HLU.UI.ViewModel
                 else if (historyTable.Rows.Count == 0)
                     throw new Exception("No GIS features were updated.");
 
-                //TODO: GIS layer shadow copy update - Set length and area for each polygon (if possible)?
-                // Perform database shadow copy update
-                UpdateGISShadowCopy(incidCond);
+                // Perform database shadow copy update, including geometry values read back from GIS
+                // via the history table, to keep the database in sync with GIS.
+                UpdateGISShadowCopy(incidCond, historyTable);
 
                 // Build a list of columns and values to update
                 DataColumn[] updateColumns = [
@@ -322,35 +322,144 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Updates the GIS shadow copy (the incid_mm_polygons table).
+        /// Updates the GIS shadow copy (the incid_mm_polygons table), including geometry fields
+        /// read back from GIS via the history table.
         /// </summary>
         /// <param name="incidCond">The conditions to filter the rows to be updated.</param>
-        private void UpdateGISShadowCopy(List<SqlFilterCondition> incidCond)
+        /// <param name="historyTable">
+        /// The history table returned by GetHistoryAsync(), which contains one row per GIS feature
+        /// and includes the geometry values (shape_length / shape_area) sourced from the live GIS layer.
+        /// </param>
+        private void UpdateGISShadowCopy(
+            List<SqlFilterCondition> incidCond,
+            DataTable historyTable)
         {
-            string updateStatement = string.Format(
-                "UPDATE {0} SET {1}={2}, {3}={4}, {5}={6}, {7}={8} WHERE {9}",
-                _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
-                _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.habprimaryColumn.ColumnName),
-                _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidPrimary),
-                _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.habsecondColumn.ColumnName),
-                _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidSecondarySummary),
-                _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.determqtyColumn.ColumnName),
-                _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidQualityDetermination),
-                _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.interpqtyColumn.ColumnName),
-                _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidQualityInterpretation),
-                _viewModelMain.DataBase.WhereClause(false, true, true, incidCond));
+            // Resolve column names for toid, fragid and geometry.
+            string toidCol = _viewModelMain.HluDataset.incid_mm_polygons.toidColumn.ColumnName;
+            string fragidCol = _viewModelMain.HluDataset.incid_mm_polygons.fragidColumn.ColumnName;
+            string geom1ColName = ViewModelWindowMain.HistoryGeometry1ColumnName;
+            string geom2ColName = ViewModelWindowMain.HistoryGeometry2ColumnName;
 
-            // Update the DB copy of the GIS layer.
-            try
+            // Determine whether the history table carries usable geometry values.
+            bool hasGeom = historyTable != null &&
+                           historyTable.Columns.Contains(toidCol) &&
+                           historyTable.Columns.Contains(fragidCol) &&
+                           historyTable.Columns.Contains(geom1ColName) &&
+                           historyTable.Columns.Contains(geom2ColName);
+
+            // If the geometry values are present, perform an update per GIS feature row to keep the
+            // geometry in sync.
+            if (hasGeom)
             {
-                _viewModelMain.DataBase.ExecuteNonQuery(
-                    updateStatement,
-                    _viewModelMain.DataBase.Connection.ConnectionTimeout,
-                    CommandType.Text);
+                // Issue one UPDATE per GIS feature row so geometry stays in sync.
+                foreach (DataRow row in historyTable.Rows)
+                {
+                    double geom1 = row[geom1ColName] is double d1 ? d1 : -1;
+                    double geom2 = row[geom2ColName] is double d2 ? d2 : -1;
+
+                    // Build a WHERE clause that identifies the individual feature.
+                    List<SqlFilterCondition> rowCond =
+                    [
+                        new SqlFilterCondition(
+                            _viewModelMain.HluDataset.incid_mm_polygons,
+                            _viewModelMain.HluDataset.incid_mm_polygons.incidColumn,
+                            _viewModelMain.Incid),
+                        new SqlFilterCondition(
+                            _viewModelMain.HluDataset.incid_mm_polygons,
+                            _viewModelMain.HluDataset.incid_mm_polygons.toidColumn,
+                            row[toidCol]?.ToString()),
+                        new SqlFilterCondition(
+                            _viewModelMain.HluDataset.incid_mm_polygons,
+                            _viewModelMain.HluDataset.incid_mm_polygons.fragidColumn,
+                            row[fragidCol]?.ToString()),
+                    ];
+
+                    // Build the UPDATE statement to update the row for the individual feature,
+                    // including geometry values.
+                    string updateStatement = string.Format(
+                        "UPDATE {0} SET {1}={2}, {3}={4}, {5}={6}, {7}={8}, {9}={10}, {11}={12}" +
+                        " WHERE {13}",
+                        _viewModelMain.DataBase.QualifyTableName(
+                            _viewModelMain.HluDataset.incid_mm_polygons.TableName),
+                        _viewModelMain.DataBase.QuoteIdentifier(
+                            _viewModelMain.HluDataset.incid_mm_polygons.habprimaryColumn.ColumnName),
+                        _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidPrimary),
+                        _viewModelMain.DataBase.QuoteIdentifier(
+                            _viewModelMain.HluDataset.incid_mm_polygons.habsecondColumn.ColumnName),
+                        _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidSecondarySummary),
+                        _viewModelMain.DataBase.QuoteIdentifier(
+                            _viewModelMain.HluDataset.incid_mm_polygons.determqtyColumn.ColumnName),
+                        _viewModelMain.DataBase.QuoteValue(
+                            _viewModelMain.IncidQualityDetermination),
+                        _viewModelMain.DataBase.QuoteIdentifier(
+                            _viewModelMain.HluDataset.incid_mm_polygons.interpqtyColumn.ColumnName),
+                        _viewModelMain.DataBase.QuoteValue(
+                            _viewModelMain.IncidQualityInterpretation),
+                        _viewModelMain.DataBase.QuoteIdentifier(
+                            _viewModelMain.HluDataset.incid_mm_polygons.shape_lengthColumn.ColumnName),
+                        geom1 >= 0
+                            ? _viewModelMain.DataBase.QuoteValue(geom1)
+                            : "NULL",
+                        _viewModelMain.DataBase.QuoteIdentifier(
+                            _viewModelMain.HluDataset.incid_mm_polygons.shape_areaColumn.ColumnName),
+                        geom2 >= 0
+                            ? _viewModelMain.DataBase.QuoteValue(geom2)
+                            : "NULL",
+                        _viewModelMain.DataBase.WhereClause(false, true, true, rowCond));
+
+                    // Try to execute the update statement, and throw an exception if it fails.
+                    try
+                    {
+                        _viewModelMain.DataBase.ExecuteNonQuery(
+                            updateStatement,
+                            _viewModelMain.DataBase.Connection.ConnectionTimeout,
+                            CommandType.Text);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception(
+                            $"Failed to update database copy of GIS layer in table " +
+                            $"[{_viewModelMain.HluDataset.incid_mm_polygons.TableName}].", ex);
+                    }
+                }
             }
-            catch (Exception ex)
+            else
             {
-                throw new Exception($"Failed to update database copy of GIS layer in table [{_viewModelMain.HluDataset.incid_mm_polygons.TableName}].", ex);
+                // Otherwise, perform a bulk update without geometry.
+
+                // Build the UPDATE statement to update all rows for the incid with the same values (geometry not included).
+                string updateStatement = string.Format(
+                    "UPDATE {0} SET {1}={2}, {3}={4}, {5}={6}, {7}={8} WHERE {9}",
+                    _viewModelMain.DataBase.QualifyTableName(
+                        _viewModelMain.HluDataset.incid_mm_polygons.TableName),
+                    _viewModelMain.DataBase.QuoteIdentifier(
+                        _viewModelMain.HluDataset.incid_mm_polygons.habprimaryColumn.ColumnName),
+                    _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidPrimary),
+                    _viewModelMain.DataBase.QuoteIdentifier(
+                        _viewModelMain.HluDataset.incid_mm_polygons.habsecondColumn.ColumnName),
+                    _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidSecondarySummary),
+                    _viewModelMain.DataBase.QuoteIdentifier(
+                        _viewModelMain.HluDataset.incid_mm_polygons.determqtyColumn.ColumnName),
+                    _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidQualityDetermination),
+                    _viewModelMain.DataBase.QuoteIdentifier(
+                        _viewModelMain.HluDataset.incid_mm_polygons.interpqtyColumn.ColumnName),
+                    _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidQualityInterpretation),
+                    _viewModelMain.DataBase.WhereClause(false, true, true, incidCond));
+
+                // Try to execute the update statement, and throw an exception if it fails.
+                try
+                {
+                    _viewModelMain.DataBase.ExecuteNonQuery(
+                        updateStatement,
+                        _viewModelMain.DataBase.Connection.ConnectionTimeout,
+                        CommandType.Text);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception(
+                        $"Failed to update database copy of GIS layer in table " +
+                        $"[{_viewModelMain.HluDataset.incid_mm_polygons.TableName}].", ex);
+                }
             }
         }
 
