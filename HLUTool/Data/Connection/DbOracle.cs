@@ -342,12 +342,6 @@ namespace HLU.Data.Connection
                 return new OracleCommand();
         }
 
-        //TODO: CreateAdapter
-        //public override IDbDataAdapter CreateAdapter()
-        //{
-        //    return new OracleDataAdapter();
-        //}
-
         /// <summary>
         /// Creates and returns an IDbDataAdapter for the specified table type T. The method checks
         /// if an adapter for the given table type already exists in the _adaptersDic dictionary. If
@@ -780,7 +774,7 @@ namespace HLU.Data.Connection
                     _transaction.Commit();
                     _commandBuilder.RefreshSchema();
                 }
-                return false;
+                return true;
             }
             catch (Exception ex)
             {
@@ -897,15 +891,21 @@ namespace HLU.Data.Connection
             _errorMessage = String.Empty;
             if (String.IsNullOrEmpty(sql)) return null;
             ConnectionState previousConnectionState = _connection.State;
+
             try
             {
                 _command.CommandType = commandType;
                 _command.CommandTimeout = commandTimeout;
                 _command.CommandText = sql;
 
-                if (_transaction != null) _command.Transaction = _transaction;
+                if (_transaction != null)
+                    _command.Transaction = _transaction;
+
                 _commandBuilder.RefreshSchema();
-                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+
+                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                    _connection.Open();
+
                 return _command.ExecuteScalar();
             }
             catch (Exception ex)
@@ -988,8 +988,8 @@ namespace HLU.Data.Connection
             }
             catch (Exception ex)
             {
+                // Return the invalid reason as the error message
                 _errorMessage = ex.Message;
-                //TODO: throw ex;
                 return false;
             }
             finally { if (previousConnectionState == ConnectionState.Closed) _connection.Close(); }

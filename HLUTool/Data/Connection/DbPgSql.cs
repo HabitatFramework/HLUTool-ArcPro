@@ -217,12 +217,6 @@ namespace HLU.Data.Connection
                 return new NpgsqlCommand();
         }
 
-        //TODO: CreateAdapter
-        //public override IDbDataAdapter CreateAdapter()
-        //{
-        //    return new NpgsqlDataAdapter();
-        //}
-
         /// <summary>
         /// Creates and returns a new data adapter for the specified DataTable. The method checks if
         /// an adapter for the type of the provided table already exists in the _adaptersDic
@@ -638,7 +632,7 @@ namespace HLU.Data.Connection
                     _transaction.Commit();
                     _commandBuilder.RefreshSchema();
                 }
-                return false;
+                return true;
             }
             catch (Exception ex)
             {
@@ -765,16 +759,20 @@ namespace HLU.Data.Connection
             _errorMessage = String.Empty;
             if (String.IsNullOrEmpty(sql)) return null;
             ConnectionState previousConnectionState = _connection.State;
+
             try
             {
                 _command.CommandType = commandType;
                 _command.CommandTimeout = commandTimeout;
                 _command.CommandText = sql;
 
-                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+                if (_transaction != null)
+                    _command.Transaction = _transaction;
 
-                if (_transaction != null) _command.Transaction = _transaction;
                 _commandBuilder.RefreshSchema();
+
+                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                    _connection.Open();
 
                 return _command.ExecuteScalar();
             }
@@ -860,8 +858,8 @@ namespace HLU.Data.Connection
             }
             catch (Exception ex)
             {
+                // Return the invalid reason as the error message
                 _errorMessage = ex.Message;
-                //TODO: throw ex;
                 return false;
             }
             finally { if (previousConnectionState == ConnectionState.Closed) _connection.Close(); }
@@ -1452,7 +1450,7 @@ namespace HLU.Data.Connection
                 _command.ExecuteNonQuery();
             }
             catch { }
-            finally { if (previousConnectionState != ConnectionState.Open) _connection.Open() ; }
+            finally { if (previousConnectionState != ConnectionState.Open) _connection.Close() ; }
         }
 
         #endregion Private Methods

@@ -322,7 +322,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Updates the GIS shadow copy (of the incid_mm_polygons table).
+        /// Updates the GIS shadow copy (the incid_mm_polygons table).
         /// </summary>
         /// <param name="incidCond">The conditions to filter the rows to be updated.</param>
         private void UpdateGISShadowCopy(List<SqlFilterCondition> incidCond)

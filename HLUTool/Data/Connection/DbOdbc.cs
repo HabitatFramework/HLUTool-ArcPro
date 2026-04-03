@@ -362,12 +362,6 @@ namespace HLU.Data.Connection
                 return new OdbcCommand();
         }
 
-        //TODO: CreateAdapter
-        //public override IDbDataAdapter CreateAdapter()
-        //{
-        //    return new();
-        //}
-
         /// <summary>
         /// Creates and returns an ODBC data adapter for the specified DataTable. The method checks
         /// if the provided DataTable is null and, if so, it initializes a new instance of the
@@ -810,7 +804,7 @@ namespace HLU.Data.Connection
                     _transaction.Commit();
                     _commandBuilder.RefreshSchema();
                 }
-                return false;
+                return true;
             }
             catch (Exception ex)
             {
@@ -934,9 +928,7 @@ namespace HLU.Data.Connection
         public override object ExecuteScalar(string sql, int commandTimeout, CommandType commandType)
         {
             _errorMessage = String.Empty;
-
             if (String.IsNullOrEmpty(sql)) return null;
-
             ConnectionState previousConnectionState = _connection.State;
 
             try
@@ -951,7 +943,7 @@ namespace HLU.Data.Connection
                 _commandBuilder.RefreshSchema();
 
                 if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
-                    _connection.OpenAsync();
+                    _connection.Open();
 
                 return _command.ExecuteScalarAsync();
             }
@@ -1039,7 +1031,7 @@ namespace HLU.Data.Connection
             }
             catch (Exception ex)
             {
-                //TODO: throw ex;
+                // Return the invalid reason as the error message
                 _errorMessage = ex.Message;
                 return false;
             }

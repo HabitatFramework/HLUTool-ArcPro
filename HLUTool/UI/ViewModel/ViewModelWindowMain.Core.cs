@@ -1064,7 +1064,6 @@ namespace HLU.UI.ViewModel
             get { return _incidCurrentRowIndex; }
             set
             {
-                //TODO: Should this really be fire and forget?
                 // Call the safe fire and forget helper to move to the
                 // new current row index asynchronously.
                 AsyncHelpers.SafeFireAndForget(MoveIncidCurrentRowIndexAsync(value),

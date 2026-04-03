@@ -115,28 +115,12 @@ namespace HLU.UI.ViewModel
             if (!await PerformLogicalMergeAsync())
                 return false;
 
-            //// If the selected features share the same incid and toid.
-            //if ((_viewModelMain.IncidsSelectedMapCount == 1) && (_viewModelMain.ToidsSelectedMapCount == 1))
-            //{
-            //    // Prompt the user to perform a physical merge as well.
-            //    if (MessageBox.Show("Perform physical merge as well?", "HLU: Physical Merge",
-            //    MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes)
-            //    {
-            //        //TODO: Needed?
-            //        //// Restore the selection.
-            //        //_viewModelMain.GisSelection.Clear();
-            //        //foreach (HluDataSet.incid_mm_polygonsRow r in polygons)
-            //        //{
-            //        //    DataRow newRow = _viewModelMain.GisSelection.NewRow();
-            //        //    for (int i = 0; i < _viewModelMain.GisIDColumnOrdinals.Length; i++)
-            //        //        newRow[i] = r[_viewModelMain.GisIDColumnOrdinals[i]];
-            //        //    _viewModelMain.GisSelection.Rows.Add(newRow);
-            //        //}
-
-            //        // Perform the physical merge.
-            //        return await PerformPhysicalMergeAsync();
-            //    }
-            //}
+            // If the selected features share the same incid and toid.
+            if ((_viewModelMain.SelectedIncidsInGISCount == 1) && (_viewModelMain.SelectedToidsInGISCount == 1))
+            {
+                // Show informational message that physical merge can be performed if desired.
+                _viewModelMain.ShowInfo("The selected features share the same INCID and TOID, so a physical merge is possible.", MessageCategory.Merge);
+            }
 
             return true;
         }
@@ -533,49 +517,12 @@ namespace HLU.UI.ViewModel
             // Get the lowest fragid in selection to assign to the result feature.
             string newFragmentID = selectTable.Min(r => r.fragid);
 
-            // Choose (or prompt user to select) which feature to keep
-            if (selectTable.GroupBy(r => r.incid).Count() == 1)
-            {
-                int minFragmID = Int32.Parse(newFragmentID);
-                _mergeResultFeatureIndex = selectTable.Select((r, index) =>
-                    Int32.Parse(r.fragid) == minFragmID ? index : -1).First(i => i != -1);
-            }
-            else
-            {
-                //TODO: This shouldn't be possible (more than 1 incid), so remove?
-                // Create the merge features window
-                _mergeFeaturesWindow = new WindowMergeFeatures
-                {
-                    // Set ArcGIS Pro as the parent
-                    Owner = FrameworkApplication.Current.MainWindow,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                    Topmost = true
-                };
+            int minFragmID = Int32.Parse(newFragmentID);
+            _mergeResultFeatureIndex = selectTable
+                .Select((r, index) => Int32.Parse(r.fragid) == minFragmID ? index : -1)
+                .First(i => i != -1);
 
-                _mergeFeaturesViewModelPhysical = new(selectTable,
-                    _viewModelMain.GisIDColumnOrdinals, _viewModelMain.IncidTable.incidColumn.Ordinal,
-                    null, _viewModelMain.GISApplication)
-                {
-                    DisplayName = "Select Feature To Keep"
-                };
-
-                // Handle the RequestClose event to get the selected feature index
-                _mergeFeaturesViewModelPhysical.RequestClose -= MergeFeaturesViewModelPhysical_RequestClose; // Safety: avoid double subscription.
-                _mergeFeaturesViewModelPhysical.RequestClose += new ViewModelWindowMergeFeatures
-                    <HluDataSet.incid_mm_polygonsDataTable, HluDataSet.incid_mm_polygonsRow>
-                    .RequestCloseEventHandler(MergeFeaturesViewModelPhysical_RequestClose);
-
-                // Set the DataContext for data binding.
-                _mergeFeaturesWindow.DataContext = _mergeFeaturesViewModelPhysical;
-
-                // Reset the result feature index.
-                _mergeResultFeatureIndex = -1;
-
-                // Show the window.
-                _mergeFeaturesWindow.ShowDialog();
-            }
-
-            // Return false if the user didn't choose an incid.
+            // Return false if no valid result feature was found.
             if (_mergeResultFeatureIndex == -1)
                 return false;
 

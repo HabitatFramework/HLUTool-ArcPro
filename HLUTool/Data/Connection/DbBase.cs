@@ -1499,13 +1499,13 @@ namespace HLU.Data.Connection
                 }
                 catch (Exception ex)
                 {
-                    //TODO: throw ex;
                     _errorMessage = ex.Message;
-                    return _errorMessage;
+                    return _errorMessage;  // caller displays this to the user
                 }
 
-                // If the sql is not valid then return error.
-                if (!valid) return "Sql is invalid";
+                // If the sql is not valid then return the database error message.
+                if (!valid)
+                    return String.IsNullOrEmpty(_errorMessage) ? "Sql is invalid" : _errorMessage;
 
                 // Fill the result table using the sql command.
                 FillTable<DataTable>(sbCommandText.ToString(), ref resultTable);
@@ -1517,7 +1517,7 @@ namespace HLU.Data.Connection
             catch (Exception ex)
             {
                 _errorMessage = ex.Message;
-                return _errorMessage;
+                return _errorMessage;  // caller displays this to the user
             }
         }
 
@@ -1538,9 +1538,6 @@ namespace HLU.Data.Connection
         public abstract IDbTransaction Transaction { get; }
 
         public abstract IDbCommand CreateCommand();
-
-        //TODO: CreateAdapter
-        //public abstract IDbDataAdapter CreateAdapter();
 
         public abstract IDbDataAdapter CreateAdapter<T>(T table) where T : DataTable, new();
 

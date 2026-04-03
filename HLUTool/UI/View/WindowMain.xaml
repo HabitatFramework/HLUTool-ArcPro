@@ -1110,7 +1110,13 @@
                                                 SelectedValuePath="code"
                                                 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
                                                 ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
-                                                ToolTipService.ShowOnDisabled="True" />
+                                                ToolTipService.ShowOnDisabled="True">
+                                                <ComboBox.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <VirtualizingStackPanel />
+                                                    </ItemsPanelTemplate>
+                                                </ComboBox.ItemsPanel>
+                                            </ComboBox>
                                             <CheckBox
                                                 x:Name="CheckBoxCopyLegacyHabitat"
                                                 Grid.Row="0"
@@ -3097,8 +3103,7 @@
                     </TabItem>
 
                     <!--  TabItemHistory  -->
-                    <TabItem x:Name="TabItemHistory"
-                             Visibility="{Binding HistoryTabVisibility}">
+                    <TabItem x:Name="TabItemHistory" Visibility="{Binding HistoryTabVisibility}">
                         <TabItem.Header>
                             <StackPanel>
                                 <Label
@@ -3212,14 +3217,16 @@
                             Margin="0,0,2,0"
                             Command="{Binding NavigateFirstCommand}"
                             Style="{DynamicResource Esri_ButtonUpSmall}"
-                            ToolTip="First record" />
+                            ToolTip="First record"
+                            ToolTipService.ShowOnDisabled="True" />
                         <Button
                             Name="ButtonPreviousRecord"
                             Grid.Column="2"
                             Margin="2,0,2,0"
                             Command="{Binding NavigatePreviousCommand}"
                             Style="{DynamicResource Esri_ButtonBackSmall}"
-                            ToolTip="Previous record" />
+                            ToolTip="Previous record"
+                            ToolTipService.ShowOnDisabled="True" />
                         <TextBox
                             Name="TextBoxRecordNumber"
                             Grid.Column="3"
@@ -3243,31 +3250,35 @@
                             Margin="2,0,2,0"
                             Command="{Binding NavigateNextCommand}"
                             Style="{DynamicResource Esri_ButtonForwardSmall}"
-                            ToolTip="Next record" />
+                            ToolTip="Next record"
+                            ToolTipService.ShowOnDisabled="True" />
                         <Button
                             Name="ButtonLastRecord"
                             Grid.Column="5"
                             Margin="2,0,0,0"
                             Command="{Binding NavigateLastCommand}"
                             Style="{DynamicResource Esri_ButtonDownSmall}"
-                            ToolTip="Last record" />
+                            ToolTip="Last record"
+                            ToolTipService.ShowOnDisabled="True" />
                     </Grid>
 
-                    <Grid x:Name="GridBulkUpdate"
-                          Grid.Column="0"
-                          Height="23"
-                          VerticalAlignment="Bottom"
-                          Visibility="{Binding Path=ShowInBulkUpdateMode}">
+                    <Grid
+                        x:Name="GridBulkUpdate"
+                        Grid.Column="0"
+                        Height="23"
+                        VerticalAlignment="Bottom"
+                        Visibility="{Binding Path=ShowInBulkUpdateMode}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition />
                         </Grid.ColumnDefinitions>
-                        <Label x:Name="LabelBulkUpdate"
-                               Margin="0,0,0,0"
-                               HorizontalAlignment="Right"
-                               VerticalAlignment="Center"
-                               Content="Bulk Update Involved:"
-                               FontStretch="UltraExpanded"
-                               FontWeight="Bold" />
+                        <Label
+                            x:Name="LabelBulkUpdate"
+                            Margin="0,0,0,0"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Content="Bulk Update Involved:"
+                            FontStretch="UltraExpanded"
+                            FontWeight="Bold" />
                     </Grid>
 
                     <Grid
@@ -3306,7 +3317,8 @@
                             Content="Appl_y"
                             Foreground="White"
                             Style="{DynamicResource Esri_Button}"
-                            ToolTip="Apply updates" />
+                            ToolTip="Apply updates"
+                            ToolTipService.ShowOnDisabled="True" />
                     </Grid>
                 </Grid>
 

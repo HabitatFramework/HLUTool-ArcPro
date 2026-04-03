@@ -1462,8 +1462,6 @@ namespace HLU.UI.ViewModel
                 // Clear the current list without replacing the collection instance.
                 _primaryCodes.Clear();
 
-                //TODO: Use a default (all habitats) if no primary codes are found?
-
                 if (!String.IsNullOrEmpty(_habitatType))
                 {
                     // Load all primary habitat codes where the primary habitat code
@@ -2265,7 +2263,6 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        //TODO: Handle very large number of values.
         /// <summary>
         /// Looks up the legacy habitat codes and descriptions from
         /// the database table 'lut_legacy_habitat'.
@@ -3172,7 +3169,7 @@ namespace HLU.UI.ViewModel
             get
             {
                 return IncidBapHabitatsAuto != null && IncidBapHabitatsAuto.Count > 0;
-            } // return IsNotBulkMode; }
+            }
         }
 
         /// <summary>
@@ -3185,10 +3182,10 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                //TODO: Review this logic
-                return true;
-                //return IsBulkMode || (IncidBapHabitatsAuto != null &&
-                //    IncidBapHabitatsAuto.Count > 0) || (IncidBapHabitatsUser.Count > 0);
+                //TODO: Check this logic
+                return IsBulkMode ||
+                    (IncidBapHabitatsAuto != null && IncidBapHabitatsAuto.Count > 0) ||
+                    (IncidBapHabitatsUser != null && IncidBapHabitatsUser.Count > 0);
             }
         }
 
@@ -8711,7 +8708,6 @@ namespace HLU.UI.ViewModel
                         ShowWarning("Not all expected features found in active layer.", MessageCategory.GIS);
                     }
 
-                    //TODO: Needed?
                     // Indicate the selection didn't come from the map.
                     _filteredByMap = false;
 
