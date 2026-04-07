@@ -20,6 +20,7 @@ using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using HLU.Data;
 using HLU.Data.Model;
+using HLU.Exceptions;
 using HLU.Helpers;
 using HLU.UI.UserControls;
 using HLU.UI.ViewModel;
@@ -90,7 +91,8 @@ namespace HLU.UI.View
             AsyncHelpers.ObserveTask(
                 vm.InitializeAndCheckAsync(),
                 "HLU Tool",
-                "The HLU Tool encountered an error initialising.");
+                "The HLU Tool encountered an error initialising.",
+                ex => ex is UserCancelledException || vm.InError);
         }
 
         /// <summary>

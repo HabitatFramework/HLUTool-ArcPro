@@ -51,10 +51,12 @@ namespace HLU.Helpers
         /// <param name="task">The task to observe.</param>
         /// <param name="title">The message box title.</param>
         /// <param name="message">A user-friendly message prefix.</param>
+        /// <param name="suppressReport">Optional predicate; when it returns <c>true</c> the exception is swallowed silently.</param>
         public static async void ObserveTask(
             Task task,
             string title,
-            string message)
+            string message,
+            Func<Exception, bool> suppressReport = null)
         {
             try
             {
@@ -62,6 +64,12 @@ namespace HLU.Helpers
             }
             catch (Exception ex)
             {
+                if (suppressReport != null && suppressReport(ex))
+                {
+                    Debug.WriteLine(ex);
+                    return;
+                }
+
                 System.Windows.Application.Current.Dispatcher.Invoke(() =>
                 {
                     MessageBox.Show(

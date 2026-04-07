@@ -1952,13 +1952,6 @@ private async Task CreateWorkingGeodatabaseAsync()
                 // User declined to connect — not an error; return false silently.
                 return false;
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "HLU: Initialise Application",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-
-                return false;
-            }
         }
 
         /// <summary>
@@ -2811,10 +2804,13 @@ private async Task CreateWorkingGeodatabaseAsync()
                     Task checkTask = InitializeAndCheckAsync();
 
                     // Trap and report any exceptions to the user.
+                    // Suppress UserCancelledException (user cancelled – not an error) and
+                    // suppress anything already shown by another observer (InError is set).
                     AsyncHelpers.ObserveTask(
                         checkTask,
                         "HLU Tool",
-                        "The HLU Tool encountered an error initialising or checking the active map.");
+                        "The HLU Tool encountered an error initialising or checking the active map.",
+                        ex => ex is UserCancelledException || InError);
                 }
             }
 
