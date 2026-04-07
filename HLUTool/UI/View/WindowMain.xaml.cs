@@ -86,7 +86,7 @@ namespace HLU.UI.View
             if (e.NewValue is not ViewModelWindowMain vm)
                 return;
 
-            // Ensure the tool is initialised.
+            // Ensure the tool is initialised, showing any error dialog only once.
             AsyncHelpers.ObserveTask(
                 vm.InitializeAndCheckAsync(),
                 "HLU Tool",

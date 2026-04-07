@@ -53,8 +53,6 @@ namespace HLU.UI.ViewModel
         private ViewModelWindowMain _viewModelMain;
         private WindowMergeFeatures _mergeFeaturesWindow;
         private ViewModelWindowMergeFeatures<HluDataSet.incidDataTable, HluDataSet.incidRow> _mergeFeaturesViewModelLogical;
-        private ViewModelWindowMergeFeatures<HluDataSet.incid_mm_polygonsDataTable, HluDataSet.incid_mm_polygonsRow>
-            _mergeFeaturesViewModelPhysical;
         private int _mergeResultFeatureIndex;
 
         #endregion Fields
@@ -708,20 +706,6 @@ namespace HLU.UI.ViewModel
             }
 
             return success;
-        }
-
-        /// <summary>
-        /// Handles the closure of the merge features view model and updates the selected feature index.
-        /// </summary>
-        /// <param name="selectedIndex">The index of the selected feature to be set after the view model is closed.</param>
-        private void MergeFeaturesViewModelPhysical_RequestClose(int selectedIndex)
-        {
-            // Unsubscribe from the event to prevent memory leaks.
-            _mergeFeaturesViewModelPhysical.RequestClose -= MergeFeaturesViewModelPhysical_RequestClose;
-            _mergeFeaturesWindow.Close();
-
-            // Set the result selected feature index.
-            _mergeResultFeatureIndex = selectedIndex;
         }
 
         #endregion Physical Merge

@@ -98,7 +98,7 @@ namespace HLU.UI.UserControls.Toolbar
             Enabled = _viewModel.CanOSMMBulkUpdateMode;
 
             // Set the disabled tool tip text (for when it is disabled).
-            DisabledTooltip = "Unavailable when there are no OSMM updates pending, when the user is not authorised, or when OSMM review mode is active.";
+            DisabledTooltip = "Unavailable when:\n• No OSMM updates pending\n• The user is not authorised\n• No reason or process selected\n• OSMM review mode is active\n• The main window is not visible";
         }
 
         #endregion Overrides

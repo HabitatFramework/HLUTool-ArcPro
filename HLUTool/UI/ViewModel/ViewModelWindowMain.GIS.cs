@@ -25,6 +25,7 @@ using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Internal.Framework.Controls;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using ArcGIS.Desktop.Editing.Events;
 using HLU.Data;
 using HLU.Data.Model;
 using HLU.Enums;
@@ -70,6 +71,7 @@ namespace HLU.UI.ViewModel
         private bool _mapMemberEventsSubscribed;
         private bool _projectClosedEventsSubscribed;
         private bool _layersChangedEventsSubscribed;
+        private bool _editCompletedEventsSubscribed;
 
         #endregion Fields - Event Tracking
 
@@ -474,6 +476,19 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
+        /// Handles the event raised when an edit operation completes.
+        /// Recomputes CanEdit in case the editing session state has changed.
+        /// </summary>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        private Task OnEditCompleted(EditCompletedEventArgs args)
+        {
+            // Recomputes whether editing is currently possible.
+            RefreshEditCapability();
+
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
         /// Event when the project is closed. Recomputes whether editing is currently possible and makes the UI controls hidden.
         /// </summary>
         /// <param name="obj">Event arguments containing details about the project that was closed.</param>
@@ -503,17 +518,19 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Event when the DockPane is disposed. Unsubscribes from all events to prevent memory leaks and calls base to allow parent cleanup.
+        /// Event when the DockPane is disposed. Unsubscribes from all events to prevent memory
+        /// leaks and calls base to allow parent cleanup.
         /// </summary>
         protected override void OnDispose()
         {
-            // Unsubscribe from all events to prevent memory leaks
+            // Unsubscribe from map events
             if (_mapEventsSubscribed)
             {
                 ActiveMapViewChangedEvent.Unsubscribe(OnActiveMapViewChanged);
                 _mapEventsSubscribed = false;
             }
 
+            // Unsubscribe from layer events
             if (_layersChangedEventsSubscribed)
             {
                 LayersAddedEvent.Unsubscribe(OnLayersAdded);
@@ -521,16 +538,25 @@ namespace HLU.UI.ViewModel
                 _layersChangedEventsSubscribed = false;
             }
 
+            // Unsubscribe from editing events
             if (_projectClosedEventsSubscribed)
             {
                 ProjectClosedEvent.Unsubscribe(OnProjectClosed);
                 _projectClosedEventsSubscribed = false;
             }
 
+            // Unsubscribe from map member events
             if (_mapMemberEventsSubscribed)
             {
                 MapMemberPropertiesChangedEvent.Unsubscribe(OnMapMemberPropertiesChanged);
                 _mapMemberEventsSubscribed = false;
+            }
+
+            // Unsubscribe from edit completed events
+            if (_editCompletedEventsSubscribed)
+            {
+                EditCompletedEvent.Unsubscribe(OnEditCompleted);
+                _editCompletedEventsSubscribed = false;
             }
 
             // Clean up all message timers
@@ -852,6 +878,9 @@ namespace HLU.UI.ViewModel
                 // Initialise the GIS selection table.
                 _gisSelection = NewGisSelectionTable();
 
+                if (_gisSelection == null)
+                    return;
+
                 // Read which features are selected in GIS (passing it a new
                 // GIS selection table so that it knows the columns to return.
                 try
@@ -1061,6 +1090,10 @@ namespace HLU.UI.ViewModel
         /// <returns>A new DataTable for GIS selection.</returns>
         private DataTable NewGisSelectionTable()
         {
+            // Check the GIS ID columns have been initialised.
+            if (_gisIDColumns == null)
+                return null;
+
             DataTable outTable = new();
             foreach (DataColumn c in _gisIDColumns)
                 outTable.Columns.Add(new DataColumn(c.ColumnName, c.DataType));
@@ -1186,9 +1219,6 @@ namespace HLU.UI.ViewModel
                         (rel = GetRelation(_hluDS.incid, st)) != null ?
                         new SqlFilterCondition("AND", t, t.incidColumn, typeof(DataColumn), "(", ")", rel.ChildColumns[0]) : null).Where(c => c != null);
 
-                    // Count the number of fragments from the database.
-                    numFragments = await _db.SqlCountAsync(whereTables, "*", [.. joinCond], sqlWhereClause);
-
                     // Create a selection DataTable of PK values of IncidMMPolygons.
                     _incidMMPolygonSelection = await Task.Run(() =>
                         _db.SqlSelect(
@@ -1197,17 +1227,8 @@ namespace HLU.UI.ViewModel
                             _hluDS.incid_mm_polygons.PrimaryKey,
                             [.. whereTables], [.. joinCond], sqlWhereClause));
 
-                    //TODO: Why is this set twice?
                     // Count the number of fragments from the selection table.
                     numFragments = _incidMMPolygonSelection.Rows.Count;
-
-                    //TODO: Change "*" to distinct concatenation of incid, toid and fragments?
-                    //numFragments = _db.SqlCount(whereTables, String.Format("Distinct Convert(varchar, {0}.{1}) + Convert(varchar, {0}.{2}) + Convert(varchar, {0}.{3})",
-                    //    _db.QuoteIdentifier(_hluDS.incid_mm_polygons.TableName),
-                    //    _db.QuoteIdentifier(_hluDS.incid_mm_polygons.incidColumn.ColumnName),
-                    //    _db.QuoteIdentifier(_hluDS.incid_mm_polygons.toidColumn.ColumnName),
-                    //    _db.QuoteIdentifier(_hluDS.incid_mm_polygons.fragidColumn.ColumnName)),
-                    //    joinCond.ToList(), sqlWhereClause);
                 }
                 catch { }
             }

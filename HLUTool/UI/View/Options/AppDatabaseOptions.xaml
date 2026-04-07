@@ -109,6 +109,47 @@
 
             </Expander>
 
+            <Expander
+                Margin="6,10,0,0"
+                Header="Database Connection"
+                IsExpanded="True">
+
+                <Grid Margin="12,4,4,2" HorizontalAlignment="Left">
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="6" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button
+                            x:Name="ButtonResetDbConnection"
+                            Grid.Column="0"
+                            Height="24"
+                            Padding="8,0"
+                            Command="{Binding ResetDbConnectionCommand}"
+                            Content="Reset Database Connection ..."
+                            Style="{DynamicResource Esri_Button}"
+                            ToolTip="Clear the saved connection settings." />
+                        <controls:InfoButton
+                            Grid.Column="1"
+                            Margin="5,0,0,0"
+                            Description="Clears the saved database connection settings. You will be prompted to choose a new connection the next time the HLU Tool is loaded.&#10;&#10;Use this option if the database server has moved, the database name has changed, or the connection is no longer valid."
+                            Header="Reset Database Connection" />
+
+                    </Grid>
+
+                </Grid>
+
+            </Expander>
+
         </StackPanel>
 
         <TextBlock

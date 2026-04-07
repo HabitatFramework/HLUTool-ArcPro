@@ -101,12 +101,17 @@ namespace HLU.Helpers
 
             List<HistoryFieldBinding> bindings = [];
 
+            // Loop through requested history columns and build bindings for those that can be mapped to source fields.
             foreach (DataColumn c in historyColumns)
             {
+                // If a column cannot be mapped, it is ignored.
                 if (c == null)
                     continue;
 
+                // Get the requested output column name.
                 string requestedName = c.ColumnName;
+
+                // If the column name is null/empty/whitespace, ignore it.
                 if (string.IsNullOrWhiteSpace(requestedName))
                     continue;
 
@@ -117,6 +122,8 @@ namespace HLU.Helpers
                 string outputName;
                 string sourceFieldName;
 
+                // Get the index of the additional fields delimiter, if present, and split the
+                // requested name into prefix and source field name parts.
                 int delimIx = requestedName.IndexOf(additionalFieldsDelimiter, StringComparison.Ordinal);
                 if (delimIx >= 0)
                 {
@@ -130,6 +137,7 @@ namespace HLU.Helpers
                     sourceFieldName = requestedName;
                 }
 
+                // Get the source field index using the mapping function, falling back to fuzzy matching if needed.
                 int ix = mapField(sourceFieldName);
                 if (ix == -1)
                     ix = fuzzyFieldOrdinal(sourceFieldName);
@@ -138,9 +146,11 @@ namespace HLU.Helpers
                 if (ix == -1)
                     continue;
 
+                // Add a binding for this column.
                 bindings.Add(new HistoryFieldBinding(outputName, ix, c.DataType));
             }
 
+            // Return the built bindings.
             return bindings;
         }
     }

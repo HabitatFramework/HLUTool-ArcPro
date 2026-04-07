@@ -40,7 +40,6 @@ namespace HLU.Data.Connection
     {
         #region Private Members
 
-        private string _errorMessage;
         private NpgsqlConnectionStringBuilder _connStrBuilder;
         private NpgsqlConnection _connection;
         private NpgsqlCommand _command;

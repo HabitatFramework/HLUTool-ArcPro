@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
@@ -29,6 +30,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -60,6 +62,13 @@ namespace HLU.UI.ViewModel
         public int Pending { get; set; }
         public int Applied { get; set; }
         public int Total { get; set; }
+
+        /// <summary>
+        /// Numeric value of <see cref="Process"/> for correct numeric sort in the DataGrid.
+        /// Falls back to <see cref="int.MaxValue"/> when the value is not a plain integer.
+        /// </summary>
+        public int ProcessSortKey =>
+            int.TryParse(Process, out int n) ? n : int.MaxValue;
 
         #endregion Fields
     }
@@ -105,7 +114,8 @@ namespace HLU.UI.ViewModel
 
         private string _displayName = "OSMM Updates Filter";
 
-        List<OSMMUpdates> _tableTotal;
+        private readonly ObservableCollection<OSMMUpdates> _osmmUpdatesSummary = [];
+        private readonly ObservableCollection<OSMMUpdates> _tableTotal = [];
 
         #endregion Fields
 
@@ -137,8 +147,23 @@ namespace HLU.UI.ViewModel
             else
                 _osmmUpdatesStatus = "Proposed";
 
-            // Count the incid_osmm_update rows for the initial values.
-            CountOSMMUpdates();
+            // Counts and summary are loaded asynchronously via LoadAsync().
+        }
+
+        /// <summary>
+        /// Loads OSMM update counts and the summary table asynchronously.
+        /// Called after the window is shown so the UI thread is not blocked.
+        /// </summary>
+        public async Task LoadAsync()
+        {
+            // Show the wait cursor whilst loading the values.
+            ChangeCursor(Cursors.Wait);
+
+            await CountOSMMUpdatesAsync(suppressCursorChange: true);
+            await LoadOSMMUpdatesSummaryAsync(suppressCursorChange: true);
+
+            // Reset the cursor back to normal.
+            ChangeCursor(Cursors.Arrow);
         }
 
         /// <summary>
@@ -146,7 +171,7 @@ namespace HLU.UI.ViewModel
         /// Updates in the database for the selected flags.
         /// </summary>
         /// <param name="selectedRow">The selected OSMM updates row.</param>
-        public void OSMMUpdatesSelectedRow(OSMMUpdates selectedRow)
+        public async void OSMMUpdatesSelectedRow(OSMMUpdates selectedRow)
         {
             // Set the filter fields to the selected row values
             if (selectedRow != null && selectedRow.Change != "Total")
@@ -156,7 +181,7 @@ namespace HLU.UI.ViewModel
                 _osmmChangeFlag = selectedRow.Change;
 
                 // Count the incid_osmm_update rows for the initial values.
-                CountOSMMUpdates();
+                await CountOSMMUpdatesAsync();
 
                 OnPropertyChanged(nameof(IncidOSMMUpdatesProcessFlag));
                 OnPropertyChanged(nameof(IncidOSMMUpdatesSpatialFlag));
@@ -274,7 +299,7 @@ namespace HLU.UI.ViewModel
         /// the initial values.
         /// </summary>
         /// <param name="param">The parameter passed to the command.</param>
-        private void ResetOSMMFilterClicked(object param)
+        private async void ResetOSMMFilterClicked(object param)
         {
             // Reset all the filter fields.
             _osmmProcessFlag = _codeAnyRow;
@@ -288,7 +313,7 @@ namespace HLU.UI.ViewModel
                 _osmmUpdatesStatus = "Proposed";
 
             // Count the incid_osmm_update rows for the initial values.
-            CountOSMMUpdates();
+            await CountOSMMUpdatesAsync();
 
             OnPropertyChanged(nameof(IncidOSMMUpdatesProcessFlag));
             OnPropertyChanged(nameof(IncidOSMMUpdatesSpatialFlag));
@@ -387,7 +412,7 @@ namespace HLU.UI.ViewModel
                 _osmmProcessFlag = value;
 
                 // Count the incid_osmm_update rows for the selected flag.
-                CountOSMMUpdates();
+                _ = CountOSMMUpdatesAsync();
             }
         }
 
@@ -429,7 +454,7 @@ namespace HLU.UI.ViewModel
                 _osmmSpatialFlag = value;
 
                 // Count the incid_osmm_update rows for the selected flag.
-                CountOSMMUpdates();
+                _ = CountOSMMUpdatesAsync();
             }
         }
 
@@ -471,7 +496,7 @@ namespace HLU.UI.ViewModel
                 _osmmChangeFlag = value;
 
                 // Count the incid_osmm_update rows for the selected flag.
-                CountOSMMUpdates();
+                _ = CountOSMMUpdatesAsync();
             }
         }
 
@@ -516,7 +541,7 @@ namespace HLU.UI.ViewModel
                 _osmmUpdatesStatus = value;
 
                 // Count the incid_osmm_update rows for the selected status.
-                CountOSMMUpdates();
+                _ = CountOSMMUpdatesAsync();
             }
         }
 
@@ -581,7 +606,7 @@ namespace HLU.UI.ViewModel
         /// <value>The count of rejected OSMM Updates for the selected flags.</value>
         public string IncidOSMMUpdatesRejectedCount
         {
-            get { return String.Format("{0:n0}", _osmmUpdatesCountRejected); }
+            get { return _osmmUpdatesCountRejected == -1 ? null : String.Format("{0:n0}", _osmmUpdatesCountRejected); }
         }
 
         /// <summary>
@@ -592,7 +617,7 @@ namespace HLU.UI.ViewModel
         /// <value>The count of ignored OSMM Updates for the selected flags.</value>
         public string IncidOSMMUpdatesIgnoredCount
         {
-            get { return String.Format("{0:n0}", _osmmUpdatesCountIgnored); }
+            get { return _osmmUpdatesCountIgnored == -1 ? null : String.Format("{0:n0}", _osmmUpdatesCountIgnored); }
         }
 
         /// <summary>
@@ -603,7 +628,7 @@ namespace HLU.UI.ViewModel
         /// <value>The count of pending OSMM Updates for the selected flags.</value>
         public string IncidOSMMUpdatesPendingCount
         {
-            get { return String.Format("{0:n0}", _osmmUpdatesCountPending); }
+            get { return _osmmUpdatesCountPending == -1 ? null : String.Format("{0:n0}", _osmmUpdatesCountPending); }
         }
 
         /// <summary>
@@ -614,7 +639,7 @@ namespace HLU.UI.ViewModel
         /// <value>The count of proposed OSMM Updates for the selected flags.</value>
         public string IncidOSMMUpdatesProposedCount
         {
-            get { return String.Format("{0:n0}", _osmmUpdatesCountProposed); }
+            get { return _osmmUpdatesCountProposed == -1 ? null : String.Format("{0:n0}", _osmmUpdatesCountProposed); }
         }
 
         /// <summary>
@@ -625,25 +650,32 @@ namespace HLU.UI.ViewModel
         /// <value>The count of applied OSMM Updates for the selected flags.</value>
         public string IncidOSMMUpdatesAppliedCount
         {
-            get { return String.Format("{0:n0}", _osmmUpdatesCountApplied); }
+            get { return _osmmUpdatesCountApplied == -1 ? null : String.Format("{0:n0}", _osmmUpdatesCountApplied); }
         }
 
         /// <summary>
-        /// Count the number of OSMM Updates in the database for the selected flags.
+        /// Count the number of OSMM Updates in the database for the selected flags asynchronously.
         /// </summary>
-        public void CountOSMMUpdates()
+        public async Task CountOSMMUpdatesAsync(bool suppressCursorChange = false)
         {
             // Show the wait cursor whilst loading the values.
-            ChangeCursor(Cursors.Wait);
+            if (!suppressCursorChange) ChangeCursor(Cursors.Wait);
 
+            // Reset the counts to -1 to indicate they are being loaded. This will show a blank
+            // value in the UI until the counts are loaded.
             _osmmUpdatesCountRejected = -1;
             _osmmUpdatesCountIgnored = -1;
             _osmmUpdatesCountApplied = -1;
             _osmmUpdatesCountPending = -1;
             _osmmUpdatesCountProposed = -1;
 
+            // Build the WHERE clause for the SQL query based on the selected flags. Only include
+            // conditions for flags that are not "Any".
             StringBuilder whereClause = new();
 
+            // Append the selected flags to the WHERE clause if they are not "Any". The "Any" option
+            // will show all OSMM Updates regardless of the flag value, so no need to filter by that
+            // flag in the query.
             if (!String.IsNullOrEmpty(_osmmProcessFlag) && _osmmProcessFlag != _codeAnyRow)
             {
                 whereClause.Append(String.Format(" AND {0} = {1}",
@@ -662,56 +694,45 @@ namespace HLU.UI.ViewModel
                 _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.change_flagColumn.ColumnName), _db.QuoteValue(_osmmChangeFlag)));
             }
 
-            // Count the total number of rejected OSMM updates in the database for
-            // the selected flags.
-            _osmmUpdatesCountRejected = (int)_db.ExecuteScalar(String.Format(
-                "SELECT COUNT(*) FROM {0} WHERE {1} = {2}{3}",
-                _db.QualifyTableName(_hluDataset.incid_osmm_updates.TableName),
-                _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.statusColumn.ColumnName),
-                -99,
-                whereClause),
-                _db.Connection.ConnectionTimeout, CommandType.Text);
+            // Capture locals for use inside Task.Run (avoids closure over 'this' members that may change).
+            string tableName = _db.QualifyTableName(_hluDataset.incid_osmm_updates.TableName);
+            string statusCol = _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.statusColumn.ColumnName);
+            string where = whereClause.ToString();
+            int timeout = _db.Connection.ConnectionTimeout;
 
-            // Count the total number of ignored OSMM updates in the database for
-            // the selected flags.
-            _osmmUpdatesCountIgnored = (int)_db.ExecuteScalar(String.Format(
-                "SELECT COUNT(*) FROM {0} WHERE {1} = {2}{3}",
-                _db.QualifyTableName(_hluDataset.incid_osmm_updates.TableName),
-                _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.statusColumn.ColumnName),
-                -2,
-                whereClause),
-                _db.Connection.ConnectionTimeout, CommandType.Text);
+            // Run all five COUNT queries on a background thread so the UI thread is not blocked.
+            (int rejected, int ignored, int applied, int pending, int proposed) = await Task.Run(() =>
+            {
+                // Count the number of OSMM Updates in the database for the selected flags and each status.
+                int rejectedCount = (int)_db.ExecuteScalar(
+                    String.Format("SELECT COUNT(*) FROM {0} WHERE {1} = {2}{3}", tableName, statusCol, -99, where),
+                    timeout, CommandType.Text);
+                int ignoredCount = (int)_db.ExecuteScalar(
+                    String.Format("SELECT COUNT(*) FROM {0} WHERE {1} = {2}{3}", tableName, statusCol, -2, where),
+                    timeout, CommandType.Text);
+                int appliedCount = (int)_db.ExecuteScalar(
+                    String.Format("SELECT COUNT(*) FROM {0} WHERE {1} = {2}{3}", tableName, statusCol, -1, where),
+                    timeout, CommandType.Text);
+                int pendingCount = (int)_db.ExecuteScalar(
+                    String.Format("SELECT COUNT(*) FROM {0} WHERE {1} = {2}{3}", tableName, statusCol, 0, where),
+                    timeout, CommandType.Text);
+                int proposedCount = (int)_db.ExecuteScalar(
+                    String.Format("SELECT COUNT(*) FROM {0} WHERE {1} > {2}{3}", tableName, statusCol, 0, where),
+                    timeout, CommandType.Text);
 
-            // Count the total number of applied OSMM updates in the database for
-            // the selected flags.
-            _osmmUpdatesCountApplied = (int)_db.ExecuteScalar(String.Format(
-                "SELECT COUNT(*) FROM {0} WHERE {1} = {2}{3}",
-                _db.QualifyTableName(_hluDataset.incid_osmm_updates.TableName),
-                _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.statusColumn.ColumnName),
-                -1,
-                whereClause),
-                _db.Connection.ConnectionTimeout, CommandType.Text);
+                // Return the counts as a tuple.
+                return (rejectedCount, ignoredCount, appliedCount, pendingCount, proposedCount);
+            });
 
-            // Count the total number of pending OSMM updates in the database for
-            // the selected flags.
-            _osmmUpdatesCountPending = (int)_db.ExecuteScalar(String.Format(
-                "SELECT COUNT(*) FROM {0} WHERE {1} = {2}{3}",
-                _db.QualifyTableName(_hluDataset.incid_osmm_updates.TableName),
-                _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.statusColumn.ColumnName),
-                0,
-                whereClause),
-                _db.Connection.ConnectionTimeout, CommandType.Text);
+            // Update the counts in the view model with the results from the background thread.
+            _osmmUpdatesCountRejected = rejected;
+            _osmmUpdatesCountIgnored = ignored;
+            _osmmUpdatesCountApplied = applied;
+            _osmmUpdatesCountPending = pending;
+            _osmmUpdatesCountProposed = proposed;
 
-            // Count the total number of proposed OSMM updates in the database for
-            // the selected flags.
-            _osmmUpdatesCountProposed = (int)_db.ExecuteScalar(String.Format(
-                "SELECT COUNT(*) FROM {0} WHERE {1} > {2}{3}",
-                _db.QualifyTableName(_hluDataset.incid_osmm_updates.TableName),
-                _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.statusColumn.ColumnName),
-                0,
-                whereClause),
-                _db.Connection.ConnectionTimeout, CommandType.Text);
-
+            // Set the filter count based on the selected status. This will be used to determine
+            // whether the filter can be applied.
             if (!String.IsNullOrEmpty(_osmmUpdatesStatus) && _osmmUpdatesStatus != _codeAnyRow)
             {
                 switch (_osmmUpdatesStatus)
@@ -740,8 +761,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(CanApplyOSMMFilter));
 
             // Reset the cursor back to normal.
-            ChangeCursor(Cursors.Arrow);
-
+            if (!suppressCursorChange) ChangeCursor(Cursors.Arrow);
         }
 
         #endregion Counts
@@ -749,165 +769,158 @@ namespace HLU.UI.ViewModel
         #region OSMM Updates Summary
 
         /// <summary>
-        /// Gets a summary of the OSMM Updates in the database for the selected flags. This will be used
-        /// to show the number of OSMM Updates for each status and determine whether the filter can be applied.
+        /// Gets the cached OSMM Updates summary list. Populated by <see cref="LoadOSMMUpdatesSummaryAsync"/>.
         /// </summary>
-        /// <value>A list of OSMM Updates summary for the selected flags.</value>
-        public List<OSMMUpdates> OSMMUpdatesSummary
+        public ObservableCollection<OSMMUpdates> OSMMUpdatesSummary => _osmmUpdatesSummary;
+
+        /// <summary>
+        /// Loads the OSMM Updates summary from the database asynchronously and notifies the UI.
+        /// </summary>
+        public async Task LoadOSMMUpdatesSummaryAsync(bool suppressCursorChange = false)
         {
-            get
+            // Show the wait cursor whilst loading the values.
+            if (!suppressCursorChange) ChangeCursor(Cursors.Wait);
+
+            // Create the select SQL.
+            string sql;
             {
-                int rejectedCount = 0;
-                int ignoredCount = 0;
-                int proposedCount = 0;
-                int pendingCount = 0;
-                int appliedCount = 0;
-                int allCount = 0;
-                int rejectedTotal = 0;
-                int ignoredTotal = 0;
-                int proposedTotal = 0;
-                int pendingTotal = 0;
-                int appliedTotal = 0;
-                int allTotal = 0;
+                string sqlColumns = String.Format("{0}, {1}, {2}, {3}, COUNT(*) As RecCount",
+                    _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.process_flagColumn.ColumnName),
+                    _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.spatial_flagColumn.ColumnName),
+                    _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.change_flagColumn.ColumnName),
+                    _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.statusColumn.ColumnName));
+                string sqlGroupBy = String.Format("{0}, {1}, {2}, {3}",
+                    _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.process_flagColumn.ColumnName),
+                    _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.spatial_flagColumn.ColumnName),
+                    _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.change_flagColumn.ColumnName),
+                    _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.statusColumn.ColumnName));
+                sql = String.Format(
+                    "SELECT DISTINCT {0} FROM {1} GROUP BY {3} ORDER BY {3}",
+                    sqlColumns,
+                    _db.QualifyTableName(_hluDataset.incid_osmm_updates.TableName),
+                    _db.QualifyTableName(_hluDataset.lut_osmm_habitat_xref.TableName),
+                    sqlGroupBy);
+            }
 
-                // Show the wait cursor whilst loading the values.
-                ChangeCursor(Cursors.Wait);
+            // Get the query timeout.
+            int timeout = _db.Connection.ConnectionTimeout;
 
-                // Define a new data table to hold the results.
-                List<OSMMUpdates> dataTable = [];
+            // Run the heavy reader query on a background thread.
+            List<OSMMUpdates> result = null;
+            List<OSMMUpdates> total = null;
 
-                // Create a data reader to retrieve the rows for
-                // the required column.
-                IDataReader dataReader = null;
-
-                try
+            try
+            {
+                (result, total) = await Task.Run(() =>
                 {
-                    // Load the data reader to retrieve the rows for
-                    // the required column.
-                    string sqlColumns = String.Format("{0}, {1}, {2}, {3}, COUNT(*) As RecCount",
-                        _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.process_flagColumn.ColumnName),
-                        _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.spatial_flagColumn.ColumnName),
-                        _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.change_flagColumn.ColumnName),
-                        _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.statusColumn.ColumnName));
-                    string sqlGroupBy = String.Format("{0}, {1}, {2}, {3}",
-                        _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.process_flagColumn.ColumnName),
-                        _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.spatial_flagColumn.ColumnName),
-                        _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.change_flagColumn.ColumnName),
-                        _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.statusColumn.ColumnName));
-                    String sql = String.Format(
-                        "SELECT DISTINCT {0} FROM {1} GROUP BY {3} ORDER BY {3}",
-                        sqlColumns,
-                        _db.QualifyTableName(_hluDataset.incid_osmm_updates.TableName),
-                        _db.QualifyTableName(_hluDataset.lut_osmm_habitat_xref.TableName),
-                        sqlGroupBy);
+                    List<OSMMUpdates> dataTable = [];
+                    IDataReader dataReader = null;
 
-                    dataReader = _db.ExecuteReader(sql,
-                        _db.Connection.ConnectionTimeout, CommandType.Text);
+                    // Reset the counts and totals.
+                    int rejectedCount = 0;
+                    int ignoredCount = 0;
+                    int proposedCount = 0;
+                    int pendingCount = 0;
+                    int appliedCount = 0;
+                    int allCount = 0;
+                    int rejectedTotal = 0;
+                    int ignoredTotal = 0;
+                    int proposedTotal = 0;
+                    int pendingTotal = 0;
+                    int appliedTotal = 0;
+                    int allTotal = 0;
 
-                    if (dataReader == null) throw new Exception($"Error reading values from {_hluDataset.incid_osmm_updates.TableName}");
-
-                    string processFlag, lastProcessFlag = null;
-                    string spatialFlag, lastSpatialFlag = null;
-                    string changeFlag, lastChangeFlag = null;
-                    int status;
-                    int recs;
-                    OSMMUpdates dataRow;
-
-                    // Load the list with the results.
-                    while (dataReader.Read())
+                    try
                     {
-                        processFlag = dataReader.GetValue(0).ToString();
-                        spatialFlag = dataReader.GetValue(1).ToString();
-                        changeFlag = dataReader.GetValue(2).ToString();
-                        status = (int)dataReader.GetValue(3);
-                        //summary = dataReader.GetValue(4).ToString();
-                        recs = (int)dataReader.GetValue(4);
+                        dataReader = _db.ExecuteReader(sql, timeout, CommandType.Text);
 
-                        lastProcessFlag ??= processFlag;
-                        lastSpatialFlag ??= spatialFlag;
-                        lastChangeFlag ??= changeFlag;
+                        if (dataReader == null) throw new Exception($"Error reading values from {_hluDataset.incid_osmm_updates.TableName}");
 
-                        // If this is a different group.
-                        if (processFlag != lastProcessFlag || spatialFlag != lastSpatialFlag || changeFlag != lastChangeFlag)
+                        string processFlag, lastProcessFlag = null;
+                        string spatialFlag, lastSpatialFlag = null;
+                        string changeFlag, lastChangeFlag = null;
+                        int status;
+                        int recs;
+                        OSMMUpdates dataRow;
+
+                        // Load the list with the results.
+                        while (dataReader.Read())
                         {
-                            // Add the results as a new row.
-                            dataRow = new()
+                            processFlag = dataReader.GetValue(0).ToString();
+                            spatialFlag = dataReader.GetValue(1).ToString();
+                            changeFlag = dataReader.GetValue(2).ToString();
+                            status = (int)dataReader.GetValue(3);
+                            recs = (int)dataReader.GetValue(4);
+
+                            lastProcessFlag ??= processFlag;
+                            lastSpatialFlag ??= spatialFlag;
+                            lastChangeFlag ??= changeFlag;
+
+                            // If this is a different group.
+                            if (processFlag != lastProcessFlag || spatialFlag != lastSpatialFlag || changeFlag != lastChangeFlag)
                             {
-                                Process = lastProcessFlag,
-                                Spatial = lastSpatialFlag,
-                                Change = lastChangeFlag,
-                                Rejected = rejectedCount,
-                                Ignored = ignoredCount,
-                                Proposed = proposedCount,
-                                Pending = pendingCount,
-                                Applied = appliedCount,
-                                Total = allCount
-                            };
-                            dataTable.Add(dataRow);
+                                // Add the results as a new row.
+                                dataRow = new()
+                                {
+                                    Process = lastProcessFlag,
+                                    Spatial = lastSpatialFlag,
+                                    Change = lastChangeFlag,
+                                    Rejected = rejectedCount,
+                                    Ignored = ignoredCount,
+                                    Proposed = proposedCount,
+                                    Pending = pendingCount,
+                                    Applied = appliedCount,
+                                    Total = allCount
+                                };
+                                dataTable.Add(dataRow);
 
-                            // Update the totals.
-                            rejectedTotal += rejectedCount;
-                            ignoredTotal += ignoredCount;
-                            proposedTotal += proposedCount;
-                            pendingTotal += pendingCount;
-                            appliedTotal += appliedCount;
-                            allTotal += allCount;
+                                // Update the totals.
+                                rejectedTotal += rejectedCount; ignoredTotal += ignoredCount; proposedTotal += proposedCount; pendingTotal += pendingCount; appliedTotal += appliedCount; allTotal += allCount;
 
-                            // Reset the counts.
-                            rejectedCount = 0;
-                            ignoredCount = 0;
-                            proposedCount = 0;
-                            pendingCount = 0;
-                            appliedCount = 0;
-                            allCount = 0;
+                                // Reset the counts.
+                                rejectedCount = 0; ignoredCount = 0; proposedCount = 0; pendingCount = 0; appliedCount = 0; allCount = 0;
 
-                            // Save the last group values;
-                            lastProcessFlag = processFlag;
-                            lastSpatialFlag = spatialFlag;
-                            lastChangeFlag = changeFlag;
+                                // Save the last group values;
+                                lastProcessFlag = processFlag;
+                                lastSpatialFlag = spatialFlag;
+                                lastChangeFlag = changeFlag;
+                            }
+
+                            // Update the counts.
+                            if (status == -99) rejectedCount = recs;
+                            if (status == -2) ignoredCount = recs;
+                            if (status == 0) pendingCount = recs;
+                            if (status == -1) appliedCount = recs;
+                            if (status > 0) proposedCount += recs;
+                            allCount += recs;
                         }
 
-                        // Update the counts.
-                        if (status == -99)
-                            rejectedCount = recs;
-                        if (status == -2)
-                            ignoredCount = recs;
-                        if (status == 0)
-                            pendingCount = recs;
-                        if (status == -1)
-                            appliedCount = recs;
-                        if (status > 0)
-                            proposedCount += recs;
-                        allCount += recs;
+                        // Add the last results as a new row.
+                        OSMMUpdates lastRow = new()
+                        {
+                            Process = lastProcessFlag,
+                            Spatial = lastSpatialFlag,
+                            Change = lastChangeFlag,
+                            Rejected = rejectedCount,
+                            Ignored = ignoredCount,
+                            Proposed = proposedCount,
+                            Pending = pendingCount,
+                            Applied = appliedCount,
+                            Total = allCount
+                        };
+                        dataTable.Add(lastRow);
 
+                        // Update the totals.
+                        rejectedTotal += rejectedCount; ignoredTotal += ignoredCount; proposedTotal += proposedCount; pendingTotal += pendingCount; appliedTotal += appliedCount; allTotal += allCount;
+                    }
+                    finally
+                    {
+                        if ((dataReader != null) && (!dataReader.IsClosed))
+                            dataReader.Close();
                     }
 
-                    // Add the last results as a new row.
-                    dataRow = new OSMMUpdates
-                    {
-                        Process = lastProcessFlag,
-                        Spatial = lastSpatialFlag,
-                        Change = lastChangeFlag,
-                        Rejected = rejectedCount,
-                        Ignored = ignoredCount,
-                        Proposed = proposedCount,
-                        Pending = pendingCount,
-                        Applied = appliedCount,
-                        Total = allCount
-                    };
-                    dataTable.Add(dataRow);
-
-                    // Update the totals.
-                    rejectedTotal += rejectedCount;
-                    ignoredTotal += ignoredCount;
-                    proposedTotal += proposedCount;
-                    pendingTotal += pendingCount;
-                    appliedTotal += appliedCount;
-                    allTotal += allCount;
-
-                    // Add the totals as a new row.
-                    _tableTotal = [];
-                    dataRow = new OSMMUpdates
+                    // Build the totals row.
+                    List<OSMMUpdates> tot = [new OSMMUpdates
                     {
                         Process = "",
                         Change = "",
@@ -918,45 +931,41 @@ namespace HLU.UI.ViewModel
                         Pending = pendingTotal,
                         Applied = appliedTotal,
                         Total = allTotal
-                    };
-                    _tableTotal.Add(dataRow);
+                    }];
 
-                    // Reset the cursor back to normal.
-                    ChangeCursor(Cursors.Arrow);
-
-                    return dataTable;
-                }
-                catch (Exception ex)
-                {
-                    // Reset the cursor back to normal.
-                    ChangeCursor(Cursors.Arrow);
-
-                    MessageBox.Show(ex.Message, "HLU Error", MessageBoxButton.OK, MessageBoxImage.Error);
-
-                    return null;
-                }
-                finally
-                {
-                    // Close the data reader.
-                    if ((dataReader != null) && (!dataReader.IsClosed))
-                        dataReader.Close();
-                }
+                    // Return the results and totals.
+                    return (dataTable, tot);
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "HLU Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                result = null;
+                total = null;
+            }
+            finally
+            {
+                // Reset the cursor back to normal.
+                if (!suppressCursorChange) ChangeCursor(Cursors.Arrow);
             }
 
+            // Populate the observable collections in-place so the DataGrid receives
+            // incremental CollectionChanged notifications rather than a full ItemsSource reset.
+            _osmmUpdatesSummary.Clear();
+            if (result != null)
+                foreach (OSMMUpdates row in result)
+                    _osmmUpdatesSummary.Add(row);
+
+            _tableTotal.Clear();
+            if (total != null)
+                foreach (OSMMUpdates row in total)
+                    _tableTotal.Add(row);
         }
 
         /// <summary>
-        /// Gets a summary of the OSMM Updates in the database for the selected flags. This will be used
-        /// to show the number of OSMM Updates for each status and determine whether the filter can be applied.
+        /// Gets a summary of the OSMM Updates totals in the database for the selected flags.
         /// </summary>
-        /// <value>A list of OSMM Updates summary for the selected flags.</value>
-        public List<OSMMUpdates> OSMMUpdatesSummaryTotal
-        {
-            get
-            {
-                return _tableTotal;
-            }
-        }
+        public ObservableCollection<OSMMUpdates> OSMMUpdatesSummaryTotal => _tableTotal;
 
         #endregion OSMM Updates Summary
 

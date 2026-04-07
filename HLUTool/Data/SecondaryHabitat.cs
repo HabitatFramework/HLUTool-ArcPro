@@ -364,17 +364,17 @@ namespace HLU.Data
                         }
                         else if (_validSecondaryCodes == null)
                         {
-                            errors.Add("Error: Secondary habitat is not valid without primary habitat");
+                            errors.Add($"Error: Secondary habitat '{Secondary_habitat}' is not valid without primary habitat");
                         }
                         else if ((_secondaryHabitatList != null) && (_secondaryHabitatList.Count(b => b.Secondary_habitat == Secondary_habitat) > 1))
                         {
-                            errors.Add("Error: Duplicate secondary habitat");
+                            errors.Add($"Error: Duplicate secondary habitat '{Secondary_habitat}'");
                         }
                         else if (_primarySecondaryCodeValidation > 0)
                         {
                             if ((_validSecondaryCodes != null) && (!_validSecondaryCodes.Contains(Secondary_habitat)))
                             {
-                                errors.Add("Error: Secondary habitat is not valid for primary habitat");
+                                errors.Add($"Error: Secondary habitat '{Secondary_habitat}' is not valid for primary habitat");
                             }
                         }
                     }

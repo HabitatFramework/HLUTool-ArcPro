@@ -50,7 +50,7 @@ namespace HLU.Data.Connection
 
         private string _connectionString;
         private string _defaultSchema;
-        private string _errorMessage;
+        protected string _errorMessage;
         private string _pwd;
         protected Dictionary<string, string> _replaceDataTypes;
         protected Regex _sqlTypeRegex;
@@ -1373,7 +1373,9 @@ namespace HLU.Data.Connection
         /// <returns></returns>
         public DataTable SqlSelect(bool selectDistinct, bool orderBy, DataColumn[] targetColumns, List<DataTable> sqlFromTables, List<SqlFilterCondition> whereConds, string sqlWhereClause)
         {
-            if ((targetColumns == null) || (targetColumns.Length == 0)) return new();
+            // Check inputs are valid.
+            if ((targetColumns == null) || (targetColumns.Length == 0))
+                return new();
 
             try
             {
@@ -1451,7 +1453,9 @@ namespace HLU.Data.Connection
         /// <returns>A string indicating the result of the SQL validation.</returns>
         public string SqlValidate(DataColumn[] targetColumns, List<DataTable> sqlFromTables, string sqlWhereClause)
         {
-            if ((targetColumns == null) || (targetColumns.Length == 0)) return "Error verifying Sql";
+            // Check if inputs are valid
+            if ((targetColumns == null) || (targetColumns.Length == 0))
+                return "Error verifying Sql";
 
             try
             {

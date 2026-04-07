@@ -27,6 +27,7 @@
                 <ResourceDictionary Source="Dictionary\ValidationTemplates.xaml" />
                 <ResourceDictionary Source="Dictionary\NullableValueConverterDictionary.xaml" />
                 <ResourceDictionary Source="Dictionary\ErrorMessageConverterDictionary.xaml" />
+                <ResourceDictionary Source="Dictionary\BoolToVisibilityConverter.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </controls:ProWindow.Resources>
@@ -40,6 +41,7 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
@@ -201,7 +203,11 @@
                                 ItemsSource="{Binding QueryValues}"
                                 SelectedValue="{Binding Path=QueryValue, ValidatesOnDataErrors=True}"
                                 SelectedValuePath="Value">
-                                <!--  ItemContainerStyle="{DynamicResource ComboBoxItemStyle}"  -->
+                                <ComboBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <VirtualizingStackPanel />
+                                    </ItemsPanelTemplate>
+                                </ComboBox.ItemsPanel>
                             </ComboBox>
                             <Button
                                 Name="ButtonAddValue"
@@ -302,8 +308,36 @@
             </GroupBox>
 
             <Grid
-                x:Name="GridButtons"
+                x:Name="GridMessage"
                 Grid.Row="1"
+                Margin="4,4,4,0"
+                Visibility="{Binding MessageVisibility}">
+                <controls:MessageLabel
+                    CanClose="False"
+                    Content="{Binding MessageText}"
+                    MessageType="{Binding MessageLevel}"
+                    Severity="High"
+                    ShowHelp="False"
+                    ToolTip="{Binding MessageText}" />
+                <Button
+                    Width="20"
+                    Height="20"
+                    Margin="4,0,-20,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Command="{Binding DismissMessageCommand}"
+                    Style="{DynamicResource Esri_ButtonBorderless}"
+                    ToolTip="Dismiss">
+                    <TextBlock
+                        FontFamily="Segoe MDL2 Assets"
+                        FontSize="10"
+                        Text="&#xE711;" />
+                </Button>
+            </Grid>
+
+            <Grid
+                x:Name="GridButtons"
+                Grid.Row="2"
                 Margin="4">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />

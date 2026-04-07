@@ -2745,6 +2745,11 @@ namespace HLU.UI.ViewModel
 
                             OnPropertyChanged(nameof(CanOSMMAccept));
                             OnPropertyChanged(nameof(CanOSMMSkip));
+
+                            // RelayCommand.CanExecuteChanged is wired to CommandManager.RequerySuggested,
+                            // so explicitly invalidate to ensure the buttons re-evaluate CanExecute
+                            // immediately without waiting for a UI interaction.
+                            CommandManager.InvalidateRequerySuggested();
                         }
 
                         // Refresh all the controls

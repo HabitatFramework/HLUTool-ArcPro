@@ -70,6 +70,7 @@ namespace HLU.UI.ViewModel
         private ICommand _browseExportPathCommand;
         private ICommand _browseWorkingFileGDBPathCommand;
         private ICommand _openHyperlinkCommand;
+        private ICommand _resetDbConnectionCommand;
 
         private string _displayName = "Options";
 
@@ -809,6 +810,61 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion Cancel Command
+
+        #region Reset Database Connection Command
+
+        /// <summary>
+        /// Gets the command that schedules a database connection reset on the
+        /// next tool load by setting the ResetDbConnection flag.
+        /// The command is disabled when a reset is already pending.
+        /// </summary>
+        public ICommand ResetDbConnectionCommand
+        {
+            get
+            {
+                if (_resetDbConnectionCommand == null)
+                {
+                    Action<object> resetAction = new(this.ResetDbConnectionClick);
+                    _resetDbConnectionCommand = new RelayCommand(resetAction, param => !ResetDbConnection);
+                }
+
+                return _resetDbConnectionCommand;
+            }
+        }
+
+        /// <summary>
+        /// Gets whether a database connection reset has been scheduled.
+        /// </summary>
+        /// <value><c>true</c> if a reset is pending; otherwise, <c>false</c>.</value>
+        public bool ResetDbConnection
+        {
+            get { return Settings.Default.ResetDbConnection; }
+        }
+
+        /// <summary>
+        /// Handles event when Reset Database Connection button is clicked.
+        /// </summary>
+        /// <param name="param">The parameter passed to the command.</param>
+        private void ResetDbConnectionClick(object param)
+        {
+            // Set the ResetDbConnection flag to true, which will trigger a database connection reset the next time the tool is loaded.
+            Settings.Default.ResetDbConnection = true;
+
+            // Save the settings to persist the ResetDbConnection flag.
+            Settings.Default.Save();
+
+            // Notify the UI that the button should now be disabled.
+            OnPropertyChanged(nameof(ResetDbConnection));
+
+            // Inform the user that the database connection will be reset on the next tool load.
+            MessageBox.Show(
+                "The database connection will be reset the next time the HLU Tool is loaded.",
+                "HLU: Reset Database Connection",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+
+        #endregion Reset Database Connection Command
 
         #region OpenHyperlink Command
 

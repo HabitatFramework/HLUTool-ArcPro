@@ -46,6 +46,20 @@ namespace HLU.UI.View.Connection
             if (this.ComboBoxDataSource.Items.Count == 1) this.ComboBoxDataSource.SelectedIndex = 0;
         }
 
+        private void Window_ContentRendered(object sender, EventArgs e)
+        {
+            BindingOperations.GetBindingExpression(ComboBoxDataSource, ComboBox.TextProperty)?.UpdateSource();
+            BindingOperations.GetBindingExpression(TextBoxUserID, TextBox.TextProperty)?.UpdateSource();
+            BindingOperations.GetBindingExpression(ComboBoxDefaultSchema, ComboBox.TextProperty)?.UpdateSource();
+
+            // Force WPF to re-evaluate IDataErrorInfo validation on the validated fields
+            // so that error adorners appear immediately when the window first opens with blank values.
+            if (DataContext is ViewModelConnectOracle vm)
+            {
+                vm.NotifyValidationOnLoad();
+            }
+        }
+
         private void ComboBox_DropDownOpened(object sender, EventArgs e)
         {
             Binding bnd = BindingOperations.GetBinding((ComboBox)sender, ComboBox.SelectedItemProperty);

@@ -39,7 +39,6 @@ namespace HLU.Data.Connection
     {
         #region Private Members
 
-        private string _errorMessage;
         private OracleConnectionStringBuilder _connStrBuilder;
         private OracleConnection _connection;
         private OracleCommand _command;

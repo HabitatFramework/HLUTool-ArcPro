@@ -1785,7 +1785,6 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        //TODO: Include optional secondary codes in the suggested list?
         /// <summary>
         /// Gets the string of suggested secondaries that are related to the
         /// selected habitat type and primary habitat. It is used as an aid
@@ -1799,6 +1798,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //TODO: Include optional secondary codes in the suggested list?
                 if ((_habitatSecondariesSuggested == null) && (_secondaryCodesOptional != null))
                     return string.Join(", ", _secondaryCodesOptional);
                 else
@@ -3182,10 +3182,10 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                //TODO: Check this logic
-                return IsBulkMode ||
-                    (IncidBapHabitatsAuto != null && IncidBapHabitatsAuto.Count > 0) ||
-                    (IncidBapHabitatsUser != null && IncidBapHabitatsUser.Count > 0);
+                return true;
+                //return IsBulkMode ||
+                //    (IncidBapHabitatsAuto != null && IncidBapHabitatsAuto.Count > 0) ||
+                //    (IncidBapHabitatsUser != null && IncidBapHabitatsUser.Count > 0);
             }
         }
 
@@ -6243,11 +6243,11 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Must be in edit mode,
+                // Must be in a mode that allows edits and ready for edit operations (includes CanEdit + Reason/Process selection),
                 // there must be proposed OSMM Updates for the current filter,
                 // the user must be authorised for bulk updates,
                 // and we must not already be in OSMM Review mode,
-                return IsEditMode &&
+                return IsEditReady &&
                     AnyOSMMUpdates == true &&
                     CanUserBulkUpdate == true &&
                     !WorkMode.HasAll(WorkMode.OSMMReview) &&
@@ -6874,9 +6874,6 @@ namespace HLU.UI.ViewModel
                 // Create a new GIS functions instance (so that it will use the new active layer to set any cached variables).
                 _gisApp = new();
 
-                // Recomputes whether editing is currently possible.
-                RefreshEditCapability();
-
                 // Get the new active map view (if there is one).
                 if (MapView.Active is null || MapView.Active.Map.Name != _gisApp.MapName)
                     _activeMapView = _gisApp.GetActiveMapView();
@@ -6889,6 +6886,9 @@ namespace HLU.UI.ViewModel
 
                     // Refresh the layer name
                     OnPropertyChanged(nameof(ActiveLayerName));
+
+                    // Recomputes whether editing is currently possible.
+                    RefreshEditCapability();
 
                     // Get the GIS layer selection and warn the user if no
                     // features are found
@@ -7336,6 +7336,9 @@ namespace HLU.UI.ViewModel
         {
             OnPropertyChanged(nameof(TabItemHabitatEnabled));
             OnPropertyChanged(nameof(TabHabitatControlsEnabled));
+            OnPropertyChanged(nameof(ShowSourceHabitatGroup));
+            OnPropertyChanged(nameof(ShowHabitatSecondariesSuggested));
+            OnPropertyChanged(nameof(ShowNVCCodes));
             OnPropertyChanged(nameof(HabitatTabLabel));
             OnPropertyChanged(nameof(HabitatClass));
             OnPropertyChanged(nameof(HabitatTypeCodes));
@@ -7918,7 +7921,9 @@ namespace HLU.UI.ViewModel
         /// </summary>
         private void RefreshEditCapability()
         {
-            //TODO: Update IsEditable to consider whether the layer is currently in a state that allows edits?
+            // Determine whether editing is currently possible based on the state of the GIS
+            // application, the active HLU layer, the user's permissions, whether the active HLU
+            // layer is editable, and whether editing is enabled in the project.
             bool canEdit =
                 _gisApp != null &&
                 _gisApp.ActiveHluLayer != null &&
@@ -8450,9 +8455,8 @@ namespace HLU.UI.ViewModel
                         return;
                 }
 
+                // Start the OSMM update mode (shows the query window; cursor/message reset after dialog closes).
                 ChangeCursor(Cursors.Wait, "Starting bulk OSMM update mode ...");
-
-                // Start the OSMM update mode
                 _viewModelBulkUpdate.StartOSMMBulkUpdate();
 
                 // Reset the cursor back to normal.
@@ -8877,10 +8881,6 @@ namespace HLU.UI.ViewModel
                 if (IsNotOsmmBulkMode)
                     _osmmUpdatesEmpty = true;
 
-                // Clear all the form fields (except the habitat class
-                // and habitat type).
-                //ClearForm();      // Already cleared
-
                 // Clear the map selection.
                 await _gisApp.ClearMapSelectionAsync();
 
@@ -9173,6 +9173,11 @@ namespace HLU.UI.ViewModel
 
                                 OnPropertyChanged(nameof(CanOSMMAccept));
                                 OnPropertyChanged(nameof(CanOSMMSkip));
+
+                                // RelayCommand.CanExecuteChanged is wired to CommandManager.RequerySuggested,
+                                // so explicitly invalidate to ensure the buttons re-evaluate CanExecute
+                                // immediately without waiting for a UI interaction.
+                                CommandManager.InvalidateRequerySuggested();
 
                                 // Set the filter to the first incid.
                                 await SetFilterAsync();

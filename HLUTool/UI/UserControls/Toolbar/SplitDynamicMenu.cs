@@ -85,7 +85,7 @@ namespace HLU.UI.UserControls.Toolbar
             Enabled = canSplit;
 
             // Set the disabled tool tip text (for when it is disabled).
-            DisabledTooltip = "Unavailable when a physical or logical split is not possible, or when the main window is not visible.";
+            DisabledTooltip = "Unavailable when:\n\u2022 A physical or logical split is not possible\n• The main window is not visible.";
         }
 
         /// <summary>

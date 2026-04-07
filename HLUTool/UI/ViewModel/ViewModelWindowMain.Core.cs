@@ -1614,6 +1614,29 @@ namespace HLU.UI.ViewModel
                 // Upgrade the user settings if necessary.
                 UpgradeUserSettings();
 
+                // If the user requested a connection reset via the Options screen,
+                // clear the stored connection settings now so GetConnectionSettingsAsync
+                // will re-prompt them.
+                if (Settings.Default.ResetDbConnection)
+                {
+                    DbFactory.ClearSettings();
+                }
+
+                // Prompt for database connection type/details if not already configured.
+                // This must happen before InitializeToolPaneAsync so all UI dialogs are
+                // shown here on the UI thread, not buried inside tool initialisation.
+                if (!await DbFactory.GetConnectionSettingsAsync())
+                    throw new UserCancelledException();
+
+                // Apply add-in settings now so _dbConnectionTimeout is set before
+                // the connection is opened.
+                ApplyAddInSettings();
+
+                // Open the database connection and validate the dataset.
+                // This is separated from InitializeToolPaneAsync so that connection
+                // UI and errors are handled cleanly before tool setup begins.
+                await OpenDatabaseConnectionAsync();
+
                 // Initialise the main view (start the tool).
                 await InitializeToolPaneAsync();
 
@@ -1636,6 +1659,7 @@ namespace HLU.UI.ViewModel
             {
                 InError = true;
                 _initializationException = ex;
+                _initializationTask = null;
 
                 throw;
             }
@@ -1734,6 +1758,42 @@ private async Task CreateWorkingGeodatabaseAsync()
         }
 
         /// <summary>
+        /// Opens the database connection and validates that it points to a valid HLU dataset.
+        /// Connection settings must already have been obtained by <see cref="DbFactory.GetConnectionSettingsAsync"/>
+        /// and add-in settings applied (for <see cref="DbConnectionTimeout"/>) before calling this method.
+        /// </summary>
+        /// <returns>A task that completes when the connection is open and validated.</returns>
+        /// <exception cref="HLUToolException">Thrown if no connection can be created or the dataset is invalid.</exception>
+        private async Task OpenDatabaseConnectionAsync()
+        {
+            if ((_db = await DbFactory.CreateConnectionAsync(DbConnectionTimeout)) == null)
+                throw new HLUToolException("No database connection.");
+
+            _hluDS = new HluDataSet();
+
+            string errorMessage;
+            if (!_db.ContainsDataSet(_hluDS, out errorMessage))
+            {
+                // Handle any error message returned from the dataset validation.
+                if (errorMessage.Length > 200)
+                {
+                    if (MessageBox.Show("There were errors loading data from the database." +
+                        "\n\nWould like to see a list of those errors?", "HLU: Initialise Dataset",
+                        MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.Yes)
+                        ShowMessageWindow.ShowMessageDialog(errorMessage, "HLU Dataset");
+                }
+                else if (!String.IsNullOrEmpty(errorMessage))
+                {
+                    MessageBox.Show("There were errors loading data from the database." +
+                        "\n\n" + errorMessage, "HLU: Initialise Dataset",
+                        MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                }
+
+                throw new HLUToolException("Database does not contain a valid HLU dataset.");
+            }
+        }
+
+        /// <summary>
         /// Initialise settings for main window.
         /// </summary>
         /// <returns>Returns a task that resolves to true if the tool pane was initialized successfully; false otherwise.</returns>
@@ -1741,9 +1801,6 @@ private async Task CreateWorkingGeodatabaseAsync()
         {
             // Get incid table size setting.
             _incidPageSize = _addInSettings.IncidTablePageSize;
-
-            // Get add-in settings.
-            ApplyAddInSettings();
 
             // Get user settings;
             ApplyUserSettings();
@@ -1757,52 +1814,9 @@ private async Task CreateWorkingGeodatabaseAsync()
             HistoryGeometry1ColumnName = Settings.Default.HistoryGeometry1ColumnName;
             HistoryGeometry2ColumnName = Settings.Default.HistoryGeometry2ColumnName;
 
-            // Open the database connection and test whether it points to a valid HLU database.
+            // Open the database connection using settings already obtained by the caller.
             try
             {
-                while (true)
-                {
-                    // If the database connection settings are not valid then this will throw an
-                    // exception which is caught and handled by prompting the user to enter new settings.
-                    if ((_db = DbFactory.CreateConnection(DbConnectionTimeout)) == null)
-                        throw new HLUToolException("No database connection.");
-
-                    _hluDS = new HluDataSet();
-
-                    string errorMessage;
-                    if (!_db.ContainsDataSet(_hluDS, out errorMessage))
-                    {
-                        // Clear the current database settings as they are clearly not valid.
-                        DbFactory.ClearSettings();
-
-                        // Handle any error message returned from the dataset validation - if it's
-                        // very long offer to show it in a separate window to avoid overwhelming the
-                        // user with a message box.
-                        if (String.IsNullOrEmpty(errorMessage))
-                        {
-                            errorMessage = String.Empty;
-                        }
-                        else if (errorMessage.Length > 200)
-                        {
-                            if (MessageBox.Show("There were errors loading data from the database." +
-                                "\n\nWould like to see a list of those errors?", "HLU: Initialise Dataset",
-                                MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.Yes)
-                                ShowMessageWindow.ShowMessageDialog(errorMessage, "HLU Dataset");
-
-                            errorMessage = String.Empty;
-                        }
-
-                        if (MessageBox.Show("There were errors loading data from the database." +
-                            errorMessage + "\n\nWould you like to connect to another database?", "HLU: Initialise Dataset",
-                            MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.No)
-                            throw new UserCancelledException();
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
                 ChangeCursor(Cursors.Wait, "Initialising ...");
 
                 // Create table adapter manager for the dataset and connection
@@ -2813,8 +2827,9 @@ private async Task CreateWorkingGeodatabaseAsync()
                 // Clear any messages.
                 ClearMessage();
 
-                // Make the UI controls visible.
-                GridMainVisibility = Visibility.Visible;
+                // Only make the UI controls visible if initialisation succeeded.
+                if (!InError)
+                    GridMainVisibility = Visibility.Visible;
             }
         }
 
@@ -2935,6 +2950,9 @@ private async Task CreateWorkingGeodatabaseAsync()
         {
             try
             {
+                if (_db == null)
+                    return;
+
                 object result = _db.ExecuteScalar(String.Format("SELECT {0} FROM {1} WHERE {2} = {3}",
                     _db.QuoteIdentifier(_hluDS.lut_user.bulk_updateColumn.ColumnName),
                     _db.QualifyTableName(_hluDS.lut_user.TableName),

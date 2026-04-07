@@ -83,16 +83,18 @@
                                         HeadersVisibility="Column"
                                         IsEnabled="True"
                                         IsReadOnly="True"
-                                        ItemsSource="{Binding OSMMUpdatesSummary, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
-                                        RowDetailsVisibilityMode="Visible"
+                                        ItemsSource="{Binding OSMMUpdatesSummary}"
+                                        RowDetailsVisibilityMode="Collapsed"
                                         RowHeaderWidth="0"
                                         RowHeight="24"
-                                        RowStyle="{StaticResource DataGridRowWithValidation}"
                                         ScrollViewer.CanContentScroll="True"
+                                        ScrollViewer.IsDeferredScrollingEnabled="True"
                                         ScrollViewer.VerticalScrollBarVisibility="Auto"
                                         SelectionChanged="OSMMUpdates_SelectionChanged"
                                         SelectionMode="Single"
-                                        Style="{DynamicResource Esri_DataGrid}">
+                                        Style="{DynamicResource Esri_DataGrid}"
+                                        VirtualizingPanel.IsVirtualizing="True"
+                                        VirtualizingPanel.VirtualizationMode="Recycling">
                                         <!--  SelectedItem="{Binding OSMMUpdatesSelected, Mode=TwoWay}"  -->
                                         <!--  SelectionChanged="{Binding OSMMUpdates_SelectionChanged}"  -->
                                         <DataGrid.Columns>
@@ -100,7 +102,8 @@
                                                 Width="65"
                                                 Binding="{Binding Process}"
                                                 Header="Process"
-                                                IsReadOnly="True" />
+                                                IsReadOnly="True"
+                                                SortMemberPath="ProcessSortKey" />
                                             <DataGridTextColumn
                                                 Width="65"
                                                 Binding="{Binding Change}"
@@ -165,15 +168,17 @@
                                         HeadersVisibility="Column"
                                         IsEnabled="True"
                                         IsReadOnly="True"
-                                        ItemsSource="{Binding OSMMUpdatesSummaryTotal, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                        ItemsSource="{Binding OSMMUpdatesSummaryTotal}"
                                         RowDetailsVisibilityMode="Collapsed"
                                         RowHeaderWidth="0"
                                         RowHeight="26"
-                                        RowStyle="{StaticResource DataGridRowWithValidation}"
                                         ScrollViewer.CanContentScroll="True"
+                                        ScrollViewer.IsDeferredScrollingEnabled="True"
                                         ScrollViewer.VerticalScrollBarVisibility="Auto"
                                         SelectionMode="Single"
-                                        Style="{DynamicResource Esri_DataGrid}">
+                                        Style="{DynamicResource Esri_DataGrid}"
+                                        VirtualizingPanel.IsVirtualizing="True"
+                                        VirtualizingPanel.VirtualizationMode="Recycling">
                                         <DataGrid.Columns>
                                             <DataGridTextColumn
                                                 Width="0"

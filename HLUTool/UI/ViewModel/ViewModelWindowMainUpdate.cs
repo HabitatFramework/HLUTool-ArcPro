@@ -182,7 +182,6 @@ namespace HLU.UI.ViewModel
                 else if (historyTable.Rows.Count == 0)
                     throw new Exception("No GIS features were updated.");
 
-                //TODO: GIS layer shadow copy update - Set length and area for each polygon (if possible)?
                 // Perform database shadow copy update
                 UpdateGISShadowCopy(incidCond);
 

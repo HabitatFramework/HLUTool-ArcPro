@@ -231,6 +231,18 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Raises PropertyChanged for the validated properties so that WPF re-evaluates
+        /// IDataErrorInfo and shows error adorners immediately when the window first opens
+        /// with blank values.
+        /// </summary>
+        public void NotifyValidationOnLoad()
+        {
+            OnPropertyChanged(nameof(DataSource));
+            OnPropertyChanged(nameof(UserID));
+            OnPropertyChanged(nameof(DefaultSchema));
+        }
+
         #endregion
 
         #region Data Source

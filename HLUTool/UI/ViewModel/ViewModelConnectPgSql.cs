@@ -264,15 +264,7 @@ namespace HLU.UI.ViewModel
             set
             {
                 if (Enum.IsDefined(typeof(Npgsql.SslMode), value))
-                {
                     _connStrBuilder.SslMode = (Npgsql.SslMode)Enum.Parse(typeof(Npgsql.SslMode), value);
-
-                    //TODO: PgSql SSL = true/false
-                    //if (_connStrBuilder.SslMode == Npgsql.SslMode.Require)
-                    //    _connStrBuilder.SSL = true;
-                    //else if (_connStrBuilder.SslMode == Npgsql.SslMode.Disable)
-                    //    _connStrBuilder.SSL = false;
-                }
 
             }
         }
@@ -522,6 +514,20 @@ namespace HLU.UI.ViewModel
                     LoadSchemata();
                     break;
             }
+        }
+
+        /// <summary>
+        /// Raises PropertyChanged for the validated properties so that WPF re-evaluates
+        /// IDataErrorInfo and shows error adorners immediately when the window first opens
+        /// with blank values.
+        /// </summary>
+        public void NotifyValidationOnLoad()
+        {
+            OnPropertyChanged(nameof(Host));
+            OnPropertyChanged(nameof(Port));
+            OnPropertyChanged(nameof(Database));
+            OnPropertyChanged(nameof(UserName));
+            OnPropertyChanged(nameof(SearchPath));
         }
 
         #endregion

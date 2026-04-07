@@ -24,6 +24,7 @@ using HLU.Properties;
 using HLU.UI.View.Connection;
 using HLU.UI.ViewModel;
 using System;
+using System.Threading.Tasks;
 using System.Windows;
 using ArcGIS.Desktop.Framework;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
@@ -72,33 +73,69 @@ namespace HLU.Data.Connection
         #region Methods
 
         /// <summary>
-        /// Creates a database connection based on user settings. If settings are incomplete or
-        /// invalid, prompts user to select connection type and enter connection details.
+        /// Gets the database connection settings, prompting the user if necessary.
         /// </summary>
-        /// <param name="dbConnectionTimeout">The timeout value for the database connection.</param>
-        /// <returns>A database connection object.</returns>
-        public static DbBase CreateConnection(int dbConnectionTimeout)
+        /// <returns><c>true</c> if valid settings are now stored; <c>false</c> if the user cancelled.</returns>
+        public static async Task<bool> GetConnectionSettingsAsync()
         {
+            // Read the stored connection type.
             if (Enum.IsDefined(typeof(ConnectionTypes), Settings.Default.DbConnectionType))
                 _connType = (ConnectionTypes)Settings.Default.DbConnectionType;
             else
                 _connType = ConnectionTypes.Unknown;
 
+            // Get other stored settings that we can check for completeness before prompting the user.
+            string connString = Settings.Default.DbConnectionString;
+            string defaultSchema = Settings.Default.DbDefaultSchema;
+
+            // If settings are complete, nothing to do.
+            if (_connType != ConnectionTypes.Unknown &&
+                !String.IsNullOrEmpty(connString) &&
+                (DbBase.GetBackend(connString, _connType) == Backends.Access || !String.IsNullOrEmpty(defaultSchema)))
+                return true;
+
+            // Settings are incomplete — ask the user to choose a connection type.
+            // SelectConnectionTypeAsync shows the window via Show() and completes the
+            // TaskCompletionSource from the Closed event, so no thread is blocked.
+            _connType = await SelectConnectionTypeAsync();
+
+            if (_connType == ConnectionTypes.Unknown)
+                return false;
+
+            // Persist the chosen type so CreateConnectionAsync can read it.
+            Settings.Default.DbConnectionType = (int)_connType;
+            Settings.Default.DbPromptPwd = false;
+            Settings.Default.Save();
+
+            return true;
+        }
+
+        /// <summary>
+        /// Creates a database connection from the settings already stored by
+        /// <see cref="GetConnectionSettingsAsync"/>. Does not show any UI.
+        /// </summary>
+        /// <param name="dbConnectionTimeout">The timeout value for the database connection.</param>
+        /// <returns>A task that resolves to a database connection object, or null if settings are missing.</returns>
+        public static Task<DbBase> CreateConnectionAsync(int dbConnectionTimeout)
+        {
+            // Read connection type — must already be set by EnsureConnectionSettingsAsync.
+            if (Enum.IsDefined(typeof(ConnectionTypes), Settings.Default.DbConnectionType))
+                _connType = (ConnectionTypes)Settings.Default.DbConnectionType;
+            else
+                _connType = ConnectionTypes.Unknown;
+
+            // If connection type is still unknown, return null — caller should have called
+            // EnsureConnectionSettingsAsync first.
+            if (_connType == ConnectionTypes.Unknown) return Task.FromResult<DbBase>(null);
+
+            // Read remaining settings — these are already populated by EnsureConnectionSettingsAsync.
             string connString = Settings.Default.DbConnectionString;
             string defaultSchema = Settings.Default.DbDefaultSchema;
             bool promptPwd = Settings.Default.DbPromptPwd;
 
-            if ((_connType == ConnectionTypes.Unknown) || String.IsNullOrEmpty(connString) ||
-                ((DbBase.GetBackend(connString, _connType) != Backends.Access) && String.IsNullOrEmpty(defaultSchema)))
-            {
-                promptPwd = false;
-                SelectConnectionType();
-            }
-
-            if (_connType == ConnectionTypes.Unknown) return null;
-
             DbBase db = null;
 
+            // Create appropriate DbBase subclass based on selected connection type
             switch (_connType)
             {
                 case ConnectionTypes.ODBC:
@@ -131,8 +168,10 @@ namespace HLU.Data.Connection
                     break;
             }
 
+            // Determine the backend based on the connection string and type
             _backend = DbBase.GetBackend(connString, _connType);
 
+            // If a connection was successfully created, save the settings for next time
             if (db != null)
             {
                 Settings.Default.DbConnectionType = (int)_connType;
@@ -142,7 +181,8 @@ namespace HLU.Data.Connection
                 Settings.Default.Save();
             }
 
-            return db;
+            // Return the created connection (or null if creation failed)
+            return Task.FromResult(db);
         }
 
         /// <summary>
@@ -154,10 +194,13 @@ namespace HLU.Data.Connection
         {
             try
             {
+                // Reset connection settings to defaults
                 Settings.Default.DbConnectionType = (int)ConnectionTypes.Unknown;
                 Settings.Default.DbConnectionString = String.Empty;
                 Settings.Default.DbDefaultSchema = string.Empty;
                 Settings.Default.DbPromptPwd = true;
+
+                Settings.Default.ResetDbConnection = false;
                 Settings.Default.Save();
 
                 return true;
@@ -166,47 +209,67 @@ namespace HLU.Data.Connection
         }
 
         /// <summary>
-        /// Prompts the user to select a database connection type and enter connection details if necessary.
+        /// Prompts the user to select a database connection type. Returns the selected type,
+        /// or <see cref="ConnectionTypes.Unknown"/> if the user cancelled.
         /// </summary>
-        /// <returns>The selected database connection type.</returns>
-        private static ConnectionTypes SelectConnectionType()
+        private static Task<ConnectionTypes> SelectConnectionTypeAsync()
+        {
+            // TaskCompletionSource carries the result back to the awaiting caller without
+            // blocking any thread. The dialog sets it when it closes.
+            var tcs = new TaskCompletionSource<ConnectionTypes>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            var dispatcher = System.Windows.Application.Current.Dispatcher;
+
+            // Window creation and Show must happen on the UI thread.
+            if (dispatcher.CheckAccess())
+                ShowSelectionWindow(tcs);
+            else
+                dispatcher.BeginInvoke(() => ShowSelectionWindow(tcs));
+
+            return tcs.Task;
+        }
+
+        /// <summary>
+        /// Creates and shows the connection type selection window. Must be called on the UI thread.
+        /// </summary>
+        /// <param name="tcs">Completed with the chosen <see cref="ConnectionTypes"/> when the window closes.</param>
+        private static void ShowSelectionWindow(TaskCompletionSource<ConnectionTypes> tcs)
         {
             try
             {
                 // Create window
                 _selConnWindow = new()
                 {
-                    // Set ArcGIS Pro as the parent
                     Owner = FrameworkApplication.Current.MainWindow,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner,
                     Topmost = true
                 };
 
-                // create ViewModel to which main window binds
+                // Create ViewModel to which main window binds
                 _selConnViewModel = new()
                 {
                     DisplayName = "Connection Type"
                 };
 
-                // when ViewModel asks to be closed, close window
-                _selConnViewModel.RequestClose -= SelConnViewModel_RequestClose; // Safety: avoid double subscription.
+                // When ViewModel asks to be closed, close window
+                _selConnViewModel.RequestClose -= SelConnViewModel_RequestClose;
                 _selConnViewModel.RequestClose +=
                     new ViewModelSelectConnection.RequestCloseEventHandler(SelConnViewModel_RequestClose);
 
-                // allow all controls in window to bind to ViewModel by setting DataContext
+                // Complete the task when the window closes, regardless of how ProWindow
+                // handles ShowDialog — this is the authoritative completion signal.
+                _selConnWindow.Closed += (_, _) => tcs.TrySetResult(_connType);
+
+                // Allow all controls in window to bind to ViewModel by setting DataContext
                 _selConnWindow.DataContext = _selConnViewModel;
 
-                // show window
-                _selConnWindow.ShowDialog();
-
-                return _connType;
+                _selConnWindow.Show();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Connection Type", MessageBoxButton.OK, MessageBoxImage.Error);
+                tcs.TrySetResult(ConnectionTypes.Unknown);
             }
-
-            return ConnectionTypes.Unknown;
         }
 
         /// <summary>
@@ -218,12 +281,15 @@ namespace HLU.Data.Connection
         private static void SelConnViewModel_RequestClose(ConnectionTypes connType, string errorMsg)
         {
             _selConnViewModel.RequestClose -= SelConnViewModel_RequestClose;
+
+            // Set _connType before Close() so that the Closed event handler
+            // reads the correct value when it calls tcs.TrySetResult(_connType).
+            _connType = connType;
+
             _selConnWindow.Close();
 
             if (!String.IsNullOrEmpty(errorMsg))
                 MessageBox.Show(errorMsg, "Connection Type", MessageBoxButton.OK, MessageBoxImage.Error);
-
-            _connType = connType;
         }
 
         #endregion Methods

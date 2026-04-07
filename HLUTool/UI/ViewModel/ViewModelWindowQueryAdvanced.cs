@@ -37,9 +37,10 @@ using HLU.Data.Connection;
 using HLU.UI.ViewModel;
 using HLU.GISApplication;
 using HLU.Properties;
+using HLU.UI;
 using HLU.UI.UserControls;
-using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 using HLU.Helpers;
+using ArcGIS.Desktop.Internal.Framework.Controls;
 
 namespace HLU.UI.ViewModel
 {
@@ -92,6 +93,10 @@ namespace HLU.UI.ViewModel
         private string _sortOrderFieldName = Settings.Default.LutSortOrderFieldName;
 
         private long _lastValueCounter = 0;
+
+        private string _messageText;
+        private MessageType _messageLevel;
+        private ICommand _dismissMessageCommand;
 
         #endregion Fields
 
@@ -243,7 +248,7 @@ namespace HLU.UI.ViewModel
                     // Reset the cursor back to normal.
                     ChangeCursor(Cursors.Arrow);
 
-                    MessageBox.Show(ex.Message, "HLU Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ShowMessage(ex.Message, MessageType.Error);
                 }
                 finally
                 {
@@ -369,6 +374,9 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(ComparisonOperator));
             OnPropertyChanged(nameof(SqlFromTables));
             OnPropertyChanged(nameof(SqlWhereClause));
+
+            // Clear the current message.
+            ClearMessage();
         }
 
         /// <summary>
@@ -447,23 +455,17 @@ namespace HLU.UI.ViewModel
                     // The SQL is valid.
                     if (validity == "1")
                     {
-                        // Warn the user that the SQL is invalid.
-                        MessageBox.Show("SQL is valid.", "HLU Query",
-                            MessageBoxButton.OK, MessageBoxImage.Information);
+                        ShowMessage("SQL is valid.", MessageType.Information);
                     }
                     // The SQL is valid but did not return any rows.
                     else if (validity == "0")
                     {
-                        // Warn the user that no rows were returned.
-                        MessageBox.Show("SQL is valid but no records were returned.", "HLU Query",
-                            MessageBoxButton.OK, MessageBoxImage.Warning);
+                        ShowMessage("SQL is valid but no records were returned.", MessageType.Warning);
                     }
                     // The SQL is not valid.
                     else if (validity != null)
                     {
-                        // Warn the user that the SQL is invalid.
-                        MessageBox.Show(String.Format("{0}.", validity), "HLU Query",
-                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        ShowMessage(String.Format("{0}.", validity), MessageType.Error);
                     }
                 }
                 else
@@ -471,9 +473,7 @@ namespace HLU.UI.ViewModel
                     // Reset the cursor back to normal.
                     ChangeCursor(Cursors.Arrow);
 
-                    // Warn the user that the no valid tables were found.
-                    MessageBox.Show("No valid tables were found.", "HLU Query",
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    ShowMessage("No valid tables were found.", MessageType.Warning);
                 }
             }
             catch (Exception ex)
@@ -481,9 +481,7 @@ namespace HLU.UI.ViewModel
                 // Reset the cursor back to normal.
                 ChangeCursor(Cursors.Arrow);
 
-                // Warn the user that the SQL is invalid.
-                MessageBox.Show(ex.Message, "HLU Query",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowMessage(ex.Message, MessageType.Error);
             }
             finally { }
         }
@@ -1219,9 +1217,7 @@ namespace HLU.UI.ViewModel
 
             catch (Exception ex)
             {
-                // Warn the user that the load failed.
-                MessageBox.Show(ex.Message, "HLU Query",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowMessage(ex.Message, MessageType.Error);
             }
             finally
             {
@@ -1313,9 +1309,7 @@ namespace HLU.UI.ViewModel
 
             catch (Exception ex)
             {
-                // Warn the user that the save failed.
-                MessageBox.Show(ex.Message, "HLU Query",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowMessage(ex.Message, MessageType.Error);
             }
             finally
             {
@@ -1708,6 +1702,70 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion Cursor
+
+        #region Message
+
+        /// <summary>
+        /// Gets the current message text to display in the message panel.
+        /// </summary>
+        public string MessageText
+        {
+            get { return _messageText; }
+        }
+
+        /// <summary>
+        /// Gets the current message level (Information, Warning, Error).
+        /// </summary>
+        public MessageType MessageLevel
+        {
+            get { return _messageLevel; }
+        }
+
+        /// <summary>
+        /// Gets the visibility of the message panel.
+        /// </summary>
+        public Visibility MessageVisibility
+        {
+            get { return String.IsNullOrEmpty(_messageText) ? Visibility.Collapsed : Visibility.Visible; }
+        }
+
+        /// <summary>
+        /// Shows a message in the message panel.
+        /// </summary>
+        /// <param name="message">The message text to display.</param>
+        /// <param name="level">The message level (Information, Warning, Error).</param>
+        public void ShowMessage(string message, MessageType level)
+        {
+            _messageText = message;
+            _messageLevel = level;
+            OnPropertyChanged(nameof(MessageText));
+            OnPropertyChanged(nameof(MessageLevel));
+            OnPropertyChanged(nameof(MessageVisibility));
+        }
+
+        /// <summary>
+        /// Clears the current message from the message panel.
+        /// </summary>
+        public void ClearMessage()
+        {
+            _messageText = null;
+            OnPropertyChanged(nameof(MessageText));
+            OnPropertyChanged(nameof(MessageVisibility));
+        }
+
+        /// <summary>
+        /// Gets the command to dismiss the current message.
+        /// </summary>
+        public ICommand DismissMessageCommand
+        {
+            get
+            {
+                _dismissMessageCommand ??= new RelayCommand(param => ClearMessage(), param => true);
+                return _dismissMessageCommand;
+            }
+        }
+
+        #endregion Message
 
         #region IDataErrorInfo Members
 

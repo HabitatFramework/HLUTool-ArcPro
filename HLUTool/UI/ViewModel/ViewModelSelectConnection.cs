@@ -47,8 +47,16 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public ViewModelSelectConnection()
         {
+            // Get all values from the ConnectionTypes enum, cast them to ConnectionTypes, and
+            // filter out the Unknown type to populate the list of available connection types.
             _connectionTypes = [.. Enum.GetValues(typeof(ConnectionTypes)).Cast<ConnectionTypes>().Where(t => t != ConnectionTypes.Unknown)];
+
+            // Get the default connection type from settings and attempt to parse it as a
+            // ConnectionTypes enum value, ignoring case. If parsing fails, initVal will be null.
             object initVal = Enum.Parse(typeof(ConnectionTypes), Settings.Default.DefaultConnectionType, true);
+
+            // If the default connection type from settings is valid, set it as the initial
+            // connection type; otherwise, it will remain Unknown.
             if (initVal != null) _connectionType = (ConnectionTypes)initVal;
         }
 

@@ -1278,14 +1278,10 @@ namespace HLU.UI.ViewModel
             {
                 errorMessage = ex.Message;
 
-                //TODO: Move message box outside of if block?
                 // If a transaction was started, roll it back.
                 if (startTransaction)
-                {
                     _viewModelMain.DataBase.RollbackTransaction();
-                    MessageBox.Show("Changes could not be written to the database. The error message was:\n\n" + ex.Message,
-                        "HLU Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+
                 return false;
             }
         }

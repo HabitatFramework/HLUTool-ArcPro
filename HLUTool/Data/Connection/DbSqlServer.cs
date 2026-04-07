@@ -43,7 +43,6 @@ namespace HLU.Data.Connection
     {
         #region Private Members
 
-        private string _errorMessage;
         private SqlConnectionStringBuilder _connStrBuilder;
         private SqlConnection _connection;
         private SqlCommand _command;
@@ -793,11 +792,15 @@ namespace HLU.Data.Connection
         public override bool ValidateQuery(string sql, int commandTimeout, CommandType commandType)
         {
             _errorMessage = String.Empty;
-            if (String.IsNullOrEmpty(sql)) throw (new Exception("Sql is null or empty"));
+
+            // Check if the inputs are valid
+            if (String.IsNullOrEmpty(sql))
+                throw (new Exception("Sql is null or empty"));
 
             ConnectionState previousConnectionState = _connection.State;
             try
             {
+                // Build the command to execute
                 _command.CommandType = commandType;
                 _command.CommandTimeout = commandTimeout;
                 _command.CommandText = sql;
@@ -805,7 +808,10 @@ namespace HLU.Data.Connection
                 if (_transaction != null) _command.Transaction = _transaction;
                 _commandBuilder.RefreshSchema();
                 if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+
+                // Execute the command
                 _command.ExecuteNonQuery();
+
                 return true;
             }
             catch (Exception ex)
@@ -842,7 +848,9 @@ namespace HLU.Data.Connection
                 if (_connection.State != ConnectionState.Open) _connection.Open();
 
                 _transaction = _connection.BeginTransaction(isolationLevel);
+
                 _commandBuilder.RefreshSchema();
+
                 return true;
             }
             catch (Exception ex)

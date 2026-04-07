@@ -30,9 +30,21 @@ namespace HLU.UI.View
     /// </summary>
     public partial class WindowQueryOSMM : ProWindow
     {
+        /// <summary>
+        /// Constructor initializes the WindowQueryOSMM and sets up a Loaded event handler to call
+        /// the LoadAsync method in the ViewModel when the window is loaded. This ensures that any
+        /// necessary data is loaded and ready
+        /// </summary>
         public WindowQueryOSMM()
         {
             InitializeComponent();
+
+            // Set up the Loaded event handler to call LoadAsync in the ViewModel when the window is loaded.
+            Loaded += async (_, _) =>
+            {
+                if (DataContext is ViewModelWindowQueryOSMM vm)
+                    await vm.LoadAsync();
+            };
         }
 
         #region Methods

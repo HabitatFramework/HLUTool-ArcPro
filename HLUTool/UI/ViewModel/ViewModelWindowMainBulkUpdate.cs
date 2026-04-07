@@ -258,6 +258,14 @@ namespace HLU.UI.ViewModel
         /// <returns>A task that represents the asynchronous operation.</returns>
         public async Task ApplyBulkUpdateAsync()
         {
+            // Reason and Process are required to write history records.
+            if (String.IsNullOrEmpty(_viewModelMain.Reason) || String.IsNullOrEmpty(_viewModelMain.Process))
+            {
+                MessageBox.Show("A Reason and Process must be selected in the toolbar before applying a Bulk Update.",
+                    "HLU: Bulk Update", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             _viewModelMain.ChangeCursor(Cursors.Wait, "Applying bulk update ...");
 
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
@@ -567,6 +575,14 @@ namespace HLU.UI.ViewModel
         /// <returns>A task that represents the asynchronous operation.</returns>
         public async Task ApplyOSMMBulkUpdateAsync()
         {
+            // Reason and Process are required to write history records.
+            if (String.IsNullOrEmpty(_viewModelMain.Reason) || String.IsNullOrEmpty(_viewModelMain.Process))
+            {
+                MessageBox.Show("A Reason and Process must be selected in the toolbar before applying an OSMM Bulk Update.",
+                    "HLU: OSMM Bulk Update", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
             _viewModelMain.ChangeCursor(Cursors.Wait, "Applying OSMM bulk update ...");
 
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
@@ -713,7 +729,7 @@ namespace HLU.UI.ViewModel
                             _viewModelMain.DataBase.QuoteIdentifier(c.ColumnName),
                             _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidCurrentRow[c.Ordinal]))));
 
-                        string updateStatementIncid = incidUpdateCols.Any() ? String.Empty :
+                        string updateStatementIncid = !incidUpdateCols.Any() ? String.Empty :
                             String.Format("UPDATE {0} SET {1}", _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid.TableName), updateVals);
 
                         // Clear the list of secondary habitat rows for the class.
@@ -1473,6 +1489,14 @@ namespace HLU.UI.ViewModel
                             }
                         }
                     }
+
+                    // Write history — no GIS edit operation is involved in this branch,
+                    // so the throw from HistoryWrite will propagate cleanly to the caller.
+                    if (historyTable != null)
+                    {
+                        ViewModelWindowMainHistory vmHist = new(_viewModelMain);
+                        vmHist.HistoryWrite(null, historyTable, operation, nowDtTm);
+                    }
                 }
             }
             // Otherwise, update the GIS layer and DB shadow layer and
@@ -1538,6 +1562,15 @@ namespace HLU.UI.ViewModel
                     }
                 }
 
+                // Write history for the affected incids before executing the GIS edit
+                // operation, so that a history failure aborts the GIS edits and keeps
+                // the database and GIS layer in sync (matching the standard update path).
+                if (createHistory && (historyTable != null))
+                {
+                    ViewModelWindowMainHistory vmHist = new(_viewModelMain);
+                    vmHist.HistoryWrite(null, historyTable, operation, nowDtTm);
+                }
+
                 // Execute (commit) all queued GIS feature updates in one operation
                 bool executed = await editOperation.ExecuteAsync();
                 if (!executed)
@@ -1553,13 +1586,6 @@ namespace HLU.UI.ViewModel
                 bool saved = await ArcGIS.Desktop.Core.Project.Current.SaveEditsAsync();
                 if (!saved)
                     throw new HLUToolException("GIS edits were applied but could not be saved.");
-            }
-
-            // Write history for the affected incids
-            if (createHistory && (historyTable != null))
-            {
-                ViewModelWindowMainHistory vmHist = new(_viewModelMain);
-                vmHist.HistoryWrite(null, historyTable, operation, nowDtTm);
             }
         }
 

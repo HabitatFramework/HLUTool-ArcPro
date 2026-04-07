@@ -166,7 +166,7 @@ namespace HLU.UI.ViewModel
             {
                 return !(String.IsNullOrEmpty(_connStrBuilder.DataSource) || String.IsNullOrEmpty(_connStrBuilder.InitialCatalog) ||
                     (!_connStrBuilder.IntegratedSecurity && (String.IsNullOrEmpty(_connStrBuilder.Password) ||
-                    String.IsNullOrEmpty(_connStrBuilder.UserID))) && !String.IsNullOrEmpty(_defaultSchema));
+                    String.IsNullOrEmpty(_connStrBuilder.UserID))) || String.IsNullOrEmpty(_defaultSchema));
             }
         }
 
@@ -214,8 +214,20 @@ namespace HLU.UI.ViewModel
             get { return _connStrBuilder.DataSource; }
             set
             {
-                if (!String.IsNullOrEmpty(value) && (value != _connStrBuilder.DataSource))
-                    _connStrBuilder.DataSource = value;
+                string newValue = value ?? string.Empty;
+                if (newValue != _connStrBuilder.DataSource)
+                {
+                    _connStrBuilder.DataSource = newValue;
+                        _databases = [];
+                        _connStrBuilder.InitialCatalog = string.Empty;
+                        _schemata = [];
+                        _defaultSchema = string.Empty;
+                        OnPropertyChanged(nameof(HasServer));
+                        OnPropertyChanged(nameof(Databases));
+                        OnPropertyChanged(nameof(Database));
+                        OnPropertyChanged(nameof(Schemata));
+                        OnPropertyChanged(nameof(DefaultSchema));
+                }
 
                 _connStrBuilder.Encrypt = SqlConnectionEncryptOption.Optional;
             }
@@ -229,11 +241,19 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                _servers ??= LoadServers();
+                // Don't bother to get a list of servers. Just return an empty list.
+                //_servers ??= LoadServers();
+                _servers = [];
                 return [.. _servers];
             }
             set { }
         }
+
+        /// <summary>
+        /// Gets a value indicating whether a server name has been entered.
+        /// Used to enable/disable the Database and Default Schema controls.
+        /// </summary>
+        public bool HasServer => !String.IsNullOrEmpty(_connStrBuilder.DataSource);
 
         /// <summary>
         /// Load the list of available SQL Server instances on the network.
@@ -332,10 +352,11 @@ namespace HLU.UI.ViewModel
             get { return _connStrBuilder.InitialCatalog; }
             set
             {
-                if (!String.IsNullOrEmpty(value) && (value != _connStrBuilder.InitialCatalog))
+                if (value != _connStrBuilder.InitialCatalog)
                 {
-                    _connStrBuilder.InitialCatalog = value;
-                    LoadSchemata();
+                    _connStrBuilder.InitialCatalog = value ?? string.Empty;
+                    if (!String.IsNullOrEmpty(value))
+                        LoadSchemata();
                 }
             }
         }
@@ -406,8 +427,8 @@ namespace HLU.UI.ViewModel
             get { return _defaultSchema; }
             set
             {
-                if (!String.IsNullOrEmpty(value) && (value != _defaultSchema))
-                    _defaultSchema = value;
+                if (value != _defaultSchema)
+                    _defaultSchema = value ?? string.Empty;
             }
         }
 
@@ -477,6 +498,19 @@ namespace HLU.UI.ViewModel
                     LoadDatabases();
                     break;
             }
+        }
+
+        /// <summary>
+        /// Validates the binding expressions for all validated properties so that WPF
+        /// evaluates IDataErrorInfo and shows error adorners immediately when the window
+        /// first opens with blank values. Must be called from the view, passing the binding
+        /// expressions for each validated control.
+        /// </summary>
+        public void NotifyValidationOnLoad(System.Windows.Data.BindingExpression[] expressions)
+        {
+            if (expressions == null) return;
+            foreach (var expr in expressions)
+                expr?.ValidateWithoutUpdate();
         }
 
         #endregion View Events

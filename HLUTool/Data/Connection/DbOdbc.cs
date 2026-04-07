@@ -47,7 +47,6 @@ namespace HLU.Data.Connection
     {
         #region Private Members
 
-        private string _errorMessage;
         private OdbcConnectionStringBuilder _connStrBuilder;
         private OdbcConnection _connection;
         private OdbcCommand _command;

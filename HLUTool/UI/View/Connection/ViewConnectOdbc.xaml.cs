@@ -49,6 +49,19 @@ namespace HLU.UI.View.Connection
                 this.ComboBoxDsn.Items.Contains(this.ComboBoxDsn.Text))) this.ComboBoxDsn.SelectedIndex = 0;
         }
 
+        private void Window_ContentRendered(object sender, EventArgs e)
+        {
+            BindingOperations.GetBindingExpression(ComboBoxDsn, ComboBox.TextProperty)?.UpdateSource();
+            BindingOperations.GetBindingExpression(ComboBoxDefaultSchema, ComboBox.TextProperty)?.UpdateSource();
+
+            // Force WPF to re-evaluate IDataErrorInfo validation on the two validated fields
+            // so that error adorners appear immediately when the window first opens with blank values.
+            if (DataContext is ViewModelConnectOdbc vm)
+            {
+                vm.NotifyValidationOnLoad();
+            }
+        }
+
         private void ComboBox_DropDownOpened(object sender, EventArgs e)
         {
             Binding bnd = BindingOperations.GetBinding((ComboBox)sender, ComboBox.SelectedItemProperty);

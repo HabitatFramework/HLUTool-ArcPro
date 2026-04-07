@@ -185,15 +185,6 @@ namespace HLU.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool UseObjectFactory {
-            get {
-                return ((bool)(this["UseObjectFactory"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("description")]
         public string LutDescriptionFieldName {
             get {
@@ -379,15 +370,6 @@ namespace HLU.Properties {
         public int MaxGetValueRows {
             get {
                 return ((int)(this["MaxGetValueRows"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("30000")]
-        public int MaxSqlLengthArcGIS {
-            get {
-                return ((int)(this["MaxSqlLengthArcGIS"]));
             }
         }
         
@@ -964,6 +946,19 @@ namespace HLU.Properties {
             }
             set {
                 this["MaxFeaturesExport"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
+        public bool ResetDbConnection {
+            get {
+                return ((bool)(this["ResetDbConnection"]));
+            }
+            set {
+                this["ResetDbConnection"] = value;
             }
         }
     }

@@ -47,6 +47,22 @@ namespace HLU.UI.View.Connection
                 this.ComboBoxEncoding.Items.Contains(this.ComboBoxEncoding.Text))) this.ComboBoxEncoding.SelectedIndex = 0;
         }
 
+        private void Window_ContentRendered(object sender, EventArgs e)
+        {
+            BindingOperations.GetBindingExpression(TextBoxHost, TextBox.TextProperty)?.UpdateSource();
+            BindingOperations.GetBindingExpression(TextBoxPort, TextBox.TextProperty)?.UpdateSource();
+            BindingOperations.GetBindingExpression(TextBoxUserName, TextBox.TextProperty)?.UpdateSource();
+            BindingOperations.GetBindingExpression(ComboBoxDatabase, ComboBox.TextProperty)?.UpdateSource();
+            BindingOperations.GetBindingExpression(ComboBoxSearchPath, ComboBox.TextProperty)?.UpdateSource();
+
+            // Force WPF to re-evaluate IDataErrorInfo validation on the validated fields
+            // so that error adorners appear immediately when the window first opens with blank values.
+            if (DataContext is ViewModelConnectPgSql vm)
+            {
+                vm.NotifyValidationOnLoad();
+            }
+        }
+
         private void ComboBox_DropDownOpened(object sender, EventArgs e)
         {
             Binding bnd = BindingOperations.GetBinding((ComboBox)sender, ComboBox.SelectedItemProperty);

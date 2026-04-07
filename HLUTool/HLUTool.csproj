@@ -92,12 +92,6 @@
 		<Resource Include="Images\GetMapSelection32.png">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Resource>
-		<Resource Include="Images\HLUIcon16.png">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</Resource>
-		<Resource Include="Images\HLUIcon32.png">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</Resource>
 		<Resource Include="Images\HLUTool16.png">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Resource>

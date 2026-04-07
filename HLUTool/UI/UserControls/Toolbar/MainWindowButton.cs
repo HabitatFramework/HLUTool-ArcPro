@@ -37,9 +37,10 @@ namespace HLU.UI.UserControls.Toolbar
 
         protected override async void OnClick()
         {
-            // Show the dock pane.
             try
             {
+                // Show the dock pane. If connection settings are needed, InitializeOnceAsync
+                // will prompt the user before proceeding with initialisation.
                 await ViewModelWindowMain.ShowDockPane();
             }
             catch (Exception ex)

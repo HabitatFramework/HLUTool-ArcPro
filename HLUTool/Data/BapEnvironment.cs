@@ -364,7 +364,7 @@ namespace HLU.Data
                     }
                     else if ((_bapEnvironmentList != null) && (_bapEnvironmentList.Count(b => b.Bap_habitat == Bap_habitat) > 1))
                     {
-                        errors.Add("Error: Duplicate priority habitat");
+                        errors.Add($"Error: Duplicate priority habitat '{Bap_habitat}'");
                     }
                     break;
 
@@ -391,8 +391,7 @@ namespace HLU.Data
                                 if ((Quality_determination != BAPDetQltyUserAdded)
                                 && (Quality_determination != BAPDetQltyPrevious))
                                 {
-                                    errors.Add(String.Format("Error: Determination quality for potential priority habitats can only be '{0}' or '{1}'",
-                                        BAPDetQltyUserAddedDesc, BAPDetQltyPreviousDesc));
+                                    errors.Add($"Error: Determination quality for potential priority habitats can only be '{BAPDetQltyUserAddedDesc}' or '{BAPDetQltyPreviousDesc}'");
                                 }
                             }
                         }
@@ -404,13 +403,11 @@ namespace HLU.Data
                             // 'Previously present, but may no longer exist'.
                             if ((Quality_determination == BAPDetQltyUserAdded))
                             {
-                                errors.Add(String.Format("Error: Determination quality cannot be '{0}' for priority habitats",
-                                    BAPDetQltyUserAddedDesc));
+                                errors.Add($"Error: Determination quality cannot be '{BAPDetQltyUserAddedDesc}' for priority habitats");
                             }
                             else if ((Quality_determination == BAPDetQltyPrevious))
                             {
-                                errors.Add(String.Format("Error: Determination quality cannot be '{0}' for priority habitats",
-                                    BAPDetQltyPreviousDesc));
+                                errors.Add($"Error: Determination quality cannot be '{BAPDetQltyPreviousDesc}' for priority habitats");
                             }
                         }
                     }

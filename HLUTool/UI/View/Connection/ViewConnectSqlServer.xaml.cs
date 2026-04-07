@@ -47,13 +47,37 @@ namespace HLU.UI.View.Connection
                 this.ComboBoxServer.Items.Contains(this.ComboBoxServer.Text))) this.ComboBoxServer.SelectedIndex = 0;
         }
 
+        private void Window_ContentRendered(object sender, EventArgs e)
+        {
+            if (DataContext is not ViewModelConnectSqlServer vm) return;
+
+            // Force WPF to validate all required fields immediately on load so that
+            // error adorners appear for blank values without the user having to interact first.
+            vm.NotifyValidationOnLoad(
+            [
+                BindingOperations.GetBindingExpression(ComboBoxServer, ComboBox.TextProperty),
+                BindingOperations.GetBindingExpression(TextBoxUsername, TextBox.TextProperty),
+                BindingOperations.GetBindingExpression(ComboBoxDatabase, ComboBox.TextProperty),
+                BindingOperations.GetBindingExpression(ComboBoxSchema, ComboBox.TextProperty),
+            ]);
+        }
+
         private void ComboBox_DropDownOpened(object sender, EventArgs e)
         {
-            Binding bnd = BindingOperations.GetBinding((ComboBox)sender, ComboBox.SelectedItemProperty);
+            Binding bnd = BindingOperations.GetBinding((ComboBox)sender, ComboBox.TextProperty);
             if (bnd != null)
                 ((ViewModelConnectSqlServer)this.DataContext).ViewEvents(_windowHandle, bnd.Path.Path);
             else
                 ((ViewModelConnectSqlServer)this.DataContext).ViewEvents(_windowHandle, null);
+        }
+
+        private void ComboBoxServer_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            // WPF suppresses pushing an empty string back to the source via PropertyChanged
+            // on an editable ComboBox. Force UpdateSource when the text is cleared so that
+            // the Server setter fires and resets the dependent databases/schemata lists.
+            if (string.IsNullOrEmpty(ComboBoxServer.Text))
+                BindingOperations.GetBindingExpression(ComboBoxServer, ComboBox.TextProperty)?.UpdateSource();
         }
     }
 }

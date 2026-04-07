@@ -426,6 +426,17 @@ namespace HLU.UI.ViewModel
             if (windowHandle != IntPtr.Zero) _windowHandle = windowHandle;
         }
 
+        /// <summary>
+        /// Raises PropertyChanged for the validated properties so that WPF re-evaluates
+        /// IDataErrorInfo and shows error adorners immediately when the window first opens
+        /// with blank values.
+        /// </summary>
+        public void NotifyValidationOnLoad()
+        {
+            OnPropertyChanged(nameof(Dsn));
+            OnPropertyChanged(nameof(DefaultSchema));
+        }
+
         #endregion View Events
 
         #region IDataErrorInfo Members

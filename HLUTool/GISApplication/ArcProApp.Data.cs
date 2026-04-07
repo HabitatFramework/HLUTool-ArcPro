@@ -75,7 +75,7 @@ using HLU.Exceptions;
 namespace HLU.GISApplication
 {
     /// <summary>
-    /// Provides ArcGIS Pro application-specific functionality.
+    /// Provides properties and methods for ArcGIS Pro operations and functionality.
     /// </summary>
     internal partial class ArcProApp : SqlBuilder
     {
@@ -162,7 +162,7 @@ namespace HLU.GISApplication
 
         #endregion Fields
 
-        #region Implementation of SqlBuilder
+        #region SqlBuilder
 
         /// <summary>
         /// Quotes a string literal for SQL where clauses.
@@ -757,11 +757,9 @@ namespace HLU.GISApplication
             resultTable = localTable;
         }
 
-        #endregion Implementation of SqlBuilder
+        #endregion SqlBuilder
 
-        #region Other Public Methods
-
-        public static readonly string HistoryAdditionalFieldsDelimiter = Settings.Default.HistoryAdditionalFieldsDelimiter;
+        #region Read Map Selection
 
         /// <summary>
         /// Asynchronous method to read the map selection and populate the DataTable.
@@ -848,7 +846,7 @@ namespace HLU.GISApplication
             return resultTable;
         }
 
-        #endregion Other Public Methods
+        #endregion Read Map Selection
 
         #region Selection
 
@@ -1349,570 +1347,6 @@ namespace HLU.GISApplication
         }
 
         #endregion Expected Count
-
-        #region Zoom
-
-        /// <summary>
-        /// Zooms the active map view to the current selection in the active HLU layer,
-        /// with ArcMap-compatible behaviour:
-        /// - "always": always zoom to the selection.
-        /// - "when": only zoom if the selection is not fully within the current view extent.
-        /// </summary>
-        /// <param name="minZoom">
-        /// Minimum allowable scale (legacy meaning: do not remain more zoomed-in than this).
-        /// Interpreted as a map scale (e.g. 10000).
-        /// </param>
-        /// <param name="autoZoomToSelection">
-        /// 2 = always zoom, 1 = zoom only when selection is outside the visible area, 0 = do not zoom.
-        /// </param>
-        /// <param name="ratio">
-        /// Optional zoom ratio applied after zooming, unless a valid scale list is provided.
-        /// </param>
-        /// <param name="validScales">
-        /// Optional list of valid scales used to snap to the next scale up instead of applying the ratio directly.
-        /// </param>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        public async Task ZoomSelectedAsync(
-            int minZoom,
-            int autoZoomToSelection,
-            double? ratio = null,
-            List<int> validScales = null)
-        {
-            // Check the parameters.
-            if (_hluLayer == null)
-                return;
-
-            // Respect caller setting: 0 means do not zoom.
-            if (autoZoomToSelection == 0)
-                return;
-
-            // Get the active map view. If there is no active view, we can't zoom, so return.
-            MapView view = MapView.Active;
-            if (view == null)
-                return;
-
-            await QueuedTask.Run(async () =>
-            {
-                // Get the selection from the HLU layer. If there is no selection, there is nothing to zoom to, so return.
-                var selection = _hluLayer.GetSelection();
-                if (selection == null || selection.GetCount() == 0)
-                    return;
-
-                // Determine whether we should zoom based on autoZoomToSelection meanings:
-                //   2 = always zoom to selection.
-                //   1 = zoom only when the selection is not fully within the visible map extent.
-                //   0 = do not zoom at all.
-                bool shouldZoom = (autoZoomToSelection == 2);
-
-                if (autoZoomToSelection == 1)
-                {
-                    // Get the current visible extent of the active map view.
-                    // This represents what the user can currently see on screen.
-                    Envelope viewExtent = view.Extent;
-
-                    // Get the extent of the selected features in the HLU layer.
-                    // QueryExtent(true) returns the envelope of the current selection only.
-                    Envelope selectionExtent = GetSelectionExtent(_hluLayer);
-
-                    // If either extent cannot be determined, default to zooming.
-                    // This mirrors the ArcMap behaviour of "better to zoom than do nothing".
-                    if (viewExtent == null || selectionExtent == null)
-                    {
-                        shouldZoom = true;
-                    }
-                    else
-                    {
-                        // Ensure both extents are in the map's spatial reference.
-                        // Geometry containment tests are unreliable if spatial references differ.
-                        SpatialReference mapSpatialReference = view.Map?.SpatialReference;
-
-                        if (mapSpatialReference != null)
-                        {
-                            if (viewExtent.SpatialReference == null ||
-                                !viewExtent.SpatialReference.IsEqual(mapSpatialReference))
-                            {
-                                viewExtent = (Envelope)GeometryEngine.Instance.Project(
-                                    viewExtent,
-                                    mapSpatialReference);
-                            }
-
-                            if (selectionExtent.SpatialReference == null ||
-                                !selectionExtent.SpatialReference.IsEqual(mapSpatialReference))
-                            {
-                                selectionExtent = (Envelope)GeometryEngine.Instance.Project(
-                                    selectionExtent,
-                                    mapSpatialReference);
-                            }
-                        }
-
-                        // Is the selection extent NOT fully contained
-                        // within the current visible map extent.
-                        shouldZoom = !IsEnvelopeContained(
-                            outer: viewExtent,
-                            inner: selectionExtent);
-                    }
-                }
-
-                // If the selection extent is NOT fully contained
-                // within the current visible map extent don't zoom.
-                if (!shouldZoom)
-                    return;
-
-                // Step 1: Zoom to the selection in this layer.
-                await view.ZoomToAsync(_hluLayer, true).ConfigureAwait(false);
-
-                // Step 2: Apply additional scale logic to mirror ArcMap's ApplyZoomToMapFrame:
-                // - If a ratio is provided, apply ratio or next scale up from validScales.
-                ApplyZoomToMapView(
-                    view,
-                    ratio,
-                    null,
-                    validScales);
-
-                // Step 3: If minZoom is provided and we haven't already zoomed out to a larger
-                // scale from the validScales logic, check if we are currently more zoomed-in than
-                // minZoom and zoom out to minZoom.
-                if (minZoom > 0 && (validScales == null || validScales.Count < 2) && !ratio.HasValue)
-                {
-                    // Get the current camera scale.
-                    Camera camera = view.Camera;
-                    double currentScale = camera.Scale;
-
-                    // Smaller scale = more zoomed-in. If we are closer than minZoom, zoom out to minZoom.
-                    if (currentScale < minZoom)
-                    {
-                        camera.Scale = minZoom;
-
-                        await view.ZoomToAsync(camera, duration: null).ConfigureAwait(false);
-                    }
-                }
-            }).ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Gets the extent of the currently selected features in a feature layer
-        /// by iterating the selection and unioning each feature's shape extent.
-        /// </summary>
-        /// <remarks>
-        /// This avoids FeatureLayer.QueryExtent(true) which can return an unexpectedly
-        /// large extent for some layer/data-source types (e.g. query layers/joins).
-        /// Must be called on the MCT (i.e. from within QueuedTask.Run).
-        /// </remarks>
-        /// <param name="featureLayer">The feature layer whose selection extent is required.</param>
-        /// <returns>
-        /// The envelope of the selected features, or null if there is no selection
-        /// or feature shapes cannot be read.
-        /// </returns>
-        private static Envelope GetSelectionExtent(
-            FeatureLayer featureLayer)
-        {
-            if (featureLayer == null)
-                return null;
-
-            Selection selection = featureLayer.GetSelection();
-            if (selection == null || selection.GetCount() == 0)
-                return null;
-
-            EnvelopeBuilderEx builder = null;
-
-            // Search the selected rows only.
-            using RowCursor cursor = selection.Search();
-
-            while (cursor.MoveNext())
-            {
-                using Row row = cursor.Current;
-
-                // Selected rows from a FeatureLayer should be Feature rows.
-                if (row is not Feature feature)
-                    continue;
-
-                Geometry shape = feature.GetShape();
-                if (shape == null)
-                    continue;
-
-                Envelope env = shape.Extent;
-                if (env == null)
-                    continue;
-
-                // Build up a unioned envelope across all selected features.
-                if (builder == null)
-                {
-                    builder = new EnvelopeBuilderEx(env);
-                }
-                else
-                {
-                    builder.Union(env);
-                }
-            }
-
-            return builder?.ToGeometry() as Envelope;
-        }
-
-        /// <summary>
-        /// Determines whether one envelope is fully contained within another,
-        /// using a small tolerance to avoid floating-point precision issues.
-        /// </summary>
-        /// <param name="outer">The envelope representing the visible map extent.</param>
-        /// <param name="inner">The envelope representing the selection extent.</param>
-        /// <returns>
-        /// True if <paramref name="inner"/> is completely inside <paramref name="outer"/>;
-        /// otherwise false.
-        /// </returns>
-        private static bool IsEnvelopeContained(
-            Envelope outer,
-            Envelope inner)
-        {
-            if (outer == null || inner == null)
-                return false;
-
-            // Tolerance helps prevent false negatives due to floating-point rounding.
-            double tolerance = Math.Max(outer.Width, outer.Height) * 1e-9;
-
-            return inner.XMin >= outer.XMin - tolerance &&
-                   inner.YMin >= outer.YMin - tolerance &&
-                   inner.XMax <= outer.XMax + tolerance &&
-                   inner.YMax <= outer.YMax + tolerance;
-        }
-
-        #endregion Zoom
-
-        #region Helpers
-
-        /// <summary>
-        /// Returns the next scale larger than the current scale from a list of valid scales.
-        /// </summary>
-        /// <param name="currentScale">
-        /// The current map scale (e.g. 5000).
-        /// </param>
-        /// <param name="scaleList">
-        /// A list of valid scales. Must contain at least two values.
-        /// </param>
-        /// <returns>
-        /// The next scale up (i.e. more zoomed-out). If the current scale exceeds
-        /// the largest value in the list, the method extrapolates using the last interval.
-        /// </returns>
-        /// <exception cref="ArgumentException">
-        /// Thrown if <paramref name="scaleList"/> contains fewer than two values.
-        /// </exception>
-        private static double GetNextScaleUp(
-            double currentScale,
-            List<int> scaleList)
-        {
-            if (scaleList == null || scaleList.Count < 2)
-                throw new ArgumentException("Scale list must contain at least two values.");
-
-            // Ensure the list is ordered from smallest (most zoomed-in)
-            // to largest (most zoomed-out).
-            scaleList.Sort();
-
-            // Find the first scale larger than the current scale.
-            foreach (int scale in scaleList)
-            {
-                if (scale > currentScale)
-                    return scale;
-            }
-
-            // If we reach here, the current scale is beyond the largest defined scale.
-            // Extrapolate using the difference between the last two values.
-            int count = scaleList.Count;
-            int last = scaleList[count - 1];
-            int secondLast = scaleList[count - 2];
-            int gap = last - secondLast;
-
-            double extrapolated = last;
-
-            while (extrapolated <= currentScale)
-            {
-                extrapolated += gap;
-            }
-
-            return extrapolated;
-        }
-
-        /// <summary>
-        /// Applies zoom logic to a map view by modifying its camera scale,
-        /// based on either a ratio, a fixed scale, or a list of valid scales.
-        /// </summary>
-        /// <remarks>
-        /// This is a MapView-based adaptation of ApplyZoomToMapFrame.
-        /// Camera changes are applied using ZoomToAsync rather than direct assignment.
-        /// </remarks>
-        /// <param name="mapView">
-        /// The active map view to apply the zoom to.
-        /// </param>
-        /// <param name="ratio">
-        /// Optional zoom ratio to apply (e.g. 1.5).
-        /// Ignored if <paramref name="scale"/> is provided.
-        /// </param>
-        /// <param name="scale">
-        /// Optional fixed scale to apply directly (e.g. 10000).
-        /// </param>
-        /// <param name="validScales">
-        /// Optional list of valid scales. If supplied and <paramref name="ratio"/> is set,
-        /// the next scale up from the list is chosen instead of applying the ratio directly.
-        /// </param>
-        private static void ApplyZoomToMapView(
-            MapView mapView,
-            double? ratio,
-            double? scale,
-            List<int> validScales = null)
-        {
-            if (mapView == null)
-                return;
-
-            try
-            {
-                Camera camera = mapView.Camera;
-
-                // Ratio-based zoom logic.
-                if (ratio.HasValue)
-                {
-                    // If a scale list is supplied, choose the next valid scale up.
-                    if (validScales != null && validScales.Count >= 2)
-                    {
-                        double currentScale = camera.Scale;
-                        double nextScale = GetNextScaleUp(currentScale, validScales);
-
-                        camera.Scale = nextScale;
-
-                        // Apply the updated camera.
-                        _ = mapView.ZoomToAsync(camera, duration: null);
-                    }
-                    else
-                    {
-                        // No scale list supplied: apply the ratio directly.
-                        camera.Scale *= ratio.Value;
-
-                        _ = mapView.ZoomToAsync(camera, duration: null);
-                    }
-                }
-                // Fixed-scale zoom logic.
-                else if (scale.HasValue && scale.Value > 0)
-                {
-                    camera.Scale = scale.Value;
-
-                    _ = mapView.ZoomToAsync(camera, duration: null);
-                }
-            }
-            catch (Exception ex)
-            {
-                // Zoom errors should never be fatal to the calling workflow.
-                System.Diagnostics.Trace.WriteLine(
-                    $"ApplyZoomToMapView error: {ex.Message}");
-            }
-        }
-
-        #endregion Helpers
-
-        #region Flash
-
-        /// <summary>
-        /// Flashes the features matching the supplied where clause (built from SqlFilterCondition list).
-        /// Flashes all matched features at the same time, twice.
-        /// </summary>
-        /// <param name="whereClause">A list of SQL filter conditions representing the where clause.</param>
-        public void FlashSelectedFeature(List<SqlFilterCondition> whereClause)
-        {
-            _ = FlashSelectedFeatureAsync(whereClause);
-        }
-
-        /// <summary>
-        /// Flashes the features matching the supplied where clauses (built from SqlFilterCondition lists).
-        /// Flashes all matched features at the same time, twice.
-        /// </summary>
-        /// <param name="whereClauses">A list of lists of SQL filter conditions representing the where clauses.</param>
-        public void FlashSelectedFeatures(List<List<SqlFilterCondition>> whereClauses)
-        {
-            _ = FlashSelectedFeaturesAsync(whereClauses);
-        }
-
-        /// <summary>
-        /// Asynchronously flashes the features matching the supplied where clause.
-        /// </summary>
-        /// <param name="whereClause">A list of SQL filter conditions representing the where clause.</param>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        private async Task FlashSelectedFeatureAsync(List<SqlFilterCondition> whereClause)
-        {
-            // Check the where clause is not empty.
-            if (whereClause == null || whereClause.Count == 0)
-                return;
-
-            // Build the where clause string.
-            string wc =
-                WhereClause(
-                    false,
-                    false,
-                    false,
-                    MapWhereClauseFields(_hluLayerStructure, whereClause));
-
-            // Flash the features matching the where clause string.
-            await FlashWhereClausesAsync([wc]).ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Asynchronously flashes the features matching the supplied where clauses.
-        /// </summary>
-        /// <param name="whereClauses">A list of lists of SQL filter conditions representing the where clauses.</param>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        private async Task FlashSelectedFeaturesAsync(List<List<SqlFilterCondition>> whereClauses)
-        {
-            // Check the where clauses are not empty.
-            if (whereClauses == null || whereClauses.Count == 0)
-                return;
-
-            // Build the where clause strings.
-            List<string> wcs = [];
-            foreach (List<SqlFilterCondition> wcList in whereClauses)
-            {
-                if (wcList == null || wcList.Count == 0)
-                    continue;
-
-                string wc =
-                    WhereClause(
-                        false,
-                        false,
-                        false,
-                        MapWhereClauseFields(_hluLayerStructure, wcList));
-
-                if (!String.IsNullOrWhiteSpace(wc))
-                    wcs.Add(wc);
-            }
-
-            if (wcs.Count == 0)
-                return;
-
-            // Flash the features matching the where clause strings.
-            await FlashWhereClausesAsync(wcs).ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Flashes all features matching any of the supplied where clauses, twice, at the same time.
-        /// </summary>
-        /// <param name="whereClauses">A list of where clause strings to match features to flash.</param>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        private async Task FlashWhereClausesAsync(IEnumerable<string> whereClauses)
-        {
-            // Check prerequisites.
-            if (_hluLayer == null)
-                return;
-
-            if (_hluFeatureClass == null)
-                return;
-
-            if (MapView.Active == null)
-                return;
-
-            // Collect OIDs for all where clauses (unioned), on the MCT.
-            List<long> oids = await QueuedTask.Run(() =>
-            {
-                HashSet<long> oidSet = [];
-
-                // Query each where clause in turn.
-                foreach (string wc in whereClauses.Where(s => !String.IsNullOrWhiteSpace(s)))
-                {
-                    // Build a query filter for the where clause.
-                    QueryFilter qf = new()
-                    {
-                        WhereClause = wc
-                    };
-
-                    // Search the feature class for matching features.
-                    using RowCursor cursor = _hluFeatureClass.Search(qf, false);
-
-                    // Collect OIDs from the result set.
-                    while (cursor.MoveNext())
-                    {
-                        using Row row = cursor.Current;
-
-                        long oid = TryGetObjectId(row);
-
-                        if (oid >= 0)
-                            oidSet.Add(oid);
-                    }
-                }
-
-                return oidSet.Count == 0 ? [] : oidSet.ToList();
-            }).ConfigureAwait(false);
-
-            // If no OIDs were found, nothing to flash.
-            if (oids.Count == 0)
-                return;
-
-            // Build a SelectionSet for “flash all at once”.
-            // SelectionSet.FromDictionary expects MapMember → List<long>.
-            Dictionary<MapMember, List<long>> selectionDictionary = new()
-            {
-                { _hluLayer, oids }
-            };
-
-            // Flash the features by OID on the MCT.
-            await QueuedTask.Run(() =>
-            {
-                SelectionSet selectionSet = SelectionSet.FromDictionary(selectionDictionary);
-                MapView.Active.FlashFeature(selectionSet);
-            }).ConfigureAwait(false);
-
-            // Flashing twice is not natively supported, so we flash twice in succession with a short delay.
-            //await Task.Delay(50).ConfigureAwait(false);
-
-            //await QueuedTask.Run(() =>
-            //{
-            //    SelectionSet selectionSet = SelectionSet.FromDictionary(selectionDictionary);
-            //    MapView.Active.FlashFeature(selectionSet);
-            //}).ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Attempts to read the ObjectID from a Row in a version-tolerant way.
-        /// </summary>
-        /// <param name="row"> The Row from which to attempt to read the ObjectID.</param>
-        /// <returns>The ObjectID if it can be read; otherwise, -1.</returns>
-        private static long TryGetObjectId(Row row)
-        {
-            if (row == null)
-                return -1;
-
-            try
-            {
-                // [Guess] Row.GetObjectID() exists in your references.
-                return row.GetObjectID();
-            }
-            catch
-            {
-                // Fallback: many datasets expose OBJECTID/OID as a field value.
-                // This is intentionally defensive.
-                try
-                {
-                    object v = row["OBJECTID"];
-                    if (v == null || v == DBNull.Value)
-                        v = row["OID"];
-
-                    if (v == null || v == DBNull.Value)
-                        return -1;
-
-                    return Convert.ToInt64(v, CultureInfo.InvariantCulture);
-                }
-                catch
-                {
-                    return -1;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Runs an action on the UI dispatcher.
-        /// </summary>
-        /// <param name="action">The action to run on the UI thread.</param>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        private static Task RunOnUiAsync(Action action)
-        {
-            if (action == null)
-                return Task.CompletedTask;
-
-            return FrameworkApplication.Current.Dispatcher.InvokeAsync(action).Task;
-        }
-
-        #endregion Flash
 
         #region Split
 
@@ -3107,91 +2541,7 @@ namespace HLU.GISApplication
 
         #endregion Merge Helpers
 
-        /// <summary>
-        /// Gets the history for the currently selected features based on the provided history columns and selection criteria.
-        /// </summary>
-        /// <param name="historyColumns">The list of history columns to return.</param>
-        /// <param name="selectionWhereClause">The selection where clause.</param>
-        /// <returns>A DataTable populated with the pre-edit ("before") values.</returns>
-        /// <exception cref="HLUToolException">Thrown when reading GIS features fails.</exception>
-        public async Task<DataTable> GetHistoryAsync(
-            DataColumn[] historyColumns,
-            List<SqlFilterCondition> selectionWhereClause)
-        {
-            // Create a query filter for selecting features
-            QueryFilter queryFilter = new()
-            {
-                WhereClause = WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, selectionWhereClause))
-            };
-
-            // Extract history column names
-            string[] historyColumnNames = [.. historyColumns.Select(c => c.ColumnName)];
-
-            // Create a DataTable to store history data
-            DataTable historyTable = new();
-            foreach (string columnName in historyColumnNames)
-            {
-                historyTable.Columns.Add(columnName);
-            }
-
-            // Add geometry history columns (used for HistoryWrite mapping, not UI display).
-            if (!historyTable.Columns.Contains(ViewModelWindowMain.HistoryGeometry1ColumnName))
-                historyTable.Columns.Add(ViewModelWindowMain.HistoryGeometry1ColumnName, typeof(double));
-
-            if (!historyTable.Columns.Contains(ViewModelWindowMain.HistoryGeometry2ColumnName))
-                historyTable.Columns.Add(ViewModelWindowMain.HistoryGeometry2ColumnName, typeof(double));
-
-            // Get the history field indexes for columns that exist in the feature class schema.
-            int[] historyFieldIndexes = HistorySchema(historyColumnNames);
-
-            // Build the history data to return
-            await QueuedTask.Run(() =>
-            {
-                try
-                {
-                    // Use a RowCursor to iterate through the selected features
-                    using RowCursor rowCursor = _hluFeatureClass.Search(queryFilter, false);
-
-                    // Loop through the selected features, until there are no more,
-                    // to capture the history.
-                    while (rowCursor.MoveNext())
-                    {
-                        // Get the current feature
-                        using Row row = rowCursor.Current;
-
-                        // Capture the history before modification
-                        DataRow historyRow = historyTable.NewRow();
-
-                        // Populate standard columns from the row where possible.
-                        for (int i = 0; i < historyColumnNames.Length; i++)
-                        {
-                            int fieldIndex = historyFieldIndexes[i];
-                            historyRow[i] = fieldIndex >= 0 ? row[fieldIndex] ?? DBNull.Value : DBNull.Value;
-                        }
-
-                        // Get geometry history values (length/area or X/Y) and add to the history row.
-                        if (row is Feature feature)
-                        {
-                            Geometry geom = feature.GetShape();
-                            (double geom1, double geom2) = GetGeometryHistoryValues(geom);
-                            historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = geom1;
-                            historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = geom2;
-                        }
-
-                        // Add the history row to the history table.
-                        historyTable.Rows.Add(historyRow);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // Preserve stack trace and wrap in a meaningful type
-                    throw new HLUToolException("Error reading GIS features: " + ex.Message, ex);
-                }
-            });
-
-            // Return the history table
-            return historyTable;
-        }
+        #region Update
 
         /// <summary>
         /// Updates selected features with new values and captures history.
@@ -3283,7 +2633,97 @@ namespace HLU.GISApplication
             });
         }
 
+        #endregion Update
+
         #region History
+
+        public static readonly string HistoryAdditionalFieldsDelimiter = Settings.Default.HistoryAdditionalFieldsDelimiter;
+
+        /// <summary>
+        /// Gets the history for the currently selected features based on the provided history columns and selection criteria.
+        /// </summary>
+        /// <param name="historyColumns">The list of history columns to return.</param>
+        /// <param name="selectionWhereClause">The selection where clause.</param>
+        /// <returns>A DataTable populated with the pre-edit ("before") values.</returns>
+        /// <exception cref="HLUToolException">Thrown when reading GIS features fails.</exception>
+        public async Task<DataTable> GetHistoryAsync(
+            DataColumn[] historyColumns,
+            List<SqlFilterCondition> selectionWhereClause)
+        {
+            // Create a query filter for selecting features
+            QueryFilter queryFilter = new()
+            {
+                WhereClause = WhereClause(false, false, false, MapWhereClauseFields(_hluLayerStructure, selectionWhereClause))
+            };
+
+            // Extract history column names
+            string[] historyColumnNames = [.. historyColumns.Select(c => c.ColumnName)];
+
+            // Create a DataTable to store history data
+            DataTable historyTable = new();
+            foreach (string columnName in historyColumnNames)
+            {
+                historyTable.Columns.Add(columnName);
+            }
+
+            // Add geometry history columns (used for HistoryWrite mapping, not UI display).
+            if (!historyTable.Columns.Contains(ViewModelWindowMain.HistoryGeometry1ColumnName))
+                historyTable.Columns.Add(ViewModelWindowMain.HistoryGeometry1ColumnName, typeof(double));
+
+            if (!historyTable.Columns.Contains(ViewModelWindowMain.HistoryGeometry2ColumnName))
+                historyTable.Columns.Add(ViewModelWindowMain.HistoryGeometry2ColumnName, typeof(double));
+
+            // Get the history field indexes for columns that exist in the feature class schema.
+            int[] historyFieldIndexes = HistorySchema(historyColumnNames);
+
+            // Build the history data to return
+            await QueuedTask.Run(() =>
+            {
+                try
+                {
+                    // Use a RowCursor to iterate through the selected features
+                    using RowCursor rowCursor = _hluFeatureClass.Search(queryFilter, false);
+
+                    // Loop through the selected features, until there are no more,
+                    // to capture the history.
+                    while (rowCursor.MoveNext())
+                    {
+                        // Get the current feature
+                        using Row row = rowCursor.Current;
+
+                        // Capture the history before modification
+                        DataRow historyRow = historyTable.NewRow();
+
+                        // Populate standard columns from the row where possible.
+                        for (int i = 0; i < historyColumnNames.Length; i++)
+                        {
+                            int fieldIndex = historyFieldIndexes[i];
+                            historyRow[i] = fieldIndex >= 0 ? row[fieldIndex] ?? DBNull.Value : DBNull.Value;
+                        }
+
+                        // Get geometry history values (length/area or X/Y) and add to the history row.
+                        if (row is Feature feature)
+                        {
+                            Geometry geom = feature.GetShape();
+                            (double geom1, double geom2) = GetGeometryHistoryValues(geom);
+                            historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = geom1;
+                            historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = geom2;
+                        }
+
+                        // Add the history row to the history table.
+                        historyTable.Rows.Add(historyRow);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Preserve stack trace and wrap in a meaningful type
+                    throw new HLUToolException("Error reading GIS features: " + ex.Message, ex);
+                }
+            });
+
+            // Return the history table
+            return historyTable;
+        }
 
         /// <summary>
         /// Gets the field ordinals for the requested history columns based on the HLU layer structure and mapping.
@@ -3292,33 +2732,6 @@ namespace HLU.GISApplication
         /// <returns>An array of field ordinals for the requested history columns.</returns>
         private int[] HistorySchema(string[] historyColumns)
         {
-            //int ix;
-            //var historyFields = from c in historyColumns
-            //                    let ordinal = (ix = MapField(c)) != -1 ? ix : FuzzyFieldOrdinal(c)
-            //                    where ordinal != -1
-            //                    select new
-            //                    {
-            //                        FieldOrdinal = ordinal,
-            //                        FieldName = c.Replace(HistoryAdditionalFieldsDelimiter, String.Empty)
-            //                    };
-
-            ////for (int i = 0; i < historyFields.Count(); i++)
-            ////{
-            ////    var a = historyFields.ElementAt(i);
-            ////    _pipeData.Add(String.Format("{0}{1}{2}", a.FieldName, _pipeFieldDelimiter,
-            ////        _hluFieldSysTypeNames[a.FieldOrdinal]));
-            ////}
-
-            ////// GeometryColumn1: Length for polygons; length for polylines; X for points
-            ////_pipeData.Add(String.Format("{0}{1}System.Double", _historyGeometry1ColumnName, _pipeFieldDelimiter));
-
-            ////// GeometryColumn2: Area for polygons; empty for polylines; Y for points
-            ////_pipeData.Add(String.Format("{0}{1}System.Double", _historyGeometry2ColumnName, _pipeFieldDelimiter));
-
-            ////_pipeData.Add(_pipeTransmissionInterrupt);
-
-            //return historyFields.Select(hf => hf.FieldOrdinal).ToArray();
-
             if (historyColumns == null || historyColumns.Length == 0)
                 return [];
 
@@ -3333,72 +2746,7 @@ namespace HLU.GISApplication
             return ordinals;
         }
 
-        /// <summary>
-        /// Builds a history string for a given feature based on the provided history field ordinals and additional values.
-        /// </summary>
-        /// <param name="feature">The feature for which to build the history string.</param>
-        /// <param name="historyFieldOrdinals">An array of field ordinals representing the history fields.</param>
-        /// <param name="additionalValues">An array of additional values to include in the history string.</param>
-        /// <returns>A string representing the history of the feature.</returns>
-        private string History(FeatureClass feature, int[] historyFieldOrdinals, string[] additionalValues)
-        {
-            StringBuilder history = new();
-
-            //int j = 0;
-            //foreach (int i in historyFieldOrdinals)
-            //{
-            //    history.Append(String.Format("{0}{1}", _pipeFieldDelimiter, i != -1 ?
-            //        feature.get_Value(i) : additionalValues[j++]));
-            //}
-
-            //double geom1;
-            //double geom2;
-            //GetGeometryProperties(feature, out geom1, out geom2);
-
-            //history.Append(String.Format("{0}{1}{0}{2}", _pipeFieldDelimiter,
-            //    geom1 != -1 ? geom1.ToString() : String.Empty,
-            //    geom2 != -1 ? geom2.ToString() : String.Empty));
-
-            return history.Remove(0, 1).ToString();
-        }
-
-        /// <summary>
-        /// Extracts geometry-related properties from the specified feature and outputs them as double values, depending
-        /// on the feature's geometry type.
-        /// </summary>
-        /// <remarks>The specific values assigned to geom1 and geom2 depend on the geometry type of the
-        /// feature. For example, for polygons, geom1 may represent length and geom2 area; for points, geom1 and geom2
-        /// may represent X and Y coordinates, respectively. If a property is not applicable for the geometry type, its
-        /// value will be set to -1.</remarks>
-        /// <param name="feature">The feature from which to retrieve geometry properties. Must not be null.</param>
-        /// <param name="geom1">When this method returns, contains the first geometry property value, such as length, X coordinate, or other
-        /// type-specific value, depending on the geometry type of the feature.</param>
-        /// <param name="geom2">When this method returns, contains the second geometry property value, such as area or Y coordinate,
-        /// depending on the geometry type of the feature. May be set to -1 if not applicable.</param>
-        private void GetGeometryProperties(FeatureClass feature, out double geom1, out double geom2)
-        {
-            geom1 = -1;
-            geom2 = -1;
-            //switch (feature.Shape.GeometryType)
-            //{
-            //    case esriGeometryType.esriGeometryPolygon:
-            //        IArea area = feature.Shape as IArea;
-            //        geom1 = ((IPolygon4)feature.Shape).Length;
-            //        geom2 = area.Area;
-            //        break;
-            //    case esriGeometryType.esriGeometryPolyline:
-            //        IPolyline5 pline = feature.Shape as IPolyline5;
-            //        geom1 = pline.Length;
-            //        break;
-            //    case esriGeometryType.esriGeometryPoint:
-            //        IPoint point = feature.Shape as IPoint;
-            //        geom1 = point.X;
-            //        geom2 = point.Y;
-            //        break;
-            //}
-        }
-
-        #endregion
+        #endregion History
 
         #region Fields
 
@@ -3940,6 +3288,8 @@ namespace HLU.GISApplication
 
         #endregion Export
 
+        #region HLU Layer Management
+
         /// <summary>
         /// Gets the name of the active HLU layer on which the tool is operating, or null if no active layer.
         /// This is the name as displayed in the table of contents and used in ArcGIS Pro geoprocessing parameters,
@@ -3948,16 +3298,6 @@ namespace HLU.GISApplication
         public string HluLayerName
         {
             get { return _hluLayer?.Name; }
-        }
-
-        /// <summary>
-        /// The name of the field in the active HLU layer that contains the incid values, or null if no active layer.
-        /// </summary>
-        /// <returns>A task that represents the asynchronous operation. The task result contains the name of the field.</returns>
-        public async Task<string> IncidFieldNameAsync()
-        {
-            Field field = await GetFieldAsync(_hluLayerStructure.incidColumn.Ordinal);
-            return field.Name;
         }
 
         /// <summary>
@@ -4259,37 +3599,13 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Formats a DateTime value as a string according to the date format string for the current HLU layer's workspace.
+        /// The name of the field in the active HLU layer that contains the incid values, or null if no active layer.
         /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        private string FormatDate(DateTime value)
+        /// <returns>A task that represents the asynchronous operation. The task result contains the name of the field.</returns>
+        public async Task<string> IncidFieldNameAsync()
         {
-            try
-            {
-                return value.ToString(_dateFormatString);
-            }
-            catch { return value.ToString(); }
-        }
-
-        /// <summary>
-        /// Formats a number as a string according to the number format info for the current HLU layer's workspace.
-        /// </summary>
-        /// <param name="number"></param>
-        /// <returns></returns>
-        private string FormatNumber(double number)
-        {
-            return number.ToString(_numberFormatInfo);
-        }
-
-        /// <summary>
-        /// Formats a number as a string according to the number format info for the current HLU layer's workspace.
-        /// </summary>
-        /// <param name="number"></param>
-        /// <returns></returns>
-        private string FormatNumber(float number)
-        {
-            return number.ToString(_numberFormatInfo);
+            Field field = await GetFieldAsync(_hluLayerStructure.incidColumn.Ordinal);
+            return field.Name;
         }
 
         /// <summary>
@@ -4332,6 +3648,48 @@ namespace HLU.GISApplication
             return outWhereClause;
         }
 
+        #endregion HLU Layer Management
+
+        #region Format Helpers
+
+        /// <summary>
+        /// Formats a DateTime value as a string according to the date format string for the current HLU layer's workspace.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private string FormatDate(DateTime value)
+        {
+            try
+            {
+                return value.ToString(_dateFormatString);
+            }
+            catch { return value.ToString(); }
+        }
+
+        /// <summary>
+        /// Formats a number as a string according to the number format info for the current HLU layer's workspace.
+        /// </summary>
+        /// <param name="number"></param>
+        /// <returns></returns>
+        private string FormatNumber(double number)
+        {
+            return number.ToString(_numberFormatInfo);
+        }
+
+        /// <summary>
+        /// Formats a number as a string according to the number format info for the current HLU layer's workspace.
+        /// </summary>
+        /// <param name="number"></param>
+        /// <returns></returns>
+        private string FormatNumber(float number)
+        {
+            return number.ToString(_numberFormatInfo);
+        }
+
+        #endregion Format Helpers
+
+        #region Type Maps
+
         /// <summary>
         /// Gets the type maps between system types and Esri field types for the current HLU layer's workspace.
         /// </summary>
@@ -4366,5 +3724,7 @@ namespace HLU.GISApplication
             _typeMapSQLToSystem.Add((int)esriFieldType.esriFieldTypeString, typeof(System.String));
             _typeMapSQLToSystem.Add((int)esriFieldType.esriFieldTypeXML, typeof(System.String));
         }
+
+        #endregion Type Maps
     }
 }

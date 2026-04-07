@@ -3,137 +3,131 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:hlu="clr-namespace:HLU.UI.UserControls;assembly="
+    xmlns:local="clr-namespace:HLU.UI.ViewModel"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="{Binding WindowTitle}"
-    Width="392"
+    Width="400"
     Height="202"
+    d:DataContext="{d:DesignInstance Type=local:ViewModelConnectOdbc}"
+    ContentRendered="Window_ContentRendered"
     ResizeMode="NoResize"
     ShowInTaskbar="False"
     SizeToContent="Height"
     Style="{DynamicResource ProWindowStyle}"
     Visibility="Collapsed"
-    WindowStartupLocation="CenterOwner">
-    <!--  Icon="..\..\..\Images\HLUIcon.png" Activated="Window_Activated">  -->
-    <!--  Background="{DynamicResource WindowBackgroundBrush}"  -->
+    WindowStartupLocation="CenterOwner"
+    mc:Ignorable="d">
 
     <controls:ProWindow.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="..\Dictionary\ErrorMessageConverterDictionary.xaml" />
+                <ResourceDictionary Source="..\Dictionary\ValidationTemplates.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </controls:ProWindow.Resources>
 
     <StackPanel Name="StackPanelMain" Margin="4">
-        <Grid
-            Name="GridMain"
-            Margin="0,4,0,0"
-            VerticalAlignment="Bottom">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="80" />
-                <RowDefinition Height="55" />
-                <RowDefinition Height="6" />
-                <RowDefinition Height="23" />
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="115*" />
-                <ColumnDefinition Width="76" />
-                <ColumnDefinition Width="82" />
-            </Grid.ColumnDefinitions>
-            <GroupBox
-                Name="GroupBoxDsn"
-                Grid.Row="0"
-                Grid.ColumnSpan="3"
-                Header="DSN">
-                <Grid Name="GridDsn">
-                    <Grid.RowDefinitions>
-                        <RowDefinition />
-                        <RowDefinition />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="115*" />
-                        <ColumnDefinition Width="82" />
-                        <ColumnDefinition Width="82" />
-                    </Grid.ColumnDefinitions>
-                    <ComboBox
-                        Name="ComboBoxDsn"
-                        Grid.Row="0"
-                        Grid.ColumnSpan="2"
-                        Margin="0,0,0,0"
-                        VerticalAlignment="Center"
-                        IsEditable="True"
-                        IsReadOnly="False"
-                        ItemsSource="{Binding Path=DsnList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        SelectedValue="{Binding Dsn}"
-                        Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
-                        Text="{Binding Path=Dsn, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
-                        ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}" />
-                    <Button
-                        Name="ButtonManageDsn"
-                        Grid.Row="0"
-                        Grid.Column="2"
-                        Height="23"
-                        Margin="6,0,0,0"
-                        VerticalAlignment="Center"
-                        Command="{Binding ManageDsnCommand}">
-                        _Manage...
-                    </Button>
-                    <Grid
-                        Name="GridDsnType"
-                        Grid.Row="1"
-                        Grid.ColumnSpan="3">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="100" />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                        <RadioButton
-                            Name="RadioButtonUserDsn"
-                            Grid.Column="0"
-                            Margin="6,4,0,0"
-                            GroupName="DsnType"
-                            IsChecked="{Binding UserDsn}">
-                            _User DSN
-                        </RadioButton>
-                        <RadioButton
-                            Name="RadioButtonSystemDsn"
-                            Grid.Column="1"
-                            Margin="0,4,0,0"
-                            GroupName="DsnType"
-                            IsChecked="{Binding SystemDsn}">
-                            _System DSN
-                        </RadioButton>
-                    </Grid>
-                </Grid>
-            </GroupBox>
-
-            <GroupBox
-                Name="GroupBoxDefaultSchema"
-                Grid.Row="1"
-                Grid.ColumnSpan="3"
-                Margin="0,4,0,0"
-                Padding="0"
-                Header="Default Schema"
-                IsEnabled="{Binding SupportsSchemata}">
+        <GroupBox
+            Name="GroupBoxDsn"
+            Margin="0,4,10,0"
+            Padding="0"
+            Header="DSN">
+            <Grid Name="GridDsn">
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="115*" />
+                    <ColumnDefinition Width="82" />
+                    <ColumnDefinition Width="82" />
+                </Grid.ColumnDefinitions>
                 <ComboBox
-                    Name="ComboBoxDefaultSchema"
-                    Margin="0,4,0,0"
-                    DropDownOpened="ComboBox_DropDownOpened"
+                    Name="ComboBoxDsn"
+                    Grid.Row="0"
+                    Grid.ColumnSpan="2"
+                    Margin="0,4,0,2"
+                    VerticalAlignment="Center"
                     IsEditable="True"
                     IsReadOnly="False"
-                    ItemsSource="{Binding Path=Schemata, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                    SelectedItem="{Binding DefaultSchema}"
+                    ItemsSource="{Binding Path=DsnList, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                     Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
-                    Text="{Binding Path=DefaultSchema, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
-                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}" />
-            </GroupBox>
+                    Text="{Binding Path=Dsn, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
+                    Validation.ErrorTemplate="{StaticResource ErrorTemplate}" />
+                <Button
+                    Name="ButtonManageDsn"
+                    Grid.Row="0"
+                    Grid.Column="2"
+                    Height="23"
+                    Margin="6,4,0,2"
+                    VerticalAlignment="Center"
+                    Command="{Binding ManageDsnCommand}">
+                    _Manage...
+                </Button>
+                <Grid
+                    Name="GridDsnType"
+                    Grid.Row="1"
+                    Grid.ColumnSpan="3">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="100" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <RadioButton
+                        Name="RadioButtonUserDsn"
+                        Grid.Column="0"
+                        Margin="6,4,0,4"
+                        GroupName="DsnType"
+                        IsChecked="{Binding UserDsn}">
+                        _User DSN
+                    </RadioButton>
+                    <RadioButton
+                        Name="RadioButtonSystemDsn"
+                        Grid.Column="1"
+                        Margin="0,4,0,4"
+                        GroupName="DsnType"
+                        IsChecked="{Binding SystemDsn}">
+                        _System DSN
+                    </RadioButton>
+                </Grid>
+            </Grid>
+        </GroupBox>
 
+        <GroupBox
+            Name="GroupBoxDefaultSchema"
+            Margin="0,4,10,0"
+            Padding="0"
+            Header="Default Schema"
+            IsEnabled="{Binding SupportsSchemata}">
+            <ComboBox
+                Name="ComboBoxDefaultSchema"
+                Margin="0,4,0,0"
+                DropDownOpened="ComboBox_DropDownOpened"
+                IsEditable="True"
+                IsReadOnly="False"
+                ItemsSource="{Binding Path=Schemata, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                Text="{Binding Path=DefaultSchema, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
+                Validation.ErrorTemplate="{StaticResource ErrorTemplate}" />
+        </GroupBox>
+
+        <Grid
+            Name="GridButtons"
+            Height="23"
+            Margin="0,4,10,0"
+            VerticalAlignment="Bottom">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="115*" />
+                <ColumnDefinition Width="82" />
+                <ColumnDefinition Width="82" />
+            </Grid.ColumnDefinitions>
             <Button
                 Name="ButtonOk"
-                Grid.Row="3"
                 Grid.Column="1"
-                Height="23"
                 Margin="0,0,2,0"
-                VerticalAlignment="Center"
                 Command="{Binding OkCommand}"
                 ForceCursor="False"
                 IsDefault="True">
@@ -141,11 +135,8 @@
             </Button>
             <Button
                 Name="ButtonCancel"
-                Grid.Row="3"
                 Grid.Column="2"
-                Height="23"
                 Margin="2,0,0,0"
-                VerticalAlignment="Center"
                 Command="{Binding CancelCommand}"
                 IsCancel="True">
                 _Cancel

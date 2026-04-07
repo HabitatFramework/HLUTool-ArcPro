@@ -27,7 +27,7 @@ using ArcGIS.Desktop.Framework;
 namespace HLU;
 
 /// <summary>
-/// Manages the settings for the add-in stored in an XML file.
+/// Manages the application settings for the add-in stored in an XML file.
 /// </summary>
 public class XmlSettingsManager
 {
@@ -44,8 +44,10 @@ public class XmlSettingsManager
         // Get the directory where the add-in file is loaded from.
         string addInDirectory = Path.GetDirectoryName(addinPath);
 
-        //TODO: Set to fixed path for testing purposes, remove later
+#if DEBUG
+        // Override to fixed path when running in debug mode.
         addInDirectory = @"D:\HLUTool\Config";
+#endif
 
         // Get the full path to the settings file.
         _settingsFile = Path.Combine(addInDirectory, "HLUTool.xml");
