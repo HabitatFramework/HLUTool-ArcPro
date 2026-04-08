@@ -25,7 +25,6 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Data.Odbc;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -121,11 +120,8 @@ namespace HLU.Data.Connection
         /// <param name="connString">The connection string for the database.</param>
         /// <param name="connType">The type of the database connection.</param>
         /// <returns>The backend type of the database.</returns>
-        public static Backends GetBackend(string connString, ConnectionTypes connType) => connType switch
-        {
-            ConnectionTypes.ODBC => DbOdbc.GetBackend(connString),
-            _ => Backends.Undetermined,
-        };
+        public static Backends GetBackend(string connString, ConnectionTypes connType) =>
+            Backends.Undetermined;
 
         /// <summary>
         /// Gets the default schema for the specified database backend based on the connection string and available schemata.
@@ -139,8 +135,6 @@ namespace HLU.Data.Connection
         {
             switch (backend)
             {
-                case Backends.Access:
-                    return null;
                 case Backends.PostgreSql:
                     return "public";
                 case Backends.SqlServer:
@@ -154,16 +148,6 @@ namespace HLU.Data.Connection
                     }
                     return null;
                 default:
-                    if (connStrBuilder != null)
-                    {
-                        if ((connStrBuilder.TryGetValue("UID", out object userID)) ||
-                            (connStrBuilder.TryGetValue("User ID", out userID)))
-                        {
-                            string userIDstring = userID.ToString();
-                            if ((schemata != null) && (schemata.IndexOf(userIDstring) != -1))
-                                return userIDstring;
-                        }
-                    }
                     return null;
             }
         }
@@ -198,7 +182,7 @@ namespace HLU.Data.Connection
                 return connStringBuilder.ConnectionString;
 
             DbConnectionStringBuilder tmpConnStrBuilder =
-                new(connStringBuilder is OdbcConnectionStringBuilder)
+                new(false)
                 {
                     ConnectionString = connStringBuilder.ConnectionString
                 };

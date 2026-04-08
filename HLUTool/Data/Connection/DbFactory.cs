@@ -91,7 +91,7 @@ namespace HLU.Data.Connection
             // If settings are complete, nothing to do.
             if (_connType != ConnectionTypes.Unknown &&
                 !String.IsNullOrEmpty(connString) &&
-                (DbBase.GetBackend(connString, _connType) == Backends.Access || !String.IsNullOrEmpty(defaultSchema)))
+                !String.IsNullOrEmpty(defaultSchema))
                 return true;
 
             // Settings are incomplete — ask the user to choose a connection type.
@@ -138,13 +138,6 @@ namespace HLU.Data.Connection
             // Create appropriate DbBase subclass based on selected connection type
             switch (_connType)
             {
-                case ConnectionTypes.ODBC:
-                    db = new DbOdbc(ref connString, ref defaultSchema, ref promptPwd,
-                        Settings.Default.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders,
-                        true, Settings.Default.DbIsUnicode, Settings.Default.DbUseTimeZone,
-                        Settings.Default.DbTextLength, Settings.Default.DbBinaryLength, Settings.Default.DbTimePrecision,
-                        Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, dbConnectionTimeout);
-                    break;
                 case ConnectionTypes.Oracle:
                     db = new DbOracle(ref connString, ref defaultSchema, ref promptPwd,
                         Settings.Default.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders,

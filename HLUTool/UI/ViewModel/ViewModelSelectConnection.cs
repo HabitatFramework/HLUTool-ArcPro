@@ -50,7 +50,7 @@ namespace HLU.UI.ViewModel
             // Get all values from the ConnectionTypes enum, cast them to ConnectionTypes, and
             // filter out unsupported types to populate the list of available connection types.
             _connectionTypes = [.. Enum.GetValues(typeof(ConnectionTypes)).Cast<ConnectionTypes>()
-                .Where(t => t != ConnectionTypes.Unknown && t != ConnectionTypes.OleDb)];
+                .Where(t => t != ConnectionTypes.Unknown)];
 
             // Get the default connection type from settings and attempt to parse it as a
             // ConnectionTypes enum value, ignoring case. If parsing fails, initVal will be null.

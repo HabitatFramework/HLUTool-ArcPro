@@ -28,8 +28,6 @@ namespace HLU.Enums
 
     public enum ConnectionTypes
     {
-        ODBC = 2,
-        OleDb = 4,
         Oracle = 8,
         PostgreSQL = 16,
         SQLServer = 32,
@@ -39,13 +37,10 @@ namespace HLU.Enums
     public enum Backends : int
     {
         Undetermined = 0,
-        Access = 2,
         SqlServer = 4,
         Oracle = 8,
         PostgreSql = 16,
-        DB2 = 32,
-        UndeterminedOdbc = 64,
-        UndeterminedOleDb = 128
+        DB2 = 32
     }
 
     #endregion Enums
