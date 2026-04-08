@@ -62,21 +62,21 @@ namespace HLU.UI.ViewModel
 
         #endregion Constructor
 
-        #region OSMM Update
+        #region OSMM Review
 
         /// <summary>
-        /// Initiates the OSMM Update mode, disabling all tabs and refreshing the user interface.
+        /// Initiates the OSMM Review mode, disabling all tabs and refreshing the user interface.
         /// </summary>
         /// <remarks>
-        /// This method sets the application into OSMM Update mode by enabling the corresponding
+        /// This method sets the application into OSMM Review mode by enabling the corresponding
         /// mode flag, disabling controls across all tabs, and refreshing the user interface to
         /// reflect the updated state. It is intended to prepare the application for operations
         /// specific to OSMM updates.
         /// </remarks>
-        public void StartOSMMUpdate()
+        public void StartOSMMReview()
         {
-            // Start the OSMM Update mode
-            _viewModelMain.OSMMUpdateMode = true;
+            // Start the OSMM Review mode
+            _viewModelMain.OSMMReviewMode = true;
 
             // Disable all the tabs
             _viewModelMain.TabHabitatControlsEnabled = false;
@@ -236,9 +236,26 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion OSMM Update
+        /// <summary>
+        /// Cancels the ongoing OSMM Review process and resets the associated controls.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
+        /// <remarks>This method should be called to terminate an in-progress OSMM Review mode.  It
+        /// ensures that any related controls are reset to their default state.</remarks>
+        public async Task CancelOSMMReviewAsync()
+        {
+            _viewModelMain.ChangeCursor(Cursors.Wait, "Stopping OSMM Review mode ...");
 
-        #region Bulk OSMM Updates
+            // Stop the OSMM Review mode and reset all the controls
+            await OSMMReviewResetControlsAsync();
+
+            // Reset the cursor back to normal.
+            _viewModelMain.ChangeCursor(Cursors.Arrow);
+        }
+
+        #endregion OSMM Review
+
+        #region OSMM Bulk Updates
 
         /// <summary>
         /// Updates the status and metadata for records in the "incid_osmm_updates" table based on
@@ -359,41 +376,20 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion Bulk OSMM Updates
-
-        #region Cancel OSMM Update
-
-        /// <summary>
-        /// Cancels the ongoing OSMM update process and resets the associated controls.
-        /// </summary>
-        /// <returns>A task that represents the asynchronous operation.</returns>
-        /// <remarks>This method should be called to terminate an in-progress OSMM update operation.  It
-        /// ensures that any related controls are reset to their default state.</remarks>
-        public async Task CancelOSMMUpdateAsync()
-        {
-            _viewModelMain.ChangeCursor(Cursors.Wait, "Stopping OSMM update mode ...");
-
-            // Stop the OSMM update mode and reset all the controls
-            await OSMMUpdateResetControlsAsync();
-
-            // Reset the cursor back to normal.
-            _viewModelMain.ChangeCursor(Cursors.Arrow);
-        }
-
-        #endregion Cancel OSMM Update
+        #endregion OSMM Bulk Updates
 
         #region Reset Controls
 
         /// <summary>
-        /// Resets the controls and state related to the OSMM update mode.
+        /// Resets the controls and state related to the OSMM Review mode.
         /// </summary>
         /// <returns>A task that represents the asynchronous operation.</returns>
         /// <remarks>This method performs the following actions: <list type="bullet"> <item>Resets the
-        /// incid filter and sets the current row index to 1.</item> <item>Disables the bulk update mode.</item>
+        /// incid filter and sets the current row index to 1.</item> <item>Disables the Bulk Update mode.</item>
         /// <item>Enables all tabs in the user interface.</item> <item>Refreshes all controls to reflect the updated
         /// state.</item> <item>Resets the cursor to the default arrow.</item> </list> This method is typically called
-        /// to exit the OSMM update mode and restore the default application state.</remarks>
-        private async Task OSMMUpdateResetControlsAsync()
+        /// to exit the OSMM Review mode and restore the default application state.</remarks>
+        private async Task OSMMReviewResetControlsAsync()
         {
             // Enable all the tabs
             _viewModelMain.TabHabitatControlsEnabled = true;
@@ -407,8 +403,8 @@ namespace HLU.UI.ViewModel
             // Select the habitat tab
             _viewModelMain.TabItemSelected = 0;
 
-            // Stop the OSMM update mode
-            _viewModelMain.OSMMUpdateMode = false;
+            // Stop the OSMM Review mode
+            _viewModelMain.OSMMReviewMode = false;
 
             // Reset the incid filter
             _viewModelMain.SuppressUserNotifications = true;

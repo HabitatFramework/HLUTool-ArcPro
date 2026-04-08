@@ -128,10 +128,10 @@
 		<Resource Include="Images\OSMMBulkUpdate32.png">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Resource>
-		<Resource Include="Images\OSMMUpdate16.png">
+		<Resource Include="Images\OSMMReview16.png">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Resource>
-		<Resource Include="Images\OSMMUpdate32.png">
+		<Resource Include="Images\OSMMReview32.png">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Resource>
 		<Resource Include="Images\Paste16.png">

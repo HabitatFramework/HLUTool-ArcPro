@@ -113,7 +113,7 @@ namespace HLU.UI.UserControls.Toolbar
             Enabled = reasonProcessEnabled;
 
             // Set the disabled tool tip text (for when it is disabled).
-            DisabledTooltip = "Unavailable when in bulk update mode, when in OSMM review mode, or when the main window is not visible.";
+            DisabledTooltip = "Unavailable when: \n\u2022 Bulk Update mode is active\n\u2022 OSMM Review mode is active\n\u2022 The main window is not visible.";
 
             // Update error state periodically to catch any changes
             UpdateErrorState();

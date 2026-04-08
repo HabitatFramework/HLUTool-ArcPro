@@ -25,7 +25,7 @@ using System;
 namespace HLU.UI.UserControls.Toolbar
 {
     /// <summary>
-    /// Toggle button to switch to Bulk OSMM Update mode.
+    /// Toggle button to switch to OSMM Bulk Update mode.
     /// Allows applying accepted OSMM updates to multiple incids in bulk.
     /// </summary>
     internal sealed class OSMMBulkUpdateModeButton : Button
@@ -59,14 +59,14 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override async void OnClick()
         {
-            // Set the work mode to Bulk OSMM Update.
+            // Set the work mode to OSMM Bulk Update.
             try
             {
                 await _viewModel.SetWorkMode(WorkMode.Edit | WorkMode.Bulk | WorkMode.OSMMBulk);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error setting Bulk OSMM Update Mode: {ex}");
+                System.Diagnostics.Debug.WriteLine($"Error starting OSMM Bulk Update Mode: {ex}");
             }
         }
 
@@ -94,11 +94,11 @@ namespace HLU.UI.UserControls.Toolbar
             // Update checked state based on current work mode
             IsChecked = _viewModel.WorkMode.HasFlag(WorkMode.OSMMBulk);
 
-            // Enable or disable the button if Bulk OSMM Update mode can be activated.
+            // Enable or disable the button if OSMM Bulk Update mode can be activated.
             Enabled = _viewModel.CanOSMMBulkUpdateMode;
 
             // Set the disabled tool tip text (for when it is disabled).
-            DisabledTooltip = "Unavailable when:\n• No OSMM updates pending\n• The user is not authorised\n• No reason or process selected\n• OSMM review mode is active\n• The main window is not visible";
+            DisabledTooltip = "Unavailable when:\n\u2022 No OSMM updates are pending\n\u2022 The user is not authorised\n\u2022 No reason or process are selected\n\u2022 Bulk Update mode is active\n\u2022 OSMM Review mode is active\n\u2022 The main window is not visible";
         }
 
         #endregion Overrides

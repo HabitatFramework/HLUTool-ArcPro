@@ -3182,7 +3182,7 @@
                     x:Name="GridStatus"
                     Grid.Row="3"
                     Margin="0,4,0,4"
-                    Visibility="{Binding HideInOSMMUpdateMode}">
+                    Visibility="{Binding HideInOSMMReviewMode}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
@@ -3327,7 +3327,7 @@
                     x:Name="GridStatusOSMM"
                     Grid.Row="3"
                     Margin="0,4,0,4"
-                    Visibility="{Binding ShowInOSMMUpdateMode}">
+                    Visibility="{Binding ShowInOSMMReviewMode}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />

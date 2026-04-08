@@ -58,7 +58,7 @@
 				<!-- Mode group with 4 toggle buttons -->
 				<group id="HLUTool_Group_Mode" caption="Mode" keytip="G1">
 					<button refID="HLUTool_btnUpdateMode" size="large" />
-					<button refID="HLUTool_btnOSMMUpdateMode" size="middle" />
+					<button refID="HLUTool_btnOSMMReviewMode" size="middle" />
 					<button refID="HLUTool_btnBulkUpdateMode" size="middle" />
 					<button refID="HLUTool_btnOSMMBulkUpdateMode" size="middle" />
 				</group>
@@ -158,15 +158,15 @@
 					</tooltip>
 				</button>
 
-				<!-- OSMM Update mode button -->
-				<button id="HLUTool_btnOSMMUpdateMode"
-						caption="OSMM Update"
-						className="HLU.UI.UserControls.Toolbar.OSMMUpdateModeButton"
+				<!-- OSMM Review mode button -->
+				<button id="HLUTool_btnOSMMReviewMode"
+						caption="OSMM Review"
+						className="HLU.UI.UserControls.Toolbar.OSMMReviewModeButton"
 						loadOnClick="false"
 						keytip="O"
-						smallImage="pack://application:,,,/HLUTool;component/Images/OSMMUpdate16.png"
-						largeImage="pack://application:,,,/HLUTool;component/Images/OSMMUpdate32.png">
-					<tooltip heading="OSMM Update Mode">
+						smallImage="pack://application:,,,/HLUTool;component/Images/OSMMReview16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/OSMMReview32.png">
+					<tooltip heading="OSMM Review Mode">
 						Review and accept/reject OSMM updates
 					</tooltip>
 				</button>
@@ -192,7 +192,7 @@
 						keytip="M"
 						smallImage="pack://application:,,,/HLUTool;component/Images/OSMMBulkUpdate16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/OSMMBulkUpdate32.png">
-					<tooltip heading="Bulk OSMM Update Mode">
+					<tooltip heading="OSMM Bulk Update Mode">
 						Apply accepted OSMM updates in bulk
 					</tooltip>
 				</button>
@@ -247,7 +247,7 @@
 						  keytip="RC">
 					<tooltip heading="Reason">
 						Select the reason for attribute updates.
-						<disabledText>Available only when not in a bulk or OSMM update mode.</disabledText>
+						<disabledText>Available only when not in a bulk or OSMM Review mode.</disabledText>
 					</tooltip>
 				</comboBox>
 
@@ -262,7 +262,7 @@
 						  keytip="PC">
 					<tooltip heading="Process">
 						Select the process for attribute updates.
-						<disabledText>Available only when not in a bulk or OSMM update mode.</disabledText>
+						<disabledText>Available only when not in a bulk or OSMM Review mode.</disabledText>
 					</tooltip>
 				</comboBox>
 
@@ -315,7 +315,7 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/Filter32.png">
 					<tooltip heading="Filter by Attributes">
 						Filter the INCID records based upon non-spatial criteria using the query builder.
-						<disabledText>Available only when not in a bulk or OSMM update mode.</disabledText>
+						<disabledText>Available only when not in a bulk or OSMM Review mode.</disabledText>
 					</tooltip>
 				</button>
 
@@ -328,7 +328,7 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/ClearFilter32.png">
 					<tooltip heading="Clear Filter">
 						Clear the current filter so that all INCID records are available for viewing using the record selectors.
-						<disabledText>Available only when not in a bulk or OSMM update mode and a filter is active."</disabledText>
+						<disabledText>Available only when not in a bulk or OSMM Review mode and a filter is active."</disabledText>
 					</tooltip>
 				</button>
 
@@ -342,7 +342,7 @@
 						 sizeString="123456789012">
 					<tooltip heading="Find Incid">
 						Filter the records for a single Incid by entering an INCID in the format 'nnnn:nnnnnnn'.
-						<disabledText>Available only when not in a bulk or OSMM update mode.</disabledText>
+						<disabledText>Available only when not in a bulk or OSMM Review mode.</disabledText>
 					</tooltip>
 				</editBox>
 
@@ -355,7 +355,7 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/GetMapSelection32.png">
 					<tooltip heading="Get Map Selection">
 						Filter the Incid records associated with the selected features in the active GIS layer.
-						<disabledText>Available only when not in bulk update mode.</disabledText>
+						<disabledText>Available only when not in Bulk Update mode.</disabledText>
 					</tooltip>
 				</button>
 
@@ -368,7 +368,7 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/SelectOnMap32.png">
 					<tooltip heading="Select Current Incid">
 						Select all of the features associated with only the current INCID record in the active GIS layer.
-						<disabledText>Available only when not in bulk or OSMM update mode.</disabledText>
+						<disabledText>Available only when not in bulk or OSMM Review mode.</disabledText>
 					</tooltip>
 				</button>
 
@@ -381,7 +381,7 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/SelectAllOnMap32.png">
 					<tooltip heading="Select All Filtered INCIDs">
 						Select all of the features associated with all of the currently filtered INCID records in the active GIS layer.
-						<disabledText>Available only when not in bulk or OSMM update mode.</disabledText>
+						<disabledText>Available only when not in bulk or OSMM Review mode.</disabledText>
 					</tooltip>
 				</button>
 
@@ -419,7 +419,7 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/LogicalSplit32.png">
 					<tooltip heading="Logical Split">
 						Split selected features from the current INCID into a new INCID. Used to isolate features from one INCID into a new INCID so that they can be updated independently.
-						<disabledText>Available only when not in bulk or OSMM update mode, editing is active, and only a subset of features from one INCID is selected.</disabledText>
+						<disabledText>Available only when not in bulk or OSMM Review mode, editing is active, and only a subset of features from one INCID is selected.</disabledText>
 					</tooltip>
 				</button>
 
@@ -432,7 +432,7 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/LogicalMerge32.png">
 					<tooltip heading="Logical Merge">
 						Combine selected features into the INCID of one of those features (selected from the list of INCIDs displayed during the process).
-						<disabledText>Available only when not in bulk or OSMM update mode, editing is active, and multiple features are selected from more than one INCID.</disabledText>
+						<disabledText>Available only when not in bulk or OSMM Review mode, editing is active, and multiple features are selected from more than one INCID.</disabledText>
 					</tooltip>
 				</button>
 
@@ -445,7 +445,7 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/PhysicalSplit32.png">
 					<tooltip heading="Physical Split">
 						Sub-divide a single feature, that has already been split in the active GIS layer, into one or more new fragments by assigning new fragment identifiers. The fragments can then be assigned different attributes (once they have been logically split from one another).
-						<disabledText>Available only when not in bulk or OSMM update mode, editing is active, and more than one feature is selected that share the same INCID, TOID, and fragment ID.</disabledText>
+						<disabledText>Available only when not in bulk or OSMM Review mode, editing is active, and more than one feature is selected that share the same INCID, TOID, and fragment ID.</disabledText>
 					</tooltip>
 				</button>
 
@@ -458,7 +458,7 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/PhysicalMerge32.png">
 					<tooltip heading="Physical Merge">
 						Merge two or more fragments of a single TOID in the active GIS layer, that are also associated with the same INCID, into a new single feature and assigns them to the same fragment identifier.
-						<disabledText>Available only when not in bulk or OSMM update mode, editing is active, and multiple features are selected for the same INCID and TOID but different fragments.</disabledText>
+						<disabledText>Available only when not in bulk or OSMM Review mode, editing is active, and multiple features are selected for the same INCID and TOID but different fragments.</disabledText>
 					</tooltip>
 				</button>
 
@@ -483,7 +483,7 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/Export32.png">
 					<tooltip heading="Export">
 						Export data using a pre-defined format.
-						<disabledText>Available only when not in a bulk or OSMM update mode.</disabledText>
+						<disabledText>Available only when not in a bulk or OSMM Review mode.</disabledText>
 					</tooltip>
 				</button>
 

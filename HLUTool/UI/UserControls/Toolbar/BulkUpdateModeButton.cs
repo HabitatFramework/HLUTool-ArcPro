@@ -100,7 +100,7 @@ namespace HLU.UI.UserControls.Toolbar
             Enabled = _viewModel.CanBulkUpdate;
 
             // Set the disabled tool tip text (for when it is disabled).
-            DisabledTooltip = "Unavailable when:\n\u2022 Already in bulk update mode\n\u2022 The user is not authorised\n\u2022 No reason or process selected\n\u2022 There isn't a valid selection\n\u2022 The main window is not visible";
+            DisabledTooltip = "Unavailable when:\n\u2022 OSMM Review mode is active\n\u2022 The user is not authorised\n\u2022 No reason or process are selected\n\u2022 There isn't a valid selection\n\u2022 The main window is not visible";
         }
 
         #endregion Overrides

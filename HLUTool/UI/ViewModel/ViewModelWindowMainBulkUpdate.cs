@@ -98,7 +98,7 @@ namespace HLU.UI.ViewModel
         #region Bulk Update
 
         /// <summary>
-        /// Starts standard bulk update mode.
+        /// Starts standard Bulk Update mode.
         /// </summary>
         public void StartStandardBulkUpdate()
         {
@@ -148,7 +148,7 @@ namespace HLU.UI.ViewModel
             string interpretationQuality = _addInSettings.BulkUpdateInterpretationQuality;
             bool primaryChanged = true;
 
-            // If in OSMM bulk update mode set the mandatory options
+            // If in OSMM Bulk Update mode set the mandatory options
             if (_osmmBulkUpdateMode == true)
             {
                 // Flag the primary habitat has not been changed (so that the user
@@ -456,7 +456,7 @@ namespace HLU.UI.ViewModel
             }
             finally
             {
-                // Stop the bulk update mode and reset all the controls
+                // Stop the Bulk Update mode and reset all the controls
                 await BulkUpdateResetControlsAsync();
             }
 
@@ -466,14 +466,14 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Cancels the bulk update mode.
+        /// Cancels the Bulk Update mode.
         /// </summary>
         /// <returns>A task that represents the asynchronous operation.</returns>
         public async Task CancelBulkUpdateAsync()
         {
-            _viewModelMain.ChangeCursor(Cursors.Wait, "Stopping bulk update mode ...");
+            _viewModelMain.ChangeCursor(Cursors.Wait, "Stopping Bulk Update mode ...");
 
-            // Stop the bulk update mode and reset all the controls
+            // Stop the Bulk Update mode and reset all the controls
             await BulkUpdateResetControlsAsync();
 
             // Reset the cursor back to normal.
@@ -481,7 +481,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Stops the bulk update mode and resets all
+        /// Stops the Bulk Update mode and resets all
         /// the controls to normal.
         /// </summary>
         /// <returns>A task that represents the asynchronous operation.</returns>
@@ -504,7 +504,7 @@ namespace HLU.UI.ViewModel
             // Select the habitat tab
             _viewModelMain.TabItemSelected = 0;
 
-            // Stop the bulk update mode
+            // Stop the Bulk Update mode
             _viewModelMain.BulkUpdateMode = false;
 
             // Clear the active filter.
@@ -521,10 +521,22 @@ namespace HLU.UI.ViewModel
         #region OSMM Bulk Update
 
         /// <summary>
-        /// Starts OSMM bulk update mode.
+        /// Starts OSMM Bulk Update mode.
         /// </summary>
         public void StartOSMMBulkUpdate()
         {
+            // Can't start OSMM Bulk Update mode if the bulk OSMM source hasn't been set.
+            if (_addInSettings.BulkOSMMSourceId == null)
+            {
+                // Show warning message
+                _viewModelMain.ShowWarning(
+                    "The Bulk OSMM Source has not been set.\n\n" +
+                    "Please set the Bulk OSMM Source in the Options.",
+                    MessageCategory.BulkUpdate);
+
+                return;
+            }
+
             // Store whether we are starting in OSMM Bulk update
             // mode or just standard Bulk Update mode
             _osmmBulkUpdateMode = true;
@@ -548,18 +560,6 @@ namespace HLU.UI.ViewModel
             // Clear any interface warning and error messages
             _viewModelMain.ResetWarningsErrors();
             //_viewModelMain.RefreshAll(); // Now done when setting mode.
-
-            // Can't start OSMM Update mode if the bulk OSMM source hasn't been set.
-            if (_addInSettings.BulkOSMMSourceId == null)
-            {
-                // Show warning message
-                _viewModelMain.ShowWarning(
-                    "The Bulk OSMM Source has not been set.\n\n" +
-                    "Please set the Bulk OSMM Source in the Options.",
-                    MessageCategory.BulkUpdate);
-
-                return;
-            }
 
             // Reset the database counts
             _viewModelMain.SelectedIncidsInDBCount = 0;
@@ -877,7 +877,7 @@ namespace HLU.UI.ViewModel
             }
             finally
             {
-                // Stop the bulk update mode and reset all the controls
+                // Stop the Bulk Update mode and reset all the controls
                 await OSMMBulkUpdateResetControlsAsync();
             }
 
@@ -887,14 +887,14 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Cancels the osmm bulk update mode.
+        /// Cancels the OSMM Bulk Update mode.
         /// </summary>
         /// <returns>A task that represents the asynchronous operation.</returns>
         public async Task CancelOSMMBulkUpdateAsync()
         {
-            _viewModelMain.ChangeCursor(Cursors.Wait, "Stopping OSMM bulk update mode ...");
+            _viewModelMain.ChangeCursor(Cursors.Wait, "Stopping OSMM Bulk Update mode ...");
 
-            // Stop the osmm bulk update mode and reset all the controls
+            // Stop the OSMM Bulk Update mode and reset all the controls
             await OSMMBulkUpdateResetControlsAsync();
 
             // Reset the cursor back to normal.
@@ -902,7 +902,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Stops the osmm bulk update mode and resets all
+        /// Stops the OSMM Bulk Update mode and resets all
         /// the controls to normal.
         /// </summary>
         /// <returns>A task that represents the asynchronous operation.</returns>
@@ -921,7 +921,7 @@ namespace HLU.UI.ViewModel
             // Show the history tab
             _viewModelMain.ShowHistoryTab = true;
 
-            // Stop the OSMM bulk update mode
+            // Stop the OSMM Bulk Update mode
             _viewModelMain.OSMMBulkUpdateMode = false;
 
             // Select the habitat tab
@@ -1269,7 +1269,7 @@ namespace HLU.UI.ViewModel
                     case 0: // Insert the newly added secondary habitat
                         HluDataSet.incid_secondaryRow newRow = _viewModelMain.IncidSecondaryTable.Newincid_secondaryRow();
                         newRow.ItemArray = sh.ToItemArray(_viewModelMain.RecIDs.NextIncidSecondaryId, currIncid);
-                        if (sh.IsValid(false, newRow)) // reset bulk update mode for full validation of a new row
+                        if (sh.IsValid(false, newRow)) // reset Bulk Update mode for full validation of a new row
                             _viewModelMain.HluTableAdapterManager.incid_secondaryTableAdapter.Insert(newRow);
                         break;
                     // If the current secondary habitat is already in the database
@@ -1338,7 +1338,7 @@ namespace HLU.UI.ViewModel
                     case 0: // Insert the newly added BAP habitat
                         HluDataSet.incid_bapRow newRow = _viewModelMain.IncidBapTable.Newincid_bapRow();
                         newRow.ItemArray = be.ToItemArray(_viewModelMain.RecIDs.NextIncidBapId, currIncid);
-                        if (be.IsValid(false, isSecondary, newRow)) // reset bulk update mode for full validation of a new row
+                        if (be.IsValid(false, isSecondary, newRow)) // reset Bulk Update mode for full validation of a new row
                             _viewModelMain.HluTableAdapterManager.incid_bapTableAdapter.Insert(newRow);
                         break;
                     // If the current BAP habitat is already in the database
@@ -1397,7 +1397,7 @@ namespace HLU.UI.ViewModel
                     case 0: // Insert the newly added BAP habitat
                         HluDataSet.incid_bapRow newRow = _viewModelMain.IncidBapTable.Newincid_bapRow();
                         newRow.ItemArray = be.ToItemArray(_viewModelMain.RecIDs.NextIncidBapId, currIncid);
-                        if (be.IsValid(false, false, newRow)) // reset bulk update mode for full validation of a new row
+                        if (be.IsValid(false, false, newRow)) // reset Bulk Update mode for full validation of a new row
                             _viewModelMain.HluTableAdapterManager.incid_bapTableAdapter.Insert(newRow);
                         break;
                     // If the current BAP habitat is already in the database

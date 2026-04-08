@@ -67,7 +67,7 @@ namespace HLU.Enums
         Edit = CanEdit, // Alias for CanEdit
 
         /// <summary>
-        /// Bulk update mode is active, which allows the user to update a subset of features for an incid.
+        /// Bulk Update mode is active, which allows the user to update a subset of features for an incid.
         /// This mode may be active simultaneously with Edit mode and OsmmBulk modes.
         /// </summary>
         Bulk = 1 << 1, // Previously _bulkUpdateMode.
@@ -76,10 +76,10 @@ namespace HLU.Enums
         /// OSMM review mode is active, which allows the user to review and update OSMM updates.
         /// This mode may be active simultaneously with Edit mode.
         /// </summary>
-        OSMMReview = 1 << 2, // Previously _osmmUpdateMode.
+        OSMMReview = 1 << 2, // Previously _osmmReviewMode.
 
         /// <summary>
-        /// OSMM bulk update mode is active, which allows the user to review and update a subset of features based on OSMM updates.
+        /// OSMM Bulk Update mode is active, which allows the user to review and update a subset of features based on OSMM updates.
         /// This mode may be active simultaneously with Edit and Bulk modes.
         /// </summary>
         OSMMBulk = 1 << 3,  // Previously _osmmBulkUpdateMode.

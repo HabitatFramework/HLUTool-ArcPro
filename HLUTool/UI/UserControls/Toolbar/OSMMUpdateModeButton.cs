@@ -25,10 +25,10 @@ using System;
 namespace HLU.UI.UserControls.Toolbar
 {
     /// <summary>
-    /// Toggle button to switch to OSMM Update mode.
+    /// Toggle button to switch to OSMM Review mode.
     /// Allows review and acceptance/rejection of OSMM updates for individual incids.
     /// </summary>
-    internal sealed class OSMMUpdateModeButton : Button
+    internal sealed class OSMMReviewModeButton : Button
     {
         #region Fields
 
@@ -41,7 +41,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// <summary>
         /// Constructor gets the main view model from the dockpane.
         /// </summary>
-        public OSMMUpdateModeButton()
+        public OSMMReviewModeButton()
         {
             // Get the dockpane DAML id.
             DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
@@ -66,7 +66,7 @@ namespace HLU.UI.UserControls.Toolbar
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error setting OSMM Update Mode: {ex}");
+                System.Diagnostics.Debug.WriteLine($"Error setting OSMM Review Mode: {ex}");
             }
         }
 
@@ -94,11 +94,11 @@ namespace HLU.UI.UserControls.Toolbar
             // Update checked state based on current work mode
             IsChecked = _viewModel.WorkMode.HasFlag(WorkMode.OSMMReview);
 
-            // Enable or disable the button if OSMM Update mode can be activated.
-            Enabled = _viewModel.CanOSMMUpdateMode;
+            // Enable or disable the button if OSMM Review mode can be activated.
+            Enabled = _viewModel.CanOSMMReviewMode;
 
             // Set the disabled tool tip text (for when it is disabled).
-            DisabledTooltip = "Unavailable when:\n\u2022 There are no OSMM updates pending\n\u2022 The user is not authorised\n\u2022 Bulk update mode is active\n• The main window is not visible";
+            DisabledTooltip = "Unavailable when:\n\u2022 No OSMM updates are pending\n\u2022 The user is not authorised\n\u2022 Bulk Update mode is active\n\u2022 The main window is not visible";
         }
 
         #endregion Overrides

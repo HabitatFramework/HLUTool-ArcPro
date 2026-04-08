@@ -69,7 +69,7 @@ namespace HLU.Data
         /// Initializes a new instance of the <see cref="BapEnvironment"/> class with specified bulk update
         /// mode and secondary priority habitat flag.
         /// </summary>
-        /// <param name="bulkUpdateMode">Indicates whether the instance is in bulk update mode.</param>
+        /// <param name="bulkUpdateMode">Indicates whether the instance is in Bulk Update mode.</param>
         /// <param name="isSecondary">Indicates whether the instance represents a secondary priority habitat.</param>
         public BapEnvironment(bool bulkUpdateMode, bool isSecondary)
         {
@@ -80,9 +80,9 @@ namespace HLU.Data
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BapEnvironment"/> class based on the specified data row,
-        /// bulk update mode, and secondary priority habitat flag.
+        /// Bulk Update mode, and secondary priority habitat flag.
         /// </summary>
-        /// <param name="bulkUpdateMode">Indicates whether the instance is in bulk update mode.</param>
+        /// <param name="bulkUpdateMode">Indicates whether the instance is in Bulk Update mode.</param>
         /// <param name="isSecondary">Indicates whether the instance represents a secondary priority habitat.</param>
         /// <param name="dataRow">The data row containing the BAP information.</param>
         public BapEnvironment(bool bulkUpdateMode, bool isSecondary, HluDataSet.incid_bapRow dataRow)
@@ -105,9 +105,9 @@ namespace HLU.Data
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BapEnvironment"/> class based on the specified data row,
-        /// bulk update mode, secondary priority habitat flag, and BapEnvironment list.
+        /// Bulk Update mode, secondary priority habitat flag, and BapEnvironment list.
         /// </summary>
-        /// <param name="bulkUpdateMode">Indicates whether the instance is in bulk update mode.</param>
+        /// <param name="bulkUpdateMode">Indicates whether the instance is in Bulk Update mode.</param>
         /// <param name="isSecondary">Indicates whether the instance represents a secondary priority habitat.</param>
         /// <param name="dataRow">The data row containing the BAP information.</param>
         /// <param name="beList">The list of BapEnvironment instances.</param>
@@ -132,10 +132,10 @@ namespace HLU.Data
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BapEnvironment"/> class based on the specified bulk update mode,
+        /// Initializes a new instance of the <see cref="BapEnvironment"/> class based on the specified Bulk Update mode,
         /// secondary priority habitat flag, and item array.
         /// </summary>
-        /// <param name="bulkUpdateMode">Indicates whether the instance is in bulk update mode.</param>
+        /// <param name="bulkUpdateMode">Indicates whether the instance is in Bulk Update mode.</param>
         /// <param name="isSecondary">Indicates whether the instance represents a secondary priority habitat.</param>
         /// <param name="itemArray">The array of items containing the BAP information.</param>
         public BapEnvironment(bool bulkUpdateMode, bool isSecondary, object[] itemArray)
@@ -160,10 +160,10 @@ namespace HLU.Data
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BapEnvironment"/> class based on the specified bulk update mode,
+        /// Initializes a new instance of the <see cref="BapEnvironment"/> class based on the specified Bulk Update mode,
         /// secondary priority habitat flag, and BAP information.
         /// </summary>
-        /// <param name="bulkUpdateMode">Indicates whether the instance is in bulk update mode.</param>
+        /// <param name="bulkUpdateMode">Indicates whether the instance is in Bulk Update mode.</param>
         /// <param name="isSecondary">Indicates whether the instance represents a secondary priority habitat.</param>
         /// <param name="bap_id">The BAP ID.</param>
         /// <param name="incid">The incid.</param>
@@ -452,10 +452,10 @@ namespace HLU.Data
         }
 
         /// <summary>
-        /// Gets or sets a value indicating whether the instance is in bulk update mode. When in bulk update mode,
+        /// Gets or sets a value indicating whether the instance is in Bulk Update mode. When in Bulk Update mode,
         /// validation is temporarily disabled to improve performance.
         /// </summary>
-        /// <value><c>true</c> if the instance is in bulk update mode; otherwise, <c>false</c>.</value>
+        /// <value><c>true</c> if the instance is in Bulk Update mode; otherwise, <c>false</c>.</value>
         public bool BulkUpdateMode
         {
             get { return _bulkUpdateMode; }
@@ -532,7 +532,7 @@ namespace HLU.Data
 
         /// <summary>
         /// Gets or sets the quality of the determination for the priority habitat. This is a
-        /// mandatory field when not in bulk update mode.
+        /// mandatory field when not in Bulk Update mode.
         /// </summary>
         /// <value>The quality of the determination for the priority habitat.</value>
         public string Quality_determination
@@ -554,7 +554,7 @@ namespace HLU.Data
 
         /// <summary>
         /// Gets or sets the quality of the interpretation for the priority habitat. This is a
-        /// mandatory field when not in bulk update mode.
+        /// mandatory field when not in Bulk Update mode.
         /// </summary>
         /// <value>The quality of the interpretation for the priority habitat.</value>
         public string Quality_interpretation
@@ -725,7 +725,7 @@ namespace HLU.Data
         /// Determines whether the BAP record is valid by performing row-level validation based
         /// on the current values of the properties.
         /// </summary>
-        /// <param name="bulkUpdateMode">Indicates whether the validation is being performed in bulk update mode.</param>
+        /// <param name="bulkUpdateMode">Indicates whether the validation is being performed in Bulk Update mode.</param>
         /// <param name="isSecondary">Indicates whether the BAP record is a secondary priority habitat.</param>
         /// <returns><c>true</c> if the BAP record is valid; otherwise, <c>false</c>.</returns>
         public bool IsValid(bool bulkUpdateMode, bool isSecondary)
@@ -738,7 +738,7 @@ namespace HLU.Data
         /// Determines whether the specified row is valid by performing row-level validation based
         /// on the current values of the properties.
         /// </summary>
-        /// <param name="bulkUpdateMode">Indicates whether the validation is being performed in bulk update mode.</param>
+        /// <param name="bulkUpdateMode">Indicates whether the validation is being performed in Bulk Update mode.</param>
         /// <param name="isSecondary">Indicates whether the BAP record is a secondary priority habitat.</param>
         /// <param name="r">The BAP row to validate.</param>
         /// <returns><c>true</c> if the BAP row is valid; otherwise, <c>false</c>.</returns>
@@ -768,7 +768,7 @@ namespace HLU.Data
         /// Validates the specified row by performing row-level validation based on the current values of the properties. The method returns
         /// a string containing all validation error messages for the row, or <c>null</c> if the row is valid.
         /// </summary>
-        /// <param name="bulkUpdateMode">Indicates whether the validation is being performed in bulk update mode.</param>
+        /// <param name="bulkUpdateMode">Indicates whether the validation is being performed in Bulk Update mode.</param>
         /// <param name="isSecondary">Indicates whether the BAP record is a secondary priority habitat.</param>
         /// <param name="r">The BAP row to validate.</param>
         /// <returns><c>true</c> if the BAP row is valid; otherwise, <c>false</c>.</returns>
@@ -782,7 +782,7 @@ namespace HLU.Data
         /// Validates the specified row by performing row-level validation based on the current values of the properties. The method returns
         /// a string containing all validation error messages for the row, or <c>null</c> if the row is valid.
         /// </summary>
-        /// <param name="_bulkUpdateMode">Indicates whether the validation is being performed in bulk update mode.</param>
+        /// <param name="_bulkUpdateMode">Indicates whether the validation is being performed in Bulk Update mode.</param>
         /// <param name="isSecondary">Indicates whether the BAP record is a secondary priority habitat.</param>
         /// <param name="bap_id">The BAP ID of the row to validate.</param>
         /// <param name="incid">The INCID of the row to validate.</param>

@@ -54,12 +54,12 @@ namespace HLU.Data
         #region Constructor
 
         /// <summary>
-        /// Default constructor for a new SecondaryHabitat record. Sets bulk update mode to false and
+        /// Default constructor for a new SecondaryHabitat record. Sets Bulk Update mode to false and
         /// initializes secondary_id to -1 to indicate a new record.
         /// </summary>
         public SecondaryHabitat()
         {
-            // Set bulk update mode to false by default, which means that validation will be performed and errors will be shown for this record.
+            // Set Bulk Update mode to false by default, which means that validation will be performed and errors will be shown for this record.
             _bulkUpdateMode = false;
 
             _secondary_id = -1; // arbitrary PK for a new row
@@ -74,7 +74,7 @@ namespace HLU.Data
         /// <param name="dataRow">The data row from which to initialize the SecondaryHabitat.</param>
         public SecondaryHabitat(bool bulkUpdateMode, HluDataSet.incid_secondaryRow dataRow)
         {
-            // Set the bulk update mode from the parameter, which can affect validation behavior.
+            // Set the Bulk Update mode from the parameter, which can affect validation behavior.
             _bulkUpdateMode = bulkUpdateMode;
 
             HluDataSet.incid_secondaryDataTable table = (HluDataSet.incid_secondaryDataTable)dataRow.Table;
@@ -99,7 +99,7 @@ namespace HLU.Data
         /// <param name="shList">The list of existing secondary habitats for duplicate validation.</param>
         public SecondaryHabitat(bool bulkUpdateMode, HluDataSet.incid_secondaryRow dataRow, IEnumerable<SecondaryHabitat> shList)
         {
-            // Set the bulk update mode from the parameter, which can affect validation behavior.
+            // Set the Bulk Update mode from the parameter, which can affect validation behavior.
             _bulkUpdateMode = bulkUpdateMode;
 
             HluDataSet.incid_secondaryDataTable table = (HluDataSet.incid_secondaryDataTable)dataRow.Table;
@@ -123,7 +123,7 @@ namespace HLU.Data
         /// <param name="itemArray">The object array from which to initialize the SecondaryHabitat.</param>
         public SecondaryHabitat(bool bulkUpdateMode, object[] itemArray)
         {
-            // Set the bulk update mode from the parameter, which can affect validation behavior.
+            // Set the Bulk Update mode from the parameter, which can affect validation behavior.
             _bulkUpdateMode = bulkUpdateMode;
 
             // Try to parse the secondary_id from the first element of the array. If parsing fails, default to 0.
@@ -157,7 +157,7 @@ namespace HLU.Data
         /// <param name="secondary_group">The group to which the secondary habitat belongs.</param>
         public SecondaryHabitat(bool bulkUpdateMode, int secondary_id, string incid, string secondary_habitat, string secondary_group)
         {
-            // Set the bulk update mode from the parameter, which can affect validation behavior.
+            // Set the Bulk Update mode from the parameter, which can affect validation behavior.
             _bulkUpdateMode = bulkUpdateMode;
 
             _secondary_id = secondary_id;
@@ -178,7 +178,7 @@ namespace HLU.Data
         /// <param name="inputSH">The existing SecondaryHabitat to copy.</param>
         public SecondaryHabitat(SecondaryHabitat inputSH)
         {
-            // Set bulk update mode to false by default for the new instance, which means that
+            // Set Bulk Update mode to false by default for the new instance, which means that
             // validation will be performed and errors will be shown for this record.
             _bulkUpdateMode = false;
 
@@ -355,7 +355,7 @@ namespace HLU.Data
                     break;
 
                 case nameof(Secondary_habitat):
-                    // Only validate if not in bulk update mode and errors are to be shown
+                    // Only validate if not in Bulk Update mode and errors are to be shown
                     if (!_bulkUpdateMode)
                     {
                         if (String.IsNullOrEmpty(Secondary_habitat))
@@ -668,7 +668,7 @@ namespace HLU.Data
         /// the class.
         /// </summary>
         /// <param name="bulkUpdateMode">
-        /// A value indicating whether the validation is being performed in bulk update mode.
+        /// A value indicating whether the validation is being performed in Bulk Update mode.
         /// </param>
         /// <returns><c>true</c> if the current record is valid; otherwise, <c>false</c>.</returns>
         public bool IsValid(bool bulkUpdateMode)
@@ -682,7 +682,7 @@ namespace HLU.Data
         /// the class.
         /// </summary>
         /// <param name="bulkUpdateMode">
-        /// A value indicating whether the validation is being performed in bulk update mode.
+        /// A value indicating whether the validation is being performed in Bulk Update mode.
         /// </param>
         /// <param name="r">The data row to validate.</param>
         /// <returns><c>true</c> if the specified data row is valid; otherwise, <c>false</c>.</returns>
@@ -715,7 +715,7 @@ namespace HLU.Data
         /// in the class.
         /// </summary>
         /// <param name="bulkUpdateMode">
-        /// A value indicating whether the validation is being performed in bulk update mode.
+        /// A value indicating whether the validation is being performed in Bulk Update mode.
         /// </param>
         /// <param name="r">The data row to validate.</param>
         /// <returns><c>true</c> if the specified data row is valid; otherwise, <c>false</c>.</returns>
@@ -728,7 +728,7 @@ namespace HLU.Data
         /// Determines whether the specified data is valid based on the validation rules defined in
         /// the class.
         /// </summary>
-        /// <param name="_bulkUpdateMode">A value indicating whether the validation is being performed in bulk update mode.</param>
+        /// <param name="_bulkUpdateMode">A value indicating whether the validation is being performed in Bulk Update mode.</param>
         /// <param name="secondary_id">The secondary ID of the data.</param>
         /// <param name="incid">The INCID of the data.</param>
         /// <param name="secondary_habitat">The secondary habitat of the data.</param>
@@ -739,7 +739,7 @@ namespace HLU.Data
         {
             StringBuilder sbError = new();
 
-            // Only validate if not in bulk update mode and errors are to be shown
+            // Only validate if not in Bulk Update mode and errors are to be shown
             if (!_bulkUpdateMode)
             {
                 if ((secondary_id != -1) && String.IsNullOrEmpty(incid))

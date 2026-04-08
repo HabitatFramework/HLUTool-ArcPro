@@ -210,7 +210,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Enable switching only when not in bulk update mode or OSMM update mode and there
+                // Enable switching only when not in Bulk Update mode or OSMM Review mode and there
                 // is more than one HLU layer in the map (otherwise there is nothing to switch to).
                 if (IsNotBulkMode && IsNotOsmmReviewMode)
                 {
@@ -254,7 +254,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public bool CanGetMapSelection
         {
-            // Can get map selection if not in bulk update mode.
+            // Can get map selection if not in Bulk Update mode.
             get { return IsNotBulkMode; }
         }
 
@@ -985,7 +985,7 @@ namespace HLU.UI.ViewModel
         internal async Task SelectAllOnMapAsync()
         {
             // If there are any records in the selection (and the tool is
-            // not currently in bulk update mode).
+            // not currently in Bulk Update mode).
             if (!IsFiltered)
                 return;
 

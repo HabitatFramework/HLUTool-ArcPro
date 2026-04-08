@@ -489,7 +489,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Don't show the area when in OSMM Update mode and there are no
+                // Don't show the area when in OSMM Review mode and there are no
                 // updates to process, or when the form has been cleared.
                 if ((IsNotBulkMode) && (IsNotOsmmReviewMode || _osmmUpdatesEmpty == false)
                     && IncidCurrentRow?.RowState != DataRowState.Detached)
@@ -545,7 +545,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Don't show the length when in OSMM Update mode and there are no
+                // Don't show the length when in OSMM Review mode and there are no
                 // updates to process, or when the form has been cleared.
                 if ((IsNotBulkMode) && (IsNotOsmmReviewMode || _osmmUpdatesEmpty == false)
                     && IncidCurrentRow?.RowState != DataRowState.Detached)
@@ -706,9 +706,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Show the group if not in osmm update mode and
-                // show updates are "Always" required, or "When Outstanding"
-                // (i.e. update flag is "Proposed" (> 0) or "Pending" = 0).
+                // Show the group if in OSMM Review mode, if show updates are "Always" required, or
+                // "When Outstanding" (i.e. update flag is "Proposed" (> 0) or "Pending" = 0).
                 if ((IsOsmmReviewMode) ||
                     (IsNotBulkMode &&
                     (_showOSMMUpdates == "Always" ||
@@ -809,15 +808,15 @@ namespace HLU.UI.ViewModel
         /// selected incid. It is used to show how the latest OSMM translates.
         /// </summary>
         /// <value>
-        /// The string of OSMM Habitat Primary related to the current incid.
+        /// The string of OSMM Habitat Primary related to the current incid,
+        /// or <see langword="null"/> if no OSMM xref row exists for this incid.
         /// </value>
         public string IncidOSMMHabitatPrimary
         {
             get
             {
-                // If there are no OSMM proposed updates or the proposed update
-                // for this incid has already been processed then return null.
-                if (_osmmUpdatesEmpty == true || _incidOSMMUpdatesOSMMXref <= 0)
+                // If there is no OSMM xref for this incid then return null.
+                if (_incidOSMMUpdatesOSMMXref <= 0)
                     return null;
 
                 // Return the first proposed update primary code for this incid
@@ -838,15 +837,15 @@ namespace HLU.UI.ViewModel
         /// selected incid. It is used to show how the latest OSMM translates.
         /// </summary>
         /// <value>
-        /// The string of OSMM Habitat Secondaries related to the current incid.
+        /// The string of OSMM Habitat Secondaries related to the current incid,
+        /// or <see langword="null"/> if no OSMM xref row exists for this incid.
         /// </value>
         public string IncidOSMMHabitatSecondaries
         {
             get
             {
-                // If there are no OSMM proposed updates or the proposed update
-                // for this incid has already been processed then return null.
-                if (_osmmUpdatesEmpty == true || _incidOSMMUpdatesOSMMXref <= 0)
+                // If there is no OSMM xref for this incid then return null.
+                if (_incidOSMMUpdatesOSMMXref <= 0)
                     return null;
 
                 // Return the first proposed update secondary codes for this incid
@@ -1675,9 +1674,7 @@ namespace HLU.UI.ViewModel
 
                         if (q.Any())
                         {
-                            //TODO: Add any optional secondary codes to the list of suggested secondary codes?
-                            // Split the habitat_secondaries text into a list and combine it with
-                            // any optional secondary codes.
+                            // Set the suggested secondary codes and tips for the habitat type and primary code.
                             _habitatSecondariesSuggested = q.ElementAt(0).habitat_secondaries;
                             _habitatTips = q.ElementAt(0).comments;
                         }
@@ -1786,24 +1783,112 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets the string of suggested secondaries that are related to the
-        /// selected habitat type and primary habitat. It is used as an aid
-        /// to the user to help select the correct primary and secondary habitats.
+        /// Gets the string of suggested secondaries that are related to the selected habitat type
+        /// and primary habitat. It is used as an aid to the user to help select the correct primary
+        /// and secondary habitats.
         /// </summary>
         /// <value>
-        /// The string of suggested habitat secondaries related to the current
-        /// habitat type and primary habitat.
+        /// The string of suggested habitat secondaries related to the current habitat type and
+        /// primary habitat plus any optional secondary codes related to the habitat type that are
+        /// not already covered by the suggested codes.
         /// </value>
         public string HabitatSecondariesSuggested
         {
             get
             {
-                //TODO: Include optional secondary codes in the suggested list?
-                if ((_habitatSecondariesSuggested == null) && (_secondaryCodesOptional != null))
-                    return string.Join(", ", _secondaryCodesOptional);
-                else
+                // Get whether there are any suggested or optional secondary codes to show.
+                bool hasSuggested = !string.IsNullOrEmpty(_habitatSecondariesSuggested);
+                bool hasOptional = _secondaryCodesOptional != null && _secondaryCodesOptional.Any();
+
+                // Return null if there are no suggested or optional secondary codes to show.
+                if (!hasSuggested && !hasOptional)
+                    return null;
+
+                // Return the suggested secondary codes if there are some to show and no optional
+                // secondary codes to show.
+                if (hasSuggested && !hasOptional)
                     return _habitatSecondariesSuggested;
+
+                // Determine which optional codes are not already covered by the suggested string.
+                HashSet<string> coveredBySuggested = hasSuggested
+                    ? ExpandSuggestedCodes(_habitatSecondariesSuggested)
+                    : [];
+
+                IEnumerable<string> uniqueOptional = _secondaryCodesOptional
+                    .Where(c => !coveredBySuggested.Contains(c));
+
+                // Return the optional secondary codes if there are some to show and no suggested
+                // secondary codes to show.
+                if (!hasSuggested)
+                    return uniqueOptional.Any() ? string.Join(", ", uniqueOptional) : null;
+
+                // Return the suggested secondary codes with any non-duplicate optional codes appended.
+                if (!uniqueOptional.Any())
+                    return _habitatSecondariesSuggested;
+
+                return _habitatSecondariesSuggested + " / " + string.Join(", ", uniqueOptional);
             }
+        }
+
+        /// <summary>
+        /// Expands a free-text suggested-secondaries string into the set of individual numeric
+        /// codes it covers, so that optional codes already mentioned can be deduplicated.
+        /// <para>
+        /// Handles the following patterns found in <c>lut_habitat_type_primary.habitat_secondaries</c>:
+        /// <list type="bullet">
+        ///   <item>Simple comma-separated codes: <c>400, 401, 406</c></item>
+        ///   <item>Numeric ranges: <c>406-421</c> or <c>[502-504]</c></item>
+        ///   <item>Bracketed "or" alternatives: <c>[14 or 15]</c></item>
+        ///   <item>Combinations: <c>[14 or 15] and [503 or 504]</c>, <c>[16 or 81] and/or 523</c>,
+        ///         <c>400, 401, 406-421</c></item>
+        /// </list>
+        /// Only tokens that parse as integers (or integer ranges) are included; non-numeric
+        /// connective words (<c>and</c>, <c>or</c>, <c>and/or</c>) are ignored.
+        /// </para>
+        /// </summary>
+        /// <param name="suggested">The raw suggested-secondaries string.</param>
+        /// <returns>
+        /// A <see cref="HashSet{T}"/> of string codes covered by <paramref name="suggested"/>.
+        /// </returns>
+        private static HashSet<string> ExpandSuggestedCodes(string suggested)
+        {
+            HashSet<string> result = [];
+
+            if (string.IsNullOrWhiteSpace(suggested))
+                return result;
+
+            // Strip brackets so "[14 or 15]" becomes "14 or 15".
+            string normalised = suggested.Replace('[', ' ').Replace(']', ' ');
+
+            // Split on whitespace, commas, and the connective words "and", "or", "and/or".
+            // Keep range tokens (e.g. "406-421") intact by only splitting on non-range delimiters.
+            string[] tokens = Regex.Split(normalised, @"[\s,]+|(?<!\d)-(?!\d)|and/or|and|or",
+                RegexOptions.IgnoreCase);
+
+            foreach (string token in tokens)
+            {
+                string t = token.Trim();
+
+                if (string.IsNullOrEmpty(t))
+                    continue;
+
+                // Range token e.g. "406-421"
+                Match rangeMatch = Regex.Match(t, @"^(\d+)-(\d+)$");
+                if (rangeMatch.Success &&
+                    int.TryParse(rangeMatch.Groups[1].Value, out int lo) &&
+                    int.TryParse(rangeMatch.Groups[2].Value, out int hi))
+                {
+                    for (int i = lo; i <= hi; i++)
+                        result.Add(i.ToString());
+                    continue;
+                }
+
+                // Plain integer token e.g. "14"
+                if (int.TryParse(t, out _))
+                    result.Add(t);
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -3182,10 +3267,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                // Always enable the user to edit potential priority habitats.
                 return true;
-                //return IsBulkMode ||
-                //    (IncidBapHabitatsAuto != null && IncidBapHabitatsAuto.Count > 0) ||
-                //    (IncidBapHabitatsUser != null && IncidBapHabitatsUser.Count > 0);
             }
         }
 
@@ -3955,7 +4038,7 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Gets the list of source names to be shown in the source 1 name drop-down list. It includes
-        /// the <Clear> row if a source is currently selected, but excludes the <Clear> row in bulk update mode.
+        /// the <Clear> row if a source is currently selected, but excludes the <Clear> row in Bulk Update mode.
         /// </summary>
         /// <value>An array of source rows for source 1.</value>
         public HluDataSet.lut_sourcesRow[] Source1Names
@@ -3975,7 +4058,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Return the list of source names, with the clear row if applicable, but
-                // exclude the clear row in bulk update mode
+                // exclude the clear row in Bulk Update mode
                 if ((IncidSource1Id != null) && (IncidSource1Id != Int32.MinValue))
                 {
                     // Define the <Clear> row
@@ -4046,7 +4129,7 @@ namespace HLU.UI.ViewModel
                 // for the other source 1 fields.
                 else if (value != null)
                 {
-                    // Check for equivalent null value when in bulk update mode
+                    // Check for equivalent null value when in Bulk Update mode
                     bool wasNull = (_incidSourcesRows[0] == null || (int)_incidSourcesRows[0]["source_id"] == Int32.MinValue);
 
                     // Update the source ID
@@ -4156,7 +4239,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the list of source 1 habitat type codes to be shown in the source 1 habitat type drop-down list.
         /// The list is filtered based on the selected source 1 habitat class code. It includes the <Clear> row
-        /// if a habitat type is currently selected, but excludes the <Clear> row in bulk update mode.
+        /// if a habitat type is currently selected, but excludes the <Clear> row in Bulk Update mode.
         /// </summary>
         /// <value>An array of habitat type rows for source 1.</value>
         public HluDataSet.lut_habitat_typeRow[] Source1HabitatTypeCodes
@@ -4289,7 +4372,7 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Gets the list of source names to be shown in the source 2 name drop-down list. It includes
-        /// the <Clear> row if a habitat type is currently selected, but excludes the <Clear> row in bulk update mode.
+        /// the <Clear> row if a habitat type is currently selected, but excludes the <Clear> row in Bulk Update mode.
         /// </summary>
         /// <value>An array of source rows for source 2.</value>
         public HluDataSet.lut_sourcesRow[] Source2Names
@@ -4297,7 +4380,7 @@ namespace HLU.UI.ViewModel
             get
             {
                 // Return the list of source names, with the clear row if applicable, but
-                // exclude the clear row in bulk update mode
+                // exclude the clear row in Bulk Update mode
                 if ((IncidSource2Id != null) && (IncidSource2Id != Int32.MinValue))
                 {
                     // Define the <Clear> row
@@ -4366,7 +4449,7 @@ namespace HLU.UI.ViewModel
                 // selected then set default values for the other source 2 fields.
                 else if (value != null)
                 {
-                    // Check for equivalent null value when in bulk update mode
+                    // Check for equivalent null value when in Bulk Update mode
                     bool wasNull = (_incidSourcesRows[1] == null || (int)_incidSourcesRows[1]["source_id"] == Int32.MinValue);
 
                     // Update the source ID
@@ -4606,7 +4689,7 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Gets the list of source names to be shown in the source 3 name drop-down list. It includes
-        /// the '<Clear>' row if applicable, but excludes the '<Clear>' row in bulk update mode.
+        /// the '<Clear>' row if applicable, but excludes the '<Clear>' row in Bulk Update mode.
         /// </summary>
         /// <value>The list of source 3 names.</value>
         public HluDataSet.lut_sourcesRow[] Source3Names
@@ -4614,7 +4697,7 @@ namespace HLU.UI.ViewModel
             get
             {
                 // Return the list of source names, with the clear row if applicable, but
-                // exclude the clear row in bulk update mode
+                // exclude the clear row in Bulk Update mode
                 if ((IncidSource3Id != null) && (IncidSource3Id != Int32.MinValue))
                 {
                     // Define the <Clear> row
@@ -4683,7 +4766,7 @@ namespace HLU.UI.ViewModel
                 // selected then set default values for the other source 3 fields.
                 else if (value != null)
                 {
-                    // Check for equivalent null value when in bulk update mode
+                    // Check for equivalent null value when in Bulk Update mode
                     bool wasNull = (_incidSourcesRows[2] == null || (int)_incidSourcesRows[2]["source_id"] == Int32.MinValue);
 
                     // Update the source ID
@@ -5371,7 +5454,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Check not in OSMM update mode and GIS present and primary
+                // Check not in OSMM Review mode and GIS present and primary
                 // code and secondary habitat group and code have been set.
                 return (IsNotOsmmReviewMode
                     && _incidPrimary != null && _secondaryGroup != null && _secondaryHabitat != null);
@@ -5403,7 +5486,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Check not in OSMM update mode and GIS present and primary
+                // Check not in OSMM Review mode and GIS present and primary
                 // code and secondary habitat group and code have been set.
                 return (IsNotOsmmReviewMode
                     && _incidPrimary != null);
@@ -5423,7 +5506,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Allow export when not in bulk mode or OSMM bulk update mode with a selection.
+                // Allow export when not in bulk mode or OSMM Bulk Update mode with a selection.
                 return IsNotBulkMode && IsNotOsmmReviewMode && _hluDS != null;
             }
         }
@@ -5443,7 +5526,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Enable filter when not in bulk update mode.
+                // Enable filter when not in Bulk Update mode.
                 return (IsNotBulkMode || (IsBulkMode && IsOsmmBulkMode))
                 && IncidCurrentRow != null;
             }
@@ -5492,7 +5575,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Enable filter when in OSMM bulk update mode
+                // Enable filter when in OSMM Bulk Update mode
                 return (IsOsmmReviewMode && IncidCurrentRow != null);
             }
         }
@@ -5505,7 +5588,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Don't allow filter to be cleared when in OSMM Update mode or
+                // Don't allow filter to be cleared when in OSMM review mode or
                 // OSMM Bulk Update mode.
                 return IsFiltered == true &&
                     IsNotOsmmReviewMode &&
@@ -5716,7 +5799,7 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Update is disabled if not currently in edit mode, if no changes have been
-        /// made by the user, if we're not currently in bulk update mode with no records
+        /// made by the user, if we're not currently in Bulk Update mode with no records
         /// selected, or if the current record is in error.
         /// </summary>
         /// <value><c>true</c> if the update can be performed; otherwise, <c>false</c>.</value>
@@ -5724,7 +5807,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // In bulk update mode: allow update if there is a selection
+                // In Bulk Update mode: allow update if there is a selection
                 // and there are no errors.
                 if ((BulkUpdateMode) &&
                     (Changed == true))
@@ -5777,9 +5860,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Can bulk update mode be started?
+        /// Can Bulk Update mode be started?
         /// </summary>
-        /// <value><c>true</c> if bulk update mode can be started; otherwise, <c>false</c>.</value>
+        /// <value><c>true</c> if Bulk Update mode can be started; otherwise, <c>false</c>.</value>
         public bool CanBulkUpdate
         {
             get
@@ -5787,7 +5870,7 @@ namespace HLU.UI.ViewModel
                 // Must be in a mode that allows edits and ready for edit operations (includes CanEdit + Reason/Process selection),
                 // the user must be authorised for bulk updates,
                 // we must not already be in OSMM Review or OSMM Bulk mode,
-                // and either there must be a filter active or we must already be in bulk update mode (i.e. we're clicking the Apply button to action the bulk update).
+                // and either there must be a filter active or we must already be in Bulk Update mode (i.e. we're clicking the Apply button to action the bulk update).
                 return IsEditReady &&
                     CanUserBulkUpdate == true &&
                     !WorkMode.HasAny(WorkMode.OSMMReview | WorkMode.OSMMBulk) &&
@@ -5815,7 +5898,7 @@ namespace HLU.UI.ViewModel
         /// This is a thin wrapper over WorkMode that toggles the HluEditMode.Bulk
         /// flag while leaving other flags unchanged.
         /// </summary>
-        /// <value><c>true</c> if bulk update mode is active; otherwise, <c>false</c>.</value>
+        /// <value><c>true</c> if Bulk Update mode is active; otherwise, <c>false</c>.</value>
         internal bool BulkUpdateMode
         {
             get
@@ -5830,9 +5913,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets the visibility of controls that should be hidden when in bulk update mode.
+        /// Gets the visibility of controls that should be hidden when in Bulk Update mode.
         /// </summary>
-        /// <value>The visibility of controls that should be hidden when in bulk update mode.</value>
+        /// <value>The visibility of controls that should be hidden when in Bulk Update mode.</value>
         public Visibility HideInBulkUpdateMode
         {
             get
@@ -5848,9 +5931,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets the visibility of controls that should be shown when in bulk update mode.
+        /// Gets the visibility of controls that should be shown when in Bulk Update mode.
         /// </summary>
-        /// <value>The visibility of controls that should be shown when in bulk update mode.</value>
+        /// <value>The visibility of controls that should be shown when in Bulk Update mode.</value>
         public Visibility ShowInBulkUpdateMode
         {
             get
@@ -5899,7 +5982,7 @@ namespace HLU.UI.ViewModel
 
         #endregion Properties - Bulk Update
 
-        #region Properties - OSMM Update
+        #region Properties - OSMM Review
 
         /// <summary>
         /// Gets or sets the OSMM Accept button tag (which controls
@@ -5946,10 +6029,10 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Can OSMM Update mode be started?
+        /// Can OSMM Review mode be started?
         /// </summary>
-        /// <value><c>true</c> if this instance can OSMM update mode; otherwise, <c>false</c>.</value>
-        public bool CanOSMMUpdateMode
+        /// <value><c>true</c> if this instance can OSMM Review mode; otherwise, <c>false</c>.</value>
+        public bool CanOSMMReviewMode
         {
             get
             {
@@ -5965,10 +6048,10 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Can the OSMM Update be cancelled.
+        /// Can the OSMM Review mode be cancelled.
         /// </summary>
-        /// <value><c>true</c> if this instance can cancel OSMM update; otherwise, <c>false</c>.</value>
-        public bool CanCancelOSMMUpdate
+        /// <value><c>true</c> if this instance can cancel OSMM Review mode; otherwise, <c>false</c>.</value>
+        public bool CanCancelOSMMReview
         {
             get
             {
@@ -5994,20 +6077,20 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Can the proposed OSMM Update for the current incid
-        /// be skipped?
+        /// Can the proposed OSMM Update for the current incid be skipped?
         /// </summary>
-        /// <value><c>true</c> if the proposed OSMM Update for the current incid can be skipped; otherwise, <c>false</c>.</value>
+        /// <value>
+        /// <c>true</c> if the proposed OSMM Update for the current incid can be skipped; otherwise, <c>false</c>.
+        /// </value>
         public bool CanOSMMSkip
         {
             get
             {
-                // Check if there are proposed OSMM Updates
-                // for the current filter.
+                // Allow skip whenever there is a filter active and we are not
+                // mid-update, even if the current incid has no OSMM update record
+                // (in that case the skip simply navigates to the next record).
                 return (IsFiltered &&
-                        _osmmUpdating == false &&
-                        _osmmUpdatesEmpty == false &&
-                        _incidOSMMUpdatesStatus != null);
+                        _osmmUpdating == false);
             }
         }
 
@@ -6070,8 +6153,8 @@ namespace HLU.UI.ViewModel
         /// This toggles the HluEditMode.OsmmReview flag while leaving other flags
         /// (Edit, Bulk, OsmmBulk) unchanged.
         /// </summary>
-        /// <value><c>true</c> if OSMM Update mode is active; otherwise, <c>false</c>.</value>
-        internal bool OSMMUpdateMode
+        /// <value><c>true</c> if OSMM Review mode is active; otherwise, <c>false</c>.</value>
+        internal bool OSMMReviewMode
         {
             get
             {
@@ -6085,10 +6168,10 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Hide some controls when in OSMM Update mode.
+        /// Hide some controls when in OSMM Review mode.
         /// </summary>
-        /// <value>The visibility of controls when in OSMM Update mode.</value>
-        public Visibility HideInOSMMUpdateMode
+        /// <value>The visibility of controls when in OSMM Review mode.</value>
+        public Visibility HideInOSMMReviewMode
         {
             get
             {
@@ -6103,14 +6186,14 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Show some controls when in OSMM Update mode.
+        /// Show some controls when in OSMM Review mode.
         /// </summary>
-        /// <value>The visibility of controls in OSMM Update mode.</value>
-        public Visibility ShowInOSMMUpdateMode
+        /// <value>The visibility of controls in OSMM Review mode.</value>
+        public Visibility ShowInOSMMReviewMode
         {
             get
             {
-                // Show the group if in osmm update mode
+                // Show the group if in OSMM Review mode
                 if (IsOsmmReviewMode)
                 {
                     return Visibility.Visible;
@@ -6231,7 +6314,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion Properties - OSMM Update
+        #endregion Properties - OSMM Review
 
         #region Properties - OSMM Bulk Update
 
@@ -6246,12 +6329,12 @@ namespace HLU.UI.ViewModel
                 // Must be in a mode that allows edits and ready for edit operations (includes CanEdit + Reason/Process selection),
                 // there must be proposed OSMM Updates for the current filter,
                 // the user must be authorised for bulk updates,
-                // and we must not already be in OSMM Review mode,
+                // and we must not already be in standard Bulk mode (unless already in OSMM Bulk mode).
+                // Switching directly from OSMM Review mode to OSMM Bulk mode is allowed.
                 return IsEditReady &&
                     AnyOSMMUpdates == true &&
                     CanUserBulkUpdate == true &&
-                    !WorkMode.HasAll(WorkMode.OSMMReview) &&
-                    (!WorkMode.HasAll(WorkMode.Bulk) || WorkMode.HasAll(WorkMode.OSMMBulk));
+                    (!WorkMode.HasAll(WorkMode.Bulk) || WorkMode.HasAll(WorkMode.OSMMBulk) || WorkMode.HasAll(WorkMode.OSMMReview));
             }
         }
 
@@ -6960,7 +7043,7 @@ namespace HLU.UI.ViewModel
             _incidNVCCodes = null;
             //_incidSecondarySummary = null;
 
-            // In bulk update mode set the default habitat class immediately so that
+            // In Bulk Update mode set the default habitat class immediately so that
             // HabitatTypeCodes is populated when RefreshHabitatTab() fires.
             // In normal mode the class is reset via the HabitatClass getter.
             if (BulkUpdateMode)
@@ -7107,7 +7190,7 @@ namespace HLU.UI.ViewModel
 
             // Update all other controls.
             RefreshBulkUpdateControls();
-            RefreshOSMMUpdateControls();
+            RefreshOSMMReviewControls();
             RefreshStatus();
             RefreshHeader();
             RefreshOSMMUpdate();
@@ -7163,15 +7246,15 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Notifies the UI that properties related to OSMM update controls have changed.
+        /// Notifies the UI that properties related to OSMM Review controls have changed.
         /// </summary>
-        /// <remarks>Call this method to refresh the state of UI elements that depend on OSMM update mode
+        /// <remarks>Call this method to refresh the state of UI elements that depend on OSMM Review mode
         /// properties. This ensures that any bindings to these properties are updated to reflect the current
         /// state.</remarks>
-        private void RefreshOSMMUpdateControls()
+        private void RefreshOSMMReviewControls()
         {
-            OnPropertyChanged(nameof(ShowInOSMMUpdateMode));
-            OnPropertyChanged(nameof(HideInOSMMUpdateMode));
+            OnPropertyChanged(nameof(ShowInOSMMReviewMode));
+            OnPropertyChanged(nameof(HideInOSMMReviewMode));
 
             OnPropertyChanged(nameof(TopControlsGroupHeader));
         }
@@ -7194,7 +7277,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(CanOSMMAccept));
             OnPropertyChanged(nameof(CanOSMMSkip));
             OnPropertyChanged(nameof(CanBulkUpdate));
-            OnPropertyChanged(nameof(CanOSMMUpdateMode));
+            OnPropertyChanged(nameof(CanOSMMReviewMode));
             OnPropertyChanged(nameof(CanOSMMBulkUpdateMode));
             OnPropertyChanged(nameof(CanOSMMUpdateAccept));
             OnPropertyChanged(nameof(CanOSMMUpdateReject));
@@ -7208,6 +7291,12 @@ namespace HLU.UI.ViewModel
 
             // Update split/merge enablement
             RefreshSplitMergeEnablement();
+
+            // Dispatch an invalidation so buttons re-evaluate CanExecute on the UI thread
+            // immediately, rather than waiting for the next user input event.
+            Application.Current?.Dispatcher.BeginInvoke(
+                System.Windows.Threading.DispatcherPriority.Normal,
+                new Action(CommandManager.InvalidateRequerySuggested));
         }
 
         /// <summary>
@@ -7741,7 +7830,7 @@ namespace HLU.UI.ViewModel
                 }
             }
 
-            // If in bulk update mode then perform the bulk update and exit.
+            // If in Bulk Update mode then perform the bulk update and exit.
             if (IsBulkMode)
             {
                 ApplyBulkUpdate();
@@ -7943,7 +8032,7 @@ namespace HLU.UI.ViewModel
                 OnPropertyChanged(nameof(WindowTitle));
                 OnPropertyChanged(nameof(CanUpdate));
                 OnPropertyChanged(nameof(CanBulkUpdate));
-                OnPropertyChanged(nameof(CanOSMMUpdateMode));
+                OnPropertyChanged(nameof(CanOSMMReviewMode));
                 OnPropertyChanged(nameof(CanOSMMBulkUpdateMode));
                 OnPropertyChanged(nameof(CanOSMMUpdateAccept));
                 OnPropertyChanged(nameof(CanOSMMUpdateReject));
@@ -8078,11 +8167,11 @@ namespace HLU.UI.ViewModel
         #region Bulk Update Handler
 
         /// <summary>
-        /// Start the bulk update mode.
+        /// Start the Bulk Update mode.
         /// </summary>
         public void StartBulkUpdate()
         {
-            ChangeCursor(Cursors.Wait, "Starting bulk update mode ...");
+            ChangeCursor(Cursors.Wait, "Starting Bulk Update mode ...");
 
             _saving = false;
 
@@ -8120,36 +8209,25 @@ namespace HLU.UI.ViewModel
             _saving = false;
             _viewModelBulkUpdate ??= new ViewModelWindowMainBulkUpdate(this, _addInSettings);
 
-            // If already in bulk update mode then perform the bulk update
+            // If already in Bulk Update mode then perform the bulk update
             if (IsBulkMode)
                 _viewModelBulkUpdate.ShowBulkUpdateWindow();
         }
 
         #endregion Bulk Update Handler
 
-        #region OSMM Update Handler
+        #region OSMM Review Handler
 
         /// <summary>
-        /// Start the OSMM Update mode.
+        /// Start the OSMM Review mode.
         /// </summary>
         /// <param name="param">The parameter passed to the command.</param>
-        private void StartOSMMUpdateClicked(object param)
+        private void StartOSMMReviewClicked(object param)
         {
-            // Can't start OSMM Update mode if the bulk OSMM source hasn't been set.
-            if (_addInSettings.BulkOSMMSourceId == null)
-            {
-                // Inform the user that the bulk OSMM source hasn't been set and that they need to
-                // set it in the options before they can start the OSMM Update mode.
-                ShowWarning("The Bulk OSMM Source has not been set.\n\n" +
-                    "Please set the Bulk OSMM Source in the Options.", MessageCategory.OSMMUpdate);
-
-                return;
-            }
-
             _saving = false;
             _viewModelOSMMUpdate ??= new ViewModelWindowMainOSMMUpdate(this);
 
-            // If the OSMM update mode is not already started.
+            // If the OSMM Review mode is not already started.
             if (IsNotOsmmReviewMode)
             {
                 // Check there are no outstanding edits.
@@ -8167,13 +8245,15 @@ namespace HLU.UI.ViewModel
                         return;
                 }
 
-                ChangeCursor(Cursors.Wait, "Starting OSMM update mode ...");
+                ChangeCursor(Cursors.Wait, "Starting OSMM Review mode ...");
 
                 // Prevent OSMM updates being actioned too quickly.
                 _osmmUpdating = false;
 
-                OnPropertyChanged(nameof(CanOSMMAccept));
-                OnPropertyChanged(nameof(CanOSMMSkip));
+                // Force RelayCommand buttons to re-evaluate CanExecute on the UI thread.
+                Application.Current?.Dispatcher.BeginInvoke(
+                    System.Windows.Threading.DispatcherPriority.Normal,
+                    new Action(CommandManager.InvalidateRequerySuggested));
 
                 // If there is nothing selected force the form to be cleared
                 // and open the OSMM Updates query window.
@@ -8187,8 +8267,8 @@ namespace HLU.UI.ViewModel
                     OpenWindowQueryOSMM(true);
                 }
 
-                // Start the OSMM update mode
-                _viewModelOSMMUpdate.StartOSMMUpdate();
+                // Start the OSMM Review mode
+                _viewModelOSMMUpdate.StartOSMMReview();
 
                 // Reset the cursor back to normal.
                 ChangeCursor(Cursors.Arrow);
@@ -8213,30 +8293,23 @@ namespace HLU.UI.ViewModel
         private async Task OSMMSkipAsync()
         {
             // Prevent OSMM updates being actioned too quickly.
-            // Mark the OSMM Update row as skipped
-            // If there are any OSMM Updates for this incid then store the values.
-            if (_osmmUpdating == false && _osmmUpdatesEmpty == false)
-            {
-                if (IncidOSMMStatus > 0)
-                {
-                    _osmmUpdating = true;
+            if (_osmmUpdating)
+                return;
 
+            _osmmUpdating = true;
+
+            try
+            {
+                // Only mark the row as skipped when an OSMM update record actually
+                // exists for this incid and it is in a proposed state.
+                if (_osmmUpdatesEmpty == false && _incidOSMMUpdatesStatus > 0)
+                {
                     // Mark the OSMM Update row as skipped
                     _viewModelOSMMUpdate.OSMMUpdate(1);
-
-                    // Move to the next Incid
-                    await MoveIncidCurrentRowIndexAsync(_incidCurrentRowIndex + 1);
-
-                    _osmmUpdating = false;
-
-                    OnPropertyChanged(nameof(CanOSMMAccept));
-                    OnPropertyChanged(nameof(CanOSMMSkip));
                 }
-                else
-                {
-                    // Move to the next Incid
-                    await MoveIncidCurrentRowIndexAsync(_incidCurrentRowIndex + 1);
-                }
+
+                // Move to the next Incid regardless of whether a skip was recorded.
+                await MoveIncidCurrentRowIndexAsync(_incidCurrentRowIndex + 1);
 
                 // Refresh all the status type fields.
                 RefreshStatus();
@@ -8246,6 +8319,15 @@ namespace HLU.UI.ViewModel
 
                 // Check if the GIS and database are in sync.
                 CheckInSync("Selection", "Map");
+            }
+            finally
+            {
+                _osmmUpdating = false;
+
+                // Force RelayCommand buttons to re-evaluate CanExecute on the UI thread.
+                Application.Current?.Dispatcher.BeginInvoke(
+                    System.Windows.Threading.DispatcherPriority.Normal,
+                    new Action(CommandManager.InvalidateRequerySuggested));
             }
         }
 
@@ -8299,8 +8381,10 @@ namespace HLU.UI.ViewModel
 
                 _osmmUpdating = false;
 
-                OnPropertyChanged(nameof(CanOSMMAccept));
-                OnPropertyChanged(nameof(CanOSMMSkip));
+                // Force RelayCommand buttons to re-evaluate CanExecute on the UI thread.
+                Application.Current?.Dispatcher.BeginInvoke(
+                    System.Windows.Threading.DispatcherPriority.Normal,
+                    new Action(CommandManager.InvalidateRequerySuggested));
             }
         }
 
@@ -8354,8 +8438,10 @@ namespace HLU.UI.ViewModel
 
                 _osmmUpdating = false;
 
-                OnPropertyChanged(nameof(CanOSMMAccept));
-                OnPropertyChanged(nameof(CanOSMMSkip));
+                // Force RelayCommand buttons to re-evaluate CanExecute on the UI thread.
+                Application.Current?.Dispatcher.BeginInvoke(
+                    System.Windows.Threading.DispatcherPriority.Normal,
+                    new Action(CommandManager.InvalidateRequerySuggested));
             }
         }
 
@@ -8438,7 +8524,7 @@ namespace HLU.UI.ViewModel
             _saving = false;
             _viewModelBulkUpdate ??= new ViewModelWindowMainBulkUpdate(this, _addInSettings);
 
-            // If the OSMM Bulk update mode is not already started.
+            // If the OSMM Bulk Update mode is not already started.
             if (IsNotOsmmBulkMode)
             {
                 // Check there are no outstanding edits.
@@ -8455,8 +8541,9 @@ namespace HLU.UI.ViewModel
                         return;
                 }
 
-                // Start the OSMM update mode (shows the query window; cursor/message reset after dialog closes).
-                ChangeCursor(Cursors.Wait, "Starting bulk OSMM update mode ...");
+                // Start the bulk OSMM Review mode (shows the query window; cursor/message reset
+                // after dialog closes).
+                ChangeCursor(Cursors.Wait, "Starting bulk OSMM Review mode ...");
                 _viewModelBulkUpdate.StartOSMMBulkUpdate();
 
                 // Reset the cursor back to normal.
@@ -8541,20 +8628,9 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public void FilterByAttributes()
         {
-            // Open the OSMM Updates query window if in OSMM Update mode.
+            // Open the OSMM Updates query window if in OSMM Review mode or OSMM Bulk Update mode.
             if (IsOsmmReviewMode || IsOsmmBulkMode)
             {
-                // Can't start OSMM Update mode if the bulk OSMM source hasn't been set.
-                if (_addInSettings.BulkOSMMSourceId == null)
-                {
-                    // Inform the user that the bulk OSMM source hasn't been set and that they need
-                    // to set it in the options before they can start the OSMM Update mode.
-                    ShowWarning("The Bulk OSMM Source has not been set.\n\n" +
-                        "Please set the Bulk OSMM Source in the Options.", MessageCategory.OSMMUpdate);
-
-                    return;
-                }
-
                 OpenWindowQueryOSMM(false);
             }
             else
@@ -8692,7 +8768,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 // If there are any records in the selection (and the tool is
-                // not currently in bulk update mode).
+                // not currently in Bulk Update mode).
                 if (IsFiltered)
                 {
                     ChangeCursor(Cursors.Wait, "Counting ...");
@@ -8864,7 +8940,7 @@ namespace HLU.UI.ViewModel
         #region OSMM Filter Dialogs
 
         /// <summary>
-        /// Open the OSMM Updates query window when in OSMM Update mode.
+        /// Open the OSMM Updates query window when in OSMM Review mode.
         /// </summary>
         /// <param name="initialise">Whether to initialise the window.</param>
         public async void OpenWindowQueryOSMM(bool initialise)
@@ -8968,7 +9044,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Open the OSMM Updates advanced query window when in OSMM Update mode.
+        /// Open the OSMM Updates advanced query window when in OSMM Review mode.
         /// </summary>
         /// <param name="initialise">if set to <c>true</c> [initialise].</param>
         /// <exception cref="Exception">No parent window loaded</exception>
@@ -9134,7 +9210,7 @@ namespace HLU.UI.ViewModel
                     DataTable incidSelectionBackup = _incidSelection;
 
                     // If there are any records in the selection (and the tool is
-                    // not currently in bulk update mode).
+                    // not currently in Bulk Update mode).
                     if (IsFiltered)
                     {
                         // Find the expected number of features to be selected in GIS.
@@ -9657,7 +9733,7 @@ namespace HLU.UI.ViewModel
         /// Updates the enabled state of the active layer combo box based on the application mode and
         /// the number of available map layers.
         /// </summary>
-        /// <remarks>The combo box is enabled only when neither bulk update nor OSMM update modes are
+        /// <remarks>The combo box is enabled only when neither bulk update nor OSMM Review modes are
         /// active, and there is more than one map layer available. Otherwise, the combo box is disabled.
         /// This method should be called whenever the application mode or the set of available map layers
         /// changes to ensure the UI reflects the current state.</remarks>

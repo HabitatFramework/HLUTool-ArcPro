@@ -143,9 +143,9 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Gets or sets the where clause used to filter the osmm_updates table for updates
-        /// to be applied in bulk update mode. This is built based on the current selection
+        /// to be applied in Bulk Update mode. This is built based on the current selection
         /// in GIS and is used to determine which records in the osmm_updates table should be
-        /// updated when applying changes in bulk update mode.
+        /// updated when applying changes in Bulk Update mode.
         /// </summary>
         /// <value>The where clause used to filter the osmm_updates table for bulk updates.</value>
         internal string OSMMUpdateWhereClause
@@ -160,9 +160,9 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Are there any filters applied to the Incid table and
-        /// is the tool currently not in bulk update mode?
+        /// is the tool currently not in Bulk Update mode?
         /// </summary>
-        /// <returns><c>true</c> if there are filters applied and the tool is not in bulk update mode; otherwise, <c>false</c>.</returns>
+        /// <returns><c>true</c> if there are filters applied and the tool is not in Bulk Update mode; otherwise, <c>false</c>.</returns>
         public bool IsFiltered
         {
             get
@@ -476,11 +476,11 @@ namespace HLU.UI.ViewModel
         internal bool IsDirtyIncid()
         {
             // If there is no current row there can't be any changes. This also prevents false
-            // positives for changes when the current row is null in bulk update mode.
+            // positives for changes when the current row is null in Bulk Update mode.
             if (_incidCurrentRow == null)
                 return false;
 
-            // In bulk update mode the current row is Detached (created via
+            // In Bulk Update mode the current row is Detached (created via
             // NewincidRow). The clone is taken of the blank row after ClearForm,
             // so CompareIncidCurrentRowClone detects any field the user has
             // touched — identical to how normal mode works.
@@ -492,7 +492,7 @@ namespace HLU.UI.ViewModel
             if (!rowIsUsable)
                 return false;
 
-            //// In bulk update mode the current row is always Detached (created via
+            //// In Bulk Update mode the current row is always Detached (created via
             //// NewincidRow and never added to the table). Treat any non-null field
             //// value as a pending change rather than requiring a row-state check.
             //if (BulkUpdateMode)
@@ -519,7 +519,7 @@ namespace HLU.UI.ViewModel
         internal bool IsDirtyIncidIhsMatrix()
         {
             // If there are no ihs matrix rows there can't be any changes. This also prevents false
-            // positives for changes when the ihs matrix rows are null in bulk update mode.
+            // positives for changes when the ihs matrix rows are null in Bulk Update mode.
             if (_incidIhsMatrixRows != null)
             {
                 // If the number of ihs matrix rows doesn't match the original count consider the
@@ -545,7 +545,7 @@ namespace HLU.UI.ViewModel
         internal bool IsDirtyIncidIhsFormation()
         {
             // If there are no ihs formation rows there can't be any changes. This also prevents
-            // false positives for changes when the ihs formation rows are null in bulk update mode.
+            // false positives for changes when the ihs formation rows are null in Bulk Update mode.
             if (_incidIhsFormationRows != null)
             {
                 // If the number of ihs formation rows doesn't match the original count consider the
@@ -570,7 +570,7 @@ namespace HLU.UI.ViewModel
         internal bool IsDirtyIncidIhsManagement()
         {
             // If there are no ihs management rows there can't be any changes. This also prevents
-            // false positives for changes when the ihs management rows are null in bulk update mode.
+            // false positives for changes when the ihs management rows are null in Bulk Update mode.
             if (_incidIhsManagementRows != null)
             {
                 // If the number of ihs management rows doesn't match the original count consider
@@ -595,7 +595,7 @@ namespace HLU.UI.ViewModel
         internal bool IsDirtyIncidIhsComplex()
         {
             // If there are no ihs complex rows there can't be any changes. This also prevents false
-            // positives for changes when the ihs complex rows are null in bulk update mode.
+            // positives for changes when the ihs complex rows are null in Bulk Update mode.
             if (_incidIhsComplexRows != null)
             {
                 // If the number of ihs complex rows doesn't match the original count consider the
@@ -620,7 +620,7 @@ namespace HLU.UI.ViewModel
         internal bool IsDirtyIncidSecondary()
         {
             // If there are no secondary habitats there can't be any changes. This also prevents false
-            // positives for changes when the secondary habitats are null in bulk update mode.
+            // positives for changes when the secondary habitats are null in Bulk Update mode.
             if (_incidSecondaryHabitats == null)
                 return false;
 
@@ -657,7 +657,7 @@ namespace HLU.UI.ViewModel
         /// </returns>
         internal bool IsDirtyIncidCondition()
         {
-            // In bulk update mode condition rows are always Detached so RowIsDirty
+            // In Bulk Update mode condition rows are always Detached so RowIsDirty
             // returns false and the count always matches _origIncidConditionCount.
             // Instead treat any row with a non-null condition value as a pending change.
             if (BulkUpdateMode)
@@ -692,7 +692,7 @@ namespace HLU.UI.ViewModel
         internal bool IsDirtyIncidBap()
         {
             // If there are no BAP environments there can't be any changes. This also prevents false
-            // positives for changes when the BAP environments are null in bulk update mode.
+            // positives for changes when the BAP environments are null in Bulk Update mode.
             if (_incidBapRowsAuto == null)
                 return false;
 
@@ -740,7 +740,7 @@ namespace HLU.UI.ViewModel
         /// </returns>
         private bool IsDirtyIncidSources()
         {
-            // In bulk update mode source rows are always Detached so RowIsDirty
+            // In Bulk Update mode source rows are always Detached so RowIsDirty
             // returns false and _incidSourcesRows is empty so the count always
             // matches _origIncidSourcesCount (0). Instead treat any row with a
             // real source_id (i.e. not the sentinel Int32.MinValue) as a pending change.
@@ -1505,7 +1505,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Add a secondary habitat.
         /// </summary>
-        /// <param name="bulkUpdateMode">Whether the application is in bulk update mode.</param>
+        /// <param name="bulkUpdateMode">Whether the application is in Bulk Update mode.</param>
         /// <param name="secondary_id">The ID of the secondary habitat.</param>
         /// <param name="incid">The incid associated with the secondary habitat.</param>
         /// <param name="secondary_habitat">The name of the secondary habitat.</param>
@@ -2520,7 +2520,7 @@ namespace HLU.UI.ViewModel
                 DataTable incidSelectionBackup = _incidSelection;
 
                 // If there are any records in the selection (and the tool is
-                // not currently in bulk update mode).
+                // not currently in Bulk Update mode).
                 if (IsFiltered)
                 {
                     // Find the expected number of features to be selected in GIS.
@@ -2709,7 +2709,7 @@ namespace HLU.UI.ViewModel
                 DataTable incidSelectionBackup = _incidSelection;
 
                 // If there are any records in the selection (and the tool is not currently in bulk
-                // bulk update mode), and the caller has requested to select the records in GIS.
+                // Bulk Update mode), and the caller has requested to select the records in GIS.
                 if (IsFiltered && selectInGIS)
                 {
                     // Find the expected number of features to be selected in GIS.
@@ -2866,16 +2866,10 @@ namespace HLU.UI.ViewModel
         /// <returns>A task that represents the asynchronous operation.</returns>
         public async Task ClearFilterAsync(bool resetRowIndex)
         {
-            // Reset the OSMM Updates filter when in OSMM Update mode.
+            // Reset the OSMM Updates filter when in OSMM Review mode.
             if (IsOsmmReviewMode)
             {
                 await ApplyOSMMUpdatesFilterAsync(null, null, null, null, false);
-                return;
-            }
-            else if (IsOsmmBulkMode)
-            {
-                //TODO: Should SelectInGIS be true here?
-                await ApplyOSMMUpdatesFilterAsync(null, null, null, "Pending", true);
                 return;
             }
 
@@ -3044,7 +3038,7 @@ namespace HLU.UI.ViewModel
             try
             {
                 // If filtered, and there are selected incids in the map or not connected to GIS
-                // or in OSMM Update mode.
+                // or in OSMM Review mode.
                 if (IsFiltered && (((_selectedIncidsInGISCount > 0) || (_gisApp == null)) || IsOsmmReviewMode))
                     // If currently splitting a feature then go to the last incid
                     // in the filter (which will be the new incid).

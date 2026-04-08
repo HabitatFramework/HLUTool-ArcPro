@@ -934,7 +934,7 @@ namespace HLU.UI.ViewModel
         ///     WorkMode.HasAll(WorkMode.Bulk)
         ///
         /// Whenever WorkMode changes, this setter keeps the legacy boolean
-        /// fields (_canEdit, _bulkUpdateMode, _osmmUpdateMode,
+        /// fields (_canEdit, _bulkUpdateMode, _osmmReviewMode,
         /// _osmmBulkUpdateMode) in sync for backward compatibility and then
         /// refreshes all dependent UI state.
         /// </summary>
@@ -978,16 +978,16 @@ namespace HLU.UI.ViewModel
             WorkMode.HasAll(WorkMode.EditReady);
 
         /// <summary>
-        /// Returns true when the tool is in bulk update mode, which disables normal edit operations and enables bulk update functionality.
+        /// Returns true when the tool is in Bulk Update mode, which disables normal edit operations and enables bulk update functionality.
         /// </summary>
-        /// <value><c>true</c> if the tool is in bulk update mode; otherwise, <c>false</c>.</value>
+        /// <value><c>true</c> if the tool is in Bulk Update mode; otherwise, <c>false</c>.</value>
         private bool IsBulkMode =>
             WorkMode.HasFlag(WorkMode.Bulk);
 
         /// <summary>
-        /// Returns true when the tool is not in bulk update mode.
+        /// Returns true when the tool is not in Bulk Update mode.
         /// </summary>
-        /// <value><c>true</c> if the tool is not in bulk update mode; otherwise, <c>false</c>.</value>
+        /// <value><c>true</c> if the tool is not in Bulk Update mode; otherwise, <c>false</c>.</value>
         private bool IsNotBulkMode =>
             !IsBulkMode;
 
@@ -1006,16 +1006,16 @@ namespace HLU.UI.ViewModel
             !IsOsmmReviewMode;
 
         /// <summary>
-        /// Returns true when the tool is in OSMM bulk update mode, which disables normal edit operations and enables OSMM-specific bulk update functionality.
+        /// Returns true when the tool is in OSMM Bulk Update mode, which disables normal edit operations and enables OSMM-specific bulk update functionality.
         /// </summary>
-        /// <value><c>true</c> if the tool is in OSMM bulk update mode; otherwise, <c>false</c>.</value>
+        /// <value><c>true</c> if the tool is in OSMM Bulk Update mode; otherwise, <c>false</c>.</value>
         internal bool IsOsmmBulkMode =>
             WorkMode.HasFlag(WorkMode.OSMMBulk);
 
         /// <summary>
-        /// Returns true when the tool is not in OSMM bulk update mode.
+        /// Returns true when the tool is not in OSMM Bulk Update mode.
         /// </summary>
-        /// <value><c>true</c> if the tool is not in OSMM bulk update mode; otherwise, <c>false</c>.</value>
+        /// <value><c>true</c> if the tool is not in OSMM Bulk Update mode; otherwise, <c>false</c>.</value>
         private bool IsNotOsmmBulkMode =>
             !IsOsmmBulkMode;
 
@@ -1125,13 +1125,13 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Show errors in bulk update mode.
+                // Show errors in Bulk Update mode.
                 if ((_incidCurrentRow == null) ||
                     (_incidCurrentRow.RowState == DataRowState.Detached && IsNotBulkMode)) return null;
 
                 StringBuilder error = new();
 
-                // If not in bulk update mode.
+                // If not in Bulk Update mode.
                 if (IsNotBulkMode)
                 {
                     if (String.IsNullOrEmpty(IncidBoundaryBaseMap))
@@ -1154,7 +1154,7 @@ namespace HLU.UI.ViewModel
                     }
                 }
 
-                // If the habitat primary code is missing and not in bulk update mode.
+                // If the habitat primary code is missing and not in Bulk Update mode.
                 if (String.IsNullOrEmpty(IncidPrimary) && IsNotBulkMode)
                     error.Append(Environment.NewLine).Append("Primary Habitat is mandatory for every INCID");
 
@@ -1227,7 +1227,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Show errors in bulk update mode.
+                // Show errors in Bulk Update mode.
                 if ((_incidCurrentRow == null) ||
                     (_incidCurrentRow.RowState == DataRowState.Detached && IsNotBulkMode)) return null;
 
@@ -1423,10 +1423,10 @@ namespace HLU.UI.ViewModel
                         break;
                 }
 
-                // Exit if in OSMM bulk update mode.
+                // Exit if in OSMM Bulk Update mode.
                 if (IsOsmmReviewMode) return null;
 
-                // Additional checks if not in bulk update mode.
+                // Additional checks if not in Bulk Update mode.
                 if (IsNotBulkMode)
                 {
                     switch (columnName)
@@ -2901,7 +2901,7 @@ private async Task CreateWorkingGeodatabaseAsync()
                     // Switching from OSMM Review mode → cancel it cleanly.
                     _viewModelOSMMUpdate ??=
                         new ViewModelWindowMainOSMMUpdate(this);
-                    await _viewModelOSMMUpdate.CancelOSMMUpdateAsync();
+                    await _viewModelOSMMUpdate.CancelOSMMReviewAsync();
                 }
                 else
                 {
@@ -2914,12 +2914,19 @@ private async Task CreateWorkingGeodatabaseAsync()
             // If switching to OSMM Review mode
             else if (newMode.HasFlag(WorkMode.OSMMReview))
             {
-                // Start OSMM Update mode (which will set the flags)
-                StartOSMMUpdateClicked(null);
+                // Start OSMM Review mode (which will set the flags)
+                StartOSMMReviewClicked(null);
             }
             // If switching to Bulk OSMM mode
             else if (newMode.HasFlag(WorkMode.OSMMBulk))
             {
+                // If currently in OSMM Review mode, cancel it cleanly first.
+                if (IsOsmmReviewMode)
+                {
+                    _viewModelOSMMUpdate ??= new ViewModelWindowMainOSMMUpdate(this);
+                    await _viewModelOSMMUpdate.CancelOSMMReviewAsync();
+                }
+
                 // Start OSMM Bulk Update mode (which will set the flags)
                 StartOSMMBulkUpdateClicked(null);
             }
@@ -3225,7 +3232,7 @@ private async Task CreateWorkingGeodatabaseAsync()
                         break;
                     case MessageBoxResult.No:
                         // Clear the form and warn the user when there are no more records
-                        // when in OSMM Update mode.
+                        // when in OSMM Review mode.
                         if (IsOsmmReviewMode && ((value > 0) &&
                             (IsFiltered && ((_incidSelection == null) || (value > _incidSelection.Rows.Count)))))
                         {
@@ -3257,12 +3264,12 @@ private async Task CreateWorkingGeodatabaseAsync()
                             ChangeCursor(Cursors.Arrow);
 
                             // Warn the user that no more records were found.
-                            ShowWarning("No more records found.", MessageCategory.Navigation);
+                            ShowWarning("No more records in filter.", MessageCategory.Navigation);
 
                             break;
                         }
 
-                        // If in bulk update mode.
+                        // If in Bulk Update mode.
                         if (IsBulkMode)
                         {
                             // Set the new current row index.
@@ -3648,7 +3655,7 @@ private async Task CreateWorkingGeodatabaseAsync()
         {
             MessageBoxResult userResponse = MessageBoxResult.No;
 
-            // Don't check for edits when in OSMM Update mode (because the data
+            // Don't check for edits when in OSMM Review mode (because the data
             // can't be edited by the user).
             if (IsEditMode
                 && (_splitting == false)

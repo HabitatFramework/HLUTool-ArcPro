@@ -135,7 +135,7 @@ namespace HLU.UI
         public const string Filter = "Filter";
         public const string Update = "Update";
         public const string BulkUpdate = "BulkUpdate";
-        public const string OSMMUpdate = "OSMMUpdate";
+        public const string OSMMReview = "OSMMReview";
         public const string GIS = "GIS";
         public const string Export = "Export";
         public const string Split = "Split";

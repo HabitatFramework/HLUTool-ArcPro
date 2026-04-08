@@ -128,7 +128,7 @@ namespace HLU.UI.UserControls.Toolbar
             Enabled = canFilterByIncid;
 
             // Set the disabled tool tip text (for when it is disabled).
-            DisabledTooltip = "Unavailable when there are no features to filter, or when the main window is not visible.";
+            DisabledTooltip = "Unavailable when:\n\u2022 There are no features to filter\n\u2022 The main window is not visible.";
         }
 
         #endregion Overrides
