@@ -231,6 +231,30 @@ namespace HLU.UI.View
             }
         }
 
+        /// <summary>
+        /// Handles the Click event for the Apply (Update) button.
+        /// Clears the secondary habitat combo box selection.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The event data.</param>
+        private void ButtonUpdate_Click(object sender, RoutedEventArgs e)
+        {
+            ComboBoxSecondaryHabitat.SelectedValue = null;
+            ComboBoxSecondaryHabitat.Text = string.Empty;
+        }
+
+        /// <summary>
+        /// Handles the Click event for the Get Map Selection button.
+        /// Clears the secondary habitat combo box selection.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The event data.</param>
+        private void ButtonGetMapSelection_Click(object sender, RoutedEventArgs e)
+        {
+            ComboBoxSecondaryHabitat.SelectedValue = null;
+            ComboBoxSecondaryHabitat.Text = string.Empty;
+        }
+
         #endregion Event handlers
    }
 }

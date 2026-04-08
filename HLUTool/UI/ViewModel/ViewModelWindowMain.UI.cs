@@ -1575,6 +1575,9 @@ namespace HLU.UI.ViewModel
                 // Refresh the mandatory habitat secondaries and tips.
                 OnPropertyChanged(nameof(HabitatSecondariesMandatory));
                 OnPropertyChanged(nameof(HabitatSecondariesSuggested));
+                OnPropertyChanged(nameof(HabitatSecondariesOptional));
+                OnPropertyChanged(nameof(ShowHabitatSecondariesSuggested));
+                OnPropertyChanged(nameof(ShowHabitatTips));
 
                 // Refresh selection + dependent UI.
                 OnPropertyChanged(nameof(IncidPrimary));
@@ -1683,8 +1686,11 @@ namespace HLU.UI.ViewModel
                     // Set the list of secondary codes for the primary habitat.
                     NewPrimaryHabitat(_incidPrimary);
 
-                    // Refresh the suggested habitat secondaries and tips
+                    // Refresh the suggested habitat secondaries, optional secondaries, and tips.
                     OnPropertyChanged(nameof(HabitatSecondariesSuggested));
+                    OnPropertyChanged(nameof(HabitatSecondariesOptional));
+                    OnPropertyChanged(nameof(ShowHabitatSecondariesSuggested));
+                    OnPropertyChanged(nameof(ShowHabitatTips));
                     OnPropertyChanged(nameof(HabitatTips));
 
                     // Refresh the BAP habitat environments (in case secondary codes
@@ -1768,7 +1774,7 @@ namespace HLU.UI.ViewModel
             get
             {
                 // If should be showing the suggested habitat secondaries
-                if (_showHabitatSecondariesSuggested)
+                if (_showHabitatSecondariesSuggested && HabitatSecondariesSuggested != null)
                 {
                     return Visibility.Visible;
                 }
@@ -1788,45 +1794,51 @@ namespace HLU.UI.ViewModel
         /// and secondary habitats.
         /// </summary>
         /// <value>
-        /// The string of suggested habitat secondaries related to the current habitat type and
-        /// primary habitat plus any optional secondary codes related to the habitat type that are
-        /// not already covered by the suggested codes.
+        /// The raw suggested habitat secondaries string from
+        /// <c>lut_habitat_type_primary.habitat_secondaries</c>, or <see langword="null"/> when
+        /// there is no suggestion for the current habitat-type / primary combination.
         /// </value>
         public string HabitatSecondariesSuggested
         {
             get
             {
-                // Get whether there are any suggested or optional secondary codes to show.
-                bool hasSuggested = !string.IsNullOrEmpty(_habitatSecondariesSuggested);
-                bool hasOptional = _secondaryCodesOptional != null && _secondaryCodesOptional.Any();
+                return string.IsNullOrEmpty(_habitatSecondariesSuggested)
+                    ? null
+                    : _habitatSecondariesSuggested;
+            }
+        }
 
-                // Return null if there are no suggested or optional secondary codes to show.
-                if (!hasSuggested && !hasOptional)
+        /// <summary>
+        /// Gets the comma-separated list of optional secondary codes for the selected habitat type
+        /// that are not already covered by <see cref="HabitatSecondariesSuggested"/>.
+        /// </summary>
+        /// <value>
+        /// A comma-separated string of optional secondary codes from
+        /// <c>lut_habitat_type_secondary</c> (where <c>mandatory = 0</c>) that do not appear in
+        /// the suggested string, or <see langword="null"/> when there are none to show.
+        /// </value>
+        public string HabitatSecondariesOptional
+        {
+            get
+            {
+                if (_secondaryCodesOptional == null || !_secondaryCodesOptional.Any())
                     return null;
 
-                // Return the suggested secondary codes if there are some to show and no optional
-                // secondary codes to show.
-                if (hasSuggested && !hasOptional)
-                    return _habitatSecondariesSuggested;
+                return string.Join(", ", _secondaryCodesOptional);
+            }
+        }
 
-                // Determine which optional codes are not already covered by the suggested string.
-                HashSet<string> coveredBySuggested = hasSuggested
-                    ? ExpandSuggestedCodes(_habitatSecondariesSuggested)
-                    : [];
-
-                IEnumerable<string> uniqueOptional = _secondaryCodesOptional
-                    .Where(c => !coveredBySuggested.Contains(c));
-
-                // Return the optional secondary codes if there are some to show and no suggested
-                // secondary codes to show.
-                if (!hasSuggested)
-                    return uniqueOptional.Any() ? string.Join(", ", uniqueOptional) : null;
-
-                // Return the suggested secondary codes with any non-duplicate optional codes appended.
-                if (!uniqueOptional.Any())
-                    return _habitatSecondariesSuggested;
-
-                return _habitatSecondariesSuggested + " / " + string.Join(", ", uniqueOptional);
+        /// <summary>
+        /// Gets the visibility of the habitat tips info button.
+        /// The button is only shown when the option is set and there are tips to display.
+        /// </summary>
+        public Visibility ShowHabitatTips
+        {
+            get
+            {
+                return (_showHabitatSecondariesSuggested && !string.IsNullOrEmpty(_habitatTips))
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
             }
         }
 
@@ -7427,6 +7439,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(TabHabitatControlsEnabled));
             OnPropertyChanged(nameof(ShowSourceHabitatGroup));
             OnPropertyChanged(nameof(ShowHabitatSecondariesSuggested));
+            OnPropertyChanged(nameof(ShowHabitatTips));
             OnPropertyChanged(nameof(ShowNVCCodes));
             OnPropertyChanged(nameof(HabitatTabLabel));
             OnPropertyChanged(nameof(HabitatClass));
@@ -7434,6 +7447,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(HabitatType));
             OnPropertyChanged(nameof(HabitatSecondariesMandatory));
             OnPropertyChanged(nameof(HabitatSecondariesSuggested));
+            OnPropertyChanged(nameof(HabitatSecondariesOptional));
             OnPropertyChanged(nameof(HabitatTips));
             OnPropertyChanged(nameof(IncidPrimary));
             OnPropertyChanged(nameof(NvcCodes));

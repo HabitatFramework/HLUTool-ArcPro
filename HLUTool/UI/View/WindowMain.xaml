@@ -778,51 +778,97 @@
                                                 <ColumnDefinition Width="20" />
                                             </Grid.ColumnDefinitions>
 
-                                            <Label
-                                                x:Name="LabelHabitatSecondariesMandatory"
+                                            <!--  Row 0: Mandatory and Optional side-by-side, always visible, equal width  -->
+                                            <Grid
+                                                x:Name="GridHabitatSecondariesMandatoryOptional"
                                                 Grid.Row="0"
                                                 Grid.Column="0"
-                                                Margin="0,0,0,2"
-                                                HorizontalAlignment="Right"
-                                                VerticalAlignment="Center"
-                                                Content="Mandatory"
-                                                Visibility="Visible" />
-                                            <TextBox
-                                                x:Name="TextBoxHabitatSecondariesMandatory"
-                                                Grid.Row="0"
-                                                Grid.Column="1"
-                                                Height="22"
-                                                Margin="0,0,0,2"
-                                                VerticalAlignment="Center"
-                                                IsEnabled="False"
-                                                IsReadOnly="True"
-                                                Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
-                                                Text="{Binding HabitatSecondariesMandatory, Mode=OneWay, ValidatesOnDataErrors=True}"
-                                                ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
-                                                ToolTipService.ShowOnDisabled="True"
-                                                Visibility="Visible" />
+                                                Grid.ColumnSpan="2"
+                                                Margin="0,0,0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
 
-                                            <Label
-                                                x:Name="LabelHabitatSecondariesSuggested"
+                                                <Label
+                                                    x:Name="LabelHabitatSecondariesMandatory"
+                                                    Grid.Column="0"
+                                                    HorizontalContentAlignment="Right"
+                                                    MinWidth="80"
+                                                    VerticalAlignment="Center"
+                                                    Content="Mandatory" />
+                                                <TextBox
+                                                    x:Name="TextBoxHabitatSecondariesMandatory"
+                                                    Grid.Column="1"
+                                                    Height="22"
+                                                    VerticalAlignment="Center"
+                                                    IsEnabled="False"
+                                                    IsReadOnly="True"
+                                                    Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                    Text="{Binding HabitatSecondariesMandatory, Mode=OneWay, ValidatesOnDataErrors=True}"
+                                                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
+                                                    ToolTipService.ShowOnDisabled="True" />
+
+                                                <Label
+                                                    x:Name="LabelHabitatSecondariesOptional"
+                                                    Grid.Column="2"
+                                                    HorizontalContentAlignment="Right"
+                                                    MinWidth="60"
+                                                    VerticalAlignment="Center"
+                                                    Content="Optional" />
+                                                <TextBox
+                                                    x:Name="TextBoxHabitatSecondariesOptional"
+                                                    Grid.Column="3"
+                                                    Height="22"
+                                                    VerticalAlignment="Center"
+                                                    IsEnabled="False"
+                                                    Text="{Binding HabitatSecondariesOptional, Mode=OneWay}"
+                                                    ToolTipService.ShowOnDisabled="True" />
+                                            </Grid>
+
+                                            <!--  Row 1: Suggested + InfoButton, hidden when show-suggested option is off  -->
+                                            <Grid
+                                                x:Name="GridHabitatSecondariesSuggested"
                                                 Grid.Row="1"
                                                 Grid.Column="0"
+                                                Grid.ColumnSpan="3"
                                                 Margin="0,2,0,2"
-                                                HorizontalAlignment="Right"
-                                                VerticalAlignment="Center"
-                                                Content="Suggested"
-                                                Visibility="{Binding ShowHabitatSecondariesSuggested}" />
-                                            <TextBox
-                                                x:Name="TextBoxHabitatSecondariesSuggested"
-                                                Grid.Row="1"
-                                                Grid.Column="1"
-                                                Height="22"
-                                                Margin="0,2,0,2"
-                                                VerticalAlignment="Center"
-                                                IsEnabled="False"
-                                                Text="{Binding HabitatSecondariesSuggested, Mode=OneWay}"
-                                                ToolTip="{Binding HabitatTips}"
-                                                ToolTipService.ShowOnDisabled="True"
-                                                Visibility="{Binding ShowHabitatSecondariesSuggested}" />
+                                                Visibility="{Binding ShowHabitatSecondariesSuggested}">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <Label
+                                                    x:Name="LabelHabitatSecondariesSuggested"
+                                                    Grid.Column="0"
+                                                    HorizontalContentAlignment="Right"
+                                                    MinWidth="80"
+                                                    VerticalAlignment="Center"
+                                                    Content="Suggested" />
+                                                <TextBox
+                                                    x:Name="TextBoxHabitatSecondariesSuggested"
+                                                    Grid.Column="1"
+                                                    Height="22"
+                                                    VerticalAlignment="Center"
+                                                    IsEnabled="False"
+                                                    Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
+                                                    Text="{Binding HabitatSecondariesSuggested, Mode=OneWay, ValidatesOnDataErrors=True}"
+                                                    ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
+                                                    ToolTipService.ShowOnDisabled="True" />
+
+                                                <!--  InfoButton for HabitatTips, shown only when tips are available  -->
+                                                <controls:InfoButton
+                                                    x:Name="ButtonHabitatTips"
+                                                    Grid.Column="2"
+                                                    Margin="0,0,0,0"
+                                                    Description="{Binding HabitatTips}"
+                                                    Header="Habitat Tips"
+                                                    Visibility="{Binding ShowHabitatTips}" />
+                                            </Grid>
 
                                             <Grid
                                                 x:Name="GridAddSecondaryHabitat"
@@ -834,13 +880,6 @@
                                                     <ColumnDefinition Width="*" />
                                                 </Grid.ColumnDefinitions>
 
-                                                <!--<Label x:Name="LabelSecondaryGroup"
-												   Grid.Row="0"
-												   Grid.Column="0"
-                                                   Margin="0,8,0,4"
-                                                   HorizontalAlignment="Right"
-                                                   VerticalAlignment="Center"
-                                                   Content="Group" />-->
                                                 <ComboBox
                                                     x:Name="ComboBoxSecondaryGroup"
                                                     Grid.Row="0"
@@ -856,13 +895,6 @@
                                                     SelectedValuePath="code"
                                                     ToolTipService.ShowOnDisabled="True" />
 
-                                                <!--<Label x:Name="LabelSecondaryHabitat"
-                                                   Grid.Row="0"
-                                                   Grid.Column="2"
-                                                   Margin="0,2,0,4"
-                                                   HorizontalAlignment="Right"
-                                                   VerticalAlignment="Center"
-                                                   Content="Code" />-->
                                                 <ComboBox
                                                     x:Name="ComboBoxSecondaryHabitat"
                                                     Grid.Row="0"
@@ -3167,6 +3199,7 @@
                     Padding="0,0,0,0"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
+                    Click="ButtonGetMapSelection_Click"
                     Command="{Binding GetMapSelectionCommand}"
                     Style="{DynamicResource Esri_Button}"
                     ToolTip="Get Map Selection"
@@ -3313,6 +3346,7 @@
                             Margin="2,0,0,0"
                             HorizontalAlignment="Center"
                             Background="Red"
+                            Click="ButtonUpdate_Click"
                             Command="{Binding UpdateCommand}"
                             Content="Appl_y"
                             Foreground="White"
