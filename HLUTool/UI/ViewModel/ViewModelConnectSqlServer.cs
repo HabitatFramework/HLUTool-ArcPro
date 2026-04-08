@@ -241,7 +241,9 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Don't bother to get a list of servers. Just return an empty list.
+                // Don't bother to get a list of servers, just return an empty list as it can be
+                // very time consuming and often fails due to network issues or SQL Server Browser
+                // service not running on the server. The user can still enter the server name manually.
                 //_servers ??= LoadServers();
                 _servers = [];
                 return [.. _servers];

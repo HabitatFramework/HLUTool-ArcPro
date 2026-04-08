@@ -2946,14 +2946,20 @@ private async Task CreateWorkingGeodatabaseAsync()
         {
             try
             {
+                // Check if the database connection is available.
                 if (_db == null)
                     return;
 
+                // Find the current user's record in the lut_user table and get the value of the
+                // bulk update column to determine if they are an authorised user and can bulk update.
                 object result = _db.ExecuteScalar(String.Format("SELECT {0} FROM {1} WHERE {2} = {3}",
                     _db.QuoteIdentifier(_hluDS.lut_user.bulk_updateColumn.ColumnName),
                     _db.QualifyTableName(_hluDS.lut_user.TableName),
                     _db.QuoteIdentifier(_hluDS.lut_user.user_idColumn.ColumnName),
                     _db.QuoteValue(this.UserID)), _db.Connection.ConnectionTimeout, CommandType.Text);
+
+                // If a record was found, the user is an authorised user and the value of the bulk
+                // update column determines if they can bulk update.
                 if (result != null)
                 {
                     _isAuthorisedUser = true;
@@ -2961,6 +2967,7 @@ private async Task CreateWorkingGeodatabaseAsync()
                 }
                 else
                 {
+                    // Otherwise, the user is not an authorised user and cannot bulk update.
                     _isAuthorisedUser = false;
                     _canUserBulkUpdate = false;
                 }
@@ -2972,6 +2979,8 @@ private async Task CreateWorkingGeodatabaseAsync()
                     _db.QualifyTableName(_hluDS.lut_user.TableName),
                     _db.QuoteIdentifier(_hluDS.lut_user.user_idColumn.ColumnName),
                     _db.QuoteValue(this.UserID)), _db.Connection.ConnectionTimeout, CommandType.Text);
+
+                // If a record was found, get the username; otherwise, use "(guest)".
                 if (result != null)
                 {
                     _userName = (string)result;
@@ -2983,6 +2992,8 @@ private async Task CreateWorkingGeodatabaseAsync()
             }
             catch
             {
+                // If there was an error accessing the database, assume the user is not an
+                // authorised user and cannot bulk update.
                 _isAuthorisedUser = null;
                 _canUserBulkUpdate = null;
             }

@@ -232,6 +232,5 @@ namespace HLU.UI.View
         }
 
         #endregion Event handlers
-
-    }
+   }
 }

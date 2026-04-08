@@ -7,11 +7,11 @@
 
 	<AddInInfo id="{8bb44fa0-a26d-4f03-a370-b52f39b28c90}" version="4.1.0" desktopVersion="3.4">
 		<Name>HLUTool</Name>
-		<Description>HLUTool is an ArcGIS .Net tool ....</Description>
+		<Description>HLUTool is an ArcGIS .Net tool </Description>
 		<Image>Images\AddinDesktop32.png</Image>
 		<Author>Andy Foy, andy@andyfoyconsulting.co.uk</Author>
 		<Company>Andy Foy Consulting</Company>
-		<Date>09/12/2025 17:38:00 AM</Date>
+		<Date>08/04/2026 17:38:00 AM</Date>
 		<Subject>Framework, Editing, Geodatabase</Subject>
 		<!-- Note subject can be one or more of these topics:
                     Content, Framework, Editing, Geodatabase, Geometry, Geoprocessing, Layouts, Map Authoring, Map Exploration -->
