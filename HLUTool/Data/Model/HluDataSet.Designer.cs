@@ -256,6 +256,12 @@ namespace HLU.Data.Model {
         
         private global::System.Data.DataRelation relationfk_history_incid_mm_polygons;
         
+        private global::System.Data.DataRelation relationfk_lut_osmm_habitat_xref_habitat_primary;
+        
+        private global::System.Data.DataRelation relationfk_lut_primary_lut_habitat_class;
+        
+        private global::System.Data.DataRelation relationfk_incid_lut_habitat_class;
+        
         private global::System.Data.SchemaSerializationMode _schemaSerializationMode = global::System.Data.SchemaSerializationMode.IncludeSchema;
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -1591,6 +1597,9 @@ namespace HLU.Data.Model {
             this.relationfk_incid_osmm_updates_lut_osmm_habitat_xref = this.Relations["fk_incid_osmm_updates_lut_osmm_habitat_xref"];
             this.relationlut_primary_lut_primary_secondary = this.Relations["lut_primary_lut_primary_secondary"];
             this.relationfk_history_incid_mm_polygons = this.Relations["fk_history_incid_mm_polygons"];
+            this.relationfk_lut_osmm_habitat_xref_habitat_primary = this.Relations["fk_lut_osmm_habitat_xref_habitat_primary"];
+            this.relationfk_lut_primary_lut_habitat_class = this.Relations["fk_lut_primary_lut_habitat_class"];
+            this.relationfk_incid_lut_habitat_class = this.Relations["fk_incid_lut_habitat_class"];
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -1975,6 +1984,18 @@ namespace HLU.Data.Model {
                         this.tablehistory.toidColumn,
                         this.tablehistory.fragidColumn}, false);
             this.Relations.Add(this.relationfk_history_incid_mm_polygons);
+            this.relationfk_lut_osmm_habitat_xref_habitat_primary = new global::System.Data.DataRelation("fk_lut_osmm_habitat_xref_habitat_primary", new global::System.Data.DataColumn[] {
+                        this.tablelut_primary.codeColumn}, new global::System.Data.DataColumn[] {
+                        this.tablelut_osmm_habitat_xref.habitat_primaryColumn}, false);
+            this.Relations.Add(this.relationfk_lut_osmm_habitat_xref_habitat_primary);
+            this.relationfk_lut_primary_lut_habitat_class = new global::System.Data.DataRelation("fk_lut_primary_lut_habitat_class", new global::System.Data.DataColumn[] {
+                        this.tablelut_habitat_class.codeColumn}, new global::System.Data.DataColumn[] {
+                        this.tablelut_primary.habitat_class_codeColumn}, false);
+            this.Relations.Add(this.relationfk_lut_primary_lut_habitat_class);
+            this.relationfk_incid_lut_habitat_class = new global::System.Data.DataRelation("fk_incid_lut_habitat_class", new global::System.Data.DataColumn[] {
+                        this.tablelut_habitat_class.codeColumn}, new global::System.Data.DataColumn[] {
+                        this.tableincid.habitat_classColumn}, false);
+            this.Relations.Add(this.relationfk_incid_lut_habitat_class);
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -2778,8 +2799,6 @@ namespace HLU.Data.Model {
             
             private global::System.Data.DataColumn columndb_version;
             
-            private global::System.Data.DataColumn columnhabitat_version;
-            
             private global::System.Data.DataColumn columndata_version;
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -2835,14 +2854,6 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public global::System.Data.DataColumn habitat_versionColumn {
-                get {
-                    return this.columnhabitat_version;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             public global::System.Data.DataColumn data_versionColumn {
                 get {
                     return this.columndata_version;
@@ -2886,12 +2897,11 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public lut_versionRow Addlut_versionRow(string app_version, string db_version, string habitat_version, string data_version) {
+            public lut_versionRow Addlut_versionRow(string app_version, string db_version, string data_version) {
                 lut_versionRow rowlut_versionRow = ((lut_versionRow)(this.NewRow()));
                 object[] columnValuesArray = new object[] {
                         app_version,
                         db_version,
-                        habitat_version,
                         data_version};
                 rowlut_versionRow.ItemArray = columnValuesArray;
                 this.Rows.Add(rowlut_versionRow);
@@ -2924,7 +2934,6 @@ namespace HLU.Data.Model {
             internal void InitVars() {
                 this.columnapp_version = base.Columns["app_version"];
                 this.columndb_version = base.Columns["db_version"];
-                this.columnhabitat_version = base.Columns["habitat_version"];
                 this.columndata_version = base.Columns["data_version"];
             }
             
@@ -2935,8 +2944,6 @@ namespace HLU.Data.Model {
                 base.Columns.Add(this.columnapp_version);
                 this.columndb_version = new global::System.Data.DataColumn("db_version", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columndb_version);
-                this.columnhabitat_version = new global::System.Data.DataColumn("habitat_version", typeof(string), null, global::System.Data.MappingType.Element);
-                base.Columns.Add(this.columnhabitat_version);
                 this.columndata_version = new global::System.Data.DataColumn("data_version", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columndata_version);
                 this.Constraints.Add(new global::System.Data.UniqueConstraint("Constraint1", new global::System.Data.DataColumn[] {
@@ -2946,8 +2953,6 @@ namespace HLU.Data.Model {
                 this.columnapp_version.MaxLength = 10;
                 this.columndb_version.AllowDBNull = false;
                 this.columndb_version.MaxLength = 10;
-                this.columnhabitat_version.AllowDBNull = false;
-                this.columnhabitat_version.MaxLength = 11;
                 this.columndata_version.AllowDBNull = false;
                 this.columndata_version.MaxLength = 4;
             }
@@ -4042,6 +4047,8 @@ namespace HLU.Data.Model {
             
             private global::System.Data.DataColumn columnhabitat_secondaries;
             
+            private global::System.Data.DataColumn columnhabitat_class;
+            
             private global::System.Data.DataColumn columnhabitat_version;
             
             private global::System.Data.DataColumn columnsite_ref;
@@ -4128,6 +4135,14 @@ namespace HLU.Data.Model {
             public global::System.Data.DataColumn habitat_secondariesColumn {
                 get {
                     return this.columnhabitat_secondaries;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public global::System.Data.DataColumn habitat_classColumn {
+                get {
+                    return this.columnhabitat_class;
                 }
             }
             
@@ -4292,6 +4307,7 @@ namespace HLU.Data.Model {
                         string incid, 
                         lut_primaryRow parentlut_primaryRowByfk_incid_lut_primary, 
                         string habitat_secondaries, 
+                        lut_habitat_classRow parentlut_habitat_classRowByfk_incid_lut_habitat_class, 
                         string habitat_version, 
                         string site_ref, 
                         string site_name, 
@@ -4312,6 +4328,7 @@ namespace HLU.Data.Model {
                         incid,
                         null,
                         habitat_secondaries,
+                        null,
                         habitat_version,
                         site_ref,
                         site_name,
@@ -4330,26 +4347,29 @@ namespace HLU.Data.Model {
                 if ((parentlut_primaryRowByfk_incid_lut_primary != null)) {
                     columnValuesArray[1] = parentlut_primaryRowByfk_incid_lut_primary[0];
                 }
+                if ((parentlut_habitat_classRowByfk_incid_lut_habitat_class != null)) {
+                    columnValuesArray[3] = parentlut_habitat_classRowByfk_incid_lut_habitat_class[0];
+                }
                 if ((parentlut_quality_determinationRowByfk_incid_lut_quality_determination != null)) {
-                    columnValuesArray[7] = parentlut_quality_determinationRowByfk_incid_lut_quality_determination[0];
+                    columnValuesArray[8] = parentlut_quality_determinationRowByfk_incid_lut_quality_determination[0];
                 }
                 if ((parentlut_quality_interpretationRowByfk_incid_lut_quality_interpretation != null)) {
-                    columnValuesArray[8] = parentlut_quality_interpretationRowByfk_incid_lut_quality_interpretation[0];
+                    columnValuesArray[9] = parentlut_quality_interpretationRowByfk_incid_lut_quality_interpretation[0];
                 }
                 if ((parentlut_boundary_mapRowByfk_incid_lut_boundary_map_base != null)) {
-                    columnValuesArray[10] = parentlut_boundary_mapRowByfk_incid_lut_boundary_map_base[0];
+                    columnValuesArray[11] = parentlut_boundary_mapRowByfk_incid_lut_boundary_map_base[0];
                 }
                 if ((parentlut_boundary_mapRowByFK_lut_boundary_map_incid != null)) {
-                    columnValuesArray[11] = parentlut_boundary_mapRowByFK_lut_boundary_map_incid[0];
+                    columnValuesArray[12] = parentlut_boundary_mapRowByFK_lut_boundary_map_incid[0];
                 }
                 if ((parentlut_legacy_habitatRowByfk_incid_lut_legacy_habitat != null)) {
-                    columnValuesArray[13] = parentlut_legacy_habitatRowByfk_incid_lut_legacy_habitat[0];
+                    columnValuesArray[14] = parentlut_legacy_habitatRowByfk_incid_lut_legacy_habitat[0];
                 }
                 if ((parentlut_userRowByfk_incid_user_created != null)) {
-                    columnValuesArray[15] = parentlut_userRowByfk_incid_user_created[0];
+                    columnValuesArray[16] = parentlut_userRowByfk_incid_user_created[0];
                 }
                 if ((parentlut_userRowByfk_incid_user_modified != null)) {
-                    columnValuesArray[17] = parentlut_userRowByfk_incid_user_modified[0];
+                    columnValuesArray[18] = parentlut_userRowByfk_incid_user_modified[0];
                 }
                 rowincidRow.ItemArray = columnValuesArray;
                 this.Rows.Add(rowincidRow);
@@ -4383,6 +4403,7 @@ namespace HLU.Data.Model {
                 this.columnincid = base.Columns["incid"];
                 this.columnhabitat_primary = base.Columns["habitat_primary"];
                 this.columnhabitat_secondaries = base.Columns["habitat_secondaries"];
+                this.columnhabitat_class = base.Columns["habitat_class"];
                 this.columnhabitat_version = base.Columns["habitat_version"];
                 this.columnsite_ref = base.Columns["site_ref"];
                 this.columnsite_name = base.Columns["site_name"];
@@ -4409,6 +4430,8 @@ namespace HLU.Data.Model {
                 base.Columns.Add(this.columnhabitat_primary);
                 this.columnhabitat_secondaries = new global::System.Data.DataColumn("habitat_secondaries", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnhabitat_secondaries);
+                this.columnhabitat_class = new global::System.Data.DataColumn("habitat_class", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnhabitat_class);
                 this.columnhabitat_version = new global::System.Data.DataColumn("habitat_version", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnhabitat_version);
                 this.columnsite_ref = new global::System.Data.DataColumn("site_ref", typeof(string), null, global::System.Data.MappingType.Element);
@@ -4446,6 +4469,7 @@ namespace HLU.Data.Model {
                 this.columnincid.MaxLength = 12;
                 this.columnhabitat_primary.MaxLength = 8;
                 this.columnhabitat_secondaries.MaxLength = 80;
+                this.columnhabitat_version.AllowDBNull = false;
                 this.columnhabitat_version.MaxLength = 11;
                 this.columnsite_ref.MaxLength = 16;
                 this.columnsite_name.MaxLength = 100;
@@ -7273,6 +7297,8 @@ namespace HLU.Data.Model {
             
             private global::System.Data.DataColumn columndescription;
             
+            private global::System.Data.DataColumn columnhabitat_version;
+            
             private global::System.Data.DataColumn columnis_local;
             
             private global::System.Data.DataColumn columnsort_order;
@@ -7330,6 +7356,14 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public global::System.Data.DataColumn habitat_versionColumn {
+                get {
+                    return this.columnhabitat_version;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             public global::System.Data.DataColumn is_localColumn {
                 get {
                     return this.columnis_local;
@@ -7381,11 +7415,12 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public lut_habitat_classRow Addlut_habitat_classRow(string code, string description, bool is_local, int sort_order) {
+            public lut_habitat_classRow Addlut_habitat_classRow(string code, string description, string habitat_version, bool is_local, int sort_order) {
                 lut_habitat_classRow rowlut_habitat_classRow = ((lut_habitat_classRow)(this.NewRow()));
                 object[] columnValuesArray = new object[] {
                         code,
                         description,
+                        habitat_version,
                         is_local,
                         sort_order};
                 rowlut_habitat_classRow.ItemArray = columnValuesArray;
@@ -7419,6 +7454,7 @@ namespace HLU.Data.Model {
             internal void InitVars() {
                 this.columncode = base.Columns["code"];
                 this.columndescription = base.Columns["description"];
+                this.columnhabitat_version = base.Columns["habitat_version"];
                 this.columnis_local = base.Columns["is_local"];
                 this.columnsort_order = base.Columns["sort_order"];
             }
@@ -7430,6 +7466,8 @@ namespace HLU.Data.Model {
                 base.Columns.Add(this.columncode);
                 this.columndescription = new global::System.Data.DataColumn("description", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columndescription);
+                this.columnhabitat_version = new global::System.Data.DataColumn("habitat_version", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnhabitat_version);
                 this.columnis_local = new global::System.Data.DataColumn("is_local", typeof(bool), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnis_local);
                 this.columnsort_order = new global::System.Data.DataColumn("sort_order", typeof(int), null, global::System.Data.MappingType.Element);
@@ -7441,7 +7479,6 @@ namespace HLU.Data.Model {
                 this.columncode.MaxLength = 5;
                 this.columndescription.AllowDBNull = false;
                 this.columndescription.MaxLength = 254;
-                this.columnis_local.AllowDBNull = false;
                 this.columnsort_order.AllowDBNull = false;
             }
             
@@ -14752,6 +14789,8 @@ namespace HLU.Data.Model {
             
             private global::System.Data.DataColumn columncategory;
             
+            private global::System.Data.DataColumn columnhabitat_class_code;
+            
             private global::System.Data.DataColumn columnnvc_codes;
             
             private global::System.Data.DataColumn columnpolygon;
@@ -14822,6 +14861,14 @@ namespace HLU.Data.Model {
             public global::System.Data.DataColumn categoryColumn {
                 get {
                     return this.columncategory;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public global::System.Data.DataColumn habitat_class_codeColumn {
+                get {
+                    return this.columnhabitat_class_code;
                 }
             }
             
@@ -14918,11 +14965,12 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public lut_primaryRow Addlut_primaryRow(string code, string description, lut_primary_categoryRow parentlut_primary_categoryRowByfk_lut_primary_lut_secondary_group, string nvc_codes, bool polygon, bool line, bool point, string comments, bool is_local, int sort_order) {
+            public lut_primaryRow Addlut_primaryRow(string code, string description, lut_primary_categoryRow parentlut_primary_categoryRowByfk_lut_primary_lut_secondary_group, lut_habitat_classRow parentlut_habitat_classRowByfk_lut_primary_lut_habitat_class, string nvc_codes, bool polygon, bool line, bool point, string comments, bool is_local, int sort_order) {
                 lut_primaryRow rowlut_primaryRow = ((lut_primaryRow)(this.NewRow()));
                 object[] columnValuesArray = new object[] {
                         code,
                         description,
+                        null,
                         null,
                         nvc_codes,
                         polygon,
@@ -14933,6 +14981,9 @@ namespace HLU.Data.Model {
                         sort_order};
                 if ((parentlut_primary_categoryRowByfk_lut_primary_lut_secondary_group != null)) {
                     columnValuesArray[2] = parentlut_primary_categoryRowByfk_lut_primary_lut_secondary_group[0];
+                }
+                if ((parentlut_habitat_classRowByfk_lut_primary_lut_habitat_class != null)) {
+                    columnValuesArray[3] = parentlut_habitat_classRowByfk_lut_primary_lut_habitat_class[0];
                 }
                 rowlut_primaryRow.ItemArray = columnValuesArray;
                 this.Rows.Add(rowlut_primaryRow);
@@ -14966,6 +15017,7 @@ namespace HLU.Data.Model {
                 this.columncode = base.Columns["code"];
                 this.columndescription = base.Columns["description"];
                 this.columncategory = base.Columns["category"];
+                this.columnhabitat_class_code = base.Columns["habitat_class_code"];
                 this.columnnvc_codes = base.Columns["nvc_codes"];
                 this.columnpolygon = base.Columns["polygon"];
                 this.columnline = base.Columns["line"];
@@ -14984,6 +15036,8 @@ namespace HLU.Data.Model {
                 base.Columns.Add(this.columndescription);
                 this.columncategory = new global::System.Data.DataColumn("category", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columncategory);
+                this.columnhabitat_class_code = new global::System.Data.DataColumn("habitat_class_code", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnhabitat_class_code);
                 this.columnnvc_codes = new global::System.Data.DataColumn("nvc_codes", typeof(string), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnnvc_codes);
                 this.columnpolygon = new global::System.Data.DataColumn("polygon", typeof(bool), null, global::System.Data.MappingType.Element);
@@ -15007,6 +15061,7 @@ namespace HLU.Data.Model {
                 this.columndescription.MaxLength = 254;
                 this.columncategory.AllowDBNull = false;
                 this.columncategory.MaxLength = 1;
+                this.columnhabitat_class_code.AllowDBNull = false;
                 this.columnnvc_codes.MaxLength = 150;
                 this.columnpolygon.AllowDBNull = false;
                 this.columnline.AllowDBNull = false;
@@ -18943,13 +18998,16 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public lut_osmm_habitat_xrefRow Addlut_osmm_habitat_xrefRow(int osmm_xref_id, string habitat_primary, string habitat_secondaries, bool is_local) {
+            public lut_osmm_habitat_xrefRow Addlut_osmm_habitat_xrefRow(int osmm_xref_id, lut_primaryRow parentlut_primaryRowByfk_lut_osmm_habitat_xref_habitat_primary, string habitat_secondaries, bool is_local) {
                 lut_osmm_habitat_xrefRow rowlut_osmm_habitat_xrefRow = ((lut_osmm_habitat_xrefRow)(this.NewRow()));
                 object[] columnValuesArray = new object[] {
                         osmm_xref_id,
-                        habitat_primary,
+                        null,
                         habitat_secondaries,
                         is_local};
+                if ((parentlut_primaryRowByfk_lut_osmm_habitat_xref_habitat_primary != null)) {
+                    columnValuesArray[1] = parentlut_primaryRowByfk_lut_osmm_habitat_xref_habitat_primary[0];
+                }
                 rowlut_osmm_habitat_xrefRow.ItemArray = columnValuesArray;
                 this.Rows.Add(rowlut_osmm_habitat_xrefRow);
                 return rowlut_osmm_habitat_xrefRow;
@@ -19210,17 +19268,6 @@ namespace HLU.Data.Model {
                 }
                 set {
                     this[this.tablelut_version.db_versionColumn] = value;
-                }
-            }
-            
-            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public string habitat_version {
-                get {
-                    return ((string)(this[this.tablelut_version.habitat_versionColumn]));
-                }
-                set {
-                    this[this.tablelut_version.habitat_versionColumn] = value;
                 }
             }
             
@@ -20032,14 +20079,25 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public string habitat_version {
+            public string habitat_class {
                 get {
                     try {
-                        return ((string)(this[this.tableincid.habitat_versionColumn]));
+                        return ((string)(this[this.tableincid.habitat_classColumn]));
                     }
                     catch (global::System.InvalidCastException e) {
-                        throw new global::System.Data.StrongTypingException("The value for column \'habitat_version\' in table \'incid\' is DBNull.", e);
+                        throw new global::System.Data.StrongTypingException("The value for column \'habitat_class\' in table \'incid\' is DBNull.", e);
                     }
+                }
+                set {
+                    this[this.tableincid.habitat_classColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public string habitat_version {
+                get {
+                    return ((string)(this[this.tableincid.habitat_versionColumn]));
                 }
                 set {
                     this[this.tableincid.habitat_versionColumn] = value;
@@ -20330,6 +20388,17 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public lut_habitat_classRow lut_habitat_classRow {
+                get {
+                    return ((lut_habitat_classRow)(this.GetParentRow(this.Table.ParentRelations["fk_incid_lut_habitat_class"])));
+                }
+                set {
+                    this.SetParentRow(value, this.Table.ParentRelations["fk_incid_lut_habitat_class"]);
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             public bool Ishabitat_primaryNull() {
                 return this.IsNull(this.tableincid.habitat_primaryColumn);
             }
@@ -20354,14 +20423,14 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public bool Ishabitat_versionNull() {
-                return this.IsNull(this.tableincid.habitat_versionColumn);
+            public bool Ishabitat_classNull() {
+                return this.IsNull(this.tableincid.habitat_classColumn);
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public void Sethabitat_versionNull() {
-                this[this.tableincid.habitat_versionColumn] = global::System.Convert.DBNull;
+            public void Sethabitat_classNull() {
+                this[this.tableincid.habitat_classColumn] = global::System.Convert.DBNull;
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -21701,9 +21770,30 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public string habitat_version {
+                get {
+                    try {
+                        return ((string)(this[this.tablelut_habitat_class.habitat_versionColumn]));
+                    }
+                    catch (global::System.InvalidCastException e) {
+                        throw new global::System.Data.StrongTypingException("The value for column \'habitat_version\' in table \'lut_habitat_class\' is DBNull.", e);
+                    }
+                }
+                set {
+                    this[this.tablelut_habitat_class.habitat_versionColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             public bool is_local {
                 get {
-                    return ((bool)(this[this.tablelut_habitat_class.is_localColumn]));
+                    try {
+                        return ((bool)(this[this.tablelut_habitat_class.is_localColumn]));
+                    }
+                    catch (global::System.InvalidCastException e) {
+                        throw new global::System.Data.StrongTypingException("The value for column \'is_local\' in table \'lut_habitat_class\' is DBNull.", e);
+                    }
                 }
                 set {
                     this[this.tablelut_habitat_class.is_localColumn] = value;
@@ -21719,6 +21809,30 @@ namespace HLU.Data.Model {
                 set {
                     this[this.tablelut_habitat_class.sort_orderColumn] = value;
                 }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public bool Ishabitat_versionNull() {
+                return this.IsNull(this.tablelut_habitat_class.habitat_versionColumn);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public void Sethabitat_versionNull() {
+                this[this.tablelut_habitat_class.habitat_versionColumn] = global::System.Convert.DBNull;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public bool Isis_localNull() {
+                return this.IsNull(this.tablelut_habitat_class.is_localColumn);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public void Setis_localNull() {
+                this[this.tablelut_habitat_class.is_localColumn] = global::System.Convert.DBNull;
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -21740,6 +21854,28 @@ namespace HLU.Data.Model {
                 }
                 else {
                     return ((lut_habitat_typeRow[])(base.GetChildRows(this.Table.ChildRelations["fk_lut_habitat_type_lut_habitat_class"])));
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public lut_primaryRow[] Getlut_primaryRows() {
+                if ((this.Table.ChildRelations["fk_lut_primary_lut_habitat_class"] == null)) {
+                    return new lut_primaryRow[0];
+                }
+                else {
+                    return ((lut_primaryRow[])(base.GetChildRows(this.Table.ChildRelations["fk_lut_primary_lut_habitat_class"])));
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public incidRow[] GetincidRows() {
+                if ((this.Table.ChildRelations["fk_incid_lut_habitat_class"] == null)) {
+                    return new incidRow[0];
+                }
+                else {
+                    return ((incidRow[])(base.GetChildRows(this.Table.ChildRelations["fk_incid_lut_habitat_class"])));
                 }
             }
         }
@@ -23941,6 +24077,17 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public string habitat_class_code {
+                get {
+                    return ((string)(this[this.tablelut_primary.habitat_class_codeColumn]));
+                }
+                set {
+                    this[this.tablelut_primary.habitat_class_codeColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             public string nvc_codes {
                 get {
                     if (this.Isnvc_codesNull()) {
@@ -24039,6 +24186,17 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public lut_habitat_classRow lut_habitat_classRow {
+                get {
+                    return ((lut_habitat_classRow)(this.GetParentRow(this.Table.ParentRelations["fk_lut_primary_lut_habitat_class"])));
+                }
+                set {
+                    this.SetParentRow(value, this.Table.ParentRelations["fk_lut_primary_lut_habitat_class"]);
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             public bool Isnvc_codesNull() {
                 return this.IsNull(this.tablelut_primary.nvc_codesColumn);
             }
@@ -24124,6 +24282,17 @@ namespace HLU.Data.Model {
                 }
                 else {
                     return ((lut_primary_secondaryRow[])(base.GetChildRows(this.Table.ChildRelations["lut_primary_lut_primary_secondary"])));
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public lut_osmm_habitat_xrefRow[] Getlut_osmm_habitat_xrefRows() {
+                if ((this.Table.ChildRelations["fk_lut_osmm_habitat_xref_habitat_primary"] == null)) {
+                    return new lut_osmm_habitat_xrefRow[0];
+                }
+                else {
+                    return ((lut_osmm_habitat_xrefRow[])(base.GetChildRows(this.Table.ChildRelations["fk_lut_osmm_habitat_xref_habitat_primary"])));
                 }
             }
         }
@@ -25230,6 +25399,17 @@ namespace HLU.Data.Model {
                 }
                 set {
                     this[this.tablelut_osmm_habitat_xref.is_localColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public lut_primaryRow lut_primaryRow {
+                get {
+                    return ((lut_primaryRow)(this.GetParentRow(this.Table.ParentRelations["fk_lut_osmm_habitat_xref_habitat_primary"])));
+                }
+                set {
+                    this.SetParentRow(value, this.Table.ParentRelations["fk_lut_osmm_habitat_xref_habitat_primary"]);
                 }
             }
             
@@ -27444,14 +27624,13 @@ namespace HLU.Data.Model.HluDataSetTableAdapters {
             tableMapping.DataSetTable = "lut_version";
             tableMapping.ColumnMappings.Add("app_version", "app_version");
             tableMapping.ColumnMappings.Add("db_version", "db_version");
-            tableMapping.ColumnMappings.Add("habitat_version", "habitat_version");
             tableMapping.ColumnMappings.Add("data_version", "data_version");
             this._adapter.TableMappings.Add(tableMapping);
             this._adapter.DeleteCommand = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._adapter.DeleteCommand.Connection = this.Connection;
             this._adapter.DeleteCommand.CommandText = "DELETE FROM [lut_version] WHERE (([app_version] = @Original_app_version) AND ([db" +
-                "_version] = @Original_db_version) AND ([habitat_version] = @Original_habitat_ver" +
-                "sion) AND ([data_version] = @Original_data_version))";
+                "_version] = @Original_db_version) AND ([data_version] = @Original_data_version))" +
+                "";
             this._adapter.DeleteCommand.CommandType = global::System.Data.CommandType.Text;
             global::Microsoft.Data.SqlClient.SqlParameter param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@Original_app_version";
@@ -27468,13 +27647,6 @@ namespace HLU.Data.Model.HluDataSetTableAdapters {
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.DeleteCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
-            param.ParameterName = "@Original_habitat_version";
-            param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
-            param.IsNullable = true;
-            param.SourceColumn = "habitat_version";
-            param.SourceVersion = global::System.Data.DataRowVersion.Original;
-            this._adapter.DeleteCommand.Parameters.Add(param);
-            param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@Original_data_version";
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
             param.IsNullable = true;
@@ -27483,8 +27655,9 @@ namespace HLU.Data.Model.HluDataSetTableAdapters {
             this._adapter.DeleteCommand.Parameters.Add(param);
             this._adapter.InsertCommand = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._adapter.InsertCommand.Connection = this.Connection;
-            this._adapter.InsertCommand.CommandText = @"INSERT INTO [lut_version] ([app_version], [db_version], [habitat_version], [data_version]) VALUES (@app_version, @db_version, @habitat_version, @data_version);
-SELECT app_version, db_version, habitat_version, data_version FROM lut_version WHERE (app_version = @app_version)";
+            this._adapter.InsertCommand.CommandText = "INSERT INTO [lut_version] ([app_version], [db_version], [data_version]) VALUES (@" +
+                "app_version, @db_version, @data_version);\r\nSELECT app_version, db_version, data_" +
+                "version FROM lut_version WHERE (app_version = @app_version)";
             this._adapter.InsertCommand.CommandType = global::System.Data.CommandType.Text;
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@app_version";
@@ -27499,12 +27672,6 @@ SELECT app_version, db_version, habitat_version, data_version FROM lut_version W
             param.SourceColumn = "db_version";
             this._adapter.InsertCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
-            param.ParameterName = "@habitat_version";
-            param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
-            param.IsNullable = true;
-            param.SourceColumn = "habitat_version";
-            this._adapter.InsertCommand.Parameters.Add(param);
-            param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@data_version";
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
             param.IsNullable = true;
@@ -27512,8 +27679,8 @@ SELECT app_version, db_version, habitat_version, data_version FROM lut_version W
             this._adapter.InsertCommand.Parameters.Add(param);
             this._adapter.UpdateCommand = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._adapter.UpdateCommand.Connection = this.Connection;
-            this._adapter.UpdateCommand.CommandText = @"UPDATE [lut_version] SET [app_version] = @app_version, [db_version] = @db_version, [habitat_version] = @habitat_version, [data_version] = @data_version WHERE (([app_version] = @Original_app_version) AND ([db_version] = @Original_db_version) AND ([habitat_version] = @Original_habitat_version) AND ([data_version] = @Original_data_version));
-SELECT app_version, db_version, habitat_version, data_version FROM lut_version WHERE (app_version = @app_version)";
+            this._adapter.UpdateCommand.CommandText = @"UPDATE [lut_version] SET [app_version] = @app_version, [db_version] = @db_version, [data_version] = @data_version WHERE (([app_version] = @Original_app_version) AND ([db_version] = @Original_db_version) AND ([data_version] = @Original_data_version));
+SELECT app_version, db_version, data_version FROM lut_version WHERE (app_version = @app_version)";
             this._adapter.UpdateCommand.CommandType = global::System.Data.CommandType.Text;
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@app_version";
@@ -27526,12 +27693,6 @@ SELECT app_version, db_version, habitat_version, data_version FROM lut_version W
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
             param.IsNullable = true;
             param.SourceColumn = "db_version";
-            this._adapter.UpdateCommand.Parameters.Add(param);
-            param = new global::Microsoft.Data.SqlClient.SqlParameter();
-            param.ParameterName = "@habitat_version";
-            param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
-            param.IsNullable = true;
-            param.SourceColumn = "habitat_version";
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@data_version";
@@ -27551,13 +27712,6 @@ SELECT app_version, db_version, habitat_version, data_version FROM lut_version W
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
             param.IsNullable = true;
             param.SourceColumn = "db_version";
-            param.SourceVersion = global::System.Data.DataRowVersion.Original;
-            this._adapter.UpdateCommand.Parameters.Add(param);
-            param = new global::Microsoft.Data.SqlClient.SqlParameter();
-            param.ParameterName = "@Original_habitat_version";
-            param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
-            param.IsNullable = true;
-            param.SourceColumn = "habitat_version";
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
@@ -27582,8 +27736,7 @@ SELECT app_version, db_version, habitat_version, data_version FROM lut_version W
             this._commandCollection = new global::Microsoft.Data.SqlClient.SqlCommand[1];
             this._commandCollection[0] = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._commandCollection[0].Connection = this.Connection;
-            this._commandCollection[0].CommandText = "SELECT        app_version, db_version, habitat_version, data_version\r\nFROM       " +
-                "     lut_version";
+            this._commandCollection[0].CommandText = "SELECT app_version, db_version, data_version FROM lut_version";
             this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;
         }
         
@@ -27644,7 +27797,7 @@ SELECT app_version, db_version, habitat_version, data_version FROM lut_version W
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Delete, true)]
-        public virtual int Delete(string Original_app_version, string Original_db_version, string Original_habitat_version, string Original_data_version) {
+        public virtual int Delete(string Original_app_version, string Original_db_version, string Original_data_version) {
             if ((Original_app_version == null)) {
                 throw new global::System.ArgumentNullException("Original_app_version");
             }
@@ -27657,17 +27810,11 @@ SELECT app_version, db_version, habitat_version, data_version FROM lut_version W
             else {
                 this.Adapter.DeleteCommand.Parameters[1].Value = ((string)(Original_db_version));
             }
-            if ((Original_habitat_version == null)) {
-                throw new global::System.ArgumentNullException("Original_habitat_version");
-            }
-            else {
-                this.Adapter.DeleteCommand.Parameters[2].Value = ((string)(Original_habitat_version));
-            }
             if ((Original_data_version == null)) {
                 throw new global::System.ArgumentNullException("Original_data_version");
             }
             else {
-                this.Adapter.DeleteCommand.Parameters[3].Value = ((string)(Original_data_version));
+                this.Adapter.DeleteCommand.Parameters[2].Value = ((string)(Original_data_version));
             }
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.DeleteCommand.Connection.State;
             if (((this.Adapter.DeleteCommand.Connection.State & global::System.Data.ConnectionState.Open) 
@@ -27689,7 +27836,7 @@ SELECT app_version, db_version, habitat_version, data_version FROM lut_version W
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Insert, true)]
-        public virtual int Insert(string app_version, string db_version, string habitat_version, string data_version) {
+        public virtual int Insert(string app_version, string db_version, string data_version) {
             if ((app_version == null)) {
                 throw new global::System.ArgumentNullException("app_version");
             }
@@ -27702,17 +27849,11 @@ SELECT app_version, db_version, habitat_version, data_version FROM lut_version W
             else {
                 this.Adapter.InsertCommand.Parameters[1].Value = ((string)(db_version));
             }
-            if ((habitat_version == null)) {
-                throw new global::System.ArgumentNullException("habitat_version");
-            }
-            else {
-                this.Adapter.InsertCommand.Parameters[2].Value = ((string)(habitat_version));
-            }
             if ((data_version == null)) {
                 throw new global::System.ArgumentNullException("data_version");
             }
             else {
-                this.Adapter.InsertCommand.Parameters[3].Value = ((string)(data_version));
+                this.Adapter.InsertCommand.Parameters[2].Value = ((string)(data_version));
             }
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.InsertCommand.Connection.State;
             if (((this.Adapter.InsertCommand.Connection.State & global::System.Data.ConnectionState.Open) 
@@ -27734,7 +27875,7 @@ SELECT app_version, db_version, habitat_version, data_version FROM lut_version W
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Update, true)]
-        public virtual int Update(string app_version, string db_version, string habitat_version, string data_version, string Original_app_version, string Original_db_version, string Original_habitat_version, string Original_data_version) {
+        public virtual int Update(string app_version, string db_version, string data_version, string Original_app_version, string Original_db_version, string Original_data_version) {
             if ((app_version == null)) {
                 throw new global::System.ArgumentNullException("app_version");
             }
@@ -27747,41 +27888,29 @@ SELECT app_version, db_version, habitat_version, data_version FROM lut_version W
             else {
                 this.Adapter.UpdateCommand.Parameters[1].Value = ((string)(db_version));
             }
-            if ((habitat_version == null)) {
-                throw new global::System.ArgumentNullException("habitat_version");
-            }
-            else {
-                this.Adapter.UpdateCommand.Parameters[2].Value = ((string)(habitat_version));
-            }
             if ((data_version == null)) {
                 throw new global::System.ArgumentNullException("data_version");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[3].Value = ((string)(data_version));
+                this.Adapter.UpdateCommand.Parameters[2].Value = ((string)(data_version));
             }
             if ((Original_app_version == null)) {
                 throw new global::System.ArgumentNullException("Original_app_version");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[4].Value = ((string)(Original_app_version));
+                this.Adapter.UpdateCommand.Parameters[3].Value = ((string)(Original_app_version));
             }
             if ((Original_db_version == null)) {
                 throw new global::System.ArgumentNullException("Original_db_version");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[5].Value = ((string)(Original_db_version));
-            }
-            if ((Original_habitat_version == null)) {
-                throw new global::System.ArgumentNullException("Original_habitat_version");
-            }
-            else {
-                this.Adapter.UpdateCommand.Parameters[6].Value = ((string)(Original_habitat_version));
+                this.Adapter.UpdateCommand.Parameters[4].Value = ((string)(Original_db_version));
             }
             if ((Original_data_version == null)) {
                 throw new global::System.ArgumentNullException("Original_data_version");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[7].Value = ((string)(Original_data_version));
+                this.Adapter.UpdateCommand.Parameters[5].Value = ((string)(Original_data_version));
             }
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.UpdateCommand.Connection.State;
             if (((this.Adapter.UpdateCommand.Connection.State & global::System.Data.ConnectionState.Open) 
@@ -27803,8 +27932,8 @@ SELECT app_version, db_version, habitat_version, data_version FROM lut_version W
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Update, true)]
-        public virtual int Update(string db_version, string habitat_version, string data_version, string Original_app_version, string Original_db_version, string Original_habitat_version, string Original_data_version) {
-            return this.Update(Original_app_version, db_version, habitat_version, data_version, Original_app_version, Original_db_version, Original_habitat_version, Original_data_version);
+        public virtual int Update(string db_version, string data_version, string Original_app_version, string Original_db_version, string Original_data_version) {
+            return this.Update(Original_app_version, db_version, data_version, Original_app_version, Original_db_version, Original_data_version);
         }
     }
     
@@ -30408,6 +30537,7 @@ FROM            history";
             tableMapping.ColumnMappings.Add("quality_determination", "quality_determination");
             tableMapping.ColumnMappings.Add("quality_interpretation", "quality_interpretation");
             tableMapping.ColumnMappings.Add("interpretation_comments", "interpretation_comments");
+            tableMapping.ColumnMappings.Add("habitat_class", "habitat_class");
             this._adapter.TableMappings.Add(tableMapping);
             this._adapter.DeleteCommand = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._adapter.DeleteCommand.Connection = this.Connection;
@@ -30415,24 +30545,24 @@ FROM            history";
                 "ary = 1 AND [habitat_primary] IS NULL) OR ([habitat_primary] = @Original_habitat" +
                 "_primary)) AND ((@IsNull_habitat_secondaries = 1 AND [habitat_secondaries] IS NU" +
                 "LL) OR ([habitat_secondaries] = @Original_habitat_secondaries)) AND ((@IsNull_ha" +
-                "bitat_version = 1 AND [habitat_version] IS NULL) OR ([habitat_version] = @Origin" +
-                "al_habitat_version)) AND ((@IsNull_site_ref = 1 AND [site_ref] IS NULL) OR ([sit" +
-                "e_ref] = @Original_site_ref)) AND ((@IsNull_site_name = 1 AND [site_name] IS NUL" +
-                "L) OR ([site_name] = @Original_site_name)) AND ((@IsNull_general_comments = 1 AN" +
-                "D [general_comments] IS NULL) OR ([general_comments] = @Original_general_comment" +
-                "s)) AND ((@IsNull_quality_determination = 1 AND [quality_determination] IS NULL)" +
-                " OR ([quality_determination] = @Original_quality_determination)) AND ((@IsNull_q" +
-                "uality_interpretation = 1 AND [quality_interpretation] IS NULL) OR ([quality_int" +
-                "erpretation] = @Original_quality_interpretation)) AND ((@IsNull_interpretation_c" +
-                "omments = 1 AND [interpretation_comments] IS NULL) OR ([interpretation_comments]" +
-                " = @Original_interpretation_comments)) AND ([boundary_base_map] = @Original_boun" +
-                "dary_base_map) AND ([digitisation_base_map] = @Original_digitisation_base_map) A" +
-                "ND ((@IsNull_ihs_habitat = 1 AND [ihs_habitat] IS NULL) OR ([ihs_habitat] = @Ori" +
-                "ginal_ihs_habitat)) AND ((@IsNull_legacy_habitat = 1 AND [legacy_habitat] IS NUL" +
-                "L) OR ([legacy_habitat] = @Original_legacy_habitat)) AND ([created_date] = @Orig" +
-                "inal_created_date) AND ([created_user_id] = @Original_created_user_id) AND ([las" +
-                "t_modified_date] = @Original_last_modified_date) AND ([last_modified_user_id] = " +
-                "@Original_last_modified_user_id))";
+                "bitat_class = 1 AND [habitat_class] IS NULL) OR ([habitat_class] = @Original_hab" +
+                "itat_class)) AND ([habitat_version] = @Original_habitat_version) AND ((@IsNull_s" +
+                "ite_ref = 1 AND [site_ref] IS NULL) OR ([site_ref] = @Original_site_ref)) AND ((" +
+                "@IsNull_site_name = 1 AND [site_name] IS NULL) OR ([site_name] = @Original_site_" +
+                "name)) AND ((@IsNull_general_comments = 1 AND [general_comments] IS NULL) OR ([g" +
+                "eneral_comments] = @Original_general_comments)) AND ((@IsNull_quality_determinat" +
+                "ion = 1 AND [quality_determination] IS NULL) OR ([quality_determination] = @Orig" +
+                "inal_quality_determination)) AND ((@IsNull_quality_interpretation = 1 AND [quali" +
+                "ty_interpretation] IS NULL) OR ([quality_interpretation] = @Original_quality_int" +
+                "erpretation)) AND ((@IsNull_interpretation_comments = 1 AND [interpretation_comm" +
+                "ents] IS NULL) OR ([interpretation_comments] = @Original_interpretation_comments" +
+                ")) AND ([boundary_base_map] = @Original_boundary_base_map) AND ([digitisation_ba" +
+                "se_map] = @Original_digitisation_base_map) AND ((@IsNull_ihs_habitat = 1 AND [ih" +
+                "s_habitat] IS NULL) OR ([ihs_habitat] = @Original_ihs_habitat)) AND ((@IsNull_le" +
+                "gacy_habitat = 1 AND [legacy_habitat] IS NULL) OR ([legacy_habitat] = @Original_" +
+                "legacy_habitat)) AND ([created_date] = @Original_created_date) AND ([created_use" +
+                "r_id] = @Original_created_user_id) AND ([last_modified_date] = @Original_last_mo" +
+                "dified_date) AND ([last_modified_user_id] = @Original_last_modified_user_id))";
             this._adapter.DeleteCommand.CommandType = global::System.Data.CommandType.Text;
             global::Microsoft.Data.SqlClient.SqlParameter param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@Original_incid";
@@ -30474,13 +30604,20 @@ FROM            history";
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.DeleteCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
-            param.ParameterName = "@IsNull_habitat_version";
+            param.ParameterName = "@IsNull_habitat_class";
             param.DbType = global::System.Data.DbType.Int32;
             param.SqlDbType = global::System.Data.SqlDbType.Int;
             param.IsNullable = true;
-            param.SourceColumn = "habitat_version";
+            param.SourceColumn = "habitat_class";
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             param.SourceColumnNullMapping = true;
+            this._adapter.DeleteCommand.Parameters.Add(param);
+            param = new global::Microsoft.Data.SqlClient.SqlParameter();
+            param.ParameterName = "@Original_habitat_class";
+            param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
+            param.IsNullable = true;
+            param.SourceColumn = "habitat_class";
+            param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.DeleteCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@Original_habitat_version";
@@ -30663,8 +30800,8 @@ FROM            history";
             this._adapter.DeleteCommand.Parameters.Add(param);
             this._adapter.InsertCommand = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._adapter.InsertCommand.Connection = this.Connection;
-            this._adapter.InsertCommand.CommandText = @"INSERT INTO [incid] ([incid], [habitat_primary], [habitat_secondaries], [habitat_version], [site_ref], [site_name], [general_comments], [quality_determination], [quality_interpretation], [interpretation_comments], [boundary_base_map], [digitisation_base_map], [ihs_habitat], [legacy_habitat], [created_date], [created_user_id], [last_modified_date], [last_modified_user_id]) VALUES (@incid, @habitat_primary, @habitat_secondaries, @habitat_version, @site_ref, @site_name, @general_comments, @quality_determination, @quality_interpretation, @interpretation_comments, @boundary_base_map, @digitisation_base_map, @ihs_habitat, @legacy_habitat, @created_date, @created_user_id, @last_modified_date, @last_modified_user_id);
-SELECT incid, habitat_primary, habitat_secondaries, habitat_version, site_ref, site_name, general_comments, quality_determination, quality_interpretation, interpretation_comments, boundary_base_map, digitisation_base_map, ihs_habitat, legacy_habitat, created_date, created_user_id, last_modified_date, last_modified_user_id FROM incid WHERE (incid = @incid)";
+            this._adapter.InsertCommand.CommandText = @"INSERT INTO [incid] ([incid], [habitat_primary], [habitat_secondaries], [habitat_class], [habitat_version], [site_ref], [site_name], [general_comments], [quality_determination], [quality_interpretation], [interpretation_comments], [boundary_base_map], [digitisation_base_map], [ihs_habitat], [legacy_habitat], [created_date], [created_user_id], [last_modified_date], [last_modified_user_id]) VALUES (@incid, @habitat_primary, @habitat_secondaries, @habitat_class, @habitat_version, @site_ref, @site_name, @general_comments, @quality_determination, @quality_interpretation, @interpretation_comments, @boundary_base_map, @digitisation_base_map, @ihs_habitat, @legacy_habitat, @created_date, @created_user_id, @last_modified_date, @last_modified_user_id);
+SELECT incid, habitat_primary, habitat_secondaries, habitat_class, habitat_version, site_ref, site_name, general_comments, quality_determination, quality_interpretation, interpretation_comments, boundary_base_map, digitisation_base_map, ihs_habitat, legacy_habitat, created_date, created_user_id, last_modified_date, last_modified_user_id FROM incid WHERE (incid = @incid)";
             this._adapter.InsertCommand.CommandType = global::System.Data.CommandType.Text;
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@incid";
@@ -30683,6 +30820,12 @@ SELECT incid, habitat_primary, habitat_secondaries, habitat_version, site_ref, s
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
             param.IsNullable = true;
             param.SourceColumn = "habitat_secondaries";
+            this._adapter.InsertCommand.Parameters.Add(param);
+            param = new global::Microsoft.Data.SqlClient.SqlParameter();
+            param.ParameterName = "@habitat_class";
+            param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
+            param.IsNullable = true;
+            param.SourceColumn = "habitat_class";
             this._adapter.InsertCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@habitat_version";
@@ -30779,40 +30922,41 @@ SELECT incid, habitat_primary, habitat_secondaries, habitat_version, site_ref, s
             this._adapter.UpdateCommand = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._adapter.UpdateCommand.Connection = this.Connection;
             this._adapter.UpdateCommand.CommandText = "UPDATE [incid] SET [incid] = @incid, [habitat_primary] = @habitat_primary, [habit" +
-                "at_secondaries] = @habitat_secondaries, [habitat_version] = @habitat_version, [s" +
-                "ite_ref] = @site_ref, [site_name] = @site_name, [general_comments] = @general_co" +
-                "mments, [quality_determination] = @quality_determination, [quality_interpretatio" +
-                "n] = @quality_interpretation, [interpretation_comments] = @interpretation_commen" +
-                "ts, [boundary_base_map] = @boundary_base_map, [digitisation_base_map] = @digitis" +
-                "ation_base_map, [ihs_habitat] = @ihs_habitat, [legacy_habitat] = @legacy_habitat" +
-                ", [created_date] = @created_date, [created_user_id] = @created_user_id, [last_mo" +
-                "dified_date] = @last_modified_date, [last_modified_user_id] = @last_modified_use" +
-                "r_id WHERE (([incid] = @Original_incid) AND ((@IsNull_habitat_primary = 1 AND [h" +
-                "abitat_primary] IS NULL) OR ([habitat_primary] = @Original_habitat_primary)) AND" +
-                " ((@IsNull_habitat_secondaries = 1 AND [habitat_secondaries] IS NULL) OR ([habit" +
-                "at_secondaries] = @Original_habitat_secondaries)) AND ((@IsNull_habitat_version " +
-                "= 1 AND [habitat_version] IS NULL) OR ([habitat_version] = @Original_habitat_ver" +
-                "sion)) AND ((@IsNull_site_ref = 1 AND [site_ref] IS NULL) OR ([site_ref] = @Orig" +
-                "inal_site_ref)) AND ((@IsNull_site_name = 1 AND [site_name] IS NULL) OR ([site_n" +
-                "ame] = @Original_site_name)) AND ((@IsNull_general_comments = 1 AND [general_com" +
-                "ments] IS NULL) OR ([general_comments] = @Original_general_comments)) AND ((@IsN" +
-                "ull_quality_determination = 1 AND [quality_determination] IS NULL) OR ([quality_" +
-                "determination] = @Original_quality_determination)) AND ((@IsNull_quality_interpr" +
-                "etation = 1 AND [quality_interpretation] IS NULL) OR ([quality_interpretation] =" +
-                " @Original_quality_interpretation)) AND ((@IsNull_interpretation_comments = 1 AN" +
-                "D [interpretation_comments] IS NULL) OR ([interpretation_comments] = @Original_i" +
-                "nterpretation_comments)) AND ([boundary_base_map] = @Original_boundary_base_map)" +
-                " AND ([digitisation_base_map] = @Original_digitisation_base_map) AND ((@IsNull_i" +
-                "hs_habitat = 1 AND [ihs_habitat] IS NULL) OR ([ihs_habitat] = @Original_ihs_habi" +
-                "tat)) AND ((@IsNull_legacy_habitat = 1 AND [legacy_habitat] IS NULL) OR ([legacy" +
-                "_habitat] = @Original_legacy_habitat)) AND ([created_date] = @Original_created_d" +
-                "ate) AND ([created_user_id] = @Original_created_user_id) AND ([last_modified_dat" +
-                "e] = @Original_last_modified_date) AND ([last_modified_user_id] = @Original_last" +
-                "_modified_user_id));\r\nSELECT incid, habitat_primary, habitat_secondaries, habita" +
-                "t_version, site_ref, site_name, general_comments, quality_determination, quality" +
-                "_interpretation, interpretation_comments, boundary_base_map, digitisation_base_m" +
-                "ap, ihs_habitat, legacy_habitat, created_date, created_user_id, last_modified_da" +
-                "te, last_modified_user_id FROM incid WHERE (incid = @incid)";
+                "at_secondaries] = @habitat_secondaries, [habitat_class] = @habitat_class, [habit" +
+                "at_version] = @habitat_version, [site_ref] = @site_ref, [site_name] = @site_name" +
+                ", [general_comments] = @general_comments, [quality_determination] = @quality_det" +
+                "ermination, [quality_interpretation] = @quality_interpretation, [interpretation_" +
+                "comments] = @interpretation_comments, [boundary_base_map] = @boundary_base_map, " +
+                "[digitisation_base_map] = @digitisation_base_map, [ihs_habitat] = @ihs_habitat, " +
+                "[legacy_habitat] = @legacy_habitat, [created_date] = @created_date, [created_use" +
+                "r_id] = @created_user_id, [last_modified_date] = @last_modified_date, [last_modi" +
+                "fied_user_id] = @last_modified_user_id WHERE (([incid] = @Original_incid) AND ((" +
+                "@IsNull_habitat_primary = 1 AND [habitat_primary] IS NULL) OR ([habitat_primary]" +
+                " = @Original_habitat_primary)) AND ((@IsNull_habitat_secondaries = 1 AND [habita" +
+                "t_secondaries] IS NULL) OR ([habitat_secondaries] = @Original_habitat_secondarie" +
+                "s)) AND ((@IsNull_habitat_class = 1 AND [habitat_class] IS NULL) OR ([habitat_cl" +
+                "ass] = @Original_habitat_class)) AND ([habitat_version] = @Original_habitat_vers" +
+                "ion) AND ((@IsNull_site_ref = 1 AND [site_ref] IS NULL) OR ([site_ref] = @Origin" +
+                "al_site_ref)) AND ((@IsNull_site_name = 1 AND [site_name] IS NULL) OR ([site_nam" +
+                "e] = @Original_site_name)) AND ((@IsNull_general_comments = 1 AND [general_comme" +
+                "nts] IS NULL) OR ([general_comments] = @Original_general_comments)) AND ((@IsNul" +
+                "l_quality_determination = 1 AND [quality_determination] IS NULL) OR ([quality_de" +
+                "termination] = @Original_quality_determination)) AND ((@IsNull_quality_interpret" +
+                "ation = 1 AND [quality_interpretation] IS NULL) OR ([quality_interpretation] = @" +
+                "Original_quality_interpretation)) AND ((@IsNull_interpretation_comments = 1 AND " +
+                "[interpretation_comments] IS NULL) OR ([interpretation_comments] = @Original_int" +
+                "erpretation_comments)) AND ([boundary_base_map] = @Original_boundary_base_map) A" +
+                "ND ([digitisation_base_map] = @Original_digitisation_base_map) AND ((@IsNull_ihs" +
+                "_habitat = 1 AND [ihs_habitat] IS NULL) OR ([ihs_habitat] = @Original_ihs_habita" +
+                "t)) AND ((@IsNull_legacy_habitat = 1 AND [legacy_habitat] IS NULL) OR ([legacy_h" +
+                "abitat] = @Original_legacy_habitat)) AND ([created_date] = @Original_created_dat" +
+                "e) AND ([created_user_id] = @Original_created_user_id) AND ([last_modified_date]" +
+                " = @Original_last_modified_date) AND ([last_modified_user_id] = @Original_last_m" +
+                "odified_user_id));\r\nSELECT incid, habitat_primary, habitat_secondaries, habitat_" +
+                "class, habitat_version, site_ref, site_name, general_comments, quality_determina" +
+                "tion, quality_interpretation, interpretation_comments, boundary_base_map, digiti" +
+                "sation_base_map, ihs_habitat, legacy_habitat, created_date, created_user_id, las" +
+                "t_modified_date, last_modified_user_id FROM incid WHERE (incid = @incid)";
             this._adapter.UpdateCommand.CommandType = global::System.Data.CommandType.Text;
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@incid";
@@ -30831,6 +30975,12 @@ SELECT incid, habitat_primary, habitat_secondaries, habitat_version, site_ref, s
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
             param.IsNullable = true;
             param.SourceColumn = "habitat_secondaries";
+            this._adapter.UpdateCommand.Parameters.Add(param);
+            param = new global::Microsoft.Data.SqlClient.SqlParameter();
+            param.ParameterName = "@habitat_class";
+            param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
+            param.IsNullable = true;
+            param.SourceColumn = "habitat_class";
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@habitat_version";
@@ -30964,13 +31114,20 @@ SELECT incid, habitat_primary, habitat_secondaries, habitat_version, site_ref, s
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
-            param.ParameterName = "@IsNull_habitat_version";
+            param.ParameterName = "@IsNull_habitat_class";
             param.DbType = global::System.Data.DbType.Int32;
             param.SqlDbType = global::System.Data.SqlDbType.Int;
             param.IsNullable = true;
-            param.SourceColumn = "habitat_version";
+            param.SourceColumn = "habitat_class";
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             param.SourceColumnNullMapping = true;
+            this._adapter.UpdateCommand.Parameters.Add(param);
+            param = new global::Microsoft.Data.SqlClient.SqlParameter();
+            param.ParameterName = "@Original_habitat_class";
+            param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
+            param.IsNullable = true;
+            param.SourceColumn = "habitat_class";
+            param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@Original_habitat_version";
@@ -31166,8 +31323,8 @@ SELECT incid, habitat_primary, habitat_secondaries, habitat_version, site_ref, s
             this._commandCollection = new global::Microsoft.Data.SqlClient.SqlCommand[1];
             this._commandCollection[0] = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._commandCollection[0].Connection = this.Connection;
-            this._commandCollection[0].CommandText = @"SELECT        incid, habitat_primary, habitat_secondaries, habitat_version, site_ref, site_name, general_comments, quality_determination, quality_interpretation, interpretation_comments, boundary_base_map, digitisation_base_map,
-                         ihs_habitat, legacy_habitat, created_date, created_user_id, last_modified_date, last_modified_user_id
+            this._commandCollection[0].CommandText = @"SELECT        incid, habitat_primary, habitat_secondaries, habitat_class, habitat_version, site_ref, site_name, general_comments, quality_determination, quality_interpretation, interpretation_comments, boundary_base_map, 
+                         digitisation_base_map, ihs_habitat, legacy_habitat, created_date, created_user_id, last_modified_date, last_modified_user_id
 FROM            incid";
             this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;
         }
@@ -31233,6 +31390,7 @@ FROM            incid";
                     string Original_incid, 
                     string Original_habitat_primary, 
                     string Original_habitat_secondaries, 
+                    string Original_habitat_class, 
                     string Original_habitat_version, 
                     string Original_site_ref, 
                     string Original_site_name, 
@@ -31270,103 +31428,109 @@ FROM            incid";
                 this.Adapter.DeleteCommand.Parameters[3].Value = ((object)(0));
                 this.Adapter.DeleteCommand.Parameters[4].Value = ((string)(Original_habitat_secondaries));
             }
-            if ((Original_habitat_version == null)) {
+            if ((Original_habitat_class == null)) {
                 this.Adapter.DeleteCommand.Parameters[5].Value = ((object)(1));
                 this.Adapter.DeleteCommand.Parameters[6].Value = global::System.DBNull.Value;
             }
             else {
                 this.Adapter.DeleteCommand.Parameters[5].Value = ((object)(0));
-                this.Adapter.DeleteCommand.Parameters[6].Value = ((string)(Original_habitat_version));
+                this.Adapter.DeleteCommand.Parameters[6].Value = ((string)(Original_habitat_class));
+            }
+            if ((Original_habitat_version == null)) {
+                throw new global::System.ArgumentNullException("Original_habitat_version");
+            }
+            else {
+                this.Adapter.DeleteCommand.Parameters[7].Value = ((string)(Original_habitat_version));
             }
             if ((Original_site_ref == null)) {
-                this.Adapter.DeleteCommand.Parameters[7].Value = ((object)(1));
-                this.Adapter.DeleteCommand.Parameters[8].Value = global::System.DBNull.Value;
+                this.Adapter.DeleteCommand.Parameters[8].Value = ((object)(1));
+                this.Adapter.DeleteCommand.Parameters[9].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.DeleteCommand.Parameters[7].Value = ((object)(0));
-                this.Adapter.DeleteCommand.Parameters[8].Value = ((string)(Original_site_ref));
+                this.Adapter.DeleteCommand.Parameters[8].Value = ((object)(0));
+                this.Adapter.DeleteCommand.Parameters[9].Value = ((string)(Original_site_ref));
             }
             if ((Original_site_name == null)) {
-                this.Adapter.DeleteCommand.Parameters[9].Value = ((object)(1));
-                this.Adapter.DeleteCommand.Parameters[10].Value = global::System.DBNull.Value;
+                this.Adapter.DeleteCommand.Parameters[10].Value = ((object)(1));
+                this.Adapter.DeleteCommand.Parameters[11].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.DeleteCommand.Parameters[9].Value = ((object)(0));
-                this.Adapter.DeleteCommand.Parameters[10].Value = ((string)(Original_site_name));
+                this.Adapter.DeleteCommand.Parameters[10].Value = ((object)(0));
+                this.Adapter.DeleteCommand.Parameters[11].Value = ((string)(Original_site_name));
             }
             if ((Original_general_comments == null)) {
-                this.Adapter.DeleteCommand.Parameters[11].Value = ((object)(1));
-                this.Adapter.DeleteCommand.Parameters[12].Value = global::System.DBNull.Value;
+                this.Adapter.DeleteCommand.Parameters[12].Value = ((object)(1));
+                this.Adapter.DeleteCommand.Parameters[13].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.DeleteCommand.Parameters[11].Value = ((object)(0));
-                this.Adapter.DeleteCommand.Parameters[12].Value = ((string)(Original_general_comments));
+                this.Adapter.DeleteCommand.Parameters[12].Value = ((object)(0));
+                this.Adapter.DeleteCommand.Parameters[13].Value = ((string)(Original_general_comments));
             }
             if ((Original_quality_determination == null)) {
-                this.Adapter.DeleteCommand.Parameters[13].Value = ((object)(1));
-                this.Adapter.DeleteCommand.Parameters[14].Value = global::System.DBNull.Value;
+                this.Adapter.DeleteCommand.Parameters[14].Value = ((object)(1));
+                this.Adapter.DeleteCommand.Parameters[15].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.DeleteCommand.Parameters[13].Value = ((object)(0));
-                this.Adapter.DeleteCommand.Parameters[14].Value = ((string)(Original_quality_determination));
+                this.Adapter.DeleteCommand.Parameters[14].Value = ((object)(0));
+                this.Adapter.DeleteCommand.Parameters[15].Value = ((string)(Original_quality_determination));
             }
             if ((Original_quality_interpretation == null)) {
-                this.Adapter.DeleteCommand.Parameters[15].Value = ((object)(1));
-                this.Adapter.DeleteCommand.Parameters[16].Value = global::System.DBNull.Value;
+                this.Adapter.DeleteCommand.Parameters[16].Value = ((object)(1));
+                this.Adapter.DeleteCommand.Parameters[17].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.DeleteCommand.Parameters[15].Value = ((object)(0));
-                this.Adapter.DeleteCommand.Parameters[16].Value = ((string)(Original_quality_interpretation));
+                this.Adapter.DeleteCommand.Parameters[16].Value = ((object)(0));
+                this.Adapter.DeleteCommand.Parameters[17].Value = ((string)(Original_quality_interpretation));
             }
             if ((Original_interpretation_comments == null)) {
-                this.Adapter.DeleteCommand.Parameters[17].Value = ((object)(1));
-                this.Adapter.DeleteCommand.Parameters[18].Value = global::System.DBNull.Value;
+                this.Adapter.DeleteCommand.Parameters[18].Value = ((object)(1));
+                this.Adapter.DeleteCommand.Parameters[19].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.DeleteCommand.Parameters[17].Value = ((object)(0));
-                this.Adapter.DeleteCommand.Parameters[18].Value = ((string)(Original_interpretation_comments));
+                this.Adapter.DeleteCommand.Parameters[18].Value = ((object)(0));
+                this.Adapter.DeleteCommand.Parameters[19].Value = ((string)(Original_interpretation_comments));
             }
             if ((Original_boundary_base_map == null)) {
                 throw new global::System.ArgumentNullException("Original_boundary_base_map");
             }
             else {
-                this.Adapter.DeleteCommand.Parameters[19].Value = ((string)(Original_boundary_base_map));
+                this.Adapter.DeleteCommand.Parameters[20].Value = ((string)(Original_boundary_base_map));
             }
             if ((Original_digitisation_base_map == null)) {
                 throw new global::System.ArgumentNullException("Original_digitisation_base_map");
             }
             else {
-                this.Adapter.DeleteCommand.Parameters[20].Value = ((string)(Original_digitisation_base_map));
+                this.Adapter.DeleteCommand.Parameters[21].Value = ((string)(Original_digitisation_base_map));
             }
             if ((Original_ihs_habitat == null)) {
-                this.Adapter.DeleteCommand.Parameters[21].Value = ((object)(1));
-                this.Adapter.DeleteCommand.Parameters[22].Value = global::System.DBNull.Value;
+                this.Adapter.DeleteCommand.Parameters[22].Value = ((object)(1));
+                this.Adapter.DeleteCommand.Parameters[23].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.DeleteCommand.Parameters[21].Value = ((object)(0));
-                this.Adapter.DeleteCommand.Parameters[22].Value = ((string)(Original_ihs_habitat));
+                this.Adapter.DeleteCommand.Parameters[22].Value = ((object)(0));
+                this.Adapter.DeleteCommand.Parameters[23].Value = ((string)(Original_ihs_habitat));
             }
             if ((Original_legacy_habitat == null)) {
-                this.Adapter.DeleteCommand.Parameters[23].Value = ((object)(1));
-                this.Adapter.DeleteCommand.Parameters[24].Value = global::System.DBNull.Value;
+                this.Adapter.DeleteCommand.Parameters[24].Value = ((object)(1));
+                this.Adapter.DeleteCommand.Parameters[25].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.DeleteCommand.Parameters[23].Value = ((object)(0));
-                this.Adapter.DeleteCommand.Parameters[24].Value = ((string)(Original_legacy_habitat));
+                this.Adapter.DeleteCommand.Parameters[24].Value = ((object)(0));
+                this.Adapter.DeleteCommand.Parameters[25].Value = ((string)(Original_legacy_habitat));
             }
-            this.Adapter.DeleteCommand.Parameters[25].Value = ((System.DateTime)(Original_created_date));
+            this.Adapter.DeleteCommand.Parameters[26].Value = ((System.DateTime)(Original_created_date));
             if ((Original_created_user_id == null)) {
                 throw new global::System.ArgumentNullException("Original_created_user_id");
             }
             else {
-                this.Adapter.DeleteCommand.Parameters[26].Value = ((string)(Original_created_user_id));
+                this.Adapter.DeleteCommand.Parameters[27].Value = ((string)(Original_created_user_id));
             }
-            this.Adapter.DeleteCommand.Parameters[27].Value = ((System.DateTime)(Original_last_modified_date));
+            this.Adapter.DeleteCommand.Parameters[28].Value = ((System.DateTime)(Original_last_modified_date));
             if ((Original_last_modified_user_id == null)) {
                 throw new global::System.ArgumentNullException("Original_last_modified_user_id");
             }
             else {
-                this.Adapter.DeleteCommand.Parameters[28].Value = ((string)(Original_last_modified_user_id));
+                this.Adapter.DeleteCommand.Parameters[29].Value = ((string)(Original_last_modified_user_id));
             }
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.DeleteCommand.Connection.State;
             if (((this.Adapter.DeleteCommand.Connection.State & global::System.Data.ConnectionState.Open) 
@@ -31392,6 +31556,7 @@ FROM            incid";
                     string incid, 
                     string habitat_primary, 
                     string habitat_secondaries, 
+                    string habitat_class, 
                     string habitat_version, 
                     string site_ref, 
                     string site_name, 
@@ -31425,85 +31590,91 @@ FROM            incid";
             else {
                 this.Adapter.InsertCommand.Parameters[2].Value = ((string)(habitat_secondaries));
             }
-            if ((habitat_version == null)) {
+            if ((habitat_class == null)) {
                 this.Adapter.InsertCommand.Parameters[3].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.InsertCommand.Parameters[3].Value = ((string)(habitat_version));
+                this.Adapter.InsertCommand.Parameters[3].Value = ((string)(habitat_class));
             }
-            if ((site_ref == null)) {
-                this.Adapter.InsertCommand.Parameters[4].Value = global::System.DBNull.Value;
+            if ((habitat_version == null)) {
+                throw new global::System.ArgumentNullException("habitat_version");
             }
             else {
-                this.Adapter.InsertCommand.Parameters[4].Value = ((string)(site_ref));
+                this.Adapter.InsertCommand.Parameters[4].Value = ((string)(habitat_version));
             }
-            if ((site_name == null)) {
+            if ((site_ref == null)) {
                 this.Adapter.InsertCommand.Parameters[5].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.InsertCommand.Parameters[5].Value = ((string)(site_name));
+                this.Adapter.InsertCommand.Parameters[5].Value = ((string)(site_ref));
             }
-            if ((general_comments == null)) {
+            if ((site_name == null)) {
                 this.Adapter.InsertCommand.Parameters[6].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.InsertCommand.Parameters[6].Value = ((string)(general_comments));
+                this.Adapter.InsertCommand.Parameters[6].Value = ((string)(site_name));
             }
-            if ((quality_determination == null)) {
+            if ((general_comments == null)) {
                 this.Adapter.InsertCommand.Parameters[7].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.InsertCommand.Parameters[7].Value = ((string)(quality_determination));
+                this.Adapter.InsertCommand.Parameters[7].Value = ((string)(general_comments));
             }
-            if ((quality_interpretation == null)) {
+            if ((quality_determination == null)) {
                 this.Adapter.InsertCommand.Parameters[8].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.InsertCommand.Parameters[8].Value = ((string)(quality_interpretation));
+                this.Adapter.InsertCommand.Parameters[8].Value = ((string)(quality_determination));
             }
-            if ((interpretation_comments == null)) {
+            if ((quality_interpretation == null)) {
                 this.Adapter.InsertCommand.Parameters[9].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.InsertCommand.Parameters[9].Value = ((string)(interpretation_comments));
+                this.Adapter.InsertCommand.Parameters[9].Value = ((string)(quality_interpretation));
+            }
+            if ((interpretation_comments == null)) {
+                this.Adapter.InsertCommand.Parameters[10].Value = global::System.DBNull.Value;
+            }
+            else {
+                this.Adapter.InsertCommand.Parameters[10].Value = ((string)(interpretation_comments));
             }
             if ((boundary_base_map == null)) {
                 throw new global::System.ArgumentNullException("boundary_base_map");
             }
             else {
-                this.Adapter.InsertCommand.Parameters[10].Value = ((string)(boundary_base_map));
+                this.Adapter.InsertCommand.Parameters[11].Value = ((string)(boundary_base_map));
             }
             if ((digitisation_base_map == null)) {
                 throw new global::System.ArgumentNullException("digitisation_base_map");
             }
             else {
-                this.Adapter.InsertCommand.Parameters[11].Value = ((string)(digitisation_base_map));
+                this.Adapter.InsertCommand.Parameters[12].Value = ((string)(digitisation_base_map));
             }
             if ((ihs_habitat == null)) {
-                this.Adapter.InsertCommand.Parameters[12].Value = global::System.DBNull.Value;
-            }
-            else {
-                this.Adapter.InsertCommand.Parameters[12].Value = ((string)(ihs_habitat));
-            }
-            if ((legacy_habitat == null)) {
                 this.Adapter.InsertCommand.Parameters[13].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.InsertCommand.Parameters[13].Value = ((string)(legacy_habitat));
+                this.Adapter.InsertCommand.Parameters[13].Value = ((string)(ihs_habitat));
             }
-            this.Adapter.InsertCommand.Parameters[14].Value = ((System.DateTime)(created_date));
+            if ((legacy_habitat == null)) {
+                this.Adapter.InsertCommand.Parameters[14].Value = global::System.DBNull.Value;
+            }
+            else {
+                this.Adapter.InsertCommand.Parameters[14].Value = ((string)(legacy_habitat));
+            }
+            this.Adapter.InsertCommand.Parameters[15].Value = ((System.DateTime)(created_date));
             if ((created_user_id == null)) {
                 throw new global::System.ArgumentNullException("created_user_id");
             }
             else {
-                this.Adapter.InsertCommand.Parameters[15].Value = ((string)(created_user_id));
+                this.Adapter.InsertCommand.Parameters[16].Value = ((string)(created_user_id));
             }
-            this.Adapter.InsertCommand.Parameters[16].Value = ((System.DateTime)(last_modified_date));
+            this.Adapter.InsertCommand.Parameters[17].Value = ((System.DateTime)(last_modified_date));
             if ((last_modified_user_id == null)) {
                 throw new global::System.ArgumentNullException("last_modified_user_id");
             }
             else {
-                this.Adapter.InsertCommand.Parameters[17].Value = ((string)(last_modified_user_id));
+                this.Adapter.InsertCommand.Parameters[18].Value = ((string)(last_modified_user_id));
             }
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.InsertCommand.Connection.State;
             if (((this.Adapter.InsertCommand.Connection.State & global::System.Data.ConnectionState.Open) 
@@ -31529,6 +31700,7 @@ FROM            incid";
                     string incid, 
                     string habitat_primary, 
                     string habitat_secondaries, 
+                    string habitat_class, 
                     string habitat_version, 
                     string site_ref, 
                     string site_name, 
@@ -31547,6 +31719,7 @@ FROM            incid";
                     string Original_incid, 
                     string Original_habitat_primary, 
                     string Original_habitat_secondaries, 
+                    string Original_habitat_class, 
                     string Original_habitat_version, 
                     string Original_site_ref, 
                     string Original_site_name, 
@@ -31580,205 +31753,217 @@ FROM            incid";
             else {
                 this.Adapter.UpdateCommand.Parameters[2].Value = ((string)(habitat_secondaries));
             }
-            if ((habitat_version == null)) {
+            if ((habitat_class == null)) {
                 this.Adapter.UpdateCommand.Parameters[3].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[3].Value = ((string)(habitat_version));
+                this.Adapter.UpdateCommand.Parameters[3].Value = ((string)(habitat_class));
             }
-            if ((site_ref == null)) {
-                this.Adapter.UpdateCommand.Parameters[4].Value = global::System.DBNull.Value;
+            if ((habitat_version == null)) {
+                throw new global::System.ArgumentNullException("habitat_version");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[4].Value = ((string)(site_ref));
+                this.Adapter.UpdateCommand.Parameters[4].Value = ((string)(habitat_version));
             }
-            if ((site_name == null)) {
+            if ((site_ref == null)) {
                 this.Adapter.UpdateCommand.Parameters[5].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[5].Value = ((string)(site_name));
+                this.Adapter.UpdateCommand.Parameters[5].Value = ((string)(site_ref));
             }
-            if ((general_comments == null)) {
+            if ((site_name == null)) {
                 this.Adapter.UpdateCommand.Parameters[6].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[6].Value = ((string)(general_comments));
+                this.Adapter.UpdateCommand.Parameters[6].Value = ((string)(site_name));
             }
-            if ((quality_determination == null)) {
+            if ((general_comments == null)) {
                 this.Adapter.UpdateCommand.Parameters[7].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[7].Value = ((string)(quality_determination));
+                this.Adapter.UpdateCommand.Parameters[7].Value = ((string)(general_comments));
             }
-            if ((quality_interpretation == null)) {
+            if ((quality_determination == null)) {
                 this.Adapter.UpdateCommand.Parameters[8].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[8].Value = ((string)(quality_interpretation));
+                this.Adapter.UpdateCommand.Parameters[8].Value = ((string)(quality_determination));
             }
-            if ((interpretation_comments == null)) {
+            if ((quality_interpretation == null)) {
                 this.Adapter.UpdateCommand.Parameters[9].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[9].Value = ((string)(interpretation_comments));
+                this.Adapter.UpdateCommand.Parameters[9].Value = ((string)(quality_interpretation));
+            }
+            if ((interpretation_comments == null)) {
+                this.Adapter.UpdateCommand.Parameters[10].Value = global::System.DBNull.Value;
+            }
+            else {
+                this.Adapter.UpdateCommand.Parameters[10].Value = ((string)(interpretation_comments));
             }
             if ((boundary_base_map == null)) {
                 throw new global::System.ArgumentNullException("boundary_base_map");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[10].Value = ((string)(boundary_base_map));
+                this.Adapter.UpdateCommand.Parameters[11].Value = ((string)(boundary_base_map));
             }
             if ((digitisation_base_map == null)) {
                 throw new global::System.ArgumentNullException("digitisation_base_map");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[11].Value = ((string)(digitisation_base_map));
+                this.Adapter.UpdateCommand.Parameters[12].Value = ((string)(digitisation_base_map));
             }
             if ((ihs_habitat == null)) {
-                this.Adapter.UpdateCommand.Parameters[12].Value = global::System.DBNull.Value;
-            }
-            else {
-                this.Adapter.UpdateCommand.Parameters[12].Value = ((string)(ihs_habitat));
-            }
-            if ((legacy_habitat == null)) {
                 this.Adapter.UpdateCommand.Parameters[13].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[13].Value = ((string)(legacy_habitat));
+                this.Adapter.UpdateCommand.Parameters[13].Value = ((string)(ihs_habitat));
             }
-            this.Adapter.UpdateCommand.Parameters[14].Value = ((System.DateTime)(created_date));
+            if ((legacy_habitat == null)) {
+                this.Adapter.UpdateCommand.Parameters[14].Value = global::System.DBNull.Value;
+            }
+            else {
+                this.Adapter.UpdateCommand.Parameters[14].Value = ((string)(legacy_habitat));
+            }
+            this.Adapter.UpdateCommand.Parameters[15].Value = ((System.DateTime)(created_date));
             if ((created_user_id == null)) {
                 throw new global::System.ArgumentNullException("created_user_id");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[15].Value = ((string)(created_user_id));
+                this.Adapter.UpdateCommand.Parameters[16].Value = ((string)(created_user_id));
             }
-            this.Adapter.UpdateCommand.Parameters[16].Value = ((System.DateTime)(last_modified_date));
+            this.Adapter.UpdateCommand.Parameters[17].Value = ((System.DateTime)(last_modified_date));
             if ((last_modified_user_id == null)) {
                 throw new global::System.ArgumentNullException("last_modified_user_id");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[17].Value = ((string)(last_modified_user_id));
+                this.Adapter.UpdateCommand.Parameters[18].Value = ((string)(last_modified_user_id));
             }
             if ((Original_incid == null)) {
                 throw new global::System.ArgumentNullException("Original_incid");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[18].Value = ((string)(Original_incid));
+                this.Adapter.UpdateCommand.Parameters[19].Value = ((string)(Original_incid));
             }
             if ((Original_habitat_primary == null)) {
-                this.Adapter.UpdateCommand.Parameters[19].Value = ((object)(1));
-                this.Adapter.UpdateCommand.Parameters[20].Value = global::System.DBNull.Value;
+                this.Adapter.UpdateCommand.Parameters[20].Value = ((object)(1));
+                this.Adapter.UpdateCommand.Parameters[21].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[19].Value = ((object)(0));
-                this.Adapter.UpdateCommand.Parameters[20].Value = ((string)(Original_habitat_primary));
+                this.Adapter.UpdateCommand.Parameters[20].Value = ((object)(0));
+                this.Adapter.UpdateCommand.Parameters[21].Value = ((string)(Original_habitat_primary));
             }
             if ((Original_habitat_secondaries == null)) {
-                this.Adapter.UpdateCommand.Parameters[21].Value = ((object)(1));
-                this.Adapter.UpdateCommand.Parameters[22].Value = global::System.DBNull.Value;
+                this.Adapter.UpdateCommand.Parameters[22].Value = ((object)(1));
+                this.Adapter.UpdateCommand.Parameters[23].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[21].Value = ((object)(0));
-                this.Adapter.UpdateCommand.Parameters[22].Value = ((string)(Original_habitat_secondaries));
+                this.Adapter.UpdateCommand.Parameters[22].Value = ((object)(0));
+                this.Adapter.UpdateCommand.Parameters[23].Value = ((string)(Original_habitat_secondaries));
+            }
+            if ((Original_habitat_class == null)) {
+                this.Adapter.UpdateCommand.Parameters[24].Value = ((object)(1));
+                this.Adapter.UpdateCommand.Parameters[25].Value = global::System.DBNull.Value;
+            }
+            else {
+                this.Adapter.UpdateCommand.Parameters[24].Value = ((object)(0));
+                this.Adapter.UpdateCommand.Parameters[25].Value = ((string)(Original_habitat_class));
             }
             if ((Original_habitat_version == null)) {
-                this.Adapter.UpdateCommand.Parameters[23].Value = ((object)(1));
-                this.Adapter.UpdateCommand.Parameters[24].Value = global::System.DBNull.Value;
+                throw new global::System.ArgumentNullException("Original_habitat_version");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[23].Value = ((object)(0));
-                this.Adapter.UpdateCommand.Parameters[24].Value = ((string)(Original_habitat_version));
+                this.Adapter.UpdateCommand.Parameters[26].Value = ((string)(Original_habitat_version));
             }
             if ((Original_site_ref == null)) {
-                this.Adapter.UpdateCommand.Parameters[25].Value = ((object)(1));
-                this.Adapter.UpdateCommand.Parameters[26].Value = global::System.DBNull.Value;
-            }
-            else {
-                this.Adapter.UpdateCommand.Parameters[25].Value = ((object)(0));
-                this.Adapter.UpdateCommand.Parameters[26].Value = ((string)(Original_site_ref));
-            }
-            if ((Original_site_name == null)) {
                 this.Adapter.UpdateCommand.Parameters[27].Value = ((object)(1));
                 this.Adapter.UpdateCommand.Parameters[28].Value = global::System.DBNull.Value;
             }
             else {
                 this.Adapter.UpdateCommand.Parameters[27].Value = ((object)(0));
-                this.Adapter.UpdateCommand.Parameters[28].Value = ((string)(Original_site_name));
+                this.Adapter.UpdateCommand.Parameters[28].Value = ((string)(Original_site_ref));
             }
-            if ((Original_general_comments == null)) {
+            if ((Original_site_name == null)) {
                 this.Adapter.UpdateCommand.Parameters[29].Value = ((object)(1));
                 this.Adapter.UpdateCommand.Parameters[30].Value = global::System.DBNull.Value;
             }
             else {
                 this.Adapter.UpdateCommand.Parameters[29].Value = ((object)(0));
-                this.Adapter.UpdateCommand.Parameters[30].Value = ((string)(Original_general_comments));
+                this.Adapter.UpdateCommand.Parameters[30].Value = ((string)(Original_site_name));
             }
-            if ((Original_quality_determination == null)) {
+            if ((Original_general_comments == null)) {
                 this.Adapter.UpdateCommand.Parameters[31].Value = ((object)(1));
                 this.Adapter.UpdateCommand.Parameters[32].Value = global::System.DBNull.Value;
             }
             else {
                 this.Adapter.UpdateCommand.Parameters[31].Value = ((object)(0));
-                this.Adapter.UpdateCommand.Parameters[32].Value = ((string)(Original_quality_determination));
+                this.Adapter.UpdateCommand.Parameters[32].Value = ((string)(Original_general_comments));
             }
-            if ((Original_quality_interpretation == null)) {
+            if ((Original_quality_determination == null)) {
                 this.Adapter.UpdateCommand.Parameters[33].Value = ((object)(1));
                 this.Adapter.UpdateCommand.Parameters[34].Value = global::System.DBNull.Value;
             }
             else {
                 this.Adapter.UpdateCommand.Parameters[33].Value = ((object)(0));
-                this.Adapter.UpdateCommand.Parameters[34].Value = ((string)(Original_quality_interpretation));
+                this.Adapter.UpdateCommand.Parameters[34].Value = ((string)(Original_quality_determination));
             }
-            if ((Original_interpretation_comments == null)) {
+            if ((Original_quality_interpretation == null)) {
                 this.Adapter.UpdateCommand.Parameters[35].Value = ((object)(1));
                 this.Adapter.UpdateCommand.Parameters[36].Value = global::System.DBNull.Value;
             }
             else {
                 this.Adapter.UpdateCommand.Parameters[35].Value = ((object)(0));
-                this.Adapter.UpdateCommand.Parameters[36].Value = ((string)(Original_interpretation_comments));
+                this.Adapter.UpdateCommand.Parameters[36].Value = ((string)(Original_quality_interpretation));
+            }
+            if ((Original_interpretation_comments == null)) {
+                this.Adapter.UpdateCommand.Parameters[37].Value = ((object)(1));
+                this.Adapter.UpdateCommand.Parameters[38].Value = global::System.DBNull.Value;
+            }
+            else {
+                this.Adapter.UpdateCommand.Parameters[37].Value = ((object)(0));
+                this.Adapter.UpdateCommand.Parameters[38].Value = ((string)(Original_interpretation_comments));
             }
             if ((Original_boundary_base_map == null)) {
                 throw new global::System.ArgumentNullException("Original_boundary_base_map");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[37].Value = ((string)(Original_boundary_base_map));
+                this.Adapter.UpdateCommand.Parameters[39].Value = ((string)(Original_boundary_base_map));
             }
             if ((Original_digitisation_base_map == null)) {
                 throw new global::System.ArgumentNullException("Original_digitisation_base_map");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[38].Value = ((string)(Original_digitisation_base_map));
+                this.Adapter.UpdateCommand.Parameters[40].Value = ((string)(Original_digitisation_base_map));
             }
             if ((Original_ihs_habitat == null)) {
-                this.Adapter.UpdateCommand.Parameters[39].Value = ((object)(1));
-                this.Adapter.UpdateCommand.Parameters[40].Value = global::System.DBNull.Value;
-            }
-            else {
-                this.Adapter.UpdateCommand.Parameters[39].Value = ((object)(0));
-                this.Adapter.UpdateCommand.Parameters[40].Value = ((string)(Original_ihs_habitat));
-            }
-            if ((Original_legacy_habitat == null)) {
                 this.Adapter.UpdateCommand.Parameters[41].Value = ((object)(1));
                 this.Adapter.UpdateCommand.Parameters[42].Value = global::System.DBNull.Value;
             }
             else {
                 this.Adapter.UpdateCommand.Parameters[41].Value = ((object)(0));
-                this.Adapter.UpdateCommand.Parameters[42].Value = ((string)(Original_legacy_habitat));
+                this.Adapter.UpdateCommand.Parameters[42].Value = ((string)(Original_ihs_habitat));
             }
-            this.Adapter.UpdateCommand.Parameters[43].Value = ((System.DateTime)(Original_created_date));
+            if ((Original_legacy_habitat == null)) {
+                this.Adapter.UpdateCommand.Parameters[43].Value = ((object)(1));
+                this.Adapter.UpdateCommand.Parameters[44].Value = global::System.DBNull.Value;
+            }
+            else {
+                this.Adapter.UpdateCommand.Parameters[43].Value = ((object)(0));
+                this.Adapter.UpdateCommand.Parameters[44].Value = ((string)(Original_legacy_habitat));
+            }
+            this.Adapter.UpdateCommand.Parameters[45].Value = ((System.DateTime)(Original_created_date));
             if ((Original_created_user_id == null)) {
                 throw new global::System.ArgumentNullException("Original_created_user_id");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[44].Value = ((string)(Original_created_user_id));
+                this.Adapter.UpdateCommand.Parameters[46].Value = ((string)(Original_created_user_id));
             }
-            this.Adapter.UpdateCommand.Parameters[45].Value = ((System.DateTime)(Original_last_modified_date));
+            this.Adapter.UpdateCommand.Parameters[47].Value = ((System.DateTime)(Original_last_modified_date));
             if ((Original_last_modified_user_id == null)) {
                 throw new global::System.ArgumentNullException("Original_last_modified_user_id");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[46].Value = ((string)(Original_last_modified_user_id));
+                this.Adapter.UpdateCommand.Parameters[48].Value = ((string)(Original_last_modified_user_id));
             }
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.UpdateCommand.Connection.State;
             if (((this.Adapter.UpdateCommand.Connection.State & global::System.Data.ConnectionState.Open) 
@@ -31803,6 +31988,7 @@ FROM            incid";
         public virtual int Update(
                     string habitat_primary, 
                     string habitat_secondaries, 
+                    string habitat_class, 
                     string habitat_version, 
                     string site_ref, 
                     string site_name, 
@@ -31821,6 +32007,7 @@ FROM            incid";
                     string Original_incid, 
                     string Original_habitat_primary, 
                     string Original_habitat_secondaries, 
+                    string Original_habitat_class, 
                     string Original_habitat_version, 
                     string Original_site_ref, 
                     string Original_site_name, 
@@ -31836,7 +32023,7 @@ FROM            incid";
                     string Original_created_user_id, 
                     System.DateTime Original_last_modified_date, 
                     string Original_last_modified_user_id) {
-            return this.Update(Original_incid, habitat_primary, habitat_secondaries, habitat_version, site_ref, site_name, general_comments, quality_determination, quality_interpretation, interpretation_comments, boundary_base_map, digitisation_base_map, ihs_habitat, legacy_habitat, created_date, created_user_id, last_modified_date, last_modified_user_id, Original_incid, Original_habitat_primary, Original_habitat_secondaries, Original_habitat_version, Original_site_ref, Original_site_name, Original_general_comments, Original_quality_determination, Original_quality_interpretation, Original_interpretation_comments, Original_boundary_base_map, Original_digitisation_base_map, Original_ihs_habitat, Original_legacy_habitat, Original_created_date, Original_created_user_id, Original_last_modified_date, Original_last_modified_user_id);
+            return this.Update(Original_incid, habitat_primary, habitat_secondaries, habitat_class, habitat_version, site_ref, site_name, general_comments, quality_determination, quality_interpretation, interpretation_comments, boundary_base_map, digitisation_base_map, ihs_habitat, legacy_habitat, created_date, created_user_id, last_modified_date, last_modified_user_id, Original_incid, Original_habitat_primary, Original_habitat_secondaries, Original_habitat_class, Original_habitat_version, Original_site_ref, Original_site_name, Original_general_comments, Original_quality_determination, Original_quality_interpretation, Original_interpretation_comments, Original_boundary_base_map, Original_digitisation_base_map, Original_ihs_habitat, Original_legacy_habitat, Original_created_date, Original_created_user_id, Original_last_modified_date, Original_last_modified_user_id);
         }
     }
     
@@ -36060,17 +36247,15 @@ SELECT code, description, sort_order FROM lut_boundary_map WHERE (code = @code)"
             tableMapping.ColumnMappings.Add("description", "description");
             tableMapping.ColumnMappings.Add("sort_order", "sort_order");
             tableMapping.ColumnMappings.Add("is_local", "is_local");
+            tableMapping.ColumnMappings.Add("habitat_version", "habitat_version");
             this._adapter.TableMappings.Add(tableMapping);
             this._adapter.DeleteCommand = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._adapter.DeleteCommand.Connection = this.Connection;
-            this._adapter.DeleteCommand.CommandText = "DELETE FROM lut_habitat_class\r\nWHERE        (code = @Original_code) AND (descript" +
-                "ion = @Original_description) AND (is_local = @Original_is_local) AND (sort_order" +
-                " = @Original_sort_order)";
+            this._adapter.DeleteCommand.CommandText = @"DELETE FROM [lut_habitat_class] WHERE (([code] = @Original_code) AND ([description] = @Original_description) AND ((@IsNull_habitat_version = 1 AND [habitat_version] IS NULL) OR ([habitat_version] = @Original_habitat_version)) AND ((@IsNull_is_local = 1 AND [is_local] IS NULL) OR ([is_local] = @Original_is_local)) AND ([sort_order] = @Original_sort_order))";
             this._adapter.DeleteCommand.CommandType = global::System.Data.CommandType.Text;
             global::Microsoft.Data.SqlClient.SqlParameter param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@Original_code";
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
-            param.Size = 5;
             param.IsNullable = true;
             param.SourceColumn = "code";
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
@@ -36078,16 +36263,39 @@ SELECT code, description, sort_order FROM lut_boundary_map WHERE (code = @code)"
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@Original_description";
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
-            param.Size = 254;
             param.IsNullable = true;
             param.SourceColumn = "description";
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.DeleteCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
+            param.ParameterName = "@IsNull_habitat_version";
+            param.DbType = global::System.Data.DbType.Int32;
+            param.SqlDbType = global::System.Data.SqlDbType.Int;
+            param.IsNullable = true;
+            param.SourceColumn = "habitat_version";
+            param.SourceVersion = global::System.Data.DataRowVersion.Original;
+            param.SourceColumnNullMapping = true;
+            this._adapter.DeleteCommand.Parameters.Add(param);
+            param = new global::Microsoft.Data.SqlClient.SqlParameter();
+            param.ParameterName = "@Original_habitat_version";
+            param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
+            param.IsNullable = true;
+            param.SourceColumn = "habitat_version";
+            param.SourceVersion = global::System.Data.DataRowVersion.Original;
+            this._adapter.DeleteCommand.Parameters.Add(param);
+            param = new global::Microsoft.Data.SqlClient.SqlParameter();
+            param.ParameterName = "@IsNull_is_local";
+            param.DbType = global::System.Data.DbType.Int32;
+            param.SqlDbType = global::System.Data.SqlDbType.Int;
+            param.IsNullable = true;
+            param.SourceColumn = "is_local";
+            param.SourceVersion = global::System.Data.DataRowVersion.Original;
+            param.SourceColumnNullMapping = true;
+            this._adapter.DeleteCommand.Parameters.Add(param);
+            param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@Original_is_local";
             param.DbType = global::System.Data.DbType.Boolean;
             param.SqlDbType = global::System.Data.SqlDbType.Bit;
-            param.Size = 1;
             param.IsNullable = true;
             param.SourceColumn = "is_local";
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
@@ -36096,73 +36304,37 @@ SELECT code, description, sort_order FROM lut_boundary_map WHERE (code = @code)"
             param.ParameterName = "@Original_sort_order";
             param.DbType = global::System.Data.DbType.Int32;
             param.SqlDbType = global::System.Data.SqlDbType.Int;
-            param.Size = 4;
             param.IsNullable = true;
             param.SourceColumn = "sort_order";
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.DeleteCommand.Parameters.Add(param);
-            this._adapter.InsertCommand = new global::Microsoft.Data.SqlClient.SqlCommand();
-            this._adapter.InsertCommand.Connection = this.Connection;
-            this._adapter.InsertCommand.CommandText = "INSERT INTO lut_habitat_class\r\n                         (code, description, is_lo" +
-                "cal, sort_order)\r\nVALUES        (@code,@description,@is_local,@sort_order);\r\nSEL" +
-                "ECT code, description, sort_order FROM lut_habitat_class WHERE (code = @code)";
-            this._adapter.InsertCommand.CommandType = global::System.Data.CommandType.Text;
-            param = new global::Microsoft.Data.SqlClient.SqlParameter();
-            param.ParameterName = "@code";
-            param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
-            param.Size = 5;
-            param.IsNullable = true;
-            param.SourceColumn = "code";
-            this._adapter.InsertCommand.Parameters.Add(param);
-            param = new global::Microsoft.Data.SqlClient.SqlParameter();
-            param.ParameterName = "@description";
-            param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
-            param.Size = 254;
-            param.IsNullable = true;
-            param.SourceColumn = "description";
-            this._adapter.InsertCommand.Parameters.Add(param);
-            param = new global::Microsoft.Data.SqlClient.SqlParameter();
-            param.ParameterName = "@is_local";
-            param.DbType = global::System.Data.DbType.Boolean;
-            param.SqlDbType = global::System.Data.SqlDbType.Bit;
-            param.Size = 1;
-            param.IsNullable = true;
-            param.SourceColumn = "is_local";
-            this._adapter.InsertCommand.Parameters.Add(param);
-            param = new global::Microsoft.Data.SqlClient.SqlParameter();
-            param.ParameterName = "@sort_order";
-            param.DbType = global::System.Data.DbType.Int32;
-            param.SqlDbType = global::System.Data.SqlDbType.Int;
-            param.Size = 4;
-            param.IsNullable = true;
-            param.SourceColumn = "sort_order";
-            this._adapter.InsertCommand.Parameters.Add(param);
             this._adapter.UpdateCommand = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._adapter.UpdateCommand.Connection = this.Connection;
-            this._adapter.UpdateCommand.CommandText = @"UPDATE       lut_habitat_class
-SET                code = @code, description = @description, is_local = @is_local, sort_order = @sort_order
-WHERE        (code = @Original_code) AND (description = @Original_description) AND (is_local = @Original_is_local) AND (sort_order = @Original_sort_order);
-SELECT code, description, is_local, sort_order FROM lut_habitat_class WHERE (code = @code)";
+            this._adapter.UpdateCommand.CommandText = @"UPDATE [lut_habitat_class] SET [code] = @code, [description] = @description, [habitat_version] = @habitat_version, [is_local] = @is_local, [sort_order] = @sort_order WHERE (([code] = @Original_code) AND ([description] = @Original_description) AND ((@IsNull_habitat_version = 1 AND [habitat_version] IS NULL) OR ([habitat_version] = @Original_habitat_version)) AND ((@IsNull_is_local = 1 AND [is_local] IS NULL) OR ([is_local] = @Original_is_local)) AND ([sort_order] = @Original_sort_order));
+SELECT code, description, habitat_version, is_local, sort_order FROM lut_habitat_class WHERE (code = @code)";
             this._adapter.UpdateCommand.CommandType = global::System.Data.CommandType.Text;
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@code";
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
-            param.Size = 5;
             param.IsNullable = true;
             param.SourceColumn = "code";
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@description";
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
-            param.Size = 254;
             param.IsNullable = true;
             param.SourceColumn = "description";
+            this._adapter.UpdateCommand.Parameters.Add(param);
+            param = new global::Microsoft.Data.SqlClient.SqlParameter();
+            param.ParameterName = "@habitat_version";
+            param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
+            param.IsNullable = true;
+            param.SourceColumn = "habitat_version";
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@is_local";
             param.DbType = global::System.Data.DbType.Boolean;
             param.SqlDbType = global::System.Data.SqlDbType.Bit;
-            param.Size = 1;
             param.IsNullable = true;
             param.SourceColumn = "is_local";
             this._adapter.UpdateCommand.Parameters.Add(param);
@@ -36170,14 +36342,12 @@ SELECT code, description, is_local, sort_order FROM lut_habitat_class WHERE (cod
             param.ParameterName = "@sort_order";
             param.DbType = global::System.Data.DbType.Int32;
             param.SqlDbType = global::System.Data.SqlDbType.Int;
-            param.Size = 4;
             param.IsNullable = true;
             param.SourceColumn = "sort_order";
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@Original_code";
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
-            param.Size = 5;
             param.IsNullable = true;
             param.SourceColumn = "code";
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
@@ -36185,16 +36355,39 @@ SELECT code, description, is_local, sort_order FROM lut_habitat_class WHERE (cod
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@Original_description";
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
-            param.Size = 254;
             param.IsNullable = true;
             param.SourceColumn = "description";
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
+            param.ParameterName = "@IsNull_habitat_version";
+            param.DbType = global::System.Data.DbType.Int32;
+            param.SqlDbType = global::System.Data.SqlDbType.Int;
+            param.IsNullable = true;
+            param.SourceColumn = "habitat_version";
+            param.SourceVersion = global::System.Data.DataRowVersion.Original;
+            param.SourceColumnNullMapping = true;
+            this._adapter.UpdateCommand.Parameters.Add(param);
+            param = new global::Microsoft.Data.SqlClient.SqlParameter();
+            param.ParameterName = "@Original_habitat_version";
+            param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
+            param.IsNullable = true;
+            param.SourceColumn = "habitat_version";
+            param.SourceVersion = global::System.Data.DataRowVersion.Original;
+            this._adapter.UpdateCommand.Parameters.Add(param);
+            param = new global::Microsoft.Data.SqlClient.SqlParameter();
+            param.ParameterName = "@IsNull_is_local";
+            param.DbType = global::System.Data.DbType.Int32;
+            param.SqlDbType = global::System.Data.SqlDbType.Int;
+            param.IsNullable = true;
+            param.SourceColumn = "is_local";
+            param.SourceVersion = global::System.Data.DataRowVersion.Original;
+            param.SourceColumnNullMapping = true;
+            this._adapter.UpdateCommand.Parameters.Add(param);
+            param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@Original_is_local";
             param.DbType = global::System.Data.DbType.Boolean;
             param.SqlDbType = global::System.Data.SqlDbType.Bit;
-            param.Size = 1;
             param.IsNullable = true;
             param.SourceColumn = "is_local";
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
@@ -36203,7 +36396,6 @@ SELECT code, description, is_local, sort_order FROM lut_habitat_class WHERE (cod
             param.ParameterName = "@Original_sort_order";
             param.DbType = global::System.Data.DbType.Int32;
             param.SqlDbType = global::System.Data.SqlDbType.Int;
-            param.Size = 4;
             param.IsNullable = true;
             param.SourceColumn = "sort_order";
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
@@ -36223,8 +36415,8 @@ SELECT code, description, is_local, sort_order FROM lut_habitat_class WHERE (cod
             this._commandCollection = new global::Microsoft.Data.SqlClient.SqlCommand[1];
             this._commandCollection[0] = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._commandCollection[0].Connection = this.Connection;
-            this._commandCollection[0].CommandText = "SELECT        code, description, is_local, sort_order\r\nFROM            lut_habita" +
-                "t_class";
+            this._commandCollection[0].CommandText = "SELECT        code, description, habitat_version, is_local, sort_order\r\nFROM     " +
+                "       lut_habitat_class";
             this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;
         }
         
@@ -36285,7 +36477,7 @@ SELECT code, description, is_local, sort_order FROM lut_habitat_class WHERE (cod
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Delete, true)]
-        public virtual int Delete(string Original_code, string Original_description, global::System.Nullable<bool> Original_is_local, int Original_sort_order) {
+        public virtual int Delete(string Original_code, string Original_description, string Original_habitat_version, global::System.Nullable<bool> Original_is_local, int Original_sort_order) {
             if ((Original_code == null)) {
                 throw new global::System.ArgumentNullException("Original_code");
             }
@@ -36298,13 +36490,23 @@ SELECT code, description, is_local, sort_order FROM lut_habitat_class WHERE (cod
             else {
                 this.Adapter.DeleteCommand.Parameters[1].Value = ((string)(Original_description));
             }
-            if ((Original_is_local.HasValue == true)) {
-                this.Adapter.DeleteCommand.Parameters[2].Value = ((bool)(Original_is_local.Value));
+            if ((Original_habitat_version == null)) {
+                this.Adapter.DeleteCommand.Parameters[2].Value = ((object)(1));
+                this.Adapter.DeleteCommand.Parameters[3].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.DeleteCommand.Parameters[2].Value = global::System.DBNull.Value;
+                this.Adapter.DeleteCommand.Parameters[2].Value = ((object)(0));
+                this.Adapter.DeleteCommand.Parameters[3].Value = ((string)(Original_habitat_version));
             }
-            this.Adapter.DeleteCommand.Parameters[3].Value = ((int)(Original_sort_order));
+            if ((Original_is_local.HasValue == true)) {
+                this.Adapter.DeleteCommand.Parameters[4].Value = ((object)(0));
+                this.Adapter.DeleteCommand.Parameters[5].Value = ((bool)(Original_is_local.Value));
+            }
+            else {
+                this.Adapter.DeleteCommand.Parameters[4].Value = ((object)(1));
+                this.Adapter.DeleteCommand.Parameters[5].Value = global::System.DBNull.Value;
+            }
+            this.Adapter.DeleteCommand.Parameters[6].Value = ((int)(Original_sort_order));
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.DeleteCommand.Connection.State;
             if (((this.Adapter.DeleteCommand.Connection.State & global::System.Data.ConnectionState.Open) 
                         != global::System.Data.ConnectionState.Open)) {
@@ -36324,48 +36526,8 @@ SELECT code, description, is_local, sort_order FROM lut_habitat_class WHERE (cod
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
-        [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Insert, true)]
-        public virtual int Insert(string code, string description, global::System.Nullable<bool> is_local, int sort_order) {
-            if ((code == null)) {
-                throw new global::System.ArgumentNullException("code");
-            }
-            else {
-                this.Adapter.InsertCommand.Parameters[0].Value = ((string)(code));
-            }
-            if ((description == null)) {
-                throw new global::System.ArgumentNullException("description");
-            }
-            else {
-                this.Adapter.InsertCommand.Parameters[1].Value = ((string)(description));
-            }
-            if ((is_local.HasValue == true)) {
-                this.Adapter.InsertCommand.Parameters[2].Value = ((bool)(is_local.Value));
-            }
-            else {
-                this.Adapter.InsertCommand.Parameters[2].Value = global::System.DBNull.Value;
-            }
-            this.Adapter.InsertCommand.Parameters[3].Value = ((int)(sort_order));
-            global::System.Data.ConnectionState previousConnectionState = this.Adapter.InsertCommand.Connection.State;
-            if (((this.Adapter.InsertCommand.Connection.State & global::System.Data.ConnectionState.Open) 
-                        != global::System.Data.ConnectionState.Open)) {
-                this.Adapter.InsertCommand.Connection.Open();
-            }
-            try {
-                int returnValue = this.Adapter.InsertCommand.ExecuteNonQuery();
-                return returnValue;
-            }
-            finally {
-                if ((previousConnectionState == global::System.Data.ConnectionState.Closed)) {
-                    this.Adapter.InsertCommand.Connection.Close();
-                }
-            }
-        }
-        
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-        [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Update, true)]
-        public virtual int Update(string code, string description, global::System.Nullable<bool> is_local, int sort_order, string Original_code, string Original_description, global::System.Nullable<bool> Original_is_local, int Original_sort_order) {
+        public virtual int Update(string code, string description, string habitat_version, global::System.Nullable<bool> is_local, int sort_order, string Original_code, string Original_description, string Original_habitat_version, global::System.Nullable<bool> Original_is_local, int Original_sort_order) {
             if ((code == null)) {
                 throw new global::System.ArgumentNullException("code");
             }
@@ -36378,32 +36540,48 @@ SELECT code, description, is_local, sort_order FROM lut_habitat_class WHERE (cod
             else {
                 this.Adapter.UpdateCommand.Parameters[1].Value = ((string)(description));
             }
-            if ((is_local.HasValue == true)) {
-                this.Adapter.UpdateCommand.Parameters[2].Value = ((bool)(is_local.Value));
-            }
-            else {
+            if ((habitat_version == null)) {
                 this.Adapter.UpdateCommand.Parameters[2].Value = global::System.DBNull.Value;
             }
-            this.Adapter.UpdateCommand.Parameters[3].Value = ((int)(sort_order));
+            else {
+                this.Adapter.UpdateCommand.Parameters[2].Value = ((string)(habitat_version));
+            }
+            if ((is_local.HasValue == true)) {
+                this.Adapter.UpdateCommand.Parameters[3].Value = ((bool)(is_local.Value));
+            }
+            else {
+                this.Adapter.UpdateCommand.Parameters[3].Value = global::System.DBNull.Value;
+            }
+            this.Adapter.UpdateCommand.Parameters[4].Value = ((int)(sort_order));
             if ((Original_code == null)) {
                 throw new global::System.ArgumentNullException("Original_code");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[4].Value = ((string)(Original_code));
+                this.Adapter.UpdateCommand.Parameters[5].Value = ((string)(Original_code));
             }
             if ((Original_description == null)) {
                 throw new global::System.ArgumentNullException("Original_description");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[5].Value = ((string)(Original_description));
+                this.Adapter.UpdateCommand.Parameters[6].Value = ((string)(Original_description));
             }
-            if ((Original_is_local.HasValue == true)) {
-                this.Adapter.UpdateCommand.Parameters[6].Value = ((bool)(Original_is_local.Value));
+            if ((Original_habitat_version == null)) {
+                this.Adapter.UpdateCommand.Parameters[7].Value = ((object)(1));
+                this.Adapter.UpdateCommand.Parameters[8].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[6].Value = global::System.DBNull.Value;
+                this.Adapter.UpdateCommand.Parameters[7].Value = ((object)(0));
+                this.Adapter.UpdateCommand.Parameters[8].Value = ((string)(Original_habitat_version));
             }
-            this.Adapter.UpdateCommand.Parameters[7].Value = ((int)(Original_sort_order));
+            if ((Original_is_local.HasValue == true)) {
+                this.Adapter.UpdateCommand.Parameters[9].Value = ((object)(0));
+                this.Adapter.UpdateCommand.Parameters[10].Value = ((bool)(Original_is_local.Value));
+            }
+            else {
+                this.Adapter.UpdateCommand.Parameters[9].Value = ((object)(1));
+                this.Adapter.UpdateCommand.Parameters[10].Value = global::System.DBNull.Value;
+            }
+            this.Adapter.UpdateCommand.Parameters[11].Value = ((int)(Original_sort_order));
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.UpdateCommand.Connection.State;
             if (((this.Adapter.UpdateCommand.Connection.State & global::System.Data.ConnectionState.Open) 
                         != global::System.Data.ConnectionState.Open)) {
@@ -36424,8 +36602,8 @@ SELECT code, description, is_local, sort_order FROM lut_habitat_class WHERE (cod
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Update, true)]
-        public virtual int Update(string description, global::System.Nullable<bool> is_local, int sort_order, string Original_code, string Original_description, global::System.Nullable<bool> Original_is_local, int Original_sort_order) {
-            return this.Update(Original_code, description, is_local, sort_order, Original_code, Original_description, Original_is_local, Original_sort_order);
+        public virtual int Update(string description, string habitat_version, global::System.Nullable<bool> is_local, int sort_order, string Original_code, string Original_description, string Original_habitat_version, global::System.Nullable<bool> Original_is_local, int Original_sort_order) {
+            return this.Update(Original_code, description, habitat_version, is_local, sort_order, Original_code, Original_description, Original_habitat_version, Original_is_local, Original_sort_order);
         }
     }
     
@@ -46011,10 +46189,11 @@ SELECT code, description, sort_order FROM lut_condition_qualifier WHERE (code = 
             tableMapping.ColumnMappings.Add("comments", "comments");
             tableMapping.ColumnMappings.Add("is_local", "is_local");
             tableMapping.ColumnMappings.Add("sort_order", "sort_order");
+            tableMapping.ColumnMappings.Add("habitat_class_code", "habitat_class_code");
             this._adapter.TableMappings.Add(tableMapping);
             this._adapter.DeleteCommand = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._adapter.DeleteCommand.Connection = this.Connection;
-            this._adapter.DeleteCommand.CommandText = @"DELETE FROM [lut_primary] WHERE (([code] = @Original_code) AND ([description] = @Original_description) AND ([category] = @Original_category) AND ((@IsNull_nvc_codes = 1 AND [nvc_codes] IS NULL) OR ([nvc_codes] = @Original_nvc_codes)) AND ([polygon] = @Original_polygon) AND ([line] = @Original_line) AND ([point] = @Original_point) AND ((@IsNull_comments = 1 AND [comments] IS NULL) OR ([comments] = @Original_comments)) AND ([is_local] = @Original_is_local) AND ([sort_order] = @Original_sort_order))";
+            this._adapter.DeleteCommand.CommandText = @"DELETE FROM [lut_primary] WHERE (([code] = @Original_code) AND ([description] = @Original_description) AND ([category] = @Original_category) AND ([habitat_class_code] = @Original_habitat_class_code) AND ((@IsNull_nvc_codes = 1 AND [nvc_codes] IS NULL) OR ([nvc_codes] = @Original_nvc_codes)) AND ([polygon] = @Original_polygon) AND ([line] = @Original_line) AND ([point] = @Original_point) AND ((@IsNull_comments = 1 AND [comments] IS NULL) OR ([comments] = @Original_comments)) AND ([is_local] = @Original_is_local) AND ([sort_order] = @Original_sort_order))";
             this._adapter.DeleteCommand.CommandType = global::System.Data.CommandType.Text;
             global::Microsoft.Data.SqlClient.SqlParameter param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@Original_code";
@@ -46035,6 +46214,13 @@ SELECT code, description, sort_order FROM lut_condition_qualifier WHERE (code = 
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
             param.IsNullable = true;
             param.SourceColumn = "category";
+            param.SourceVersion = global::System.Data.DataRowVersion.Original;
+            this._adapter.DeleteCommand.Parameters.Add(param);
+            param = new global::Microsoft.Data.SqlClient.SqlParameter();
+            param.ParameterName = "@Original_habitat_class_code";
+            param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
+            param.IsNullable = true;
+            param.SourceColumn = "habitat_class_code";
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.DeleteCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
@@ -46111,8 +46297,8 @@ SELECT code, description, sort_order FROM lut_condition_qualifier WHERE (code = 
             this._adapter.DeleteCommand.Parameters.Add(param);
             this._adapter.UpdateCommand = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._adapter.UpdateCommand.Connection = this.Connection;
-            this._adapter.UpdateCommand.CommandText = @"UPDATE [lut_primary] SET [code] = @code, [description] = @description, [category] = @category, [nvc_codes] = @nvc_codes, [polygon] = @polygon, [line] = @line, [point] = @point, [comments] = @comments, [is_local] = @is_local, [sort_order] = @sort_order WHERE (([code] = @Original_code) AND ([description] = @Original_description) AND ([category] = @Original_category) AND ((@IsNull_nvc_codes = 1 AND [nvc_codes] IS NULL) OR ([nvc_codes] = @Original_nvc_codes)) AND ([polygon] = @Original_polygon) AND ([line] = @Original_line) AND ([point] = @Original_point) AND ((@IsNull_comments = 1 AND [comments] IS NULL) OR ([comments] = @Original_comments)) AND ([is_local] = @Original_is_local) AND ([sort_order] = @Original_sort_order));
-SELECT code, description, category, nvc_codes, polygon, line, point, comments, is_local, sort_order FROM lut_primary WHERE (code = @code)";
+            this._adapter.UpdateCommand.CommandText = @"UPDATE [lut_primary] SET [code] = @code, [description] = @description, [category] = @category, [habitat_class_code] = @habitat_class_code, [nvc_codes] = @nvc_codes, [polygon] = @polygon, [line] = @line, [point] = @point, [comments] = @comments, [is_local] = @is_local, [sort_order] = @sort_order WHERE (([code] = @Original_code) AND ([description] = @Original_description) AND ([category] = @Original_category) AND ([habitat_class_code] = @Original_habitat_class_code) AND ((@IsNull_nvc_codes = 1 AND [nvc_codes] IS NULL) OR ([nvc_codes] = @Original_nvc_codes)) AND ([polygon] = @Original_polygon) AND ([line] = @Original_line) AND ([point] = @Original_point) AND ((@IsNull_comments = 1 AND [comments] IS NULL) OR ([comments] = @Original_comments)) AND ([is_local] = @Original_is_local) AND ([sort_order] = @Original_sort_order));
+SELECT code, description, category, habitat_class_code, nvc_codes, polygon, line, point, comments, is_local, sort_order FROM lut_primary WHERE (code = @code)";
             this._adapter.UpdateCommand.CommandType = global::System.Data.CommandType.Text;
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@code";
@@ -46131,6 +46317,12 @@ SELECT code, description, category, nvc_codes, polygon, line, point, comments, i
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
             param.IsNullable = true;
             param.SourceColumn = "category";
+            this._adapter.UpdateCommand.Parameters.Add(param);
+            param = new global::Microsoft.Data.SqlClient.SqlParameter();
+            param.ParameterName = "@habitat_class_code";
+            param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
+            param.IsNullable = true;
+            param.SourceColumn = "habitat_class_code";
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@nvc_codes";
@@ -46198,6 +46390,13 @@ SELECT code, description, category, nvc_codes, polygon, line, point, comments, i
             param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
             param.IsNullable = true;
             param.SourceColumn = "category";
+            param.SourceVersion = global::System.Data.DataRowVersion.Original;
+            this._adapter.UpdateCommand.Parameters.Add(param);
+            param = new global::Microsoft.Data.SqlClient.SqlParameter();
+            param.ParameterName = "@Original_habitat_class_code";
+            param.SqlDbType = global::System.Data.SqlDbType.NVarChar;
+            param.IsNullable = true;
+            param.SourceColumn = "habitat_class_code";
             param.SourceVersion = global::System.Data.DataRowVersion.Original;
             this._adapter.UpdateCommand.Parameters.Add(param);
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
@@ -46287,8 +46486,8 @@ SELECT code, description, category, nvc_codes, polygon, line, point, comments, i
             this._commandCollection = new global::Microsoft.Data.SqlClient.SqlCommand[1];
             this._commandCollection[0] = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._commandCollection[0].Connection = this.Connection;
-            this._commandCollection[0].CommandText = "SELECT        code, description, category, nvc_codes, polygon, line, point, comme" +
-                "nts, is_local, sort_order\r\nFROM            lut_primary";
+            this._commandCollection[0].CommandText = "SELECT code, description, category, habitat_class_code, nvc_codes, polygon, line," +
+                " point, comments, is_local, sort_order FROM lut_primary";
             this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;
         }
         
@@ -46349,7 +46548,7 @@ SELECT code, description, category, nvc_codes, polygon, line, point, comments, i
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         [global::System.ComponentModel.Design.HelpKeywordAttribute("vs.data.TableAdapter")]
         [global::System.ComponentModel.DataObjectMethodAttribute(global::System.ComponentModel.DataObjectMethodType.Delete, true)]
-        public virtual int Delete(string Original_code, string Original_description, string Original_category, string Original_nvc_codes, bool Original_polygon, bool Original_line, bool Original_point, string Original_comments, bool Original_is_local, int Original_sort_order) {
+        public virtual int Delete(string Original_code, string Original_description, string Original_category, string Original_habitat_class_code, string Original_nvc_codes, bool Original_polygon, bool Original_line, bool Original_point, string Original_comments, bool Original_is_local, int Original_sort_order) {
             if ((Original_code == null)) {
                 throw new global::System.ArgumentNullException("Original_code");
             }
@@ -46368,27 +46567,33 @@ SELECT code, description, category, nvc_codes, polygon, line, point, comments, i
             else {
                 this.Adapter.DeleteCommand.Parameters[2].Value = ((string)(Original_category));
             }
+            if ((Original_habitat_class_code == null)) {
+                throw new global::System.ArgumentNullException("Original_habitat_class_code");
+            }
+            else {
+                this.Adapter.DeleteCommand.Parameters[3].Value = ((string)(Original_habitat_class_code));
+            }
             if ((Original_nvc_codes == null)) {
-                this.Adapter.DeleteCommand.Parameters[3].Value = ((object)(1));
-                this.Adapter.DeleteCommand.Parameters[4].Value = global::System.DBNull.Value;
+                this.Adapter.DeleteCommand.Parameters[4].Value = ((object)(1));
+                this.Adapter.DeleteCommand.Parameters[5].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.DeleteCommand.Parameters[3].Value = ((object)(0));
-                this.Adapter.DeleteCommand.Parameters[4].Value = ((string)(Original_nvc_codes));
+                this.Adapter.DeleteCommand.Parameters[4].Value = ((object)(0));
+                this.Adapter.DeleteCommand.Parameters[5].Value = ((string)(Original_nvc_codes));
             }
-            this.Adapter.DeleteCommand.Parameters[5].Value = ((bool)(Original_polygon));
-            this.Adapter.DeleteCommand.Parameters[6].Value = ((bool)(Original_line));
-            this.Adapter.DeleteCommand.Parameters[7].Value = ((bool)(Original_point));
+            this.Adapter.DeleteCommand.Parameters[6].Value = ((bool)(Original_polygon));
+            this.Adapter.DeleteCommand.Parameters[7].Value = ((bool)(Original_line));
+            this.Adapter.DeleteCommand.Parameters[8].Value = ((bool)(Original_point));
             if ((Original_comments == null)) {
-                this.Adapter.DeleteCommand.Parameters[8].Value = ((object)(1));
-                this.Adapter.DeleteCommand.Parameters[9].Value = global::System.DBNull.Value;
+                this.Adapter.DeleteCommand.Parameters[9].Value = ((object)(1));
+                this.Adapter.DeleteCommand.Parameters[10].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.DeleteCommand.Parameters[8].Value = ((object)(0));
-                this.Adapter.DeleteCommand.Parameters[9].Value = ((string)(Original_comments));
+                this.Adapter.DeleteCommand.Parameters[9].Value = ((object)(0));
+                this.Adapter.DeleteCommand.Parameters[10].Value = ((string)(Original_comments));
             }
-            this.Adapter.DeleteCommand.Parameters[10].Value = ((bool)(Original_is_local));
-            this.Adapter.DeleteCommand.Parameters[11].Value = ((int)(Original_sort_order));
+            this.Adapter.DeleteCommand.Parameters[11].Value = ((bool)(Original_is_local));
+            this.Adapter.DeleteCommand.Parameters[12].Value = ((int)(Original_sort_order));
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.DeleteCommand.Connection.State;
             if (((this.Adapter.DeleteCommand.Connection.State & global::System.Data.ConnectionState.Open) 
                         != global::System.Data.ConnectionState.Open)) {
@@ -46413,6 +46618,7 @@ SELECT code, description, category, nvc_codes, polygon, line, point, comments, i
                     string code, 
                     string description, 
                     string category, 
+                    string habitat_class_code, 
                     string nvc_codes, 
                     bool polygon, 
                     bool line, 
@@ -46423,6 +46629,7 @@ SELECT code, description, category, nvc_codes, polygon, line, point, comments, i
                     string Original_code, 
                     string Original_description, 
                     string Original_category, 
+                    string Original_habitat_class_code, 
                     string Original_nvc_codes, 
                     bool Original_polygon, 
                     bool Original_line, 
@@ -46448,62 +46655,74 @@ SELECT code, description, category, nvc_codes, polygon, line, point, comments, i
             else {
                 this.Adapter.UpdateCommand.Parameters[2].Value = ((string)(category));
             }
+            if ((habitat_class_code == null)) {
+                throw new global::System.ArgumentNullException("habitat_class_code");
+            }
+            else {
+                this.Adapter.UpdateCommand.Parameters[3].Value = ((string)(habitat_class_code));
+            }
             if ((nvc_codes == null)) {
-                this.Adapter.UpdateCommand.Parameters[3].Value = global::System.DBNull.Value;
+                this.Adapter.UpdateCommand.Parameters[4].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[3].Value = ((string)(nvc_codes));
+                this.Adapter.UpdateCommand.Parameters[4].Value = ((string)(nvc_codes));
             }
-            this.Adapter.UpdateCommand.Parameters[4].Value = ((bool)(polygon));
-            this.Adapter.UpdateCommand.Parameters[5].Value = ((bool)(line));
-            this.Adapter.UpdateCommand.Parameters[6].Value = ((bool)(point));
+            this.Adapter.UpdateCommand.Parameters[5].Value = ((bool)(polygon));
+            this.Adapter.UpdateCommand.Parameters[6].Value = ((bool)(line));
+            this.Adapter.UpdateCommand.Parameters[7].Value = ((bool)(point));
             if ((comments == null)) {
-                this.Adapter.UpdateCommand.Parameters[7].Value = global::System.DBNull.Value;
+                this.Adapter.UpdateCommand.Parameters[8].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[7].Value = ((string)(comments));
+                this.Adapter.UpdateCommand.Parameters[8].Value = ((string)(comments));
             }
-            this.Adapter.UpdateCommand.Parameters[8].Value = ((bool)(is_local));
-            this.Adapter.UpdateCommand.Parameters[9].Value = ((int)(sort_order));
+            this.Adapter.UpdateCommand.Parameters[9].Value = ((bool)(is_local));
+            this.Adapter.UpdateCommand.Parameters[10].Value = ((int)(sort_order));
             if ((Original_code == null)) {
                 throw new global::System.ArgumentNullException("Original_code");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[10].Value = ((string)(Original_code));
+                this.Adapter.UpdateCommand.Parameters[11].Value = ((string)(Original_code));
             }
             if ((Original_description == null)) {
                 throw new global::System.ArgumentNullException("Original_description");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[11].Value = ((string)(Original_description));
+                this.Adapter.UpdateCommand.Parameters[12].Value = ((string)(Original_description));
             }
             if ((Original_category == null)) {
                 throw new global::System.ArgumentNullException("Original_category");
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[12].Value = ((string)(Original_category));
+                this.Adapter.UpdateCommand.Parameters[13].Value = ((string)(Original_category));
+            }
+            if ((Original_habitat_class_code == null)) {
+                throw new global::System.ArgumentNullException("Original_habitat_class_code");
+            }
+            else {
+                this.Adapter.UpdateCommand.Parameters[14].Value = ((string)(Original_habitat_class_code));
             }
             if ((Original_nvc_codes == null)) {
-                this.Adapter.UpdateCommand.Parameters[13].Value = ((object)(1));
-                this.Adapter.UpdateCommand.Parameters[14].Value = global::System.DBNull.Value;
+                this.Adapter.UpdateCommand.Parameters[15].Value = ((object)(1));
+                this.Adapter.UpdateCommand.Parameters[16].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[13].Value = ((object)(0));
-                this.Adapter.UpdateCommand.Parameters[14].Value = ((string)(Original_nvc_codes));
+                this.Adapter.UpdateCommand.Parameters[15].Value = ((object)(0));
+                this.Adapter.UpdateCommand.Parameters[16].Value = ((string)(Original_nvc_codes));
             }
-            this.Adapter.UpdateCommand.Parameters[15].Value = ((bool)(Original_polygon));
-            this.Adapter.UpdateCommand.Parameters[16].Value = ((bool)(Original_line));
-            this.Adapter.UpdateCommand.Parameters[17].Value = ((bool)(Original_point));
+            this.Adapter.UpdateCommand.Parameters[17].Value = ((bool)(Original_polygon));
+            this.Adapter.UpdateCommand.Parameters[18].Value = ((bool)(Original_line));
+            this.Adapter.UpdateCommand.Parameters[19].Value = ((bool)(Original_point));
             if ((Original_comments == null)) {
-                this.Adapter.UpdateCommand.Parameters[18].Value = ((object)(1));
-                this.Adapter.UpdateCommand.Parameters[19].Value = global::System.DBNull.Value;
+                this.Adapter.UpdateCommand.Parameters[20].Value = ((object)(1));
+                this.Adapter.UpdateCommand.Parameters[21].Value = global::System.DBNull.Value;
             }
             else {
-                this.Adapter.UpdateCommand.Parameters[18].Value = ((object)(0));
-                this.Adapter.UpdateCommand.Parameters[19].Value = ((string)(Original_comments));
+                this.Adapter.UpdateCommand.Parameters[20].Value = ((object)(0));
+                this.Adapter.UpdateCommand.Parameters[21].Value = ((string)(Original_comments));
             }
-            this.Adapter.UpdateCommand.Parameters[20].Value = ((bool)(Original_is_local));
-            this.Adapter.UpdateCommand.Parameters[21].Value = ((int)(Original_sort_order));
+            this.Adapter.UpdateCommand.Parameters[22].Value = ((bool)(Original_is_local));
+            this.Adapter.UpdateCommand.Parameters[23].Value = ((int)(Original_sort_order));
             global::System.Data.ConnectionState previousConnectionState = this.Adapter.UpdateCommand.Connection.State;
             if (((this.Adapter.UpdateCommand.Connection.State & global::System.Data.ConnectionState.Open) 
                         != global::System.Data.ConnectionState.Open)) {
@@ -46527,6 +46746,7 @@ SELECT code, description, category, nvc_codes, polygon, line, point, comments, i
         public virtual int Update(
                     string description, 
                     string category, 
+                    string habitat_class_code, 
                     string nvc_codes, 
                     bool polygon, 
                     bool line, 
@@ -46537,6 +46757,7 @@ SELECT code, description, category, nvc_codes, polygon, line, point, comments, i
                     string Original_code, 
                     string Original_description, 
                     string Original_category, 
+                    string Original_habitat_class_code, 
                     string Original_nvc_codes, 
                     bool Original_polygon, 
                     bool Original_line, 
@@ -46544,7 +46765,7 @@ SELECT code, description, category, nvc_codes, polygon, line, point, comments, i
                     string Original_comments, 
                     bool Original_is_local, 
                     int Original_sort_order) {
-            return this.Update(Original_code, description, category, nvc_codes, polygon, line, point, comments, is_local, sort_order, Original_code, Original_description, Original_category, Original_nvc_codes, Original_polygon, Original_line, Original_point, Original_comments, Original_is_local, Original_sort_order);
+            return this.Update(Original_code, description, category, habitat_class_code, nvc_codes, polygon, line, point, comments, is_local, sort_order, Original_code, Original_description, Original_category, Original_habitat_class_code, Original_nvc_codes, Original_polygon, Original_line, Original_point, Original_comments, Original_is_local, Original_sort_order);
         }
     }
     

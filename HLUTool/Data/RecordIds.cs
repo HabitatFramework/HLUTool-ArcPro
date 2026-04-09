@@ -37,7 +37,6 @@ namespace HLU.Data
         HluDataSet _hluDataset;
         HluGeometryTypes _gisLayerType;
         TableAdapterManager _hluTableAdapterMgr;
-        private string _habitatVersion;
         private int _incidCurrentNumber = -1;
         int _nextIncidSecondaryId = -1;
         int _nextIncidConditionId = -1;
@@ -88,24 +87,28 @@ namespace HLU.Data
         {
             object retVal;
 
+            // Get the next INCID Secondary ID from the database, starting with the maximum ID in the in-memory table.
             retVal = _db.ExecuteScalar(String.Format("SELECT MAX({0}) + 1 FROM {1}",
                 _db.QuoteIdentifier(_hluDataset.incid_secondary.secondary_idColumn.ColumnName),
                 _db.QualifyTableName(_hluDataset.incid_secondary.TableName)),
                 _db.Connection.ConnectionTimeout, CommandType.Text);
             _nextIncidSecondaryId = retVal != DBNull.Value && retVal != null ? (int)retVal : 1;
 
+            // Get the next INCID Condition ID from the database, starting with the maximum ID in the in-memory table.
             retVal = _db.ExecuteScalar(String.Format("SELECT MAX({0}) + 1 FROM {1}",
                 _db.QuoteIdentifier(_hluDataset.incid_condition.incid_condition_idColumn.ColumnName),
                 _db.QualifyTableName(_hluDataset.incid_condition.TableName)),
                 _db.Connection.ConnectionTimeout, CommandType.Text);
             _nextIncidConditionId = retVal != DBNull.Value && retVal != null ? (int)retVal : 1;
 
+            // Get the next INCID Bap ID from the database, starting with the maximum ID in the in-memory table.
             retVal = _db.ExecuteScalar(String.Format("SELECT MAX({0}) + 1 FROM {1}",
                 _db.QuoteIdentifier(_hluDataset.incid_bap.bap_idColumn.ColumnName),
                 _db.QualifyTableName(_hluDataset.incid_bap.TableName)),
                 _db.Connection.ConnectionTimeout, CommandType.Text);
             _nextIncidBapId = retVal != DBNull.Value && retVal != null ? (int)retVal : 1;
 
+            // Get the next INCID Sources ID from the database, starting with the maximum ID in the in-memory table.
             retVal = _db.ExecuteScalar(String.Format("SELECT MAX({0}) + 1 FROM {1}",
                 _db.QuoteIdentifier(_hluDataset.incid_sources.incid_source_idColumn.ColumnName),
                 _db.QualifyTableName(_hluDataset.incid_sources.TableName)),
@@ -118,22 +121,31 @@ namespace HLU.Data
         #region Public Properties
 
         /// <summary>
-        /// Gets the habitat version from lut_version table.
+        /// Gets the habitat version from the lut_habitat_class table for the given habitat class code.
         /// </summary>
-        /// <value>The habitat version.</value>
-        public string HabitatVersion
+        /// <param name="habitatClassCode">
+        /// The habitat class code to look up (e.g. the code from lut_primary.habitat_class_code).
+        /// </param>
+        /// <returns>
+        /// The habitat_version for the matching lut_habitat_class row, or "0" if not found.
+        /// </returns>
+        public string GetHabitatVersion(string habitatClassCode)
         {
-            get
-            {
-                // Get the habitat_version from the lut_version table.
-                if (String.IsNullOrEmpty(_habitatVersion))
-                    if (_hluDataset.lut_version.Count > 0)
-                        _habitatVersion = _hluDataset.lut_version.ElementAt(_hluDataset.lut_version.Count - 1).habitat_version;
-                    else
-                        _habitatVersion = "0";
+            // Check parameter and return "0" if null or empty.
+            if (String.IsNullOrEmpty(habitatClassCode))
+                return "0";
 
-                return _habitatVersion;
-            }
+            // Find the first row in lut_habitat_class where code matches habitatClassCode.
+            var row = _hluDataset.lut_habitat_class
+                .FirstOrDefault(r => r.code == habitatClassCode);
+
+            // If no matching row is found or habitat_version is null, return "0".
+            if (row == null || row.Ishabitat_versionNull())
+                return "0";
+
+
+            // Return the habitat_version from the matching row.
+            return row.habitat_version;
         }
 
         /// <summary>
@@ -144,6 +156,8 @@ namespace HLU.Data
         {
             get
             {
+                // If SiteID is not set, get the last one from lut_site_id based on GIS layer type.
+                // If lut_site_id is empty, default to "0000".
                 if (String.IsNullOrEmpty(_siteID))
                 {
                     if (_hluDataset.lut_site_id.Count > 0)
@@ -179,7 +193,11 @@ namespace HLU.Data
         {
             get
             {
+                // Get the current maximum INCID number from in-memory table, lut_last_incid table
+                // and DB incid table, increment it and save back to lut_last_incid.
                 _incidCurrentNumber = CurrentMaxIncidNumber(true);
+
+                // Return the new INCID string based on the INCID number.
                 return IncidString(_incidCurrentNumber);
             }
         }
@@ -190,7 +208,11 @@ namespace HLU.Data
         /// <value>The current INCID string.</value>
         public string CurrentIncid
         {
-            get { return SiteID + ":" + _incidCurrentNumber.ToString("D7"); }
+            get
+            {
+                // Return the current INCID string based on the current INCID number.
+                return SiteID + ":" + _incidCurrentNumber.ToString("D7");
+            }
         }
 
         /// <summary>
@@ -201,6 +223,7 @@ namespace HLU.Data
         {
             get
             {
+                // Return the current INCID Bap ID based on the next INCID Bap ID.
                 return NextID(_nextIncidBapId, _hluDataset.incid_bap,
                     _hluDataset.incid_bap.bap_idColumn.Ordinal) - 1;
             }
@@ -214,8 +237,12 @@ namespace HLU.Data
         {
             get
             {
+                // Get the next INCID Secondary ID based on the next INCID Secondary ID and the
+                // maximum ID in the incid_secondary table.
                 _nextIncidSecondaryId = NextID(_nextIncidSecondaryId, _hluDataset.incid_secondary,
                     _hluDataset.incid_secondary.secondary_idColumn.Ordinal);
+
+                // Return the next INCID Secondary ID.
                 return _nextIncidSecondaryId;
             }
         }
@@ -228,8 +255,12 @@ namespace HLU.Data
         {
             get
             {
+                // Get the next INCID Condition ID based on the next INCID Condition ID and the
+                // maximum ID in the incid_condition table.
                 _nextIncidConditionId = NextID(_nextIncidConditionId, _hluDataset.incid_condition,
                     _hluDataset.incid_condition.incid_condition_idColumn.Ordinal);
+
+                // Return the next INCID Condition ID.
                 return _nextIncidConditionId;
             }
         }
@@ -242,8 +273,12 @@ namespace HLU.Data
         {
             get
             {
+                // Get the next INCID Bap ID based on the next INCID Bap ID and the maximum ID in
+                // the incid_bap table.
                 _nextIncidBapId = NextID(_nextIncidBapId, _hluDataset.incid_bap,
                     _hluDataset.incid_bap.bap_idColumn.Ordinal);
+
+                // Return the next INCID Bap ID.
                 return _nextIncidBapId;
             }
         }
@@ -256,8 +291,11 @@ namespace HLU.Data
         {
             get
             {
+                // Get the next INCID Sources ID based on the next INCID Sources ID and the maximum ID in the incid_sources table.
                 _nextIncidSourcesId = NextID(_nextIncidSourcesId, _hluDataset.incid_sources,
                     _hluDataset.incid_sources.incid_source_idColumn.Ordinal);
+
+                // Return the next INCID Sources ID.
                 return _nextIncidSourcesId;
             }
         }
@@ -268,7 +306,11 @@ namespace HLU.Data
         /// <value>The maximum INCID number.</value>
         public int MaxIncidNumber
         {
-            get { return (int)Math.Pow((double)10, (double)(IncidString(1).Length - SiteID.Length - 1)) - 1; }
+            get
+            {
+                // Get the maximum INCID number based on the length of the INCID string and SiteID.
+                return (int)Math.Pow((double)10, (double)(IncidString(1).Length - SiteID.Length - 1)) - 1;
+            }
         }
 
         #endregion Public Properties
@@ -318,11 +360,14 @@ namespace HLU.Data
 
             try
             {
+                // Build SQL to get the maximum fragment ID for the given TOID and execute it.
                 object retVal = _db.ExecuteScalar(String.Format("SELECT MAX({0}) FROM {1} WHERE {2} = {3}",
                     _db.QuoteIdentifier(_hluDataset.incid_mm_polygons.fragidColumn.ColumnName),
                     _db.QualifyTableName(_hluDataset.incid_mm_polygons.TableName),
                     _db.QuoteIdentifier(_hluDataset.incid_mm_polygons.toidColumn.ColumnName),
                     _db.QuoteValue(toid)), _db.Connection.ConnectionTimeout, CommandType.Text);
+
+                // Return the maximum fragment ID with leading zeros, or "00000" if null.
                 return retVal.ToString() ?? "00000";
             }
             catch { return null; }
@@ -343,11 +388,11 @@ namespace HLU.Data
             {
                 int maxIncidNumber = 0;
 
-                // check in-memory incid table
+                // Check the in-memory incid table
                 if (_hluDataset.incid.Count > 0)
                     maxIncidNumber = _hluDataset.incid.Max(r => IncidNumber(r.incid));
 
-                // check lut_last_incid in DB
+                // Check the lut_last_incid table
                 _hluTableAdapterMgr.Fill(_hluDataset, typeof(HluDataSet.lut_last_incidDataTable), true);
                 HluDataSet.lut_last_incidRow lastIncidRow = null;
                 if (_hluDataset.lut_last_incid.Count > 0)
@@ -358,7 +403,7 @@ namespace HLU.Data
                         maxIncidNumber = lastIncidRow.last_incid;
                 }
 
-                // check DB incid table
+                // Check the DB incid table
                 string sql = String.Format("SELECT MAX({0}) FROM {1}",
                     _db.QuoteIdentifier(_hluDataset.incid.incidColumn.ColumnName),
                     _db.QualifyTableName(_hluDataset.incid.TableName));
@@ -367,9 +412,10 @@ namespace HLU.Data
                 if ((result != DBNull.Value) && (result != null) &&
                     ((dbMax = IncidNumber(result.ToString())) > maxIncidNumber)) maxIncidNumber = dbMax;
 
+                // If increment is true, increment the greatest value found and save to lut_last_incid.
                 if (increment)
                 {
-                    // increment the greatest value found and save to lut_last_incid
+                    // Increment the greatest value found and save to lut_last_incid
                     maxIncidNumber++;
                     if (lastIncidRow != null)
                         lastIncidRow.last_incid = maxIncidNumber;
@@ -378,6 +424,7 @@ namespace HLU.Data
                     _hluTableAdapterMgr.lut_last_incidTableAdapter.Update(lastIncidRow);
                 }
 
+                // Return the current maximum INCID number.
                 return maxIncidNumber;
             }
             catch { return -1; }
@@ -394,18 +441,24 @@ namespace HLU.Data
         public int NextID<T>(int nextID, T table, int idColumnOrdinal)
             where T : DataTable
         {
+            // If nextID is -1, get the maximum ID from the in-memory table.
             if ((nextID == -1) && (table.Rows.Count > 0) && (table != null))
                 nextID = table.AsEnumerable().Max(r => r.Field<int>(idColumnOrdinal)) + 1;
 
+            // Build SQL to get the maximum ID from the database table and execute it.
             string sql = String.Format("SELECT MAX({0}) + 1 FROM {1}",
                 _db.QuoteIdentifier(table.Columns[idColumnOrdinal].ColumnName), _db.QualifyTableName(table.TableName));
+
             object result = _db.ExecuteScalar(sql, _db.Connection.ConnectionTimeout, CommandType.Text);
+
+            // If the result is valid and greater than nextID, use it; otherwise, increment nextID by 1.
             int dbMax;
             if ((result != DBNull.Value) && (result != null) && Int32.TryParse(result.ToString(), out dbMax) &&
                 (nextID < dbMax)) nextID = dbMax;
             else
                 nextID += 1;
 
+            // Return the next ID.
             return nextID;
         }
 

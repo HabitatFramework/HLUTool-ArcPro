@@ -5297,14 +5297,43 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets the Habitat Version for the current record.
+        /// Gets the habitat class code for the current incid, derived from
+        /// lut_primary.habitat_class_code for the active IncidPrimary value. Returns null when
+        /// IncidPrimary is not set or has no matching lut_primary row.
         /// </summary>
-        /// <value>The Habitat Version for the current record.</value>
-        public string HabitatVersion
+        /// <value>The habitat class code (e.g. "UKHab") for the current primary habitat.</value>
+        public string IncidHabitatClass
         {
             get
             {
-                return _recIDs.HabitatVersion;
+                // Check that there is a valid primary habitat code and lookup table before
+                // attempting to get the habitat class code from the lookup table
+                if (String.IsNullOrEmpty(_incidPrimary) || _lutPrimary == null)
+                    return null;
+
+                // Return the habitat class code from the lookup table where the code matches the
+                // IncidPrimary value, or null if no match is found
+                return _lutPrimary
+                    .FirstOrDefault(p => p.code == _incidPrimary)
+                    ?.habitat_class_code;
+            }
+        }
+
+        /// <summary>
+        /// Gets the habitat version for the current incid, derived from
+        /// lut_habitat_class.habitat_version where code matches lut_primary.habitat_class_code for
+        /// the active IncidPrimary value. Returns "0" when the class code or version cannot be resolved.
+        /// </summary>
+        /// <value>
+        /// The habitat version string for the current primary habitat's classification system.
+        /// </value>
+        public string IncidHabitatVersion
+        {
+            get
+            {
+                // Return the habitat version from the record identifiers helper based on the
+                // current habitat class code, or "0" if the class code is not set or cannot be resolved
+                return _recIDs.GetHabitatVersion(IncidHabitatClass);
             }
         }
 

@@ -301,9 +301,13 @@ namespace HLU.UI.ViewModel
                 _viewModelMain.IncidCurrentRow.habitat_primary = _viewModelMain.IncidPrimary;
                 _viewModelMain.IncidCurrentRow.habitat_secondaries = _viewModelMain.IncidSecondarySummary;
 
+                // Update the habitat class if the primary habitat has changed
+                if (!_viewModelMain.IncidCurrentRow.Ishabitat_primaryNull())
+                    _viewModelMain.IncidCurrentRow.habitat_class = _viewModelMain.IncidHabitatClass;
+
                 // Update the habitat version if the primary habitat has changed
                 if (!_viewModelMain.IncidCurrentRow.Ishabitat_primaryNull())
-                    _viewModelMain.IncidCurrentRow.habitat_version = _viewModelMain.HabitatVersion;
+                    _viewModelMain.IncidCurrentRow.habitat_version = _viewModelMain.IncidHabitatVersion;
 
                 // Build a collection of the updated columns in the incid table
                 var incidUpdateCols = _viewModelMain.HluDataset.incid.Columns.Cast<DataColumn>()
@@ -614,8 +618,12 @@ namespace HLU.UI.ViewModel
                 _viewModelMain.IncidCurrentRow.last_modified_date = nowDtTm;
                 _viewModelMain.IncidCurrentRow.last_modified_user_id = _viewModelMain.UserID;
 
+                // Update the habitat class if the primary habitat has changed
+                if (!_viewModelMain.IncidCurrentRow.Ishabitat_primaryNull())
+                    _viewModelMain.IncidCurrentRow.habitat_class = _viewModelMain.IncidHabitatClass;
+
                 // Update the habitat version as the primary habitat will change
-                _viewModelMain.IncidCurrentRow.habitat_version = _viewModelMain.HabitatVersion;
+                _viewModelMain.IncidCurrentRow.habitat_version = _viewModelMain.IncidHabitatVersion;
 
                 // Set the primary habitat on the incid table to a non-null value
                 // to indicate that the column has/will change

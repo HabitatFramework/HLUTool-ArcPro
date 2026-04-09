@@ -598,7 +598,8 @@ namespace HLU.UI.ViewModel
             // Update other incid vales
             viewModelMain.IncidCurrentRow.habitat_primary = viewModelMain.IncidPrimary;
             viewModelMain.IncidCurrentRow.habitat_secondaries = viewModelMain.IncidSecondarySummary;
-            viewModelMain.IncidCurrentRow.habitat_version = viewModelMain.HabitatVersion;
+            viewModelMain.IncidCurrentRow.habitat_class = viewModelMain.IncidHabitatClass;
+            viewModelMain.IncidCurrentRow.habitat_version = viewModelMain.IncidHabitatVersion;
         }
 
         /// <summary>
