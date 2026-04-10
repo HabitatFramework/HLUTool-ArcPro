@@ -395,19 +395,17 @@ namespace HLU.UI.ViewModel
             if ((_currentIncidToidsInGISCount == _currentIncidToidsInDBCount) &&
                (_currentIncidFragsInGISCount > _currentIncidFragsInDBCount))
             {
-                // Show informational message that physical merge can be performed if desired.
+                // Show informational message that physical split can be performed if desired.
                 if (showMessage)
                     ShowInfo($"{itemType}{(_currentIncidFragsInGISCount == 1 ? "" : "s")} may have been split in GIS but not physically split using HLU Tool.", Messagecategory);
             }
-            // Check if there are two or more features that share the same incid and toid, but there
-            // are multiple fragments in GIS and the database.
-            else if (_currentIncidFragsInGISCount > 1 &&
-                (_currentIncidFragsInGISCount == _currentIncidFragsInDBCount) &&
+            // Check if there are multiple fragments in GIS that share the same incid and toid.
+            else if (_selectedFragsInGISCount > 1 &&
                 (_selectedIncidsInGISCount == 1) && (_selectedToidsInGISCount == 1))
             {
                 // Show informational message that physical merge can be performed if desired.
                 if (showMessage)
-                    ShowInfo("The selected features share the same INCID and TOID so a physical merge is possible.", MessageCategory.GIS);
+                    ShowInfo("Selected features share the same INCID and TOID so a physical merge is possible.", MessageCategory.GIS);
             }
             // Check if the GIS and database are in sync.
             else if ((_currentIncidToidsInGISCount > _currentIncidToidsInDBCount) ||
@@ -2635,11 +2633,15 @@ namespace HLU.UI.ViewModel
         /// <returns>A task that represents the asynchronous operation.</returns>
         public async Task FilterByIncidAsync(String queryIncid)
         {
+            // Check inputs
             if (String.IsNullOrEmpty(queryIncid))
                 return;
 
             try
             {
+                // Clear any existing GIS messages
+                ClearMessage(category: MessageCategory.GIS);
+
                 ChangeCursor(Cursors.Wait, "Validating ...");
 
                 // Select only the incid database table to use in the query.
@@ -2736,7 +2738,7 @@ namespace HLU.UI.ViewModel
                         // Reset the cursor back to normal.
                         ChangeCursor(Cursors.Arrow);
 
-                        // Warn the user that no records were found.
+                        // Inform the user that no map features were found.
                         ShowInfo("Map feature not found in active layer.", MessageCategory.GIS);
                     }
                 }
@@ -2757,8 +2759,8 @@ namespace HLU.UI.ViewModel
                     // Reset the cursor back to normal
                     ChangeCursor(Cursors.Arrow);
 
-                    // Warn the user that the record was not found
-                    ShowInfo("Record not found in database.", MessageCategory.Database);
+                    // Inform the user that the record was not found
+                    ShowInfo("Record not found in database.", MessageCategory.GIS);
                 }
             }
             catch (Exception ex)
@@ -2948,7 +2950,7 @@ namespace HLU.UI.ViewModel
                         // Reset the cursor back to normal.
                         ChangeCursor(Cursors.Arrow);
 
-                        // Warn the user that no records were found.
+                        // Inform the user that no map features were found.
                         ShowInfo("No map features found in active layer.", MessageCategory.GIS);
                     }
                 }

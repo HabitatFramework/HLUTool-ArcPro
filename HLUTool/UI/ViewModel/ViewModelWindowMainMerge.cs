@@ -403,7 +403,7 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.RefillIncidTable = true;
 
                     // Get the GIS layer selection again.
-                    await _viewModelMain.GetMapSelectionAsync(false);
+                    await _viewModelMain.GetMapSelectionAsync(true);
                 }
 
                 // Reset the cursor back to normal.

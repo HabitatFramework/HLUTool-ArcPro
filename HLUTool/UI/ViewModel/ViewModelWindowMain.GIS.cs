@@ -429,8 +429,8 @@ namespace HLU.UI.ViewModel
         /// <param name="obj">Event arguments containing details about the active map view change.</param>
         private async void OnActiveMapViewChanged(ActiveMapViewChangedEventArgs obj)
         {
-            // Clear any existing GIS error messages
-            ClearMessage(category: MessageCategory.GIS, level: MessageType.Error);
+            // Clear any existing messages
+            ClearAllMessages();
 
             // If there is no active map view.
             if (MapView.Active == null)
@@ -454,9 +454,6 @@ namespace HLU.UI.ViewModel
                 // Update the MapView reference but don't treat it as a new map
                 _activeMapView = MapView.Active;
 
-                // Clear any messages and show UI
-                ClearMessage();
-
                 // Make the UI controls visible.
                 GridMainVisibility = Visibility.Visible;
                 return;
@@ -472,9 +469,6 @@ namespace HLU.UI.ViewModel
                 GridMainVisibility = Visibility.Hidden;
                 return;
             }
-
-            // Clear any messages.
-            ClearMessage();
 
             // Make the UI controls visible.
             GridMainVisibility = Visibility.Visible;
@@ -664,6 +658,9 @@ namespace HLU.UI.ViewModel
         /// <returns>A task representing the asynchronous operation.</returns>
         internal async Task SelectCurrentOnMapAsync()
         {
+            // Clear any existing GIS messages
+            ClearMessage(category: MessageCategory.GIS);
+
             // Check the GIS application is initialised.
             if (_gisApp == null)
             {
@@ -711,9 +708,6 @@ namespace HLU.UI.ViewModel
                 // Warn the user that no features were found in GIS.
                 if (_gisSelection == null || _gisSelection.Rows.Count == 0)
                 {
-                    // Clear any existing navigation warning messages
-                    ClearMessage(category: MessageCategory.GIS, level: MessageType.Warning);
-
                     // Display a warning message.
                     ShowWarning("No features for incid found in active layer.", MessageCategory.GIS);
 
@@ -751,8 +745,12 @@ namespace HLU.UI.ViewModel
         /// <returns>A task representing the asynchronous operation.</returns>
         public async Task SelectOnMapAsync(bool updateIncidSelection)
         {
+            // Check there is a current row
             if (IncidCurrentRow == null)
                 return;
+
+            // Clear any existing GIS messages
+            ClearMessage(category: MessageCategory.GIS);
 
             // Temporarily store the incid and GIS selections whilst
             // selecting the current incid in GIS so that the selections
@@ -858,18 +856,10 @@ namespace HLU.UI.ViewModel
                 // Warn the user that no features were found in GIS.
                 if (_gisSelection == null || _gisSelection.Rows.Count == 0)
                 {
-                    // Clear any existing navigation warning messages
-                    ClearMessage(category: MessageCategory.GIS, level: MessageType.Warning);
-
                     // Display a warning message.
                     ShowWarning("No features for incid found in active layer.", MessageCategory.GIS);
 
                     return;
-                }
-                else
-                {
-                    // Clear any existing GIS warning messages
-                    ClearMessage(category: MessageCategory.GIS, level: MessageType.Warning);
                 }
 
                 // Zoom to the GIS selection (if auto zoom configured).
@@ -909,6 +899,9 @@ namespace HLU.UI.ViewModel
         /// <returns>A task representing the asynchronous operation.</returns>
         internal async Task GetMapSelectionAsync(bool showMessage)
         {
+            // Clear any existing GIS messages
+            ClearMessage(category: MessageCategory.GIS);
+
             try
             {
                 // Check there are no outstanding edits.
@@ -993,9 +986,6 @@ namespace HLU.UI.ViewModel
                     // Reset the cursor back to normal.
                     ChangeCursor(Cursors.Arrow);
 
-                    // Clear any existing GIS info messages
-                    ClearMessage(category: MessageCategory.GIS, level: MessageType.Information);
-
                     // Check if the GIS and database are in sync.
                     CheckInSync(MessageCategory.GIS, showMessage: showMessage);
                 }
@@ -1012,9 +1002,6 @@ namespace HLU.UI.ViewModel
 
                     // Reset the cursor back to normal.
                     ChangeCursor(Cursors.Arrow);
-
-                    // Clear any existing navigation warning messages
-                    ClearMessage(category: MessageCategory.GIS, level: MessageType.Warning);
 
                     // Display a warning message.
                     ShowWarning("No map features selected in active layer.", MessageCategory.GIS);
@@ -1107,6 +1094,7 @@ namespace HLU.UI.ViewModel
                     {
                         // Show an information message.
                         ShowInfo("No incid features found in active layer.", MessageCategory.GIS);
+
                         return;
                     }
 
@@ -1630,8 +1618,8 @@ namespace HLU.UI.ViewModel
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task LogicalSplitAsync()
         {
-            // Clear any existing Split messages
-            ClearMessage(category: MessageCategory.Split);
+            // Clear any existing messages
+            ClearAllMessages();
 
             // Get the GIS layer selection again (just in case).
             await GetMapSelectionAsync(false);
@@ -1671,8 +1659,8 @@ namespace HLU.UI.ViewModel
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task PhysicalSplitAsync()
         {
-            // Clear any existing Split messages
-            ClearMessage(category: MessageCategory.Split);
+            // Clear any existing messages
+            ClearAllMessages();
 
             // Get the GIS layer selection again (just in case).
             await GetMapSelectionAsync(false);
@@ -1699,8 +1687,8 @@ namespace HLU.UI.ViewModel
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task LogicalMergeAsync()
         {
-            // Clear any existing Merge messages
-            ClearMessage(category: MessageCategory.Merge);
+            // Clear any existing messages
+            ClearAllMessages();
 
             // Get the GIS layer selection again (just in case).
             await GetMapSelectionAsync(false);
@@ -1738,8 +1726,8 @@ namespace HLU.UI.ViewModel
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task PhysicalMergeAsync()
         {
-            // Clear any existing Merge messages
-            ClearMessage(category: MessageCategory.Merge);
+            // Clear any existing messages
+            ClearAllMessages();
 
             // Get the GIS layer selection again (just in case).
             await GetMapSelectionAsync(false);

@@ -204,9 +204,7 @@ namespace HLU.UI.ViewModel
             else
             {
                 // Show info message
-                _viewModelMain.ShowInfo(
-                    "Export cancelled by user.",
-                    MessageCategory.Export);
+                _viewModelMain.ShowInfo("Export cancelled by user.", MessageCategory.Export);
             }
         }
 
@@ -298,9 +296,7 @@ namespace HLU.UI.ViewModel
             if (exportDetails == default)
             {
                 // Show info message
-                _viewModelMain.ShowInfo(
-                    "Export cancelled by user.",
-                    MessageCategory.Export);
+                _viewModelMain.ShowInfo("Export cancelled by user.", MessageCategory.Export);
 
                 return;
             }

@@ -60,6 +60,9 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override async void OnClick()
         {
+            // Clear any existing messages
+            _viewModel.ClearAllMessages();
+
             // Get the map selection.
             try
             {

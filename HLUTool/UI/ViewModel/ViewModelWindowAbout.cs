@@ -39,6 +39,8 @@ namespace HLU.UI.ViewModel
         private string _userId;
         private string _userName;
         private string _copyright;
+        private string _iconAttributionURL;
+        private string _iconAttributionText;
         private string _userGuideURL;
         private string _userGuideText;
         private string _technicalGuideURL;
@@ -205,6 +207,30 @@ namespace HLU.UI.ViewModel
             set
             {
                 _copyright = value;
+            }
+        }
+
+        public string IconAttributionURL
+        {
+            get
+            {
+                return _iconAttributionURL;
+            }
+            set
+            {
+                _iconAttributionURL = value;
+            }
+        }
+
+        public string IconAttributionText
+        {
+            get
+            {
+                return _iconAttributionText;
+            }
+            set
+            {
+                _iconAttributionText = value;
             }
         }
 

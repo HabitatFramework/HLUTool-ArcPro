@@ -1870,8 +1870,8 @@ namespace HLU.UI.ViewModel
                 // Refresh all controls
                 RefreshAll();
 
-                // Clear any messages.
-                ClearMessage();
+                // Clear any existing messages
+                ClearAllMessages();
 
                 // Make the UI controls visible.
                 GridMainVisibility = Visibility.Visible;
@@ -3041,8 +3041,8 @@ namespace HLU.UI.ViewModel
                 // Toggle the tab state to visible.
                 ToggleState("HLUTool_tab_state", true);
 
-                // Clear any messages.
-                ClearMessage();
+                // Clear any existing messages
+                ClearAllMessages();
 
                 // Only make the UI controls visible if initialisation succeeded.
                 if (!InError)
@@ -3506,8 +3506,8 @@ namespace HLU.UI.ViewModel
                                 // Set the new current row index.
                                 _incidCurrentRowIndex = value;
 
-                                // Clear any existing navigation warning messages
-                                ClearMessage(category: MessageCategory.Navigation, level: MessageType.Warning);
+                                // Clear any existing navigation messages
+                                ClearMessage(category: MessageCategory.Navigation);
                             }
                             else
                             {
@@ -3827,8 +3827,8 @@ namespace HLU.UI.ViewModel
                 }
                 else
                 {
-                    // Clear any existing database warning messages
-                    ClearMessage(category: MessageCategory.Database, level: MessageType.Warning);
+                    // Clear any existing database messages
+                    ClearMessage(category: MessageCategory.Database);
 
                     // If the table has paged backwards (because the required incid
                     // is lower than the page minimum) and if the row number being

@@ -6526,7 +6526,7 @@ namespace HLU.UI.ViewModel
                     return null;
 
                 // Split the copyright statement at each full stop, trim spaces and wrap it to a new line.
-                String copyright = String.Join(Environment.NewLine, ((AssemblyCopyrightAttribute)attributes[0]).Copyright.Split('.').Select(s => s.Trim()));
+                String copyright = String.Join(Environment.NewLine, ((AssemblyCopyrightAttribute)attributes[0]).Copyright.Split('.').Select(s => s.Trim()).Where(s => !String.IsNullOrEmpty(s)));
 
                 // If there is a Copyright attribute, return its value
                 return copyright;
@@ -8649,10 +8649,12 @@ namespace HLU.UI.ViewModel
                 UserId = UserID,
                 UserName = UserName,
                 Copyright = AssemblyCopyright,
-                UserGuideURL = "https://readthedocs.org/projects/hlutool-userguide/",
-                UserGuideText = "https://readthedocs.org/projects/hlutool-userguide/",
-                TechnicalGuideURL = "https://readthedocs.org/projects/hlutool-technicalguide/",
-                TechnicalGuideText = "https://readthedocs.org/projects/hlutool-technicalguide/"
+                IconAttributionURL = "https://www.flaticon.com",
+                IconAttributionText = "www.flaticon.com",
+                UserGuideURL = "https://hlutool-userguide.readthedocs.io/en/latest/",
+                UserGuideText = "hlutool-userguide.readthedocs.io/en/latest",
+                TechnicalGuideURL = "https://hlutool-technicalguide.readthedocs.io/en/latest/",
+                TechnicalGuideText = "hlutool-technicalguide.readthedocs.io/en/latest"
             };
 
             // When ViewModel asks to be closed, close window
@@ -8885,7 +8887,7 @@ namespace HLU.UI.ViewModel
                         // Reset the cursor back to normal.
                         ChangeCursor(Cursors.Arrow);
 
-                        // Warn the user that no records were found.
+                        // Inform the user that no map features were found.
                         ShowInfo("No map features found in active layer.", MessageCategory.GIS);
                     }
                 }
@@ -8906,7 +8908,7 @@ namespace HLU.UI.ViewModel
                     // Reset the cursor back to normal
                     ChangeCursor(Cursors.Arrow);
 
-                    // Warn the user that no records were found
+                    // Inform the user that no records were found
                     ShowInfo("No records found in database.", MessageCategory.Database);
                 }
             }
@@ -9359,7 +9361,7 @@ namespace HLU.UI.ViewModel
                             // Reset the cursor back to normal.
                             ChangeCursor(Cursors.Arrow);
 
-                            // Warn the user that no records were found.
+                            // Inform the user that no map features were found.
                             ShowInfo("No map features found in active layer.", MessageCategory.GIS);
                         }
                     }
@@ -9400,7 +9402,7 @@ namespace HLU.UI.ViewModel
                         // Reset the cursor back to normal.
                         ChangeCursor(Cursors.Arrow);
 
-                        // Warn the user that no records were found.
+                        // Inform the user that no records were found.
                         ShowInfo("No records found in database.", MessageCategory.Database);
                     }
                 }
