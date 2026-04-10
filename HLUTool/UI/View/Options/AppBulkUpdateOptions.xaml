@@ -79,7 +79,6 @@
                             Margin="0,0,0,0"
                             Description="Whether existing priority habitats that are orphaned (i.e. not associated with the new primary and secondary habitats) should be deleted following a change to the primary habitat during a bulk update.&#10;&#10;If checked, any existing priority habitats will be deleted, otherwise they are converted to potential priority habitats with the determination quality changed to 'Previous present, by may no longer exist'."
                             Header="Delete Orphan Priority Habitats" />
-
                     </Grid>
 
                     <Grid Grid.Row="2">
@@ -109,7 +108,6 @@
                             Margin="0,0,0,0"
                             Description="Whether existing potential priority habitats (those added manually by a user) should be deleted following during a bulk update.&#10;&#10;If checked, any existing potential priority habitats will be will be deleted, otherwise they will be retained."
                             Header="Delete Potential Priority Habitats" />
-
                     </Grid>
 
                     <Grid Grid.Row="4">
@@ -139,7 +137,6 @@
                             Margin="0,0,0,0"
                             Description="Whether existing IHS habitat and multiplex (matrix, formation, management and complex) codes should be deleted following a bulk update.&#10;&#10;If checked, any existing multiplex codes will be deleted, otherwise they will be retained."
                             Header="Delete Existing IHS Codes" />
-
                     </Grid>
 
                     <Grid Grid.Row="6">
@@ -169,7 +166,6 @@
                             Margin="0,0,0,0"
                             Description="Whether existing secondary codes should be deleted following a change to the primary habitat during a bulk update. If checked, any existing secondary codes will be deleted, otherwise they will be retained and may not be compatible with the new primary habitat."
                             Header="Delete Existing Secondary Codes" />
-
                     </Grid>
 
                     <Grid Grid.Row="8">
@@ -199,9 +195,7 @@
                             Margin="0,0,0,0"
                             Description="Whether history records will be created when a bulk update is applied."
                             Header="Create History Records" />
-
                     </Grid>
-
                 </Grid>
             </Expander>
 
@@ -251,7 +245,6 @@
                             Margin="5,0,0,0"
                             Description="Which determination quality to apply to any new priority habitats (those automatically associated with the new primary habitat) following a change to the primary habitat during an OSMM bulk update."
                             Header="Priority Determination Quality" />
-
                     </Grid>
 
                     <Grid
@@ -288,7 +281,6 @@
                             Margin="5,0,0,0"
                             Description="Which interpretation quality to apply to any new priority habitats (those automatically associated with the new primary habitat) following a change to the primary habitat during an OSMM bulk update."
                             Header="Priority Interpretation Quality" />
-
                     </Grid>
 
                     <Grid
@@ -325,12 +317,9 @@
                             Margin="5,0,0,0"
                             Description="Which interpretation quality to apply to any new priority habitats (those automatically associated with the new primary habitat) following a change to the primary habitat during an OSMM bulk update."
                             Header="Priority Interpretation Quality" />
-
                     </Grid>
-
                 </Grid>
             </Expander>
-
         </StackPanel>
 
         <TextBlock
@@ -345,7 +334,5 @@
                 Learn more about application bulk update options
             </Hyperlink>
         </TextBlock>
-
     </Grid>
-
 </UserControl>

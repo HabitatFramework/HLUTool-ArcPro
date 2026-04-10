@@ -27,7 +27,7 @@ namespace HLU.UI.UserControls
     /// <summary>
     /// Provides methods to find controls in the visual and logical tree of a WPF application.
     /// </summary>
-    static class FindControls
+    internal static class FindControls
     {
         /// <summary>
         /// Finds all logical children of a given type in the logical tree of a WPF application.

@@ -20,27 +20,20 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Data.Connection;
+using HLU.Data.Model;
+using HLU.Helpers;
+using HLU.Properties;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
-using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
-using HLU.Data.Model;
-using HLU.Data.Connection;
-using HLU.UI.ViewModel;
-using HLU.GISApplication;
-using HLU.Properties;
-using HLU.UI.UserControls;
-using HLU.Helpers;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
@@ -53,15 +46,42 @@ namespace HLU.UI.ViewModel
     {
         #region Fields
 
-        public string Process { get; set; }
-        public string Spatial { get; set; }
-        public string Change { get; set; }
-        public int Rejected { get; set; }
-        public int Ignored { get; set; }
-        public int Proposed { get; set; }
-        public int Pending { get; set; }
-        public int Applied { get; set; }
-        public int Total { get; set; }
+        public string Process
+        {
+            get; set;
+        }
+        public string Spatial
+        {
+            get; set;
+        }
+        public string Change
+        {
+            get; set;
+        }
+        public int Rejected
+        {
+            get; set;
+        }
+        public int Ignored
+        {
+            get; set;
+        }
+        public int Proposed
+        {
+            get; set;
+        }
+        public int Pending
+        {
+            get; set;
+        }
+        public int Applied
+        {
+            get; set;
+        }
+        public int Total
+        {
+            get; set;
+        }
 
         /// <summary>
         /// Numeric value of <see cref="Process"/> for correct numeric sort in the DataGrid.
@@ -199,8 +219,14 @@ namespace HLU.UI.ViewModel
         /// <value>The display name for this view model.</value>
         public override string DisplayName
         {
-            get { return _displayName; }
-            set { _displayName = value; }
+            get
+            {
+                return _displayName;
+            }
+            set
+            {
+                _displayName = value;
+            }
         }
 
         /// <summary>
@@ -209,7 +235,10 @@ namespace HLU.UI.ViewModel
         /// <value>The window title for this view model.</value>
         public override string WindowTitle
         {
-            get { return _displayName; }
+            get
+            {
+                return _displayName;
+            }
         }
 
         #endregion ViewModelBase Members
@@ -396,7 +425,9 @@ namespace HLU.UI.ViewModel
 
                 return osmmProcessFlags;
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -406,7 +437,10 @@ namespace HLU.UI.ViewModel
         /// <value>The preferred process flag option.</value>
         public string IncidOSMMUpdatesProcessFlag
         {
-            get { return _osmmProcessFlag; }
+            get
+            {
+                return _osmmProcessFlag;
+            }
             set
             {
                 _osmmProcessFlag = value;
@@ -438,7 +472,9 @@ namespace HLU.UI.ViewModel
 
                 return osmmSpatialFlags;
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -448,7 +484,10 @@ namespace HLU.UI.ViewModel
         /// <value>The preferred spatial flag option.</value>
         public string IncidOSMMUpdatesSpatialFlag
         {
-            get { return _osmmSpatialFlag; }
+            get
+            {
+                return _osmmSpatialFlag;
+            }
             set
             {
                 _osmmSpatialFlag = value;
@@ -480,7 +519,9 @@ namespace HLU.UI.ViewModel
 
                 return osmmChangeFlags;
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -490,7 +531,10 @@ namespace HLU.UI.ViewModel
         /// <value>The preferred change flag option.</value>
         public string IncidOSMMUpdatesChangeFlag
         {
-            get { return _osmmChangeFlag; }
+            get
+            {
+                return _osmmChangeFlag;
+            }
             set
             {
                 _osmmChangeFlag = value;
@@ -524,7 +568,9 @@ namespace HLU.UI.ViewModel
 
                 return osmmUpdateStatuses;
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -535,7 +581,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public string IncidOSMMUpdatesStatus
         {
-            get { return _osmmUpdatesStatus; }
+            get
+            {
+                return _osmmUpdatesStatus;
+            }
             set
             {
                 _osmmUpdatesStatus = value;
@@ -606,7 +655,10 @@ namespace HLU.UI.ViewModel
         /// <value>The count of rejected OSMM Updates for the selected flags.</value>
         public string IncidOSMMUpdatesRejectedCount
         {
-            get { return _osmmUpdatesCountRejected == -1 ? null : String.Format("{0:n0}", _osmmUpdatesCountRejected); }
+            get
+            {
+                return _osmmUpdatesCountRejected == -1 ? null : String.Format("{0:n0}", _osmmUpdatesCountRejected);
+            }
         }
 
         /// <summary>
@@ -617,7 +669,10 @@ namespace HLU.UI.ViewModel
         /// <value>The count of ignored OSMM Updates for the selected flags.</value>
         public string IncidOSMMUpdatesIgnoredCount
         {
-            get { return _osmmUpdatesCountIgnored == -1 ? null : String.Format("{0:n0}", _osmmUpdatesCountIgnored); }
+            get
+            {
+                return _osmmUpdatesCountIgnored == -1 ? null : String.Format("{0:n0}", _osmmUpdatesCountIgnored);
+            }
         }
 
         /// <summary>
@@ -628,7 +683,10 @@ namespace HLU.UI.ViewModel
         /// <value>The count of pending OSMM Updates for the selected flags.</value>
         public string IncidOSMMUpdatesPendingCount
         {
-            get { return _osmmUpdatesCountPending == -1 ? null : String.Format("{0:n0}", _osmmUpdatesCountPending); }
+            get
+            {
+                return _osmmUpdatesCountPending == -1 ? null : String.Format("{0:n0}", _osmmUpdatesCountPending);
+            }
         }
 
         /// <summary>
@@ -639,7 +697,10 @@ namespace HLU.UI.ViewModel
         /// <value>The count of proposed OSMM Updates for the selected flags.</value>
         public string IncidOSMMUpdatesProposedCount
         {
-            get { return _osmmUpdatesCountProposed == -1 ? null : String.Format("{0:n0}", _osmmUpdatesCountProposed); }
+            get
+            {
+                return _osmmUpdatesCountProposed == -1 ? null : String.Format("{0:n0}", _osmmUpdatesCountProposed);
+            }
         }
 
         /// <summary>
@@ -650,7 +711,10 @@ namespace HLU.UI.ViewModel
         /// <value>The count of applied OSMM Updates for the selected flags.</value>
         public string IncidOSMMUpdatesAppliedCount
         {
-            get { return _osmmUpdatesCountApplied == -1 ? null : String.Format("{0:n0}", _osmmUpdatesCountApplied); }
+            get
+            {
+                return _osmmUpdatesCountApplied == -1 ? null : String.Format("{0:n0}", _osmmUpdatesCountApplied);
+            }
         }
 
         /// <summary>
@@ -659,7 +723,8 @@ namespace HLU.UI.ViewModel
         public async Task CountOSMMUpdatesAsync(bool suppressCursorChange = false)
         {
             // Show the wait cursor whilst loading the values.
-            if (!suppressCursorChange) ChangeCursor(Cursors.Wait);
+            if (!suppressCursorChange)
+                ChangeCursor(Cursors.Wait);
 
             // Reset the counts to -1 to indicate they are being loaded. This will show a blank
             // value in the UI until the counts are loaded.
@@ -740,12 +805,15 @@ namespace HLU.UI.ViewModel
                     case "Rejected":
                         _filterCount = _osmmUpdatesCountRejected;
                         break;
+
                     case "Ignored":
                         _filterCount = _osmmUpdatesCountIgnored;
                         break;
+
                     case "Proposed":
                         _filterCount = _osmmUpdatesCountProposed;
                         break;
+
                     case "Pending":
                         _filterCount = _osmmUpdatesCountPending;
                         break;
@@ -761,7 +829,8 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(CanApplyOSMMFilter));
 
             // Reset the cursor back to normal.
-            if (!suppressCursorChange) ChangeCursor(Cursors.Arrow);
+            if (!suppressCursorChange)
+                ChangeCursor(Cursors.Arrow);
         }
 
         #endregion Counts
@@ -779,7 +848,8 @@ namespace HLU.UI.ViewModel
         public async Task LoadOSMMUpdatesSummaryAsync(bool suppressCursorChange = false)
         {
             // Show the wait cursor whilst loading the values.
-            if (!suppressCursorChange) ChangeCursor(Cursors.Wait);
+            if (!suppressCursorChange)
+                ChangeCursor(Cursors.Wait);
 
             // Create the select SQL.
             string sql;
@@ -834,7 +904,8 @@ namespace HLU.UI.ViewModel
                     {
                         dataReader = _db.ExecuteReader(sql, timeout, CommandType.Text);
 
-                        if (dataReader == null) throw new Exception($"Error reading values from {_hluDataset.incid_osmm_updates.TableName}");
+                        if (dataReader == null)
+                            throw new Exception($"Error reading values from {_hluDataset.incid_osmm_updates.TableName}");
 
                         string processFlag, lastProcessFlag = null;
                         string spatialFlag, lastSpatialFlag = null;
@@ -875,10 +946,20 @@ namespace HLU.UI.ViewModel
                                 dataTable.Add(dataRow);
 
                                 // Update the totals.
-                                rejectedTotal += rejectedCount; ignoredTotal += ignoredCount; proposedTotal += proposedCount; pendingTotal += pendingCount; appliedTotal += appliedCount; allTotal += allCount;
+                                rejectedTotal += rejectedCount;
+                                ignoredTotal += ignoredCount;
+                                proposedTotal += proposedCount;
+                                pendingTotal += pendingCount;
+                                appliedTotal += appliedCount;
+                                allTotal += allCount;
 
                                 // Reset the counts.
-                                rejectedCount = 0; ignoredCount = 0; proposedCount = 0; pendingCount = 0; appliedCount = 0; allCount = 0;
+                                rejectedCount = 0;
+                                ignoredCount = 0;
+                                proposedCount = 0;
+                                pendingCount = 0;
+                                appliedCount = 0;
+                                allCount = 0;
 
                                 // Save the last group values;
                                 lastProcessFlag = processFlag;
@@ -887,11 +968,16 @@ namespace HLU.UI.ViewModel
                             }
 
                             // Update the counts.
-                            if (status == -99) rejectedCount = recs;
-                            if (status == -2) ignoredCount = recs;
-                            if (status == 0) pendingCount = recs;
-                            if (status == -1) appliedCount = recs;
-                            if (status > 0) proposedCount += recs;
+                            if (status == -99)
+                                rejectedCount = recs;
+                            if (status == -2)
+                                ignoredCount = recs;
+                            if (status == 0)
+                                pendingCount = recs;
+                            if (status == -1)
+                                appliedCount = recs;
+                            if (status > 0)
+                                proposedCount += recs;
                             allCount += recs;
                         }
 
@@ -911,7 +997,12 @@ namespace HLU.UI.ViewModel
                         dataTable.Add(lastRow);
 
                         // Update the totals.
-                        rejectedTotal += rejectedCount; ignoredTotal += ignoredCount; proposedTotal += proposedCount; pendingTotal += pendingCount; appliedTotal += appliedCount; allTotal += allCount;
+                        rejectedTotal += rejectedCount;
+                        ignoredTotal += ignoredCount;
+                        proposedTotal += proposedCount;
+                        pendingTotal += pendingCount;
+                        appliedTotal += appliedCount;
+                        allTotal += allCount;
                     }
                     finally
                     {
@@ -946,7 +1037,8 @@ namespace HLU.UI.ViewModel
             finally
             {
                 // Reset the cursor back to normal.
-                if (!suppressCursorChange) ChangeCursor(Cursors.Arrow);
+                if (!suppressCursorChange)
+                    ChangeCursor(Cursors.Arrow);
             }
 
             // Populate the observable collections in-place so the DataGrid receives
@@ -977,7 +1069,13 @@ namespace HLU.UI.ViewModel
         /// <value>
         /// The window cursor type.
         /// </value>
-        public Cursor WindowCursor { get { return _windowCursor; } }
+        public Cursor WindowCursor
+        {
+            get
+            {
+                return _windowCursor;
+            }
+        }
 
         /// <summary>
         /// Changes the cursor type to use when the cursor is over the window. This will be used to show a

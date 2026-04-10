@@ -113,9 +113,7 @@
                             Description="Which Process (used for updates when applying attribute changes) is automatically selected in the toolbar when the HLU Tool is loaded."
                             Header="Default Process for Updates" />
                     </Grid>
-
                 </Grid>
-
             </Expander>
 
             <Expander
@@ -223,9 +221,7 @@
                             Description="The order that any secondary habitats appear in the secondary table.&#10;&#10;This doesn't affect the order that the secondaries appear in the Summary field."
                             Header="Secondary Table Order" />
                     </Grid>
-
                 </Grid>
-
             </Expander>
 
             <Expander
@@ -264,13 +260,9 @@
                             Margin="0,0,0,0"
                             Description="If a message window should be displayed following the completion of any of the split or merge operations."
                             Header="Notify After Completing Split/Merge" />
-
                     </Grid>
-
                 </Grid>
-
             </Expander>
-
         </StackPanel>
 
         <TextBlock
@@ -285,7 +277,5 @@
                 Learn more about user updates options
             </Hyperlink>
         </TextBlock>
-
     </Grid>
-
 </UserControl>

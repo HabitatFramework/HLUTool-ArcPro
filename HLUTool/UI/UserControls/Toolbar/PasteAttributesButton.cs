@@ -16,18 +16,11 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using HLU.UI.View;
-using HLU.UI.ViewModel;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
-using System.Text;
-using System.Threading.Tasks;
+using HLU.UI.ViewModel;
+using System;
 using System.Windows;
-using HLU.UI;
-using Xceed.Wpf.Toolkit.Primitives;
 
 namespace HLU.UI.UserControls.Toolbar
 {
@@ -68,7 +61,8 @@ namespace HLU.UI.UserControls.Toolbar
         protected override void OnClick()
         {
             // Paste attribute values.
-            try{
+            try
+            {
                 _viewModel.PasteAttributes();
             }
             catch (Exception ex)

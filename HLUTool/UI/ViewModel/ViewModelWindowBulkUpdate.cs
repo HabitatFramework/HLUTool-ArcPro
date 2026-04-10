@@ -18,15 +18,12 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Data.Model;
 using System;
 using System.ComponentModel;
-using System.Linq;
+using System.Text;
 using System.Windows;
 using System.Windows.Input;
-using System.Text;
-using HLU.Data.Model;
-using HLU.GISApplication;
-using HLU.Properties;
 
 namespace HLU.UI.ViewModel
 {
@@ -44,7 +41,7 @@ namespace HLU.UI.ViewModel
     /// <param name="determinationQuality"></param>
     /// <param name="interpretationQuality"></param>
     /// <param name="primaryHabitatChanged"></param>
-    class ViewModelWindowBulkUpdate(ViewModelWindowMain viewModelMain,
+    internal class ViewModelWindowBulkUpdate(ViewModelWindowMain viewModelMain,
         bool osmmBulkUpdateMode,
         bool deleteOrphanBapHabitats,
         bool deletePotentialBapHabitats,
@@ -94,7 +91,10 @@ namespace HLU.UI.ViewModel
 
         public override string WindowTitle
         {
-            get { return _displayName; }
+            get
+            {
+                return _displayName;
+            }
         }
 
         #endregion ViewModelBase Members
@@ -206,8 +206,14 @@ namespace HLU.UI.ViewModel
         /// </value>
         public bool DeleteOrphanBapHabitats
         {
-            get { return _deleteOrphanBapHabitats; }
-            set { _deleteOrphanBapHabitats = value; }
+            get
+            {
+                return _deleteOrphanBapHabitats;
+            }
+            set
+            {
+                _deleteOrphanBapHabitats = value;
+            }
         }
 
         /// <summary>
@@ -218,8 +224,14 @@ namespace HLU.UI.ViewModel
         /// </value>
         public bool DeletePotentialBapHabitats
         {
-            get { return _deletePotentialBapHabitats; }
-            set { _deletePotentialBapHabitats = value; }
+            get
+            {
+                return _deletePotentialBapHabitats;
+            }
+            set
+            {
+                _deletePotentialBapHabitats = value;
+            }
         }
 
         /// <summary>
@@ -230,8 +242,14 @@ namespace HLU.UI.ViewModel
         /// </value>
         public bool DeleteIHSCodes
         {
-            get { return _deleteIHSCodes; }
-            set { _deleteIHSCodes = value; }
+            get
+            {
+                return _deleteIHSCodes;
+            }
+            set
+            {
+                _deleteIHSCodes = value;
+            }
         }
 
         /// <summary>
@@ -243,7 +261,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public bool DeleteSecondaryCodes
         {
-            get { return _deleteSecondaryCodes; }
+            get
+            {
+                return _deleteSecondaryCodes;
+            }
             set
             {
                 _deleteSecondaryCodes = value;
@@ -258,7 +279,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public bool DeleteSources
         {
-            get { return (_sourceCount != 0); }
+            get
+            {
+                return (_sourceCount != 0);
+            }
         }
 
         /// <summary>
@@ -269,8 +293,14 @@ namespace HLU.UI.ViewModel
         /// </value>
         public bool CreateHistory
         {
-            get { return _createHistory; }
-            set { _createHistory = value; }
+            get
+            {
+                return _createHistory;
+            }
+            set
+            {
+                _createHistory = value;
+            }
         }
 
         /// <summary>
@@ -301,7 +331,10 @@ namespace HLU.UI.ViewModel
             {
                 return _determinationQuality;
             }
-            set { _determinationQuality = value; }
+            set
+            {
+                _determinationQuality = value;
+            }
         }
 
         /// <summary>
@@ -332,7 +365,10 @@ namespace HLU.UI.ViewModel
             {
                 return _interpretationQuality;
             }
-            set { _interpretationQuality = value; }
+            set
+            {
+                _interpretationQuality = value;
+            }
         }
 
         /// <summary>
@@ -348,7 +384,9 @@ namespace HLU.UI.ViewModel
                 else
                     return Visibility.Visible;
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -368,7 +406,9 @@ namespace HLU.UI.ViewModel
                     return Visibility.Collapsed;
                 }
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -388,7 +428,9 @@ namespace HLU.UI.ViewModel
                     return false;
                 }
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -408,7 +450,9 @@ namespace HLU.UI.ViewModel
                     return false;
                 }
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -428,7 +472,9 @@ namespace HLU.UI.ViewModel
                     return false;
                 }
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -448,7 +494,9 @@ namespace HLU.UI.ViewModel
                     return false;
                 }
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -468,7 +516,9 @@ namespace HLU.UI.ViewModel
                     return false;
                 }
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -490,7 +540,9 @@ namespace HLU.UI.ViewModel
                     return false;
                 }
             }
-            set { }
+            set
+            {
+            }
         }
 
         #endregion Interface
@@ -526,8 +578,9 @@ namespace HLU.UI.ViewModel
                 {
                     case "DeterminationQuality":
                         if (String.IsNullOrEmpty(DeterminationQuality))
-                            error= "Error: You must choose a Determination Quality";
+                            error = "Error: You must choose a Determination Quality";
                         break;
+
                     case "InterpretationQuality":
                         if (String.IsNullOrEmpty(InterpretationQuality))
                             error = "Error: You must choose an Interpretation Quality";

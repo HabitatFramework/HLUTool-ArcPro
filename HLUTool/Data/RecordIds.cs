@@ -20,11 +20,9 @@
 using HLU.Data.Connection;
 using HLU.Data.Model;
 using HLU.Enums;
-using HLU.UI.ViewModel;
 using System;
 using System.Data;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace HLU.Data
 {
@@ -33,15 +31,15 @@ namespace HLU.Data
         #region Fields
 
         private string _siteID;
-        DbBase _db;
-        HluDataSet _hluDataset;
-        HluGeometryTypes _gisLayerType;
-        TableAdapterManager _hluTableAdapterMgr;
+        private DbBase _db;
+        private HluDataSet _hluDataset;
+        private HluGeometryTypes _gisLayerType;
+        private TableAdapterManager _hluTableAdapterMgr;
         private int _incidCurrentNumber = -1;
-        int _nextIncidSecondaryId = -1;
-        int _nextIncidConditionId = -1;
-        int _nextIncidBapId = -1;
-        int _nextIncidSourcesId = -1;
+        private int _nextIncidSecondaryId = -1;
+        private int _nextIncidConditionId = -1;
+        private int _nextIncidBapId = -1;
+        private int _nextIncidSourcesId = -1;
 
         #endregion Fields
 
@@ -143,7 +141,6 @@ namespace HLU.Data
             if (row == null || row.Ishabitat_versionNull())
                 return "0";
 
-
             // Return the habitat_version from the matching row.
             return row.habitat_version;
         }
@@ -167,9 +164,11 @@ namespace HLU.Data
                             case HluGeometryTypes.Point:
                                 _siteID = _hluDataset.lut_site_id.ElementAt(_hluDataset.lut_site_id.Count - 1).site_id_point;
                                 break;
+
                             case HluGeometryTypes.Line:
                                 _siteID = _hluDataset.lut_site_id.ElementAt(_hluDataset.lut_site_id.Count - 1).site_id_line;
                                 break;
+
                             case HluGeometryTypes.Polygon:
                                 _siteID = _hluDataset.lut_site_id.ElementAt(_hluDataset.lut_site_id.Count - 1).site_id_polygon;
                                 break;
@@ -410,7 +409,8 @@ namespace HLU.Data
                 object result = _db.ExecuteScalar(sql, _db.Connection.ConnectionTimeout, CommandType.Text);
                 int dbMax;
                 if ((result != DBNull.Value) && (result != null) &&
-                    ((dbMax = IncidNumber(result.ToString())) > maxIncidNumber)) maxIncidNumber = dbMax;
+                    ((dbMax = IncidNumber(result.ToString())) > maxIncidNumber))
+                    maxIncidNumber = dbMax;
 
                 // If increment is true, increment the greatest value found and save to lut_last_incid.
                 if (increment)
@@ -454,7 +454,8 @@ namespace HLU.Data
             // If the result is valid and greater than nextID, use it; otherwise, increment nextID by 1.
             int dbMax;
             if ((result != DBNull.Value) && (result != null) && Int32.TryParse(result.ToString(), out dbMax) &&
-                (nextID < dbMax)) nextID = dbMax;
+                (nextID < dbMax))
+                nextID = dbMax;
             else
                 nextID += 1;
 

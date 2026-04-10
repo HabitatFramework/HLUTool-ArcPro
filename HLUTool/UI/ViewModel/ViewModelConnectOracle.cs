@@ -17,6 +17,10 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Data.Connection;
+using HLU.Enums;
+using HLU.Properties;
+using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -25,10 +29,6 @@ using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Input;
-using HLU.Data.Connection;
-using HLU.Properties;
-using HLU.Enums;
-using Oracle.ManagedDataAccess.Client;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
@@ -39,7 +39,7 @@ namespace HLU.UI.ViewModel
     /// successful then the connection string and default schema are passed back to the caller via
     /// the RequestClose event.
     /// </summary>
-    class ViewModelConnectOracle : ViewModelBase, IDataErrorInfo
+    internal class ViewModelConnectOracle : ViewModelBase, IDataErrorInfo
     {
         internal enum DBAPrivilege
         {
@@ -57,7 +57,7 @@ namespace HLU.UI.ViewModel
         private string _defaultSchema;
         private OracleConnectionStringBuilder _connStrBuilder;
 
-        #endregion
+        #endregion private Members
 
         #region Constructor
 
@@ -69,7 +69,7 @@ namespace HLU.UI.ViewModel
             _connStrBuilder = [];
         }
 
-        #endregion
+        #endregion Constructor
 
         #region Connection String Builder
 
@@ -79,9 +79,15 @@ namespace HLU.UI.ViewModel
         /// if successful is passed back to the caller via the RequestClose event.
         /// </summary>
         /// <value>The OracleConnectionStringBuilder used to build the connection string.</value>
-        public OracleConnectionStringBuilder ConnectionStringBuilder { get { return _connStrBuilder; } }
+        public OracleConnectionStringBuilder ConnectionStringBuilder
+        {
+            get
+            {
+                return _connStrBuilder;
+            }
+        }
 
-        #endregion
+        #endregion Connection String Builder
 
         #region Display Name
 
@@ -91,11 +97,17 @@ namespace HLU.UI.ViewModel
         /// <value>The display name.</value>
         public override string DisplayName
         {
-            get { return _displayName; }
-            set { _displayName = value; }
+            get
+            {
+                return _displayName;
+            }
+            set
+            {
+                _displayName = value;
+            }
         }
 
-        #endregion
+        #endregion Display Name
 
         #region Window Title
 
@@ -103,9 +115,15 @@ namespace HLU.UI.ViewModel
         /// Gets the window title for this ViewModel. This is used as the title of the dialog and is set to the same value as DisplayName.
         /// </summary>
         /// <value>The window title.</value>
-        public override string WindowTitle { get { return DisplayName; } }
+        public override string WindowTitle
+        {
+            get
+            {
+                return DisplayName;
+            }
+        }
 
-        #endregion
+        #endregion Window Title
 
         #region RequestClose
 
@@ -116,7 +134,7 @@ namespace HLU.UI.ViewModel
         // the connection string, default schema and any error message back to the caller.
         public event RequestCloseEventHandler RequestClose;
 
-        #endregion
+        #endregion RequestClose
 
         #region Ok Command
 
@@ -180,7 +198,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Ok Command
 
         #region Cancel Command
 
@@ -211,7 +229,7 @@ namespace HLU.UI.ViewModel
             RequestClose?.Invoke(null, null, null);
         }
 
-        #endregion
+        #endregion Cancel Command
 
         #region View Events
 
@@ -243,7 +261,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(DefaultSchema));
         }
 
-        #endregion
+        #endregion View Events
 
         #region Data Source
 
@@ -274,7 +292,9 @@ namespace HLU.UI.ViewModel
                 }
                 return _dataSources;
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -284,7 +304,10 @@ namespace HLU.UI.ViewModel
         /// <value>The data source.</value>
         public string DataSource
         {
-            get { return _connStrBuilder.DataSource; }
+            get
+            {
+                return _connStrBuilder.DataSource;
+            }
             set
             {
                 if (!String.IsNullOrEmpty(value) && (value != _connStrBuilder.DataSource))
@@ -292,7 +315,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Data Source
 
         #region Authentication
 
@@ -302,7 +325,10 @@ namespace HLU.UI.ViewModel
         /// <value>The user ID.</value>
         public string UserID
         {
-            get { return _connStrBuilder.UserID; }
+            get
+            {
+                return _connStrBuilder.UserID;
+            }
             set
             {
                 if (!String.IsNullOrEmpty(value) && (value != _connStrBuilder.UserID))
@@ -328,8 +354,13 @@ namespace HLU.UI.ViewModel
         /// <value>The list of DBA privilege options.</value>
         public DBAPrivilege[] DBAPrivilegeOptions
         {
-            get { return (DBAPrivilege[])Enum.GetValues(typeof(DBAPrivilege)); }
-            set { }
+            get
+            {
+                return (DBAPrivilege[])Enum.GetValues(typeof(DBAPrivilege));
+            }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -341,7 +372,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (String.IsNullOrEmpty(_connStrBuilder.DBAPrivilege)) return DBAPrivilege.Normal;
+                if (String.IsNullOrEmpty(_connStrBuilder.DBAPrivilege))
+                    return DBAPrivilege.Normal;
                 object newValue = Enum.Parse(typeof(DBAPrivilege), _connStrBuilder.DBAPrivilege);
                 if (newValue != null)
                     return (DBAPrivilege)newValue;
@@ -363,7 +395,10 @@ namespace HLU.UI.ViewModel
         /// <value>The password.</value>
         public string Password
         {
-            get { return _connStrBuilder.Password; }
+            get
+            {
+                return _connStrBuilder.Password;
+            }
             set
             {
                 if (!String.IsNullOrEmpty(value) && (value != _connStrBuilder.Password))
@@ -371,7 +406,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Authentication
 
         #region Default Schema
 
@@ -385,7 +420,9 @@ namespace HLU.UI.ViewModel
             {
                 return [.. _schemata];
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -395,8 +432,15 @@ namespace HLU.UI.ViewModel
         /// <value>The default schema.</value>
         public string DefaultSchema
         {
-            get { return _defaultSchema; }
-            set { if (value != _defaultSchema) _defaultSchema = value; }
+            get
+            {
+                return _defaultSchema;
+            }
+            set
+            {
+                if (value != _defaultSchema)
+                    _defaultSchema = value;
+            }
         }
 
         /// <summary>
@@ -441,17 +485,19 @@ namespace HLU.UI.ViewModel
             }
             finally
             {
-                if ((cn != null) && (cn.State != ConnectionState.Closed)) cn.Close();
+                if ((cn != null) && (cn.State != ConnectionState.Closed))
+                    cn.Close();
 
                 _schemata = schemaList;
                 OnPropertyChanged(nameof(Schemata));
 
-                if (_schemata.Count == 1) _defaultSchema = _schemata[0];
+                if (_schemata.Count == 1)
+                    _defaultSchema = _schemata[0];
                 OnPropertyChanged(nameof(DefaultSchema));
             }
         }
 
-        #endregion
+        #endregion Default Schema
 
         #region IDataErrorInfo Members
 
@@ -470,8 +516,10 @@ namespace HLU.UI.ViewModel
                     error.Append(", data source");
                 //if (!_connStrBuilder.IntegratedSecurity && String.IsNullOrEmpty(_connStrBuilder.UserID))
                 //    error.Append(", user ID");
-                if (String.IsNullOrEmpty(_connStrBuilder.UserID)) error.Append(", user ID");
-                if (String.IsNullOrEmpty(_defaultSchema)) error.Append(", default schema");
+                if (String.IsNullOrEmpty(_connStrBuilder.UserID))
+                    error.Append(", user ID");
+                if (String.IsNullOrEmpty(_defaultSchema))
+                    error.Append(", default schema");
 
                 if (error.Length > 0)
                     return error.Remove(0, 1).Insert(0, "Please provide a ").ToString();
@@ -498,10 +546,13 @@ namespace HLU.UI.ViewModel
                         if (String.IsNullOrEmpty(_connStrBuilder.DataSource))
                             error = "Error: You must provide a data source";
                         break;
+
                     case "UserID":
                         //if (!_connStrBuilder.IntegratedSecurity && String.IsNullOrEmpty(_connStrBuilder.UserID))
-                        if (String.IsNullOrEmpty(_connStrBuilder.UserID)) error = "Error: You must provide a user ID";
+                        if (String.IsNullOrEmpty(_connStrBuilder.UserID))
+                            error = "Error: You must provide a user ID";
                         break;
+
                     case "DefaultSchema":
                         if (String.IsNullOrEmpty(_defaultSchema))
                             error = "Error: You must provide a default schema";
@@ -513,9 +564,8 @@ namespace HLU.UI.ViewModel
 
                 return error;
             }
-
         }
 
-        #endregion
+        #endregion IDataErrorInfo Members
     }
 }

@@ -17,17 +17,16 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using System;
-using System.Globalization;
-using System.Windows.Input;
 using HLU.Properties;
+using System;
+using System.Windows.Input;
 
 namespace HLU.UI.ViewModel
 {
     /// <summary>
     /// Contains the ViewModel for the Notify On Split/Merge window.
     /// </summary>
-    class ViewModelWindowNotifyOnSplitMerge : ViewModelBase
+    internal class ViewModelWindowNotifyOnSplitMerge : ViewModelBase
     {
         #region Fields
 
@@ -35,7 +34,7 @@ namespace HLU.UI.ViewModel
         private string _msgText;
         private ICommand _okCommand;
 
-        #endregion
+        #endregion Fields
 
         #region Constructor
 
@@ -55,13 +54,22 @@ namespace HLU.UI.ViewModel
 
         public override string DisplayName
         {
-            get { return _displayName; }
-            set { _displayName = value; }
+            get
+            {
+                return _displayName;
+            }
+            set
+            {
+                _displayName = value;
+            }
         }
 
         public override string WindowTitle
         {
-            get { return DisplayName; }
+            get
+            {
+                return DisplayName;
+            }
         }
 
         #endregion ViewModelBase members
@@ -111,8 +119,13 @@ namespace HLU.UI.ViewModel
 
         public string GroupBoxNotifyOnSplitMergeHeader
         {
-            get { return "HLU Tool"; }
-            set { }
+            get
+            {
+                return "HLU Tool";
+            }
+            set
+            {
+            }
         }
 
         public string LabelMessage
@@ -121,13 +134,21 @@ namespace HLU.UI.ViewModel
             {
                 return _msgText;
             }
-            set { }
+            set
+            {
+            }
         }
 
         public bool DoNotTellAgain
         {
-            get { return !Settings.Default.NotifyOnSplitMerge; }
-            set { Settings.Default.NotifyOnSplitMerge = !value; }
+            get
+            {
+                return !Settings.Default.NotifyOnSplitMerge;
+            }
+            set
+            {
+                Settings.Default.NotifyOnSplitMerge = !value;
+            }
         }
 
         #endregion Properties

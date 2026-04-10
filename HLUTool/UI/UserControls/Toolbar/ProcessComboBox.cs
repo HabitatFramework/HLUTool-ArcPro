@@ -18,15 +18,9 @@
 
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
-using HLU.Data;
 using HLU.UI.ViewModel;
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using ComboBox = ArcGIS.Desktop.Framework.Contracts.ComboBox;
 
@@ -209,7 +203,10 @@ namespace HLU.UI.UserControls.Toolbar
         /// <value>The currently selected process.</value>
         public string Process
         {
-            get { return (SelectedItem as ComboBoxItem)?.Text; }
+            get
+            {
+                return (SelectedItem as ComboBoxItem)?.Text;
+            }
         }
 
         /// <summary>

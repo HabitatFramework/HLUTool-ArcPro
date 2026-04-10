@@ -168,13 +168,9 @@
                             Margin="0,0,0,0"
                             Description="If the status of any pending OSMM Updates for the current INCID should be reset to 'Ignored' when an update is applied."
                             Header="Reset Pending OSMM Update Status On Manual Update" />
-
                     </Grid>
-
                 </Grid>
-
             </Expander>
-
         </StackPanel>
 
         <TextBlock
@@ -189,7 +185,5 @@
                 Learn more about application updates options
             </Hyperlink>
         </TextBlock>
-
     </Grid>
-
 </UserControl>

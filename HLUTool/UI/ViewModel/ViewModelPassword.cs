@@ -25,7 +25,7 @@ using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
 {
-    class ViewModelPassword : ViewModelBase, IDataErrorInfo
+    internal class ViewModelPassword : ViewModelBase, IDataErrorInfo
     {
         #region private Members
 
@@ -36,7 +36,7 @@ namespace HLU.UI.ViewModel
         private string _userText;
         private string _password;
 
-        #endregion Private Members
+        #endregion private Members
 
         #region Constructor
 
@@ -57,8 +57,14 @@ namespace HLU.UI.ViewModel
         /// <value>The display name.</value>
         public override string DisplayName
         {
-            get { return _displayName; }
-            set { _displayName = value; }
+            get
+            {
+                return _displayName;
+            }
+            set
+            {
+                _displayName = value;
+            }
         }
 
         #endregion Display Name
@@ -69,7 +75,13 @@ namespace HLU.UI.ViewModel
         /// Gets the title of the window, which is the same as the display name.
         /// </summary>
         /// <value>The window title.</value>
-        public override string WindowTitle { get { return DisplayName; } }
+        public override string WindowTitle
+        {
+            get
+            {
+                return DisplayName;
+            }
+        }
 
         #endregion Window Title
 
@@ -123,7 +135,13 @@ namespace HLU.UI.ViewModel
         /// Gets a value indicating whether the Ok button can be clicked. The Ok button is enabled only when a password is provided.
         /// </summary>
         /// <value>Indicates whether the Ok button can be clicked.</value>
-        private bool CanOk { get { return !String.IsNullOrEmpty(_password); } }
+        private bool CanOk
+        {
+            get
+            {
+                return !String.IsNullOrEmpty(_password);
+            }
+        }
 
         #endregion Ok Command
 
@@ -167,8 +185,14 @@ namespace HLU.UI.ViewModel
         /// <value>The user label.</value>
         public string UserLabel
         {
-            get { return _userLabel; }
-            set { _userLabel = value; }
+            get
+            {
+                return _userLabel;
+            }
+            set
+            {
+                _userLabel = value;
+            }
         }
 
         /// <summary>
@@ -178,8 +202,14 @@ namespace HLU.UI.ViewModel
         /// <value>The user text.</value>
         public string UserText
         {
-            get { return _userText; }
-            set { _userText = value; }
+            get
+            {
+                return _userText;
+            }
+            set
+            {
+                _userText = value;
+            }
         }
 
         #endregion User
@@ -195,8 +225,14 @@ namespace HLU.UI.ViewModel
         /// <value>The password entered by the user.</value>
         public string Password
         {
-            get { return _password; }
-            set { _password = value; }
+            get
+            {
+                return _password;
+            }
+            set
+            {
+                _password = value;
+            }
         }
 
         #endregion Password

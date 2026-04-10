@@ -18,20 +18,19 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using System;
-using System.Text;
-using System.Globalization;
-using System.Windows.Input;
-using HLU.Properties;
-using HLU.Data;
 using HLU.Enums;
+using HLU.Properties;
+using System;
+using System.Globalization;
+using System.Text;
+using System.Windows.Input;
 
 namespace HLU.UI.ViewModel
 {
     /// <summary>
     /// Contains the view model for the GIS selection warning dialog.
     /// </summary>
-    class ViewModelWindowWarnOnGISSelect : ViewModelBase
+    internal class ViewModelWindowWarnOnGISSelect : ViewModelBase
     {
         #region Fields
 
@@ -78,13 +77,22 @@ namespace HLU.UI.ViewModel
 
         public override string DisplayName
         {
-            get { return _displayName; }
-            set { _displayName = value; }
+            get
+            {
+                return _displayName;
+            }
+            set
+            {
+                _displayName = value;
+            }
         }
 
         public override string WindowTitle
         {
-            get { return DisplayName; }
+            get
+            {
+                return DisplayName;
+            }
         }
 
         #endregion ViewModelBase members
@@ -169,8 +177,13 @@ namespace HLU.UI.ViewModel
 
         public string GroupBoxWarnOnGISSelectHeader
         {
-            get { return "HLU Tool"; }
-            set { }
+            get
+            {
+                return "HLU Tool";
+            }
+            set
+            {
+            }
         }
 
         public string LabelMessage
@@ -218,7 +231,9 @@ namespace HLU.UI.ViewModel
 
                 return labelMsg.ToString();
             }
-            set { }
+            set
+            {
+            }
         }
 
         public bool DoNotAskAgain

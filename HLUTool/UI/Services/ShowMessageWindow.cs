@@ -18,11 +18,10 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.UI.View;
+using HLU.UI.ViewModel;
 using System;
 using System.Windows;
-using HLU.UI.View;
-using ArcGIS.Desktop.Framework;
-using HLU.UI.ViewModel;
 
 namespace HLU.UI.Services
 {

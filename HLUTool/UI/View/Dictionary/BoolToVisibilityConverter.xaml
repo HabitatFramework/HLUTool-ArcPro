@@ -4,5 +4,4 @@
     xmlns:hlu="clr-namespace:HLU.Converters">
 
     <hlu:BoolToVisibilityConverter x:Key="boolToVisibilityConverter" />
-
 </ResourceDictionary>

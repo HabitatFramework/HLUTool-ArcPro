@@ -18,19 +18,18 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Data.Model;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Input;
-using HLU.Data.Model;
-using HLU.GISApplication;
 
 namespace HLU.UI.ViewModel
 {
     /// <summary>
     /// Contains the data and commands for the Export window.
     /// </summary>
-    class ViewModelWindowExport : ViewModelBase, IDataErrorInfo
+    internal class ViewModelWindowExport : ViewModelBase, IDataErrorInfo
     {
         #region Fields
 

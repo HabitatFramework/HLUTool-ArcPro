@@ -19,6 +19,7 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Data;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -26,7 +27,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
-using HLU.Data;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
@@ -122,7 +122,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidPrimary
         {
-            get { return _copyIncidPrimary; }
+            get
+            {
+                return _copyIncidPrimary;
+            }
             set
             {
                 _copyIncidPrimary = value;
@@ -132,7 +135,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidSecondaryHabitats
         {
-            get { return _copyIncidSecondaryHabitats; }
+            get
+            {
+                return _copyIncidSecondaryHabitats;
+            }
             set
             {
                 _copyIncidSecondaryHabitats = value;
@@ -142,7 +148,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidLegacyHabitat
         {
-            get { return _copyIncidLegacyHabitat; }
+            get
+            {
+                return _copyIncidLegacyHabitat;
+            }
             set
             {
                 _copyIncidLegacyHabitat = value;
@@ -152,7 +161,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidBapHabitatsUser
         {
-            get { return _copyIncidBapHabitatsUser; }
+            get
+            {
+                return _copyIncidBapHabitatsUser;
+            }
             set
             {
                 _copyIncidBapHabitatsUser = value;
@@ -162,7 +174,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidGeneralComments
         {
-            get { return _copyIncidGeneralComments; }
+            get
+            {
+                return _copyIncidGeneralComments;
+            }
             set
             {
                 _copyIncidGeneralComments = value;
@@ -172,7 +187,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidBoundaryBaseMap
         {
-            get { return _copyIncidBoundaryBaseMap; }
+            get
+            {
+                return _copyIncidBoundaryBaseMap;
+            }
             set
             {
                 _copyIncidBoundaryBaseMap = value;
@@ -182,7 +200,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidDigitisationBaseMap
         {
-            get { return _copyIncidDigitisationBaseMap; }
+            get
+            {
+                return _copyIncidDigitisationBaseMap;
+            }
             set
             {
                 _copyIncidDigitisationBaseMap = value;
@@ -192,7 +213,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidSiteRef
         {
-            get { return _copyIncidSiteRef; }
+            get
+            {
+                return _copyIncidSiteRef;
+            }
             set
             {
                 _copyIncidSiteRef = value;
@@ -202,7 +226,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidSiteName
         {
-            get { return _copyIncidSiteName; }
+            get
+            {
+                return _copyIncidSiteName;
+            }
             set
             {
                 _copyIncidSiteName = value;
@@ -212,7 +239,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidCondition
         {
-            get { return _copyIncidCondition; }
+            get
+            {
+                return _copyIncidCondition;
+            }
             set
             {
                 _copyIncidCondition = value;
@@ -222,7 +252,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidConditionQualifier
         {
-            get { return _copyIncidConditionQualifier; }
+            get
+            {
+                return _copyIncidConditionQualifier;
+            }
             set
             {
                 _copyIncidConditionQualifier = value;
@@ -232,7 +265,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidConditionDate
         {
-            get { return _copyIncidConditionDate; }
+            get
+            {
+                return _copyIncidConditionDate;
+            }
             set
             {
                 _copyIncidConditionDate = value;
@@ -242,7 +278,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidQualityDetermination
         {
-            get { return _copyIncidQualityDetermination; }
+            get
+            {
+                return _copyIncidQualityDetermination;
+            }
             set
             {
                 _copyIncidQualityDetermination = value;
@@ -252,7 +291,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidQualityInterpretation
         {
-            get { return _copyIncidQualityInterpretation; }
+            get
+            {
+                return _copyIncidQualityInterpretation;
+            }
             set
             {
                 _copyIncidQualityInterpretation = value;
@@ -262,7 +304,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidQualityComments
         {
-            get { return _copyIncidQualityComments; }
+            get
+            {
+                return _copyIncidQualityComments;
+            }
             set
             {
                 _copyIncidQualityComments = value;
@@ -272,7 +317,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidSource1Id
         {
-            get { return _copyIncidSource1Id; }
+            get
+            {
+                return _copyIncidSource1Id;
+            }
             set
             {
                 _copyIncidSource1Id = value;
@@ -282,7 +330,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidSource1Date
         {
-            get { return _copyIncidSource1Date; }
+            get
+            {
+                return _copyIncidSource1Date;
+            }
             set
             {
                 _copyIncidSource1Date = value;
@@ -292,7 +343,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidSource1HabitatClass
         {
-            get { return _copyIncidSource1HabitatClass; }
+            get
+            {
+                return _copyIncidSource1HabitatClass;
+            }
             set
             {
                 _copyIncidSource1HabitatClass = value;
@@ -302,7 +356,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidSource1HabitatType
         {
-            get { return _copyIncidSource1HabitatType; }
+            get
+            {
+                return _copyIncidSource1HabitatType;
+            }
             set
             {
                 _copyIncidSource1HabitatType = value;
@@ -312,7 +369,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidSource1BoundaryImportance
         {
-            get { return _copyIncidSource1BoundaryImportance; }
+            get
+            {
+                return _copyIncidSource1BoundaryImportance;
+            }
             set
             {
                 _copyIncidSource1BoundaryImportance = value;
@@ -322,7 +382,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidSource1HabitatImportance
         {
-            get { return _copyIncidSource1HabitatImportance; }
+            get
+            {
+                return _copyIncidSource1HabitatImportance;
+            }
             set
             {
                 _copyIncidSource1HabitatImportance = value;
@@ -332,7 +395,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidSource2Id
         {
-            get { return _copyIncidSource2Id; }
+            get
+            {
+                return _copyIncidSource2Id;
+            }
             set
             {
                 _copyIncidSource2Id = value;
@@ -342,7 +408,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidSource2Date
         {
-            get { return _copyIncidSource2Date; }
+            get
+            {
+                return _copyIncidSource2Date;
+            }
             set
             {
                 _copyIncidSource2Date = value;
@@ -352,7 +421,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidSource2HabitatClass
         {
-            get { return _copyIncidSource2HabitatClass; }
+            get
+            {
+                return _copyIncidSource2HabitatClass;
+            }
             set
             {
                 _copyIncidSource2HabitatClass = value;
@@ -362,7 +434,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidSource2HabitatType
         {
-            get { return _copyIncidSource2HabitatType; }
+            get
+            {
+                return _copyIncidSource2HabitatType;
+            }
             set
             {
                 _copyIncidSource2HabitatType = value;
@@ -372,7 +447,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidSource2BoundaryImportance
         {
-            get { return _copyIncidSource2BoundaryImportance; }
+            get
+            {
+                return _copyIncidSource2BoundaryImportance;
+            }
             set
             {
                 _copyIncidSource2BoundaryImportance = value;
@@ -382,7 +460,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidSource2HabitatImportance
         {
-            get { return _copyIncidSource2HabitatImportance; }
+            get
+            {
+                return _copyIncidSource2HabitatImportance;
+            }
             set
             {
                 _copyIncidSource2HabitatImportance = value;
@@ -392,7 +473,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidSource3Id
         {
-            get { return _copyIncidSource3Id; }
+            get
+            {
+                return _copyIncidSource3Id;
+            }
             set
             {
                 _copyIncidSource3Id = value;
@@ -402,7 +486,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidSource3Date
         {
-            get { return _copyIncidSource3Date; }
+            get
+            {
+                return _copyIncidSource3Date;
+            }
             set
             {
                 _copyIncidSource3Date = value;
@@ -412,7 +499,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidSource3HabitatClass
         {
-            get { return _copyIncidSource3HabitatClass; }
+            get
+            {
+                return _copyIncidSource3HabitatClass;
+            }
             set
             {
                 _copyIncidSource3HabitatClass = value;
@@ -422,7 +512,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidSource3HabitatType
         {
-            get { return _copyIncidSource3HabitatType; }
+            get
+            {
+                return _copyIncidSource3HabitatType;
+            }
             set
             {
                 _copyIncidSource3HabitatType = value;
@@ -432,7 +525,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidSource3BoundaryImportance
         {
-            get { return _copyIncidSource3BoundaryImportance; }
+            get
+            {
+                return _copyIncidSource3BoundaryImportance;
+            }
             set
             {
                 _copyIncidSource3BoundaryImportance = value;
@@ -442,7 +538,10 @@ namespace HLU.UI.ViewModel
 
         public bool CopyIncidSource3HabitatImportance
         {
-            get { return _copyIncidSource3HabitatImportance; }
+            get
+            {
+                return _copyIncidSource3HabitatImportance;
+            }
             set
             {
                 _copyIncidSource3HabitatImportance = value;
@@ -456,7 +555,10 @@ namespace HLU.UI.ViewModel
 
         public string IncidPrimary
         {
-            get { return _copyIncidPrimary ? _incidPrimary : null; }
+            get
+            {
+                return _copyIncidPrimary ? _incidPrimary : null;
+            }
             set
             {
                 _incidPrimary = value;
@@ -466,7 +568,10 @@ namespace HLU.UI.ViewModel
 
         public ObservableCollection<SecondaryHabitat> IncidSecondaryHabitats
         {
-            get { return _copyIncidSecondaryHabitats ? _incidSecondaryHabitats : null; }
+            get
+            {
+                return _copyIncidSecondaryHabitats ? _incidSecondaryHabitats : null;
+            }
             set
             {
                 ObservableCollection<SecondaryHabitat> newSH = [];
@@ -482,7 +587,10 @@ namespace HLU.UI.ViewModel
 
         public string IncidLegacyHabitat
         {
-            get { return _copyIncidLegacyHabitat ? _incidLegacyHabitat : null; }
+            get
+            {
+                return _copyIncidLegacyHabitat ? _incidLegacyHabitat : null;
+            }
             set
             {
                 _incidLegacyHabitat = value;
@@ -492,7 +600,10 @@ namespace HLU.UI.ViewModel
 
         public ObservableCollection<BapEnvironment> IncidBapHabitatsUser
         {
-            get { return _copyIncidBapHabitatsUser ? _incidBapHabitatsUser : null; }
+            get
+            {
+                return _copyIncidBapHabitatsUser ? _incidBapHabitatsUser : null;
+            }
             set
             {
                 ObservableCollection<BapEnvironment> newBH = [];
@@ -503,12 +614,15 @@ namespace HLU.UI.ViewModel
                 }
                 _incidBapHabitatsUser = newBH;
                 PropertyChanged.Invoke(this, new PropertyChangedEventArgs(nameof(IncidBapHabitatsUser)));
- }
+            }
         }
 
         public string IncidGeneralComments
         {
-            get { return _incidGeneralComments; }
+            get
+            {
+                return _incidGeneralComments;
+            }
             set
             {
                 _incidGeneralComments = value;
@@ -518,7 +632,10 @@ namespace HLU.UI.ViewModel
 
         public string IncidBoundaryBaseMap
         {
-            get { return _incidBoundaryBaseMap; }
+            get
+            {
+                return _incidBoundaryBaseMap;
+            }
             set
             {
                 _incidBoundaryBaseMap = value;
@@ -528,7 +645,10 @@ namespace HLU.UI.ViewModel
 
         public string IncidDigitisationBaseMap
         {
-            get { return _incidDigitisationBaseMap; }
+            get
+            {
+                return _incidDigitisationBaseMap;
+            }
             set
             {
                 _incidDigitisationBaseMap = value;
@@ -538,7 +658,10 @@ namespace HLU.UI.ViewModel
 
         public string IncidSiteRef
         {
-            get { return _incidSiteRef; }
+            get
+            {
+                return _incidSiteRef;
+            }
             set
             {
                 _incidSiteRef = value;
@@ -548,7 +671,10 @@ namespace HLU.UI.ViewModel
 
         public string IncidSiteName
         {
-            get { return _incidSiteName; }
+            get
+            {
+                return _incidSiteName;
+            }
             set
             {
                 _incidSiteName = value;
@@ -558,7 +684,10 @@ namespace HLU.UI.ViewModel
 
         public string IncidCondition
         {
-            get { return _copyIncidCondition ? _incidCondition : null; }
+            get
+            {
+                return _copyIncidCondition ? _incidCondition : null;
+            }
             set
             {
                 _incidCondition = value;
@@ -568,7 +697,10 @@ namespace HLU.UI.ViewModel
 
         public string IncidConditionQualifier
         {
-            get { return _copyIncidConditionQualifier ? _incidConditionQualifier : null; }
+            get
+            {
+                return _copyIncidConditionQualifier ? _incidConditionQualifier : null;
+            }
             set
             {
                 _incidConditionQualifier = value;
@@ -578,7 +710,10 @@ namespace HLU.UI.ViewModel
 
         public Date.VagueDateInstance IncidConditionDate
         {
-            get { return _copyIncidConditionDate ? _incidConditionDate : null; }
+            get
+            {
+                return _copyIncidConditionDate ? _incidConditionDate : null;
+            }
             set
             {
                 _incidConditionDate = value;
@@ -588,7 +723,10 @@ namespace HLU.UI.ViewModel
 
         public string IncidQualityDetermination
         {
-            get { return _copyIncidQualityDetermination ? _incidQualityDetermination : null; }
+            get
+            {
+                return _copyIncidQualityDetermination ? _incidQualityDetermination : null;
+            }
             set
             {
                 _incidQualityDetermination = value;
@@ -598,7 +736,10 @@ namespace HLU.UI.ViewModel
 
         public string IncidQualityInterpretation
         {
-            get { return _copyIncidQualityInterpretation ? _incidQualityInterpretation : null; }
+            get
+            {
+                return _copyIncidQualityInterpretation ? _incidQualityInterpretation : null;
+            }
             set
             {
                 _incidQualityInterpretation = value;
@@ -608,7 +749,10 @@ namespace HLU.UI.ViewModel
 
         public string IncidQualityComments
         {
-            get { return _copyIncidQualityComments ? _incidQualityComments : null; }
+            get
+            {
+                return _copyIncidQualityComments ? _incidQualityComments : null;
+            }
             set
             {
                 _incidQualityComments = value;
@@ -618,7 +762,10 @@ namespace HLU.UI.ViewModel
 
         public Nullable<int> IncidSource1Id
         {
-            get { return _copyIncidSource1Id ? _incidSource1Id : null; }
+            get
+            {
+                return _copyIncidSource1Id ? _incidSource1Id : null;
+            }
             set
             {
                 _incidSource1Id = value;
@@ -628,7 +775,10 @@ namespace HLU.UI.ViewModel
 
         public Date.VagueDateInstance IncidSource1Date
         {
-            get { return _copyIncidSource1Date ? _incidSource1Date : null; }
+            get
+            {
+                return _copyIncidSource1Date ? _incidSource1Date : null;
+            }
             set
             {
                 _incidSource1Date = value;
@@ -638,7 +788,10 @@ namespace HLU.UI.ViewModel
 
         public string IncidSource1HabitatClass
         {
-            get { return _copyIncidSource1HabitatClass ? _incidSource1HabitatClass : null; }
+            get
+            {
+                return _copyIncidSource1HabitatClass ? _incidSource1HabitatClass : null;
+            }
             set
             {
                 _incidSource1HabitatClass = value;
@@ -648,7 +801,10 @@ namespace HLU.UI.ViewModel
 
         public string IncidSource1HabitatType
         {
-            get { return _copyIncidSource1HabitatType ? _incidSource1HabitatType : null; }
+            get
+            {
+                return _copyIncidSource1HabitatType ? _incidSource1HabitatType : null;
+            }
             set
             {
                 _incidSource1HabitatType = value;
@@ -658,7 +814,10 @@ namespace HLU.UI.ViewModel
 
         public string IncidSource1BoundaryImportance
         {
-            get { return _copyIncidSource1BoundaryImportance ? _incidSource1BoundaryImportance : null; }
+            get
+            {
+                return _copyIncidSource1BoundaryImportance ? _incidSource1BoundaryImportance : null;
+            }
             set
             {
                 _incidSource1BoundaryImportance = value;
@@ -668,7 +827,10 @@ namespace HLU.UI.ViewModel
 
         public string IncidSource1HabitatImportance
         {
-            get { return _copyIncidSource1HabitatImportance ? _incidSource1HabitatImportance : null; }
+            get
+            {
+                return _copyIncidSource1HabitatImportance ? _incidSource1HabitatImportance : null;
+            }
             set
             {
                 _incidSource1HabitatImportance = value;
@@ -678,7 +840,10 @@ namespace HLU.UI.ViewModel
 
         public Nullable<int> IncidSource2Id
         {
-            get { return _copyIncidSource2Id ? _incidSource2Id : null; }
+            get
+            {
+                return _copyIncidSource2Id ? _incidSource2Id : null;
+            }
             set
             {
                 _incidSource2Id = value;
@@ -688,7 +853,10 @@ namespace HLU.UI.ViewModel
 
         public Date.VagueDateInstance IncidSource2Date
         {
-            get { return _copyIncidSource2Date ? _incidSource2Date : null; }
+            get
+            {
+                return _copyIncidSource2Date ? _incidSource2Date : null;
+            }
             set
             {
                 _incidSource2Date = value;
@@ -698,7 +866,10 @@ namespace HLU.UI.ViewModel
 
         public string IncidSource2HabitatClass
         {
-            get { return _copyIncidSource2HabitatClass ? _incidSource2HabitatClass : null; }
+            get
+            {
+                return _copyIncidSource2HabitatClass ? _incidSource2HabitatClass : null;
+            }
             set
             {
                 _incidSource2HabitatClass = value;
@@ -708,7 +879,10 @@ namespace HLU.UI.ViewModel
 
         public string IncidSource2HabitatType
         {
-            get { return _copyIncidSource2HabitatType ? _incidSource2HabitatType : null; }
+            get
+            {
+                return _copyIncidSource2HabitatType ? _incidSource2HabitatType : null;
+            }
             set
             {
                 _incidSource2HabitatType = value;
@@ -718,7 +892,10 @@ namespace HLU.UI.ViewModel
 
         public string IncidSource2BoundaryImportance
         {
-            get { return _copyIncidSource2BoundaryImportance ? _incidSource2BoundaryImportance : null; }
+            get
+            {
+                return _copyIncidSource2BoundaryImportance ? _incidSource2BoundaryImportance : null;
+            }
             set
             {
                 _incidSource2BoundaryImportance = value;
@@ -728,7 +905,10 @@ namespace HLU.UI.ViewModel
 
         public string IncidSource2HabitatImportance
         {
-            get { return _copyIncidSource2HabitatImportance ? _incidSource2HabitatImportance : null; }
+            get
+            {
+                return _copyIncidSource2HabitatImportance ? _incidSource2HabitatImportance : null;
+            }
             set
             {
                 _incidSource2HabitatImportance = value;
@@ -738,7 +918,10 @@ namespace HLU.UI.ViewModel
 
         public Nullable<int> IncidSource3Id
         {
-            get { return _copyIncidSource3Id ? _incidSource3Id : null; }
+            get
+            {
+                return _copyIncidSource3Id ? _incidSource3Id : null;
+            }
             set
             {
                 _incidSource3Id = value;
@@ -748,7 +931,10 @@ namespace HLU.UI.ViewModel
 
         public Date.VagueDateInstance IncidSource3Date
         {
-            get { return _copyIncidSource3Date ? _incidSource3Date : null; }
+            get
+            {
+                return _copyIncidSource3Date ? _incidSource3Date : null;
+            }
             set
             {
                 _incidSource3Date = value;
@@ -758,7 +944,10 @@ namespace HLU.UI.ViewModel
 
         public string IncidSource3HabitatClass
         {
-            get { return _copyIncidSource3HabitatClass ? _incidSource3HabitatClass : null; }
+            get
+            {
+                return _copyIncidSource3HabitatClass ? _incidSource3HabitatClass : null;
+            }
             set
             {
                 _incidSource3HabitatClass = value;
@@ -768,7 +957,10 @@ namespace HLU.UI.ViewModel
 
         public string IncidSource3HabitatType
         {
-            get { return _copyIncidSource3HabitatType ? _incidSource3HabitatType : null; }
+            get
+            {
+                return _copyIncidSource3HabitatType ? _incidSource3HabitatType : null;
+            }
             set
             {
                 _incidSource3HabitatType = value;
@@ -778,7 +970,10 @@ namespace HLU.UI.ViewModel
 
         public string IncidSource3BoundaryImportance
         {
-            get { return _copyIncidSource3BoundaryImportance ? _incidSource3BoundaryImportance : null; }
+            get
+            {
+                return _copyIncidSource3BoundaryImportance ? _incidSource3BoundaryImportance : null;
+            }
             set
             {
                 _incidSource3BoundaryImportance = value;
@@ -788,7 +983,10 @@ namespace HLU.UI.ViewModel
 
         public string IncidSource3HabitatImportance
         {
-            get { return _copyIncidSource3HabitatImportance ? _incidSource3HabitatImportance : null; }
+            get
+            {
+                return _copyIncidSource3HabitatImportance ? _incidSource3HabitatImportance : null;
+            }
             set
             {
                 _incidSource3HabitatImportance = value;
@@ -904,7 +1102,6 @@ namespace HLU.UI.ViewModel
 
             // Refresh all the controls
             vmMain.RefreshAll();
-
         }
 
         /// <summary>

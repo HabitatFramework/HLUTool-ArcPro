@@ -5,5 +5,4 @@
 
     <hlu:ErrorMessageConverter x:Key="errorMessageConverter" />
     <hlu:NullableValueConverter x:Key="nullableValueConverter" />
-
 </ResourceDictionary>

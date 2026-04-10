@@ -32,7 +32,7 @@ namespace HLU.UI.View.Connection
     /// </summary>
     public partial class ViewConnectOracle : ProWindow
     {
-        IntPtr _windowHandle;
+        private IntPtr _windowHandle;
 
         public ViewConnectOracle()
         {
@@ -41,9 +41,11 @@ namespace HLU.UI.View.Connection
 
         private void Window_Activated(object sender, EventArgs e)
         {
-            if (PresentationSource.FromVisual(this) is HwndSource hwndSrc) _windowHandle = hwndSrc.Handle;
+            if (PresentationSource.FromVisual(this) is HwndSource hwndSrc)
+                _windowHandle = hwndSrc.Handle;
 
-            if (this.ComboBoxDataSource.Items.Count == 1) this.ComboBoxDataSource.SelectedIndex = 0;
+            if (this.ComboBoxDataSource.Items.Count == 1)
+                this.ComboBoxDataSource.SelectedIndex = 0;
         }
 
         private void Window_ContentRendered(object sender, EventArgs e)

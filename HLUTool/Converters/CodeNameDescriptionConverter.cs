@@ -17,12 +17,12 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Properties;
 using System;
 using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Data;
-using HLU.Properties;
 
 namespace HLU.Converters
 {
@@ -31,9 +31,9 @@ namespace HLU.Converters
     /// habitat type fields by combining the code, name and
     /// description fields depending on their values.
     /// </summary>
-    class CodeNameDescriptionConverter : IValueConverter
+    internal class CodeNameDescriptionConverter : IValueConverter
     {
-        string _codeDeleteRow = Settings.Default.CodeDeleteRow;
+        private string _codeDeleteRow = Settings.Default.CodeDeleteRow;
 
         #region IValueConverter Members
 
@@ -142,28 +142,32 @@ namespace HLU.Converters
                             if (t.Columns.Contains(splitArray[3]))
                             {
                                 DataColumn cs = t.Columns[splitArray[3]];
-                                if (cs.DataType == typeof(int)) sortColumnOrdinal = cs.Ordinal;
+                                if (cs.DataType == typeof(int))
+                                    sortColumnOrdinal = cs.Ordinal;
                             }
                             goto case 3;
                         case 3:
                             if (t.Columns.Contains(splitArray[2]))
                             {
                                 DataColumn cd = t.Columns[splitArray[2]];
-                                if (cd.DataType == typeof(string)) descriptionColumnOrdinal = cd.Ordinal;
+                                if (cd.DataType == typeof(string))
+                                    descriptionColumnOrdinal = cd.Ordinal;
                             }
                             goto case 2;
                         case 2:
                             if (t.Columns.Contains(splitArray[1]))
                             {
                                 DataColumn cd = t.Columns[splitArray[1]];
-                                if (cd.DataType == typeof(string)) nameColumnOrdinal = cd.Ordinal;
+                                if (cd.DataType == typeof(string))
+                                    nameColumnOrdinal = cd.Ordinal;
                             }
                             goto case 1;
                         case 1:
                             if (t.Columns.Contains(splitArray[0]))
                             {
                                 DataColumn cc = t.Columns[splitArray[0]];
-                                if (cc.DataType == typeof(string)) codeColumnOrdinal = cc.Ordinal;
+                                if (cc.DataType == typeof(string))
+                                    codeColumnOrdinal = cc.Ordinal;
                             }
                             break;
                     }
@@ -183,7 +187,8 @@ namespace HLU.Converters
         private object FormatList(DataRow[] rows, int codeColumnOrdinal,
             int nameColumnOrdinal, int descriptionColumnOrdinal, int sortColumnOrdinal)
         {
-            if (codeColumnOrdinal == -1) return rows;
+            if (codeColumnOrdinal == -1)
+                return rows;
 
             // Sort depending on the source columns
             if ((nameColumnOrdinal != -1) && (descriptionColumnOrdinal != -1) && (sortColumnOrdinal != -1))
@@ -227,13 +232,13 @@ namespace HLU.Converters
                         }).OrderBy(r => r.sort_order).ThenBy(r => r.sort_order2);
             else if (descriptionColumnOrdinal != -1)
                 return (from r in rows
-                       select new
-                       {
-                           code = r.Field<string>(codeColumnOrdinal),
-                           name = String.Empty,
-                           description = FormatDescription(r, codeColumnOrdinal, nameColumnOrdinal, descriptionColumnOrdinal),
-                           sort_order = r.Field<string>(descriptionColumnOrdinal)
-                       }).OrderBy(r => r.sort_order);
+                        select new
+                        {
+                            code = r.Field<string>(codeColumnOrdinal),
+                            name = String.Empty,
+                            description = FormatDescription(r, codeColumnOrdinal, nameColumnOrdinal, descriptionColumnOrdinal),
+                            sort_order = r.Field<string>(descriptionColumnOrdinal)
+                        }).OrderBy(r => r.sort_order);
             else if (sortColumnOrdinal != -1)
                 return (from r in rows
                         select new
@@ -326,7 +331,7 @@ namespace HLU.Converters
     /// habitat type fields by combining the code, name and
     /// description fields depending on their values.
     /// </summary>
-    class CodeNameDescriptionMultiConverter : IMultiValueConverter
+    internal class CodeNameDescriptionMultiConverter : IMultiValueConverter
     {
         #region IMultiValueConverter Members
 

@@ -18,14 +18,9 @@
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
-using System.Windows.Input;
 using System.Text.RegularExpressions;
-using HLU.Data;
-using HLU.Data.Model;
+using System.Windows.Input;
 
 namespace HLU.UI.ViewModel
 {
@@ -47,13 +42,22 @@ namespace HLU.UI.ViewModel
 
         public override string DisplayName
         {
-            get { return _displayName; }
-            set { _displayName = value; }
+            get
+            {
+                return _displayName;
+            }
+            set
+            {
+                _displayName = value;
+            }
         }
 
         public override string WindowTitle
         {
-            get { return DisplayName; }
+            get
+            {
+                return DisplayName;
+            }
         }
 
         #endregion ViewModelBase Members
@@ -147,8 +151,14 @@ namespace HLU.UI.ViewModel
 
         public string QuerySecondaries
         {
-            get { return _querySecondaries; }
-            set { _querySecondaries = value; }
+            get
+            {
+                return _querySecondaries;
+            }
+            set
+            {
+                _querySecondaries = value;
+            }
         }
 
         #endregion Query Secondaries
@@ -163,7 +173,8 @@ namespace HLU.UI.ViewModel
                 string pattern = @"^[1-9][0-9]{0,3}(\s[1-9][0-9]{0,3})*$|^[1-9][0-9]{0,3}((\s)*,(\s)*[1-9][0-9]{0,3})*$|^[1-9][0-9]{0,3}((\s)*\.(\s)*[1-9][0-9]{0,3})*$";
                 if ((!String.IsNullOrEmpty(QuerySecondaries)) && (!Regex.IsMatch(QuerySecondaries, pattern, RegexOptions.IgnoreCase)))
                     return "Please enter a valid list of secondaries code separated by either spaces, commas or points.";
-                else return null;
+                else
+                    return null;
             }
         }
 

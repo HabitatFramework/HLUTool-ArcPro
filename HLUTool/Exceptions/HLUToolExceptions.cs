@@ -18,7 +18,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace HLU.Exceptions
 {
@@ -27,8 +26,13 @@ namespace HLU.Exceptions
     /// </summary>
     public class HLUToolException : Exception
     {
-        public HLUToolException(string message) : base(message) { }
-        public HLUToolException(string message, Exception inner) : base(message, inner) { }
+        public HLUToolException(string message) : base(message)
+        {
+        }
+
+        public HLUToolException(string message, Exception inner) : base(message, inner)
+        {
+        }
     }
 
     /// <summary>
@@ -37,7 +41,9 @@ namespace HLU.Exceptions
     /// </summary>
     public sealed class UserCancelledException : HLUToolException
     {
-        public UserCancelledException() : base("Operation cancelled by user.") { }
+        public UserCancelledException() : base("Operation cancelled by user.")
+        {
+        }
     }
 
     /// <summary>
@@ -45,8 +51,13 @@ namespace HLU.Exceptions
     /// </summary>
     public sealed class GisSelectionException : HLUToolException
     {
-        public GisSelectionException(string message) : base(message) { }
-        public GisSelectionException(string message, Exception inner) : base(message, inner) { }
+        public GisSelectionException(string message) : base(message)
+        {
+        }
+
+        public GisSelectionException(string message, Exception inner) : base(message, inner)
+        {
+        }
     }
 
     /// <summary>
@@ -54,7 +65,10 @@ namespace HLU.Exceptions
     /// </summary>
     public sealed class MissingLayerFieldsException : HLUToolException
     {
-        public IReadOnlyList<string> MissingFields { get; }
+        public IReadOnlyList<string> MissingFields
+        {
+            get;
+        }
 
         public MissingLayerFieldsException(IEnumerable<string> missingFields)
             : base("The active layer is missing required field(s): " + string.Join(", ", missingFields))
@@ -68,8 +82,13 @@ namespace HLU.Exceptions
     /// </summary>
     public sealed class DatabaseQueryException : HLUToolException
     {
-        public DatabaseQueryException(string message) : base(message) { }
-        public DatabaseQueryException(string message, Exception inner) : base(message, inner) { }
+        public DatabaseQueryException(string message) : base(message)
+        {
+        }
+
+        public DatabaseQueryException(string message, Exception inner) : base(message, inner)
+        {
+        }
     }
 
     /// <summary>
@@ -77,8 +96,13 @@ namespace HLU.Exceptions
     /// </summary>
     public sealed class EditOperationException : HLUToolException
     {
-        public EditOperationException(string message) : base(message) { }
-        public EditOperationException(string message, Exception inner) : base(message, inner) { }
+        public EditOperationException(string message) : base(message)
+        {
+        }
+
+        public EditOperationException(string message, Exception inner) : base(message, inner)
+        {
+        }
     }
 
     /// <summary>
@@ -86,7 +110,12 @@ namespace HLU.Exceptions
     /// </summary>
     public sealed class ConfigurationException : HLUToolException
     {
-        public ConfigurationException(string message) : base(message) { }
-        public ConfigurationException(string message, Exception inner) : base(message, inner) { }
+        public ConfigurationException(string message) : base(message)
+        {
+        }
+
+        public ConfigurationException(string message, Exception inner) : base(message, inner)
+        {
+        }
     }
 }

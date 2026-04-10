@@ -17,10 +17,9 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using System.Windows;
+using ArcGIS.Desktop.Framework.Controls;
 using System.Diagnostics;
 using System.Windows.Navigation;
-using ArcGIS.Desktop.Framework.Controls;
 
 namespace HLU.UI.View
 {

@@ -18,14 +18,13 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Data.Model;
+using HLU.Enums;
+using HLU.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using HLU.Data;
-using HLU.Data.Model;
-using HLU.Enums;
-using HLU.Exceptions;
 
 namespace HLU.UI.ViewModel
 {
@@ -64,13 +63,15 @@ namespace HLU.UI.ViewModel
             DateTime nowDtTm)
         {
             // Check there are some history records to write.
-            if ((newHistoryRecords == null) || (newHistoryRecords.Rows.Count == 0)) return;
+            if ((newHistoryRecords == null) || (newHistoryRecords.Rows.Count == 0))
+                return;
 
             // Check if a transaction is already runnning.
             bool startTransaction = _viewModelMain.DataBase.Transaction == null;
 
             // Begin a new transaction if one is not already running..
-            if (startTransaction) _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
+            if (startTransaction)
+                _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
             try
             {
@@ -194,12 +195,14 @@ namespace HLU.UI.ViewModel
                     throw new Exception("Failed to update history table.");
 
                 // Commit the transaction if one was started.
-                if (startTransaction) _viewModelMain.DataBase.CommitTransaction();
+                if (startTransaction)
+                    _viewModelMain.DataBase.CommitTransaction();
             }
             catch (Exception ex)
             {
                 // Roll back the transaction if one was started.
-                if (startTransaction) _viewModelMain.DataBase.RollbackTransaction();
+                if (startTransaction)
+                    _viewModelMain.DataBase.RollbackTransaction();
 
                 throw new HLUToolException("Failed to write history records.", ex);
             }
@@ -214,15 +217,18 @@ namespace HLU.UI.ViewModel
         internal void HistoryRenameGeometryPropertyColumns(string newGeom1ColumnName,
             string newGeom2ColumnName, ref DataTable table)
         {
-            if (table == null) return;
+            if (table == null)
+                return;
             switch (_viewModelMain.GisLayerType)
             {
                 case HluGeometryTypes.Point:
                     break;
+
                 case HluGeometryTypes.Line:
                     if (table.Columns.Contains(ViewModelWindowMain.HistoryGeometry1ColumnName))
                         table.Columns[ViewModelWindowMain.HistoryGeometry1ColumnName].ColumnName = newGeom1ColumnName;
                     break;
+
                 case HluGeometryTypes.Polygon:
                     if (table.Columns.Contains(ViewModelWindowMain.HistoryGeometry1ColumnName))
                         table.Columns[ViewModelWindowMain.HistoryGeometry1ColumnName].ColumnName = newGeom1ColumnName;
@@ -234,5 +240,4 @@ namespace HLU.UI.ViewModel
     }
 
     #endregion Methods
-
 }

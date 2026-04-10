@@ -16,13 +16,12 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Desktop.Framework;
 using System;
 using System.IO;
-using System.Xml.Serialization;
-using System.Reflection;
 using System.Linq;
 using System.Xml.Linq;
-using ArcGIS.Desktop.Framework;
+using System.Xml.Serialization;
 
 namespace HLU;
 
@@ -135,26 +134,31 @@ public class AddInSettings
 
     // Application database options
     public int DbConnectionTimeout { get; set; } = 60;
+
     public int IncidTablePageSize { get; set; } = 100;
 
     // Application dates options
     public string[] SeasonNames { get; set; } = ["Spring", "Summery", "Autumn", "Winter"];
+
     public string VagueDateDelimiter { get; set; } = "-";
 
     // Application validation options
     public int HabitatSecondaryCodeValidation { get; set; } = 2;
+
     public int PrimarySecondaryCodeValidation { get; set; } = 1;
     public int QualityValidation { get; set; } = 1;
     public int PotentialPriorityDetermQtyValidation { get; set; } = 1;
 
     // Application updates options
     public int SubsetUpdateAction { get; set; } = 0;
+
     public string ClearIHSUpdateAction { get; set; } = "Do not clear";
     public string SecondaryCodeDelimiter { get; set; } = ".";
     public bool ResetOSMMUpdatesStatus { get; set; } = false;
 
     // Application bulk update options
     public bool BulkUpdateDeleteOrphanBapHabitats { get; set; } = false;
+
     public bool BulkUpdateDeletePotentialBapHabitats { get; set; } = false;
     public bool BulkUpdateDeleteIHSCodes { get; set; } = false;
     public bool BulkUpdateDeleteSecondaryCodes { get; set; } = false;
@@ -173,6 +177,7 @@ public class HelpPages
 {
     // Individual help pages
     public string AppDatabase { get; set; } = "interface/interface.html#database-options";
+
     public string AppDates { get; set; } = "interface/interface.html#dates-options";
     public string AppBulkUpdate { get; set; } = "interface/interface.html#bulk-update-options";
     public string AppUpdates { get; set; } = "interface/interface.html#updates-options";

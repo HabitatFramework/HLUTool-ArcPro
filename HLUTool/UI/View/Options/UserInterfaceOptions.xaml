@@ -78,7 +78,6 @@
                             Margin="0,0,0,0"
                             Description="If section headers in the main interface will be shown or hidden."
                             Header="Show Group Headers" />
-
                     </Grid>
 
                     <Grid Grid.Row="2">
@@ -103,7 +102,6 @@
                             Margin="0,0,0,0"
                             Description="If the IHS tab will be shown or hidden in the main interface."
                             Header="Show IHS Tab" />
-
                     </Grid>
 
                     <Grid Grid.Row="4">
@@ -128,7 +126,6 @@
                             Margin="0,0,0,0"
                             Description="If the Source Habitat group, containing the Habitat Class and Habitat Type lists, will be shown or hidden in the main interface.&#10;&#10;The group can be hidden if the source habitat data is in UKHab and primary and secondary habitats are being entered directly without any need to assist the user with translating from other habitat classifications."
                             Header="Show Source Habitat" />
-
                     </Grid>
 
                     <Grid Grid.Row="6">
@@ -153,7 +150,6 @@
                             Margin="0,0,0,0"
                             Description="If any suggested secondary habitats related to the source habitat type and selected primary habitat are shown."
                             Header="Show Secondary Suggestions" />
-
                     </Grid>
 
                     <Grid Grid.Row="8">
@@ -178,7 +174,6 @@
                             Margin="0,0,0,0"
                             Description="If a list of any potential NVC Codes related to the selected primary habitat will be shown."
                             Header="Show NVC Codes" />
-
                     </Grid>
 
                     <Grid Grid.Row="10">
@@ -203,7 +198,6 @@
                             Margin="0,0,0,0"
                             Description="If the summary of the primary and secondary codes will be shown."
                             Header="Show Habitat Summary" />
-
                     </Grid>
 
                     <Grid Grid.Row="12">
@@ -230,11 +224,8 @@
                             Margin="5,0,0,0"
                             Description="When Ordnance Survey MasterMap (OSMM) updates should be shown in the main interface. The available options are:&#10;&#10;  * Never - Never show the OSMM Updates section.&#10;  * When Outstanding - Only show the OSMM Updates section when the update is outstanding (the status is 'Proposed' or 'Pending').&#10;  * When Present - Only show the OSMM Updates section when an update is present (regardless of status).&#10;  * Always - Always show the OSMM Updates section."
                             Header="Show OSMM Update Attributes" />
-
                     </Grid>
-
                 </Grid>
-
             </Expander>
 
             <Expander
@@ -279,7 +270,6 @@
                             Margin="5,0,0,0"
                             Description="The number of seconds before an error message is automatically dismissed. Enter 0 to never auto-dismiss error messages."
                             Header="Error Message Timeout" />
-
                     </Grid>
 
                     <Grid Grid.Row="2" HorizontalAlignment="Left">
@@ -307,7 +297,6 @@
                             Margin="5,0,0,0"
                             Description="The number of seconds before a warning message is automatically dismissed. Enter 0 to never auto-dismiss warning messages."
                             Header="Warning Message Timeout" />
-
                     </Grid>
 
                     <Grid Grid.Row="4" HorizontalAlignment="Left">
@@ -335,7 +324,6 @@
                             Margin="5,0,0,0"
                             Description="The number of seconds before an info message is automatically dismissed. Enter 0 to never auto-dismiss info messages."
                             Header="Info Message Timeout" />
-
                     </Grid>
 
                     <Grid Grid.Row="6" HorizontalAlignment="Left">
@@ -363,13 +351,9 @@
                             Margin="5,0,0,0"
                             Description="The number of seconds before a success message is automatically dismissed. Enter 0 to never auto-dismiss success messages."
                             Header="Success Message Timeout" />
-
                     </Grid>
-
                 </Grid>
-
             </Expander>
-
         </StackPanel>
 
         <TextBlock
@@ -384,7 +368,5 @@
                 Learn more about user interface options
             </Hyperlink>
         </TextBlock>
-
     </Grid>
-
 </UserControl>

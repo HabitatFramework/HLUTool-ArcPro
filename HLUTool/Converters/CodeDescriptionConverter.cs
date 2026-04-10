@@ -17,21 +17,21 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Properties;
 using System;
 using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Data;
-using HLU.Properties;
 
 namespace HLU.Converters
 {
     /// <summary>
     /// Converts a DataRow, DataRow[], DataView or DataTable to a list of code/description pairs or vice versa.
     /// </summary>
-    class CodeDescriptionConverter : IValueConverter
+    internal class CodeDescriptionConverter : IValueConverter
     {
-        string _codeDeleteRow = Settings.Default.CodeDeleteRow;
+        private string _codeDeleteRow = Settings.Default.CodeDeleteRow;
         internal static readonly string[] _separator = [" : "];
 
         #region IValueConverter Members
@@ -138,21 +138,24 @@ namespace HLU.Converters
                             if (t.Columns.Contains(splitArray[2]))
                             {
                                 DataColumn cs = t.Columns[splitArray[2]];
-                                if (cs.DataType == typeof(int)) sortColumnOrdinal = cs.Ordinal;
+                                if (cs.DataType == typeof(int))
+                                    sortColumnOrdinal = cs.Ordinal;
                             }
                             goto case 2;
                         case 2:
                             if (t.Columns.Contains(splitArray[1]))
                             {
                                 DataColumn cd = t.Columns[splitArray[1]];
-                                if (cd.DataType == typeof(string)) descriptionColumnOrdinal = cd.Ordinal;
+                                if (cd.DataType == typeof(string))
+                                    descriptionColumnOrdinal = cd.Ordinal;
                             }
                             goto case 1;
                         case 1:
                             if (t.Columns.Contains(splitArray[0]))
                             {
                                 DataColumn cc = t.Columns[splitArray[0]];
-                                if (cc.DataType == typeof(string)) codeColumnOrdinal = cc.Ordinal;
+                                if (cc.DataType == typeof(string))
+                                    codeColumnOrdinal = cc.Ordinal;
                             }
                             break;
                     }
@@ -171,7 +174,8 @@ namespace HLU.Converters
         private object FormatList(DataRow[] rows, int codeColumnOrdinal,
             int descriptionColumnOrdinal, int sortColumnOrdinal)
         {
-            if (codeColumnOrdinal == -1) return rows;
+            if (codeColumnOrdinal == -1)
+                return rows;
 
             // Sort depending on the source columns
             if ((descriptionColumnOrdinal != -1) && (sortColumnOrdinal != -1))
@@ -263,7 +267,7 @@ namespace HLU.Converters
     /// <summary>
     /// Converts a DataRow, DataRow[], DataView or DataTable to a list of code/description pairs or vice versa.
     /// </summary>
-    class CodeDescriptionMultiConverter : IMultiValueConverter
+    internal class CodeDescriptionMultiConverter : IMultiValueConverter
     {
         internal static readonly string[] _separator = [" : "];
 

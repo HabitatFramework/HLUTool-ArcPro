@@ -22,7 +22,6 @@
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using HLU.Helpers;
-using HLU.Properties;
 using System.IO;
 
 namespace HLU

@@ -17,11 +17,9 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using System.Windows;
-using System.Reflection;
-using System.Windows.Controls;
-using HLU.UI.ViewModel;
 using ArcGIS.Desktop.Framework.Controls;
+using HLU.UI.ViewModel;
+using System.Windows.Controls;
 
 namespace HLU.UI.View
 {
@@ -56,7 +54,7 @@ namespace HLU.UI.View
         /// </summary>
         /// <param name="sender">The DataGrid that triggered the event.</param>
         /// <param name="e">The event arguments.</param>
-        void OSMMUpdates_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void OSMMUpdates_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (sender != null)
             {

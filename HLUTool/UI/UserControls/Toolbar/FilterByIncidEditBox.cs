@@ -16,21 +16,12 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using HLU.UI.View;
+using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Framework.Contracts;
 using HLU.UI.ViewModel;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using ArcGIS.Desktop.Framework;
 using System.Text.RegularExpressions;
-using ArcGIS.Desktop.Framework.Contracts;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using HLU.UI;
-using Xceed.Wpf.Toolkit.Primitives;
-using System.Windows.Controls;
-using Azure.Core;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.UserControls.Toolbar

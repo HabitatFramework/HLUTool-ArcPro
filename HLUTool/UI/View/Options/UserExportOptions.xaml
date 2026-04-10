@@ -74,7 +74,6 @@
                                 Margin="0,0,0,0"
                                 Description="The default folder path that will be used when exporting data. A different path to the default can still be selected during the export process."
                                 Header="Default Export Directory" />
-
                         </Grid>
 
                         <Grid Grid.Row="1">
@@ -115,7 +114,6 @@
                                     Height="16"
                                     Source="{Binding ButtonOpenFolderImg}" />
                             </Button>
-
                         </Grid>
                     </Grid>
 
@@ -148,11 +146,8 @@
                             Description="The number of features above which a warning will be shown before starting an export, as the operation may take some time. Set to 0 to disable the warning."
                             Header="Warning Before Exporting Features" />
                     </Grid>
-
                 </Grid>
-
             </Expander>
-
         </StackPanel>
 
         <TextBlock
@@ -167,7 +162,5 @@
                 Learn more about user export options
             </Hyperlink>
         </TextBlock>
-
     </Grid>
-
 </UserControl>

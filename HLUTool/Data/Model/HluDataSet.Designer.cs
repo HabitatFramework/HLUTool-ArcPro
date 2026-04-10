@@ -31323,7 +31323,7 @@ SELECT incid, habitat_primary, habitat_secondaries, habitat_class, habitat_versi
             this._commandCollection = new global::Microsoft.Data.SqlClient.SqlCommand[1];
             this._commandCollection[0] = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._commandCollection[0].Connection = this.Connection;
-            this._commandCollection[0].CommandText = @"SELECT        incid, habitat_primary, habitat_secondaries, habitat_class, habitat_version, site_ref, site_name, general_comments, quality_determination, quality_interpretation, interpretation_comments, boundary_base_map, 
+            this._commandCollection[0].CommandText = @"SELECT        incid, habitat_primary, habitat_secondaries, habitat_class, habitat_version, site_ref, site_name, general_comments, quality_determination, quality_interpretation, interpretation_comments, boundary_base_map,
                          digitisation_base_map, ihs_habitat, legacy_habitat, created_date, created_user_id, last_modified_date, last_modified_user_id
 FROM            incid";
             this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;

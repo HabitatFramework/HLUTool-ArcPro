@@ -19,7 +19,7 @@
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
+using HLU.Enums;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
@@ -31,7 +31,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using HLU.Enums;
 using CommandType = System.Data.CommandType;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
@@ -43,7 +42,7 @@ namespace HLU.Data.Connection
     /// executing SQL commands. Specific database implementations (e.g., SQL Server, Oracle) will
     /// inherit from this class and implement the necessary functionality for their respective backends.
     /// </summary>
-    abstract public partial class DbBase : SqlBuilder
+    public abstract partial class DbBase : SqlBuilder
     {
         #region Fields
 
@@ -137,8 +136,10 @@ namespace HLU.Data.Connection
             {
                 case Backends.PostgreSql:
                     return "public";
+
                 case Backends.SqlServer:
                     return "dbo";
+
                 case Backends.Oracle:
                     if ((connStrBuilder != null) && (connStrBuilder.ContainsKey("USER ID")))
                     {
@@ -147,6 +148,7 @@ namespace HLU.Data.Connection
                             return userIDstring;
                     }
                     return null;
+
                 default:
                     return null;
             }
@@ -161,7 +163,8 @@ namespace HLU.Data.Connection
         public static bool HasPassword(DbConnectionStringBuilder connStringBuilder)
         {
             if ((connStringBuilder == null) || IsIntegratedSecurity(connStringBuilder) ||
-                !HasPasswordKey(connStringBuilder)) return false;
+                !HasPasswordKey(connStringBuilder))
+                return false;
 
             connStringBuilder.TryGetValue("Password", out object pwd);
             return !String.IsNullOrEmpty(pwd.ToString());
@@ -176,7 +179,8 @@ namespace HLU.Data.Connection
         /// <returns>The connection string with the password masked.</returns>
         public static string MaskPassword(DbConnectionStringBuilder connStringBuilder, string maskString)
         {
-            if (connStringBuilder == null) return String.Empty;
+            if (connStringBuilder == null)
+                return String.Empty;
 
             if (IsIntegratedSecurity(connStringBuilder) || !HasPasswordKey(connStringBuilder))
                 return connStringBuilder.ConnectionString;
@@ -200,7 +204,8 @@ namespace HLU.Data.Connection
         /// <returns><c>true</c> if integrated security is being used; otherwise, <c>false</c>.</returns>
         private static bool IsIntegratedSecurity(DbConnectionStringBuilder connStringBuilder)
         {
-            if (connStringBuilder == null) return false;
+            if (connStringBuilder == null)
+                return false;
 
             if (connStringBuilder.TryGetValue("Integrated Security", out object integratedSecurity))
             {
@@ -259,39 +264,126 @@ namespace HLU.Data.Connection
 
         public string ConnectionString
         {
-            get { return _connectionString; }
-            protected set { if (!String.IsNullOrEmpty(value)) { _connectionString = value; } }
+            get
+            {
+                return _connectionString;
+            }
+            protected set
+            {
+                if (!String.IsNullOrEmpty(value))
+                {
+                    _connectionString = value;
+                }
+            }
         }
 
         public string DefaultSchema
         {
-            get { return String.IsNullOrEmpty(_defaultSchema) ? null : _defaultSchema; }
-            set { _defaultSchema = String.IsNullOrEmpty(value) ? null : value; }
+            get
+            {
+                return String.IsNullOrEmpty(_defaultSchema) ? null : _defaultSchema;
+            }
+            set
+            {
+                _defaultSchema = String.IsNullOrEmpty(value) ? null : value;
+            }
         }
 
-        public bool IsUnicode { get { return _isUnicode; } }
+        public bool IsUnicode
+        {
+            get
+            {
+                return _isUnicode;
+            }
+        }
 
-        public bool UseTimeZone { get { return _useTimeZone; } }
+        public bool UseTimeZone
+        {
+            get
+            {
+                return _useTimeZone;
+            }
+        }
 
-        public uint TextLength { get { return _textLength; } }
+        public uint TextLength
+        {
+            get
+            {
+                return _textLength;
+            }
+        }
 
-        public uint BinaryLength { get { return _binaryLength; } }
+        public uint BinaryLength
+        {
+            get
+            {
+                return _binaryLength;
+            }
+        }
 
-        public uint TimePrecision { get { return _timePrecision; } }
+        public uint TimePrecision
+        {
+            get
+            {
+                return _timePrecision;
+            }
+        }
 
-        public uint NumericPrecision { get { return _numericPrecision; } }
+        public uint NumericPrecision
+        {
+            get
+            {
+                return _numericPrecision;
+            }
+        }
 
-        public uint NumericScale { get { return _numericScale; } }
+        public uint NumericScale
+        {
+            get
+            {
+                return _numericScale;
+            }
+        }
 
-        public int ConnectTimeOut { get { return _connectTimeOut; } }
+        public int ConnectTimeOut
+        {
+            get
+            {
+                return _connectTimeOut;
+            }
+        }
 
-        public string RestrictionNameCatalog { get { return _restrictionNameCatalog; } }
+        public string RestrictionNameCatalog
+        {
+            get
+            {
+                return _restrictionNameCatalog;
+            }
+        }
 
-        public string RestrictionNameSchema { get { return _restrictionNameSchema; } }
+        public string RestrictionNameSchema
+        {
+            get
+            {
+                return _restrictionNameSchema;
+            }
+        }
 
-        public string RestrictionNameTable { get { return _restrictionNameTable; } }
+        public string RestrictionNameTable
+        {
+            get
+            {
+                return _restrictionNameTable;
+            }
+        }
 
-        public string RestrictionNameColumn { get { return _restrictionNameColumn; } }
+        public string RestrictionNameColumn
+        {
+            get
+            {
+                return _restrictionNameColumn;
+            }
+        }
 
         /// <summary>
         /// Returns the backend data type as a string for a given .NET system type by first mapping
@@ -326,14 +418,21 @@ namespace HLU.Data.Connection
                     tsql = _typeMapSQLCodeToSQL.AsEnumerable()
                         .SingleOrDefault(t => _sqlTypeRegex.Replace(t.Key, "").Equals(backendType, StringComparison.InvariantCultureIgnoreCase)).Value;
 
-                if (_typeMapSQLToSystem.TryGetValue(tsql, out Type tsys)) return tsys;
+                if (_typeMapSQLToSystem.TryGetValue(tsql, out Type tsys))
+                    return tsys;
             }
             catch { }
 
             return (Type)Type.Missing;
         }
 
-        public string ErrorMessage { get { return _errorMessage; } }
+        public string ErrorMessage
+        {
+            get
+            {
+                return _errorMessage;
+            }
+        }
 
         /// <summary>
         /// Returns a qualified table name by combining the default schema (if specified) with the
@@ -430,12 +529,14 @@ namespace HLU.Data.Connection
             where C : DbConnection
             where T : DbTransaction
         {
-            if (transaction != null) return null;
+            if (transaction != null)
+                return null;
 
             try
             {
                 ConnectionState previousConnectionState = connection.State;
-                if ((connection.State & ConnectionState.Open) != ConnectionState.Open) connection.Open();
+                if ((connection.State & ConnectionState.Open) != ConnectionState.Open)
+                    connection.Open();
 
                 DataTable dt = null;
 
@@ -465,7 +566,8 @@ namespace HLU.Data.Connection
                     }
                 }
 
-                if (previousConnectionState == ConnectionState.Closed) connection.Close();
+                if (previousConnectionState == ConnectionState.Closed)
+                    connection.Close();
 
                 return dt;
             }
@@ -481,7 +583,8 @@ namespace HLU.Data.Connection
         /// <returns>An integer of the number of rows matching the SQL.</returns>
         public async Task<int> SqlCountAsync(DataColumn[] targetColumns, List<SqlFilterCondition> whereConds)
         {
-            if ((targetColumns == null) || (targetColumns.Length == 0)) return 0;
+            if ((targetColumns == null) || (targetColumns.Length == 0))
+                return 0;
 
             try
             {
@@ -495,7 +598,8 @@ namespace HLU.Data.Connection
                 object result = await ExecuteScalarAsync(sbCommandText.ToString(), 0, CommandType.Text);
 
                 int numRows = 0;
-                if (result != null) numRows = Convert.ToInt32(result);
+                if (result != null)
+                    numRows = Convert.ToInt32(result);
 
                 return numRows;
             }
@@ -517,7 +621,8 @@ namespace HLU.Data.Connection
         public async Task<int> SqlCountAsync(DataTable[] targetTables, string countColumns, List<SqlFilterCondition> whereConds)
         {
             if ((targetTables == null) || (targetTables.Length == 0) ||
-                (targetTables[0].Columns.Count == 0)) return 0;
+                (targetTables[0].Columns.Count == 0))
+                return 0;
 
             try
             {
@@ -531,7 +636,8 @@ namespace HLU.Data.Connection
                 object result = await ExecuteScalarAsync(sbCommandText.ToString(), 0, CommandType.Text);
 
                 int numRows = 0;
-                if (result != null) numRows = Convert.ToInt32(result);
+                if (result != null)
+                    numRows = Convert.ToInt32(result);
 
                 return numRows;
             }
@@ -553,7 +659,8 @@ namespace HLU.Data.Connection
         /// <returns>An integer of the number of rows matching the SQL.</returns>
         public async Task<int> SqlCountAsync(DataTable[] targetTables, string countColumns, List<SqlFilterCondition> whereConds, string sqlWhereClause)
         {
-            if ((targetTables == null) || (targetTables.Length == 0)) return 0;
+            if ((targetTables == null) || (targetTables.Length == 0))
+                return 0;
 
             try
             {
@@ -590,7 +697,8 @@ namespace HLU.Data.Connection
                 object result = await ExecuteScalarAsync(sbCommandText.ToString(), 0, CommandType.Text);
 
                 int numRows = 0;
-                if (result != null) numRows = Convert.ToInt32(result);
+                if (result != null)
+                    numRows = Convert.ToInt32(result);
 
                 return numRows;
             }
@@ -649,7 +757,6 @@ namespace HLU.Data.Connection
 
         protected Dictionary<string, string[]> _schemaRestrictions;
 
-
         /// <summary>
         /// Provides a mapping of data type strings that may be returned by the database metadata to more standard .NET type names.
         /// </summary>
@@ -698,7 +805,8 @@ namespace HLU.Data.Connection
             DataTable metaDataCollections = GetSchema(DbMetaDataCollectionNames.MetaDataCollections,
                 null, connection, transaction);
 
-            if (metaDataCollections == null) return;
+            if (metaDataCollections == null)
+                return;
 
             if ((metaDataCollections.AsEnumerable().Count(r => r.Field<string>(DbMetaDataColumnNames.CollectionName) ==
                 DbMetaDataCollectionNames.Restrictions) == 1))
@@ -708,7 +816,8 @@ namespace HLU.Data.Connection
                 if (restrictions != null)
                 {
                     string numRestCol = DbMetaDataColumnNames.NumberOfRestrictions;
-                    if (!restrictions.Columns.Contains(numRestCol)) numRestCol = "RestrictionNumber";
+                    if (!restrictions.Columns.Contains(numRestCol))
+                        numRestCol = "RestrictionNumber";
 
                     _schemaRestrictions = (from r in restrictions.AsEnumerable()
                                            let collName = r.Field<string>(DbMetaDataColumnNames.CollectionName)
@@ -730,6 +839,7 @@ namespace HLU.Data.Connection
                                 _restrictionNameTable = restrictionNames[2];
                                 _restrictionNameColumn = restrictionNames[3];
                                 break;
+
                             case 3:
                                 _restrictionNameSchema = restrictionNames[0];
                                 _restrictionNameTable = restrictionNames[1];
@@ -959,7 +1069,8 @@ namespace HLU.Data.Connection
         protected void PromptPassword<T>(string userLabel, ref T connStrBuilder)
             where T : DbConnectionStringBuilder
         {
-            if (connStrBuilder == null) return;
+            if (connStrBuilder == null)
+                return;
 
             string connType = Enum.GetName(typeof(Backends), this.Backend).Replace("Undetermined", "");
 
@@ -1131,8 +1242,10 @@ namespace HLU.Data.Connection
         {
             if (!String.IsNullOrEmpty(identifier))
             {
-                if (!identifier.StartsWith(QuotePrefix)) identifier = identifier.Insert(0, QuotePrefix);
-                if (!identifier.EndsWith(QuoteSuffix)) identifier += QuoteSuffix;
+                if (!identifier.StartsWith(QuotePrefix))
+                    identifier = identifier.Insert(0, QuotePrefix);
+                if (!identifier.EndsWith(QuoteSuffix))
+                    identifier += QuoteSuffix;
             }
             return identifier;
         }
@@ -1152,13 +1265,16 @@ namespace HLU.Data.Connection
         {
             resultTable = new();
 
-            if ((targetColumns == null) || (targetColumns.Length == 0)) return String.Empty; ;
+            if ((targetColumns == null) || (targetColumns.Length == 0))
+                return String.Empty;
+            ;
 
             StringBuilder sbTargetList = new();
 
             try
             {
-                if (checkQualify) qualifyColumns = QualifyColumnNames(targetColumns);
+                if (checkQualify)
+                    qualifyColumns = QualifyColumnNames(targetColumns);
 
                 string columnAlias;
                 foreach (DataColumn c in targetColumns)
@@ -1206,7 +1322,8 @@ namespace HLU.Data.Connection
         /// <returns></returns>
         public override DataTable SqlSelect(bool selectDistinct, DataColumn[] targetColumns, List<SqlFilterCondition> whereConds)
         {
-            if ((targetColumns == null) || (targetColumns.Length == 0)) return new();
+            if ((targetColumns == null) || (targetColumns.Length == 0))
+                return new();
 
             try
             {
@@ -1246,7 +1363,8 @@ namespace HLU.Data.Connection
         public override DataTable SqlSelect(bool selectDistinct, DataTable[] targetTables, List<SqlFilterCondition> whereConds)
         {
             if ((targetTables == null) || (targetTables.Length == 0) ||
-                (targetTables[0].Columns.Count == 0)) return new();
+                (targetTables[0].Columns.Count == 0))
+                return new();
 
             try
             {
@@ -1283,7 +1401,8 @@ namespace HLU.Data.Connection
         /// <returns></returns>
         public DataTable SqlSelect(bool selectDistinct, DataColumn[] targetColumns, List<DataTable> sqlFromTables, string sqlWhereClause)
         {
-            if ((targetColumns == null) || (targetColumns.Length == 0)) return new();
+            if ((targetColumns == null) || (targetColumns.Length == 0))
+                return new();
 
             try
             {
@@ -1498,7 +1617,8 @@ namespace HLU.Data.Connection
                 // Fill the result table using the sql command.
                 FillTable<DataTable>(sbCommandText.ToString(), ref resultTable);
                 int numRows = 0;
-                if (resultTable != null) numRows = resultTable.Rows.Count;
+                if (resultTable != null)
+                    numRows = resultTable.Rows.Count;
 
                 return numRows.ToString();
             }
@@ -1513,17 +1633,29 @@ namespace HLU.Data.Connection
 
         #region Public Abstract
 
-        public abstract Backends Backend { get; }
+        public abstract Backends Backend
+        {
+            get;
+        }
 
-        public abstract DbConnectionStringBuilder ConnectionStringBuilder { get; }
+        public abstract DbConnectionStringBuilder ConnectionStringBuilder
+        {
+            get;
+        }
 
-        public abstract IDbConnection Connection { get; }
+        public abstract IDbConnection Connection
+        {
+            get;
+        }
 
         public abstract bool FillSchema<T>(SchemaType schemaType, string sql, ref T table) where T : DataTable, new();
 
         public abstract int FillTable<T>(string sql, ref T table) where T : DataTable, new();
 
-        public abstract IDbTransaction Transaction { get; }
+        public abstract IDbTransaction Transaction
+        {
+            get;
+        }
 
         public abstract IDbCommand CreateCommand();
 
@@ -1618,7 +1750,10 @@ namespace HLU.Data.Connection
 
         protected abstract void BrowseConnection();
 
-        protected abstract string ParameterPrefix { get; }
+        protected abstract string ParameterPrefix
+        {
+            get;
+        }
 
         protected abstract string ParameterName(string prefix, string columnName, int paramNo);
 

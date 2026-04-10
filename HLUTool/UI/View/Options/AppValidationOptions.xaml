@@ -76,7 +76,6 @@
                             Margin="5,0,0,0"
                             Description="Whether mandatory secondary codes for the selected source habitat type must be added to the secondary table, and if any missing codes are considered as errors or just warnings. The available actions are:&#10;&#10;  * Ignore - Missing mandatory secondary codes for the selected source habitat type are ignored.&#10;  * Warning - Missing mandatory secondary codes for the selected source habitat type are flagged with a warning.&#10;  * Error - Missing mandatory secondary codes for the selected source habitat type are flagged with an error."
                             Header="Habitat/Secondary Validation" />
-
                     </Grid>
 
                     <Grid x:Name="GridPrimarySecondaryCodeValidation" Grid.Row="2">
@@ -105,7 +104,6 @@
                             Margin="5,0,0,0"
                             Description="Whether secondary codes for the selected primary habitat are validated, i.e. have been added to the secondary table. The available actions are:&#10;&#10;  * Ignore - Missing secondary codes for the selected primary habitat are ignored.&#10;  * Error - Missing secondary codes for the selected primary habitat type are flagged with an error."
                             Header="Primary/Secondary Validation" />
-
                     </Grid>
 
                     <Grid x:Name="GridQualityValidation" Grid.Row="4">
@@ -162,13 +160,9 @@
                             Margin="5,0,0,0"
                             Description="Whether the determination quality value for potential priority habitats is validated. The available actions are:&#10;&#10;  * Ignore - The determination quality value for potential priority habitats is ignored (i.e. is not validated).&#10;  * Error - Invalid determination quality values for potential priority habitats are flagged with an error.&#10;&#10;Ignoring the validation for potential priority habitats enables the user to select determination quality values that indicate that the habitat is, or probably is, in the associated polygon(s). Otherwise determination quality values can only be 'Not present but close to definition' or 'Previously present, but may no longer exist'."
                             Header="Potential Priority Habitat Determination Quality Validation" />
-
                     </Grid>
-
                 </Grid>
-
             </Expander>
-
         </StackPanel>
 
         <TextBlock
@@ -183,7 +177,5 @@
                 Learn more about application validation options
             </Hyperlink>
         </TextBlock>
-
     </Grid>
-
 </UserControl>

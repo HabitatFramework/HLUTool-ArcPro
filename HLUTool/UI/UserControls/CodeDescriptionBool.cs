@@ -16,14 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Controls;
 using System.ComponentModel;
-using System.Windows.Media;
 
 namespace HLU.UI.UserControls
 {
@@ -65,7 +58,10 @@ namespace HLU.UI.UserControls
 
         public string Display
         {
-            get { return $"{Code} : {Description}"; }
+            get
+            {
+                return $"{Code} : {Description}";
+            }
         }
 
         public string NVC_codes
@@ -104,7 +100,9 @@ namespace HLU.UI.UserControls
         /// <summary>
         /// Initializes a new instance of the <see cref="CodeDescriptionBool"/> class with default values.
         /// </summary>
-        public CodeDescriptionBool() { }
+        public CodeDescriptionBool()
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CodeDescriptionBool"/> class with the specified code and description.

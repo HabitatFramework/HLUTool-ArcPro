@@ -70,7 +70,6 @@
                         Text="{Binding Path=QuerySecondaries, ValidatesOnDataErrors=True, UpdateSourceTrigger=PropertyChanged}"
                         ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}" />
                 </Grid>
-
             </GroupBox>
 
             <Grid

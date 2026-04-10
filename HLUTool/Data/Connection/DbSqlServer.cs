@@ -20,7 +20,6 @@
 
 using ArcGIS.Desktop.Framework;
 using HLU.Enums;
-using HLU.Properties;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
@@ -39,7 +38,7 @@ namespace HLU.Data.Connection
     /// <summary>
     /// Class for handling SQL Server database connections and operations.
     /// </summary>
-    class DbSqlServer : DbBase
+    internal class DbSqlServer : DbBase
     {
         #region Private Members
 
@@ -81,7 +80,8 @@ namespace HLU.Data.Connection
             : base(ref connString, ref defaultSchema, ref promptPwd, pwdMask, useCommandBuilder, useColumnNames,
             isUnicode, useTimeZone, textLength, binaryLength, timePrecision, numericPrecision, numericScale, connectTimeOut)
         {
-            if (String.IsNullOrEmpty(ConnectionString)) throw (new Exception("No connection string"));
+            if (String.IsNullOrEmpty(ConnectionString))
+                throw (new Exception("No connection string"));
 
             try
             {
@@ -111,7 +111,13 @@ namespace HLU.Data.Connection
         /// Gets the backend type for this database connection, which is SQL Server in this case.
         /// </summary>
         /// <value>The backend type for this database connection.</value>
-        public override Backends Backend { get { return Backends.SqlServer; } }
+        public override Backends Backend
+        {
+            get
+            {
+                return Backends.SqlServer;
+            }
+        }
 
         /// <summary>
         /// Checks if the database schema contains the necessary tables and columns as defined in the provided DataSet.
@@ -158,7 +164,8 @@ namespace HLU.Data.Connection
                                                  where !dbCols.Any()
                                                  select QuoteIdentifier(dsCol.ColumnName) + " (" +
                                                  ((SqlDbType)SystemToDbType(dsCol.DataType) + ")").ToString())];
-                        if (checkColumns.Length > 0) messageText.Append(String.Format("\n\nTable: {0}\nColumns: {1}",
+                        if (checkColumns.Length > 0)
+                            messageText.Append(String.Format("\n\nTable: {0}\nColumns: {1}",
                             QuoteIdentifier(t.TableName), String.Join(", ", checkColumns)));
                     }
                 }
@@ -183,13 +190,25 @@ namespace HLU.Data.Connection
         /// Gets the database connection object for this SQL Server connection.
         /// </summary>
         /// <value>The database connection object for this SQL Server connection.</value>
-        public override IDbConnection Connection { get { return _connection; } }
+        public override IDbConnection Connection
+        {
+            get
+            {
+                return _connection;
+            }
+        }
 
         /// <summary>
         /// Gets the connection string builder for this SQL Server connection, which allows for constructing and modifying the connection string.
         /// </summary>
         /// <value>The connection string builder for this SQL Server connection.</value>
-        public override DbConnectionStringBuilder ConnectionStringBuilder { get { return _connStrBuilder; } }
+        public override DbConnectionStringBuilder ConnectionStringBuilder
+        {
+            get
+            {
+                return _connStrBuilder;
+            }
+        }
 
         /// <summary>
         /// Gets the current database transaction for this SQL Server connection, if any. This allows for managing transactions across multiple database operations.
@@ -197,7 +216,10 @@ namespace HLU.Data.Connection
         /// <value>The current database transaction for this SQL Server connection, or null if no transaction is active.</value>
         public override IDbTransaction Transaction
         {
-            get { return _transaction; }
+            get
+            {
+                return _transaction;
+            }
         }
 
         /// <summary>
@@ -238,7 +260,8 @@ namespace HLU.Data.Connection
                 adapter = new();
 
                 DataColumn[] pk = table.PrimaryKey;
-                if ((pk == null) || (pk.Length == 0)) return null;
+                if ((pk == null) || (pk.Length == 0))
+                    return null;
 
                 DataTableMapping tableMapping = new()
                 {
@@ -289,7 +312,8 @@ namespace HLU.Data.Connection
                     string colName = QuoteIdentifier(c.ColumnName);
 
                     int colType;
-                    if (!_typeMapSystemToSQL.TryGetValue(c.DataType, out colType)) continue;
+                    if (!_typeMapSystemToSQL.TryGetValue(c.DataType, out colType))
+                        continue;
 
                     if (c.AllowDBNull)
                     {
@@ -511,13 +535,15 @@ namespace HLU.Data.Connection
         /// <returns>True if the schema was successfully filled; otherwise, false.</returns>
         public override bool FillSchema<T>(SchemaType schemaType, string sql, ref T table)
         {
-            if (String.IsNullOrEmpty(sql)) return false;
+            if (String.IsNullOrEmpty(sql))
+                return false;
             ConnectionState previousConnectionState = _connection.State;
             try
             {
                 _errorMessage = String.Empty;
                 table ??= new T();
-                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                    _connection.Open();
                 SqlDataAdapter adapter = UpdateAdapter(table);
                 if (adapter != null)
                 {
@@ -530,7 +556,8 @@ namespace HLU.Data.Connection
                 {
                     _command.CommandText = sql;
                     _command.CommandType = CommandType.Text;
-                    if (_transaction != null) _command.Transaction = _transaction;
+                    if (_transaction != null)
+                        _command.Transaction = _transaction;
                     _adapter = new(_command)
                     {
                         MissingSchemaAction = MissingSchemaAction.AddWithKey
@@ -557,13 +584,15 @@ namespace HLU.Data.Connection
         /// <returns>The number of rows added to the DataTable, or -1 if an error occurred.</returns>
         public override int FillTable<T>(string sql, ref T table)
         {
-            if (String.IsNullOrEmpty(sql)) return 0;
+            if (String.IsNullOrEmpty(sql))
+                return 0;
             ConnectionState previousConnectionState = _connection.State;
             try
             {
                 _errorMessage = String.Empty;
                 table ??= new T();
-                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                    _connection.Open();
                 SqlDataAdapter adapter = UpdateAdapter(table);
                 if (adapter != null)
                 {
@@ -575,7 +604,8 @@ namespace HLU.Data.Connection
                 {
                     _command.CommandText = sql;
                     _command.CommandType = CommandType.Text;
-                    if (_transaction != null) _command.Transaction = _transaction;
+                    if (_transaction != null)
+                        _command.Transaction = _transaction;
                     _adapter = new(_command);
                     return _adapter.Fill(table);
                 }
@@ -599,7 +629,8 @@ namespace HLU.Data.Connection
         public override IDataReader ExecuteReader(string sql, int commandTimeout, CommandType commandType)
         {
             _errorMessage = String.Empty;
-            if (String.IsNullOrEmpty(sql)) return null;
+            if (String.IsNullOrEmpty(sql))
+                return null;
             ConnectionState previousConnectionState = _connection.State;
             try
             {
@@ -607,14 +638,17 @@ namespace HLU.Data.Connection
                 _command.CommandTimeout = commandTimeout;
                 _command.CommandText = sql;
 
-                if (_transaction != null) _command.Transaction = _transaction;
+                if (_transaction != null)
+                    _command.Transaction = _transaction;
                 _commandBuilder.RefreshSchema();
-                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                    _connection.Open();
                 return _command.ExecuteReader() as IDataReader;
             }
             catch (Exception ex)
             {
-                if (previousConnectionState == ConnectionState.Closed) _connection.Close();
+                if (previousConnectionState == ConnectionState.Closed)
+                    _connection.Close();
                 _errorMessage = ex.Message;
                 return null;
             }
@@ -631,7 +665,8 @@ namespace HLU.Data.Connection
         public override int ExecuteNonQuery(string sql, int commandTimeout, CommandType commandType)
         {
             _errorMessage = String.Empty;
-            if (String.IsNullOrEmpty(sql)) return -1;
+            if (String.IsNullOrEmpty(sql))
+                return -1;
             ConnectionState previousConnectionState = _connection.State;
             try
             {
@@ -639,9 +674,11 @@ namespace HLU.Data.Connection
                 _command.CommandTimeout = commandTimeout;
                 _command.CommandText = sql;
 
-                if (_transaction != null) _command.Transaction = _transaction;
+                if (_transaction != null)
+                    _command.Transaction = _transaction;
                 _commandBuilder.RefreshSchema();
-                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                    _connection.Open();
                 return _command.ExecuteNonQuery();
             }
             catch (Exception ex)
@@ -663,7 +700,8 @@ namespace HLU.Data.Connection
         public override object ExecuteScalar(string sql, int commandTimeout, CommandType commandType)
         {
             _errorMessage = String.Empty;
-            if (String.IsNullOrEmpty(sql)) return null;
+            if (String.IsNullOrEmpty(sql))
+                return null;
             ConnectionState previousConnectionState = _connection.State;
 
             try
@@ -703,7 +741,8 @@ namespace HLU.Data.Connection
         {
             _errorMessage = String.Empty;
 
-            if (String.IsNullOrEmpty(sql)) return null;
+            if (String.IsNullOrEmpty(sql))
+                return null;
 
             // Create local copies of the connection and command to avoid race conditions
             // where shared instance members might be disposed/nullified during async operations
@@ -807,9 +846,11 @@ namespace HLU.Data.Connection
                 _command.CommandTimeout = commandTimeout;
                 _command.CommandText = sql;
 
-                if (_transaction != null) _command.Transaction = _transaction;
+                if (_transaction != null)
+                    _command.Transaction = _transaction;
                 _commandBuilder.RefreshSchema();
-                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                    _connection.Open();
 
                 // Execute the command
                 _command.ExecuteNonQuery();
@@ -847,7 +888,8 @@ namespace HLU.Data.Connection
                         _transaction.Rollback();
                 }
 
-                if (_connection.State != ConnectionState.Open) _connection.Open();
+                if (_connection.State != ConnectionState.Open)
+                    _connection.Open();
 
                 _transaction = _connection.BeginTransaction(isolationLevel);
 
@@ -923,10 +965,13 @@ namespace HLU.Data.Connection
         public override int Update<T>(T table, string insertCommand, string updateCommand, string deleteCommand)
         {
             ConnectionState previousConnectionState = _connection.State;
-            if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+            if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                _connection.Open();
 
-            if ((table == null) || (table.Rows.Count == 0)) return 0;
-            if (_adapter == null) return -1;
+            if ((table == null) || (table.Rows.Count == 0))
+                return 0;
+            if (_adapter == null)
+                return -1;
 
             try
             {
@@ -937,7 +982,8 @@ namespace HLU.Data.Connection
                 if (!String.IsNullOrEmpty(deleteCommand))
                     _adapter.DeleteCommand = new(deleteCommand);
 
-                return _adapter.Update(table);;
+                return _adapter.Update(table);
+                ;
             }
             catch (Exception ex)
             {
@@ -957,9 +1003,11 @@ namespace HLU.Data.Connection
         public override int Update<T>(T table)
         {
             ConnectionState previousConnectionState = _connection.State;
-            if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+            if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                _connection.Open();
 
-            if ((table == null) || (table.Rows.Count == 0)) return 0;
+            if ((table == null) || (table.Rows.Count == 0))
+                return 0;
 
             try
             {
@@ -985,10 +1033,12 @@ namespace HLU.Data.Connection
         public override int Update<T>(T dataSet, string sourceTable)
         {
             ConnectionState previousConnectionState = _connection.State;
-            if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+            if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                _connection.Open();
 
             if ((dataSet == null) || String.IsNullOrEmpty(sourceTable) ||
-                !dataSet.Tables.Contains(sourceTable)) return 0;
+                !dataSet.Tables.Contains(sourceTable))
+                return 0;
 
             try
             {
@@ -1016,9 +1066,11 @@ namespace HLU.Data.Connection
         public override int Update<T, R>(R[] rows)
         {
             ConnectionState previousConnectionState = _connection.State;
-            if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+            if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                _connection.Open();
 
-            if ((rows == null) || (rows.Length == 0)) return 0;
+            if ((rows == null) || (rows.Length == 0))
+                return 0;
 
             try
             {
@@ -1045,13 +1097,15 @@ namespace HLU.Data.Connection
         /// <returns>The SqlDataAdapter used to update the DataTable.</returns>
         private SqlDataAdapter UpdateAdapter<T>(T table) where T : DataTable, new()
         {
-            if (table == null) return null;
+            if (table == null)
+                return null;
 
             SqlDataAdapter adapter;
             if (!_adaptersDic.TryGetValue(typeof(T), out adapter))
             {
                 CreateAdapter<T>(table);
-                if (!_adaptersDic.TryGetValue(typeof(T), out adapter)) return null;
+                if (!_adaptersDic.TryGetValue(typeof(T), out adapter))
+                    return null;
             }
 
             if (_transaction != null)
@@ -1070,7 +1124,7 @@ namespace HLU.Data.Connection
             return adapter;
         }
 
-        #endregion Public Methods
+        #endregion Public Members
 
         #region Parameter Handling
 
@@ -1080,7 +1134,10 @@ namespace HLU.Data.Connection
         /// <value>The prefix used for parameter names in SQL commands.</value>
         protected override string ParameterPrefix
         {
-            get { return "@"; }
+            get
+            {
+                return "@";
+            }
         }
 
         #endregion Parameter Handling
@@ -1121,7 +1178,8 @@ namespace HLU.Data.Connection
                 _connWindow.ShowDialog();
 
                 // throw error if connection failed
-                if (!String.IsNullOrEmpty(_errorMessage)) throw (new Exception(_errorMessage));
+                if (!String.IsNullOrEmpty(_errorMessage))
+                    throw (new Exception(_errorMessage));
             }
             catch (Exception ex)
             {
@@ -1159,23 +1217,71 @@ namespace HLU.Data.Connection
 
         #region SQLBuilder Properties
 
-        public override string QuotePrefix { get { return "["; } }
+        public override string QuotePrefix
+        {
+            get
+            {
+                return "[";
+            }
+        }
 
-        public override string QuoteSuffix { get { return "]"; } }
+        public override string QuoteSuffix
+        {
+            get
+            {
+                return "]";
+            }
+        }
 
-        public override string StringLiteralDelimiter { get { return "'"; } }
+        public override string StringLiteralDelimiter
+        {
+            get
+            {
+                return "'";
+            }
+        }
 
-        public override string DateLiteralPrefix { get { return "'"; } }
+        public override string DateLiteralPrefix
+        {
+            get
+            {
+                return "'";
+            }
+        }
 
-        public override string DateLiteralSuffix { get { return "'"; } }
+        public override string DateLiteralSuffix
+        {
+            get
+            {
+                return "'";
+            }
+        }
 
-        public override string WildcardSingleMatch { get { return "_"; } }
+        public override string WildcardSingleMatch
+        {
+            get
+            {
+                return "_";
+            }
+        }
 
-        public override string WildcardManyMatch { get { return "%"; } }
+        public override string WildcardManyMatch
+        {
+            get
+            {
+                return "%";
+            }
+        }
 
-        public override string ConcatenateOperator { get { return "+"; } }
+        public override string ConcatenateOperator
+        {
+            get
+            {
+                return "+";
+            }
+        }
 
-        #endregion Properties
+        #endregion SQLBuilder Properties
 
         #region SQLBuilder Methods
 
@@ -1187,7 +1293,8 @@ namespace HLU.Data.Connection
         /// <returns>The quoted value as a string.</returns>
         public override string QuoteValue(object value)
         {
-            if (value == null) return "NULL";
+            if (value == null)
+                return "NULL";
             Type valueType = value.GetType();
             int colType;
             if (_typeMapSystemToSQL.TryGetValue(valueType, out colType))
@@ -1199,27 +1306,39 @@ namespace HLU.Data.Connection
                     case SqlDbType.Text:
                     case SqlDbType.VarChar:
                     case SqlDbType.Xml:
-                        if (s.Length == 0) return StringLiteralDelimiter + StringLiteralDelimiter;
-                        if (!s.StartsWith(StringLiteralDelimiter)) s = StringLiteralDelimiter + s;
-                        if (!s.EndsWith(StringLiteralDelimiter)) s += StringLiteralDelimiter;
+                        if (s.Length == 0)
+                            return StringLiteralDelimiter + StringLiteralDelimiter;
+                        if (!s.StartsWith(StringLiteralDelimiter))
+                            s = StringLiteralDelimiter + s;
+                        if (!s.EndsWith(StringLiteralDelimiter))
+                            s += StringLiteralDelimiter;
                         return s;
+
                     case SqlDbType.NChar:
                     case SqlDbType.NText:
                     case SqlDbType.NVarChar:
-                        if (s.Length == 0) return "N" + StringLiteralDelimiter + StringLiteralDelimiter;
-                        if (!s.StartsWith(StringLiteralDelimiter)) s = "N" + StringLiteralDelimiter + s;
-                        if (!s.EndsWith(StringLiteralDelimiter)) s += StringLiteralDelimiter;
+                        if (s.Length == 0)
+                            return "N" + StringLiteralDelimiter + StringLiteralDelimiter;
+                        if (!s.StartsWith(StringLiteralDelimiter))
+                            s = "N" + StringLiteralDelimiter + s;
+                        if (!s.EndsWith(StringLiteralDelimiter))
+                            s += StringLiteralDelimiter;
                         return s;
+
                     case SqlDbType.Date:
                     case SqlDbType.DateTime:
                     case SqlDbType.DateTime2:
                     case SqlDbType.DateTimeOffset:
                     case SqlDbType.Time:
                     case SqlDbType.Timestamp:
-                        if (s.Length == 0) return DateLiteralPrefix + DateLiteralSuffix ;
-                        if (!s.StartsWith(DateLiteralPrefix)) s = DateLiteralPrefix + s;
-                        if (!s.EndsWith(DateLiteralSuffix)) s += DateLiteralSuffix;
+                        if (s.Length == 0)
+                            return DateLiteralPrefix + DateLiteralSuffix;
+                        if (!s.StartsWith(DateLiteralPrefix))
+                            s = DateLiteralPrefix + s;
+                        if (!s.EndsWith(DateLiteralSuffix))
+                            s += DateLiteralSuffix;
                         return s;
+
                     default:
                         return s;
                 }

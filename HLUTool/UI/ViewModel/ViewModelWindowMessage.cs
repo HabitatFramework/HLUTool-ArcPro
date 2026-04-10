@@ -25,7 +25,7 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// Contains the view model for a message window.
     /// </summary>
-    class ViewModelWindowMessage : ViewModelBase
+    internal class ViewModelWindowMessage : ViewModelBase
     {
         #region Fields
 
@@ -39,13 +39,22 @@ namespace HLU.UI.ViewModel
 
         public override string DisplayName
         {
-            get { return _messageHeader; }
-            set { _messageHeader = value; }
+            get
+            {
+                return _messageHeader;
+            }
+            set
+            {
+                _messageHeader = value;
+            }
         }
 
         public override string WindowTitle
         {
-            get { return DisplayName; }
+            get
+            {
+                return DisplayName;
+            }
         }
 
         #endregion Window Title
@@ -90,14 +99,26 @@ namespace HLU.UI.ViewModel
 
         public string MessageText
         {
-            get { return _messageText; }
-            set { _messageText = value; }
+            get
+            {
+                return _messageText;
+            }
+            set
+            {
+                _messageText = value;
+            }
         }
 
         public string MessageHeader
         {
-            get { return _messageHeader; }
-            set { _messageHeader = value; }
+            get
+            {
+                return _messageHeader;
+            }
+            set
+            {
+                _messageHeader = value;
+            }
         }
 
         #endregion Message

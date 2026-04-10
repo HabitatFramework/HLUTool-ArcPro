@@ -105,8 +105,10 @@ namespace HLU.Helpers
 
                 FileInfo fileInfo = new(strFileName);
 
-                if (fileInfo.Exists) return true;
-                else return false;
+                if (fileInfo.Exists)
+                    return true;
+                else
+                    return false;
             }
             return false;
         }

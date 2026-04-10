@@ -19,17 +19,10 @@
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using HLU.Data.Model;
-using HLU.UI;
 using HLU.UI.View;
 using HLU.UI.ViewModel;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using Xceed.Wpf.Toolkit.Primitives;
-using static HLU.Data.Model.HluDataSet;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.UserControls.Toolbar
@@ -147,7 +140,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// Save the options settings when the options window is closed.
         /// </summary>
         /// <param name="applySettings">if set to <c>true</c> [save settings].</param>
-        void ViewModelOptions_RequestClose(bool applySettings)
+        private void ViewModelOptions_RequestClose(bool applySettings)
         {
             _viewModelOptions.RequestClose -= ViewModelOptions_RequestClose;
             _windowOptions.Close();

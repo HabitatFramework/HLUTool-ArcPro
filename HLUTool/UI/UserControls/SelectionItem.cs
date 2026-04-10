@@ -44,10 +44,14 @@ namespace HLU.UI.UserControls
         /// <value><c>true</c> if the item is selected; otherwise, <c>false</c>.</value>
         public bool IsSelected
         {
-            get { return isSelected; }
+            get
+            {
+                return isSelected;
+            }
             set
             {
-                if (value == isSelected) return;
+                if (value == isSelected)
+                    return;
                 isSelected = value;
                 OnPropertyChanged(nameof(IsSelected));
                 OnSelectionChanged();
@@ -60,10 +64,14 @@ namespace HLU.UI.UserControls
         /// <value>The item associated with this selection state.</value>
         public T Item
         {
-            get { return item; }
+            get
+            {
+                return item;
+            }
             set
             {
-                if (value.Equals(item)) return;
+                if (value.Equals(item))
+                    return;
                 item = value;
                 OnPropertyChanged(nameof(Item));
             }

@@ -18,14 +18,14 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Enums;
+using HLU.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using HLU.Enums;
-using HLU.Helpers;
 
 namespace HLU.Date
 {
@@ -114,7 +114,7 @@ namespace HLU.Date
     /// <summary>
     /// Represents a vague date.
     /// </summary>
-    partial class VagueDate
+    internal partial class VagueDate
     {
         private static Dictionary<string, VagueDateTypes> _codeValueDictionary = Enum<VagueDateTypes>.ToCodeValueDictionary();
         private static Dictionary<VagueDateTypes, string> _valueCodeDictionary = Enum<VagueDateTypes>.ToValueCodeDictionary();
@@ -134,17 +134,31 @@ namespace HLU.Date
         #region Properties
 
         public static string _delimiter;
+
         public static string Delimiter
         {
-            get { return _delimiter; }
-            set { _delimiter = value; }
+            get
+            {
+                return _delimiter;
+            }
+            set
+            {
+                _delimiter = value;
+            }
         }
 
         public static string[] _seasonNames;
+
         public static string[] SeasonNames
         {
-            get { return _seasonNames; }
-            set { _seasonNames = value; }
+            get
+            {
+                return _seasonNames;
+            }
+            set
+            {
+                _seasonNames = value;
+            }
         }
 
         #endregion Properties
@@ -208,7 +222,8 @@ namespace HLU.Date
             formattedDate = userDateString;
 
             // Return an empty string is null or empty.
-            if (String.IsNullOrEmpty(userDateString)) return String.Empty;
+            if (String.IsNullOrEmpty(userDateString))
+                return String.Empty;
 
             string startDateString;
             string endDateString;
@@ -241,7 +256,8 @@ namespace HLU.Date
                 string endYearStr = String.Empty;
                 int endYear = -1;
                 if ((endDateString.Length >= 4) && Int32.TryParse(endDateString.AsSpan(endDateString.Length - 4, 4),
-                    out endYear)) endYearStr = endYear.ToString();
+                    out endYear))
+                    endYearStr = endYear.ToString();
 
                 // Format the first part of the date (using the year from the end part ???)
                 formatString1 = ReadDateString(startDateString, endYearStr, out startDateString);
@@ -312,10 +328,12 @@ namespace HLU.Date
 
             try
             {
-                if (String.IsNullOrEmpty(dateString)) return String.Empty;
+                if (String.IsNullOrEmpty(dateString))
+                    return String.Empty;
 
                 //if (dateString.ToLower() == "unknown") return VagueDateTypes.Unknown.ToString();
-                if (dateString.Equals("unknown", StringComparison.CurrentCultureIgnoreCase)) return String.Empty;
+                if (dateString.Equals("unknown", StringComparison.CurrentCultureIgnoreCase))
+                    return String.Empty;
 
                 DateTimeFormatInfo dtFormatInfo = CultureInfo.CurrentCulture.DateTimeFormat;
 
@@ -367,6 +385,7 @@ namespace HLU.Date
                             return VagueDate.ToCode(VagueDateTypes.StartSeason); // "P";
                         }
                         break;
+
                     case 2:
                         if (!Int32.TryParse(splitArray[1], out year))
                             throw new ArgumentException("Invalid date string.", nameof(dateString));
@@ -405,7 +424,8 @@ namespace HLU.Date
 
                 if (DateTime.TryParse(dateString, dtFormatInfo, DateTimeStyles.AllowWhiteSpaces |
                     DateTimeStyles.AssumeLocal | DateTimeStyles.NoCurrentDateDefault, out testDate) &&
-                    (testDate.Year != 1)) return VagueDate.ToCode(VagueDateTypes.StartDate); // "D" // normal date
+                    (testDate.Year != 1))
+                    return VagueDate.ToCode(VagueDateTypes.StartDate); // "D" // normal date
             }
             catch { }
 
@@ -519,12 +539,14 @@ namespace HLU.Date
                 if ((String.IsNullOrEmpty(startDateString) || !DateTime.TryParse(startDateString, dtFormatInfo,
                     DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeLocal |
                     DateTimeStyles.NoCurrentDateDefault, out startDate)) && ((outputFormat == DateType.Start) ||
-                    (outputFormat == DateType.Vague))) return VagueDateTypes.Unknown.ToString();
+                    (outputFormat == DateType.Vague)))
+                    return VagueDateTypes.Unknown.ToString();
 
                 if ((String.IsNullOrEmpty(endDateString) || !DateTime.TryParse(endDateString, dtFormatInfo,
                     DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeLocal |
                     DateTimeStyles.NoCurrentDateDefault, out endDate)) && ((outputFormat == DateType.End) ||
-                    (outputFormat == DateType.Vague))) return VagueDateTypes.Unknown.ToString();
+                    (outputFormat == DateType.Vague)))
+                    return VagueDateTypes.Unknown.ToString();
 
                 return FromDate(startDate, endDate, dateType, outputFormat);
             }
@@ -560,16 +582,21 @@ namespace HLU.Date
                         {
                             case VagueDateTypes.StartDate: // "D"
                                 return startDate.ToShortDateString();
+
                             case VagueDateTypes.StartMonthAndYear: // "O"
                                 return String.Format("{0} {1}", dtFormatInfo.MonthNames[startDate.Month - 1], startDate.Year);
+
                             case VagueDateTypes.StartYear: // "Y"
                                 return startDate.Year.ToString();
+
                             case VagueDateTypes.StartSeason: // "P"
                                 return String.Format("{0}{1}", SeasonString(startDate), Delimiter);
+
                             case VagueDateTypes.Unknown: // "U"
                                 return VagueDateTypes.Unknown.ToString();
                         }
                         break;
+
                     case DateType.End:
                         if (dateType.Length > 1)
                             formatString1 = dateType.Substring(dateType.Length - 1, 1);
@@ -577,16 +604,21 @@ namespace HLU.Date
                         {
                             case VagueDateTypes.StartDate: // "D"
                                 return endDate.ToShortDateString();
+
                             case VagueDateTypes.StartMonthAndYear: // "O"
                                 return String.Format("{0} {1}", dtFormatInfo.MonthNames[endDate.Month - 1], endDate.Year);
+
                             case VagueDateTypes.StartYear: // "Y"
                                 return endDate.Year.ToString();
+
                             case VagueDateTypes.StartSeason: // "P"
                                 return String.Format("{0}{1}", Delimiter, SeasonString(endDate));
+
                             case VagueDateTypes.Unknown: // "U"
                                 return VagueDateTypes.Unknown.ToString();
                         }
                         break;
+
                     case DateType.Vague:
                         if (dateType.Length > 0)
                             formatString1 = dateType.Substring(0, 1);
@@ -598,16 +630,20 @@ namespace HLU.Date
                             case VagueDateTypes.StartDate: // "D"
                                 returnString.Append(startDate.ToShortDateString());
                                 break;
+
                             case VagueDateTypes.StartMonthAndYear: // "O"
                                 returnString.Append(String.Format("{0} {1}",
                                     dtFormatInfo.MonthNames[startDate.Month - 1], startDate.Year));
                                 break;
+
                             case VagueDateTypes.StartYear: // "Y"
                                 returnString.Append(startDate.Year);
                                 break;
+
                             case VagueDateTypes.StartSeason: // "P"
                                 returnString.Append(SeasonString(startDate));
                                 break;
+
                             case VagueDateTypes.Unknown: // "U"
                                 if (dateType.StartsWith("unknown", StringComparison.CurrentCultureIgnoreCase))
                                     returnString.Append(VagueDateTypes.Unknown.ToString());
@@ -625,13 +661,17 @@ namespace HLU.Date
                         {
                             case VagueDateTypes.StartDate: // "D"
                                 return returnString.Append(Delimiter).Append(endDate.ToShortDateString()).ToString();
+
                             case VagueDateTypes.StartMonthAndYear: // "O"
                                 return returnString.Append(Delimiter).Append(String.Format("{0} {1}",
                                     dtFormatInfo.MonthNames[endDate.Month - 1], endDate.Year)).ToString();
+
                             case VagueDateTypes.StartYear: // "Y"
                                 return returnString.Append(Delimiter).Append(endDate.Year).ToString();
+
                             case VagueDateTypes.StartSeason: // "P"
                                 return returnString.Append(Delimiter).Append(SeasonString(endDate)).ToString();
+
                             case VagueDateTypes.Unknown: // "U"
                                 if (returnString.Length == 0)
                                     return VagueDateTypes.Unknown.ToString();
@@ -704,17 +744,22 @@ namespace HLU.Date
                         switch (VagueDate.FromCode(formatType))
                         {
                             case VagueDateTypes.StartDate: // "D"
-                                if (startDateOk) return startDate.Subtract(BaseDate).Days;
+                                if (startDateOk)
+                                    return startDate.Subtract(BaseDate).Days;
                                 break;
+
                             case VagueDateTypes.StartMonthAndYear: // "O"
-                                if (startDateOk) return startDate.Subtract(BaseDate).Days;
+                                if (startDateOk)
+                                    return startDate.Subtract(BaseDate).Days;
                                 break;
+
                             case VagueDateTypes.StartYear: // "Y"
                                 if (startDateOk)
                                     return new DateTime(startDate.Year, 1, 1).Subtract(BaseDate).Days;
                                 else if (Int32.TryParse(startDateString, out year))
                                     return new DateTime(year, 1, 1).Subtract(BaseDate).Days;
                                 break;
+
                             case VagueDateTypes.StartSeason: // "P"
                                 if (!String.IsNullOrEmpty(startDateString))
                                 {
@@ -731,6 +776,7 @@ namespace HLU.Date
                                     }
                                 }
                                 break;
+
                             case VagueDateTypes.Unknown: // "U"
                             default:
                                 return DateUnknown;
@@ -746,7 +792,8 @@ namespace HLU.Date
                         {
                             // Return the exact day
                             case VagueDateTypes.StartDate: // "D"
-                                if (endDateOk) return endDate.Subtract(BaseDate).Days;
+                                if (endDateOk)
+                                    return endDate.Subtract(BaseDate).Days;
                                 break;
 
                             // Return the end of the month
@@ -820,18 +867,22 @@ namespace HLU.Date
             endDateString = null;
             delimiterFound = false;
 
-            if (String.IsNullOrEmpty(dateString)) return false;
+            if (String.IsNullOrEmpty(dateString))
+                return false;
 
             // Set a default delimiter if there isn't one (this shouldn't happen).
-            if (String.IsNullOrEmpty(Delimiter)) Delimiter = "-";
+            if (String.IsNullOrEmpty(Delimiter))
+                Delimiter = "-";
 
             // Try and split the date string.
             string[] a = Regex.Split(dateString, @"\s*" + Delimiter + @"\s*");
 
             startDateString = a[0];
-            if (a.Length == 2) endDateString = a[1];
+            if (a.Length == 2)
+                endDateString = a[1];
 
-            if (dateString.Contains(Delimiter)) delimiterFound = true;
+            if (dateString.Contains(Delimiter))
+                delimiterFound = true;
 
             return a.Length <= 2;
         }

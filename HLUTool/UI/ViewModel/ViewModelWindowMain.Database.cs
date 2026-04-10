@@ -20,9 +20,6 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using ActiproSoftware.Windows.Shapes;
-using ArcGIS.Core.Internal.CIM;
-using ArcGIS.Desktop.Internal.Framework.Controls;
 using HLU.Data;
 using HLU.Data.Connection;
 using HLU.Data.Model;
@@ -42,7 +39,6 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -110,8 +106,14 @@ namespace HLU.UI.ViewModel
         /// <value>The DataTable representing the current selection in GIS for the toid table.</value>
         internal DataTable GisSelection
         {
-            get { return _gisSelection; }
-            set { _gisSelection = value; }
+            get
+            {
+                return _gisSelection;
+            }
+            set
+            {
+                _gisSelection = value;
+            }
         }
 
         /// <summary>
@@ -124,8 +126,14 @@ namespace HLU.UI.ViewModel
         /// <value>The DataTable representing the current selection in GIS for the incid table.</value>
         internal DataTable IncidSelection
         {
-            get { return _incidSelection; }
-            set { _incidSelection = value; }
+            get
+            {
+                return _incidSelection;
+            }
+            set
+            {
+                _incidSelection = value;
+            }
         }
 
         /// <summary>
@@ -138,8 +146,14 @@ namespace HLU.UI.ViewModel
         /// <value>The where clause conditions for the current selection in GIS, organized by table type.</value>
         internal List<List<SqlFilterCondition>> IncidSelectionWhereClause
         {
-            get { return _incidSelectionWhereClause; }
-            set { _incidSelectionWhereClause = value; }
+            get
+            {
+                return _incidSelectionWhereClause;
+            }
+            set
+            {
+                _incidSelectionWhereClause = value;
+            }
         }
 
         /// <summary>
@@ -151,8 +165,14 @@ namespace HLU.UI.ViewModel
         /// <value>The where clause used to filter the osmm_updates table for bulk updates.</value>
         internal string OSMMUpdateWhereClause
         {
-            get { return _osmmUpdateWhereClause; }
-            set { _osmmUpdateWhereClause = value; }
+            get
+            {
+                return _osmmUpdateWhereClause;
+            }
+            set
+            {
+                _osmmUpdateWhereClause = value;
+            }
         }
 
         #endregion Properties - Selection State
@@ -180,86 +200,170 @@ namespace HLU.UI.ViewModel
 
         internal List<string> HabitatWarnings
         {
-            get { return _habitatWarnings; }
-            set { _habitatWarnings = value; }
+            get
+            {
+                return _habitatWarnings;
+            }
+            set
+            {
+                _habitatWarnings = value;
+            }
         }
 
         internal List<string> PriorityWarnings
         {
-            get { return _priorityWarnings; }
-            set { _priorityWarnings = value; }
+            get
+            {
+                return _priorityWarnings;
+            }
+            set
+            {
+                _priorityWarnings = value;
+            }
         }
 
         internal List<string[]> ConditionWarnings
         {
-            get { return _conditionWarnings; }
-            set { _conditionWarnings = value; }
+            get
+            {
+                return _conditionWarnings;
+            }
+            set
+            {
+                _conditionWarnings = value;
+            }
         }
 
         internal List<string> DetailsWarnings
         {
-            get { return _detailsWarnings; }
-            set { _detailsWarnings = value; }
+            get
+            {
+                return _detailsWarnings;
+            }
+            set
+            {
+                _detailsWarnings = value;
+            }
         }
 
         internal List<string[]> Source1Warnings
         {
-            get { return _source1Warnings; }
-            set { _source1Warnings = value; }
+            get
+            {
+                return _source1Warnings;
+            }
+            set
+            {
+                _source1Warnings = value;
+            }
         }
 
         internal List<string[]> Source2Warnings
         {
-            get { return _source2Warnings; }
-            set { _source2Warnings = value; }
+            get
+            {
+                return _source2Warnings;
+            }
+            set
+            {
+                _source2Warnings = value;
+            }
         }
 
         internal List<string[]> Source3Warnings
         {
-            get { return _source3Warnings; }
-            set { _source3Warnings = value; }
+            get
+            {
+                return _source3Warnings;
+            }
+            set
+            {
+                _source3Warnings = value;
+            }
         }
 
         internal List<string> HabitatErrors
         {
-            get { return _habitatErrors; }
-            set { _habitatErrors = value; }
+            get
+            {
+                return _habitatErrors;
+            }
+            set
+            {
+                _habitatErrors = value;
+            }
         }
 
         internal List<string> PriorityErrors
         {
-            get { return _priorityErrors; }
-            set { _priorityErrors = value; }
+            get
+            {
+                return _priorityErrors;
+            }
+            set
+            {
+                _priorityErrors = value;
+            }
         }
 
         internal List<string[]> ConditionErrors
         {
-            get { return _conditionErrors; }
-            set { _conditionErrors = value; }
+            get
+            {
+                return _conditionErrors;
+            }
+            set
+            {
+                _conditionErrors = value;
+            }
         }
 
         internal List<string> DetailsErrors
         {
-            get { return _detailsErrors; }
-            set { _detailsErrors = value; }
+            get
+            {
+                return _detailsErrors;
+            }
+            set
+            {
+                _detailsErrors = value;
+            }
         }
 
         internal List<string[]> Source1Errors
         {
-            get { return _source1Errors; }
-            set { _source1Errors = value; }
+            get
+            {
+                return _source1Errors;
+            }
+            set
+            {
+                _source1Errors = value;
+            }
         }
 
         internal List<string[]> Source2Errors
         {
-            get { return _source2Errors; }
-            set { _source2Errors = value; }
+            get
+            {
+                return _source2Errors;
+            }
+            set
+            {
+                _source2Errors = value;
+            }
         }
 
         internal List<string[]> Source3Errors
         {
-            get { return _source3Errors; }
-            set { _source3Errors = value; }
+            get
+            {
+                return _source3Errors;
+            }
+            set
+            {
+                _source3Errors = value;
+            }
         }
 
         #endregion Properties - Validation
@@ -325,9 +429,11 @@ namespace HLU.UI.ViewModel
         /// <returns><c>true</c> if there are valid ihs matrix rows; otherwise, <c>false</c>.</returns>
         private bool CheckIhsMatrix()
         {
-            if (_hluDS == null) return false;
+            if (_hluDS == null)
+                return false;
 
-            if (IsBulkMode) return true;
+            if (IsBulkMode)
+                return true;
 
             if (_incidIhsMatrixRows == null)
             {
@@ -363,9 +469,11 @@ namespace HLU.UI.ViewModel
         /// <returns><c>true</c> if there are valid ihs formation rows; otherwise, <c>false</c>.</returns>
         private bool CheckIhsFormation()
         {
-            if (_hluDS == null) return false;
+            if (_hluDS == null)
+                return false;
 
-            if (IsBulkMode) return true;
+            if (IsBulkMode)
+                return true;
 
             if (_incidIhsFormationRows == null)
             {
@@ -399,9 +507,11 @@ namespace HLU.UI.ViewModel
         /// <returns><c>true</c> if there are valid ihs management rows; otherwise, <c>false</c>.</returns>
         private bool CheckIhsManagement()
         {
-            if (_hluDS == null) return false;
+            if (_hluDS == null)
+                return false;
 
-            if (IsBulkMode) return true;
+            if (IsBulkMode)
+                return true;
 
             if (_incidIhsManagementRows == null)
             {
@@ -436,9 +546,11 @@ namespace HLU.UI.ViewModel
         /// <returns><c>true</c> if there are valid ihs complex rows; otherwise, <c>false</c>.</returns>
         private bool CheckIhsComplex()
         {
-            if (_hluDS == null) return false;
+            if (_hluDS == null)
+                return false;
 
-            if (IsBulkMode) return true;
+            if (IsBulkMode)
+                return true;
 
             if (_incidIhsComplexRows == null)
             {
@@ -528,11 +640,13 @@ namespace HLU.UI.ViewModel
             {
                 // If the number of ihs matrix rows doesn't match the original count consider the
                 // table dirty without further checks.
-                if (_incidIhsMatrixRows.Count(r => r != null) != _origIncidIhsMatrixCount) return true;
+                if (_incidIhsMatrixRows.Count(r => r != null) != _origIncidIhsMatrixCount)
+                    return true;
 
                 // If any of the ihs matrix rows have unsaved changes consider the table dirty.
                 foreach (DataRow r in _incidIhsMatrixRows)
-                    if (ViewModelWindowMainHelpers.RowIsDirty(r)) return true;
+                    if (ViewModelWindowMainHelpers.RowIsDirty(r))
+                        return true;
 
                 return false;
             }
@@ -554,11 +668,13 @@ namespace HLU.UI.ViewModel
             {
                 // If the number of ihs formation rows doesn't match the original count consider the
                 // table dirty without further checks.
-                if (_incidIhsFormationRows.Count(r => r != null) != _origIncidIhsFormationCount) return true;
+                if (_incidIhsFormationRows.Count(r => r != null) != _origIncidIhsFormationCount)
+                    return true;
 
                 // If any of the ihs formation rows have unsaved changes consider the table dirty.
                 foreach (DataRow r in _incidIhsFormationRows)
-                    if (ViewModelWindowMainHelpers.RowIsDirty(r)) return true;
+                    if (ViewModelWindowMainHelpers.RowIsDirty(r))
+                        return true;
 
                 return false;
             }
@@ -579,11 +695,13 @@ namespace HLU.UI.ViewModel
             {
                 // If the number of ihs management rows doesn't match the original count consider
                 // the table dirty without further checks.
-                if (_incidIhsManagementRows.Count(r => r != null) != _origIncidIhsManagementCount) return true;
+                if (_incidIhsManagementRows.Count(r => r != null) != _origIncidIhsManagementCount)
+                    return true;
 
                 // If any of the ihs management rows have unsaved changes consider the table dirty.
                 foreach (DataRow r in _incidIhsManagementRows)
-                    if (ViewModelWindowMainHelpers.RowIsDirty(r)) return true;
+                    if (ViewModelWindowMainHelpers.RowIsDirty(r))
+                        return true;
 
                 return false;
             }
@@ -604,11 +722,13 @@ namespace HLU.UI.ViewModel
             {
                 // If the number of ihs complex rows doesn't match the original count consider the
                 // table dirty without further checks.
-                if (_incidIhsComplexRows.Count(r => r != null) != _origIncidIhsComplexCount) return true;
+                if (_incidIhsComplexRows.Count(r => r != null) != _origIncidIhsComplexCount)
+                    return true;
 
                 // If any of the ihs complex rows have unsaved changes consider the table dirty.
                 foreach (DataRow r in _incidIhsComplexRows)
-                    if (ViewModelWindowMainHelpers.RowIsDirty(r)) return true;
+                    if (ViewModelWindowMainHelpers.RowIsDirty(r))
+                        return true;
 
                 return false;
             }
@@ -630,25 +750,29 @@ namespace HLU.UI.ViewModel
 
             // If any secondary habitat rows have been marked for deletion consider the table dirty
             // without further checks.
-            if (_incidSecondaryRows.Any(r => r.RowState == DataRowState.Deleted)) return true;
+            if (_incidSecondaryRows.Any(r => r.RowState == DataRowState.Deleted))
+                return true;
 
             // If there are any secondary habitat rows that are new or have unsaved changes consider
             // the table dirty without further checks.
             if (_incidSecondaryHabitats != null)
             {
-                if (_incidSecondaryHabitats.Any(sh => IncidSecondaryRowDirty(sh))) return true;
+                if (_incidSecondaryHabitats.Any(sh => IncidSecondaryRowDirty(sh)))
+                    return true;
             }
 
             // If the number of secondary habitat rows doesn't match the number of secondary
             // habitats consider the table dirty without further checks.
             if ((_incidSecondaryRows != null) && (_incidSecondaryHabitats.Count !=
-                _incidSecondaryRows.Length)) return true;
+                _incidSecondaryRows.Length))
+                return true;
 
             // If any of the secondary habitat rows have unsaved changes consider the table dirty.
             if (_incidSecondaryRows != null)
             {
                 foreach (DataRow r in _incidSecondaryRows)
-                    if (ViewModelWindowMainHelpers.RowIsDirty(r)) return true;
+                    if (ViewModelWindowMainHelpers.RowIsDirty(r))
+                        return true;
             }
             return false;
         }
@@ -701,7 +825,8 @@ namespace HLU.UI.ViewModel
                 return false;
 
             // If any BAP environment rows have been marked for deletion consider the table dirty
-            if (_incidBapRows.Any(r => r.RowState == DataRowState.Deleted)) return true;
+            if (_incidBapRows.Any(r => r.RowState == DataRowState.Deleted))
+                return true;
 
             // If there are any BAP environment rows that are new or have unsaved changes consider
             // the table dirty without further checks.
@@ -709,7 +834,8 @@ namespace HLU.UI.ViewModel
             if (_incidBapRowsAuto != null)
             {
                 incidBapRowsAutoNum = _incidBapRowsAuto.Count;
-                if (_incidBapRowsAuto.Any(be => IncidBapRowDirty(be))) return true;
+                if (_incidBapRowsAuto.Any(be => IncidBapRowDirty(be)))
+                    return true;
             }
 
             // If there are any user-added BAP environment rows that are new or have unsaved changes
@@ -718,19 +844,22 @@ namespace HLU.UI.ViewModel
             if (_incidBapRowsUser != null)
             {
                 incidBapRowsAutoUserNum = _incidBapRowsUser.Count;
-                if (_incidBapRowsUser.Any(be => IncidBapRowDirty(be))) return true;
+                if (_incidBapRowsUser.Any(be => IncidBapRowDirty(be)))
+                    return true;
             }
 
             // If the number of BAP environment rows doesn't match the number of BAP environments
             // consider the table dirty without further checks.
             if ((_incidBapRows != null) && (incidBapRowsAutoNum + incidBapRowsAutoUserNum !=
-                _incidBapRows.Length)) return true;
+                _incidBapRows.Length))
+                return true;
 
             // If any of the BAP environment rows have unsaved changes consider the table dirty.
             if (_incidBapRows != null)
             {
                 foreach (DataRow r in _incidBapRows)
-                    if (ViewModelWindowMainHelpers.RowIsDirty(r)) return true;
+                    if (ViewModelWindowMainHelpers.RowIsDirty(r))
+                        return true;
             }
 
             return false;
@@ -785,7 +914,8 @@ namespace HLU.UI.ViewModel
             {
                 // Check if any of the osmm updates rows have unsaved changes. If so consider the table dirty.
                 foreach (DataRow r in _incidOSMMUpdatesRows)
-                    if (ViewModelWindowMainHelpers.RowIsDirty(r)) return true;
+                    if (ViewModelWindowMainHelpers.RowIsDirty(r))
+                        return true;
             }
 
             return false;
@@ -809,10 +939,12 @@ namespace HLU.UI.ViewModel
                 case 0:
                     // If there are no such rows then the specified row must be new.
                     return true;
+
                 case 1:
                     // If there is one such row then compare it to the specified row to determine if
                     // there are unsaved changes.
-                    if (!sh.IsValid() && sh.IsAdded) return true;
+                    if (!sh.IsValid() && sh.IsAdded)
+                        return true;
 
                     HluDataSet.incid_secondaryRow oldRow = q.ElementAt(0);
                     object[] itemArray = sh.ToItemArray();
@@ -820,7 +952,8 @@ namespace HLU.UI.ViewModel
                     {
                         if (oldRow.IsNull(i))
                         {
-                            if (itemArray[i] != null) return true;
+                            if (itemArray[i] != null)
+                                return true;
                         }
                         else if (!oldRow[i].Equals(itemArray[i]))
                         {
@@ -828,6 +961,7 @@ namespace HLU.UI.ViewModel
                         }
                     }
                     return false;
+
                 default:
                     // If there are multiple such rows then there must be a duplicate secondary
                     // habitat and the specified row must be new or have unsaved changes.
@@ -850,12 +984,14 @@ namespace HLU.UI.ViewModel
                 case 0:
                     // If there are no such rows then the specified row must be new.
                     return true;
+
                 case 1:
                     // Only flag an incid_bap row that is invalid as dirty if it has
                     // been added by the user. This allows existing records to be
                     // viewed in the user interface without warning the user that
                     // the data has changed.
-                    if (!be.IsValid() && be.IsAdded) return true;
+                    if (!be.IsValid() && be.IsAdded)
+                        return true;
 
                     HluDataSet.incid_bapRow oldRow = q.ElementAt(0);
                     object[] itemArray = be.ToItemArray();
@@ -863,7 +999,8 @@ namespace HLU.UI.ViewModel
                     {
                         if (oldRow.IsNull(i))
                         {
-                            if (itemArray[i] != null) return true;
+                            if (itemArray[i] != null)
+                                return true;
                         }
                         else if (!oldRow[i].Equals(itemArray[i]))
                         {
@@ -871,6 +1008,7 @@ namespace HLU.UI.ViewModel
                         }
                     }
                     return false;
+
                 default:
                     // If there are multiple such rows then there must be a duplicate BAP environment
                     return true;
@@ -890,11 +1028,13 @@ namespace HLU.UI.ViewModel
         /// <returns><c>true</c> if all columns in the row that do not allow nulls contain non-null values; otherwise, <c>false</c>.</returns>
         internal bool IsCompleteRow(DataRow r)
         {
-            if (r == null) return false;
+            if (r == null)
+                return false;
 
             foreach (DataColumn c in r.Table.Columns)
             {
-                if (!c.AllowDBNull && r.IsNull(c)) return false;
+                if (!c.AllowDBNull && r.IsNull(c))
+                    return false;
             }
 
             return true;
@@ -1198,7 +1338,8 @@ namespace HLU.UI.ViewModel
         {
             string propNameCheck = propNamePat.Replace(propNamePatWildcard, propNameWildcardValCurrProp);
             PropertyInfo propInf = this.GetType().GetProperty(propNameCheck);
-            if (propInf == null) return;
+            if (propInf == null)
+                return;
 
             string skipVal = Settings.Default.SourceImportanceSkip;
             string ord1val = Settings.Default.SourceImportanceApply1;
@@ -1206,7 +1347,8 @@ namespace HLU.UI.ViewModel
             string ord3val = Settings.Default.SourceImportanceApply3;
 
             object checkVal = propInf.GetValue(this, null);
-            if ((checkVal == null) || checkVal.Equals(skipVal)) return;
+            if ((checkVal == null) || checkVal.Equals(skipVal))
+                return;
 
             string[] split = propNamePat.Split([propNamePatWildcard], StringSplitOptions.None);
             string errMsg = String.Format("Error: {0}", split[^1]);
@@ -1246,7 +1388,6 @@ namespace HLU.UI.ViewModel
                 if (ord2Sources == 0 && checkVal.Equals(ord3val))
                     errors.Add([propNameCheck, errMsg]);
             }
-
         }
 
         /// <summary>
@@ -1265,10 +1406,12 @@ namespace HLU.UI.ViewModel
         {
             string propNameCheck = propNamePat.Replace(propNamePatWildcard, propNameWildcardValCurrProp);
             PropertyInfo propInf = this.GetType().GetProperty(propNameCheck);
-            if (propInf == null) return;
+            if (propInf == null)
+                return;
 
             object checkVal = propInf.GetValue(this, null);
-            if ((checkVal == null) || checkVal.Equals(skipVal)) return;
+            if ((checkVal == null) || checkVal.Equals(skipVal))
+                return;
 
             string[] split = propNamePat.Split([propNamePatWildcard], StringSplitOptions.None);
             string errMsg = String.Format("Error: {0}", split[^1]);
@@ -1281,7 +1424,8 @@ namespace HLU.UI.ViewModel
 
             foreach (PropertyInfo pi in this.GetType().GetProperties().Where(pn => pn.Name != propNameCheck && Regex.IsMatch(pn.Name, propNamePat)))
             {
-                if (pi.Name == propNameCheck) continue;
+                if (pi.Name == propNameCheck)
+                    continue;
 
                 object compVal = pi.GetValue(this, null);
                 if ((compVal != null) && !compVal.Equals(skipVal) && compVal.Equals(checkVal))
@@ -1307,7 +1451,8 @@ namespace HLU.UI.ViewModel
             if (errorList != null)
             {
                 IEnumerable<string[]> err = errorList.Where(s => s[0] == columnName);
-                if (err.Any()) return err.ElementAt(0)[1];
+                if (err.Any())
+                    return err.ElementAt(0)[1];
             }
             return null;
         }
@@ -1319,7 +1464,8 @@ namespace HLU.UI.ViewModel
         /// <returns>A concatenated string of all error messages, or null if no errors exist.</returns>
         private string ErrorMessageList(List<string[]> errors)
         {
-            if ((errors == null) || (errors.Count == 0)) return null;
+            if ((errors == null) || (errors.Count == 0))
+                return null;
 
             StringBuilder sbMsg = new();
 
@@ -2132,9 +2278,11 @@ namespace HLU.UI.ViewModel
         /// <returns><c>true</c> if there are valid condition rows; otherwise, <c>false</c>.</returns>
         private bool CheckCondition()
         {
-            if (_hluDS == null) return false;
+            if (_hluDS == null)
+                return false;
 
-            if (IsBulkMode) return true;
+            if (IsBulkMode)
+                return true;
 
             if (_incidConditionRows == null)
             {
@@ -2157,7 +2305,8 @@ namespace HLU.UI.ViewModel
         {
             try
             {
-                if (_incidConditionRows == null) return;
+                if (_incidConditionRows == null)
+                    return;
 
                 // If the row is blank
                 if (_incidConditionRows[rowNumber] == null)
@@ -2240,9 +2389,11 @@ namespace HLU.UI.ViewModel
         /// <returns>True if there are valid source rows; otherwise, false.</returns>
         private bool CheckSources()
         {
-            if (_hluDS == null) return false;
+            if (_hluDS == null)
+                return false;
 
-            if (IsBulkMode) return true;
+            if (IsBulkMode)
+                return true;
 
             if (_incidSourcesRows == null)
             {
@@ -2261,7 +2412,8 @@ namespace HLU.UI.ViewModel
         /// <returns>The default date for the specified source, or the current date if no default is found.</returns>
         public Date.VagueDateInstance DefaultSourceDate(Date.VagueDateInstance currentDate, Nullable<int> sourceID)
         {
-            if ((HluDataset == null) || (HluDataset.lut_sources == null)) return currentDate;
+            if ((HluDataset == null) || (HluDataset.lut_sources == null))
+                return currentDate;
 
             EnumerableRowCollection<HluDataSet.lut_sourcesRow> rows =
                 HluDataset.lut_sources.Where(r => r.source_id == sourceID &&
@@ -2290,7 +2442,8 @@ namespace HLU.UI.ViewModel
         {
             try
             {
-                if (_incidSourcesRows == null) return;
+                if (_incidSourcesRows == null)
+                    return;
 
                 // If the row is blank
                 if (_incidSourcesRows[rowNumber] == null)
@@ -3345,6 +3498,5 @@ namespace HLU.UI.ViewModel
         #endregion Helper Methods
 
         #endregion Methods
-
     }
 }

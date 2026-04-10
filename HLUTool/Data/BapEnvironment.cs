@@ -16,14 +16,14 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Data.Model;
+using HLU.Properties;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
-using HLU.Data.Model;
-using HLU.Properties;
 
 namespace HLU.Data
 {
@@ -46,10 +46,10 @@ namespace HLU.Data
         private static IEnumerable<BapEnvironment> _bapEnvironmentList;
         private static int _potentialPriorityDetermQtyValidation;
 
-        public readonly static string BAPDetQltyUserAdded = Settings.Default.BAPDeterminationQualityUserAdded;
-        public readonly static string BAPDetQltyUserAddedDesc = Settings.Default.BAPDeterminationQualityUserAddedDesc;
-        public readonly static string BAPDetQltyPrevious = Settings.Default.BAPDeterminationQualityPrevious;
-        public readonly static string BAPDetQltyPreviousDesc = Settings.Default.BAPDeterminationQualityPreviousDesc;
+        public static readonly string BAPDetQltyUserAdded = Settings.Default.BAPDeterminationQualityUserAdded;
+        public static readonly string BAPDetQltyUserAddedDesc = Settings.Default.BAPDeterminationQualityUserAddedDesc;
+        public static readonly string BAPDetQltyPrevious = Settings.Default.BAPDeterminationQualityPrevious;
+        public static readonly string BAPDetQltyPreviousDesc = Settings.Default.BAPDeterminationQualityPreviousDesc;
 
         #endregion Fields
 
@@ -436,7 +436,10 @@ namespace HLU.Data
         /// <value>The list of BapEnvironment instances.</value>
         public static IEnumerable<BapEnvironment> BapEnvironmentList
         {
-            set { _bapEnvironmentList = value; }
+            set
+            {
+                _bapEnvironmentList = value;
+            }
         }
 
         /// <summary>
@@ -448,7 +451,10 @@ namespace HLU.Data
         /// <value>The flag indicating whether potential priority habitat determination quality should be validated.</value>
         public static int PotentialPriorityDetermQtyValidation
         {
-            set { _potentialPriorityDetermQtyValidation = value; }
+            set
+            {
+                _potentialPriorityDetermQtyValidation = value;
+            }
         }
 
         /// <summary>
@@ -458,8 +464,14 @@ namespace HLU.Data
         /// <value><c>true</c> if the instance is in Bulk Update mode; otherwise, <c>false</c>.</value>
         public bool BulkUpdateMode
         {
-            get { return _bulkUpdateMode; }
-            set { _bulkUpdateMode = value; }
+            get
+            {
+                return _bulkUpdateMode;
+            }
+            set
+            {
+                _bulkUpdateMode = value;
+            }
         }
 
         /// <summary>
@@ -468,7 +480,10 @@ namespace HLU.Data
         /// <value><c>true</c> if the BAP record is a new record that has been added but not yet saved to the database; otherwise, <c>false</c>.</value>
         public bool IsAdded
         {
-            get { return _bap_id == -1; }
+            get
+            {
+                return _bap_id == -1;
+            }
         }
 
         /// <summary>
@@ -477,7 +492,10 @@ namespace HLU.Data
         /// <value><c>true</c> if the BAP record is a secondary priority habitat; otherwise, <c>false</c>.</value>
         public bool SecondaryPriorityHabitat
         {
-            get { return _secondaryPriorityHabitat; }
+            get
+            {
+                return _secondaryPriorityHabitat;
+            }
         }
 
         /// <summary>
@@ -486,8 +504,14 @@ namespace HLU.Data
         /// <value>The BAP ID.</value>
         public int Bap_id
         {
-            get { return _bap_id; }
-            set { _bap_id = value; }
+            get
+            {
+                return _bap_id;
+            }
+            set
+            {
+                _bap_id = value;
+            }
         }
 
         /// <summary>
@@ -496,7 +520,10 @@ namespace HLU.Data
         /// <value>The incid associated with the BAP record.</value>
         public string Incid
         {
-            get { return _incid; }
+            get
+            {
+                return _incid;
+            }
             set
             {
                 if (_incid != value)
@@ -515,7 +542,10 @@ namespace HLU.Data
         /// <value>The priority habitat associated with the BAP record.</value>
         public string Bap_habitat
         {
-            get { return _bap_habitat; }
+            get
+            {
+                return _bap_habitat;
+            }
             set
             {
                 if (_bap_habitat != value)
@@ -537,7 +567,10 @@ namespace HLU.Data
         /// <value>The quality of the determination for the priority habitat.</value>
         public string Quality_determination
         {
-            get { return _quality_determination; }
+            get
+            {
+                return _quality_determination;
+            }
             set
             {
                 if (_quality_determination != value)
@@ -559,7 +592,10 @@ namespace HLU.Data
         /// <value>The quality of the interpretation for the priority habitat.</value>
         public string Quality_interpretation
         {
-            get { return _quality_interpretation; }
+            get
+            {
+                return _quality_interpretation;
+            }
             set
             {
                 if (_quality_interpretation != value)
@@ -582,7 +618,10 @@ namespace HLU.Data
         /// <value>The interpretation comments for the priority habitat.</value>
         public string Interpretation_comments
         {
-            get { return _interpretation_comments; }
+            get
+            {
+                return _interpretation_comments;
+            }
             set
             {
                 string newValue = value == null || value.Length <= 254 ? value : value.Substring(0, 254);
@@ -643,7 +682,8 @@ namespace HLU.Data
         /// <returns>An array of objects representing the BAP record.</returns>
         public object[] ToItemArray(int bapID, string incid, bool isSecondary)
         {
-            if (isSecondary) MakeSecondary();
+            if (isSecondary)
+                MakeSecondary();
             return [ bapID, incid, _bap_habitat, _quality_determination,
                 _quality_interpretation, _interpretation_comments ];
         }
@@ -758,7 +798,8 @@ namespace HLU.Data
             get
             {
                 var allErrors = GetErrors(string.Empty);
-                if (allErrors == null) return string.Empty;
+                if (allErrors == null)
+                    return string.Empty;
 
                 return string.Join(Environment.NewLine, allErrors.Cast<string>());
             }

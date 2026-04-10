@@ -20,24 +20,21 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Windows;
-using System.Windows.Input;
+using ArcGIS.Desktop.Editing;
+using ArcGIS.Desktop.Framework;
 using HLU.Data;
 using HLU.Data.Connection;
 using HLU.Data.Model;
 using HLU.Enums;
 using HLU.Exceptions;
-using HLU.Properties;
 using HLU.UI.View;
-using System.Windows.Threading;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
-using ArcGIS.Desktop.Editing;
-using ArcGIS.Desktop.Framework;
+using System.Windows;
+using System.Windows.Input;
 using CommandType = System.Data.CommandType;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
@@ -324,7 +321,8 @@ namespace HLU.UI.ViewModel
                             CommandType.Text);
 
                         // If any rows were affected, refresh the total incid count.
-                        if (numAffected > 0) _viewModelMain.IncidRowCount(true);
+                        if (numAffected > 0)
+                            _viewModelMain.IncidRowCount(true);
                     }
                     catch (Exception ex)
                     {
@@ -364,7 +362,8 @@ namespace HLU.UI.ViewModel
             catch (Exception ex)
             {
                 // Rollback the transaction on error.
-                if (startTransaction) _viewModelMain.DataBase.RollbackTransaction();
+                if (startTransaction)
+                    _viewModelMain.DataBase.RollbackTransaction();
                 success = false;
 
                 // Ensure any queued but unexecuted GIS edits are discarded.
@@ -651,7 +650,8 @@ namespace HLU.UI.ViewModel
             catch (Exception ex)
             {
                 // Rollback the transaction on error.
-                if (startTransaction) _viewModelMain.DataBase.RollbackTransaction();
+                if (startTransaction)
+                    _viewModelMain.DataBase.RollbackTransaction();
                 success = false;
 
                 // Ensure any queued but unexecuted GIS edits are discarded.
@@ -774,7 +774,8 @@ namespace HLU.UI.ViewModel
             bool startTransaction = _viewModelMain.DataBase.Transaction == null;
 
             // Start a transaction if not already started.
-            if (startTransaction) _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
+            if (startTransaction)
+                _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
             try
             {
@@ -815,12 +816,14 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Commit the transaction if started here.
-                if (startTransaction) _viewModelMain.DataBase.CommitTransaction();
+                if (startTransaction)
+                    _viewModelMain.DataBase.CommitTransaction();
             }
             catch
             {
                 // Rollback the transaction on error.
-                if (startTransaction) _viewModelMain.DataBase.RollbackTransaction();
+                if (startTransaction)
+                    _viewModelMain.DataBase.RollbackTransaction();
                 throw;
             }
         }
@@ -838,8 +841,10 @@ namespace HLU.UI.ViewModel
             string keepIncid)
         {
             // Check parameters
-            if (String.IsNullOrWhiteSpace(keepIncid)) return;
-            if ((losingPolygonKeys == null) || (losingPolygonKeys.Count == 0)) return;
+            if (String.IsNullOrWhiteSpace(keepIncid))
+                return;
+            if ((losingPolygonKeys == null) || (losingPolygonKeys.Count == 0))
+                return;
 
             // Remove any keys that already belong to the kept incid (belt-and-braces).
             losingPolygonKeys = [.. losingPolygonKeys
@@ -847,7 +852,8 @@ namespace HLU.UI.ViewModel
                 .Distinct()];
 
             // If no losing keys remain, exit.
-            if (losingPolygonKeys.Count == 0) return;
+            if (losingPolygonKeys.Count == 0)
+                return;
 
             // Build a values clause for the update statement.
             string valuesClause = String.Join(",",
@@ -900,10 +906,14 @@ namespace HLU.UI.ViewModel
             string newFragId)
         {
             // Check parameters
-            if (String.IsNullOrWhiteSpace(incid)) return;
-            if (String.IsNullOrWhiteSpace(toid)) return;
-            if (String.IsNullOrWhiteSpace(newFragId)) return;
-            if ((oldFragIds == null) || (oldFragIds.Count == 0)) return;
+            if (String.IsNullOrWhiteSpace(incid))
+                return;
+            if (String.IsNullOrWhiteSpace(toid))
+                return;
+            if (String.IsNullOrWhiteSpace(newFragId))
+                return;
+            if ((oldFragIds == null) || (oldFragIds.Count == 0))
+                return;
 
             // Remove the kept frag id if it accidentally appears in the list.
             oldFragIds = [.. oldFragIds
@@ -911,7 +921,8 @@ namespace HLU.UI.ViewModel
                 .Distinct()];
 
             // If no old frag ids remain, exit.
-            if (oldFragIds.Count == 0) return;
+            if (oldFragIds.Count == 0)
+                return;
 
             // Build the IN list for the update statement.
             string inList = String.Join(",",

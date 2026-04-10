@@ -18,29 +18,22 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Desktop.Internal.Framework.Controls;
+using HLU.Data.Connection;
+using HLU.Data.Model;
+using HLU.Helpers;
+using HLU.Properties;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
 using System.Data.Odbc;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
-using Microsoft.Win32;
-using HLU.Data.Model;
-using HLU.Data.Connection;
-using HLU.UI.ViewModel;
-using HLU.GISApplication;
-using HLU.Properties;
-using HLU.UI;
-using HLU.UI.UserControls;
-using HLU.Helpers;
-using ArcGIS.Desktop.Internal.Framework.Controls;
 
 namespace HLU.UI.ViewModel
 {
@@ -123,8 +116,14 @@ namespace HLU.UI.ViewModel
         /// <value>The display name of the view model.</value>
         public override string DisplayName
         {
-            get { return _displayName; }
-            set { _displayName = value; }
+            get
+            {
+                return _displayName;
+            }
+            set
+            {
+                _displayName = value;
+            }
         }
 
         /// <summary>
@@ -133,7 +132,10 @@ namespace HLU.UI.ViewModel
         /// <value>The window title.</value>
         public override string WindowTitle
         {
-            get { return _displayName; }
+            get
+            {
+                return _displayName;
+            }
         }
 
         #endregion ViewModelBase Members
@@ -195,7 +197,8 @@ namespace HLU.UI.ViewModel
                         _db.QualifyTableName(Table.TableName)),
                         _db.Connection.ConnectionTimeout, CommandType.Text);
 
-                    if (dataReader == null) throw new Exception($"Error reading values from {Table.TableName}.{Column.ColumnName}");
+                    if (dataReader == null)
+                        throw new Exception($"Error reading values from {Table.TableName}.{Column.ColumnName}");
 
                     // Define a new dictionary to hold the column values.
                     Dictionary<string, object> q = [];
@@ -263,7 +266,6 @@ namespace HLU.UI.ViewModel
             }
 
             OnPropertyChanged(nameof(QueryValues));
-
         }
 
         /// <summary>
@@ -310,8 +312,14 @@ namespace HLU.UI.ViewModel
         /// </value>
         public int? GetValueRows
         {
-            get { return (_getValueRows != null && _getValueRows <= 0) ? 1000 : _getValueRows; }
-            set { _getValueRows = value; }
+            get
+            {
+                return (_getValueRows != null && _getValueRows <= 0) ? 1000 : _getValueRows;
+            }
+            set
+            {
+                _getValueRows = value;
+            }
         }
 
         /// <summary>
@@ -382,7 +390,13 @@ namespace HLU.UI.ViewModel
         /// Gets a value indicating whether the Clear button can be clicked.
         /// </summary>
         /// <value>True if the Clear button can be clicked; otherwise, false.</value>
-        private bool CanClear { get { return (!String.IsNullOrEmpty(SqlFromTables) || !String.IsNullOrEmpty(SqlWhereClause)); } }
+        private bool CanClear
+        {
+            get
+            {
+                return (!String.IsNullOrEmpty(SqlFromTables) || !String.IsNullOrEmpty(SqlWhereClause));
+            }
+        }
 
         #endregion Clear Command
 
@@ -489,7 +503,13 @@ namespace HLU.UI.ViewModel
         /// Gets a value indicating whether the Verify button can be clicked.
         /// </summary>
         /// <value>True if the Verify button can be clicked; otherwise, false.</value>
-        private bool CanVerify { get { return (!String.IsNullOrEmpty(SqlFromTables) && !String.IsNullOrEmpty(SqlWhereClause)); } }
+        private bool CanVerify
+        {
+            get
+            {
+                return (!String.IsNullOrEmpty(SqlFromTables) && !String.IsNullOrEmpty(SqlWhereClause));
+            }
+        }
 
         #endregion Verify Command
 
@@ -526,8 +546,14 @@ namespace HLU.UI.ViewModel
         /// Gets a value indicating whether the Ok button can be clicked.
         /// </summary>
         /// <value>True if the Ok button can be clicked; otherwise, false.</value>
-        private bool CanOk { get { return (String.IsNullOrEmpty(Error) &&
-            !String.IsNullOrEmpty(SqlFromTables) && !String.IsNullOrEmpty(SqlWhereClause)); } }
+        private bool CanOk
+        {
+            get
+            {
+                return (String.IsNullOrEmpty(Error) &&
+            !String.IsNullOrEmpty(SqlFromTables) && !String.IsNullOrEmpty(SqlWhereClause));
+            }
+        }
 
         #endregion Ok Command
 
@@ -626,7 +652,13 @@ namespace HLU.UI.ViewModel
         /// Gets a value indicating whether the Save button can be clicked.
         /// </summary>
         /// <value>True if the Save button can be clicked; otherwise, false.</value>
-        private bool CanSave { get { return (!String.IsNullOrEmpty(SqlFromTables) && !String.IsNullOrEmpty(SqlWhereClause)); } }
+        private bool CanSave
+        {
+            get
+            {
+                return (!String.IsNullOrEmpty(SqlFromTables) && !String.IsNullOrEmpty(SqlWhereClause));
+            }
+        }
 
         #endregion Save Command
 
@@ -651,7 +683,9 @@ namespace HLU.UI.ViewModel
                 //return _tables;
                 return _tables.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -662,7 +696,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public DataTable Table
         {
-            get { return _table; }
+            get
+            {
+                return _table;
+            }
             set
             {
                 _table = value;
@@ -697,7 +734,9 @@ namespace HLU.UI.ViewModel
                 else
                     return null;
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -708,7 +747,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public DataColumn Column
         {
-            get { return _column; }
+            get
+            {
+                return _column;
+            }
             set
             {
                 DataColumn column;
@@ -737,7 +779,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public bool ColumnIsEnabled
         {
-            get { return Table != null; }
+            get
+            {
+                return Table != null;
+            }
         }
 
         #endregion Column
@@ -768,7 +813,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public string ComparisonOperator
         {
-            get { return _comparisonOperator; }
+            get
+            {
+                return _comparisonOperator;
+            }
             set
             {
                 _comparisonOperator = value;
@@ -784,7 +832,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public bool ComparisonOperatorIsEnabled
         {
-            get { return Column != null; }
+            get
+            {
+                return Column != null;
+            }
         }
 
         #endregion Operator
@@ -897,7 +948,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public object QueryValue
         {
-            get { return _queryValue ?? null; }
+            get
+            {
+                return _queryValue ?? null;
+            }
             set
             {
                 _queryValue = value;
@@ -913,7 +967,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public bool QueryValueIsEnabled
         {
-            get { return _queryValues != null; }
+            get
+            {
+                return _queryValues != null;
+            }
         }
 
         #endregion Value
@@ -964,7 +1021,10 @@ namespace HLU.UI.ViewModel
         /// <value>True if the AddTable button can be clicked; otherwise, false.</value>
         private bool CanAddTable
         {
-            get { return (Table != null); }
+            get
+            {
+                return (Table != null);
+            }
         }
 
         #endregion Add Table
@@ -1009,7 +1069,10 @@ namespace HLU.UI.ViewModel
         /// <value>True if the AddColumn button can be clicked; otherwise, false.</value>
         private bool CanAddColumn
         {
-            get { return Column != null; }
+            get
+            {
+                return Column != null;
+            }
         }
 
         #endregion Add Column
@@ -1054,7 +1117,10 @@ namespace HLU.UI.ViewModel
         /// <value>True if the AddOperator button can be clicked; otherwise, false.</value>
         private bool CanAddOperator
         {
-            get { return (ComparisonOperator != null); }
+            get
+            {
+                return (ComparisonOperator != null);
+            }
         }
 
         #endregion Add Operator
@@ -1090,7 +1156,6 @@ namespace HLU.UI.ViewModel
             else
                 SqlWhereClause += String.Concat(" ", QuoteValue(QueryValue));
 
-
             OnPropertyChanged(nameof(SqlWhereClause));
         }
 
@@ -1100,7 +1165,10 @@ namespace HLU.UI.ViewModel
         /// <value>True if the AddValue button can be clicked; otherwise, false.</value>
         private bool CanAddValue
         {
-            get { return QueryValue != null; }
+            get
+            {
+                return QueryValue != null;
+            }
         }
 
         #endregion Add Value
@@ -1118,8 +1186,14 @@ namespace HLU.UI.ViewModel
         /// </value>
         public string SqlFromTables
         {
-            get { return _sqlFromTables; }
-            set { _sqlFromTables = value; }
+            get
+            {
+                return _sqlFromTables;
+            }
+            set
+            {
+                _sqlFromTables = value;
+            }
         }
 
         /// <summary>
@@ -1131,8 +1205,14 @@ namespace HLU.UI.ViewModel
         /// </value>
         public string SqlWhereClause
         {
-            get { return _sqlWhereClause; }
-            set { _sqlWhereClause = value; }
+            get
+            {
+                return _sqlWhereClause;
+            }
+            set
+            {
+                _sqlWhereClause = value;
+            }
         }
 
         #endregion SQL
@@ -1196,6 +1276,7 @@ namespace HLU.UI.ViewModel
 
                                 SqlFromTables = fromTables.Trim().TrimStart('{').TrimEnd('}').Trim();
                                 break;
+
                             case "where":
                                 removeString = "Where";
                                 findIndex = sqlCmd.IndexOf(removeString);
@@ -1205,6 +1286,7 @@ namespace HLU.UI.ViewModel
 
                                 SqlWhereClause = whereClause.Trim().TrimStart('{').TrimEnd('}').Trim();
                                 break;
+
                             default:
                                 break;
                         }
@@ -1213,14 +1295,12 @@ namespace HLU.UI.ViewModel
                     OnPropertyChanged(nameof(SqlWhereClause));
                 }
             }
-
             catch (Exception ex)
             {
                 ShowMessage(ex.Message, MessageType.Error);
             }
             finally
             {
-
                 // If the existing file path does not exist
                 // then save the new path in the settings
                 if (!Directory.Exists(Settings.Default.SQLPath) && filePath != null)
@@ -1305,14 +1385,12 @@ namespace HLU.UI.ViewModel
                     }
                 }
             }
-
             catch (Exception ex)
             {
                 ShowMessage(ex.Message, MessageType.Error);
             }
             finally
             {
-
                 // If the existing file path does not exist
                 // then save the new path in the settings
                 if (!Directory.Exists(Settings.Default.SQLPath) && filePath != null)
@@ -1342,7 +1420,7 @@ namespace HLU.UI.ViewModel
                     InitialDirectory = queryPath
                 };
 
-                bool ?ok = saveFileDlg.ShowDialog();
+                bool? ok = saveFileDlg.ShowDialog();
                 if (ok == true)
                 {
                     queryFile = saveFileDlg.FileName;
@@ -1506,8 +1584,10 @@ namespace HLU.UI.ViewModel
         {
             if (!String.IsNullOrEmpty(identifier))
             {
-                if (!identifier.StartsWith(QuotePrefix)) identifier = identifier.Insert(0, QuotePrefix);
-                if (!identifier.EndsWith(QuoteSuffix)) identifier += QuoteSuffix;
+                if (!identifier.StartsWith(QuotePrefix))
+                    identifier = identifier.Insert(0, QuotePrefix);
+                if (!identifier.EndsWith(QuoteSuffix))
+                    identifier += QuoteSuffix;
             }
             return identifier;
         }
@@ -1516,43 +1596,85 @@ namespace HLU.UI.ViewModel
         /// Gets the prefix to use when quoting identifiers (e.g. table and column names).
         /// </summary>
         /// <value>The quote prefix.</value>
-        public string QuotePrefix { get { return "["; } }
+        public string QuotePrefix
+        {
+            get
+            {
+                return "[";
+            }
+        }
 
         /// <summary>
         /// Gets the suffix to use when quoting identifiers (e.g. table and column names).
         /// </summary>
         /// <value>The quote suffix.</value>
-        public string QuoteSuffix { get { return "]"; } }
+        public string QuoteSuffix
+        {
+            get
+            {
+                return "]";
+            }
+        }
 
         /// <summary>
         /// Gets the delimiter to use when quoting string literals.
         /// </summary>
         /// <value>The string literal delimiter.</value>
-        public string StringLiteralDelimiter { get { return "\'"; } }
+        public string StringLiteralDelimiter
+        {
+            get
+            {
+                return "\'";
+            }
+        }
 
         /// <summary>
         /// Gets the prefix to use when quoting date literals.
         /// </summary>
         /// <value>The date literal prefix.</value>
-        public string DateLiteralPrefix { get { return "#"; } }
+        public string DateLiteralPrefix
+        {
+            get
+            {
+                return "#";
+            }
+        }
 
         /// <summary>
         /// Gets the suffix to use when quoting date literals.
         /// </summary>
         /// <value>The date literal suffix.</value>
-        public string DateLiteralSuffix { get { return "#"; } }
+        public string DateLiteralSuffix
+        {
+            get
+            {
+                return "#";
+            }
+        }
 
         /// <summary>
         /// Gets the wildcard character to use when matching a single character in a string.
         /// </summary>
         /// <value>The wildcard character to use when matching a single character in a string.</value>
-        public string WildcardSingleMatch { get { return "_"; } }
+        public string WildcardSingleMatch
+        {
+            get
+            {
+                return "_";
+            }
+        }
 
         /// <summary>
         /// Gets the wildcard character to use when matching any number of characters in a string.
         /// </summary>
         /// <value>The wildcard character to use when matching any number of characters in a string.</value>
-        public string WildcardManyMatch { get { return "%"; } }
+        public string WildcardManyMatch
+        {
+            get
+            {
+                return "%";
+            }
+        }
 
         /// <summary>
         /// Does not escape string delimiter or other special characters.
@@ -1562,7 +1684,8 @@ namespace HLU.UI.ViewModel
         /// <returns>The quoted value.</returns>
         public string QuoteValue(object value)
         {
-            if (value == null) return "NULL";
+            if (value == null)
+                return "NULL";
 
             // Get the type of the value and look up the corresponding database data type in the
             // type map
@@ -1636,19 +1759,27 @@ namespace HLU.UI.ViewModel
                     case OdbcType.NVarChar:
                     case OdbcType.Text:
                     case OdbcType.VarChar:
-                        if (s.Length == 0) return StringLiteralDelimiter + StringLiteralDelimiter;
-                        if (!s.StartsWith(StringLiteralDelimiter)) s = StringLiteralDelimiter + s;
-                        if (!s.EndsWith(StringLiteralDelimiter)) s += StringLiteralDelimiter;
+                        if (s.Length == 0)
+                            return StringLiteralDelimiter + StringLiteralDelimiter;
+                        if (!s.StartsWith(StringLiteralDelimiter))
+                            s = StringLiteralDelimiter + s;
+                        if (!s.EndsWith(StringLiteralDelimiter))
+                            s += StringLiteralDelimiter;
                         return s;
+
                     case OdbcType.Date:
                     case OdbcType.DateTime:
                     case OdbcType.SmallDateTime:
                     case OdbcType.Time:
                     case OdbcType.Timestamp:
-                        if (s.Length == 0) return DateLiteralPrefix + DateLiteralSuffix;
-                        if (!s.StartsWith(DateLiteralPrefix)) s = DateLiteralPrefix + s;
-                        if (!s.EndsWith(DateLiteralSuffix)) s += DateLiteralSuffix;
+                        if (s.Length == 0)
+                            return DateLiteralPrefix + DateLiteralSuffix;
+                        if (!s.StartsWith(DateLiteralPrefix))
+                            s = DateLiteralPrefix + s;
+                        if (!s.EndsWith(DateLiteralSuffix))
+                            s += DateLiteralSuffix;
                         return s;
+
                     default:
                         return s;
                 }
@@ -1685,7 +1816,13 @@ namespace HLU.UI.ViewModel
         /// <value>
         /// The window cursor type.
         /// </value>
-        public Cursor WindowCursor { get { return _windowCursor; } }
+        public Cursor WindowCursor
+        {
+            get
+            {
+                return _windowCursor;
+            }
+        }
 
         /// <summary>
         /// Changes the cursor type to use when the cursor is over the window.
@@ -1709,7 +1846,10 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public string MessageText
         {
-            get { return _messageText; }
+            get
+            {
+                return _messageText;
+            }
         }
 
         /// <summary>
@@ -1717,7 +1857,10 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public MessageType MessageLevel
         {
-            get { return _messageLevel; }
+            get
+            {
+                return _messageLevel;
+            }
         }
 
         /// <summary>
@@ -1725,7 +1868,10 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public Visibility MessageVisibility
         {
-            get { return String.IsNullOrEmpty(_messageText) ? Visibility.Collapsed : Visibility.Visible; }
+            get
+            {
+                return String.IsNullOrEmpty(_messageText) ? Visibility.Collapsed : Visibility.Visible;
+            }
         }
 
         /// <summary>
@@ -1803,5 +1949,5 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion IDataErrorInfo Members
-   }
+    }
 }

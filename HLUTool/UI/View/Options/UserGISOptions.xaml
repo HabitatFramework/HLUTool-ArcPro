@@ -69,7 +69,6 @@
                             Margin="5,0,0,0"
                             Description="When to automatically zoom to the GIS features in the active GIS layer whenever the INCID selection is changed."
                             Header="Auto Zoom To Selection" />
-
                     </Grid>
 
                     <Grid Grid.Row="2">
@@ -98,9 +97,7 @@
                             Margin="5,0,0,0"
                             Description="The minimum zoom level at which the auto-zoom function activates. Select a scale value (e.g. 1000). Lower values zoom in closer, while higher values zoom out."
                             Header="Minimum Auto Zoom" />
-
                     </Grid>
-
                 </Grid>
             </Expander>
 
@@ -140,7 +137,6 @@
                             Margin="5,0,0,0"
                             Description="The units used to display the area of the current INCID in the main interface and in history records."
                             Header="Display Area Units" />
-
                     </Grid>
 
                     <Grid Grid.Row="2">
@@ -166,11 +162,8 @@
                             Margin="5,0,0,0"
                             Description="The units used to display the perimeter length of the current INCID in the main interface and in history records."
                             Header="Display Distance Units" />
-
                     </Grid>
-
                 </Grid>
-
             </Expander>
 
             <Expander
@@ -243,7 +236,6 @@
                                 Margin="0,0,0,0"
                                 Description="The folder path for the working File Geodatabase that will be used when peforming large or complex GIS queries."
                                 Header="Working File Geodatabase Directory" />
-
                         </Grid>
 
                         <Grid Grid.Row="1">
@@ -284,13 +276,10 @@
                                     Height="16"
                                     Source="{Binding ButtonOpenFolderImg}" />
                             </Button>
-
                         </Grid>
                     </Grid>
                 </Grid>
-
             </Expander>
-
         </StackPanel>
 
         <TextBlock
@@ -305,7 +294,5 @@
                 Learn more about user GIS options
             </Hyperlink>
         </TextBlock>
-
     </Grid>
-
 </UserControl>

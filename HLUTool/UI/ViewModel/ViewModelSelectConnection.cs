@@ -17,17 +17,16 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Enums;
+using HLU.Properties;
 using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Input;
-using HLU.Data.Connection;
-using HLU.Enums;
-using HLU.Properties;
 
 namespace HLU.UI.ViewModel
 {
-    class ViewModelSelectConnection : ViewModelBase, IDataErrorInfo
+    internal class ViewModelSelectConnection : ViewModelBase, IDataErrorInfo
     {
         #region private Members
 
@@ -38,7 +37,7 @@ namespace HLU.UI.ViewModel
         private ConnectionTypes[] _connectionTypes;
         private ConnectionTypes _connectionType;
 
-        #endregion
+        #endregion private Members
 
         #region Constructor
 
@@ -58,7 +57,8 @@ namespace HLU.UI.ViewModel
 
             // If the default connection type from settings is valid, set it as the initial
             // connection type; otherwise, it will remain Unknown.
-            if (initVal != null) _connectionType = (ConnectionTypes)initVal;
+            if (initVal != null)
+                _connectionType = (ConnectionTypes)initVal;
         }
 
         #endregion Constructor
@@ -71,8 +71,14 @@ namespace HLU.UI.ViewModel
         /// <value>The display name.</value>
         public override string DisplayName
         {
-            get { return _displayName; }
-            set { _displayName = value; }
+            get
+            {
+                return _displayName;
+            }
+            set
+            {
+                _displayName = value;
+            }
         }
 
         #endregion Display Name
@@ -83,7 +89,13 @@ namespace HLU.UI.ViewModel
         /// Gets the window title, which is the same as the display name.
         /// </summary>
         /// <value>The window title.</value>
-        public override string WindowTitle { get { return DisplayName; } }
+        public override string WindowTitle
+        {
+            get
+            {
+                return DisplayName;
+            }
+        }
 
         #endregion Window Title
 
@@ -132,7 +144,13 @@ namespace HLU.UI.ViewModel
         /// connection type is selected.
         /// </summary>
         /// <value><c>true</c> if the Ok command can execute; otherwise, <c>false</c>.</value>
-        private bool CanOk { get { return _connectionType != ConnectionTypes.Unknown; } }
+        private bool CanOk
+        {
+            get
+            {
+                return _connectionType != ConnectionTypes.Unknown;
+            }
+        }
 
         #endregion Ok Command
 
@@ -177,8 +195,13 @@ namespace HLU.UI.ViewModel
         /// <value>The connection types.</value>
         public ConnectionTypes[] AvailableConnectionTypes
         {
-            get { return _connectionTypes; }
-            set { }
+            get
+            {
+                return _connectionTypes;
+            }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -188,8 +211,15 @@ namespace HLU.UI.ViewModel
         /// <value>The selected connection type.</value>
         public ConnectionTypes ConnectionType
         {
-            get { return _connectionType; }
-            set { if (value != _connectionType) _connectionType = value; }
+            get
+            {
+                return _connectionType;
+            }
+            set
+            {
+                if (value != _connectionType)
+                    _connectionType = value;
+            }
         }
 
         #endregion Connection Types
@@ -205,7 +235,8 @@ namespace HLU.UI.ViewModel
         /// <param name="propertyName">The name of the property that changed.</param>
         public void ViewEvents(IntPtr windowHandle, string propertyName)
         {
-            if (windowHandle != IntPtr.Zero) _windowHandle = windowHandle;
+            if (windowHandle != IntPtr.Zero)
+                _windowHandle = windowHandle;
 
             switch (propertyName)
             {

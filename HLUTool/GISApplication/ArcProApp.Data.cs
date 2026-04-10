@@ -22,22 +22,16 @@
 
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.Analyst3D;
-using ArcGIS.Core.Data.DDL;
-using ArcGIS.Core.Data.UtilityNetwork.Trace;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Core.Internal.CIM;
-using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
-using ArcGIS.Desktop.Core.Geoprocessing;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ArcGIS.Desktop.Internal.GeoProcessing.ModelBuilder;
-using ArcGIS.Desktop.Layouts;
 using ArcGIS.Desktop.Mapping;
 using HLU.Data;
 using HLU.Data.Model;
+using HLU.Exceptions;
+using HLU.Helpers;
 using HLU.Properties;
 using HLU.UI.ViewModel;
 using Microsoft.Win32;
@@ -45,31 +39,18 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
-using System.Drawing;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Interop;
 using static HLU.Helpers.HistoryFieldBindingHelper;
-using Envelope = ArcGIS.Core.Geometry.Envelope;
 using Field = ArcGIS.Core.Data.Field;
-using FieldDescription = ArcGIS.Core.Data.DDL.FieldDescription;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
-using LinearUnit = ArcGIS.Core.Geometry.LinearUnit;
-using QueryFilter = ArcGIS.Core.Data.QueryFilter;
-using SpatialReference = ArcGIS.Core.Geometry.SpatialReference;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
-using HLU.Enums;
-using HLU.Helpers;
-using HLU.Exceptions;
+using QueryFilter = ArcGIS.Core.Data.QueryFilter;
+
 //using ArcGIS.Core.Internal.CIM;
 
 namespace HLU.GISApplication
@@ -370,24 +351,42 @@ namespace HLU.GISApplication
                    connectionString.Contains("DBCLIENT=postgresql", StringComparison.OrdinalIgnoreCase);
         }
 
-
         /// <summary>
         /// Gets the string literal delimiter for ArcGIS Pro.
         /// </summary>
         /// <value>The string literal delimiter character.</value>
-        public override string StringLiteralDelimiter { get { return "'"; } }
+        public override string StringLiteralDelimiter
+        {
+            get
+            {
+                return "'";
+            }
+        }
 
         /// <summary>
         /// Gets the date literal prefix for ArcGIS Pro.
         /// </summary>
         /// <value>The date literal prefix string.</value>
-        public override string DateLiteralPrefix { get { return _dateLiteralPrefix; ; } }
+        public override string DateLiteralPrefix
+        {
+            get
+            {
+                return _dateLiteralPrefix;
+                ;
+            }
+        }
 
         /// <summary>
         /// Gets the date literal suffix for ArcGIS Pro.
         /// </summary>
         /// <value>The date literal suffix string.</value>
-        public override string DateLiteralSuffix { get { return _dateLiteralSuffix; } }
+        public override string DateLiteralSuffix
+        {
+            get
+            {
+                return _dateLiteralSuffix;
+            }
+        }
 
         /// <summary>
         /// Gets the wildcard single match character for ArcGIS Pro.
@@ -417,7 +416,13 @@ namespace HLU.GISApplication
         /// Gets the concatenate operator for ArcGIS Pro.
         /// </summary>
         /// <value>The concatenate operator string.</value>
-        public override string ConcatenateOperator { get { return "&"; } }
+        public override string ConcatenateOperator
+        {
+            get
+            {
+                return "&";
+            }
+        }
 
         /// <summary>
         /// Quotes a value for use in a SQL query, based on its type and the requirements of ArcGIS Pro.
@@ -426,7 +431,8 @@ namespace HLU.GISApplication
         /// <returns>The quoted value as a string.</returns>
         public override string QuoteValue(object value)
         {
-            if (value == null) return "NULL";
+            if (value == null)
+                return "NULL";
             int colType;
             if (_typeMapSystemToSQL.TryGetValue(value.GetType(), out colType))
             {
@@ -435,20 +441,30 @@ namespace HLU.GISApplication
                 {
                     case esriFieldType.esriFieldTypeString:
                         s = value.ToString();
-                        if (s.Length == 0) return StringLiteralDelimiter + StringLiteralDelimiter;
-                        if (!s.StartsWith(StringLiteralDelimiter)) s = StringLiteralDelimiter + s;
-                        if (!s.EndsWith(StringLiteralDelimiter)) s += StringLiteralDelimiter;
+                        if (s.Length == 0)
+                            return StringLiteralDelimiter + StringLiteralDelimiter;
+                        if (!s.StartsWith(StringLiteralDelimiter))
+                            s = StringLiteralDelimiter + s;
+                        if (!s.EndsWith(StringLiteralDelimiter))
+                            s += StringLiteralDelimiter;
                         return s;
+
                     case esriFieldType.esriFieldTypeDate:
                         s = value is System.DateTime ? FormatDate((DateTime)value) : value.ToString();
-                        if (s.Length == 0) return DateLiteralPrefix + DateLiteralSuffix;
-                        if (!s.StartsWith(DateLiteralPrefix)) s = DateLiteralPrefix + s;
-                        if (!s.EndsWith(DateLiteralSuffix)) s += DateLiteralSuffix;
+                        if (s.Length == 0)
+                            return DateLiteralPrefix + DateLiteralSuffix;
+                        if (!s.StartsWith(DateLiteralPrefix))
+                            s = DateLiteralPrefix + s;
+                        if (!s.EndsWith(DateLiteralSuffix))
+                            s += DateLiteralSuffix;
                         return s;
+
                     case esriFieldType.esriFieldTypeSingle:
                         return FormatNumber((float)value).ToString();
+
                     case esriFieldType.esriFieldTypeDouble:
                         return FormatNumber((double)value).ToString();
+
                     default:
                         return value.ToString();
                 }
@@ -495,7 +511,8 @@ namespace HLU.GISApplication
         /// <returns>True if any column names were qualified; otherwise, false.</returns>
         public override bool QualifyColumnNames(DataColumn[] targetColumns)
         {
-            if ((targetColumns == null) || (targetColumns.Length == 0)) return false;
+            if ((targetColumns == null) || (targetColumns.Length == 0))
+                return false;
             return targetColumns.Any(c => GetFieldName(_hluLayerStructure.Columns[c.ColumnName].Ordinal) == null);
         }
 
@@ -513,13 +530,16 @@ namespace HLU.GISApplication
         {
             resultTable = new();
 
-            if ((targetColumns == null) || (targetColumns.Length == 0)) return String.Empty; ;
+            if ((targetColumns == null) || (targetColumns.Length == 0))
+                return String.Empty;
+            ;
 
             StringBuilder sbTargetList = new();
 
             try
             {
-                if (checkQualify) qualifyColumns = QualifyColumnNames(targetColumns);
+                if (checkQualify)
+                    qualifyColumns = QualifyColumnNames(targetColumns);
 
                 string fieldName;
                 string columnAlias;
@@ -565,7 +585,8 @@ namespace HLU.GISApplication
         {
             /// Checks for valid input parameters. If any are invalid, an empty DataTable is returned.
             if ((_hluLayer == null) ||
-                (targetList == null) || (targetList.Length == 0)) return new();
+                (targetList == null) || (targetList.Length == 0))
+                return new();
 
             // Try to perform the SQL select operation, catching any exceptions and displaying an error message if it fails.
             try
@@ -602,7 +623,8 @@ namespace HLU.GISApplication
         {
             // Checks for valid input parameters. If any are invalid, an empty DataTable is returned.
             if ((_hluLayer == null) ||
-                (targetList == null) || (targetList.Length == 0)) return new();
+                (targetList == null) || (targetList.Length == 0))
+                return new();
 
             // Try to perform the SQL select operation, catching any exceptions and displaying an error message if it fails.
             try
@@ -637,7 +659,8 @@ namespace HLU.GISApplication
         {
             // Checks for valid input parameters. If any are invalid, an empty DataTable is returned.
             if ((_hluLayer == null) || (targetTables == null) ||
-                (targetTables.Length == 0) || (targetTables[0].Columns.Count == 0)) return new();
+                (targetTables.Length == 0) || (targetTables[0].Columns.Count == 0))
+                return new();
 
             // Try to perform the SQL select operation, catching any exceptions and displaying an error message if it fails.
             try
@@ -1801,11 +1824,20 @@ namespace HLU.GISApplication
                 DataType = dataType;
             }
 
-            public string OutputColumnName { get; }
+            public string OutputColumnName
+            {
+                get;
+            }
 
-            public int SourceFieldIndex { get; }
+            public int SourceFieldIndex
+            {
+                get;
+            }
 
-            public Type DataType { get; }
+            public Type DataType
+            {
+                get;
+            }
         }
 
         /// <summary>
@@ -2835,7 +2867,8 @@ namespace HLU.GISApplication
                         join s in fieldName.Split([HistoryAdditionalFieldsDelimiter],
                             StringSplitOptions.RemoveEmptyEntries).Distinct() on c.ColumnName equals s
                         select c.Ordinal;
-                if (q.Count() == 1) return q.First();
+                if (q.Count() == 1)
+                    return q.First();
             }
             return -1;
         }
@@ -3297,7 +3330,10 @@ namespace HLU.GISApplication
         /// </summary>
         public string HluLayerName
         {
-            get { return _hluLayer?.Name; }
+            get
+            {
+                return _hluLayer?.Name;
+            }
         }
 
         /// <summary>
@@ -3305,7 +3341,10 @@ namespace HLU.GISApplication
         /// </summary>
         public int HluLayerCount
         {
-            get { return _hluLayerNamesList?.Count ?? 0; }
+            get
+            {
+                return _hluLayerNamesList?.Count ?? 0;
+            }
         }
 
         /// <summary>
@@ -3313,7 +3352,10 @@ namespace HLU.GISApplication
         /// </summary>
         public List<string> ValidHluLayerNames
         {
-            get { return _hluLayerNamesList; }
+            get
+            {
+                return _hluLayerNamesList;
+            }
         }
 
         /// <summary>
@@ -3321,7 +3363,10 @@ namespace HLU.GISApplication
         /// </summary>
         public FeatureLayer HluLayer
         {
-            get { return _hluLayer; }
+            get
+            {
+                return _hluLayer;
+            }
         }
 
         /// <summary>
@@ -3329,7 +3374,10 @@ namespace HLU.GISApplication
         /// </summary>
         public HLULayer ActiveHluLayer
         {
-            get { return _hluActiveLayer; }
+            get
+            {
+                return _hluActiveLayer;
+            }
         }
 
         /// <summary>
@@ -3337,7 +3385,10 @@ namespace HLU.GISApplication
         /// </summary>
         public FeatureClass HluFeatureClass
         {
-            get { return _hluFeatureClass; }
+            get
+            {
+                return _hluFeatureClass;
+            }
         }
 
         /// <summary>
@@ -3442,7 +3493,8 @@ namespace HLU.GISApplication
         protected string GetFieldName(int columnOrdinal)
         {
             if ((_hluFieldNames == null) || (_hluFieldMap == null) || (columnOrdinal < 0) ||
-                (columnOrdinal > _hluFieldNames.Length - 1)) return null;
+                (columnOrdinal > _hluFieldNames.Length - 1))
+                return null;
             else
                 return _hluFieldNames[columnOrdinal];
         }
@@ -3456,7 +3508,8 @@ namespace HLU.GISApplication
         {
             // Check the field map and column ordinal are valid.
             if ((_hluFieldMap == null) ||
-                (columnOrdinal < 0) || (columnOrdinal >= _hluFieldMap.Length)) return null;
+                (columnOrdinal < 0) || (columnOrdinal >= _hluFieldMap.Length))
+                return null;
 
             int fieldOrdinal = _hluFieldMap[columnOrdinal];
 
@@ -3525,7 +3578,6 @@ namespace HLU.GISApplication
                     if (field.Length > expectedMaxLength)
                         return -1;
                 }
-
 
                 // All checks passed, return the field index.
                 return idx;

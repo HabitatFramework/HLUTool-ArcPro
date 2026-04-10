@@ -17,13 +17,10 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using System.Windows;
+using ArcGIS.Desktop.Framework.Controls;
 using System.Reflection;
-using HLU.UI.UserControls;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Collections.Generic;
-using ArcGIS.Desktop.Framework.Controls;
 
 namespace HLU.UI.View
 {
@@ -59,7 +56,8 @@ namespace HLU.UI.View
         /// <param name="cb">The combo box to validate.</param>
         private void ValidateComboboxText(ComboBox cb)
         {
-            if ((cb == null) || (cb.Items.Count == 0)) return;
+            if ((cb == null) || (cb.Items.Count == 0))
+                return;
 
             PropertyInfo pi = cb.Items[0].GetType().GetProperty(cb.DisplayMemberPath);
 

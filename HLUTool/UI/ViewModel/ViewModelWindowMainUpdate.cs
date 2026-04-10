@@ -20,7 +20,6 @@
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using ArcGIS.Desktop.Editing;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
 using HLU.Data;
 using HLU.Data.Connection;
 using HLU.Data.Model;
@@ -28,15 +27,11 @@ using HLU.Enums;
 using HLU.Exceptions;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Threading;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
@@ -123,10 +118,12 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Update the secondary rows
-                if (_viewModelMain.IsDirtyIncidSecondary()) UpdateSecondary();
+                if (_viewModelMain.IsDirtyIncidSecondary())
+                    UpdateSecondary();
 
                 // Update the BAP rows
-                if (_viewModelMain.IsDirtyIncidBap()) UpdateBap();
+                if (_viewModelMain.IsDirtyIncidBap())
+                    UpdateBap();
 
                 // Update the source rows
                 if (_viewModelMain.IncidSourcesRows != null)
@@ -401,7 +398,10 @@ namespace HLU.UI.ViewModel
             // no longer in the current rows.
             _viewModelMain.IncidBapRows.Where(r => r.RowState != DataRowState.Deleted &&
                 !currentBapRows.Any(g => g.Bap_id == r.bap_id)).ToList()
-                .ForEach(delegate(HluDataSet.incid_bapRow row) { row.Delete(); });
+                .ForEach(delegate (HluDataSet.incid_bapRow row)
+                {
+                    row.Delete();
+                });
 
             // Update the table to remove the deleted rows.
             if (_viewModelMain.HluTableAdapterManager.incid_bapTableAdapter.Update(
@@ -419,7 +419,6 @@ namespace HLU.UI.ViewModel
             // Insert the new rows into the table.
             foreach (HluDataSet.incid_bapRow r in newRows)
                 _viewModelMain.HluTableAdapterManager.incid_bapTableAdapter.Insert(r);
-
         }
 
         /// <summary>
@@ -431,8 +430,12 @@ namespace HLU.UI.ViewModel
 
             // remove duplicate codes
             IEnumerable<SecondaryHabitat> currSecondaryRows = from s in _viewModelMain.IncidSecondaryHabitats
-                                                        group s by new { s.Secondary_group, s.Secondary_habitat } into secs
-                                                        select secs.First();
+                                                              group s by new
+                                                              {
+                                                                  s.Secondary_group,
+                                                                  s.Secondary_habitat
+                                                              } into secs
+                                                              select secs.First();
 
             List<HluDataSet.incid_secondaryRow> newRows = [];
             List<HluDataSet.incid_secondaryRow> updateRows = [];
@@ -462,7 +465,10 @@ namespace HLU.UI.ViewModel
             // no longer in the current rows.
             _viewModelMain.IncidSecondaryRows.Where(r => r.RowState != DataRowState.Deleted &&
                 !currSecondaryRows.Any(g => g.Secondary_id == r.secondary_id)).ToList()
-                .ForEach(delegate(HluDataSet.incid_secondaryRow row) { row.Delete(); });
+                .ForEach(delegate (HluDataSet.incid_secondaryRow row)
+                {
+                    row.Delete();
+                });
 
             // Update the table to remove the deleted rows.
             if (_viewModelMain.HluTableAdapterManager.incid_secondaryTableAdapter.Update(
@@ -480,7 +486,6 @@ namespace HLU.UI.ViewModel
             // Insert the new rows into the table.
             foreach (HluDataSet.incid_secondaryRow r in newRows)
                 _viewModelMain.HluTableAdapterManager.incid_secondaryTableAdapter.Insert(r);
-
         }
 
         /// <summary>
@@ -493,7 +498,8 @@ namespace HLU.UI.ViewModel
             var q = _viewModelMain.IncidBapRows.Where(r => r.RowState != DataRowState.Deleted && r.bap_id == be.Bap_id);
             if (q.Count() == 1)
             {
-                if (!be.IsValid()) return null;
+                if (!be.IsValid())
+                    return null;
                 HluDataSet.incid_bapRow oldRow = q.ElementAt(0);
                 object[] itemArray = be.ToItemArray();
                 for (int i = 0; i < itemArray.Length; i++)
@@ -514,7 +520,8 @@ namespace HLU.UI.ViewModel
             var q = _viewModelMain.IncidSecondaryRows.Where(r => r.RowState != DataRowState.Deleted && r.secondary_id == sh.Secondary_id);
             if (q.Count() == 1)
             {
-                if (!sh.IsValid()) return null;
+                if (!sh.IsValid())
+                    return null;
                 HluDataSet.incid_secondaryRow oldRow = q.ElementAt(0);
                 object[] itemArray = sh.ToItemArray();
                 for (int i = 0; i < itemArray.Length; i++)
@@ -549,6 +556,7 @@ namespace HLU.UI.ViewModel
                         clearIHSCodes = true;
                     }
                     break;
+
                 case "Clear on change in primary or secondary codes only":
                     // Check if the primary habitat has changed
                     if (viewModelMain.IncidCurrentRow.IsNull(viewModelMain.HluDataset.incid.habitat_primaryColumn)
@@ -578,9 +586,11 @@ namespace HLU.UI.ViewModel
                         }
                     }
                     break;
+
                 case "Clear on any change":
                     clearIHSCodes = true;
                     break;
+
                 default:    // "Don't clear"
                     break;
             }

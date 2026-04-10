@@ -27,22 +27,22 @@ namespace HLU.Converters
     /// <summary>
     /// Converts a null value to a string.Empty value and vice versa.
     /// </summary>
-    class NullableValueConverter : IValueConverter
+    internal class NullableValueConverter : IValueConverter
     {
-         #region IValueConverter Members
+        #region IValueConverter Members
 
-         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-         {
-             return value;
-         }
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value;
+        }
 
-         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-         {
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
             if (value == null || String.IsNullOrEmpty(value.ToString()))
                 return null;
 
-             return value;
-         }
+            return value;
+        }
 
         #endregion IValueConverter Members
     }

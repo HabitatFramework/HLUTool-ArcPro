@@ -17,6 +17,9 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Data.Connection;
+using HLU.Enums;
+using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -25,14 +28,11 @@ using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Input;
-using HLU.Data.Connection;
-using HLU.Enums;
-using Npgsql;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
 {
-    class ViewModelConnectPgSql : ViewModelBase, IDataErrorInfo
+    internal class ViewModelConnectPgSql : ViewModelBase, IDataErrorInfo
     {
         #region private Members
 
@@ -48,7 +48,7 @@ namespace HLU.UI.ViewModel
 
         private NpgsqlConnectionStringBuilder _connStrBuilder;
 
-        #endregion
+        #endregion private Members
 
         #region Constructor
 
@@ -65,7 +65,7 @@ namespace HLU.UI.ViewModel
             };
         }
 
-        #endregion
+        #endregion Constructor
 
         #region Connection String Builder
 
@@ -74,9 +74,15 @@ namespace HLU.UI.ViewModel
         /// string based on user input in the view.
         /// </summary>
         /// <value>The NpgsqlConnectionStringBuilder used to build the connection string.</value>
-        public NpgsqlConnectionStringBuilder ConnectionStringBuilder { get { return _connStrBuilder; } }
+        public NpgsqlConnectionStringBuilder ConnectionStringBuilder
+        {
+            get
+            {
+                return _connStrBuilder;
+            }
+        }
 
-        #endregion
+        #endregion Connection String Builder
 
         #region Display Name
 
@@ -87,11 +93,17 @@ namespace HLU.UI.ViewModel
         /// <value>The display name of the view model.</value>
         public override string DisplayName
         {
-            get { return _displayName; }
-            set { _displayName = value; }
+            get
+            {
+                return _displayName;
+            }
+            set
+            {
+                _displayName = value;
+            }
         }
 
-        #endregion
+        #endregion Display Name
 
         #region Window Title
 
@@ -99,9 +111,15 @@ namespace HLU.UI.ViewModel
         /// Gets the title of the connection window, which is set to the display name of the view model.
         /// </summary>
         /// <value>The title of the connection window.</value>
-        public override string WindowTitle { get { return DisplayName; } }
+        public override string WindowTitle
+        {
+            get
+            {
+                return DisplayName;
+            }
+        }
 
-        #endregion
+        #endregion Window Title
 
         #region RequestClose
 
@@ -112,7 +130,7 @@ namespace HLU.UI.ViewModel
         // connection string, encoding, default schema and any error message back to the caller.
         public event RequestCloseEventHandler RequestClose;
 
-        #endregion
+        #endregion RequestClose
 
         #region Ok Command
 
@@ -177,7 +195,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Ok Command
 
         #region Cancel Command
 
@@ -208,7 +226,7 @@ namespace HLU.UI.ViewModel
             RequestClose?.Invoke(null, null, null, null);
         }
 
-        #endregion
+        #endregion Cancel Command
 
         #region Host
 
@@ -219,7 +237,10 @@ namespace HLU.UI.ViewModel
         /// <value>The host name of the PostgreSQL server.</value>
         public string Host
         {
-            get { return _connStrBuilder.Host; }
+            get
+            {
+                return _connStrBuilder.Host;
+            }
             set
             {
                 if (!String.IsNullOrEmpty(value) && (value != _connStrBuilder.Host))
@@ -234,8 +255,15 @@ namespace HLU.UI.ViewModel
         /// <value>The port number of the PostgreSQL server.</value>
         public int Port
         {
-            get { return _connStrBuilder.Port; }
-            set { if (value != _connStrBuilder.Port) _connStrBuilder.Port = value; }
+            get
+            {
+                return _connStrBuilder.Port;
+            }
+            set
+            {
+                if (value != _connStrBuilder.Port)
+                    _connStrBuilder.Port = value;
+            }
         }
 
         /// <summary>
@@ -250,7 +278,9 @@ namespace HLU.UI.ViewModel
                 _sslModes ??= ["Allow", "Disable", "Prefer", "Require"];
                 return _sslModes;
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -260,16 +290,18 @@ namespace HLU.UI.ViewModel
         /// <value>The SSL mode for the PostgreSQL connection.</value>
         public string SslMode
         {
-            get { return Enum.GetName(typeof(Npgsql.SslMode), _connStrBuilder.SslMode); }
+            get
+            {
+                return Enum.GetName(typeof(Npgsql.SslMode), _connStrBuilder.SslMode);
+            }
             set
             {
                 if (Enum.IsDefined(typeof(Npgsql.SslMode), value))
                     _connStrBuilder.SslMode = (Npgsql.SslMode)Enum.Parse(typeof(Npgsql.SslMode), value);
-
             }
         }
 
-        #endregion
+        #endregion Host
 
         #region Database
 
@@ -280,8 +312,13 @@ namespace HLU.UI.ViewModel
         /// <value>An array of available databases on the PostgreSQL server.</value>
         public string[] Databases
         {
-            get { return _databases; }
-            set { }
+            get
+            {
+                return _databases;
+            }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -291,7 +328,10 @@ namespace HLU.UI.ViewModel
         /// <value>The database name to which to connect on the PostgreSQL server.</value>
         public string Database
         {
-            get { return _connStrBuilder.Database; }
+            get
+            {
+                return _connStrBuilder.Database;
+            }
             set
             {
                 if (!String.IsNullOrEmpty(value) && (value != _connStrBuilder.Database))
@@ -341,7 +381,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Database
 
         #region Encoding
 
@@ -362,7 +402,9 @@ namespace HLU.UI.ViewModel
                         "WIN1257","WIN1258" ];
                 return _encodings;
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -372,7 +414,10 @@ namespace HLU.UI.ViewModel
         /// <value>The encoding to use for the PostgreSQL connection.</value>
         public string Encoding
         {
-            get { return _encoding; }
+            get
+            {
+                return _encoding;
+            }
             set
             {
                 if (!String.IsNullOrEmpty(value) && (value != _encoding))
@@ -380,7 +425,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Encoding
 
         #region Authentication
 
@@ -391,7 +436,10 @@ namespace HLU.UI.ViewModel
         /// <value>The user name to use for authentication when connecting to the PostgreSQL server.</value>
         public string UserName
         {
-            get { return _connStrBuilder.Username; }
+            get
+            {
+                return _connStrBuilder.Username;
+            }
             set
             {
                 if (!String.IsNullOrEmpty(value) && (value != _connStrBuilder.Username))
@@ -406,11 +454,18 @@ namespace HLU.UI.ViewModel
         /// <value>The password to use for authentication when connecting to the PostgreSQL server.</value>
         public string Password
         {
-            get { return _connStrBuilder.Password; }
-            set { if (value != _connStrBuilder.Password) _connStrBuilder.Password = value; }
+            get
+            {
+                return _connStrBuilder.Password;
+            }
+            set
+            {
+                if (value != _connStrBuilder.Password)
+                    _connStrBuilder.Password = value;
+            }
         }
 
-        #endregion
+        #endregion Authentication
 
         #region Default Schema
 
@@ -421,8 +476,13 @@ namespace HLU.UI.ViewModel
         /// <value>An array of available schemata in the selected database on the PostgreSQL server.</value>
         public string[] Schemata
         {
-            get { return [.. _schemata]; }
-            set { }
+            get
+            {
+                return [.. _schemata];
+            }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -432,8 +492,15 @@ namespace HLU.UI.ViewModel
         /// <value>The search path to use for the PostgreSQL connection.</value>
         public string SearchPath
         {
-            get { return _connStrBuilder.SearchPath; }
-            set { if (value != _connStrBuilder.SearchPath) _connStrBuilder.SearchPath = value; }
+            get
+            {
+                return _connStrBuilder.SearchPath;
+            }
+            set
+            {
+                if (value != _connStrBuilder.SearchPath)
+                    _connStrBuilder.SearchPath = value;
+            }
         }
 
         /// <summary>
@@ -490,7 +557,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion Default Schema
 
         #region View Events
 
@@ -503,13 +570,15 @@ namespace HLU.UI.ViewModel
         /// <param name="propertyName">The name of the property that triggered the event.</param>
         public void ViewEvents(IntPtr windowHandle, string propertyName)
         {
-            if (windowHandle != IntPtr.Zero) _windowHandle = windowHandle;
+            if (windowHandle != IntPtr.Zero)
+                _windowHandle = windowHandle;
 
             switch (propertyName)
             {
                 case "Database":
                     LoadDatabases();
                     break;
+
                 case "SearchPath":
                     LoadSchemata();
                     break;
@@ -530,7 +599,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(SearchPath));
         }
 
-        #endregion
+        #endregion View Events
 
         #region IDataErrorInfo Members
 
@@ -581,18 +650,22 @@ namespace HLU.UI.ViewModel
                         if (String.IsNullOrEmpty(_connStrBuilder.Host))
                             error = "Error: You must provide a host name";
                         break;
+
                     case "Port":
                         if (_connStrBuilder.Port == 0)
                             error = "Error: You must provide a port";
                         break;
+
                     case "Database":
                         if (String.IsNullOrEmpty(_connStrBuilder.Database))
                             error = "Error: You must provide a database name";
                         break;
+
                     case "UserName":
                         if (String.IsNullOrEmpty(_connStrBuilder.Username))
                             error = "Error: You must provide a user name";
                         break;
+
                     case "SearchPath":
                         if (String.IsNullOrEmpty(_connStrBuilder.SearchPath))
                             error = "Error: You must provide a search path";
@@ -606,6 +679,6 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion
+        #endregion IDataErrorInfo Members
     }
 }

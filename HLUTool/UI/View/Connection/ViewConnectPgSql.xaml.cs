@@ -32,7 +32,7 @@ namespace HLU.UI.View.Connection
     /// </summary>
     public partial class ViewConnectPgSql : ProWindow
     {
-        IntPtr _windowHandle;
+        private IntPtr _windowHandle;
 
         public ViewConnectPgSql()
         {
@@ -41,10 +41,12 @@ namespace HLU.UI.View.Connection
 
         private void Window_Activated(object sender, EventArgs e)
         {
-            if (PresentationSource.FromVisual(this) is HwndSource hwndSrc) _windowHandle = hwndSrc.Handle;
+            if (PresentationSource.FromVisual(this) is HwndSource hwndSrc)
+                _windowHandle = hwndSrc.Handle;
 
             if ((this.ComboBoxEncoding.Items.Count == 1) && (String.IsNullOrEmpty(this.ComboBoxEncoding.Text) ||
-                this.ComboBoxEncoding.Items.Contains(this.ComboBoxEncoding.Text))) this.ComboBoxEncoding.SelectedIndex = 0;
+                this.ComboBoxEncoding.Items.Contains(this.ComboBoxEncoding.Text)))
+                this.ComboBoxEncoding.SelectedIndex = 0;
         }
 
         private void Window_ContentRendered(object sender, EventArgs e)

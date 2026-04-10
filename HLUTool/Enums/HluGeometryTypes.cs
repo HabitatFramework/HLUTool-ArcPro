@@ -16,12 +16,6 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace HLU.Enums
 {
     #region Enums
@@ -29,7 +23,10 @@ namespace HLU.Enums
     /// <summary>
     /// HLU layer geometry types.
     /// </summary>
-    public enum HluGeometryTypes { Point, Line, Polygon, Unknown };
+    public enum HluGeometryTypes
+    {
+        Point, Line, Polygon, Unknown
+    };
 
     #endregion Enums
 }

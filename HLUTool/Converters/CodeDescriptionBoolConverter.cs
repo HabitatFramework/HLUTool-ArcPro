@@ -17,23 +17,23 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Properties;
+using HLU.UI.UserControls;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Data;
-using HLU.Properties;
-using HLU.UI.UserControls;
 
 namespace HLU.Converters
 {
     /// <summary>
     /// Converts a collection of CodeDescriptionBool items to a list or vice versa.
     /// </summary>
-    class CodeDescriptionBoolConverter : IValueConverter
+    internal class CodeDescriptionBoolConverter : IValueConverter
     {
-        string _codeDeleteRow = Settings.Default.CodeDeleteRow;
+        private string _codeDeleteRow = Settings.Default.CodeDeleteRow;
         internal static readonly string[] _separator = [" : "];
 
         #region IValueConverter Members

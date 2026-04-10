@@ -19,14 +19,11 @@
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using HLU.Data;
-using HLU.Data.Model;
 using HLU.Exceptions;
 using HLU.Helpers;
 using HLU.UI.UserControls;
 using HLU.UI.ViewModel;
-using System;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -197,6 +194,7 @@ namespace HLU.UI.View
                         this.TextBoxOSMMRecordNumber.Focus();
                     }
                     break;
+
                 case Key.Return:
                     if (this.TextBoxRecordNumber.IsFocused)
                     {
@@ -204,24 +202,28 @@ namespace HLU.UI.View
                         this.TextBoxRecordNumber.Focus();
                     }
                     break;
+
                 case Key.Home:
                     if ((focusedControl != null) && (focusedControl is TextBox))
                         return;
                     if (this.ButtonFirstRecord.Command.CanExecute(null))
                         this.ButtonFirstRecord.Command.Execute(null);
                     break;
+
                 case Key.Prior:
                     if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
                         goto case Key.Home;
                     else if (this.ButtonPreviousRecord.Command.CanExecute(null))
                         this.ButtonPreviousRecord.Command.Execute(null);
                     break;
+
                 case Key.Next:
                     if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
                         goto case Key.End;
                     else if (this.ButtonNextRecord.Command.CanExecute(null))
                         this.ButtonNextRecord.Command.Execute(null);
                     break;
+
                 case Key.End:
                     if ((focusedControl != null) && (focusedControl is TextBox))
                         return;
@@ -256,5 +258,5 @@ namespace HLU.UI.View
         }
 
         #endregion Event handlers
-   }
+    }
 }

@@ -18,9 +18,6 @@
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace HLU.Data
 {
@@ -39,7 +36,7 @@ namespace HLU.Data
         private bool _autoNum;
         private int _fieldOrder;
 
-        #endregion
+        #endregion Fields
 
         #region Constructor
 
@@ -62,71 +59,131 @@ namespace HLU.Data
             _fieldOrder = fieldOrder;
         }
 
-        #endregion // Constructor
+        #endregion Constructor
 
         #region Properties
 
         public int FieldOrdinal
         {
-            get { return _fieldOrdinal; }
-            set { _fieldOrdinal = value; }
+            get
+            {
+                return _fieldOrdinal;
+            }
+            set
+            {
+                _fieldOrdinal = value;
+            }
         }
 
         public string TableName
         {
-            get { return _tableName; }
-            set { _tableName = value; }
+            get
+            {
+                return _tableName;
+            }
+            set
+            {
+                _tableName = value;
+            }
         }
 
         public string ColumnName
         {
-            get { return _columnName; }
-            set { _columnName = value; }
+            get
+            {
+                return _columnName;
+            }
+            set
+            {
+                _columnName = value;
+            }
         }
 
         public string FieldName
         {
-            get { return _fieldName; }
-            set { _fieldName = value; }
+            get
+            {
+                return _fieldName;
+            }
+            set
+            {
+                _fieldName = value;
+            }
         }
 
         public Type FieldType
         {
-            get { return _fieldType; }
-            set { _fieldType = value; }
+            get
+            {
+                return _fieldType;
+            }
+            set
+            {
+                _fieldType = value;
+            }
         }
 
         public int FieldLength
         {
-            get { return _fieldLength; }
-            set { _fieldLength = value; }
+            get
+            {
+                return _fieldLength;
+            }
+            set
+            {
+                _fieldLength = value;
+            }
         }
 
         public int FieldsCount
         {
-            get { return _fieldsCount; }
-            set { _fieldsCount = value; }
+            get
+            {
+                return _fieldsCount;
+            }
+            set
+            {
+                _fieldsCount = value;
+            }
         }
 
         public string FieldFormat
         {
-            get { return _fieldFormat; }
-            set { _fieldFormat = value; }
+            get
+            {
+                return _fieldFormat;
+            }
+            set
+            {
+                _fieldFormat = value;
+            }
         }
 
         public bool AutoNum
         {
-            get { return _autoNum; }
-            set { _autoNum = value; }
+            get
+            {
+                return _autoNum;
+            }
+            set
+            {
+                _autoNum = value;
+            }
         }
 
         public int FieldOrder
         {
-            get { return _fieldOrder; }
-            set { _fieldOrder = value; }
+            get
+            {
+                return _fieldOrder;
+            }
+            set
+            {
+                _fieldOrder = value;
+            }
         }
 
-        #endregion // Properties
+        #endregion Properties
 
         #region Methods
 
@@ -146,7 +203,8 @@ namespace HLU.Data
 
         public virtual bool Equals(ExportField other)
         {
-            if (other == null) return false;
+            if (other == null)
+                return false;
 
             return ((this._tableName == other._tableName)
                 && (this._columnName == other._columnName)
@@ -155,12 +213,12 @@ namespace HLU.Data
 
         public override bool Equals(object obj)
         {
-            if (this.GetType() != obj.GetType()) return false;
+            if (this.GetType() != obj.GetType())
+                return false;
 
             return Equals(obj as ExportField);
         }
 
-        #endregion // Methods
-
+        #endregion Methods
     }
 }

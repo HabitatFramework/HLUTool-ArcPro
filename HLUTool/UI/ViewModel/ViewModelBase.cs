@@ -17,11 +17,10 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Desktop.Framework.Contracts;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
-
-using ArcGIS.Desktop.Framework.Contracts;
 
 namespace HLU.UI.ViewModel
 {
@@ -38,7 +37,7 @@ namespace HLU.UI.ViewModel
         {
         }
 
-        #endregion // Constructor
+        #endregion Constructor
 
         #region DisplayName
 
@@ -47,9 +46,12 @@ namespace HLU.UI.ViewModel
         /// Child classes can set this property to a new value,
         /// or override it to determine the value on-demand.
         /// </summary>
-        public abstract string DisplayName { get; set; }
+        public abstract string DisplayName
+        {
+            get; set;
+        }
 
-        #endregion // DisplayName
+        #endregion DisplayName
 
         #region Window title
 
@@ -59,9 +61,12 @@ namespace HLU.UI.ViewModel
         /// <value></value>
         /// <returns></returns>
         /// <remarks></remarks>
-        public abstract string WindowTitle { get; }
+        public abstract string WindowTitle
+        {
+            get;
+        }
 
-        #endregion
+        #endregion Window title
 
         #region Debugging Aides
 
@@ -93,7 +98,10 @@ namespace HLU.UI.ViewModel
         /// The default value is false, but subclasses used by unit tests might
         /// override this property's getter to return true.
         /// </summary>
-        protected virtual bool ThrowOnInvalidPropertyName { get; private set; }
+        protected virtual bool ThrowOnInvalidPropertyName
+        {
+            get; private set;
+        }
 
         #endregion Debugging Aides
 
@@ -153,6 +161,6 @@ namespace HLU.UI.ViewModel
         }
 #endif
 
-        #endregion /Disposable Members
+        #endregion IDisposable Members
     }
 }

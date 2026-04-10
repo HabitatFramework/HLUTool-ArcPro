@@ -4,10 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:hlu="clr-namespace:HLU.UI.UserControls;assembly="
     xmlns:local="clr-namespace:HLU.UI.ViewModel"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:tkit="http://schemas.microsoft.com/wpf/2008/toolkit"
     Title="{Binding WindowTitle}"
     Width="650"
     Height="450"
@@ -441,7 +439,6 @@
                             </Grid>
                         </Grid>
                     </GroupBox>
-
                 </Grid>
             </AdornerDecorator>
 

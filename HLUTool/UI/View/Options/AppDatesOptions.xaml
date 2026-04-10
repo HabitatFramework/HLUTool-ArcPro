@@ -167,11 +167,8 @@
                             Description="How date ranges, such as 'Spring 2010-Autumn 2010' or '1989-2010', are entered so that they can be converted to dates in the database."
                             Header="Vague Date Delimiter" />
                     </Grid>
-
                 </Grid>
-
             </Expander>
-
         </StackPanel>
 
         <TextBlock
@@ -186,7 +183,5 @@
                 Learn more about application dates options
             </Hyperlink>
         </TextBlock>
-
     </Grid>
-
 </UserControl>

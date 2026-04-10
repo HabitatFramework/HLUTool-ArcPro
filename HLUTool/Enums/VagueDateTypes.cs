@@ -16,12 +16,6 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace HLU.Enums
 {
     #region Enums
@@ -29,7 +23,10 @@ namespace HLU.Enums
     /// <summary>
     /// Indicates whether a date is a start date, end date, or vague date.
     /// </summary>
-    public enum DateType { Start, End, Vague };
+    public enum DateType
+    {
+        Start, End, Vague
+    };
 
     /// <summary>
     /// Indicates the type of vague date, which can be a single date, a date range, a month and
@@ -39,36 +36,52 @@ namespace HLU.Enums
     {
         [EnumCode("D")]
         StartDate,
+
         [EnumCode("DD")]
         StartAndEndDates,
+
         [EnumCode("D-")]
         StartDateRange,
+
         [EnumCode("-D")]
         EndDateRange,
+
         [EnumCode("O")]
         StartMonthAndYear,
+
         [EnumCode("OO")]
         StartAndEndMonthAndYear,
+
         [EnumCode("O-")]
         StartMonthRange,
+
         [EnumCode("-O")]
         EndMonthRange,
+
         [EnumCode("Y")]
         StartYear,
+
         [EnumCode("YY")]
         StartAndEndYear,
+
         [EnumCode("Y-")]
         StartYearRange,
+
         [EnumCode("-Y")]
         EndYearRange,
+
         [EnumCode("P")]
         StartSeason,
+
         [EnumCode("PP")]
         StartAndEndSeason,
+
         [EnumCode("P-")]
         StartSeasonRange,
+
         [EnumCode("-P")]
         EndSeasonRange,
+
         [EnumCode("U")]
         Unknown
     }

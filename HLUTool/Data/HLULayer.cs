@@ -18,12 +18,6 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using HLU.Enums;
-
 namespace HLU.Data
 {
     /// <summary>
@@ -39,7 +33,7 @@ namespace HLU.Data
         private string _layerName;
         private bool _isEditable = false;
 
-        #endregion
+        #endregion Fields
 
         #region Constructor
 
@@ -80,8 +74,14 @@ namespace HLU.Data
         /// <value>The name of the layer.</value>
         public string LayerName
         {
-            get { return _layerName; }
-            set { _layerName = value; }
+            get
+            {
+                return _layerName;
+            }
+            set
+            {
+                _layerName = value;
+            }
         }
 
         /// <summary>
@@ -90,8 +90,14 @@ namespace HLU.Data
         /// <value><c>true</c> if the layer is editable; otherwise, <c>false</c>.</value>
         public bool IsEditable
         {
-            get { return _isEditable; }
-            set { _isEditable = value; }
+            get
+            {
+                return _isEditable;
+            }
+            set
+            {
+                _isEditable = value;
+            }
         }
 
         /// <summary>
@@ -100,7 +106,10 @@ namespace HLU.Data
         /// <value>The display name of the layer.</value>
         public string DisplayName
         {
-            get { return _layerName; }
+            get
+            {
+                return _layerName;
+            }
         }
 
         #endregion Properties
@@ -119,19 +128,20 @@ namespace HLU.Data
 
         public virtual bool Equals(HLULayer other)
         {
-            if (other == null) return false;
+            if (other == null)
+                return false;
 
             return (this._layerName == other._layerName);
         }
 
         public override bool Equals(object obj)
         {
-            if (this.GetType() != obj.GetType()) return false;
+            if (this.GetType() != obj.GetType())
+                return false;
 
             return Equals(obj as HLULayer);
         }
 
         #endregion Overrides
-
     }
 }

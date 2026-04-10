@@ -21,25 +21,19 @@
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.DDL;
-using ArcGIS.Core.Data.Exceptions;
-using ArcGIS.Desktop.Core.Geoprocessing;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
 using HLU.Data;
 using HLU.Data.Connection;
 using HLU.Data.Model;
 using HLU.Date;
 using HLU.Enums;
-using HLU.GISApplication;
 using HLU.Helpers;
 using HLU.Properties;
 using HLU.UI.View;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -48,7 +42,6 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Threading;
 using CommandType = System.Data.CommandType;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
@@ -57,13 +50,13 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// Contains the view model for the main window export functionality.
     /// </summary>
-    partial class ViewModelWindowMainExport
+    internal partial class ViewModelWindowMainExport
     {
         #region Fields
 
         public static HluDataSet HluDatasetStatic = null;
 
-        ViewModelWindowMain _viewModelMain;
+        private ViewModelWindowMain _viewModelMain;
         private WindowExport _windowExport;
         private ViewModelWindowExport _viewModelExport;
 
@@ -217,7 +210,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion Export Request Close
+        #endregion Initiate Export
 
         #region Export Processing
 
@@ -624,7 +617,7 @@ namespace HLU.UI.ViewModel
                 _viewModelMain.ShowSuccess("Export succeeded. Output added to the current map.", MessageCategory.Export);
         }
 
-        #endregion Export
+        #endregion Export Processing
 
         #region Export to Geodatabase
 
@@ -1336,7 +1329,7 @@ namespace HLU.UI.ViewModel
                 return inValue;
         }
 
-        #endregion Export Processing
+        #endregion Export to Geodatabase
 
         #region Export Joins
 
@@ -1409,7 +1402,8 @@ namespace HLU.UI.ViewModel
             tableAliases = context.TableAliases;
 
             // Remove leading comma from target list
-            if (targetList.Length > 1) targetList.Remove(0, 1);
+            if (targetList.Length > 1)
+                targetList.Remove(0, 1);
         }
 
         #endregion Export Joins
@@ -1423,29 +1417,101 @@ namespace HLU.UI.ViewModel
         {
             #region Properties
 
-            public string TableAlias { get; }
-            public StringBuilder TargetList { get; }
-            public StringBuilder FromClause { get; }
-            public List<string> FromList { get; }
-            public List<string> LeftJoined { get; }
-            public Dictionary<string, string> TableAliases { get; }
+            public string TableAlias
+            {
+                get;
+            }
 
-            public int TableAliasNum { get; set; }
-            public int SqlFieldOrdinal { get; set; }
-            public bool FirstJoin { get; set; }
+            public StringBuilder TargetList
+            {
+                get;
+            }
+
+            public StringBuilder FromClause
+            {
+                get;
+            }
+
+            public List<string> FromList
+            {
+                get;
+            }
+
+            public List<string> LeftJoined
+            {
+                get;
+            }
+
+            public Dictionary<string, string> TableAliases
+            {
+                get;
+            }
+
+            public int TableAliasNum
+            {
+                get; set;
+            }
+
+            public int SqlFieldOrdinal
+            {
+                get; set;
+            }
+
+            public bool FirstJoin
+            {
+                get; set;
+            }
 
             // Field tracking
-            public int PrimaryKeyOrdinal { get; set; }
-            public List<int> SortFields { get; }
-            public List<int> ConditionFields { get; }
-            public List<int> MatrixFields { get; }
-            public List<int> FormationFields { get; }
-            public List<int> ManagementFields { get; }
-            public List<int> ComplexFields { get; }
-            public List<int> BapFields { get; }
-            public List<int> SourceFields { get; }
+            public int PrimaryKeyOrdinal
+            {
+                get; set;
+            }
 
-            public int SourceSortOrderOrdinal { get; set; }
+            public List<int> SortFields
+            {
+                get;
+            }
+
+            public List<int> ConditionFields
+            {
+                get;
+            }
+
+            public List<int> MatrixFields
+            {
+                get;
+            }
+
+            public List<int> FormationFields
+            {
+                get;
+            }
+
+            public List<int> ManagementFields
+            {
+                get;
+            }
+
+            public List<int> ComplexFields
+            {
+                get;
+            }
+
+            public List<int> BapFields
+            {
+                get;
+            }
+
+            public List<int> SourceFields
+            {
+                get;
+            }
+
+            public int SourceSortOrderOrdinal
+            {
+                get; set;
+            }
 
             #endregion Properties
 
@@ -1482,7 +1548,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion ExportJoinContext class
+        #endregion Methods
 
         /// <summary>
         /// Initializes all output data structures for the export.
@@ -1599,22 +1665,27 @@ namespace HLU.UI.ViewModel
                     dataType = typeof(int);
                     attributeLength = 4;
                     break;
+
                 case 6:     // Single
                     dataType = typeof(float);
                     attributeLength = 4;
                     break;
+
                 case 7:     // Double
                     dataType = typeof(double);
                     attributeLength = 8;
                     break;
+
                 case 8:     // Date/Time
                     dataType = typeof(DateTime);
                     attributeLength = 8;
                     break;
+
                 case 10:    // Text
                     dataType = typeof(string);
                     attributeLength = Math.Min(fieldLength, 254);
                     break;
+
                 default:
                     dataType = typeof(string);
                     attributeLength = Math.Min(fieldLength, 254);
@@ -2041,7 +2112,8 @@ namespace HLU.UI.ViewModel
 
                 // Add field to export table
                 DataColumn c = new(f.FieldName, f.FieldType);
-                if (f.AutoNum == true) c.AutoIncrement = true;
+                if (f.AutoNum == true)
+                    c.AutoIncrement = true;
                 if ((f.FieldType == System.Type.GetType("System.String")) && (f.FieldLength > 0))
                     c.MaxLength = f.FieldLength;
 
@@ -2514,7 +2586,7 @@ namespace HLU.UI.ViewModel
             sourceOrdinals = [.. context.SourceFields];
         }
 
-        #endregion Export Joins
+        #endregion ExportJoinContext class
 
         #region Helper Methods
 
@@ -2583,18 +2655,22 @@ namespace HLU.UI.ViewModel
                     dataType = System.Type.GetType("System.Int32");
                     attributeLength = 2;
                     break;
+
                 case 6:     // Single
                     dataType = System.Type.GetType("System.Single");
                     attributeLength = 4;
                     break;
+
                 case 7:     // Double
                     dataType = System.Type.GetType("System.Double");
                     attributeLength = 8;
                     break;
+
                 case 8:     // Date/Time
                     dataType = System.Type.GetType("System.DateTime");
                     attributeLength = 8;
                     break;
+
                 case 10:    // Text
                     dataType = System.Type.GetType("System.String");
                     if (maxLength > 0)
@@ -2608,11 +2684,13 @@ namespace HLU.UI.ViewModel
                         attributeLength = fieldLength;
                     }
                     break;
+
                 case 99:    // Autonumber
                     dataType = System.Type.GetType("System.Int32");
                     autoNum = true;
                     attributeLength = 4;
                     break;
+
                 default:
                     dataType = System.Type.GetType("System.String");
                     fieldLength = maxLength;

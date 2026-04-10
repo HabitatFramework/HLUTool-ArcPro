@@ -30,11 +30,23 @@ namespace HLU.UI.UserControls
     /// </summary>
     public class NavigationItem : INotifyPropertyChanged
     {
-        public string Name { get; set; }
-        public string Category { get; set; }
-        public UserControl Content { get; set; }
+        public string Name
+        {
+            get; set;
+        }
+
+        public string Category
+        {
+            get; set;
+        }
+
+        public UserControl Content
+        {
+            get; set;
+        }
 
         private bool _hasErrors;
+
         /// <summary>
         /// Gets or sets a value indicating whether this navigation item has any validation errors.
         /// </summary>
@@ -50,6 +62,7 @@ namespace HLU.UI.UserControls
         }
 
         private string _errorMessage;
+
         /// <summary>
         /// Gets or sets the error message associated with this navigation item, if any.
         /// </summary>
@@ -65,6 +78,7 @@ namespace HLU.UI.UserControls
         }
 
         private bool _isSelected;
+
         /// <summary>
         /// Gets or sets a value indicating whether this navigation item is currently selected.
         /// </summary>

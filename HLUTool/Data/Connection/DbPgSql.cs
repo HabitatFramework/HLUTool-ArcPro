@@ -36,7 +36,7 @@ using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.Data.Connection
 {
-    class DbPgSql : DbBase
+    internal class DbPgSql : DbBase
     {
         #region Private Members
 
@@ -83,7 +83,8 @@ namespace HLU.Data.Connection
             : base(ref connString, ref defaultSchema, ref promptPwd, pwdMask, useCommandBuilder, useColumnNames,
             isUnicode, useTimeZone, textLength, binaryLength, timePrecision, numericPrecision, numericScale, connectTimeOut)
         {
-            if (String.IsNullOrEmpty(ConnectionString)) throw (new Exception("No connection string"));
+            if (String.IsNullOrEmpty(ConnectionString))
+                throw (new Exception("No connection string"));
 
             try
             {
@@ -105,6 +106,7 @@ namespace HLU.Data.Connection
             }
             catch { throw; }
         }
+
         #endregion Constructor
 
         #region Override Members
@@ -113,7 +115,13 @@ namespace HLU.Data.Connection
         /// Gets the backend type for this database connection, which is PostgreSQL in this case.
         /// </summary>
         /// <value>The backend type for this database connection.</value>
-        public override Backends Backend { get { return Backends.PostgreSql; } }
+        public override Backends Backend
+        {
+            get
+            {
+                return Backends.PostgreSql;
+            }
+        }
 
         /// <summary>
         /// Checks if the provided DataSet contains the necessary tables and columns that match the
@@ -162,7 +170,8 @@ namespace HLU.Data.Connection
                                                  where !dbCols.Any()
                                                  select QuoteIdentifier(dsCol.ColumnName) + " (" +
                                                  ((SqlDbType)SystemToDbType(dsCol.DataType) + ")").ToString())];
-                        if (checkColumns.Length > 0) messageText.Append(String.Format("\n\nTable: {0}\nColumns: {1}",
+                        if (checkColumns.Length > 0)
+                            messageText.Append(String.Format("\n\nTable: {0}\nColumns: {1}",
                             QuoteIdentifier(t.TableName), String.Join(", ", checkColumns)));
                     }
                 }
@@ -187,13 +196,25 @@ namespace HLU.Data.Connection
         /// Gets the database connection object for this PostgreSQL connection, which is an instance of NpgsqlConnection.
         /// </summary>
         /// <value>The database connection object for this PostgreSQL connection.</value>
-        public override IDbConnection Connection { get { return _connection; } }
+        public override IDbConnection Connection
+        {
+            get
+            {
+                return _connection;
+            }
+        }
 
         /// <summary>
         /// Gets the connection string builder for this PostgreSQL connection, which is an instance of NpgsqlConnectionStringBuilder.
         /// </summary>
         /// <value>The connection string builder for this PostgreSQL connection.</value>
-        public override DbConnectionStringBuilder ConnectionStringBuilder { get { return _connStrBuilder; } }
+        public override DbConnectionStringBuilder ConnectionStringBuilder
+        {
+            get
+            {
+                return _connStrBuilder;
+            }
+        }
 
         /// <summary>
         /// Gets the database transaction object for this PostgreSQL connection, which is an instance of NpgsqlTransaction.
@@ -201,7 +222,10 @@ namespace HLU.Data.Connection
         /// <value>The database transaction object for this PostgreSQL connection.</value>
         public override IDbTransaction Transaction
         {
-            get { return _transaction; }
+            get
+            {
+                return _transaction;
+            }
         }
 
         /// <summary>
@@ -239,7 +263,8 @@ namespace HLU.Data.Connection
                 adapter = new();
 
                 DataColumn[] pk = table.PrimaryKey;
-                if ((pk == null) || (pk.Length == 0)) return null;
+                if ((pk == null) || (pk.Length == 0))
+                    return null;
 
                 DataTableMapping tableMapping = new()
                 {
@@ -285,7 +310,8 @@ namespace HLU.Data.Connection
                     string colName = QuoteIdentifier(c.ColumnName);
 
                     int colType;
-                    if (!_typeMapSystemToSQL.TryGetValue(c.DataType, out colType)) continue;
+                    if (!_typeMapSystemToSQL.TryGetValue(c.DataType, out colType))
+                        continue;
 
                     if (c.AllowDBNull)
                     {
@@ -496,13 +522,15 @@ namespace HLU.Data.Connection
         /// <returns>True if the schema was successfully filled; otherwise, false.</returns>
         public override bool FillSchema<T>(SchemaType schemaType, string sql, ref T table)
         {
-            if (String.IsNullOrEmpty(sql)) return false;
+            if (String.IsNullOrEmpty(sql))
+                return false;
             ConnectionState previousConnectionState = _connection.State;
             try
             {
                 _errorMessage = String.Empty;
                 table ??= new T();
-                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                    _connection.Open();
                 NpgsqlDataAdapter adapter = UpdateAdapter(table);
                 if (adapter != null)
                 {
@@ -515,7 +543,8 @@ namespace HLU.Data.Connection
                 {
                     _command.CommandText = sql;
                     _command.CommandType = CommandType.Text;
-                    if (_transaction != null) _command.Transaction = _transaction;
+                    if (_transaction != null)
+                        _command.Transaction = _transaction;
                     _adapter = new(_command)
                     {
                         MissingSchemaAction = MissingSchemaAction.AddWithKey
@@ -547,13 +576,15 @@ namespace HLU.Data.Connection
         /// <returns>The number of rows added to the table, or -1 if an error occurred.</returns>
         public override int FillTable<T>(string sql, ref T table)
         {
-            if (String.IsNullOrEmpty(sql)) return 0;
+            if (String.IsNullOrEmpty(sql))
+                return 0;
             ConnectionState previousConnectionState = _connection.State;
             try
             {
                 _errorMessage = String.Empty;
                 table ??= new T();
-                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                    _connection.Open();
                 NpgsqlDataAdapter adapter = UpdateAdapter(table);
                 if (adapter != null)
                 {
@@ -565,7 +596,8 @@ namespace HLU.Data.Connection
                 {
                     _command.CommandText = sql;
                     _command.CommandType = CommandType.Text;
-                    if (_transaction != null) _command.Transaction = _transaction;
+                    if (_transaction != null)
+                        _command.Transaction = _transaction;
                     _adapter = new(_command);
                     return _adapter.Fill(table);
                 }
@@ -602,7 +634,8 @@ namespace HLU.Data.Connection
                         _transaction.Rollback();
                 }
 
-                if (_connection.State != ConnectionState.Open) _connection.Open();
+                if (_connection.State != ConnectionState.Open)
+                    _connection.Open();
 
                 _transaction = _connection.BeginTransaction(isolationLevel);
                 _commandBuilder.RefreshSchema();
@@ -683,7 +716,8 @@ namespace HLU.Data.Connection
         public override IDataReader ExecuteReader(string sql, int commandTimeout, CommandType commandType)
         {
             _errorMessage = String.Empty;
-            if (String.IsNullOrEmpty(sql)) return null;
+            if (String.IsNullOrEmpty(sql))
+                return null;
             ConnectionState previousConnectionState = _connection.State;
             try
             {
@@ -691,7 +725,8 @@ namespace HLU.Data.Connection
                 _command.CommandTimeout = commandTimeout;
                 _command.CommandText = sql;
 
-                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                    _connection.Open();
 
                 if (_transaction != null)
                 {
@@ -703,7 +738,8 @@ namespace HLU.Data.Connection
             }
             catch (Exception ex)
             {
-                if (previousConnectionState == ConnectionState.Closed) _connection.Close();
+                if (previousConnectionState == ConnectionState.Closed)
+                    _connection.Close();
                 _errorMessage = ex.Message;
                 return null;
             }
@@ -725,7 +761,8 @@ namespace HLU.Data.Connection
         public override int ExecuteNonQuery(string sql, int commandTimeout, CommandType commandType)
         {
             _errorMessage = String.Empty;
-            if (String.IsNullOrEmpty(sql)) return -1;
+            if (String.IsNullOrEmpty(sql))
+                return -1;
             ConnectionState previousConnectionState = _connection.State;
             try
             {
@@ -733,9 +770,11 @@ namespace HLU.Data.Connection
                 _command.CommandTimeout = commandTimeout;
                 _command.CommandText = sql;
 
-                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                    _connection.Open();
 
-                if (_transaction != null) _command.Transaction = _transaction;
+                if (_transaction != null)
+                    _command.Transaction = _transaction;
                 _commandBuilder.RefreshSchema();
 
                 return _command.ExecuteNonQuery();
@@ -758,7 +797,8 @@ namespace HLU.Data.Connection
         public override object ExecuteScalar(string sql, int commandTimeout, CommandType commandType)
         {
             _errorMessage = String.Empty;
-            if (String.IsNullOrEmpty(sql)) return null;
+            if (String.IsNullOrEmpty(sql))
+                return null;
             ConnectionState previousConnectionState = _connection.State;
 
             try
@@ -797,7 +837,8 @@ namespace HLU.Data.Connection
         {
             _errorMessage = String.Empty;
 
-            if (String.IsNullOrEmpty(sql)) return null;
+            if (String.IsNullOrEmpty(sql))
+                return null;
 
             ConnectionState previousConnectionState = _connection.State;
 
@@ -841,7 +882,8 @@ namespace HLU.Data.Connection
         public override bool ValidateQuery(string sql, int commandTimeout, CommandType commandType)
         {
             _errorMessage = String.Empty;
-            if (String.IsNullOrEmpty(sql)) throw (new Exception("Sql is null or empty"));
+            if (String.IsNullOrEmpty(sql))
+                throw (new Exception("Sql is null or empty"));
             ConnectionState previousConnectionState = _connection.State;
             try
             {
@@ -849,9 +891,11 @@ namespace HLU.Data.Connection
                 _command.CommandTimeout = commandTimeout;
                 _command.CommandText = sql;
 
-                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                    _connection.Open();
 
-                if (_transaction != null) _command.Transaction = _transaction;
+                if (_transaction != null)
+                    _command.Transaction = _transaction;
                 _commandBuilder.RefreshSchema();
 
                 _command.ExecuteNonQuery();
@@ -884,10 +928,13 @@ namespace HLU.Data.Connection
         public override int Update<T>(T table, string insertCommand, string updateCommand, string deleteCommand)
         {
             ConnectionState previousConnectionState = _connection.State;
-            if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+            if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                _connection.Open();
 
-            if ((table == null) || (table.Rows.Count == 0)) return 0;
-            if (_adapter == null) return -1;
+            if ((table == null) || (table.Rows.Count == 0))
+                return 0;
+            if (_adapter == null)
+                return -1;
 
             try
             {
@@ -926,7 +973,8 @@ namespace HLU.Data.Connection
             if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
                 _connection.Open();
 
-            if ((table == null) || (table.Rows.Count == 0)) return 0;
+            if ((table == null) || (table.Rows.Count == 0))
+                return 0;
 
             try
             {
@@ -961,7 +1009,8 @@ namespace HLU.Data.Connection
                 _connection.Open();
 
             if ((dataSet == null) || String.IsNullOrEmpty(sourceTable) ||
-                !dataSet.Tables.Contains(sourceTable)) return 0;
+                !dataSet.Tables.Contains(sourceTable))
+                return 0;
 
             try
             {
@@ -997,7 +1046,8 @@ namespace HLU.Data.Connection
             if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
                 _connection.Open();
 
-            if ((rows == null) || (rows.Length == 0)) return 0;
+            if ((rows == null) || (rows.Length == 0))
+                return 0;
 
             try
             {
@@ -1022,13 +1072,15 @@ namespace HLU.Data.Connection
         /// <returns>The NpgsqlDataAdapter for the provided table, or null if the table is null or the adapter could not be created.</returns>
         private NpgsqlDataAdapter UpdateAdapter<T>(T table) where T : DataTable, new()
         {
-            if (table == null) return null;
+            if (table == null)
+                return null;
 
             NpgsqlDataAdapter adapter;
             if (!_adaptersDic.TryGetValue(typeof(T), out adapter))
             {
                 CreateAdapter<T>(table);
-                if (!_adaptersDic.TryGetValue(typeof(T), out adapter)) return null;
+                if (!_adaptersDic.TryGetValue(typeof(T), out adapter))
+                    return null;
             }
 
             if (_transaction != null)
@@ -1047,7 +1099,7 @@ namespace HLU.Data.Connection
             return adapter;
         }
 
-        #endregion Override Methods
+        #endregion Override Members
 
         #region Protected Properties
 
@@ -1058,7 +1110,10 @@ namespace HLU.Data.Connection
         /// <value>The parameter prefix used for PostgreSQL parameters.</value>
         protected override string ParameterPrefix
         {
-            get { return "@"; }
+            get
+            {
+                return "@";
+            }
         }
 
         #endregion Protected Properties
@@ -1105,7 +1160,8 @@ namespace HLU.Data.Connection
                 _connWindow.ShowDialog();
 
                 // throw error if connection failed
-                if (!String.IsNullOrEmpty(_errorMessage)) throw (new Exception(_errorMessage));
+                if (!String.IsNullOrEmpty(_errorMessage))
+                    throw (new Exception(_errorMessage));
             }
             catch (Exception ex)
             {
@@ -1139,7 +1195,8 @@ namespace HLU.Data.Connection
             {
                 ConnectionString = connString;
                 DefaultSchema = defaultSchema;
-                if (!String.IsNullOrEmpty(encoding)) _encoding = encoding;
+                if (!String.IsNullOrEmpty(encoding))
+                    _encoding = encoding;
             }
         }
 
@@ -1149,21 +1206,69 @@ namespace HLU.Data.Connection
 
         #region Public Members
 
-        public override string QuotePrefix { get { return "\""; } }
+        public override string QuotePrefix
+        {
+            get
+            {
+                return "\"";
+            }
+        }
 
-        public override string QuoteSuffix { get { return "\""; } }
+        public override string QuoteSuffix
+        {
+            get
+            {
+                return "\"";
+            }
+        }
 
-        public override string StringLiteralDelimiter { get { return "'"; } }
+        public override string StringLiteralDelimiter
+        {
+            get
+            {
+                return "'";
+            }
+        }
 
-        public override string DateLiteralPrefix { get { return "'"; } }
+        public override string DateLiteralPrefix
+        {
+            get
+            {
+                return "'";
+            }
+        }
 
-        public override string DateLiteralSuffix { get { return "'"; } }
+        public override string DateLiteralSuffix
+        {
+            get
+            {
+                return "'";
+            }
+        }
 
-        public override string WildcardSingleMatch { get { return "_"; } }
+        public override string WildcardSingleMatch
+        {
+            get
+            {
+                return "_";
+            }
+        }
 
-        public override string WildcardManyMatch { get { return "%"; } }
+        public override string WildcardManyMatch
+        {
+            get
+            {
+                return "%";
+            }
+        }
 
-        public override string ConcatenateOperator { get { return "||"; } }
+        public override string ConcatenateOperator
+        {
+            get
+            {
+                return "||";
+            }
+        }
 
         /// <summary>
         /// Does not escape string delimiter or other special characters.
@@ -1173,7 +1278,8 @@ namespace HLU.Data.Connection
         /// <returns>The quoted value as a string.</returns>
         public override string QuoteValue(object value)
         {
-            if (value == null) return "NULL";
+            if (value == null)
+                return "NULL";
             Type valueType = value.GetType();
             int colType;
             if (_typeMapSystemToSQL.TryGetValue(valueType, out colType))
@@ -1186,19 +1292,27 @@ namespace HLU.Data.Connection
                     case NpgsqlDbType.Text:
                     case NpgsqlDbType.Varchar:
                     case NpgsqlDbType.Xml:
-                        if (s.Length == 0) return StringLiteralDelimiter + StringLiteralDelimiter;
-                        if (!s.StartsWith(StringLiteralDelimiter)) s = StringLiteralDelimiter + s;
-                        if (!s.EndsWith(StringLiteralDelimiter)) s += StringLiteralDelimiter;
+                        if (s.Length == 0)
+                            return StringLiteralDelimiter + StringLiteralDelimiter;
+                        if (!s.StartsWith(StringLiteralDelimiter))
+                            s = StringLiteralDelimiter + s;
+                        if (!s.EndsWith(StringLiteralDelimiter))
+                            s += StringLiteralDelimiter;
                         return s;
+
                     case NpgsqlDbType.Date:
                     case NpgsqlDbType.Time:
                     case NpgsqlDbType.Timestamp:
                     case NpgsqlDbType.TimestampTz:
                     case NpgsqlDbType.TimeTz:
-                        if (s.Length == 0) return DateLiteralPrefix + DateLiteralSuffix;
-                        if (!s.StartsWith(DateLiteralPrefix)) s = DateLiteralPrefix + s;
-                        if (!s.EndsWith(DateLiteralSuffix)) s += DateLiteralSuffix;
+                        if (s.Length == 0)
+                            return DateLiteralPrefix + DateLiteralSuffix;
+                        if (!s.StartsWith(DateLiteralPrefix))
+                            s = DateLiteralPrefix + s;
+                        if (!s.EndsWith(DateLiteralSuffix))
+                            s += DateLiteralSuffix;
                         return s;
+
                     default:
                         return s;
                 }
@@ -1242,24 +1356,24 @@ namespace HLU.Data.Connection
 
             Dictionary<Type, int> typeMapSystemToSQLAdd = [];
             typeMapSystemToSQLAdd.Add(typeof(Boolean), (int)NpgsqlDbType.Boolean);
-            typeMapSystemToSQLAdd.Add(typeof(Byte), (int) NpgsqlDbType.Smallint);
-            typeMapSystemToSQLAdd.Add(typeof(Char), (int) NpgsqlDbType.Char);
+            typeMapSystemToSQLAdd.Add(typeof(Byte), (int)NpgsqlDbType.Smallint);
+            typeMapSystemToSQLAdd.Add(typeof(Char), (int)NpgsqlDbType.Char);
             typeMapSystemToSQLAdd.Add(typeof(DateTime), (int)(useTimeZone ? NpgsqlDbType.TimestampTz : NpgsqlDbType.Timestamp));
             typeMapSystemToSQLAdd.Add(typeof(TimeSpan), (int)NpgsqlDbType.Interval);
-            typeMapSystemToSQLAdd.Add(typeof(Decimal), (int) NpgsqlDbType.Numeric);
-            typeMapSystemToSQLAdd.Add(typeof(Double), (int) NpgsqlDbType.Numeric);
-            typeMapSystemToSQLAdd.Add(typeof(Int16), (int) NpgsqlDbType.Smallint);
-            typeMapSystemToSQLAdd.Add(typeof(Int32), (int) NpgsqlDbType.Integer);
-            typeMapSystemToSQLAdd.Add(typeof(Int64), (int) NpgsqlDbType.Bigint);
-            typeMapSystemToSQLAdd.Add(typeof(Object), (int) NpgsqlDbType.Bytea);
-            typeMapSystemToSQLAdd.Add(typeof(SByte), (int) NpgsqlDbType.Smallint);
-            typeMapSystemToSQLAdd.Add(typeof(Single), (int) NpgsqlDbType.Real);
-            typeMapSystemToSQLAdd.Add(typeof(String), (int) NpgsqlDbType.Varchar);
-            typeMapSystemToSQLAdd.Add(typeof(UInt16), (int) NpgsqlDbType.Smallint);
-            typeMapSystemToSQLAdd.Add(typeof(UInt32), (int) NpgsqlDbType.Integer);
-            typeMapSystemToSQLAdd.Add(typeof(UInt64), (int) NpgsqlDbType.Bigint);
-            typeMapSystemToSQLAdd.Add(typeof(Byte[]), (int) NpgsqlDbType.Bytea);
-            typeMapSystemToSQLAdd.Add(typeof(Char[]), (int) NpgsqlDbType.Varchar);
+            typeMapSystemToSQLAdd.Add(typeof(Decimal), (int)NpgsqlDbType.Numeric);
+            typeMapSystemToSQLAdd.Add(typeof(Double), (int)NpgsqlDbType.Numeric);
+            typeMapSystemToSQLAdd.Add(typeof(Int16), (int)NpgsqlDbType.Smallint);
+            typeMapSystemToSQLAdd.Add(typeof(Int32), (int)NpgsqlDbType.Integer);
+            typeMapSystemToSQLAdd.Add(typeof(Int64), (int)NpgsqlDbType.Bigint);
+            typeMapSystemToSQLAdd.Add(typeof(Object), (int)NpgsqlDbType.Bytea);
+            typeMapSystemToSQLAdd.Add(typeof(SByte), (int)NpgsqlDbType.Smallint);
+            typeMapSystemToSQLAdd.Add(typeof(Single), (int)NpgsqlDbType.Real);
+            typeMapSystemToSQLAdd.Add(typeof(String), (int)NpgsqlDbType.Varchar);
+            typeMapSystemToSQLAdd.Add(typeof(UInt16), (int)NpgsqlDbType.Smallint);
+            typeMapSystemToSQLAdd.Add(typeof(UInt32), (int)NpgsqlDbType.Integer);
+            typeMapSystemToSQLAdd.Add(typeof(UInt64), (int)NpgsqlDbType.Bigint);
+            typeMapSystemToSQLAdd.Add(typeof(Byte[]), (int)NpgsqlDbType.Bytea);
+            typeMapSystemToSQLAdd.Add(typeof(Char[]), (int)NpgsqlDbType.Varchar);
             typeMapSystemToSQLAdd.Add(typeof(Guid), (int)NpgsqlDbType.Uuid);
 
             Dictionary<int, Type> typeMapSQLToSystemAdd = [];
@@ -1439,19 +1553,21 @@ namespace HLU.Data.Connection
         /// </summary>
         private void SetPgClientEncoding()
         {
-            if (String.IsNullOrEmpty(_encoding)) return;
+            if (String.IsNullOrEmpty(_encoding))
+                return;
 
             ConnectionState previousConnectionState = _connection.State;
 
             try
             {
-                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                    _connection.Open();
 
                 _command.CommandText = "SET client_encoding TO " + ("'" + _encoding.Trim() + "'").Replace("''", "'");
                 _command.ExecuteNonQuery();
             }
             catch { }
-            finally { if (previousConnectionState != ConnectionState.Open) _connection.Close() ; }
+            finally { if (previousConnectionState != ConnectionState.Open) _connection.Close(); }
         }
 
         #endregion Private Methods

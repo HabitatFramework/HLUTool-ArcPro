@@ -61,7 +61,6 @@
                             Margin="0,0,0,0"
                             Description="Which additional columns from the GIS layer are displayed in the History tab for each update. If the checkbox for a column is selected the column will be displayed."
                             Header="Display History Columns" />
-
                     </Grid>
 
                     <ListBox
@@ -78,11 +77,8 @@
                                 <CheckBox Content="{Binding Item, Mode=TwoWay}" IsChecked="{Binding IsSelected, Mode=TwoWay}" />
                             </DataTemplate>
                         </ListBox.ItemTemplate>
-
                     </ListBox>
-
                 </Grid>
-
             </Expander>
 
             <Expander
@@ -107,9 +103,7 @@
                         Margin="5,0,0,0"
                         Description="Whether the modified length [km] and area [ha] are to be shown for each entry in the History tab."
                         Header="Display Geometry Measurements" />
-
                 </Grid>
-
             </Expander>
 
             <Expander
@@ -143,11 +137,8 @@
                         Margin="5,0,0,0"
                         Description="The number of entries displayed in the ‘History’ tab of the main interface."
                         Header="Display History Rows" />
-
                 </Grid>
-
             </Expander>
-
         </StackPanel>
 
         <TextBlock
@@ -162,7 +153,5 @@
                 Learn more about user history options
             </Hyperlink>
         </TextBlock>
-
     </Grid>
-
 </UserControl>

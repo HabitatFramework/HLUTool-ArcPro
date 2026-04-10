@@ -17,23 +17,23 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Data;
+using HLU.Data.Model;
+using HLU.Enums;
+using HLU.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using HLU.Data;
-using HLU.Data.Model;
-using HLU.Enums;
-using HLU.Helpers;
 
 namespace HLU.UI.ViewModel
 {
     /// <summary>
     /// Helper methods for the main window view model.
     /// </summary>
-    static partial class ViewModelWindowMainHelpers
+    internal static partial class ViewModelWindowMainHelpers
     {
         #region Helpers
 
@@ -146,7 +146,8 @@ namespace HLU.UI.ViewModel
             int incidOrdinal, T incidTable, IEnumerable<string> incidList) where T : DataTable
         {
             // If the incid list is null or empty, return null.
-            if ((incidList == null) || (!incidList.Any())) return null;
+            if ((incidList == null) || (!incidList.Any()))
+                return null;
 
             // Sort incids to provide consistent UI ordering and stable paging.
             IEnumerable<string> orderedIncids = incidList.OrderBy(i => i);
@@ -223,7 +224,8 @@ namespace HLU.UI.ViewModel
         public static string GetOperationsCode(HluDataSet hluDS, Operations modifyOperation)
         {
             // If the hluDS is null or the lut_operation is null then return null.
-            if ((hluDS == null) || (hluDS.lut_operation == null)) return null;
+            if ((hluDS == null) || (hluDS.lut_operation == null))
+                return null;
 
             // Get the operation name from the enum value.
             string operationName = Enum.GetName(typeof(Operations), modifyOperation);
@@ -252,7 +254,8 @@ namespace HLU.UI.ViewModel
         public static string GetReasonCode(HluDataSet hluDS, string reasonDescription)
         {
             // If the hluDS is null or the lut_reason is null then return null.
-            if ((hluDS == null) || (hluDS.lut_reason == null)) return null;
+            if ((hluDS == null) || (hluDS.lut_reason == null))
+                return null;
 
             // Try matching by description first (normal case).
             var byDesc = hluDS.lut_reason
@@ -278,7 +281,8 @@ namespace HLU.UI.ViewModel
         public static string GetProcessCode(HluDataSet hluDS, string processDescription)
         {
             // If the hluDS is null or the lut_process is null then return null.
-            if ((hluDS == null) || (hluDS.lut_process == null)) return null;
+            if ((hluDS == null) || (hluDS.lut_process == null))
+                return null;
 
             // Try matching by description first (normal case).
             var byDesc = hluDS.lut_process

@@ -40,7 +40,10 @@ namespace HLU.UI.UserControls
         /// <value>The selected items in the list.</value>
         public IEnumerable<T> SelectedItems
         {
-            get { return this.Where(x => x.IsSelected).Select(x => x.Item); }
+            get
+            {
+                return this.Where(x => x.IsSelected).Select(x => x.Item);
+            }
         }
 
         /// <summary>
@@ -49,7 +52,10 @@ namespace HLU.UI.UserControls
         /// <value>All of the items in the SelectionList.</value>
         public IEnumerable<T> AllItems
         {
-            get { return this.Select(x => x.Item); }
+            get
+            {
+                return this.Select(x => x.Item);
+            }
         }
 
         #endregion Properties
@@ -78,7 +84,8 @@ namespace HLU.UI.UserControls
             int i = 0;
             foreach (T existingItem in AllItems)
             {
-                if (item.CompareTo(existingItem) < 0) break;
+                if (item.CompareTo(existingItem) < 0)
+                    break;
                 i++;
             }
             Insert(i, new SelectionItem<T>(item));

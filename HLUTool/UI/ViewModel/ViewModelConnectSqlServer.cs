@@ -17,28 +17,29 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Data.Connection;
+using HLU.Enums;
+using HLU.Properties;
+using Microsoft.Data.Sql;
+using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using Microsoft.Data.Sql;
-using Microsoft.Data.SqlClient;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using HLU.Data.Connection;
-using HLU.Properties;
-using HLU.Enums;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
 {
-    class ViewModelConnectSqlServer : ViewModelBase, IDataErrorInfo
+    internal class ViewModelConnectSqlServer : ViewModelBase, IDataErrorInfo
     {
         #region Private Members
 
         //private IntPtr _windowHandle;
         private string _displayName;
+
         private RelayCommand _okCommand;
         private RelayCommand _cancelCommand;
         private List<String> _servers;
@@ -71,7 +72,13 @@ namespace HLU.UI.ViewModel
         /// user input and to test the connection when Ok is clicked.
         /// </summary>
         /// <value>The <see cref="SqlConnectionStringBuilder"/> instance used to build the connection string.</value>
-        public SqlConnectionStringBuilder ConnectionStringBuilder { get { return _connStrBuilder; } }
+        public SqlConnectionStringBuilder ConnectionStringBuilder
+        {
+            get
+            {
+                return _connStrBuilder;
+            }
+        }
 
         #endregion Connection String Builder
 
@@ -83,8 +90,14 @@ namespace HLU.UI.ViewModel
         /// <value>The display name for the dialog.</value>
         public override string DisplayName
         {
-            get { return _displayName; }
-            set { _displayName = value; }
+            get
+            {
+                return _displayName;
+            }
+            set
+            {
+                _displayName = value;
+            }
         }
 
         #endregion Display Name
@@ -95,7 +108,13 @@ namespace HLU.UI.ViewModel
         /// Get the window title for the dialog.
         /// </summary>
         /// <value>The window title for the dialog.</value>
-        public override string WindowTitle { get { return DisplayName; } }
+        public override string WindowTitle
+        {
+            get
+            {
+                return DisplayName;
+            }
+        }
 
         #endregion Window Title
 
@@ -211,22 +230,25 @@ namespace HLU.UI.ViewModel
         /// <value>The server name for the connection.</value>
         public string Server
         {
-            get { return _connStrBuilder.DataSource; }
+            get
+            {
+                return _connStrBuilder.DataSource;
+            }
             set
             {
                 string newValue = value ?? string.Empty;
                 if (newValue != _connStrBuilder.DataSource)
                 {
                     _connStrBuilder.DataSource = newValue;
-                        _databases = [];
-                        _connStrBuilder.InitialCatalog = string.Empty;
-                        _schemata = [];
-                        _defaultSchema = string.Empty;
-                        OnPropertyChanged(nameof(HasServer));
-                        OnPropertyChanged(nameof(Databases));
-                        OnPropertyChanged(nameof(Database));
-                        OnPropertyChanged(nameof(Schemata));
-                        OnPropertyChanged(nameof(DefaultSchema));
+                    _databases = [];
+                    _connStrBuilder.InitialCatalog = string.Empty;
+                    _schemata = [];
+                    _defaultSchema = string.Empty;
+                    OnPropertyChanged(nameof(HasServer));
+                    OnPropertyChanged(nameof(Databases));
+                    OnPropertyChanged(nameof(Database));
+                    OnPropertyChanged(nameof(Schemata));
+                    OnPropertyChanged(nameof(DefaultSchema));
                 }
 
                 _connStrBuilder.Encrypt = SqlConnectionEncryptOption.Optional;
@@ -248,7 +270,9 @@ namespace HLU.UI.ViewModel
                 _servers = [];
                 return [.. _servers];
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -295,7 +319,10 @@ namespace HLU.UI.ViewModel
         /// <value>True if Windows Authentication is used; otherwise, false.</value>
         public bool WindowsAuthentication
         {
-            get { return _connStrBuilder.IntegratedSecurity; }
+            get
+            {
+                return _connStrBuilder.IntegratedSecurity;
+            }
             set
             {
                 _connStrBuilder.IntegratedSecurity = value;
@@ -311,7 +338,10 @@ namespace HLU.UI.ViewModel
         /// <value>True if SQL Server Authentication is used; otherwise, false.</value>
         public bool SQLServerAuthentication
         {
-            get { return !_connStrBuilder.IntegratedSecurity; }
+            get
+            {
+                return !_connStrBuilder.IntegratedSecurity;
+            }
             set
             {
                 _connStrBuilder.IntegratedSecurity = !value;
@@ -327,8 +357,15 @@ namespace HLU.UI.ViewModel
         /// <value>The username for SQL Server Authentication.</value>
         public string Username
         {
-            get { return _connStrBuilder.UserID; }
-            set { if (value != _connStrBuilder.UserID) _connStrBuilder.UserID = value; }
+            get
+            {
+                return _connStrBuilder.UserID;
+            }
+            set
+            {
+                if (value != _connStrBuilder.UserID)
+                    _connStrBuilder.UserID = value;
+            }
         }
 
         /// <summary>
@@ -337,8 +374,15 @@ namespace HLU.UI.ViewModel
         /// <value>The password for SQL Server Authentication.</value>
         public string Password
         {
-            get { return _connStrBuilder.Password; }
-            set { if (value != _connStrBuilder.Password) _connStrBuilder.Password = value; }
+            get
+            {
+                return _connStrBuilder.Password;
+            }
+            set
+            {
+                if (value != _connStrBuilder.Password)
+                    _connStrBuilder.Password = value;
+            }
         }
 
         #endregion Authentication
@@ -351,7 +395,10 @@ namespace HLU.UI.ViewModel
         /// <value>The database name for the connection.</value>
         public string Database
         {
-            get { return _connStrBuilder.InitialCatalog; }
+            get
+            {
+                return _connStrBuilder.InitialCatalog;
+            }
             set
             {
                 if (value != _connStrBuilder.InitialCatalog)
@@ -373,7 +420,9 @@ namespace HLU.UI.ViewModel
             {
                 return [.. _databases];
             }
-            set { }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -416,8 +465,13 @@ namespace HLU.UI.ViewModel
         /// <value>An array of available schema names for the selected database.</value>
         public string[] Schemata
         {
-            get { return [.. _schemata]; }
-            set { }
+            get
+            {
+                return [.. _schemata];
+            }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -426,7 +480,10 @@ namespace HLU.UI.ViewModel
         /// <value>The default schema for the connection.</value>
         public string DefaultSchema
         {
-            get { return _defaultSchema; }
+            get
+            {
+                return _defaultSchema;
+            }
             set
             {
                 if (value != _defaultSchema)
@@ -468,12 +525,14 @@ namespace HLU.UI.ViewModel
             }
             finally
             {
-                if ((cn != null) && (cn.State != ConnectionState.Closed)) cn.Close();
+                if ((cn != null) && (cn.State != ConnectionState.Closed))
+                    cn.Close();
 
                 _schemata = schemaList;
                 OnPropertyChanged(nameof(Schemata));
 
-                if (_schemata.Count == 1) _defaultSchema = _schemata[0];
+                if (_schemata.Count == 1)
+                    _defaultSchema = _schemata[0];
                 OnPropertyChanged(nameof(DefaultSchema));
             }
         }
@@ -510,7 +569,8 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public void NotifyValidationOnLoad(System.Windows.Data.BindingExpression[] expressions)
         {
-            if (expressions == null) return;
+            if (expressions == null)
+                return;
             foreach (var expr in expressions)
                 expr?.ValidateWithoutUpdate();
         }
@@ -531,7 +591,6 @@ namespace HLU.UI.ViewModel
 
                 if (String.IsNullOrEmpty(_connStrBuilder.DataSource) || String.IsNullOrEmpty(_connStrBuilder.InitialCatalog))
                     error = "Error: You must provide at least server name and database";
-
 
                 if (!_connStrBuilder.IntegratedSecurity && String.IsNullOrEmpty(_connStrBuilder.UserID))
                     error = "Error: You must provide user id (and usually password) if using SQL Server authentication";
@@ -559,14 +618,17 @@ namespace HLU.UI.ViewModel
                         if (String.IsNullOrEmpty(_connStrBuilder.DataSource))
                             error = "Error: You must choose a server";
                         break;
+
                     case "Username":
                         if ((!_connStrBuilder.IntegratedSecurity) && (String.IsNullOrEmpty(_connStrBuilder.UserID)))
                             error = "Error: You must provide a user id";
                         break;
+
                     case "Database":
                         if (String.IsNullOrEmpty(_connStrBuilder.InitialCatalog))
                             error = "Error: You must choose a database";
                         break;
+
                     case "DefaultSchema":
                         if (String.IsNullOrEmpty(_defaultSchema))
                             error = "Error: You must choose a default schema";

@@ -21,11 +21,11 @@
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using ArcGIS.Desktop.Core.Events;
+using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Internal.Framework.Controls;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
-using ArcGIS.Desktop.Editing.Events;
 using HLU.Data;
 using HLU.Data.Model;
 using HLU.Enums;
@@ -36,12 +36,10 @@ using HLU.Properties;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using ComboBox = ArcGIS.Desktop.Framework.Contracts.ComboBox;
 using CommandType = System.Data.CommandType;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
@@ -130,7 +128,13 @@ namespace HLU.UI.ViewModel
         /// polygon) associated with the GIS layer. The value can be used to guide rendering, analysis, or data
         /// processing operations that depend on the layer's geometry.</remarks>
         /// <value>The geometry type of the GIS layer.</value>
-        public HluGeometryTypes GisLayerType { get { return _gisLayerType; } }
+        public HluGeometryTypes GisLayerType
+        {
+            get
+            {
+                return _gisLayerType;
+            }
+        }
 
         #endregion Properties - GIS Info
 
@@ -144,7 +148,10 @@ namespace HLU.UI.ViewModel
         /// <value>The IDs of the incids currently selected in the map.</value>
         internal IEnumerable<string> IncidsSelectedMap
         {
-            get { return _incidsSelectedMap; }
+            get
+            {
+                return _incidsSelectedMap;
+            }
         }
 
         /// <summary>
@@ -155,7 +162,10 @@ namespace HLU.UI.ViewModel
         /// <value>The IDs of the toids currently selected in the map.</value>
         internal IEnumerable<string> ToidsSelectedMap
         {
-            get { return _toidsSelectedMap; }
+            get
+            {
+                return _toidsSelectedMap;
+            }
         }
 
         /// <summary>
@@ -166,7 +176,10 @@ namespace HLU.UI.ViewModel
         /// <value>The IDs of the fragments currently selected in the map.</value>
         internal IEnumerable<string> FragsSelectedMap
         {
-            get { return _fragsSelectedMap; }
+            get
+            {
+                return _fragsSelectedMap;
+            }
         }
 
         #endregion Properties - Selection State
@@ -230,7 +243,10 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public bool CanSelectOnMap
         {
-            get { return IsNotBulkMode && IsNotOsmmReviewMode && IncidCurrentRow != null; }
+            get
+            {
+                return IsNotBulkMode && IsNotOsmmReviewMode && IncidCurrentRow != null;
+            }
         }
 
         /// <summary>
@@ -255,7 +271,10 @@ namespace HLU.UI.ViewModel
         public bool CanGetMapSelection
         {
             // Can get map selection if not in Bulk Update mode.
-            get { return IsNotBulkMode; }
+            get
+            {
+                return IsNotBulkMode;
+            }
         }
 
         #endregion Properties - Map Selection
@@ -268,8 +287,14 @@ namespace HLU.UI.ViewModel
         /// <value>The count of selected Incids in the database.</value>
         public int SelectedIncidsInDBCount
         {
-            get { return _selectedIncidsInDBCount; }
-            set { _selectedIncidsInDBCount = value; }
+            get
+            {
+                return _selectedIncidsInDBCount;
+            }
+            set
+            {
+                _selectedIncidsInDBCount = value;
+            }
         }
 
         /// <summary>
@@ -278,8 +303,14 @@ namespace HLU.UI.ViewModel
         /// <value>The count of selected Frags in the database.</value>
         public int SelectedFragsInDBCount
         {
-            get { return _selectedFragsInDBCount; }
-            set { _selectedFragsInDBCount = value; }
+            get
+            {
+                return _selectedFragsInDBCount;
+            }
+            set
+            {
+                _selectedFragsInDBCount = value;
+            }
         }
 
         /// <summary>
@@ -288,8 +319,13 @@ namespace HLU.UI.ViewModel
         /// <value><c>true</c> if the count of selected Incids in GIS can be retrieved; otherwise, <c>false</c>.</value>
         public int SelectedIncidsInGISCount
         {
-            get { return _selectedIncidsInGISCount; }
-            set { }
+            get
+            {
+                return _selectedIncidsInGISCount;
+            }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -298,8 +334,13 @@ namespace HLU.UI.ViewModel
         /// <value><c>true</c> if the count of selected Toids in GIS can be retrieved; otherwise, <c>false</c>.</value>
         public int SelectedToidsInGISCount
         {
-            get { return _selectedToidsInGISCount; }
-            set { }
+            get
+            {
+                return _selectedToidsInGISCount;
+            }
+            set
+            {
+            }
         }
 
         /// <summary>
@@ -308,8 +349,13 @@ namespace HLU.UI.ViewModel
         /// <value><c>true</c> if the count of selected Frags in GIS can be retrieved; otherwise, <c>false</c>.</value>
         public int SelectedFragsInGISCount
         {
-            get { return _selectedFragsInGISCount; }
-            set { }
+            get
+            {
+                return _selectedFragsInGISCount;
+            }
+            set
+            {
+            }
         }
 
         #endregion Properties - Selection Counts
@@ -320,7 +366,13 @@ namespace HLU.UI.ViewModel
         /// Can the map be zoomed to the current selection?
         /// </summary>
         /// <value><c>true</c> if the map can be zoomed to the current selection; otherwise, <c>false</c>.</value>
-        public bool CanZoomToSelection { get { return _gisSelection != null; } }
+        public bool CanZoomToSelection
+        {
+            get
+            {
+                return _gisSelection != null;
+            }
+        }
 
         #endregion Properties - Map Zoom
 
@@ -362,7 +414,7 @@ namespace HLU.UI.ViewModel
         /// <value><c>true</c> if a merge operation can be performed; otherwise, <c>false</c>.</value>
         public bool CanMerge => _canPhysicallyMerge || _canLogicallyMerge;
 
-        #endregion Properies - Split/Merge Commands
+        #endregion Properties - Split/Merge Commands
 
         #endregion Properties
 
@@ -377,6 +429,9 @@ namespace HLU.UI.ViewModel
         /// <param name="obj">Event arguments containing details about the active map view change.</param>
         private async void OnActiveMapViewChanged(ActiveMapViewChangedEventArgs obj)
         {
+            // Clear any existing GIS error messages
+            ClearMessage(category: MessageCategory.GIS, level: MessageType.Error);
+
             // If there is no active map view.
             if (MapView.Active == null)
             {
@@ -385,6 +440,7 @@ namespace HLU.UI.ViewModel
 
                 // Display an error message.
                 ShowError("No active map.", MessageCategory.GIS);
+
                 return;
             }
 
@@ -695,7 +751,8 @@ namespace HLU.UI.ViewModel
         /// <returns>A task representing the asynchronous operation.</returns>
         public async Task SelectOnMapAsync(bool updateIncidSelection)
         {
-            if (IncidCurrentRow == null) return;
+            if (IncidCurrentRow == null)
+                return;
 
             // Temporarily store the incid and GIS selections whilst
             // selecting the current incid in GIS so that the selections
@@ -778,7 +835,6 @@ namespace HLU.UI.ViewModel
                     // Analyse the results of the GIS selection by counting
                     // the number of incids, toids and fragments selected.
                     AnalyzeGisSelectionSet(updateIncidSelection);
-
                 }
                 else
                 {
@@ -867,8 +923,10 @@ namespace HLU.UI.ViewModel
                     case MessageBoxResult.Yes:
                         //if (!_viewModelUpd.Update()) return;
                         break;
+
                     case MessageBoxResult.No:
                         break;
+
                     case MessageBoxResult.Cancel:
                         return;
                 }
@@ -1421,7 +1479,6 @@ namespace HLU.UI.ViewModel
             }
 
             return true;
-
         }
 
         #endregion Check Selected Features
@@ -1764,5 +1821,5 @@ namespace HLU.UI.ViewModel
         #endregion Split/Merge Action
 
         #endregion Methods
-   }
+    }
 }

@@ -16,14 +16,9 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Desktop.Framework.Contracts;
 using HLU.UI.ViewModel;
 using System;
-using System.Collections.Generic;
-using ArcGIS.Desktop.Framework.Contracts;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ArcGIS.Desktop.Framework.Dialogs;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.UserControls.Toolbar

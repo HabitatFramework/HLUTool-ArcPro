@@ -21,16 +21,14 @@
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using ArcGIS.Desktop.Core;
-using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Internal.Framework.Controls;
 using ArcGIS.Desktop.Mapping;
-using ArcGIS.Desktop.Mapping.Events;
 using HLU.Data;
 using HLU.Data.Model;
 using HLU.Date;
 using HLU.Enums;
+using HLU.Exceptions;
 using HLU.Helpers;
 using HLU.Properties;
 using HLU.UI.UserControls;
@@ -42,22 +40,15 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Threading;
-using System.Timers;
-using ComboBox = ArcGIS.Desktop.Framework.Contracts.ComboBox;
-using CommandType = System.Data.CommandType;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
-using HLU.Exceptions;
 
 namespace HLU.UI.ViewModel
 {
@@ -591,8 +582,6 @@ namespace HLU.UI.ViewModel
             }
         }
 
-
-
         /// <summary>
         /// Gets or sets the created date of the current incid.
         /// </summary>
@@ -1041,7 +1030,6 @@ namespace HLU.UI.ViewModel
             get
             {
                 return _process;
-
             }
             set
             {
@@ -1249,7 +1237,6 @@ namespace HLU.UI.ViewModel
             }
         }
 
-
         #endregion Properties - Tab Control State
 
         #region Properties - Habitat Tab
@@ -1285,7 +1272,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion Properties - Habitat Header
+        #endregion Properties - Habitat Label/Header
 
         #region Properties - Habitat Class/Type
 
@@ -2091,7 +2078,6 @@ namespace HLU.UI.ViewModel
 
                     // Set the full list of secondary groups (used in the options window).
                     _secondaryGroupsWithAll = secondaryGroupsWithAll;
-
                 }
 
                 return _secondaryGroupsWithAll;
@@ -3709,7 +3695,6 @@ namespace HLU.UI.ViewModel
                 // Check if there are any valid condition rows.
                 if (!CheckCondition())
                     return null;
-
 
                 if ((_incidConditionRows.Length > 0) && (_incidConditionRows[0] != null) &&
                     !_incidConditionRows[0].IsNull(HluDataset.incid_condition.condition_date_startColumn) &&
@@ -7918,9 +7903,11 @@ namespace HLU.UI.ViewModel
             {
                 case MessageBoxResult.Yes:
                     break;
+
                 case MessageBoxResult.No:
                     Changed = false;
                     return;
+
                 case MessageBoxResult.Cancel:
                     return;
             }
@@ -8026,7 +8013,6 @@ namespace HLU.UI.ViewModel
                         }
                         _splitting = false;
 
-
                         // If the update failed then restore any active filter exactly as
                         // it was.
                         if (_updateCancelled == true)
@@ -8035,7 +8021,6 @@ namespace HLU.UI.ViewModel
                             ChangeCursor(Cursors.Arrow);
                             return;
                         }
-
                     }
 
                     // Apply the updates on the current incid.
@@ -8210,7 +8195,6 @@ namespace HLU.UI.ViewModel
 
                 // Save changes back to XML.
                 SaveAddInSettings(_addInSettings);
-
             }
 
             // If the user wants to proceed with the update then set whether they
@@ -8256,8 +8240,10 @@ namespace HLU.UI.ViewModel
                 case MessageBoxResult.Yes:
                     //if (!_viewModelUpd.Update()) return;
                     break;
+
                 case MessageBoxResult.No:
                     break;
+
                 case MessageBoxResult.Cancel:
                     return;
             }
@@ -8309,8 +8295,10 @@ namespace HLU.UI.ViewModel
                     case MessageBoxResult.Yes:
                         //if (!_viewModelUpd.Update()) return;
                         break;
+
                     case MessageBoxResult.No:
                         break;
+
                     case MessageBoxResult.Cancel:
                         return;
                 }
@@ -8351,7 +8339,6 @@ namespace HLU.UI.ViewModel
         /// <param name="param">The parameter passed to the command.</param>
         private async void OSMMSkipClicked(object param)
         {
-
             // Skip the OSMM Update for the current incid (don't wait).
             await OSMMSkipAsync();
         }
@@ -8515,7 +8502,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion OSMM Update Handler
+        #endregion OSMM Review Handler
 
         #region OSMM Update Accept/Reject
 
@@ -8605,8 +8592,10 @@ namespace HLU.UI.ViewModel
                 {
                     case MessageBoxResult.Yes:
                         break;
+
                     case MessageBoxResult.No:
                         break;
+
                     case MessageBoxResult.Cancel:
                         return;
                 }
@@ -9249,7 +9238,6 @@ namespace HLU.UI.ViewModel
                 // create a selection DataTable of PK values of IncidTable
                 if (whereTables.Count != 0)
                 {
-
                     // Replace any connection type specific qualifiers and delimiters.
                     string newWhereClause = null;
                     if (sqlWhereClause != null)
@@ -9989,5 +9977,5 @@ namespace HLU.UI.ViewModel
         private static partial Regex SecondaryCodesRangeRegex();
 
         #endregion Regex
-   }
+    }
 }

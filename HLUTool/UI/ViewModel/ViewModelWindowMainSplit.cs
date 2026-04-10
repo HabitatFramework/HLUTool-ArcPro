@@ -30,13 +30,11 @@ using HLU.Exceptions;
 using HLU.GISApplication;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Threading;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
@@ -323,7 +321,8 @@ namespace HLU.UI.ViewModel
             catch (Exception ex)
             {
                 // Rollback the transaction on error.
-                if (startTransaction) _viewModelMain.DataBase.RollbackTransaction();
+                if (startTransaction)
+                    _viewModelMain.DataBase.RollbackTransaction();
                 success = false;
 
                 // Ensure any queued but unexecuted GIS edits are discarded.
@@ -610,7 +609,8 @@ namespace HLU.UI.ViewModel
             catch (Exception ex)
             {
                 // Rollback the transaction on error.
-                if (startTransaction) _viewModelMain.DataBase.RollbackTransaction();
+                if (startTransaction)
+                    _viewModelMain.DataBase.RollbackTransaction();
                 success = false;
 
                 // Ensure any queued but unexecuted GIS edits are discarded.
@@ -698,7 +698,8 @@ namespace HLU.UI.ViewModel
                 // ---------------------------------------------------------------------
                 HluDataSet.incidRow newIncidRow = _viewModelMain.IncidTable.NewincidRow();
                 for (int i = 0; i < _viewModelMain.IncidTable.Columns.Count; i++)
-                    if (!_viewModelMain.IncidCurrentRow.IsNull(i)) newIncidRow[i] = _viewModelMain.IncidCurrentRow[i];
+                    if (!_viewModelMain.IncidCurrentRow.IsNull(i))
+                        newIncidRow[i] = _viewModelMain.IncidCurrentRow[i];
 
                 // Get the next number for the new incid.
                 string newIncid = _viewModelMain.NextIncid;
@@ -754,7 +755,8 @@ namespace HLU.UI.ViewModel
                         {
                             HluDataSet.incid_ihs_matrixRow newIncidIhsMatrixRow = _viewModelMain.IncidIhsMatrixTable.Newincid_ihs_matrixRow();
                             for (int i = 0; i < _viewModelMain.IncidIhsMatrixTable.Columns.Count; i++)
-                                if (!row.IsNull(i)) newIncidIhsMatrixRow[i] = row[i];
+                                if (!row.IsNull(i))
+                                    newIncidIhsMatrixRow[i] = row[i];
 
                             ihsMatrixRows.Add(newIncidIhsMatrixRow);
                         }
@@ -810,7 +812,8 @@ namespace HLU.UI.ViewModel
                         {
                             HluDataSet.incid_ihs_formationRow newIncidIhsFormationRow = _viewModelMain.IncidIhsFormationTable.Newincid_ihs_formationRow();
                             for (int i = 0; i < _viewModelMain.IncidIhsFormationTable.Columns.Count; i++)
-                                if (!row.IsNull(i)) newIncidIhsFormationRow[i] = row[i];
+                                if (!row.IsNull(i))
+                                    newIncidIhsFormationRow[i] = row[i];
 
                             ihsFormationRows.Add(newIncidIhsFormationRow);
                         }
@@ -866,7 +869,8 @@ namespace HLU.UI.ViewModel
                         {
                             HluDataSet.incid_ihs_managementRow newIncidIhsManagementRow = _viewModelMain.IncidIhsManagementTable.Newincid_ihs_managementRow();
                             for (int i = 0; i < _viewModelMain.IncidIhsManagementTable.Columns.Count; i++)
-                                if (!row.IsNull(i)) newIncidIhsManagementRow[i] = row[i];
+                                if (!row.IsNull(i))
+                                    newIncidIhsManagementRow[i] = row[i];
 
                             ihsManagementRows.Add(newIncidIhsManagementRow);
                         }
@@ -922,7 +926,8 @@ namespace HLU.UI.ViewModel
                         {
                             HluDataSet.incid_ihs_complexRow newIncidIhsComplexRow = _viewModelMain.IncidIhsComplexTable.Newincid_ihs_complexRow();
                             for (int i = 0; i < _viewModelMain.IncidIhsComplexTable.Columns.Count; i++)
-                                if (!row.IsNull(i)) newIncidIhsComplexRow[i] = row[i];
+                                if (!row.IsNull(i))
+                                    newIncidIhsComplexRow[i] = row[i];
 
                             ihsComplexRows.Add(newIncidIhsComplexRow);
                         }
@@ -975,7 +980,8 @@ namespace HLU.UI.ViewModel
                         {
                             HluDataSet.incid_secondaryRow newIncidSecondaryRow = _viewModelMain.IncidSecondaryTable.Newincid_secondaryRow();
                             for (int i = 0; i < _viewModelMain.IncidSecondaryTable.Columns.Count; i++)
-                                if (!row.IsNull(i)) newIncidSecondaryRow[i] = row[i];
+                                if (!row.IsNull(i))
+                                    newIncidSecondaryRow[i] = row[i];
 
                             secondaryRows.Add(newIncidSecondaryRow);
                         }
@@ -1028,8 +1034,8 @@ namespace HLU.UI.ViewModel
                 if (_viewModelMain.IncidBapRowsAuto != null)
                 {
                     beAuto = from b in _viewModelMain.IncidBapRowsAuto
-                                       group b by b.Bap_habitat into habs
-                                       select habs.First();
+                             group b by b.Bap_habitat into habs
+                             select habs.First();
                 }
 
                 // Get a list of the user BAP rows, removing any duplicate
@@ -1122,7 +1128,8 @@ namespace HLU.UI.ViewModel
                         {
                             HluDataSet.incid_conditionRow newIncidConditionRow = _viewModelMain.IncidConditionTable.Newincid_conditionRow();
                             for (int i = 0; i < _viewModelMain.IncidConditionTable.Columns.Count; i++)
-                                if (!row.IsNull(i)) newIncidConditionRow[i] = row[i];
+                                if (!row.IsNull(i))
+                                    newIncidConditionRow[i] = row[i];
 
                             conditionRows.Add(newIncidConditionRow);
                         }
@@ -1175,7 +1182,8 @@ namespace HLU.UI.ViewModel
                         {
                             HluDataSet.incid_sourcesRow newIncidSourcesRow = _viewModelMain.IncidSourcesTable.Newincid_sourcesRow();
                             for (int i = 0; i < _viewModelMain.IncidSourcesTable.Columns.Count; i++)
-                                if (!row.IsNull(i)) newIncidSourcesRow[i] = row[i];
+                                if (!row.IsNull(i))
+                                    newIncidSourcesRow[i] = row[i];
 
                             sourcesRows.Add(newIncidSourcesRow);
                         }
@@ -1229,7 +1237,8 @@ namespace HLU.UI.ViewModel
                         {
                             HluDataSet.incid_osmm_updatesRow newIncidOSMMUpdatesRow = _viewModelMain.IncidOSMMUpdatesTable.Newincid_osmm_updatesRow();
                             for (int i = 0; i < _viewModelMain.IncidOSMMUpdatesTable.Columns.Count; i++)
-                                if (!row.IsNull(i)) newIncidOSMMUpdatesRow[i] = row[i];
+                                if (!row.IsNull(i))
+                                    newIncidOSMMUpdatesRow[i] = row[i];
 
                             OSMMUpdatesRows.Add(newIncidOSMMUpdatesRow);
                         }
@@ -1264,7 +1273,8 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Commit the transaction if one was started.
-                if (startTransaction) _viewModelMain.DataBase.CommitTransaction();
+                if (startTransaction)
+                    _viewModelMain.DataBase.CommitTransaction();
 
                 return true;
             }
@@ -1293,12 +1303,15 @@ namespace HLU.UI.ViewModel
             where R : DataRow
             where T : DataTable
         {
-            if (row == null) return null;
+            if (row == null)
+                return null;
             T table = (T)((R)row).Table;
             R newRow = (R)table.NewRow();
-            if ((table.PrimaryKey == null) || (table.PrimaryKey.Length != 1)) return null;
+            if ((table.PrimaryKey == null) || (table.PrimaryKey.Length != 1))
+                return null;
             int pkOrdinal = table.PrimaryKey[0].Ordinal;
-            if (table.Columns[pkOrdinal].DataType != typeof(Int32)) return null;
+            if (table.Columns[pkOrdinal].DataType != typeof(Int32))
+                return null;
             for (int i = 0; i < table.Columns.Count; i++)
             {
                 if (i == incidColumnOrdinal)
@@ -1328,7 +1341,8 @@ namespace HLU.UI.ViewModel
             // If exactly one row was found, update it with the values from the BapEnvironment object.
             if (q.Count() == 1)
             {
-                if (!be.IsValid()) return null;
+                if (!be.IsValid())
+                    return null;
                 HluDataSet.incid_bapRow oldRow = q.ElementAt(0);
                 object[] itemArray = be.ToItemArray();
                 for (int i = 0; i < itemArray.Length; i++)

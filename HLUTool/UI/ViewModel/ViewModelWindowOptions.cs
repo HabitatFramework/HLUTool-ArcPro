@@ -24,16 +24,12 @@ using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using HLU.Data.Model;
 using HLU.Enums;
-using HLU.GISApplication;
 using HLU.Properties;
 using HLU.UI.UserControls;
 using HLU.UI.View;
-using HLU.UI.ViewModel;
-using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
@@ -48,7 +44,6 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
@@ -56,7 +51,7 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// View model for the Options window.
     /// </summary>
-    partial class ViewModelWindowOptions : ViewModelBase, IDataErrorInfo
+    internal partial class ViewModelWindowOptions : ViewModelBase, IDataErrorInfo
     {
         #region Fields
 
@@ -79,10 +74,12 @@ namespace HLU.UI.ViewModel
 
         // Application Database options
         private int? _dbConnectionTimeout;
+
         private int? _incidTablePageSize;
 
         // Application Dates options
         private string _seasonSpring;
+
         private string _seasonSummer;
         private string _seasonAutumn;
         private string _seasonWinter;
@@ -90,12 +87,14 @@ namespace HLU.UI.ViewModel
 
         // Application Validation options
         private int _habitatSecondaryCodeValidation;
+
         private int _primarySecondaryCodeValidation;
         private int _qualityValidation;
         private int _potentialPriorityDetermQtyValidation;
 
         // Application Updates options
         private int? _subsetUpdateAction;
+
         private string[] _clearIHSUpdateActions;
         private string _clearIHSUpdateAction;
         private string _secondaryCodeDelimiter;
@@ -103,6 +102,7 @@ namespace HLU.UI.ViewModel
 
         // Application Bulk Update options
         private bool _bulkDeleteOrphanBapHabitats;
+
         private bool _bulkDeletePotentialBapHabitats;
         private bool _bulkDeleteIHSCodes;
         private bool _bulkDeleteSecondaryCodes;
@@ -113,6 +113,7 @@ namespace HLU.UI.ViewModel
 
         // User GIS options
         private string[] _autoZoomToSelectionOptions;
+
         private string _autoZoomToSelection;
         private int? _minAutoZoom;
         private int _maxAutoZoom;
@@ -123,11 +124,13 @@ namespace HLU.UI.ViewModel
 
         // User History options
         private SelectionList<string> _historyColumns;
+
         private int? _historyDisplayLastN;
         private bool _historyDisplayGeometry;
 
         // User Interface options
         private bool _showGroupHeaders;
+
         private bool _showIHSTab;
         private bool _showSourceHabitatGroup;
         private bool _showHabitatSecondariesSuggested;
@@ -142,6 +145,7 @@ namespace HLU.UI.ViewModel
 
         // User Update options
         private string _defaultReason;
+
         private string _defaultProcess;
         private string _defaultHabitatClass;
         private string _defaultSecondaryGroup;
@@ -151,20 +155,30 @@ namespace HLU.UI.ViewModel
 
         // User SQL options
         private int? _getValueRows;
+
         private int _maxGetValueRows;
         private string _sqlPath;
 
         // User Export options
         private string _exportPath;
+
         private int? _maxFeaturesExport;
 
         // Backup variables
         private string _bakSQLPath;
+
         private string _bakExportPath;
         private string _bakWorkingFileGDBPath;
 
-        public ObservableCollection<NavigationItem> NavigationItems { get; }
-        public ICollectionView GroupedNavigationItems { get; set; }
+        public ObservableCollection<NavigationItem> NavigationItems
+        {
+            get;
+        }
+
+        public ICollectionView GroupedNavigationItems
+        {
+            get; set;
+        }
 
         #endregion Fields
 
@@ -177,8 +191,8 @@ namespace HLU.UI.ViewModel
         /// <param name="secondaryGroupsAll">The secondary groups to be used in the options window.</param>
         public ViewModelWindowOptions()
         {
-           // Get the dockpane DAML id.
-           DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
+            // Get the dockpane DAML id.
+            DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
             if (pane == null)
                 return;
 
@@ -356,8 +370,14 @@ namespace HLU.UI.ViewModel
         /// <value>The display name for the view model.</value>
         public override string DisplayName
         {
-            get { return _displayName; }
-            set { _displayName = value; }
+            get
+            {
+                return _displayName;
+            }
+            set
+            {
+                _displayName = value;
+            }
         }
 
         /// <summary>
@@ -366,7 +386,10 @@ namespace HLU.UI.ViewModel
         /// <value>The window title for the options window.</value>
         public override string WindowTitle
         {
-            get { return _displayName; }
+            get
+            {
+                return _displayName;
+            }
         }
 
         #endregion ViewModelBase Members
@@ -774,7 +797,13 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <value>Indicates whether the Save button can be clicked.</value>
         /// <returns>True if there are no errors, otherwise false.</returns>
-        private bool CanSave { get { return String.IsNullOrEmpty(Error); } }
+        private bool CanSave
+        {
+            get
+            {
+                return String.IsNullOrEmpty(Error);
+            }
+        }
 
         #endregion Save Command
 
@@ -838,7 +867,10 @@ namespace HLU.UI.ViewModel
         /// <value><c>true</c> if a reset is pending; otherwise, <c>false</c>.</value>
         public bool ResetDbConnection
         {
-            get { return Settings.Default.ResetDbConnection; }
+            get
+            {
+                return Settings.Default.ResetDbConnection;
+            }
         }
 
         /// <summary>
@@ -910,7 +942,10 @@ namespace HLU.UI.ViewModel
         /// <value>The database connection timeout in seconds.</value>
         public int? DbConnectionTimeout
         {
-            get { return _dbConnectionTimeout; }
+            get
+            {
+                return _dbConnectionTimeout;
+            }
             set
             {
                 _dbConnectionTimeout = value;
@@ -924,7 +959,10 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public int MaxDbConnectionTimeout
         {
-            get { return 3600; }
+            get
+            {
+                return 3600;
+            }
         }
 
         /// <summary>
@@ -933,7 +971,10 @@ namespace HLU.UI.ViewModel
         /// <value>The incid table page size.</value>
         public int? IncidTablePageSize
         {
-            get { return _incidTablePageSize; }
+            get
+            {
+                return _incidTablePageSize;
+            }
             set
             {
                 _incidTablePageSize = value;
@@ -948,7 +989,10 @@ namespace HLU.UI.ViewModel
         /// <value>The maximum incid table page size.</value>
         public int MaxIncidTablePageSize
         {
-            get { return 1000; }
+            get
+            {
+                return 1000;
+            }
         }
 
         #endregion Application Database
@@ -1350,7 +1394,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public string ClearIHSUpdateAction
         {
-            get { return _clearIHSUpdateAction; }
+            get
+            {
+                return _clearIHSUpdateAction;
+            }
             set
             {
                 _clearIHSUpdateAction = value;
@@ -1369,7 +1416,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public bool ResetOSMMUpdatesStatus
         {
-            get { return _resetOSMMUpdatesStatus; }
+            get
+            {
+                return _resetOSMMUpdatesStatus;
+            }
             set
             {
                 _resetOSMMUpdatesStatus = value;
@@ -1400,7 +1450,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public HabitatSecondaryCodeValidationOptions? HabitatSecondaryCodeValidation
         {
-            get { return (HabitatSecondaryCodeValidationOptions)_habitatSecondaryCodeValidation; }
+            get
+            {
+                return (HabitatSecondaryCodeValidationOptions)_habitatSecondaryCodeValidation;
+            }
             set
             {
                 _habitatSecondaryCodeValidation = (int)value;
@@ -1431,7 +1484,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public PrimarySecondaryCodeValidationOptions? PrimarySecondaryCodeValidation
         {
-            get { return (PrimarySecondaryCodeValidationOptions)_primarySecondaryCodeValidation; }
+            get
+            {
+                return (PrimarySecondaryCodeValidationOptions)_primarySecondaryCodeValidation;
+            }
             set
             {
                 _primarySecondaryCodeValidation = (int)value;
@@ -1462,7 +1518,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public QualityValidationOptions? QualityValidation
         {
-            get { return (QualityValidationOptions)_qualityValidation; }
+            get
+            {
+                return (QualityValidationOptions)_qualityValidation;
+            }
             set
             {
                 _qualityValidation = (int)value;
@@ -1493,7 +1552,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public PotentialPriorityDetermQtyValidationOptions? PotentialPriorityDetermQtyValidation
         {
-            get { return (PotentialPriorityDetermQtyValidationOptions)_potentialPriorityDetermQtyValidation; }
+            get
+            {
+                return (PotentialPriorityDetermQtyValidationOptions)_potentialPriorityDetermQtyValidation;
+            }
             set
             {
                 _potentialPriorityDetermQtyValidation = (int)value;
@@ -1501,6 +1563,7 @@ namespace HLU.UI.ViewModel
                 NotifyNavigationItemErrorsChanged();
             }
         }
+
         #endregion Application Updates
 
         #region User Interface
@@ -2478,7 +2541,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public string ExportPath
         {
-            get { return _exportPath; }
+            get
+            {
+                return _exportPath;
+            }
             set
             {
                 _exportPath = value;
@@ -2667,7 +2733,6 @@ namespace HLU.UI.ViewModel
                     => "Error: Maximum features expected before warning on select must not be greater than 10000. Otherwise set to zero to disable warning",
                 "WorkingFileGDBPath" when String.IsNullOrEmpty(WorkingFileGDBPath)
                     => "Error: You must enter a working File Geodatabase path.",
-
 
                 // User - Updates
                 "DefaultReason" when DefaultReason == null

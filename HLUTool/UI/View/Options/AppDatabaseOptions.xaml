@@ -73,7 +73,6 @@
                             Margin="5,0,0,0"
                             Description="The amount of time the tool will wait (in seconds) for the database to respond. The default value is 15.&#10;&#10;This value should be increased if an error occurs such as ‘The connection to the database timed out’ or if the network and/or database connection is known to be slow."
                             Header="Timeout" />
-
                     </Grid>
 
                     <Grid Grid.Row="2">
@@ -102,11 +101,8 @@
                             Margin="5,0,0,0"
                             Description="How many rows are retrieved from the database at a time and stored in memory. The default value is 100.&#10;&#10;Increasing this value can improve performance when browsing records, however this will increase the amount of RAM required by the application and significant increases in the page size value could cause the tool to stop responding."
                             Header="Incid Table Page Size" />
-
                     </Grid>
-
                 </Grid>
-
             </Expander>
 
             <Expander
@@ -143,13 +139,9 @@
                             Margin="5,0,0,0"
                             Description="Clears the saved database connection settings. You will be prompted to choose a new connection the next time the HLU Tool is loaded.&#10;&#10;Use this option if the database server has moved, the database name has changed, or the connection is no longer valid."
                             Header="Reset Database Connection" />
-
                     </Grid>
-
                 </Grid>
-
             </Expander>
-
         </StackPanel>
 
         <TextBlock
@@ -164,7 +156,5 @@
                 Learn more about application database options
             </Hyperlink>
         </TextBlock>
-
     </Grid>
-
 </UserControl>

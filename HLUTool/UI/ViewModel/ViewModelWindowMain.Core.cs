@@ -20,7 +20,6 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
@@ -50,7 +49,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using ComboBox = ArcGIS.Desktop.Framework.Contracts.ComboBox;
 using CommandType = System.Data.CommandType;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
@@ -269,7 +267,7 @@ namespace HLU.UI.ViewModel
         private bool _saved = false;
         private bool _savingAttempted;
 
-        #endregion - Fields Misc State
+        #endregion Fields - Misc State
 
         #region Fields - Update Control
 
@@ -308,7 +306,10 @@ namespace HLU.UI.ViewModel
         /// <value>The ArcPro application instance, to be used for accessing GIS operations.</value>
         internal ArcProApp GISApplication
         {
-            get { return _gisApp; }
+            get
+            {
+                return _gisApp;
+            }
         }
 
         /// <summary>
@@ -317,7 +318,10 @@ namespace HLU.UI.ViewModel
         /// <value>The database instance, to be used for accessing database operations.</value>
         internal DbBase DataBase
         {
-            get { return _db; }
+            get
+            {
+                return _db;
+            }
         }
 
         /// <summary>
@@ -326,7 +330,10 @@ namespace HLU.UI.ViewModel
         /// <value>The HLU dataset, to be used for accessing data tables.</value>
         internal HluDataSet HluDataset
         {
-            get { return _hluDS; }
+            get
+            {
+                return _hluDS;
+            }
         }
 
         /// <summary>
@@ -336,7 +343,10 @@ namespace HLU.UI.ViewModel
         /// <value>The collection of DataRelations in the HLU dataset, to be used for navigating between related tables.</value>
         internal IEnumerable<DataRelation> HluDataRelations
         {
-            get { return _hluDataRelations; }
+            get
+            {
+                return _hluDataRelations;
+            }
         }
 
         /// <summary>
@@ -346,7 +356,10 @@ namespace HLU.UI.ViewModel
         /// <value>The TableAdapterManager for the HLU dataset, to be used for loading/saving data tables.</value>
         internal TableAdapterManager HluTableAdapterManager
         {
-            get { return _hluTableAdapterMgr; }
+            get
+            {
+                return _hluTableAdapterMgr;
+            }
         }
 
         /// <summary>
@@ -355,7 +368,10 @@ namespace HLU.UI.ViewModel
         /// <value>The GIS ID column ordinals for the current database type, to be used for identifying GIS features.</value>
         internal int[] GisIDColumnOrdinals
         {
-            get { return _gisIDColumnOrdinals; }
+            get
+            {
+                return _gisIDColumnOrdinals;
+            }
         }
 
         /// <summary>
@@ -364,7 +380,10 @@ namespace HLU.UI.ViewModel
         /// <value>The GIS ID columns for the current database type, to be used for identifying GIS features.</value>
         internal DataColumn[] GisIDColumns
         {
-            get { return _gisIDColumns; }
+            get
+            {
+                return _gisIDColumns;
+            }
         }
 
         /// <summary>
@@ -376,25 +395,37 @@ namespace HLU.UI.ViewModel
         /// used for displaying Incid history in the UI.</value>
         internal DataColumn[] HistoryColumns
         {
-            get { return _historyColumns; }
+            get
+            {
+                return _historyColumns;
+            }
         }
 
         /// <summary>
         /// Gets and sets the name of the first history geometry column, to be used for displaying Incid history in the UI.
         /// <value>The name of the first history geometry column.</value>
-        public static string HistoryGeometry1ColumnName { get => _historyGeometry1ColumnName; set => _historyGeometry1ColumnName = value; }
+        public static string HistoryGeometry1ColumnName
+        {
+            get => _historyGeometry1ColumnName; set => _historyGeometry1ColumnName = value;
+        }
 
         /// <summary>
         /// Gets and sets the name of the second history geometry column, to be used for displaying Incid history in the UI.
         /// </summary>
         /// <value>The name of the second history geometry column.</value>
-        public static string HistoryGeometry2ColumnName { get => _historyGeometry2ColumnName; set => _historyGeometry2ColumnName = value; }
+        public static string HistoryGeometry2ColumnName
+        {
+            get => _historyGeometry2ColumnName; set => _historyGeometry2ColumnName = value;
+        }
 
         /// <summary>
         /// Gets and sets the Incid page size, to be used for displaying Incid history in the UI.
         /// </summary>
         /// <value>The Incid page size.</value>
-        public static int IncidPageSize { get => _incidPageSize; set => _incidPageSize = value; }
+        public static int IncidPageSize
+        {
+            get => _incidPageSize; set => _incidPageSize = value;
+        }
 
         #endregion Properties - Core Infrastructure
 
@@ -406,7 +437,10 @@ namespace HLU.UI.ViewModel
         /// <value><c>true</c> if initialised; otherwise, <c>false</c>.</value>
         public bool Initialised
         {
-            get { return _initialised; }
+            get
+            {
+                return _initialised;
+            }
             set
             {
                 _initialised = value;
@@ -419,7 +453,10 @@ namespace HLU.UI.ViewModel
         /// <value><c>true</c> if in error; otherwise, <c>false</c>.</value>
         public bool InError
         {
-            get { return _inError; }
+            get
+            {
+                return _inError;
+            }
             set
             {
                 _inError = value;
@@ -640,8 +677,14 @@ namespace HLU.UI.ViewModel
         /// <value>The path to the working file geodatabase.</value>
         public string WorkingFileGDBPath
         {
-            get { return _workingFileGDBPath; }
-            set { _workingFileGDBPath = value; }
+            get
+            {
+                return _workingFileGDBPath;
+            }
+            set
+            {
+                _workingFileGDBPath = value;
+            }
         }
 
         #endregion Properties - Temp GDB
@@ -654,7 +697,10 @@ namespace HLU.UI.ViewModel
         /// <value>The database connection timeout in seconds.</value>
         public int DbConnectionTimeout
         {
-            get { return _dbConnectionTimeout; }
+            get
+            {
+                return _dbConnectionTimeout;
+            }
         }
 
         /// <summary>
@@ -664,7 +710,10 @@ namespace HLU.UI.ViewModel
         /// <value>The action to take regarding clearing IHS updates when updating an Incid from the GIS.</value>
         internal string ClearIHSUpdateAction
         {
-            get { return _clearIHSUpdateAction; }
+            get
+            {
+                return _clearIHSUpdateAction;
+            }
         }
 
         /// <summary>
@@ -675,7 +724,10 @@ namespace HLU.UI.ViewModel
         /// otherwise, <c>false</c>.</value>
         internal bool AutoSelectOnGis
         {
-            get { return _autoSelectOnGis; }
+            get
+            {
+                return _autoSelectOnGis;
+            }
         }
 
         #endregion Properties - Configuration
@@ -690,8 +742,14 @@ namespace HLU.UI.ViewModel
         /// automatically added/edited by the system and not yet saved to the database.</value>
         internal HluDataSet.incid_ihs_matrixRow[] IncidIhsMatrixRows
         {
-            get { return _incidIhsMatrixRows; }
-            set { _incidIhsMatrixRows = value; }
+            get
+            {
+                return _incidIhsMatrixRows;
+            }
+            set
+            {
+                _incidIhsMatrixRows = value;
+            }
         }
 
         /// <summary>
@@ -702,8 +760,14 @@ namespace HLU.UI.ViewModel
         /// automatically added/edited by the system and not yet saved to the database.</value>
         internal HluDataSet.incid_ihs_formationRow[] IncidIhsFormationRows
         {
-            get { return _incidIhsFormationRows; }
-            set { _incidIhsFormationRows = value; }
+            get
+            {
+                return _incidIhsFormationRows;
+            }
+            set
+            {
+                _incidIhsFormationRows = value;
+            }
         }
 
         /// <summary>
@@ -714,8 +778,14 @@ namespace HLU.UI.ViewModel
         /// automatically added/edited by the system and not yet saved to the database.</value>
         internal HluDataSet.incid_ihs_managementRow[] IncidIhsManagementRows
         {
-            get { return _incidIhsManagementRows; }
-            set { _incidIhsManagementRows = value; }
+            get
+            {
+                return _incidIhsManagementRows;
+            }
+            set
+            {
+                _incidIhsManagementRows = value;
+            }
         }
 
         /// <summary>
@@ -726,8 +796,14 @@ namespace HLU.UI.ViewModel
         /// automatically added/edited by the system and not yet saved to the database.</value>
         internal HluDataSet.incid_ihs_complexRow[] IncidIhsComplexRows
         {
-            get { return _incidIhsComplexRows; }
-            set { _incidIhsComplexRows = value; }
+            get
+            {
+                return _incidIhsComplexRows;
+            }
+            set
+            {
+                _incidIhsComplexRows = value;
+            }
         }
 
         /// <summary>
@@ -738,8 +814,14 @@ namespace HLU.UI.ViewModel
         /// automatically added/edited by the system and not yet saved to the database.</value>
         internal HluDataSet.incid_secondaryRow[] IncidSecondaryRows
         {
-            get { return _incidSecondaryRows; }
-            set { _incidSecondaryRows = value; }
+            get
+            {
+                return _incidSecondaryRows;
+            }
+            set
+            {
+                _incidSecondaryRows = value;
+            }
         }
 
         /// <summary>
@@ -750,8 +832,14 @@ namespace HLU.UI.ViewModel
         /// automatically added/edited by the system and not yet saved to the database.</value>
         internal HluDataSet.incid_conditionRow[] IncidConditionRows
         {
-            get { return _incidConditionRows; }
-            set { _incidConditionRows = value; }
+            get
+            {
+                return _incidConditionRows;
+            }
+            set
+            {
+                _incidConditionRows = value;
+            }
         }
 
         /// <summary>
@@ -762,8 +850,14 @@ namespace HLU.UI.ViewModel
         /// automatically added/edited by the system and not yet saved to the database.</value>
         internal HluDataSet.incid_bapRow[] IncidBapRows
         {
-            get { return _incidBapRows; }
-            set { _incidBapRows = value; }
+            get
+            {
+                return _incidBapRows;
+            }
+            set
+            {
+                _incidBapRows = value;
+            }
         }
 
         /// <summary>
@@ -774,8 +868,14 @@ namespace HLU.UI.ViewModel
         /// automatically added/edited by the system and not yet saved to the database.</value>
         internal HluDataSet.incid_sourcesRow[] IncidSourcesRows
         {
-            get { return _incidSourcesRows; }
-            set { _incidSourcesRows = value; }
+            get
+            {
+                return _incidSourcesRows;
+            }
+            set
+            {
+                _incidSourcesRows = value;
+            }
         }
 
         /// <summary>
@@ -786,8 +886,14 @@ namespace HLU.UI.ViewModel
         /// been automatically added/edited by the system and not yet saved to the database.</value>
         internal HluDataSet.incid_osmm_updatesRow[] IncidOSMMUpdatesRows
         {
-            get { return _incidOSMMUpdatesRows; }
-            set { _incidOSMMUpdatesRows = value; }
+            get
+            {
+                return _incidOSMMUpdatesRows;
+            }
+            set
+            {
+                _incidOSMMUpdatesRows = value;
+            }
         }
 
         /// <summary>
@@ -798,8 +904,14 @@ namespace HLU.UI.ViewModel
         /// and not yet saved to the database.</value>
         internal ObservableCollection<BapEnvironment> IncidBapRowsAuto
         {
-            get { return _incidBapRowsAuto; }
-            set { _incidBapRowsAuto = value; }
+            get
+            {
+                return _incidBapRowsAuto;
+            }
+            set
+            {
+                _incidBapRowsAuto = value;
+            }
         }
 
         /// <summary>
@@ -810,8 +922,14 @@ namespace HLU.UI.ViewModel
         /// saved to the database.</value>
         internal ObservableCollection<BapEnvironment> IncidBapRowsUser
         {
-            get { return _incidBapRowsUser; }
-            set { _incidBapRowsUser = value; }
+            get
+            {
+                return _incidBapRowsUser;
+            }
+            set
+            {
+                _incidBapRowsUser = value;
+            }
         }
 
         #endregion Properties - Child Rows
@@ -824,23 +942,71 @@ namespace HLU.UI.ViewModel
         /// <value>The record IDs.</value>
         internal RecordIds RecIDs
         {
-            get { return _recIDs; }
-            set { _recIDs = value; }
+            get
+            {
+                return _recIDs;
+            }
+            set
+            {
+                _recIDs = value;
+            }
         }
 
-        public string CurrentIncid { get { return _recIDs.CurrentIncid; } }
+        public string CurrentIncid
+        {
+            get
+            {
+                return _recIDs.CurrentIncid;
+            }
+        }
 
-        public string NextIncid { get { return _recIDs.NextIncid; } }
+        public string NextIncid
+        {
+            get
+            {
+                return _recIDs.NextIncid;
+            }
+        }
 
-        private int CurrentIncidBapId { get { return _recIDs.CurrentIncidBapId; } }
+        private int CurrentIncidBapId
+        {
+            get
+            {
+                return _recIDs.CurrentIncidBapId;
+            }
+        }
 
-        private int NextIncidBapId { get { return _recIDs.NextIncidBapId; } }
+        private int NextIncidBapId
+        {
+            get
+            {
+                return _recIDs.NextIncidBapId;
+            }
+        }
 
-        private int NextIncidSourcesId { get { return _recIDs.NextIncidSourcesId; } }
+        private int NextIncidSourcesId
+        {
+            get
+            {
+                return _recIDs.NextIncidSourcesId;
+            }
+        }
 
-        private int NextIncidSecondaryId { get { return _recIDs.NextIncidSecondaryId; } }
+        private int NextIncidSecondaryId
+        {
+            get
+            {
+                return _recIDs.NextIncidSecondaryId;
+            }
+        }
 
-        private int NextIncidConditionId { get { return _recIDs.NextIncidConditionId; } }
+        private int NextIncidConditionId
+        {
+            get
+            {
+                return _recIDs.NextIncidConditionId;
+            }
+        }
 
         #endregion Properties - Record IDs
 
@@ -852,8 +1018,14 @@ namespace HLU.UI.ViewModel
         /// <value><c>true</c> if the current state has been saved; otherwise, <c>false</c>.</value>
         internal bool Saved
         {
-            get { return _saved; }
-            set { _saved = value; }
+            get
+            {
+                return _saved;
+            }
+            set
+            {
+                _saved = value;
+            }
         }
 
         /// <summary>
@@ -862,8 +1034,14 @@ namespace HLU.UI.ViewModel
         /// <value><c>true</c> if data is currently being pasted; otherwise, <c>false</c>.</value>
         internal bool Pasting
         {
-            get { return _pasting; }
-            set { _pasting = value; }
+            get
+            {
+                return _pasting;
+            }
+            set
+            {
+                _pasting = value;
+            }
         }
 
         /// <summary>
@@ -872,7 +1050,10 @@ namespace HLU.UI.ViewModel
         /// <value><c>true</c> if changes have been made; otherwise, <c>false</c>.</value>
         internal bool Changed
         {
-            get { return _changed; }
+            get
+            {
+                return _changed;
+            }
             set
             {
                 // If this is another change by the user but the data is no longer
@@ -893,8 +1074,14 @@ namespace HLU.UI.ViewModel
         /// <value><c>true</c> if the data is currently being saved; otherwise, <c>false</c>.</value>
         internal bool Saving
         {
-            get { return _saving; }
-            set { _saving = value; }
+            get
+            {
+                return _saving;
+            }
+            set
+            {
+                _saving = value;
+            }
         }
 
         /// <summary>
@@ -903,8 +1090,14 @@ namespace HLU.UI.ViewModel
         /// <value><c>true</c> if an attempt to save the data has been made; otherwise, <c>false</c>.</value>
         internal bool SavingAttempted
         {
-            get { return _savingAttempted; }
-            set { _savingAttempted = value; }
+            get
+            {
+                return _savingAttempted;
+            }
+            set
+            {
+                _savingAttempted = value;
+            }
         }
 
         #endregion Properties - Save State
@@ -917,7 +1110,10 @@ namespace HLU.UI.ViewModel
         /// <value>The ViewModel for the Bulk Update workflow.</value>
         internal ViewModelWindowMainUpdate ViewModelUpdate
         {
-            get { return _viewModelUpd; }
+            get
+            {
+                return _viewModelUpd;
+            }
         }
 
         #endregion Properties - Workflow Controllers
@@ -1032,7 +1228,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_isAuthorisedUser == null) GetUserInfo();
+                if (_isAuthorisedUser == null)
+                    GetUserInfo();
                 return _isAuthorisedUser == true;
             }
         }
@@ -1049,8 +1246,14 @@ namespace HLU.UI.ViewModel
         /// </value>
         public HluDataSet.incidRow IncidCurrentRow
         {
-            get { return _incidCurrentRow; }
-            set { _incidCurrentRow = value; }
+            get
+            {
+                return _incidCurrentRow;
+            }
+            set
+            {
+                _incidCurrentRow = value;
+            }
         }
 
         /// <summary>
@@ -1061,7 +1264,10 @@ namespace HLU.UI.ViewModel
         /// </value>
         public int IncidCurrentRowIndex
         {
-            get { return _incidCurrentRowIndex; }
+            get
+            {
+                return _incidCurrentRowIndex;
+            }
             set
             {
                 // Call the safe fire and forget helper to move to the
@@ -1107,8 +1313,14 @@ namespace HLU.UI.ViewModel
         /// </value>
         public bool SuppressUserNotifications
         {
-            get { return _suppressUserNotifications; }
-            set { _suppressUserNotifications = value; }
+            get
+            {
+                return _suppressUserNotifications;
+            }
+            set
+            {
+                _suppressUserNotifications = value;
+            }
         }
 
         #endregion Properties - Dirty State
@@ -1127,7 +1339,8 @@ namespace HLU.UI.ViewModel
             {
                 // Show errors in Bulk Update mode.
                 if ((_incidCurrentRow == null) ||
-                    (_incidCurrentRow.RowState == DataRowState.Detached && IsNotBulkMode)) return null;
+                    (_incidCurrentRow.RowState == DataRowState.Detached && IsNotBulkMode))
+                    return null;
 
                 StringBuilder error = new();
 
@@ -1229,7 +1442,8 @@ namespace HLU.UI.ViewModel
             {
                 // Show errors in Bulk Update mode.
                 if ((_incidCurrentRow == null) ||
-                    (_incidCurrentRow.RowState == DataRowState.Detached && IsNotBulkMode)) return null;
+                    (_incidCurrentRow.RowState == DataRowState.Detached && IsNotBulkMode))
+                    return null;
 
                 string error = null;
 
@@ -1424,7 +1638,8 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Exit if in OSMM Bulk Update mode.
-                if (IsOsmmReviewMode) return null;
+                if (IsOsmmReviewMode)
+                    return null;
 
                 // Additional checks if not in Bulk Update mode.
                 if (IsNotBulkMode)
@@ -1530,8 +1745,14 @@ namespace HLU.UI.ViewModel
         /// <value><c>true</c> if the incid table needs to be refreshed; otherwise, <c>false</c>.</value>
         internal bool RefillIncidTable
         {
-            get { return _refillIncidTable; }
-            set { _refillIncidTable = true; }
+            get
+            {
+                return _refillIncidTable;
+            }
+            set
+            {
+                _refillIncidTable = true;
+            }
         }
 
         #endregion Properties - Refresh Control
@@ -1719,13 +1940,13 @@ namespace HLU.UI.ViewModel
                 Debug.WriteLine(
                     $"UpgradeUserSettings failed: {ex.Message}");
             }
-}
+        }
 
-/// <summary>
-/// Creates the working geodatabase for exports and advanced queries.
-/// </summary>
-/// <returns>A task that represents the asynchronous operation.</returns>
-private async Task CreateWorkingGeodatabaseAsync()
+        /// <summary>
+        /// Creates the working geodatabase for exports and advanced queries.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
+        private async Task CreateWorkingGeodatabaseAsync()
         {
             try
             {
@@ -3022,7 +3243,6 @@ private async Task CreateWorkingGeodatabaseAsync()
             // Save the new auto select on GIS option in the user settings.
             Settings.Default.AutoSelectOnGis = _autoSelectOnGis;
             Settings.Default.Save();
-
         }
 
         /// <summary>
@@ -3230,6 +3450,7 @@ private async Task CreateWorkingGeodatabaseAsync()
                 {
                     case MessageBoxResult.Yes:
                         break;
+
                     case MessageBoxResult.No:
                         // Clear the form and warn the user when there are no more records
                         // when in OSMM Review mode.
@@ -3299,6 +3520,7 @@ private async Task CreateWorkingGeodatabaseAsync()
                         await NewIncidCurrentRowAsync();
 
                         break;
+
                     case MessageBoxResult.Cancel:
                         break;
                 }
@@ -3467,7 +3689,8 @@ private async Task CreateWorkingGeodatabaseAsync()
                             _db.Connection.ConnectionTimeout, CommandType.Text);
 
                         seekIncidNumber += seekRowNumber - count;
-                    };
+                    }
+                    ;
 
                     // Fetch records
                     _hluTableAdapterMgr.Fill(_hluDS, typeof(HluDataSet.incidDataTable),
@@ -3689,7 +3912,8 @@ private async Task CreateWorkingGeodatabaseAsync()
                 }
 
                 // Restore the current row if the user doesn't want to save.
-                if (userResponse == MessageBoxResult.No) RestoreIncidCurrentRow();
+                if (userResponse == MessageBoxResult.No)
+                    RestoreIncidCurrentRow();
             }
 
             return userResponse;
@@ -3746,7 +3970,8 @@ private async Task CreateWorkingGeodatabaseAsync()
                 for (int i = 0; i < _hluDS.incid.Columns.Count; i++) // IncidTable.Columns.Count; i++)
                 {
                     if ((_incidCurrentRow.IsNull(i) != _incidCurrentRowClone.IsNull(i)) ||
-                        !_incidCurrentRow[i].Equals(_incidCurrentRowClone[i])) return false;
+                        !_incidCurrentRow[i].Equals(_incidCurrentRowClone[i]))
+                        return false;
                 }
             }
             return true;
@@ -4001,7 +4226,8 @@ private async Task CreateWorkingGeodatabaseAsync()
         /// <param name="incidRow">The incid row for which to load associated child rows. Cannot be null.</param>
         private void GetIncidChildRows(HluDataSet.incidRow incidRow)
         {
-            if (incidRow == null) return;
+            if (incidRow == null)
+                return;
 
             string[] relValues = [incidRow.incid];
 
@@ -4056,7 +4282,6 @@ private async Task CreateWorkingGeodatabaseAsync()
             HluDataSet.incid_osmm_updatesDataTable incidOSMMUpdatesTable = _hluDS.incid_osmm_updates;
             _incidOSMMUpdatesRows = GetIncidChildRowsDb(relValues,
                 _hluTableAdapterMgr.incid_osmm_updatesTableAdapter, ref incidOSMMUpdatesTable);
-
         }
 
         /// <summary>
@@ -4127,5 +4352,5 @@ private async Task CreateWorkingGeodatabaseAsync()
         #endregion Child Row Retrieval
 
         #endregion Methods
-   }
+    }
 }

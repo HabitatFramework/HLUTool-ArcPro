@@ -35,7 +35,7 @@ using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.Data.Connection
 {
-    class DbOracle : DbBase
+    internal class DbOracle : DbBase
     {
         #region Private Members
 
@@ -80,7 +80,8 @@ namespace HLU.Data.Connection
             useColumnNames, isUnicode, useTimeZone, textLength, binaryLength, timePrecision,
             numericPrecision, numericScale, connectTimeOut)
         {
-            if (String.IsNullOrEmpty(ConnectionString)) throw (new Exception("No connection string"));
+            if (String.IsNullOrEmpty(ConnectionString))
+                throw (new Exception("No connection string"));
 
             try
             {
@@ -170,7 +171,8 @@ namespace HLU.Data.Connection
         /// <returns>The processed user ID string.</returns>
         public static string GetUserId(DbConnectionStringBuilder connStrBuilder)
         {
-            if (connStrBuilder == null) return String.Empty;
+            if (connStrBuilder == null)
+                return String.Empty;
             object userID;
             if (connStrBuilder.TryGetValue("USER ID", out userID))
                 return GetUserId(userID.ToString());
@@ -186,7 +188,13 @@ namespace HLU.Data.Connection
         /// Gets the backend type for this database connection, which is Oracle in this case.
         /// </summary>
         /// <value>The backend type for this database connection.</value>
-        public override Backends Backend { get { return Backends.Oracle; } }
+        public override Backends Backend
+        {
+            get
+            {
+                return Backends.Oracle;
+            }
+        }
 
         /// <summary>
         /// Checks if the provided DataSet contains the necessary schema objects (tables and
@@ -243,7 +251,8 @@ namespace HLU.Data.Connection
                                                  where dbCols.Any()
                                                  select QuoteIdentifier(dsCol.ColumnName) + " (" +
                                                  ((OracleDbType)SystemToDbType(dsCol.DataType) + ")").ToString())];
-                        if (checkColumns.Length > 0) messageText.Append(String.Format("\n\nTable: {0}\nColumns: {1}",
+                        if (checkColumns.Length > 0)
+                            messageText.Append(String.Format("\n\nTable: {0}\nColumns: {1}",
                             QuoteIdentifier(t.TableName), String.Join(", ", checkColumns)));
                     }
                 }
@@ -283,7 +292,8 @@ namespace HLU.Data.Connection
             TypeCode dbColSysTypeCode = Type.GetTypeCode(dbColSysType);
             TypeCode dsColTypeCode = Type.GetTypeCode(dsColType);
 
-            if (dbColSysTypeCode == dsColTypeCode) return true;
+            if (dbColSysTypeCode == dsColTypeCode)
+                return true;
 
             TypeCode[] floatingPoint = [TypeCode.Decimal, TypeCode.Double];
 
@@ -309,14 +319,26 @@ namespace HLU.Data.Connection
         /// Gets the database connection associated with this DbOracle instance.
         /// </summary>
         /// <value>The database connection.</value>
-        public override IDbConnection Connection { get { return _connection; } }
+        public override IDbConnection Connection
+        {
+            get
+            {
+                return _connection;
+            }
+        }
 
         /// <summary>
         /// Gets the DbConnectionStringBuilder associated with this DbOracle instance, which is used
         /// to build and manage the connection string for the Oracle database connection.
         /// </summary>
         /// <value>The DbConnectionStringBuilder for this DbOracle instance.</value>
-        public override DbConnectionStringBuilder ConnectionStringBuilder { get { return _connStrBuilder; } }
+        public override DbConnectionStringBuilder ConnectionStringBuilder
+        {
+            get
+            {
+                return _connStrBuilder;
+            }
+        }
 
         /// <summary>
         /// Gets the current database transaction associated with this DbOracle instance, which can
@@ -326,7 +348,10 @@ namespace HLU.Data.Connection
         /// <value>The current database transaction, or null if no transaction is active.</value>
         public override IDbTransaction Transaction
         {
-            get { return _transaction; }
+            get
+            {
+                return _transaction;
+            }
         }
 
         /// <summary>
@@ -364,7 +389,8 @@ namespace HLU.Data.Connection
                 adapter = new();
 
                 DataColumn[] pk = table.PrimaryKey;
-                if ((pk == null) || (pk.Length == 0)) return null;
+                if ((pk == null) || (pk.Length == 0))
+                    return null;
 
                 DataTableMapping tableMapping = new()
                 {
@@ -410,7 +436,8 @@ namespace HLU.Data.Connection
                     string colName = QuoteIdentifier(c.ColumnName);
 
                     int colType;
-                    if (!_typeMapSystemToSQL.TryGetValue(c.DataType, out colType)) continue;
+                    if (!_typeMapSystemToSQL.TryGetValue(c.DataType, out colType))
+                        continue;
 
                     if (c.AllowDBNull)
                     {
@@ -628,13 +655,15 @@ namespace HLU.Data.Connection
         /// <returns>True if the schema was successfully filled; otherwise, false.</returns>
         public override bool FillSchema<T>(SchemaType schemaType, string sql, ref T table)
         {
-            if (String.IsNullOrEmpty(sql)) return false;
+            if (String.IsNullOrEmpty(sql))
+                return false;
             ConnectionState previousConnectionState = _connection.State;
             try
             {
                 _errorMessage = String.Empty;
                 table ??= new T();
-                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                    _connection.Open();
                 OracleDataAdapter adapter = UpdateAdapter(table);
                 if (adapter != null)
                 {
@@ -647,7 +676,8 @@ namespace HLU.Data.Connection
                 {
                     _command.CommandText = sql;
                     _command.CommandType = CommandType.Text;
-                    if (_transaction != null) _command.Transaction = _transaction;
+                    if (_transaction != null)
+                        _command.Transaction = _transaction;
                     _adapter = new(_command)
                     {
                         // potential data loss with Oracle types: NUMBER, DATE, all Timestamp types, and INTERVAL DAY TO SECOND
@@ -682,13 +712,15 @@ namespace HLU.Data.Connection
         /// <returns>The number of rows added to the table if successful; otherwise, -1.</returns>
         public override int FillTable<T>(string sql, ref T table)
         {
-            if (String.IsNullOrEmpty(sql)) return 0;
+            if (String.IsNullOrEmpty(sql))
+                return 0;
             ConnectionState previousConnectionState = _connection.State;
             try
             {
                 _errorMessage = String.Empty;
                 table ??= new T();
-                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                    _connection.Open();
                 OracleDataAdapter adapter = UpdateAdapter(table);
                 if (adapter != null)
                 {
@@ -700,7 +732,8 @@ namespace HLU.Data.Connection
                 {
                     _command.CommandText = sql;
                     _command.CommandType = CommandType.Text;
-                    if (_transaction != null) _command.Transaction = _transaction;
+                    if (_transaction != null)
+                        _command.Transaction = _transaction;
                     _adapter = new(_command);
 
                     // potential data loss with Oracle types: NUMBER, DATE, all Timestamp types, and INTERVAL DAY TO SECOND
@@ -742,7 +775,8 @@ namespace HLU.Data.Connection
                         _transaction.Rollback();
                 }
 
-                if (_connection.State != ConnectionState.Open) _connection.Open();
+                if (_connection.State != ConnectionState.Open)
+                    _connection.Open();
 
                 _transaction = _connection.BeginTransaction(isolationLevel);
                 _commandBuilder.RefreshSchema();
@@ -822,7 +856,8 @@ namespace HLU.Data.Connection
         public override IDataReader ExecuteReader(string sql, int commandTimeout, CommandType commandType)
         {
             _errorMessage = String.Empty;
-            if (String.IsNullOrEmpty(sql)) return null;
+            if (String.IsNullOrEmpty(sql))
+                return null;
             ConnectionState previousConnectionState = _connection.State;
             try
             {
@@ -830,14 +865,17 @@ namespace HLU.Data.Connection
                 _command.CommandTimeout = commandTimeout;
                 _command.CommandText = sql;
 
-                if (_transaction != null) _command.Transaction = _transaction;
+                if (_transaction != null)
+                    _command.Transaction = _transaction;
                 _commandBuilder.RefreshSchema();
-                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                    _connection.Open();
                 return _command.ExecuteReader() as IDataReader;
             }
             catch (Exception ex)
             {
-                if (previousConnectionState == ConnectionState.Closed) _connection.Close();
+                if (previousConnectionState == ConnectionState.Closed)
+                    _connection.Close();
                 _errorMessage = ex.Message;
                 return null;
             }
@@ -857,7 +895,8 @@ namespace HLU.Data.Connection
         public override int ExecuteNonQuery(string sql, int commandTimeout, CommandType commandType)
         {
             _errorMessage = String.Empty;
-            if (String.IsNullOrEmpty(sql)) return -1;
+            if (String.IsNullOrEmpty(sql))
+                return -1;
             ConnectionState previousConnectionState = _connection.State;
             try
             {
@@ -865,9 +904,11 @@ namespace HLU.Data.Connection
                 _command.CommandTimeout = commandTimeout;
                 _command.CommandText = sql;
 
-                if (_transaction != null) _command.Transaction = _transaction;
+                if (_transaction != null)
+                    _command.Transaction = _transaction;
                 _commandBuilder.RefreshSchema();
-                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                    _connection.Open();
                 return _command.ExecuteNonQuery();
             }
             catch (Exception ex)
@@ -888,7 +929,8 @@ namespace HLU.Data.Connection
         public override object ExecuteScalar(string sql, int commandTimeout, CommandType commandType)
         {
             _errorMessage = String.Empty;
-            if (String.IsNullOrEmpty(sql)) return null;
+            if (String.IsNullOrEmpty(sql))
+                return null;
             ConnectionState previousConnectionState = _connection.State;
 
             try
@@ -927,7 +969,8 @@ namespace HLU.Data.Connection
         {
             _errorMessage = String.Empty;
 
-            if (String.IsNullOrEmpty(sql)) return null;
+            if (String.IsNullOrEmpty(sql))
+                return null;
 
             ConnectionState previousConnectionState = _connection.State;
 
@@ -971,7 +1014,8 @@ namespace HLU.Data.Connection
         public override bool ValidateQuery(string sql, int commandTimeout, CommandType commandType)
         {
             _errorMessage = String.Empty;
-            if (String.IsNullOrEmpty(sql)) throw (new Exception("Sql is null or empty"));
+            if (String.IsNullOrEmpty(sql))
+                throw (new Exception("Sql is null or empty"));
             ConnectionState previousConnectionState = _connection.State;
             try
             {
@@ -979,9 +1023,11 @@ namespace HLU.Data.Connection
                 _command.CommandTimeout = commandTimeout;
                 _command.CommandText = sql;
 
-                if (_transaction != null) _command.Transaction = _transaction;
+                if (_transaction != null)
+                    _command.Transaction = _transaction;
                 _commandBuilder.RefreshSchema();
-                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+                if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                    _connection.Open();
                 _command.ExecuteNonQuery();
                 return true;
             }
@@ -1012,10 +1058,13 @@ namespace HLU.Data.Connection
         public override int Update<T>(T table, string insertCommand, string updateCommand, string deleteCommand)
         {
             ConnectionState previousConnectionState = _connection.State;
-            if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+            if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                _connection.Open();
 
-            if ((table == null) || (table.Rows.Count == 0)) return 0;
-            if (_adapter == null) return -1;
+            if ((table == null) || (table.Rows.Count == 0))
+                return 0;
+            if (_adapter == null)
+                return -1;
 
             try
             {
@@ -1035,7 +1084,8 @@ namespace HLU.Data.Connection
                     // _adapter.SafeMapping.Add("*", typeof(byte[])); _adapter.SafeMapping.Add("*", typeof(string));
                 }
 
-                return _adapter.Update(table); ;
+                return _adapter.Update(table);
+                ;
             }
             catch (Exception ex)
             {
@@ -1058,9 +1108,11 @@ namespace HLU.Data.Connection
         public override int Update<T>(T table)
         {
             ConnectionState previousConnectionState = _connection.State;
-            if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+            if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                _connection.Open();
 
-            if ((table == null) || (table.Rows.Count == 0)) return 0;
+            if ((table == null) || (table.Rows.Count == 0))
+                return 0;
 
             try
             {
@@ -1092,10 +1144,12 @@ namespace HLU.Data.Connection
         public override int Update<T>(T dataSet, string sourceTable)
         {
             ConnectionState previousConnectionState = _connection.State;
-            if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+            if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                _connection.Open();
 
             if ((dataSet == null) || String.IsNullOrEmpty(sourceTable) ||
-                !dataSet.Tables.Contains(sourceTable)) return 0;
+                !dataSet.Tables.Contains(sourceTable))
+                return 0;
 
             try
             {
@@ -1126,9 +1180,11 @@ namespace HLU.Data.Connection
         public override int Update<T, R>(R[] rows)
         {
             ConnectionState previousConnectionState = _connection.State;
-            if ((_connection.State & ConnectionState.Open) != ConnectionState.Open) _connection.Open();
+            if ((_connection.State & ConnectionState.Open) != ConnectionState.Open)
+                _connection.Open();
 
-            if ((rows == null) || (rows.Length == 0)) return 0;
+            if ((rows == null) || (rows.Length == 0))
+                return 0;
 
             try
             {
@@ -1159,13 +1215,15 @@ namespace HLU.Data.Connection
         /// <returns>The OracleDataAdapter associated with the table if available; otherwise, null.</returns>
         private OracleDataAdapter UpdateAdapter<T>(T table) where T : DataTable, new()
         {
-            if (table == null) return null;
+            if (table == null)
+                return null;
 
             OracleDataAdapter adapter;
             if (!_adaptersDic.TryGetValue(typeof(T), out adapter))
             {
                 CreateAdapter<T>(table);
-                if (!_adaptersDic.TryGetValue(typeof(T), out adapter)) return null;
+                if (!_adaptersDic.TryGetValue(typeof(T), out adapter))
+                    return null;
             }
 
             if (_transaction != null)
@@ -1184,7 +1242,7 @@ namespace HLU.Data.Connection
             return adapter;
         }
 
-        #endregion Override Methods
+        #endregion Override Members
 
         #region Protected Members
 
@@ -1194,7 +1252,10 @@ namespace HLU.Data.Connection
         /// <value>The prefix used for parameter names in SQL queries.</value>
         protected override string ParameterPrefix
         {
-            get { return ":"; }
+            get
+            {
+                return ":";
+            }
         }
 
         #endregion Protected Members
@@ -1241,7 +1302,8 @@ namespace HLU.Data.Connection
                 _connWindow.ShowDialog();
 
                 // throw error if connection failed
-                if (!String.IsNullOrEmpty(_errorMessage)) throw (new Exception(_errorMessage));
+                if (!String.IsNullOrEmpty(_errorMessage))
+                    throw (new Exception(_errorMessage));
             }
             catch (Exception ex)
             {
@@ -1283,21 +1345,69 @@ namespace HLU.Data.Connection
 
         #region SQLBuilder Members
 
-        public override string QuotePrefix { get { return "\""; } }
+        public override string QuotePrefix
+        {
+            get
+            {
+                return "\"";
+            }
+        }
 
-        public override string QuoteSuffix { get { return "\""; } }
+        public override string QuoteSuffix
+        {
+            get
+            {
+                return "\"";
+            }
+        }
 
-        public override string StringLiteralDelimiter { get { return "'"; } }
+        public override string StringLiteralDelimiter
+        {
+            get
+            {
+                return "'";
+            }
+        }
 
-        public override string DateLiteralPrefix { get { return "'"; } }
+        public override string DateLiteralPrefix
+        {
+            get
+            {
+                return "'";
+            }
+        }
 
-        public override string DateLiteralSuffix { get { return "'"; } }
+        public override string DateLiteralSuffix
+        {
+            get
+            {
+                return "'";
+            }
+        }
 
-        public override string WildcardSingleMatch { get { return "_"; } }
+        public override string WildcardSingleMatch
+        {
+            get
+            {
+                return "_";
+            }
+        }
 
-        public override string WildcardManyMatch { get { return "%"; } }
+        public override string WildcardManyMatch
+        {
+            get
+            {
+                return "%";
+            }
+        }
 
-        public override string ConcatenateOperator { get { return "||"; } }
+        public override string ConcatenateOperator
+        {
+            get
+            {
+                return "||";
+            }
+        }
 
         /// <summary>
         /// Does not escape string delimiter or other special characters.
@@ -1307,7 +1417,8 @@ namespace HLU.Data.Connection
         /// <returns>The quoted value as a string.</returns>
         public override string QuoteValue(object value)
         {
-            if (value == null) return "NULL";
+            if (value == null)
+                return "NULL";
             Type valueType = value.GetType();
             int colType;
             if (_typeMapSystemToSQL.TryGetValue(valueType, out colType))
@@ -1322,20 +1433,28 @@ namespace HLU.Data.Connection
                     case OracleDbType.NClob:
                     case OracleDbType.NVarchar2:
                     case OracleDbType.Varchar2:
-                        if (s.Length == 0) return StringLiteralDelimiter + StringLiteralDelimiter;
-                        if (!s.StartsWith(StringLiteralDelimiter)) s = StringLiteralDelimiter + s;
-                        if (!s.EndsWith(StringLiteralDelimiter)) s += StringLiteralDelimiter;
+                        if (s.Length == 0)
+                            return StringLiteralDelimiter + StringLiteralDelimiter;
+                        if (!s.StartsWith(StringLiteralDelimiter))
+                            s = StringLiteralDelimiter + s;
+                        if (!s.EndsWith(StringLiteralDelimiter))
+                            s += StringLiteralDelimiter;
                         return s;
+
                     case OracleDbType.Date:
                     case OracleDbType.IntervalDS:
                     case OracleDbType.IntervalYM:
                     case OracleDbType.TimeStamp:
                     case OracleDbType.TimeStampLTZ:
                     case OracleDbType.TimeStampTZ:
-                        if (s.Length == 0) return DateLiteralPrefix + DateLiteralSuffix;
-                        if (!s.StartsWith(DateLiteralPrefix)) s = DateLiteralPrefix + s;
-                        if (!s.EndsWith(DateLiteralSuffix)) s += DateLiteralSuffix;
+                        if (s.Length == 0)
+                            return DateLiteralPrefix + DateLiteralSuffix;
+                        if (!s.StartsWith(DateLiteralPrefix))
+                            s = DateLiteralPrefix + s;
+                        if (!s.EndsWith(DateLiteralSuffix))
+                            s += DateLiteralSuffix;
                         return s;
+
                     default:
                         return s;
                 }

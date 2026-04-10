@@ -4,7 +4,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:hlu="clr-namespace:HLU.UI.UserControls;assembly="
     xmlns:local="clr-namespace:HLU.UI.ViewModel"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="{Binding WindowTitle}"
@@ -236,7 +235,6 @@
                                 ToolTip="{Binding GetValuesToolTip}">
                                 Get Values
                             </Button>
-
                         </Grid>
 
                         <Grid
@@ -300,9 +298,7 @@
                                 TextWrapping="Wrap"
                                 ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                 VerticalScrollBarVisibility="Auto" />
-
                         </Grid>
-
                     </Grid>
                 </Grid>
             </GroupBox>

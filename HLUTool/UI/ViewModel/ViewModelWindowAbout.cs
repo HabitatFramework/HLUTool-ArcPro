@@ -25,7 +25,7 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// Contains the data and commands for the About window.
     /// </summary>
-    class ViewModelWindowAbout : ViewModelBase
+    internal class ViewModelWindowAbout : ViewModelBase
     {
         #region Fields
 
@@ -62,7 +62,10 @@ namespace HLU.UI.ViewModel
 
         public override string WindowTitle
         {
-            get { return DisplayName; }
+            get
+            {
+                return DisplayName;
+            }
         }
 
         #endregion ViewModelBase Members
@@ -111,74 +114,146 @@ namespace HLU.UI.ViewModel
 
         public string AppVersion
         {
-            get { return _appVersion; }
-            set { _appVersion = value; }
+            get
+            {
+                return _appVersion;
+            }
+            set
+            {
+                _appVersion = value;
+            }
         }
 
         public string DbVersion
         {
-            get { return _dbVersion; }
-            set { _dbVersion = value; }
+            get
+            {
+                return _dbVersion;
+            }
+            set
+            {
+                _dbVersion = value;
+            }
         }
 
         public string DataVersion
         {
-            get { return _dataVersion; }
-            set { _dataVersion = value; }
+            get
+            {
+                return _dataVersion;
+            }
+            set
+            {
+                _dataVersion = value;
+            }
         }
 
         public string ConnectionType
         {
-            get { return _connectionType; }
-            set { _connectionType = value; }
+            get
+            {
+                return _connectionType;
+            }
+            set
+            {
+                _connectionType = value;
+            }
         }
 
         public string ConnectionSettings
         {
-            get { return _connectionSettings; }
-            set { _connectionSettings = value; }
+            get
+            {
+                return _connectionSettings;
+            }
+            set
+            {
+                _connectionSettings = value;
+            }
         }
 
         public string UserId
         {
-            get { return _userId; }
-            set { _userId = value; }
+            get
+            {
+                return _userId;
+            }
+            set
+            {
+                _userId = value;
+            }
         }
 
         public string UserName
         {
-            get { return _userName; }
-            set { _userName = value; }
+            get
+            {
+                return _userName;
+            }
+            set
+            {
+                _userName = value;
+            }
         }
 
         public string Copyright
         {
-            get { return _copyright; }
-            set { _copyright = value; }
+            get
+            {
+                return _copyright;
+            }
+            set
+            {
+                _copyright = value;
+            }
         }
 
         public string UserGuideURL
         {
-            get { return _userGuideURL; }
-            set { _userGuideURL = value; }
+            get
+            {
+                return _userGuideURL;
+            }
+            set
+            {
+                _userGuideURL = value;
+            }
         }
 
         public string UserGuideText
         {
-            get { return _userGuideText; }
-            set { _userGuideText = value; }
+            get
+            {
+                return _userGuideText;
+            }
+            set
+            {
+                _userGuideText = value;
+            }
         }
 
         public string TechnicalGuideURL
         {
-            get { return _technicalGuideURL; }
-            set { _technicalGuideURL = value; }
+            get
+            {
+                return _technicalGuideURL;
+            }
+            set
+            {
+                _technicalGuideURL = value;
+            }
         }
 
         public string TechnicalGuideText
         {
-            get { return _technicalGuideText; }
-            set { _technicalGuideText = value; }
+            get
+            {
+                return _technicalGuideText;
+            }
+            set
+            {
+                _technicalGuideText = value;
+            }
         }
 
         #endregion Control Properties

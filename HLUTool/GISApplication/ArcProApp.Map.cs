@@ -21,29 +21,17 @@
 
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.DDL;
-using ArcGIS.Core.Data.Exceptions;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
-using ArcGIS.Desktop.Core.Geoprocessing;
-using ArcGIS.Desktop.Editing;
-using ArcGIS.Desktop.Editing.Attributes;
-using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ArcGIS.Desktop.Internal.Layouts.Utilities;
-using ArcGIS.Desktop.Layouts;
 using ArcGIS.Desktop.Mapping;
 using HLU.Data;
 using HLU.Data.Model;
-using HLU.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using QueryFilter = ArcGIS.Core.Data.QueryFilter;
@@ -909,7 +897,8 @@ namespace HLU.GISApplication
         public List<FeatureLayer> GetFeatureLayers()
         {
             // Check there is an active map.
-            if (_activeMap == null) return null;
+            if (_activeMap == null)
+                return null;
 
             //Get the feature layers in the active map view.
             List<FeatureLayer> featureLayerList = [.. _activeMap.GetLayersAsFlattenedList().OfType<FeatureLayer>()];

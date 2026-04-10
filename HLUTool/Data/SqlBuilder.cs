@@ -18,15 +18,15 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Data.Connection;
+using HLU.Helpers;
+using HLU.Properties;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using HLU.Data.Connection;
-using HLU.Helpers;
-using HLU.Properties;
 
 namespace HLU.Data
 {
@@ -169,8 +169,14 @@ namespace HLU.Data
         /// <value>The logical operator used to combine this filter condition with others, such as "AND" or "OR".</value>
         public string BooleanOperator
         {
-            get { return _booleanOperator; }
-            set { _booleanOperator = value; }
+            get
+            {
+                return _booleanOperator;
+            }
+            set
+            {
+                _booleanOperator = value;
+            }
         }
 
         /// <summary>
@@ -182,8 +188,14 @@ namespace HLU.Data
         /// </value>
         public string OpenParentheses
         {
-            get { return _openParentheses; }
-            set { _openParentheses = value; }
+            get
+            {
+                return _openParentheses;
+            }
+            set
+            {
+                _openParentheses = value;
+            }
         }
 
         /// <summary>
@@ -192,8 +204,14 @@ namespace HLU.Data
         /// <value>The DataTable that contains the column to which this filter condition applies.</value>
         public DataTable Table
         {
-            get { return _table; }
-            set { _table = value; }
+            get
+            {
+                return _table;
+            }
+            set
+            {
+                _table = value;
+            }
         }
 
         /// <summary>
@@ -202,8 +220,14 @@ namespace HLU.Data
         /// <value>The DataColumn within the specified table that this filter condition targets.</value>
         public DataColumn Column
         {
-            get { return _column; }
-            set { _column = value; }
+            get
+            {
+                return _column;
+            }
+            set
+            {
+                _column = value;
+            }
         }
 
         /// <summary>
@@ -212,8 +236,14 @@ namespace HLU.Data
         /// <value>The operator used in the filter condition, such as "=", "<", ">", etc.</value>
         public string Operator
         {
-            get { return _operator; }
-            set { _operator = value; }
+            get
+            {
+                return _operator;
+            }
+            set
+            {
+                _operator = value;
+            }
         }
 
         /// <summary>
@@ -226,8 +256,14 @@ namespace HLU.Data
         /// </value>
         public Type ColumnSystemType
         {
-            get { return _columnSystemType ?? Column.DataType; }
-            set { _columnSystemType = value; }
+            get
+            {
+                return _columnSystemType ?? Column.DataType;
+            }
+            set
+            {
+                _columnSystemType = value;
+            }
         }
 
         /// <summary>
@@ -239,8 +275,14 @@ namespace HLU.Data
         /// </value>
         public object Value
         {
-            get { return _value; }
-            set { _value = value; }
+            get
+            {
+                return _value;
+            }
+            set
+            {
+                _value = value;
+            }
         }
 
         /// <summary>
@@ -252,8 +294,14 @@ namespace HLU.Data
         /// </value>
         public string CloseParentheses
         {
-            get { return _closeParentheses; }
-            set { _closeParentheses = value; }
+            get
+            {
+                return _closeParentheses;
+            }
+            set
+            {
+                _closeParentheses = value;
+            }
         }
 
         #endregion Methods
@@ -266,21 +314,45 @@ namespace HLU.Data
     {
         #region Abstract
 
-        public abstract string QuotePrefix { get; }
+        public abstract string QuotePrefix
+        {
+            get;
+        }
 
-        public abstract string QuoteSuffix { get; }
+        public abstract string QuoteSuffix
+        {
+            get;
+        }
 
-        public abstract string StringLiteralDelimiter { get; }
+        public abstract string StringLiteralDelimiter
+        {
+            get;
+        }
 
-        public abstract string DateLiteralPrefix { get; }
+        public abstract string DateLiteralPrefix
+        {
+            get;
+        }
 
-        public abstract string DateLiteralSuffix { get; }
+        public abstract string DateLiteralSuffix
+        {
+            get;
+        }
 
-        public abstract string WildcardSingleMatch { get; }
+        public abstract string WildcardSingleMatch
+        {
+            get;
+        }
 
-        public abstract string WildcardManyMatch { get; }
+        public abstract string WildcardManyMatch
+        {
+            get;
+        }
 
-        public abstract string ConcatenateOperator { get; }
+        public abstract string ConcatenateOperator
+        {
+            get;
+        }
 
         public abstract string QuoteValue(object value);
 
@@ -352,7 +424,8 @@ namespace HLU.Data
         /// <returns>true if the columns are from multiple tables; otherwise, false.</returns>
         public virtual bool QualifyColumnNames(DataColumn[] targetColumns)
         {
-            if (targetColumns == null || targetColumns.Length == 0) return false;
+            if (targetColumns == null || targetColumns.Length == 0)
+                return false;
 
             return (from c in targetColumns
                     group c by c.Table.TableName into g
@@ -542,7 +615,8 @@ namespace HLU.Data
         /// string if tableNames is null or empty.</returns>
         public string FromList(bool includeFrom, bool quoteIdentifiers, string[] tableNames)
         {
-            if (tableNames == null || tableNames.Length == 0) return string.Empty;
+            if (tableNames == null || tableNames.Length == 0)
+                return string.Empty;
             StringBuilder sbFromList = new();
             if (quoteIdentifiers)
             {
@@ -677,7 +751,8 @@ namespace HLU.Data
                             sbWhereClause.Append(" IN (");
                             for (int i = 0; i < values.Count; i++)
                             {
-                                if (i > 0) sbWhereClause.Append(',');
+                                if (i > 0)
+                                    sbWhereClause.Append(',');
                                 sbWhereClause.Append(QuoteValue(values[i]));
                             }
                             sbWhereClause.Append(')');
@@ -771,18 +846,22 @@ namespace HLU.Data
                                 sbWhereClause.Remove(sbWhereClause.Length - 1, 1);
                                 sbWhereClause.Append(')');
                                 break;
+
                             case "BEGINS WITH":
                                 sbWhereClause.Append(" LIKE " + QuoteValue(string.Format("{0}{1}",
                             sqlCond.Value, WildcardManyMatch)));
                                 break;
+
                             case "ENDS WITH":
                                 sbWhereClause.Append(" LIKE " + QuoteValue(string.Format("{1}{0}",
                             sqlCond.Value, WildcardManyMatch)));
                                 break;
+
                             case "CONTAINS":
                                 sbWhereClause.Append(" LIKE " + QuoteValue(string.Format("{1}{0}{1}",
                             sqlCond.Value, WildcardManyMatch)));
                                 break;
+
                             default:
                                 // Avoid repeated calls to 'GetUnderlyingType' for string fields.
                                 if (condString)
@@ -801,9 +880,11 @@ namespace HLU.Data
                             case "IN ()":
                                 sbWhereClause.Append(" IN (").Append(sqlCond.Value).Append(") ");
                                 break;
+
                             case "NOT IN ()":
                                 sbWhereClause.Append(" NOT IN (").Append(sqlCond.Value).Append(") ");
                                 break;
+
                             default:
                                 sbWhereClause.Append(' ').Append(sqlCond.Operator).Append(' ');
                                 // Avoid repeated calls to 'GetUnderlyingType' for string fields.
@@ -1015,7 +1096,8 @@ namespace HLU.Data
         /// tables are provided or if the array is empty.</returns>
         private List<SqlFilterCondition> JoinClause(DataTable[] queryTables)
         {
-            if (queryTables == null || queryTables.Length == 0) return null;
+            if (queryTables == null || queryTables.Length == 0)
+                return null;
 
             List<SqlFilterCondition> joinClause = [];
 
@@ -1024,7 +1106,8 @@ namespace HLU.Data
                 DataTable p = queryTables[i];
                 for (int j = 0; j < queryTables.Length; j++)
                 {
-                    if (j == i) continue;
+                    if (j == i)
+                        continue;
                     DataTable c = queryTables[j];
                     var children = p.ChildRelations.Cast<DataRelation>().Where(r => r.ChildTable == c);
                     if (children.Any())

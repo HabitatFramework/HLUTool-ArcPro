@@ -4,10 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:hlu="clr-namespace:HLU.UI.UserControls"
     xmlns:local="clr-namespace:HLU.UI.ViewModel"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:viewModel="clr-namespace:HLU.UI.ViewModel"
     Title="{Binding WindowTitle}"
     MinWidth="750"
     MinHeight="535"
@@ -148,11 +146,9 @@
                                         </Style>
                                     </TextBlock.Style>
                                 </TextBlock>
-
                             </Grid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
-
                 </ListBox>
             </Border>
 
@@ -194,7 +190,6 @@
                     IsCancel="True"
                     Style="{DynamicResource Esri_Button}" />
             </StackPanel>
-
         </Grid>
     </DockPanel>
 </controls:ProWindow>

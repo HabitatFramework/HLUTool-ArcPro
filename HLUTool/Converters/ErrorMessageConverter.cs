@@ -30,7 +30,7 @@ namespace HLU.Converters
     /// differently in the interface.
     /// </summary>
     /// <seealso cref="System.Windows.Data.IValueConverter" />
-    class ErrorMessageConverter : IValueConverter
+    internal class ErrorMessageConverter : IValueConverter
     {
         #region IValueConverter Members
 

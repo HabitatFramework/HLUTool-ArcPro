@@ -27,7 +27,7 @@ namespace HLU.UI.UserControls
     /// Helper class to enable binding the Password property of a PasswordBox. This is not possible
     /// by default because the Password property is not a DependencyProperty.
     /// </summary>
-    static class PasswordBoxAssistant
+    internal static class PasswordBoxAssistant
     {
         #region DependencyProperties
 
@@ -121,14 +121,16 @@ namespace HLU.UI.UserControls
 
             // Only handle this event when the property is attached to a PasswordBox
             // and when the BindPassword attached property has been set to true
-            if ((d == null) || !GetBindPassword(d)) return;
+            if ((d == null) || !GetBindPassword(d))
+                return;
 
             // Avoid recursive updating by ignoring the box's changed event
             box.PasswordChanged -= HandlePasswordChanged;
 
             string newPassword = (string)e.NewValue;
 
-            if (!GetUpdatingPassword(box)) box.Password = newPassword;
+            if (!GetUpdatingPassword(box))
+                box.Password = newPassword;
 
             box.PasswordChanged += HandlePasswordChanged;
         }
@@ -141,14 +143,17 @@ namespace HLU.UI.UserControls
         /// <param name="e">The event data for the property change.</param>
         private static void OnBindPasswordChanged(DependencyObject dp, DependencyPropertyChangedEventArgs e)
         {
-            if (dp is not PasswordBox box) return;
+            if (dp is not PasswordBox box)
+                return;
 
             bool wasBound = (bool)e.OldValue;
             bool needToBind = (bool)e.NewValue;
 
-            if (wasBound) box.PasswordChanged -= HandlePasswordChanged;
+            if (wasBound)
+                box.PasswordChanged -= HandlePasswordChanged;
 
-            if (needToBind) box.PasswordChanged += HandlePasswordChanged;
+            if (needToBind)
+                box.PasswordChanged += HandlePasswordChanged;
         }
 
         /// <summary>

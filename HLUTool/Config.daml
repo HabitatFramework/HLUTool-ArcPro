@@ -5,13 +5,13 @@
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
 
-	<AddInInfo id="{8bb44fa0-a26d-4f03-a370-b52f39b28c90}" version="4.1.0" desktopVersion="3.4">
+	<AddInInfo id="{8bb44fa0-a26d-4f03-a370-b52f39b28c90}" version="4.0.0" desktopVersion="3.4">
 		<Name>HLUTool</Name>
-		<Description>HLUTool is an ArcGIS .Net tool </Description>
-		<Image>Images\AddinDesktop32.png</Image>
+		<Description>HLUTool provides a user-friendly interface for searching, displaying and updating habitat and land use attributes held in a relational database alongside spatial features in ArcGIS Pro. Key benefits include: validation of attribute compatibility; comprehensive history log for every change; simple query interface (e.g. all priority habitat features); reduced data volumes through relational data storage; data extraction in bespoke formats; and improved data retrieval and update performance for high-volume, complex data.</Description>
+		<Image>Images\AddInDesktop32.png</Image>
 		<Author>Andy Foy, andy@andyfoyconsulting.co.uk</Author>
 		<Company>Andy Foy Consulting</Company>
-		<Date>08/04/2026 17:38:00 AM</Date>
+		<Date>10/04/2026 12:31:00 AM</Date>
 		<Subject>Framework, Editing, Geodatabase</Subject>
 		<!-- Note subject can be one or more of these topics:
                     Content, Framework, Editing, Geodatabase, Geometry, Geoprocessing, Layouts, Map Authoring, Map Exploration -->
@@ -58,8 +58,8 @@
 				<!-- Mode group with 4 toggle buttons -->
 				<group id="HLUTool_Group_Mode" caption="Mode" keytip="G1">
 					<button refID="HLUTool_btnUpdateMode" size="large" />
-					<button refID="HLUTool_btnOSMMReviewMode" size="middle" />
 					<button refID="HLUTool_btnBulkUpdateMode" size="middle" />
+					<button refID="HLUTool_btnOSMMReviewMode" size="middle" />
 					<button refID="HLUTool_btnOSMMBulkUpdateMode" size="middle" />
 				</group>
 

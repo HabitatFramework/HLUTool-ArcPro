@@ -4,7 +4,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:hlu="clr-namespace:HLU.UI.UserControls"
     xmlns:local="clr-namespace:HLU.UI.ViewModel"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="{Binding WindowTitle}"
@@ -119,7 +118,6 @@
                         IsTabStop="False"
                         Text="{Binding DataVersion}" />
                 </Grid>
-
             </GroupBox>
 
             <GroupBox
@@ -171,7 +169,6 @@
                         IsTabStop="False"
                         Text="{Binding ConnectionSettings}" />
                 </Grid>
-
             </GroupBox>
 
             <GroupBox
@@ -223,7 +220,6 @@
                         IsTabStop="False"
                         Text="{Binding UserName}" />
                 </Grid>
-
             </GroupBox>
 
             <GroupBox
@@ -258,7 +254,6 @@
                         Text="{Binding Copyright}"
                         TextWrapping="Wrap" />
                 </Grid>
-
             </GroupBox>
 
             <GroupBox
@@ -314,7 +309,6 @@
                         </Hyperlink>
                     </TextBlock>
                 </Grid>
-
             </GroupBox>
 
             <Grid Name="GridButtons" Grid.Row="6">

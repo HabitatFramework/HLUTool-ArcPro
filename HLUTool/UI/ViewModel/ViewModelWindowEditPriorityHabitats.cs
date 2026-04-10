@@ -17,6 +17,8 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Data;
+using HLU.Data.Model;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -24,18 +26,14 @@ using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Text;
-using System.Windows;
 using System.Windows.Input;
-using HLU.Data;
-using HLU.Data.Model;
-using HLU.UI.View;
 
 namespace HLU.UI.ViewModel
 {
     /// <summary>
     /// Contains the ViewModel for the Edit Priority Habitats window.
     /// </summary>
-    class ViewModelWindowEditPriorityHabitats : ViewModelBase, IDataErrorInfo
+    internal class ViewModelWindowEditPriorityHabitats : ViewModelBase, IDataErrorInfo
     {
         public static HluDataSet HluDatasetStatic = null;
 
@@ -65,7 +63,7 @@ namespace HLU.UI.ViewModel
 
             IEnumerable<BapEnvironment> prevBapRowsAuto = null;
             prevBapRowsAuto = from p in incidBapHabitatsAuto
-                         select new BapEnvironment(false, false, p.Bap_id, p.Incid, p.Bap_habitat, p.Quality_determination, p.Quality_interpretation, p.Interpretation_comments);
+                              select new BapEnvironment(false, false, p.Bap_id, p.Incid, p.Bap_habitat, p.Quality_determination, p.Quality_interpretation, p.Interpretation_comments);
 
             _incidBapRowsAuto = new ObservableCollection<BapEnvironment>(prevBapRowsAuto);
             OnPropertyChanged(nameof(IncidBapHabitatsAuto));
@@ -77,13 +75,22 @@ namespace HLU.UI.ViewModel
 
         public override string DisplayName
         {
-            get { return _displayName; }
-            set { _displayName = value; }
+            get
+            {
+                return _displayName;
+            }
+            set
+            {
+                _displayName = value;
+            }
         }
 
         public override string WindowTitle
         {
-            get { return DisplayName; }
+            get
+            {
+                return DisplayName;
+            }
         }
 
         #endregion ViewModelBase Members
@@ -217,7 +224,10 @@ namespace HLU.UI.ViewModel
 
         public ObservableCollection<BapEnvironment> IncidBapHabitatsAuto
         {
-            get { return _incidBapRowsAuto; }
+            get
+            {
+                return _incidBapRowsAuto;
+            }
             set
             {
                 _incidBapRowsAuto = value;

@@ -32,7 +32,7 @@ namespace HLU.UI.View.Connection
     /// </summary>
     public partial class ViewConnectSqlServer : ProWindow
     {
-        IntPtr _windowHandle;
+        private IntPtr _windowHandle;
 
         public ViewConnectSqlServer()
         {
@@ -41,15 +41,18 @@ namespace HLU.UI.View.Connection
 
         private void Window_Activated(object sender, EventArgs e)
         {
-            if (PresentationSource.FromVisual(this) is HwndSource hwndSrc) _windowHandle = hwndSrc.Handle;
+            if (PresentationSource.FromVisual(this) is HwndSource hwndSrc)
+                _windowHandle = hwndSrc.Handle;
 
             if ((this.ComboBoxServer.Items.Count == 1) && (String.IsNullOrEmpty(this.ComboBoxServer.Text) ||
-                this.ComboBoxServer.Items.Contains(this.ComboBoxServer.Text))) this.ComboBoxServer.SelectedIndex = 0;
+                this.ComboBoxServer.Items.Contains(this.ComboBoxServer.Text)))
+                this.ComboBoxServer.SelectedIndex = 0;
         }
 
         private void Window_ContentRendered(object sender, EventArgs e)
         {
-            if (DataContext is not ViewModelConnectSqlServer vm) return;
+            if (DataContext is not ViewModelConnectSqlServer vm)
+                return;
 
             // Force WPF to validate all required fields immediately on load so that
             // error adorners appear for blank values without the user having to interact first.

@@ -25,11 +25,8 @@ using ArcGIS.Desktop.Framework;
 using HLU.Data;
 using HLU.Data.Connection;
 using HLU.Data.Model;
-using HLU.Date;
 using HLU.Enums;
 using HLU.Exceptions;
-using HLU.GISApplication;
-using HLU.Properties;
 using HLU.UI.View;
 using System;
 using System.Collections.Generic;
@@ -37,12 +34,10 @@ using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Threading;
 using CommandType = System.Data.CommandType;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
@@ -181,8 +176,8 @@ namespace HLU.UI.ViewModel
 
             // Count the non-blank rows from the user interface
             int sourceCount = (from nr in _viewModelMain.IncidSourcesRows
-                           where nr.source_id != Int32.MinValue
-                           select nr).Count();
+                               where nr.source_id != Int32.MinValue
+                               select nr).Count();
 
             // Display the bulk update interface to prompt the user
             // to select the options they want to use.
@@ -790,8 +785,8 @@ namespace HLU.UI.ViewModel
                                         // Lookup the secondary group for the secondary code
                                         IEnumerable<string> q = null;
                                         q = (from s in _viewModelMain.SecondaryHabitatCodesAll
-                                                where s.code == secondaryCode
-                                                select s.code_group);
+                                             where s.code == secondaryCode
+                                             select s.code_group);
 
                                         // If the secondary group has been found
                                         string secondaryGroup = null;
@@ -1127,8 +1122,8 @@ namespace HLU.UI.ViewModel
 
             // Count the non-blank rows from the user interface
             int newSourceRows = (from ns in incidSourcesRows
-                           where ns.source_id != Int32.MinValue
-                           select ns).Count();
+                                 where ns.source_id != Int32.MinValue
+                                 select ns).Count();
 
             // If there are new source rows then delete the old sources
             bool deleteSources = newSourceRows > 0;
@@ -1185,7 +1180,8 @@ namespace HLU.UI.ViewModel
         {
             List<R> newRows = new(rows.Length);
 
-            if ((rows == null) || (rows.Length == 0) || (rows[0] == null)) return [.. newRows];
+            if ((rows == null) || (rows.Length == 0) || (rows[0] == null))
+                return [.. newRows];
 
             T table = (T)rows[0].Table;
 
@@ -1207,7 +1203,8 @@ namespace HLU.UI.ViewModel
 
             for (int i = 0; i < rows.Length; i++)
             {
-                if (rows[i] == null) continue;
+                if (rows[i] == null)
+                    continue;
                 bool add = true;
                 for (int j = 0; j < table.Columns.Count; j++)
                 {
@@ -1218,7 +1215,8 @@ namespace HLU.UI.ViewModel
                         break;
                     }
                 }
-                if (add) newRows.Add(rows[i]);
+                if (add)
+                    newRows.Add(rows[i]);
             }
 
             return [.. newRows];
@@ -1289,6 +1287,7 @@ namespace HLU.UI.ViewModel
                     // then ignore it as there are no columns to update
                     case 1: // Nothing to update in the row
                         break;
+
                     default: // impossible if rules properly enforced
                         break;
                 }
@@ -1338,7 +1337,8 @@ namespace HLU.UI.ViewModel
                 bool isSecondary = !mandatoryBap.Contains(be.Bap_habitat);
 
                 // Flag the current BAP habitat as secondary
-                if (isSecondary) be.MakeSecondary();
+                if (isSecondary)
+                    be.MakeSecondary();
 
                 // Get any rows for the current BAP habitat already in the database
                 IEnumerable<HluDataSet.incid_bapRow> dbRows =
@@ -1365,6 +1365,7 @@ namespace HLU.UI.ViewModel
                         }
                         updateRows.Add(updateRow);
                         break;
+
                     default: // impossible if rules properly enforced
                         break;
                 }
@@ -1383,7 +1384,7 @@ namespace HLU.UI.ViewModel
                 // Change any existing rows in the database that are no longer primary
                 // (mandatory) BAP habitats to secondary
                 incidBapTable.Where(r => !mandatoryBap.Contains(r.bap_habitat)
-                    && BapEnvironment.IsSecondary(r) == false).ToList().ForEach(delegate(HluDataSet.incid_bapRow r)
+                    && BapEnvironment.IsSecondary(r) == false).ToList().ForEach(delegate (HluDataSet.incid_bapRow r)
                 {
                     updateRows.Add(BapEnvironment.MakeSecondary(r));
                 });
@@ -1424,6 +1425,7 @@ namespace HLU.UI.ViewModel
                         }
                         updateRows.Add(updateRow);
                         break;
+
                     default: // impossible if rules properly enforced
                         break;
                 }
@@ -1711,9 +1713,12 @@ namespace HLU.UI.ViewModel
             where T : DataTable, new()
             where R : DataRow
         {
-            if (dbRows == null) throw new("dbRows");
-            if (newRows == null) throw new("newRows");
-            if (adapter == null) throw new("adapter");
+            if (dbRows == null)
+                throw new("dbRows");
+            if (newRows == null)
+                throw new("newRows");
+            if (adapter == null)
+                throw new("adapter");
 
             // Check the data table primary key is an integer
             if ((dbRows.PrimaryKey.Length != 1) || (dbRows.PrimaryKey[0].DataType != typeof(Int32)))
@@ -1735,7 +1740,8 @@ namespace HLU.UI.ViewModel
             int numRowsNew = newRowsNoDups.Length;
 
             // Exit if no existing rows are to be retained and there are no new rows to add
-            if ((deleteExistingRows) && (numRowsNew == 0)) return;
+            if ((deleteExistingRows) && (numRowsNew == 0))
+                return;
 
             // Select only existing data table rows not in the new rows
             R[] oldRows = [.. (from dr in dbRowsEnum where cols.Any(col => !dr.IsNull(col.Ordinal)) && !newRows.Any(nr => cols.Count(c => nr[c.Ordinal].Equals(dr[c.Ordinal])) == cols.Length) select dr).OrderBy(r => r[pkOrdinal])];
@@ -1779,18 +1785,23 @@ namespace HLU.UI.ViewModel
                 case "incid_condition":
                     maxRowsDb = 1;
                     break;
+
                 case "incid_ihs_matrix":
                     maxRowsDb = 3;
                     break;
+
                 case "incid_ihs_formation":
                     maxRowsDb = 2;
                     break;
+
                 case "incid_ihs_management":
                     maxRowsDb = 2;
                     break;
+
                 case "incid_ihs_complex":
                     maxRowsDb = 2;
                     break;
+
                 case "incid_sources":
                     maxRowsDb = 3;
                     break;
@@ -1835,6 +1846,6 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion Database Update Methods
+        #endregion Database & GIS Updates
     }
 }

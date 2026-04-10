@@ -17,12 +17,12 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using System.Collections.Generic;
 using HLU.Data.Model;
+using System.Collections.Generic;
 
 namespace HLU.Data
 {
-    class HistoryRowEqualityComparer : IEqualityComparer<HluDataSet.historyRow>
+    internal class HistoryRowEqualityComparer : IEqualityComparer<HluDataSet.historyRow>
     {
         #region IEqualityComparer<historyRow> Members
 
@@ -30,29 +30,35 @@ namespace HLU.Data
         {
             if (x.incid == null)
             {
-                if (y.incid != null) return false;
+                if (y.incid != null)
+                    return false;
             }
             else
             {
-                if (!x.incid.Equals(y.incid)) return false;
+                if (!x.incid.Equals(y.incid))
+                    return false;
             }
 
             if (x.toid == null)
             {
-                if (y.toid != null) return false;
+                if (y.toid != null)
+                    return false;
             }
             else
             {
-                if (!x.toid.Equals(y.toid)) return false;
+                if (!x.toid.Equals(y.toid))
+                    return false;
             }
 
             if (x.fragid == null)
             {
-                if (y.fragid != null) return false;
+                if (y.fragid != null)
+                    return false;
             }
             else
             {
-                if (!x.fragid.Equals(y.fragid)) return false;
+                if (!x.fragid.Equals(y.fragid))
+                    return false;
             }
 
             return true;
@@ -63,6 +69,6 @@ namespace HLU.Data
             return obj.incid.GetHashCode() ^ obj.toid.GetHashCode() ^ obj.fragid.GetHashCode();
         }
 
-        #endregion
+        #endregion IEqualityComparer<historyRow> Members
     }
 }

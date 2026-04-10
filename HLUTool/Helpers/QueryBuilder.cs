@@ -20,13 +20,12 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Data;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
-using HLU.Data;
-using HLU.Data.Connection;
 
 namespace HLU.Helpers
 {

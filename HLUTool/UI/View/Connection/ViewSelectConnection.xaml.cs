@@ -30,7 +30,7 @@ namespace HLU.UI.View.Connection
     /// </summary>
     public partial class ViewSelectConnection : ProWindow
     {
-        IntPtr _windowHandle;
+        private IntPtr _windowHandle;
 
         public ViewSelectConnection()
         {
@@ -40,7 +40,8 @@ namespace HLU.UI.View.Connection
 
         private void Window_Activated(object sender, EventArgs e)
         {
-            if (PresentationSource.FromVisual(this) is HwndSource hwndSrc) _windowHandle = hwndSrc.Handle;
+            if (PresentationSource.FromVisual(this) is HwndSource hwndSrc)
+                _windowHandle = hwndSrc.Handle;
         }
     }
 }

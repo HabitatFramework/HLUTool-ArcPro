@@ -18,7 +18,7 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using ActiproSoftware.Windows.Controls;
+using ArcGIS.Desktop.Framework;
 using HLU.Enums;
 using HLU.Properties;
 using HLU.UI.View.Connection;
@@ -26,7 +26,6 @@ using HLU.UI.ViewModel;
 using System;
 using System.Threading.Tasks;
 using System.Windows;
-using ArcGIS.Desktop.Framework;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.Data.Connection
@@ -35,7 +34,7 @@ namespace HLU.Data.Connection
     /// Factory class to create database connections based on user settings. If settings are
     /// incomplete or invalid, prompts user to select connection type and enter connection details.
     /// </summary>
-    class DbFactory
+    internal class DbFactory
     {
         #region Fields
 
@@ -55,7 +54,10 @@ namespace HLU.Data.Connection
         /// <value>The current connection type.</value>
         public static ConnectionTypes ConnectionType
         {
-            get { return _connType; }
+            get
+            {
+                return _connType;
+            }
         }
 
         /// <summary>
@@ -65,7 +67,10 @@ namespace HLU.Data.Connection
         /// <value>The current database backend.</value>
         public static Backends Backend
         {
-            get { return _backend; }
+            get
+            {
+                return _backend;
+            }
         }
 
         #endregion Properties
@@ -126,7 +131,8 @@ namespace HLU.Data.Connection
 
             // If connection type is still unknown, return null — caller should have called
             // EnsureConnectionSettingsAsync first.
-            if (_connType == ConnectionTypes.Unknown) return Task.FromResult<DbBase>(null);
+            if (_connType == ConnectionTypes.Unknown)
+                return Task.FromResult<DbBase>(null);
 
             // Read remaining settings — these are already populated by EnsureConnectionSettingsAsync.
             string connString = Settings.Default.DbConnectionString;
@@ -145,6 +151,7 @@ namespace HLU.Data.Connection
                         Settings.Default.DbBinaryLength, Settings.Default.DbTimePrecision,
                         Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, dbConnectionTimeout);
                     break;
+
                 case ConnectionTypes.PostgreSQL:
                     db = new DbPgSql(ref connString, ref defaultSchema, ref promptPwd,
                         Settings.Default.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders,
@@ -152,6 +159,7 @@ namespace HLU.Data.Connection
                         Settings.Default.DbBinaryLength, Settings.Default.DbTimePrecision,
                         Settings.Default.DbNumericPrecision, Settings.Default.DbNumericScale, dbConnectionTimeout);
                     break;
+
                 case ConnectionTypes.SQLServer:
                     db = new DbSqlServer(ref connString, ref defaultSchema, ref promptPwd,
                         Settings.Default.PasswordMaskString, Settings.Default.UseAutomaticCommandBuilders,

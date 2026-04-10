@@ -66,7 +66,8 @@ namespace HLU.Helpers
             var enumerator = source.GetEnumerator();
 
             // move to the first element in the source sequence.
-            if (!enumerator.MoveNext()) yield break;
+            if (!enumerator.MoveNext())
+                yield break;
 
             // iterate through source sequence and create a copy of each Chunk
             // on each pass, the iterator advances to the first element of the next "Chunk"
@@ -111,7 +112,7 @@ namespace HLU.Helpers
         /// </summary>
         /// <typeparam name="TKey">The type of the key returned by the keySelector function.</typeparam>
         /// <typeparam name="TSource">The type of elements in the source sequence.</typeparam>
-        class Chunk<TKey, TSource> : IGrouping<TKey, TSource>
+        private class Chunk<TKey, TSource> : IGrouping<TKey, TSource>
         {
             // INVARIANT: DoneCopyingChunk == true ||
             //   (predicate != null && predicate(enumerator.Current) && current.Value == enumerator.Current)
@@ -120,12 +121,13 @@ namespace HLU.Helpers
             /// A Chunk has a linked list of ChunkItems, which represent the elements in the current chunk.
             /// Each ChunkItem has a reference to the next ChunkItem in the list.
             /// </summary>
-            class ChunkItem
+            private class ChunkItem
             {
                 public ChunkItem(TSource value)
                 {
                     Value = value;
                 }
+
                 public readonly TSource Value;
                 public ChunkItem Next = null;
             }
@@ -193,7 +195,13 @@ namespace HLU.Helpers
             /// key of the next element does not match the current chunk's key, or there are no more elements in the source.
             /// </summary>
             /// <value><c>true</c> if all chunk elements have been copied; otherwise, <c>false</c>.</value>
-            private bool DoneCopyingChunk { get { return tail == null; } }
+            private bool DoneCopyingChunk
+            {
+                get
+                {
+                    return tail == null;
+                }
+            }
 
             /// <summary>
             /// Adds one ChunkItem to the current group.
@@ -250,7 +258,13 @@ namespace HLU.Helpers
             /// Gets the key for this chunk. All elements in the chunk share this key.
             /// </summary>
             /// <value>The key for this chunk.</value>
-            public TKey Key { get { return key; } }
+            public TKey Key
+            {
+                get
+                {
+                    return key;
+                }
+            }
 
             /// <summary>
             /// Invoked by the inner foreach loop. This method stays just one step ahead
@@ -307,7 +321,8 @@ namespace HLU.Helpers
         public static IEnumerable<List<T>> ChunkClause<T>(this IEnumerable<T> source, int chunksize)
         {
             // Check for invalid chunk size
-            if (chunksize <= 0) throw new ArgumentException("Chunk size must be greater than zero.", nameof(chunksize));
+            if (chunksize <= 0)
+                throw new ArgumentException("Chunk size must be greater than zero.", nameof(chunksize));
 
             while (source.Any())
             {

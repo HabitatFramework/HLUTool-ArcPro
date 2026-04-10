@@ -18,16 +18,15 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Data;
+using HLU.Data.Model;
+using HLU.GISApplication;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Windows.Input;
-using HLU.Data;
-using HLU.Data.Model;
-using HLU.GISApplication;
-using HLU.UI.View;
 
 namespace HLU.UI.ViewModel
 {
@@ -55,7 +54,7 @@ namespace HLU.UI.ViewModel
         private int[] _keyOrdinals;
         private ArcProApp _gisApp;
 
-        #endregion
+        #endregion Fields
 
         #region Constructor
 
@@ -96,15 +95,27 @@ namespace HLU.UI.ViewModel
         /// <value>The display name of the window.</value>
         public override string DisplayName
         {
-            get { return _displayName; }
-            set { _displayName = value; }
+            get
+            {
+                return _displayName;
+            }
+            set
+            {
+                _displayName = value;
+            }
         }
 
         /// <summary>
         /// Gets the title for the window, which is the same as the display name.
         /// </summary>
         /// <value>The title of the window.</value>
-        public override string WindowTitle { get { return DisplayName; } }
+        public override string WindowTitle
+        {
+            get
+            {
+                return DisplayName;
+            }
+        }
 
         #endregion ViewModelBase Members
 
@@ -158,7 +169,13 @@ namespace HLU.UI.ViewModel
         /// are no validation errors.
         /// </summary>
         /// <value>True if the Ok command can be executed; otherwise, false.</value>
-        private bool CanOk { get { return String.IsNullOrEmpty(this.Error); } }
+        private bool CanOk
+        {
+            get
+            {
+                return String.IsNullOrEmpty(this.Error);
+            }
+        }
 
         #endregion Ok Command
 
@@ -235,10 +252,12 @@ namespace HLU.UI.ViewModel
         private void FlashFeature(object param)
         {
             // Check that we have a GIS application instance.
-            if (_gisApp == null) return;
+            if (_gisApp == null)
+                return;
 
             // Check that we have a result feature.
-            if (_resultFeature == null) return;
+            if (_resultFeature == null)
+                return;
 
             // If the result feature is a polygon feature then flash it alone.
             if (_resultFeature is HluDataSet.incid_mm_polygonsRow)
@@ -283,7 +302,10 @@ namespace HLU.UI.ViewModel
         /// <value>The features to be merged.</value>
         public T MergeFeatures
         {
-            get { return _selectedFeatures; }
+            get
+            {
+                return _selectedFeatures;
+            }
         }
 
         /// <summary>
@@ -292,7 +314,10 @@ namespace HLU.UI.ViewModel
         /// <value>The currently selected feature.</value>
         public int SelectedIndex
         {
-            get { return _selectedIndex; }
+            get
+            {
+                return _selectedIndex;
+            }
             set
             {
                 _selectedIndex = value;
@@ -361,6 +386,7 @@ namespace HLU.UI.ViewModel
                         if ((_selectedIndex < 0) || (_selectedIndex >= _selectedFeatures.DefaultView.Count))
                             error = "Error: You must select the feature whose attributes will be retained.";
                         break;
+
                     case "ResultFeature":
                         if (_resultFeature == null)
                             error = "Error: You must select the feature whose attributes will be retained.";

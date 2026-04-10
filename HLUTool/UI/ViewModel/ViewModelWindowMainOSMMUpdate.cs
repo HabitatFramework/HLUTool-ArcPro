@@ -20,19 +20,11 @@
 
 using HLU.Data;
 using HLU.Data.Model;
-using HLU.GISApplication;
-using HLU.Properties;
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Data;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Threading;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
@@ -143,9 +135,11 @@ namespace HLU.UI.ViewModel
                         if (newStatus > 0)
                             newStatus += 1;
                         break;
+
                     case 0:    // Accept update
                         newStatus = 0;
                         break;
+
                     case -99:   // Reject update
                         newStatus = -99;
                         break;

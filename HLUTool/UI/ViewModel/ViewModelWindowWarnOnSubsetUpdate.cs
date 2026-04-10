@@ -17,19 +17,17 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Enums;
 using System;
 using System.Globalization;
 using System.Windows.Input;
-using HLU.Properties;
-using HLU.Data;
-using HLU.Enums;
 
 namespace HLU.UI.ViewModel
 {
     /// <summary>
     /// Cotnains the ViewModel for the WarnOnSubsetUpdate window.
     /// </summary>
-    class ViewModelWindowWarnOnSubsetUpdate : ViewModelBase
+    internal class ViewModelWindowWarnOnSubsetUpdate : ViewModelBase
     {
         #region Fields
 
@@ -65,13 +63,22 @@ namespace HLU.UI.ViewModel
 
         public override string DisplayName
         {
-            get { return _displayName; }
-            set { _displayName = value; }
+            get
+            {
+                return _displayName;
+            }
+            set
+            {
+                _displayName = value;
+            }
         }
 
         public override string WindowTitle
         {
-            get { return DisplayName; }
+            get
+            {
+                return DisplayName;
+            }
         }
 
         #endregion ViewModelBase members
@@ -189,8 +196,13 @@ namespace HLU.UI.ViewModel
 
         public string GroupBoxWarnOnSubsetUpdateHeader
         {
-            get { return String.Format("Attempting to update subset of Incid"); }
-            set { }
+            get
+            {
+                return String.Format("Attempting to update subset of Incid");
+            }
+            set
+            {
+            }
         }
 
         public string LabelMessage
@@ -205,13 +217,21 @@ namespace HLU.UI.ViewModel
                     _numTotalFrags.ToString(CultureInfo.CurrentCulture),
                     _numFrags > 0 ? "s" : String.Empty);
             }
-            set { }
+            set
+            {
+            }
         }
 
         public bool MakeDefaultReponse
         {
-            get { return _makeDefaultReponse; }
-            set { _makeDefaultReponse = value; }
+            get
+            {
+                return _makeDefaultReponse;
+            }
+            set
+            {
+                _makeDefaultReponse = value;
+            }
         }
 
         #endregion Content Properties

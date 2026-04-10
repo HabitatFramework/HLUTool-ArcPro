@@ -17,18 +17,18 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Date;
+using HLU.Enums;
 using System;
 using System.Globalization;
 using System.Windows.Data;
-using HLU.Date;
-using HLU.Enums;
 
 namespace HLU.Converters
 {
     /// <summary>
     /// Converts a VagueDateInstance to a string and vice versa.
     /// </summary>
-    class VagueDateConverter : IValueConverter
+    internal class VagueDateConverter : IValueConverter
     {
         #region IValueConverter Members
 
@@ -71,7 +71,8 @@ namespace HLU.Converters
         {
             try
             {
-                if (value is not string vagueDateString) return value;
+                if (value is not string vagueDateString)
+                    return value;
 
                 // Get the type of date string.
                 string formattedDateString;
