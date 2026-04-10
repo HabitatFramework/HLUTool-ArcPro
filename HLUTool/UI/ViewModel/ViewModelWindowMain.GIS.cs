@@ -935,8 +935,11 @@ namespace HLU.UI.ViewModel
                     // Reset the cursor back to normal.
                     ChangeCursor(Cursors.Arrow);
 
+                    // Clear any existing GIS info messages
+                    ClearMessage(category: MessageCategory.GIS, level: MessageType.Information);
+
                     // Check if the GIS and database are in sync.
-                    CheckInSync("Selection", "Map", showMessage: showMessage);
+                    CheckInSync(MessageCategory.GIS, showMessage: showMessage);
                 }
                 else
                 {
@@ -1053,7 +1056,7 @@ namespace HLU.UI.ViewModel
                     await _gisApp.ZoomSelectedAsync(_minZoom, _autoZoomToSelection);
 
                     // Check if the GIS and database are in sync.
-                    CheckInSync("Selection", "Incid", "Not all incid");
+                    CheckInSync(MessageCategory.GIS, "Not all incid");
                 }
                 else
                 {
@@ -1570,6 +1573,9 @@ namespace HLU.UI.ViewModel
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task LogicalSplitAsync()
         {
+            // Clear any existing Split messages
+            ClearMessage(category: MessageCategory.Split);
+
             // Get the GIS layer selection again (just in case).
             await GetMapSelectionAsync(false);
 
@@ -1594,6 +1600,7 @@ namespace HLU.UI.ViewModel
                 // Show success message
                 ShowSuccess("Logical split completed.", MessageCategory.Split);
 
+                // Notify user with pop-up window
                 NotifySplitMerge("Logical split completed.");
             }
         }
@@ -1607,6 +1614,9 @@ namespace HLU.UI.ViewModel
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task PhysicalSplitAsync()
         {
+            // Clear any existing Split messages
+            ClearMessage(category: MessageCategory.Split);
+
             // Get the GIS layer selection again (just in case).
             await GetMapSelectionAsync(false);
 
@@ -1620,6 +1630,7 @@ namespace HLU.UI.ViewModel
                 // Show success message
                 ShowSuccess("Physical split completed.", MessageCategory.Split);
 
+                // Notify user with pop-up window
                 NotifySplitMerge("Physical split completed.");
             }
         }
@@ -1631,6 +1642,9 @@ namespace HLU.UI.ViewModel
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task LogicalMergeAsync()
         {
+            // Clear any existing Merge messages
+            ClearMessage(category: MessageCategory.Merge);
+
             // Get the GIS layer selection again (just in case).
             await GetMapSelectionAsync(false);
 
@@ -1655,6 +1669,7 @@ namespace HLU.UI.ViewModel
                 // Show success message
                 ShowSuccess("Logical merge completed.", MessageCategory.Merge);
 
+                // Notify user with pop-up window
                 NotifySplitMerge("Logical merge completed.");
             }
         }
@@ -1666,6 +1681,9 @@ namespace HLU.UI.ViewModel
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task PhysicalMergeAsync()
         {
+            // Clear any existing Merge messages
+            ClearMessage(category: MessageCategory.Merge);
+
             // Get the GIS layer selection again (just in case).
             await GetMapSelectionAsync(false);
 
@@ -1690,6 +1708,7 @@ namespace HLU.UI.ViewModel
                 // Show success message
                 ShowSuccess("Physical merge completed.", MessageCategory.Merge);
 
+                // Notify user with pop-up window
                 NotifySplitMerge("Physical merge completed.");
             }
         }

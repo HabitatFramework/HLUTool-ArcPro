@@ -364,7 +364,7 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.RefillIncidTable = true;
 
                     // Get the GIS layer selection again.
-                    await _viewModelMain.GetMapSelectionAsync(true);
+                    await _viewModelMain.GetMapSelectionAsync(false);
                 }
 
                 // Reset the cursor back to normal.
@@ -656,7 +656,7 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.RefillIncidTable = true;
 
                     // Get the GIS layer selection again.
-                    await _viewModelMain.GetMapSelectionAsync(true);
+                    await _viewModelMain.GetMapSelectionAsync(false);
                 }
 
                 // Reset the cursor back to normal.

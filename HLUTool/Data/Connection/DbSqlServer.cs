@@ -399,6 +399,8 @@ namespace HLU.Data.Connection
                 }
                 else
                 {
+                    if (_transaction != null)
+                        adapter.SelectCommand.Transaction = _transaction;
                     SqlCommandBuilder cmdBuilder = new(adapter);
                     adapter.DeleteCommand = cmdBuilder.GetDeleteCommand(_useColumnNames);
                     adapter.UpdateCommand = cmdBuilder.GetUpdateCommand(_useColumnNames);

@@ -22,6 +22,7 @@
 
 using ActiproSoftware.Windows.Shapes;
 using ArcGIS.Core.Internal.CIM;
+using ArcGIS.Desktop.Internal.Framework.Controls;
 using HLU.Data;
 using HLU.Data.Connection;
 using HLU.Data.Model;
@@ -272,42 +273,45 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Check if the GIS and database are in sync for the selected features.
         /// </summary>
-        /// <param name="action">The action being performed that requires the check, used for user messaging.</param>
+        /// <param name="Messagecategory">The category of the message to display if the items are not in sync.</param>
         /// <param name="itemType">The type of item being checked.</param>
         /// <param name="itemTypes">The plural form of the item type, used for user messaging.</param>
         /// <param name="showMessage">Indicates whether to show a message if the items are not in sync.</param>
         /// <returns><c>true</c> if the GIS and database are in sync; otherwise, <c>false</c>.</returns>
-        public bool CheckInSync(string action, string itemType, string itemTypes = "", bool showMessage = true)
+        public bool CheckInSync(string Messagecategory, string itemTypes = "", bool showMessage = true)
         {
             // Set plural item types if not provided.
-            if (itemTypes == "")
-                itemTypes = itemType;
+            string itemType;
+            if (itemTypes != "")
+                itemType = itemTypes + " feature";
+            else
+                itemType = "Feature";
 
             // Check if the GIS features have been physically split by the user but not processed in HLU yet.
-            //if (((_gisSelection != null) && (_gisSelection.Rows.Count > 1)) &&
-            //   ((SelectedIncidsInGISCount == 1) && (SelectedToidsInGISCount == 1) && (SelectedFragsInGISCount == 1)))
             if ((_currentIncidToidsInGISCount == _currentIncidToidsInDBCount) &&
                (_currentIncidFragsInGISCount > _currentIncidFragsInDBCount))
             {
+                // Show informational message that physical merge can be performed if desired.
                 if (showMessage)
-                {
-                    MessageBox.Show(string.Format("{0} features may have been physically split in GIS but not processed in HLU yet.", itemTypes), string.Format("HLU: {0}", action),
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
+                    ShowInfo($"{itemType}{(_currentIncidFragsInGISCount == 1 ? "" : "s")} may have been split in GIS but not physically split using HLU Tool.", Messagecategory);
+            }
+            // Check if there are two or more features that share the same incid and toid, but there
+            // are multiple fragments in GIS and the database.
+            else if (_currentIncidFragsInGISCount > 1 &&
+                (_currentIncidFragsInGISCount == _currentIncidFragsInDBCount) &&
+                (_selectedIncidsInGISCount == 1) && (_selectedToidsInGISCount == 1))
+            {
+                // Show informational message that physical merge can be performed if desired.
+                if (showMessage)
+                    ShowInfo("The selected features share the same INCID and TOID so a physical merge is possible.", MessageCategory.GIS);
             }
             // Check if the GIS and database are in sync.
             else if ((_currentIncidToidsInGISCount > _currentIncidToidsInDBCount) ||
                (_currentIncidFragsInGISCount > _currentIncidFragsInDBCount))
             {
+                // Show warning message that the features and database are not in sync and may need to be fixed.
                 if (showMessage)
-                {
-                    if (_currentIncidFragsInGISCount == 1)
-                        MessageBox.Show(string.Format("{0} feature not found in database.", itemType), string.Format("HLU: {0}", action),
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
-                    else
-                        MessageBox.Show(string.Format("{0} features not found in database.", itemTypes), string.Format("HLU: {0}", action),
-                        MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
+                    ShowWarning($"{itemType}{(_currentIncidFragsInGISCount == 1 ? "" : "s")} not found in database.", Messagecategory);
 
                 return false;
             }

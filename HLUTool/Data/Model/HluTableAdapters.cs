@@ -183,44 +183,46 @@ namespace HLU.Data.Model
             // Ensure the table has a primary key defined
             if (adapter == null)
                 throw new KeyNotFoundException($"Table '{_hluTable.TableName}' has no primary key.");
-            else
-                _adapter = adapter;
 
             // Store original select command and parameter mappings for later use
-            if (Adapter != null)
+            string originalSelectCommand = adapter.SelectCommand.CommandText;
+
+            Dictionary<string, int> paramsDelOrig = (from DbParameter p in adapter.DeleteCommand.Parameters
+                              where p.Direction == ParameterDirection.Input &&
+                              p.SourceVersion == DataRowVersion.Original && !p.SourceColumnNullMapping
+                              select new
+                              {
+                                  key = p.SourceColumn,
+                                  value = adapter.DeleteCommand.Parameters.IndexOf(p)
+                              }
+                              ).ToDictionary(kv => kv.key, kv => kv.value);
+
+            Dictionary<string, int> paramsUpdCurr = [];
+            Dictionary<string, int> paramsUpdOrig = [];
+
+            for (int i = 0; i < adapter.UpdateCommand.Parameters.Count; i++)
             {
-                _originalSelectCommand = adapter.SelectCommand.CommandText;
-
-                _paramsDelOrig = (from DbParameter p in _adapter.DeleteCommand.Parameters
-                                  where p.Direction == ParameterDirection.Input &&
-                                  p.SourceVersion == DataRowVersion.Original && !p.SourceColumnNullMapping
-                                  select new
-                                  {
-                                      key = p.SourceColumn,
-                                      value = _adapter.DeleteCommand.Parameters.IndexOf(p)
-                                  }
-                                  ).ToDictionary(kv => kv.key, kv => kv.value);
-
-                _paramsUpdCurr = [];
-                _paramsUpdOrig = [];
-
-                for (int i = 0; i < _adapter.UpdateCommand.Parameters.Count; i++)
+                DbParameter p = (DbParameter)adapter.UpdateCommand.Parameters[i];
+                if (p.Direction != ParameterDirection.Input) continue;
+                switch (p.SourceVersion)
                 {
-                    DbParameter p = (DbParameter)_adapter.UpdateCommand.Parameters[i];
-                    if (p.Direction != ParameterDirection.Input) continue;
-                    switch (p.SourceVersion)
-                    {
-                        case DataRowVersion.Current:
-                            if (!string.IsNullOrEmpty(p.SourceColumn))
-                                _paramsUpdCurr.Add(p.SourceColumn, i);
-                            break;
-                        case DataRowVersion.Original:
-                            if (!p.SourceColumnNullMapping)
-                                _paramsUpdOrig.Add(p.SourceColumn, i);
-                            break;
-                    }
+                    case DataRowVersion.Current:
+                        if (!string.IsNullOrEmpty(p.SourceColumn))
+                            paramsUpdCurr.Add(p.SourceColumn, i);
+                        break;
+                    case DataRowVersion.Original:
+                        if (!p.SourceColumnNullMapping)
+                            paramsUpdOrig.Add(p.SourceColumn, i);
+                        break;
                 }
             }
+
+            // Commit all state atomically only after all initialization succeeds
+            _adapter = adapter;
+            _originalSelectCommand = originalSelectCommand;
+            _paramsDelOrig = paramsDelOrig;
+            _paramsUpdCurr = paramsUpdCurr;
+            _paramsUpdOrig = paramsUpdOrig;
         }
 
         /// <summary>
@@ -231,12 +233,14 @@ namespace HLU.Data.Model
         /// execute commands from the collection.</remarks>
         private void InitCommandCollection()
         {
-            _commandCollection = new IDbCommand[1];
             if (_adapter == null || _adapter.SelectCommand == null) InitAdapter();
-            _commandCollection[0] = _db.CreateCommand();
-            _commandCollection[0].Connection = Connection;
-            _commandCollection[0].CommandText = _adapter.SelectCommand.CommandText;
-            _commandCollection[0].CommandType = CommandType.Text;
+            IDbCommand[] commandCollection = [_db.CreateCommand()];
+            commandCollection[0].Connection = Connection;
+            commandCollection[0].CommandText = _adapter.SelectCommand.CommandText;
+            commandCollection[0].CommandType = CommandType.Text;
+            if (_db.Transaction != null)
+                commandCollection[0].Transaction = _db.Transaction;
+            _commandCollection = commandCollection;
         }
 
         /// <summary>

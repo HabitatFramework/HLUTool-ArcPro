@@ -664,6 +664,7 @@ namespace HLU.Properties {
 <ArrayOfString xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"">
   <string>Never</string>
   <string>When Outstanding</string>
+  <string>When Present</string>
   <string>Always</string>
 </ArrayOfString>")]
         public global::System.Collections.Specialized.StringCollection ShowOSMMUpdatesOptions {

@@ -121,7 +121,6 @@ namespace HLU.UI.ViewModel
         private string _osmmRejectTag = "Re_ject";
         private Nullable<bool> _anyOSMMUpdates;
         private bool _osmmUpdatesEmpty = false;
-        private bool _osmmUpdateCreateHistory;
 
         // Vague date display fields
         private VagueDateInstance _incidConditionDateEntered;
@@ -707,10 +706,12 @@ namespace HLU.UI.ViewModel
             get
             {
                 // Show the group if in OSMM Review mode, if show updates are "Always" required, or
+                // When Present" (i.e. an OSMM update exists for the current incid), or
                 // "When Outstanding" (i.e. update flag is "Proposed" (> 0) or "Pending" = 0).
                 if ((IsOsmmReviewMode) ||
                     (IsNotBulkMode &&
                     (_showOSMMUpdates == "Always" ||
+                    (_showOSMMUpdates == "When Present" && (IncidOSMMStatus != null)) ||
                     (_showOSMMUpdates == "When Outstanding" && (IncidOSMMStatus >= 0)))))
                 {
                     // Adjust the window height if not already showing the group.
@@ -1473,17 +1474,25 @@ namespace HLU.UI.ViewModel
                         // First query – directly matched primary codes.
                         from p in _lutPrimary
                         join pc in _lutPrimaryCategory on p.category equals pc.code // Needed to only include local categories.
+                        join hc in _lutHabitatClass on p.habitat_class_code equals hc.code
                         from htp in _lutHabitatTypePrimary
                         where htp.code_habitat_type == _habitatType
                             && (p.code == htp.code_primary
                                 || (htp.code_primary.EndsWith('*') &&
                                     Regex.IsMatch(p.code, @"\A" + htp.code_primary.TrimEnd('*') + @"")))
-                        select new CodeDescriptionBool
+                        select new
                         {
-                            Code = p.code,
-                            Description = p.description,
-                            NVC_codes = p.nvc_codes,
-                            Preferred = htp.preferred
+                            Item = new CodeDescriptionBool
+                            {
+                                Code = p.code,
+                                Description = p.description,
+                                NVC_codes = p.nvc_codes,
+                                Preferred = htp.preferred
+                            },
+                            ClassSortOrder = hc.sort_order,
+                            ClassCode = hc.code,
+                            PrimarySortOrder = p.sort_order,
+                            PrimaryCode = p.code
                         })
                     .Concat(
                         // Second query – inferred primary codes via secondary links.
@@ -1495,17 +1504,29 @@ namespace HLU.UI.ViewModel
                                 ? Regex.IsMatch(p.code, @"\A" + ps.code_primary.TrimEnd('*') + @"")
                                 : p.code == ps.code_primary)
                         join pc in _lutPrimaryCategory on p.category equals pc.code
+                        join hc in _lutHabitatClass on p.habitat_class_code equals hc.code
                         where hts.code_habitat_type == _habitatType
-                        select new CodeDescriptionBool
+                        select new
                         {
-                            Code = p.code,
-                            Description = p.description,
-                            NVC_codes = p.nvc_codes,
-                            Preferred = false
+                            Item = new CodeDescriptionBool
+                            {
+                                Code = p.code,
+                                Description = p.description,
+                                NVC_codes = p.nvc_codes,
+                                Preferred = false
+                            },
+                            ClassSortOrder = hc.sort_order,
+                            ClassCode = hc.code,
+                            PrimarySortOrder = p.sort_order,
+                            PrimaryCode = p.code
                         })
-                    .DistinctBy(x => new { x.Code, x.Preferred }) // Remove exact duplicates only.
-                    .OrderByDescending(x => x.Preferred) // Prefer 'true' if present.
-                    .ThenBy(x => x.Code)];
+                    .DistinctBy(x => new { x.Item.Code, x.Item.Preferred }) // Remove exact duplicates only.
+                    .OrderByDescending(x => x.Item.Preferred)               // Preferred first.
+                    .ThenBy(x => x.ClassSortOrder)                          // Then lut_habitat_class.sort_order.
+                    .ThenBy(x => x.ClassCode)                               // Then lut_habitat_class.code.
+                    .ThenBy(x => x.PrimarySortOrder)                        // Then lut_primary.sort_order.
+                    .ThenBy(x => x.PrimaryCode)                             // Then lut_primary.code.
+                    .Select(x => x.Item)];
 
                     foreach (CodeDescriptionBool item in primaryCodes)
                         _primaryCodes.Add(item);
@@ -1545,6 +1566,8 @@ namespace HLU.UI.ViewModel
                     CodeDescriptionBool[] allPrimaryCodes = [.. (
                         from p in _lutPrimary
                         join pc in _lutPrimaryCategory on p.category equals pc.code
+                        join hc in _lutHabitatClass on p.habitat_class_code equals hc.code
+                        orderby hc.sort_order, hc.code, p.sort_order, p.code
                         select new CodeDescriptionBool
                         {
                             Code = p.code,
@@ -1874,8 +1897,7 @@ namespace HLU.UI.ViewModel
 
             // Split on whitespace, commas, and the connective words "and", "or", "and/or".
             // Keep range tokens (e.g. "406-421") intact by only splitting on non-range delimiters.
-            string[] tokens = Regex.Split(normalised, @"[\s,]+|(?<!\d)-(?!\d)|and/or|and|or",
-                RegexOptions.IgnoreCase);
+            string[] tokens = SecondaryCodesSplitRegex().Split(normalised);
 
             foreach (string token in tokens)
             {
@@ -1885,7 +1907,7 @@ namespace HLU.UI.ViewModel
                     continue;
 
                 // Range token e.g. "406-421"
-                Match rangeMatch = Regex.Match(t, @"^(\d+)-(\d+)$");
+                Match rangeMatch = SecondaryCodesRangeRegex().Match(t);
                 if (rangeMatch.Success &&
                     int.TryParse(rangeMatch.Groups[1].Value, out int lo) &&
                     int.TryParse(rangeMatch.Groups[2].Value, out int hi))
@@ -5297,45 +5319,56 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets the habitat class code for the current incid, derived from
-        /// lut_primary.habitat_class_code for the active IncidPrimary value. Returns null when
-        /// IncidPrimary is not set or has no matching lut_primary row.
+        /// Gets the habitat class code for the current incid from lut_primary.habitat_class_code,
+        /// using the active <see cref="_incidPrimary"/> value.
+        /// Returns <see langword="null"/> when the primary code is not set or has no matching row.
         /// </summary>
+        /// <remarks>
+        /// Use <see cref="GetHabitatClassForPrimary"/> directly when the primary code is held in a
+        /// field other than <c>_incidPrimary</c> (e.g. in bulk-update or OSMM-bulk-update contexts
+        /// where <c>IncidCurrentRow.habitat_primary</c> is the authoritative value).
+        /// </remarks>
         /// <value>The habitat class code (e.g. "UKHab") for the current primary habitat.</value>
-        public string IncidHabitatClass
-        {
-            get
-            {
-                // Check that there is a valid primary habitat code and lookup table before
-                // attempting to get the habitat class code from the lookup table
-                if (String.IsNullOrEmpty(_incidPrimary) || _lutPrimary == null)
-                    return null;
+        public string IncidHabitatClass => GetHabitatClassForPrimary(_incidPrimary);
 
-                // Return the habitat class code from the lookup table where the code matches the
-                // IncidPrimary value, or null if no match is found
-                return _lutPrimary
-                    .FirstOrDefault(p => p.code == _incidPrimary)
-                    ?.habitat_class_code;
-            }
+        /// <summary>
+        /// Returns the habitat class code from lut_primary.habitat_class_code for the given
+        /// <paramref name="primaryCode"/>.
+        /// </summary>
+        /// <param name="primaryCode">The lut_primary code to look up.</param>
+        /// <returns>The habitat_class_code value, or <see langword="null"/> if not found.</returns>
+        public string GetHabitatClassForPrimary(string primaryCode)
+        {
+            // Check for null or empty primary code and null lookup table
+            if (String.IsNullOrEmpty(primaryCode) || _lutPrimary == null)
+                return null;
+
+            // Return the habitat class code for the given primary code, or null if not found
+            return _lutPrimary
+                .FirstOrDefault(p => p.code == primaryCode)
+                ?.habitat_class_code;
         }
 
         /// <summary>
-        /// Gets the habitat version for the current incid, derived from
-        /// lut_habitat_class.habitat_version where code matches lut_primary.habitat_class_code for
-        /// the active IncidPrimary value. Returns "0" when the class code or version cannot be resolved.
+        /// Gets the habitat version for the current incid from lut_habitat_class.habitat_version,
+        /// resolved via <see cref="IncidHabitatClass"/>.
+        /// Returns <c>"0"</c> when the class code or version cannot be resolved.
         /// </summary>
-        /// <value>
-        /// The habitat version string for the current primary habitat's classification system.
-        /// </value>
-        public string IncidHabitatVersion
-        {
-            get
-            {
-                // Return the habitat version from the record identifiers helper based on the
-                // current habitat class code, or "0" if the class code is not set or cannot be resolved
-                return _recIDs.GetHabitatVersion(IncidHabitatClass);
-            }
-        }
+        /// <remarks>
+        /// Use <see cref="GetHabitatVersionForPrimary"/> directly in bulk-update or OSMM-bulk-update
+        /// contexts where <c>_incidPrimary</c> may not reflect the row being written.
+        /// </remarks>
+        /// <value>The habitat version string for the current primary habitat's classification system.</value>
+        public string IncidHabitatVersion => GetHabitatVersionForPrimary(_incidPrimary);
+
+        /// <summary>
+        /// Returns the habitat version from lut_habitat_class.habitat_version for the
+        /// lut_primary row identified by <paramref name="primaryCode"/>.
+        /// </summary>
+        /// <param name="primaryCode">The lut_primary code to look up.</param>
+        /// <returns>The habitat_version string, or <c>"0"</c> if not found.</returns>
+        public string GetHabitatVersionForPrimary(string primaryCode)
+            => _recIDs.GetHabitatVersion(GetHabitatClassForPrimary(primaryCode));
 
         #endregion Properties - Site Info
 
@@ -6250,22 +6283,6 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Whether to create incid history for processing OSMM Updates.
-        /// </summary>
-        /// <value><c>true</c> to create incid history for processing OSMM Updates; otherwise, <c>false</c>.</value>
-        public bool OSMMUpdateCreateHistory
-        {
-            get
-            {
-                return _osmmUpdateCreateHistory;
-            }
-            set
-            {
-                _osmmUpdateCreateHistory = value;
-            }
-        }
-
-        /// <summary>
         /// Set the Accept button caption depending on whether the Ctrl button
         /// is held down.
         /// </summary>
@@ -6306,6 +6323,7 @@ namespace HLU.UI.ViewModel
                 return IsEditMode &&
                     !WorkMode.HasAny(WorkMode.OSMMReview | WorkMode.Bulk) &&
                     (_showOSMMUpdates == "Always" ||
+                    _showOSMMUpdates == "When present" ||
                     _showOSMMUpdates == "When Outstanding") &&
                     IncidOSMMStatus > 0;
             }
@@ -6326,6 +6344,7 @@ namespace HLU.UI.ViewModel
                 return IsEditMode &&
                     !WorkMode.HasAny(WorkMode.OSMMReview | WorkMode.Bulk) &&
                     (_showOSMMUpdates == "Always" ||
+                    _showOSMMUpdates == "When present" ||
                     _showOSMMUpdates == "When Outstanding") &&
                     IncidOSMMStatus > 0;
             }
@@ -6749,7 +6768,15 @@ namespace HLU.UI.ViewModel
                 // Clear by category
                 else if (!string.IsNullOrEmpty(category))
                 {
-                    messagesToRemove = [.. _messageQueue.Where(m => string.Equals(m.Category, category, StringComparison.OrdinalIgnoreCase))];
+                    // And clear by level
+                    if (level.HasValue)
+                    {
+                        messagesToRemove = [.. _messageQueue.Where(m => string.Equals(m.Category, category, StringComparison.OrdinalIgnoreCase) && m.Level == level.Value)];
+                    }
+                    else
+                    {
+                        messagesToRemove = [.. _messageQueue.Where(m => string.Equals(m.Category, category, StringComparison.OrdinalIgnoreCase))];
+                    }
                 }
                 // Clear by level
                 else if (level.HasValue)
@@ -7791,7 +7818,7 @@ namespace HLU.UI.ViewModel
             ChangeCursor(Cursors.Arrow);
 
             // Check if the GIS and database are in sync.
-            CheckInSync("Selection", "Map");
+            CheckInSync(MessageCategory.Navigation);
         }
 
         /// <summary>
@@ -7828,7 +7855,7 @@ namespace HLU.UI.ViewModel
         private async Task UpdateAsync()
         {
             // Check if the GIS and database are in sync.
-            if (!CheckInSync("Save", "Cannot save: Map"))
+            if (!CheckInSync(MessageCategory.Update))
                 return;
 
             // If there are no features selected in the GIS (because there is no
@@ -8028,7 +8055,7 @@ namespace HLU.UI.ViewModel
                     RefreshStatus();
 
                     // Check if the GIS and database are in sync.
-                    CheckInSync("Selection", "Map");
+                    CheckInSync(MessageCategory.Update);
                 }
                 else
                 {
@@ -8361,7 +8388,7 @@ namespace HLU.UI.ViewModel
                 ChangeCursor(Cursors.Arrow);
 
                 // Check if the GIS and database are in sync.
-                CheckInSync("Selection", "Map");
+                CheckInSync(MessageCategory.OSMMReview);
             }
             finally
             {
@@ -8419,7 +8446,7 @@ namespace HLU.UI.ViewModel
                     await MoveIncidCurrentRowIndexAsync(_incidCurrentRowIndex + 1);
 
                     // Check if the GIS and database are in sync.
-                    CheckInSync("Selection", "Map");
+                    CheckInSync(MessageCategory.OSMMReview);
                 }
 
                 _osmmUpdating = false;
@@ -8476,7 +8503,7 @@ namespace HLU.UI.ViewModel
                     await MoveIncidCurrentRowIndexAsync(_incidCurrentRowIndex + 1);
 
                     // Check if the GIS and database are in sync.
-                    CheckInSync("Selection", "Map");
+                    CheckInSync(MessageCategory.OSMMReview);
                 }
 
                 _osmmUpdating = false;
@@ -8520,7 +8547,7 @@ namespace HLU.UI.ViewModel
             await MoveIncidCurrentRowIndexAsync(incidCurrRowIx);
 
             // Check if the GIS and database are in sync.
-            CheckInSync("Selection", "Map");
+            CheckInSync(MessageCategory.Update);
         }
 
         /// <summary>
@@ -8551,7 +8578,7 @@ namespace HLU.UI.ViewModel
             await MoveIncidCurrentRowIndexAsync(incidCurrRowIx);
 
             // Check if the GIS and database are in sync.
-            CheckInSync("Selection", "Map");
+            CheckInSync(MessageCategory.Update);
         }
 
         #endregion OSMM Update Accept/Reject
@@ -8848,7 +8875,7 @@ namespace HLU.UI.ViewModel
                         ChangeCursor(Cursors.Arrow);
 
                         // Check if the GIS and database are in sync.
-                        CheckInSync("Selection", "Expected", "Not all expected");
+                        CheckInSync(MessageCategory.Filter, "Not all expected");
                     }
                     else
                     {
@@ -9302,7 +9329,7 @@ namespace HLU.UI.ViewModel
                                 await SetFilterAsync();
 
                                 // Check if the GIS and database are in sync.
-                                CheckInSync("Selection", "Selected", "Not all selected");
+                                CheckInSync(MessageCategory.Filter, "Not all selected");
                             }
 
                             // Refresh all the controls
@@ -9945,5 +9972,22 @@ namespace HLU.UI.ViewModel
         #endregion Formatting Helpers
 
         #endregion Methods
+
+        #region Regex
+
+        /// <summary>
+        /// Splits a suggested-secondaries string on whitespace, commas, and the connective
+        /// words "and", "or", "and/or", while keeping numeric range tokens (e.g. "406-421") intact.
+        /// </summary>
+        [GeneratedRegex(@"[\s,]+|(?<!\d)-(?!\d)|and/or|and|or", RegexOptions.IgnoreCase)]
+        private static partial Regex SecondaryCodesSplitRegex();
+
+        /// <summary>
+        /// Matches a numeric range token of the form "nnn-nnn" (e.g. "406-421").
+        /// </summary>
+        [GeneratedRegex(@"^(\d+)-(\d+)$")]
+        private static partial Regex SecondaryCodesRangeRegex();
+
+        #endregion Regex
    }
 }

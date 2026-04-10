@@ -113,13 +113,6 @@ namespace HLU.UI.ViewModel
             if (!await PerformLogicalMergeAsync())
                 return false;
 
-            // If the selected features share the same incid and toid.
-            if ((_viewModelMain.SelectedIncidsInGISCount == 1) && (_viewModelMain.SelectedToidsInGISCount == 1))
-            {
-                // Show informational message that physical merge can be performed if desired.
-                _viewModelMain.ShowInfo("The selected features share the same INCID and TOID, so a physical merge is possible.", MessageCategory.Merge);
-            }
-
             return true;
         }
 
@@ -411,7 +404,7 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.RefillIncidTable = true;
 
                     // Get the GIS layer selection again.
-                    await _viewModelMain.GetMapSelectionAsync(true);
+                    await _viewModelMain.GetMapSelectionAsync(false);
                 }
 
                 // Reset the cursor back to normal.
@@ -698,7 +691,7 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.RefillIncidTable = true;
 
                     // Get the GIS layer selection again.
-                    await _viewModelMain.GetMapSelectionAsync(true);
+                    await _viewModelMain.GetMapSelectionAsync(false);
                 }
 
                 // Reset the cursor back to normal.
