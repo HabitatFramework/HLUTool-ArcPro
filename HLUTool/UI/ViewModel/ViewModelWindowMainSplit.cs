@@ -489,12 +489,6 @@ namespace HLU.UI.ViewModel
                 if ((newFeatures == null) || (newFeatures.Rows.Count < 2))
                     throw new Exception("Failed to update GIS layer.");
 
-                // Rename the geometry columns
-                ViewModelWindowMainHistory vmHist = new(_viewModelMain);
-                vmHist.HistoryRenameGeometryPropertyColumns(
-                    _viewModelMain.HluDataset.incid_mm_polygons.shape_lengthColumn.ColumnName,
-                    _viewModelMain.HluDataset.incid_mm_polygons.shape_areaColumn.ColumnName, ref newFeatures);
-
                 // get a where clause for the original split feature
                 List<List<SqlFilterCondition>> originalFeatureWhereClause = ViewModelWindowMainHelpers.GisSelectionToWhereClause(
                     [.. _viewModelMain.GisSelection.AsEnumerable().Take(1)], _viewModelMain.GisIDColumnOrdinals,
@@ -511,21 +505,13 @@ namespace HLU.UI.ViewModel
                 if ((updTable == null) || (updTable.Rows.Count != 1))
                     throw new Exception("Failed to fetch incid_mm_polygon rows.");
 
-                // Insert attributes of original split feature into history
-                DataTable history = updTable.Copy();
-                history.Columns[updTable.shape_lengthColumn.ColumnName].ColumnName = ViewModelWindowMain.HistoryGeometry1ColumnName;
-                history.Columns[updTable.shape_areaColumn.ColumnName].ColumnName = ViewModelWindowMain.HistoryGeometry2ColumnName;
-                string[] historyColNames = (
-                [
-                    ViewModelWindowMain.HistoryGeometry1ColumnName, ViewModelWindowMain.HistoryGeometry2ColumnName,
-                    .. _viewModelMain.HistoryColumns.Select(c => c.ColumnName),
-                ]);
-                DataColumn[] delCols = [.. history.Columns.Cast<DataColumn>().Where(c => !historyColNames.Contains(c.ColumnName))];
-                foreach (DataColumn c in delCols)
-                    history.Columns.Remove(c);
-
-                // Write history for original split feature.
-                vmHist.HistoryWrite(null, history, Operations.PhysicalSplit, nowDtTm);
+                // Rename the geometry columns in newFeatures from the generic history names to
+                // shape_length/shape_area so that the UPDATE/INSERT SQL statements below
+                // reference the correct column names.
+                ViewModelWindowMainHistory vmHist = new(_viewModelMain);
+                vmHist.HistoryRenameGeometryPropertyColumns(
+                    _viewModelMain.HluDataset.incid_mm_polygons.shape_lengthColumn.ColumnName,
+                    _viewModelMain.HluDataset.incid_mm_polygons.shape_areaColumn.ColumnName, ref newFeatures);
 
                 // update the original row
                 string updateStatement = String.Format("UPDATE {0} SET {1} WHERE {2}",
@@ -559,18 +545,16 @@ namespace HLU.UI.ViewModel
                     String.Join(",", [.. newFeatures.Columns.Cast<DataColumn>().Select(c =>
                     _viewModelMain.DataBase.QuoteIdentifier(c.ColumnName))])) + "{0})";
 
-                int fragID = Int32.Parse(lastFragID);
-                string numFormat = String.Format("D{0}", updTable.fragidColumn.MaxLength);
-
                 // insert new features returned from GIS into DB shadow copy of GIS layer
                 for (int i = 1; i < newFeatures.Rows.Count; i++)
                 {
+                    // Build the insert statement
                     String insertStatement = String.Format(insertCommand, String.Join(",",
                         [.. newFeatures.Rows[i].ItemArray.Select((item, index) =>
-                            _viewModelMain.DataBase.QuoteValue(newFeatures.Columns[index].ColumnName ==
-                            updTable.fragidColumn.ColumnName ?
-                            (fragID + i).ToString(numFormat) : String.IsNullOrEmpty(item.ToString()) ? null : item))]));
+                            _viewModelMain.DataBase.QuoteValue(
+                                String.IsNullOrEmpty(item.ToString()) ? null : item))]));
 
+                    // Try and execute the insert statement
                     try
                     {
                         _viewModelMain.DataBase.ExecuteNonQuery(
@@ -583,6 +567,16 @@ namespace HLU.UI.ViewModel
                         throw new Exception($"Failed to insert new rows into table [{_viewModelMain.HluDataset.incid_mm_polygons.TableName}].", ex);
                     }
                 }
+
+                // Write history for all split features (original + new) in one pass.
+                // newFeatures already has the correct fragid values for every row, but its
+                // geometry columns have been renamed to shape_length/shape_area by the earlier
+                // HistoryRenameGeometryPropertyColumns call. Rename them back to the generic
+                // HistoryGeometry names on a copy so that HistoryWrite can map them correctly.
+                DataTable historyTable = newFeatures.Copy();
+                historyTable.Columns[updTable.shape_lengthColumn.ColumnName].ColumnName = ViewModelWindowMain.HistoryGeometry1ColumnName;
+                historyTable.Columns[updTable.shape_areaColumn.ColumnName].ColumnName = ViewModelWindowMain.HistoryGeometry2ColumnName;
+                vmHist.HistoryWrite(null, historyTable, Operations.PhysicalSplit, nowDtTm);
 
                 // Update the incid modified columns (i.e. last modified user and date).
                 _viewModelMain.ViewModelUpdate.UpdateIncidModifiedColumns(_viewModelMain.IncidsSelectedMap.ElementAt(0), nowDtTm);
