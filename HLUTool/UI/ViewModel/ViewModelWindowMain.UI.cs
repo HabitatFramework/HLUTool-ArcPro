@@ -1487,9 +1487,7 @@ namespace HLU.UI.ViewModel
                         join hts in _lutHabitatTypeSecondary on s.code equals hts.code_secondary
                         join ps in _lutPrimarySecondary on hts.code_secondary equals ps.code_secondary
                         from p in _lutPrimary
-                        where (ps.code_primary.EndsWith('*')
-                                ? Regex.IsMatch(p.code, @"\A" + ps.code_primary.TrimEnd('*') + @"")
-                                : p.code == ps.code_primary)
+                        where (p.code == ps.code_primary || p.code.StartsWith(ps.code_primary))
                         join pc in _lutPrimaryCategory on p.category equals pc.code
                         join hc in _lutHabitatClass on p.habitat_class_code equals hc.code
                         where hts.code_habitat_type == _habitatType
@@ -2007,17 +2005,33 @@ namespace HLU.UI.ViewModel
                 // those that relate to the primary code, otherwise set to all secondary groups.
                 if (!String.IsNullOrEmpty(IncidPrimary))
                 {
-                    // Set the valid list of secondary groups for the primary code.
-                    _secondaryGroupsValid = [.. (from sg in _lutSecondaryGroup
-                                             join s in _lutSecondary on sg.code equals s.code_group
-                                             join ps in _lutPrimarySecondary on s.code equals ps.code_secondary
-                                             where ((ps.code_primary == IncidPrimary) || (ps.code_primary.EndsWith('*') && Regex.IsMatch(IncidPrimary, @"\A" + ps.code_primary.TrimEnd('*') + @"") == true))
-                                             select sg).OrderBy(r => r.sort_order).ThenBy(r => r.description).Distinct()];
+                    // Get the primary habitat row for the selected primary code.
+                    var primaryRow = _lutPrimary?.FirstOrDefault(p => p.code == IncidPrimary);
 
-                    if (_secondaryGroupsValid != null)
+                    // Check if the primary habitat is a UKHAB code.
+                    bool isUkhab = primaryRow != null &&
+                        primaryRow.habitat_class_code.Equals("UKHAB", StringComparison.OrdinalIgnoreCase);
+
+                    // For non-UKHAB primary codes all secondary groups are valid.
+                    if (!isUkhab)
                     {
-                        // Add the <ALL> groups containing all and all essential secondary codes.
-                        _secondaryGroupsValid = [_allRow, _allEssRow, .. _secondaryGroupsValid];
+                        // All secondary groups are valid for non-UKHAB primary habitats.
+                        _secondaryGroupsValid = SecondaryGroupCodesWithAll;
+                    }
+                    else
+                    {
+                        // Set the valid list of secondary groups for the primary code.
+                        _secondaryGroupsValid = [.. (from sg in _lutSecondaryGroup
+                                                 join s in _lutSecondary on sg.code equals s.code_group
+                                                 join ps in _lutPrimarySecondary on s.code equals ps.code_secondary
+                                                 where (IncidPrimary == ps.code_primary || IncidPrimary.StartsWith(ps.code_primary))
+                                                 select sg).OrderBy(r => r.sort_order).ThenBy(r => r.description).Distinct()];
+
+                        if (_secondaryGroupsValid != null)
+                        {
+                            // Add the <ALL> groups containing all and all essential secondary codes.
+                            _secondaryGroupsValid = [_allRow, _allEssRow, .. _secondaryGroupsValid];
+                        }
                     }
                 }
                 else

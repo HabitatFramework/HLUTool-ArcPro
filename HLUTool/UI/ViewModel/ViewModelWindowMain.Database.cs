@@ -1540,8 +1540,14 @@ namespace HLU.UI.ViewModel
         {
             if (incidPrimary != null)
             {
+                // Get the primary habitat row for the selected primary code.
+                var primaryRow = _lutPrimary.Where(p => p.code == incidPrimary).ElementAt(0);
+
                 // Set the primary habitat category.
-                _incidPrimaryCategory = _lutPrimary.Where(p => p.code == incidPrimary).ElementAt(0).category;
+                _incidPrimaryCategory = primaryRow.category;
+
+                // Check if the primary habitat is a UKHAB code.
+                bool isUkhab = primaryRow != null && primaryRow.habitat_class_code.Equals("UKHAB", StringComparison.OrdinalIgnoreCase);
 
                 // Set NVC codes based on current primary habitat
                 _incidNVCCodes = null;
@@ -1552,15 +1558,28 @@ namespace HLU.UI.ViewModel
                         _incidNVCCodes = q.ElementAt(0).NVC_codes;
                 }
 
-                // Store all secondary habitat codes that are flagged as local for
-                // all secondary groups that relate to the primary habitat category.
-                _secondaryCodesValid = [.. (from s in SecondaryHabitatCodesAll
-                                        join ps in _lutPrimarySecondary on s.code equals ps.code_secondary
-                                        where ((ps.code_primary == _incidPrimary) || (ps.code_primary.EndsWith('*') && Regex.IsMatch(_incidPrimary, @"\A" + ps.code_primary.TrimEnd('*') + @"") == true))
-                                        select s).OrderBy(r => r.sort_order).ThenBy(r => r.description)];
+                // For non-UKHAB primary codes allow any secondary code; for UKHAB
+                // codes restrict to those linked via lut_primary_secondary.
+                if (!isUkhab)
+                {
+                    // All secondary codes are valid for non-UKHAB primary habitats.
+                    _secondaryCodesValid = SecondaryHabitatCodesAll;
 
-                // Store the list of valid secondary codes.
-                SecondaryHabitat.ValidSecondaryCodes = _secondaryCodesValid.Select(s => s.code);
+                    // No restriction on valid secondary codes.
+                    SecondaryHabitat.ValidSecondaryCodes = null;
+                }
+                else
+                {
+                    // Store all secondary habitat codes that are flagged as local for
+                    // all secondary groups that relate to the primary habitat code.
+                    _secondaryCodesValid = [.. (from s in SecondaryHabitatCodesAll
+                                            join ps in _lutPrimarySecondary on s.code equals ps.code_secondary
+                                            where (_incidPrimary == ps.code_primary || _incidPrimary.StartsWith(ps.code_primary))
+                                            select s).OrderBy(r => r.sort_order).ThenBy(r => r.description)];
+
+                    // Store the list of valid secondary codes.
+                    SecondaryHabitat.ValidSecondaryCodes = _secondaryCodesValid.Select(s => s.code);
+                }
             }
             else
             {
