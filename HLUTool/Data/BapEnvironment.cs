@@ -335,8 +335,9 @@ namespace HLU.Data
                 ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(string.Empty));
             }
 
-            // Notify that HasErrors property itself has changed
+            // Notify that HasErrors and ErrorMessages properties have changed
             OnPropertyChanged(nameof(HasErrors));
+            OnPropertyChanged(nameof(ErrorMessages));
         }
 
         /// <summary>
@@ -553,6 +554,15 @@ namespace HLU.Data
                     _bap_habitat = value;
                     OnPropertyChanged(nameof(Bap_habitat));
                     ValidateProperty(nameof(Bap_habitat));
+
+                    // Once a habitat has been chosen, validate the dependent mandatory fields
+                    // so their error indicators appear immediately rather than waiting for
+                    // the user to interact with each one.
+                    if (!string.IsNullOrEmpty(_bap_habitat))
+                    {
+                        ValidateProperty(nameof(Quality_determination));
+                        ValidateProperty(nameof(Quality_interpretation));
+                    }
                     // Flag that the current record has changed so that the apply button
                     // will appear.
                     DataChanged?.Invoke(true);

@@ -669,14 +669,27 @@
                                                 <ColumnDefinition Width="358*" />
                                                 <ColumnDefinition Width="20" />
                                             </Grid.ColumnDefinitions>
-                                            <Label
-                                                x:Name="LabelPrimary"
+
+                                            <!--  InfoButton + label combined so it reads "i Primary"  -->
+                                            <StackPanel
                                                 Grid.Row="0"
                                                 Grid.Column="0"
-                                                Margin="0,0,0,2"
                                                 HorizontalAlignment="Right"
                                                 VerticalAlignment="Center"
-                                                Content="Primary" />
+                                                Orientation="Horizontal">
+                                                <controls:InfoButton
+                                                    x:Name="ButtonHabitatTips"
+                                                    VerticalAlignment="Center"
+                                                    Description="{Binding HabitatTips}"
+                                                    Header="Habitat Tips"
+                                                    Visibility="{Binding ShowHabitatTips}" />
+                                                <Label
+                                                    x:Name="LabelPrimary"
+                                                    Margin="0,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Content="Primary" />
+                                            </StackPanel>
+
                                             <ComboBox
                                                 x:Name="ComboBoxPrimary"
                                                 Grid.Row="0"
@@ -775,7 +788,7 @@
                                                 <ColumnDefinition Width="20" />
                                             </Grid.ColumnDefinitions>
 
-                                            <!--  Row 0: Mandatory and Optional side-by-side, always visible, equal width  -->
+                                            <!--  Mandatory and Optional side-by-side, always visible, equal width  -->
                                             <Grid
                                                 x:Name="GridHabitatSecondariesMandatoryOptional"
                                                 Grid.Row="0"
@@ -825,7 +838,7 @@
                                                     ToolTipService.ShowOnDisabled="True" />
                                             </Grid>
 
-                                            <!--  Row 1: Suggested + InfoButton, hidden when show-suggested option is off  -->
+                                            <!--  Suggested, hidden when show-suggested option is off  -->
                                             <Grid
                                                 x:Name="GridHabitatSecondariesSuggested"
                                                 Grid.Row="1"
@@ -856,15 +869,6 @@
                                                     Text="{Binding HabitatSecondariesSuggested, Mode=OneWay, ValidatesOnDataErrors=True}"
                                                     ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                     ToolTipService.ShowOnDisabled="True" />
-
-                                                <!--  InfoButton for HabitatTips, shown only when tips are available  -->
-                                                <controls:InfoButton
-                                                    x:Name="ButtonHabitatTips"
-                                                    Grid.Column="2"
-                                                    Margin="0,0,0,0"
-                                                    Description="{Binding HabitatTips}"
-                                                    Header="Habitat Tips"
-                                                    Visibility="{Binding ShowHabitatTips}" />
                                             </Grid>
 
                                             <Grid
@@ -1631,7 +1635,7 @@
                                                     <DataGridComboBoxColumn
                                                         x:Name="DataGridComboBoxPrimaryBapHabitatCodes"
                                                         Width="SizeToHeader"
-                                                        MinWidth="60"
+                                                        MinWidth="120"
                                                         CanUserResize="True"
                                                         DisplayMemberPath="description"
                                                         Header="Habitat"
@@ -1805,7 +1809,7 @@
                                                     <DataGridComboBoxColumn
                                                         x:Name="DataGridComboBoxSecondaryBapHabitatCodes"
                                                         Width="SizeToHeader"
-                                                        MinWidth="60"
+                                                        MinWidth="120"
                                                         CanUserResize="True"
                                                         DisplayMemberPath="description"
                                                         Header="Habitat"

@@ -37,9 +37,6 @@ namespace HLU.UI.UserControls.Toolbar
         private WindowOptions _windowOptions;
         private ViewModelWindowOptions _viewModelOptions;
 
-        private HluDataSet.lut_habitat_classRow[] _habitatClasses;
-        private HluDataSet.lut_secondary_groupRow[] _secondaryGroupsAll;
-
         private ViewModelWindowMain _viewModel;
 
         #endregion Fields
@@ -58,10 +55,6 @@ namespace HLU.UI.UserControls.Toolbar
 
             // Get the ViewModel by casting the dockpane.
             _viewModel = pane as ViewModelWindowMain;
-
-            // Get the habitat classes and secondary groups for the options window.
-            _habitatClasses = _viewModel.HabitatClasses;
-            _secondaryGroupsAll = _viewModel.SecondaryGroupCodesWithAll;
         }
 
         #endregion Constructor
@@ -120,7 +113,7 @@ namespace HLU.UI.UserControls.Toolbar
             if (_viewModel == null)
             {
                 Enabled = false;
-                DisabledTooltip = "Unavailable when the main window is not visible.";
+                DisabledTooltip = "Unavailable when the main window is not loaded.";
                 return;
             }
 

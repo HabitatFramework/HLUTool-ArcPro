@@ -46,21 +46,6 @@ namespace HLU.UI.ViewModel
 
         #endregion DisplayName
 
-        #region Window title
-
-        /// <summary>
-        /// Name of window
-        /// </summary>
-        /// <value></value>
-        /// <returns></returns>
-        /// <remarks></remarks>
-        public abstract string WindowTitle
-        {
-            get;
-        }
-
-        #endregion Window title
-
         #endregion Properties
 
         #region Debugging Aides

@@ -30,7 +30,7 @@
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
 		<Content Include="Images\AddInDesktop32.png">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
 		</Content>
 		<Resource Include="Images\AddRowSquare16.png">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -186,7 +186,7 @@
 		<PackageReference Include="Esri.ArcGISPro.Extensions30" Version="3.3.0.52636" />
 		<PackageReference Include="Extended.Wpf.Toolkit" Version="4.7.25103.5738" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.6" />
 		<PackageReference Include="Npgsql" Version="9.0.2" />
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.6.1" />
 		<PackageReference Include="System.Data.Odbc" Version="9.0.1" />

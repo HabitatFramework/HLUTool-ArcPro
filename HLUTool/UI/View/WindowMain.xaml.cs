@@ -85,11 +85,12 @@ namespace HLU.UI.View
                 return;
 
             // Ensure the tool is initialised, showing any error dialog only once.
+            // DEBUG: Removed vm.InError suppression so all exceptions are reported.
             AsyncHelpers.ObserveTask(
                 vm.InitializeAndCheckAsync(),
                 "HLU Tool",
                 "The HLU Tool encountered an error initialising.",
-                ex => ex is UserCancelledException || vm.InError);
+                ex => ex is UserCancelledException);
         }
 
         /// <summary>

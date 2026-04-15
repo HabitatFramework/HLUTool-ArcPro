@@ -33,6 +33,11 @@ public class XmlSettingsManager
     private string _settingsFile;
 
     /// <summary>
+    /// Gets the directory in which the settings file (and log file) are stored.
+    /// </summary>
+    public string SettingsDirectory { get; private set; }
+
+    /// <summary>
     /// Constructor
     /// </summary>
     internal XmlSettingsManager()
@@ -47,6 +52,8 @@ public class XmlSettingsManager
         // Override to fixed path when running in debug mode.
         addInDirectory = @"D:\HLUTool\Config";
 #endif
+
+        SettingsDirectory = addInDirectory;
 
         // Get the full path to the settings file.
         _settingsFile = Path.Combine(addInDirectory, "HLUTool.xml");

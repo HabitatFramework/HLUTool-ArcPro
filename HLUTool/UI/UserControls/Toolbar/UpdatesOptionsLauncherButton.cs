@@ -115,7 +115,7 @@ namespace HLU.UI.UserControls.Toolbar
             if (_viewModel == null)
             {
                 Enabled = false;
-                DisabledTooltip = "Unavailable when the main window is not visible.";
+                DisabledTooltip = "Unavailable when the main window is not loaded.";
                 return;
             }
 

@@ -340,18 +340,6 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets the title of the main window.
-        /// </summary>
-        /// <value>The title of the main window.</value>
-        public override string WindowTitle
-        {
-            get
-            {
-                return String.Format("{0}{1}", DisplayName, CanEdit ? String.Empty : " [READONLY]");
-            }
-        }
-
-        /// <summary>
         /// Gets the visibility of the main grid containing the UI controls. This is toggled to visible
         /// or hidden based on whether there is an active map view with a valid HLU layer, and
         /// also controls the state of the maingrid via DAML.
@@ -1676,11 +1664,13 @@ namespace HLU.UI.ViewModel
                         // If there is no exact match.
                         if (!q.Any())
                         {
-                            // Try to get a wildcard match on the primary code.
+                            // Try to get a wildcard match on the primary code, ordering by the length of
+                            // code_primary descending so the most specific (longest) match is selected first.
                             q = (from htp in _lutHabitatTypePrimary
                                  where ((htp.code_habitat_type == _habitatType)
                                  && (htp.code_primary.EndsWith('*') && Regex.IsMatch(_incidPrimary, @"\A" + htp.code_primary.TrimEnd('*') + @"") == true))
-                                 select htp);
+                                 select htp)
+                                .OrderByDescending(htp => htp.code_primary.Length);
                         }
 
                         if (q.Any())
@@ -1782,7 +1772,7 @@ namespace HLU.UI.ViewModel
             get
             {
                 // If should be showing the suggested habitat secondaries
-                if (_showHabitatSecondariesSuggested && HabitatSecondariesSuggested != null)
+                if (_showHabitatSecondariesSuggested)
                 {
                     return Visibility.Visible;
                 }
@@ -7028,6 +7018,14 @@ namespace HLU.UI.ViewModel
                 if (MapView.Active is null || MapView.Active.Map.Name != _gisApp.MapName)
                     _activeMapView = _gisApp.GetActiveMapView();
 
+                // Discover all valid HLU layers so that HluLayerCount (and CanSwitchGISLayer)
+                // are correctly populated on the new instance.
+                if (!await _gisApp.IsHluMapAsync(selectedValue))
+                    return;
+
+                // Update the list of available layer names in the ViewModel.
+                AvailableHLULayerNames = new System.Collections.ObjectModel.ObservableCollection<string>(_gisApp.ValidHluLayerNames);
+
                 // Switch the GIS layer.
                 if (await _gisApp.IsHluLayerAsync(selectedValue, true))
                 {
@@ -8098,7 +8096,9 @@ namespace HLU.UI.ViewModel
                 // Set the WorkMode.CanEdit flag to the new value.
                 SetWorkModeFlag(WorkMode.CanEdit, canEdit);
 
-                OnPropertyChanged(nameof(WindowTitle));
+                // Update the dock pane caption (to show 'Read-only' or not).
+                UpdateDockPaneCaption();
+
                 OnPropertyChanged(nameof(CanUpdate));
                 OnPropertyChanged(nameof(CanBulkUpdate));
                 OnPropertyChanged(nameof(CanOSMMReviewMode));
@@ -9842,17 +9842,26 @@ namespace HLU.UI.ViewModel
         /// </summary>
         private void UpdateDockPaneCaption()
         {
-            string readonlyPart = string.Empty;
+            // Check if the pane can be edited: it can be edited if there is an active GIS layer,
+            // the user is authorised, the active layer is editable, and the project is in an
+            // editable state.
+            bool canEdit =
+                _gisApp != null &&
+                _gisApp.ActiveHluLayer != null &&
+                IsAuthorisedUser &&
+                _gisApp.ActiveHluLayer.IsEditable &&
+                Project.Current.IsEditingEnabled;
 
             // Set the read-only part.
-            if ((_gisApp != null) && (_gisApp.ActiveHluLayer != null) && (!(bool)_gisApp?.ActiveHluLayer?.IsEditable))
-                readonlyPart = $" [READONLY]";
+            string readonlyPart = !canEdit ? $" [READONLY]" : string.Empty;
 
+            // Set the caption to the base caption plus the read-only part if applicable.
             Caption = _dockPaneBaseCaption + readonlyPart;
             OnPropertyChanged(nameof(Caption));
 
             // Only show the title when the pane is tabbed with other panes.
             TabText = _dockPaneBaseCaption;
+            OnPropertyChanged(nameof(TabText));
         }
 
         #endregion Dock Pane Caption

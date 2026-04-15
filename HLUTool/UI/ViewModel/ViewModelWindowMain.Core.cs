@@ -1820,8 +1820,14 @@ namespace HLU.UI.ViewModel
                 _initialised = false;
                 _initializationException = null;
 
-                // Open the add-in XML settings file.
+                // Open the add-in XML settings file first so SettingsDirectory is
+                // available for all subsequent log writes.
                 _xmlSettingsManager = new();
+
+                // Log that initialisation has started so we can confirm it was reached
+                // even in Release builds without a debugger attached.
+                // Pass overwrite:true so each new session starts with a fresh log file.
+                WriteInitLog("InitializeOnceAsync STARTED", overwrite: true);
 
                 // Upgrade the XML settings if necessary.
                 UpgradeXMLSettings();
@@ -1864,26 +1870,87 @@ namespace HLU.UI.ViewModel
                 // Create the working geodatabase for exports and queries.
                 await CreateWorkingGeodatabaseAsync();
 
-                // Flag the initialisation as complete.
-                Initialised = true;
+                // Marshal the final UI update back to the UI thread.
+                // ObserveTask uses ConfigureAwait(false), so this continuation may be
+                // running on a thread-pool thread in Release builds. WPF PropertyChanged
+                // notifications must be raised on the UI thread or bindings are silently
+                // dropped — causing the blank UI seen in Release-only deployments.
+                // Initialised is set inside the dispatch so that OnShow, which also
+                // reads _initialised and sets GridMainVisibility, cannot race between
+                // the flag being written and the visibility update being dispatched.
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    // Flag the initialisation as complete — on the UI thread so
+                    // GridMainVisibility getter sees the correct value immediately.
+                    Initialised = true;
 
-                // Refresh all controls
-                RefreshAll();
+                    // Log successful completion.
+                    WriteInitLog("InitializeOnceAsync SUCCEEDED");
 
-                // Clear any existing messages
-                ClearAllMessages();
+                    // Refresh all controls
+                    RefreshAll();
 
-                // Make the UI controls visible.
-                GridMainVisibility = Visibility.Visible;
+                    // Clear any existing messages
+                    ClearAllMessages();
+
+                    // Make the UI controls visible.
+                    GridMainVisibility = Visibility.Visible;
+                });
             }
             catch (Exception ex)
             {
-                InError = true;
-                _initializationException = ex;
+                // Clear the task so a future OnShow can retry.
                 _initializationTask = null;
+
+                // Only mark InError for real failures, not user cancellations.
+                // A UserCancelledException means the user dismissed the connection
+                // dialog — the tool should be retryable next time OnShow fires.
+                if (ex is not UserCancelledException)
+                {
+                    InError = true;
+                    _initializationException = ex;
+
+                    string logPath = WriteInitLog($"InitializeOnceAsync FAILED:{Environment.NewLine}{ex}{Environment.NewLine}{new string('-', 80)}");
+
+                    Debug.WriteLine($"[HLUTool] InitializeOnceAsync FAILED:{Environment.NewLine}{ex}");
+
+                    // Show a message box so the error is visible in Release builds.
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        MessageBox.Show(
+                            $"The HLU Tool failed to initialise:{Environment.NewLine}{Environment.NewLine}{ex.Message}{Environment.NewLine}{Environment.NewLine}See {logPath} for details.",
+                            "HLU Tool — Initialisation Error");
+                    });
+                }
 
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Writes a timestamped entry to the initialisation log file, which is written to
+        /// the same directory as the XML settings file (i.e. alongside the .esriAddInX file).
+        /// Falls back to %TEMP% if the settings manager is not yet available.
+        /// Pass <c>true</c> for <paramref name="overwrite"/> to truncate the file at startup
+        /// so it does not grow unboundedly across sessions.
+        /// </summary>
+        /// <param name="message">The message to log.</param>
+        /// <param name="overwrite">When <c>true</c> the file is overwritten; otherwise the message is appended.</param>
+        /// <returns>The full path of the log file that was written.</returns>
+        private string WriteInitLog(string message, bool overwrite = false)
+        {
+            string logDir = _xmlSettingsManager?.SettingsDirectory ?? Path.GetTempPath();
+            string logPath = Path.Combine(logDir, "HLUTool_init.log");
+            try
+            {
+                string entry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}{Environment.NewLine}";
+                if (overwrite)
+                    File.WriteAllText(logPath, entry);
+                else
+                    File.AppendAllText(logPath, entry);
+            }
+            catch { /* logging must never crash the tool */ }
+            return logPath;
         }
 
         /// <summary>
@@ -3018,20 +3085,23 @@ namespace HLU.UI.ViewModel
                     LayersRemovedEvent.Subscribe(OnLayersRemoved);
                 }
 
-                // If there are no errors in the dockpane.
-                if (!InError)
+                // Run init if not yet successfully initialised (retry after cancellation
+                // is allowed; retry after a real error is blocked by InError).
+                if (!InError && !_initialised)
                 {
                     // Ensure the tool is initialised.
                     Task checkTask = InitializeAndCheckAsync();
 
                     // Trap and report any exceptions to the user.
-                    // Suppress UserCancelledException (user cancelled – not an error) and
-                    // suppress anything already shown by another observer (InError is set).
+                    // Suppress only UserCancelledException (user cancelled – not an error).
+                    // Do NOT suppress based on InError: InError is set by the catch block inside
+                    // InitializeOnceAsync *before* the exception reaches this predicate, so
+                    // "|| InError" would silently swallow every init failure.
                     AsyncHelpers.ObserveTask(
                         checkTask,
                         "HLU Tool",
                         "The HLU Tool encountered an error initialising or checking the active map.",
-                        ex => ex is UserCancelledException || InError);
+                        ex => ex is UserCancelledException);
                 }
             }
 
@@ -3044,8 +3114,10 @@ namespace HLU.UI.ViewModel
                 // Clear any existing messages
                 ClearAllMessages();
 
-                // Only make the UI controls visible if initialisation succeeded.
-                if (!InError)
+                // Only make the UI controls visible if initialisation has already succeeded.
+                // (If initialisation is still in progress, InitializeOnceAsync will set
+                // GridMainVisibility = Visible itself once it completes successfully.)
+                if (!InError && _initialised)
                     GridMainVisibility = Visibility.Visible;
             }
         }
@@ -3675,22 +3747,37 @@ namespace HLU.UI.ViewModel
                 }
                 else
                 {
-                    // Set-up the SQL count clause.
-                    string countSql = String.Format("SELECT COUNT(*) FROM {0} WHERE {1} <= {{0}}",
-                        _db.QualifyTableName(_hluDS.incid.TableName),
-                        _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName));
+                    // Directly fetch the incid string at the target row position using a single
+                    // OFFSET query (zero-based offset = seekRowNumber - 1).
+                    string incidCol = _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName);
+                    string incidTable = _db.QualifyTableName(_hluDS.incid.TableName);
+                    int zeroBasedOffset = seekRowNumber - 1;
 
-                    int count = 0;
-                    while ((count < seekRowNumber) && (count < _incidRowCount))
+                    string seekSql;
+                    // If PostgreSQL, use LIMIT/OFFSET syntax; if SQL Server or Oracle 12c+, use OFFSET/FETCH syntax.
+                    if (DbFactory.Backend == Backends.PostgreSql)
                     {
-                        // Count the number of records before the seek number.
-                        count = (int)_db.ExecuteScalar(String.Format(countSql,
-                            _db.QuoteValue(_recIDs.IncidString(seekIncidNumber))),
-                            _db.Connection.ConnectionTimeout, CommandType.Text);
-
-                        seekIncidNumber += seekRowNumber - count;
+                        // PostgreSQL does support the ANSI OFFSET … FETCH syntax but it is much less
+                        // efficient than using LIMIT/OFFSET, so use LIMIT/OFFSET instead.
+                        seekSql = String.Format(
+                            "SELECT {0} FROM {1} ORDER BY {0} ASC LIMIT 1 OFFSET {2}",
+                            incidCol, incidTable, zeroBasedOffset);
                     }
-                    ;
+                    else
+                    {
+                        // SQL Server and Oracle 12c+ both support the ANSI OFFSET … FETCH syntax.
+                        seekSql = String.Format(
+                            "SELECT {0} FROM {1} ORDER BY {0} ASC OFFSET {2} ROWS FETCH NEXT 1 ROWS ONLY",
+                            incidCol, incidTable, zeroBasedOffset);
+                    }
+
+                    object seekResult = _db.ExecuteScalar(seekSql,
+                        _db.Connection.ConnectionTimeout, CommandType.Text);
+
+                    if (seekResult == null)
+                        throw new Exception($"No incid found at row position {seekRowNumber}.");
+
+                    seekIncidNumber = RecordIds.IncidNumber(seekResult.ToString());
 
                     // Fetch records
                     _hluTableAdapterMgr.Fill(_hluDS, typeof(HluDataSet.incidDataTable),
