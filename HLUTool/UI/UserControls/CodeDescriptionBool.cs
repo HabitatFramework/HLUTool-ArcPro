@@ -31,6 +31,7 @@ namespace HLU.UI.UserControls
         private string _description;
         private string _nvc_codes;
         private bool _preferred;
+        private bool _isSeparator;
 
         #endregion Fields
 
@@ -81,6 +82,20 @@ namespace HLU.UI.UserControls
             {
                 _preferred = value;
                 OnPropertyChanged(nameof(Preferred));
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this item is a visual separator.
+        /// Separator items should not be selectable and are displayed as horizontal lines.
+        /// </summary>
+        public bool IsSeparator
+        {
+            get => _isSeparator;
+            set
+            {
+                _isSeparator = value;
+                OnPropertyChanged(nameof(IsSeparator));
             }
         }
 

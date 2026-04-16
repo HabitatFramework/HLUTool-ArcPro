@@ -3300,6 +3300,10 @@ namespace HLU.UI.ViewModel
                     // apply button does not appear.
                     Changed = false;
 
+                    // Reset the area and length measures so that they get recalculated later.
+                    _incidArea = -1;
+                    _incidLength = -1;
+
                     // Clear the habitat type.
                     HabitatType = null;
                     OnPropertyChanged(nameof(HabitatType));

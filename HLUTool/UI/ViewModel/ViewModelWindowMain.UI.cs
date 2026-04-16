@@ -79,8 +79,8 @@ namespace HLU.UI.ViewModel
         private Visibility _gridmainVisibility = Visibility.Visible;
 
         // Habitat display fields
-        private double _incidArea;
-        private double _incidLength;
+        private double _incidArea = -1;
+        private double _incidLength = -1;
         private string _process;
         private string _reason;
         private string _habitatClass;
@@ -1501,8 +1501,18 @@ namespace HLU.UI.ViewModel
                     .ThenBy(x => x.PrimaryCode)                             // Then lut_primary.code.
                     .Select(x => x.Item)];
 
-                    foreach (CodeDescriptionBool item in primaryCodes)
+                    // Add primary codes (skip any with a null/blank code) and mark the
+                    // first non-preferred item so the template can draw a divider above it.
+                    bool separatorMarked = false;
+                    foreach (CodeDescriptionBool item in primaryCodes.Where(c => !string.IsNullOrWhiteSpace(c.Code)))
+                    {
+                        if (!separatorMarked && !item.Preferred && primaryCodes.Any(c => c.Preferred))
+                        {
+                            item.IsSeparator = true;
+                            separatorMarked = true;
+                        }
                         _primaryCodes.Add(item);
+                    }
 
                     // Load all secondary habitat codes where the habitat type
                     // has one of more optional codes.

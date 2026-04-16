@@ -26,7 +26,9 @@ using HLU.UI.ViewModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Media;
 using ComboBox = System.Windows.Controls.ComboBox;
 
 namespace HLU.UI.View
@@ -71,6 +73,52 @@ namespace HLU.UI.View
             // Find all combo boxes in the main grid and store them for later use (to check
             // if any are open during key up events).
             _comboBoxes = [.. FindControls.FindLogicalChildren<ComboBox>(this.GridMain)];
+        }
+
+        /// <summary>
+        /// Handles the DropDownOpened event for the HabitatType combo box.
+        /// Scrolls the dropdown list to the top when no item is selected,
+        /// so the list always opens from the beginning after the habitat class changes.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The event data.</param>
+        private void ComboBoxHabitatType_DropDownOpened(object sender, System.EventArgs e)
+        {
+            if (sender is not ComboBox comboBox || comboBox.SelectedItem != null)
+                return;
+
+            // Walk the visual tree to find the internal ScrollViewer and scroll to the top.
+            if (comboBox.Template.FindName("DropDownScrollViewer", comboBox) is ScrollViewer sv)
+            {
+                sv.ScrollToTop();
+            }
+            else
+            {
+                // Fallback: locate the first ScrollViewer in the popup's visual tree.
+                if (comboBox.Template.FindName("PART_Popup", comboBox) is Popup popup
+                    && popup.Child is UIElement popupChild)
+                {
+                    ScrollViewer scrollViewer = FindVisualChild<ScrollViewer>(popupChild);
+                    scrollViewer?.ScrollToTop();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Walks the visual tree to find the first child of the given type.
+        /// </summary>
+        private static T FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(parent, i);
+                if (child is T match)
+                    return match;
+                T result = FindVisualChild<T>(child);
+                if (result != null)
+                    return result;
+            }
+            return null;
         }
 
         /// <summary>

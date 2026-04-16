@@ -638,6 +638,7 @@
                                                 Margin="0,2,0,0"
                                                 VerticalAlignment="Center"
                                                 DisplayMemberPath="description"
+                                                DropDownOpened="ComboBoxHabitatType_DropDownOpened"
                                                 IsEditable="True"
                                                 IsReadOnly="False"
                                                 IsTextSearchEnabled="True"
@@ -706,32 +707,62 @@
                                                 Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
                                                 TextSearch.TextPath="Display"
                                                 ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}">
+                                                <ComboBox.ItemContainerStyle>
+                                                    <!--  Inherit theme selection/hover styling.
+                                                          Add a top margin to the first non-preferred item
+                                                          so the separator Rectangle has space to paint into.  -->
+                                                    <Style BasedOn="{StaticResource {x:Type ComboBoxItem}}" TargetType="ComboBoxItem">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsSeparator}" Value="True">
+                                                                <Setter Property="Margin" Value="0,12,0,0" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </ComboBox.ItemContainerStyle>
                                                 <ComboBox.ItemTemplate>
                                                     <DataTemplate>
-                                                        <TextBlock Text="{Binding Display}">
-                                                            <TextBlock.Style>
-                                                                <Style TargetType="TextBlock">
-                                                                    <!--  Default to ArcGIS Pro theme color  -->
-                                                                    <Setter Property="Foreground" Value="{DynamicResource SystemBaseHighColor}" />
-
-                                                                    <!--  Only override Foreground for preferred items  -->
-                                                                    <Style.Triggers>
-                                                                        <DataTrigger Binding="{Binding Preferred}" Value="False">
-                                                                            <Setter Property="Foreground" Value="{DynamicResource SystemBaseHighColor}" />
-                                                                            <Setter Property="FontWeight" Value="Normal" />
-                                                                        </DataTrigger>
-                                                                        <DataTrigger Binding="{Binding Preferred}" Value="True">
-                                                                            <Setter Property="Foreground" Value="DarkGreen" />
-                                                                            <Setter Property="FontWeight" Value="Medium" />
-                                                                        </DataTrigger>
-                                                                    </Style.Triggers>
-                                                                </Style>
-                                                            </TextBlock.Style>
-                                                        </TextBlock>
+                                                        <Grid>
+                                                            <!--  Separator rule drawn above the first non-preferred item.
+                                                                  Negative top margin lets it paint into the 6 px container
+                                                                  margin added above, so it appears between the two groups.
+                                                                  Fill="Gray" is explicit so it is always visible regardless
+                                                                  of theme.  -->
+                                                            <Rectangle
+                                                                Height="1"
+                                                                Width="200"
+                                                                Margin="0,-8,0,0"
+                                                                VerticalAlignment="Top"
+                                                                Fill="Gray">
+                                                                <Rectangle.Style>
+                                                                    <Style TargetType="Rectangle">
+                                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding IsSeparator}" Value="True">
+                                                                                <Setter Property="Visibility" Value="Visible" />
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </Rectangle.Style>
+                                                            </Rectangle>
+                                                            <!--  Item text; bold for preferred items  -->
+                                                            <TextBlock Text="{Binding Display}">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="{DynamicResource SystemBaseHighColor}" />
+                                                                        <Setter Property="FontWeight" Value="Normal" />
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding Preferred}" Value="True">
+                                                                                <Setter Property="FontWeight" Value="Bold" />
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </Grid>
                                                     </DataTemplate>
                                                 </ComboBox.ItemTemplate>
                                             </ComboBox>
-                                            <!--  DisplayMemberPath="description"  -->
+
                                             <CheckBox
                                                 x:Name="CheckBoxCopyPrimary"
                                                 Grid.Row="0"
@@ -2569,7 +2600,7 @@
                                                 ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
-                                                x:Name="CheckBoxCopyIncidSource1HabitatType"
+                                                x:Name="CheckBoxCopySource1HabitatType"
                                                 Grid.Row="3"
                                                 Grid.Column="3"
                                                 HorizontalAlignment="Right"
@@ -2801,7 +2832,7 @@
                                                 ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
-                                                x:Name="CheckBoxCopyIncidSource2HabitatType"
+                                                x:Name="CheckBoxCopySource2HabitatType"
                                                 Grid.Row="3"
                                                 Grid.Column="3"
                                                 HorizontalAlignment="Right"
@@ -3034,7 +3065,7 @@
                                                 ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                                                 ToolTipService.ShowOnDisabled="True" />
                                             <CheckBox
-                                                x:Name="CheckBoxCopyIncidSource3HabitatType"
+                                                x:Name="CheckBoxCopySource3HabitatType"
                                                 Grid.Row="3"
                                                 Grid.Column="3"
                                                 HorizontalAlignment="Right"
@@ -3141,15 +3172,9 @@
                             <Grid x:Name="GridTabItemHistory">
                                 <Grid.RowDefinitions>
                                     <RowDefinition />
-                                    <!--
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    -->
                                 </Grid.RowDefinitions>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="80" />
+                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition />
                                     <ColumnDefinition Width="20" />
                                 </Grid.ColumnDefinitions>
@@ -3468,8 +3493,6 @@
                             Text="{Binding ActiveLayerName, Mode=OneWay}" />
                     </Grid>
                 </Grid>
-
-                <!-- <Separator Grid.Row="5" /> -->
 
                 <!--  GridProcessStatus  -->
                 <Grid
