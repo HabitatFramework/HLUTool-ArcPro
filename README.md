@@ -41,5 +41,3 @@ The HLU tool was developed with funding from:
 * Hampshire Biodiversity Information Centre
 * Sussex Biodiversity Records Centre
 * Kent & Medway Biological Records Centre
-
-
