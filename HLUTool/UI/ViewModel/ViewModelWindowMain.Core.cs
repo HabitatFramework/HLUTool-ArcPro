@@ -2013,34 +2013,43 @@ namespace HLU.UI.ViewModel
         /// Creates the working geodatabase for exports and advanced queries.
         /// </summary>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        private async Task CreateWorkingGeodatabaseAsync()
+        internal async Task CreateWorkingGeodatabaseAsync()
         {
             try
             {
                 string workingGdbDirectory = Settings.Default.WorkingFileGDBPath;
 
-                if (!string.IsNullOrEmpty(workingGdbDirectory))
+                // Delegate GDB creation to the helper.
+                string workingGdbPath = await ArcGISProHelpers.CreateWorkingGeodatabaseAsync(workingGdbDirectory);
+
+                // Store the working GDB path in a static property for use by export and query operations.
+                HLUTool.WorkingGdbPath = workingGdbPath;
+
+                if (workingGdbPath == null && !string.IsNullOrEmpty(workingGdbDirectory))
                 {
-                    // Create a unique name for this session
-                    string uniqueID = System.Guid.NewGuid().ToString("N").Substring(0, 8);
-                    string workingGdbPath = Path.Combine(workingGdbDirectory, $"HLUTool_{uniqueID}.gdb");
-
-                    // Create the working file geodatabase
-                    await Task.Run(() =>
-                    {
-                        var tempGDB = ArcGISProHelpers.CreateFileGeodatabase(workingGdbPath);
-
-                        if (tempGDB != null)
-                        {
-                            // Store the path in the HLUTool module for cleanup on exit
-                            HLUTool.WorkingGdbPath = workingGdbPath;
-                        }
-                    });
+                    ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show(
+                        "The working geodatabase could not be created in the configured folder.\n\n" +
+                        "Exports will not be available until this is resolved.\n\n" +
+                        "Please check the working folder path in Options > User > GIS.",
+                        "HLU: Working Geodatabase",
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Warning);
                 }
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                HLUTool.WorkingGdbPath = null;
+                ArcGIS.Desktop.Framework.Dialogs.MessageBox.Show(
+                    $"{ex.Message}\n\n" +
+                    "Exports will not be available until this is resolved.\n\n" +
+                    "Please select a different folder in Options > User > GIS.",
+                    "HLU: Working Geodatabase — Access Denied",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Warning);
             }
             catch (Exception ex)
             {
-                // Log but don't fail initialization - exports just won't work
+                HLUTool.WorkingGdbPath = null;
                 System.Diagnostics.Debug.WriteLine($"Failed to create working GDB: {ex.Message}");
             }
         }
@@ -3392,6 +3401,14 @@ namespace HLU.UI.ViewModel
 
             // Refresh current incid properties affected by settings changes.
             OnPropertyChanged(nameof(IncidSecondarySummary));
+
+            // Reset cached measures so they are recalculated in the new display units.
+            _incidArea = -1;
+            _incidLength = -1;
+            OnPropertyChanged(nameof(IncidAreaLabel));
+            OnPropertyChanged(nameof(IncidArea));
+            OnPropertyChanged(nameof(IncidLengthLabel));
+            OnPropertyChanged(nameof(IncidLength));
 
             OnPropertyChanged(nameof(IncidCondition));
             OnPropertyChanged(nameof(IncidConditionQualifier));

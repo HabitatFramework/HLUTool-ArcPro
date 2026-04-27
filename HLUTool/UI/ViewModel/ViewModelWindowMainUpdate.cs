@@ -143,14 +143,30 @@ namespace HLU.UI.ViewModel
                 // updates, and if the OSMM update status > 0 (proposed)
                 // or status = 0 (pending) ...
                 if ((_viewModelMain.IncidOSMMUpdatesRows.Length > 0) &&
-                   (_viewModelMain.ResetOSMMUpdatesStatus) &&
                    (_viewModelMain.IncidOSMMUpdatesRows[0].status >= 0))
                 {
-                    // Set the update flag to "Ignored"
-                    _viewModelMain.IncidOSMMUpdatesRows[0].status = -2;
-                    _viewModelMain.IncidOSMMUpdatesRows[0].last_modified_date = nowDtTm;
-                    _viewModelMain.IncidOSMMUpdatesRows[0].last_modified_user_id = _viewModelMain.UserID;
+                    if (_viewModelMain.OsmmUpdateAppliedToForm)
+                    {
+                        // The user explicitly applied the OSMM update to the form, so
+                        // mark it as Applied (-1).
+                        _viewModelMain.IncidOSMMUpdatesRows[0].status = -1;
+                    }
+                    else if (_viewModelMain.ResetOSMMUpdatesStatus)
+                    {
+                        // The user made manual edits without applying the OSMM update,
+                        // so mark it as Ignored (-2).
+                        _viewModelMain.IncidOSMMUpdatesRows[0].status = -2;
+                    }
+
+                    if (_viewModelMain.OsmmUpdateAppliedToForm || _viewModelMain.ResetOSMMUpdatesStatus)
+                    {
+                        _viewModelMain.IncidOSMMUpdatesRows[0].last_modified_date = nowDtTm;
+                        _viewModelMain.IncidOSMMUpdatesRows[0].last_modified_user_id = _viewModelMain.UserID;
+                    }
                 }
+
+                // Reset the flag — it is only valid for a single save operation.
+                _viewModelMain.OsmmUpdateAppliedToForm = false;
 
                 // Update the OSMM Update rows
                 if ((_viewModelMain.IncidOSMMUpdatesRows != null) && _viewModelMain.IsDirtyIncidOSMMUpdates())
@@ -266,6 +282,9 @@ namespace HLU.UI.ViewModel
             {
                 _viewModelMain.SavingAttempted = true;
                 _viewModelMain.Saving = false;
+
+                // Always reset the flag regardless of success or failure.
+                _viewModelMain.OsmmUpdateAppliedToForm = false;
 
                 // Reset the cursor back to normal.
                 _viewModelMain.ChangeCursor(Cursors.Arrow);

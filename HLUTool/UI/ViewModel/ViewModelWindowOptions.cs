@@ -24,6 +24,7 @@ using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using HLU.Data.Model;
 using HLU.Enums;
+using HLU.Helpers;
 using HLU.Properties;
 using HLU.UI.UserControls;
 using HLU.UI.View;
@@ -36,6 +37,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -681,11 +683,36 @@ namespace HLU.UI.ViewModel
             // Save add-in settings.
             SaveAddInSettings();
 
+            // Capture the old working GDB path before saving new settings.
+            string oldWorkingGdbPath = HLUTool.WorkingGdbPath;
+
             // Save user settings;
             SaveUserSettings();
 
+            // If the working GDB folder path has changed or a GDB already exists, delete the old
+            // GDB and create a new one in the updated folder.
+            _ = ResetWorkingGeodatabaseAsync(oldWorkingGdbPath);
+
             // Close the window and trigger the event to apply the settings.
             RequestClose?.Invoke(true);
+        }
+
+        /// <summary>
+        /// Deletes the existing working geodatabase (if any) and creates a new one in the updated folder.
+        /// </summary>
+        /// <param name="oldWorkingGdbPath">The full path to the existing working geodatabase, or null if none.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
+        private async Task ResetWorkingGeodatabaseAsync(string oldWorkingGdbPath)
+        {
+            // Delete the existing working GDB if it exists.
+            if (!string.IsNullOrEmpty(oldWorkingGdbPath) && Directory.Exists(oldWorkingGdbPath))
+            {
+                await ArcGISProHelpers.DeleteFileGeodatabaseAsync(oldWorkingGdbPath);
+                HLUTool.WorkingGdbPath = null;
+            }
+
+            // Create a new working GDB in the updated folder.
+            await _viewModelMain.CreateWorkingGeodatabaseAsync();
         }
 
         /// <summary>
@@ -2182,9 +2209,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Prompt the user to set the working File GDB path.
+        /// Prompt the user to select an existing folder in which the tool will create a temporary working geodatabase.
         /// </summary>
-        /// <returns>The selected working File GDB path, or null if no path was selected.</returns>
+        /// <returns>The selected folder path, or null if no path was selected.</returns>
         public static string GetWorkingFileGDBPath()
         {
             try
@@ -2193,15 +2220,30 @@ namespace HLU.UI.ViewModel
 
                 FolderBrowserDialog openFolderDlg = new()
                 {
-                    Description = "Select Working File GDB Directory",
+                    Description = "Select Folder for Working Geodatabase",
                     UseDescriptionForTitle = true,
                     SelectedPath = workingFileGDBPath,
                     ShowNewFolderButton = true
                 };
                 if (openFolderDlg.ShowDialog() == DialogResult.OK)
                 {
-                    if (Directory.Exists(openFolderDlg.SelectedPath))
-                        return openFolderDlg.SelectedPath;
+                    string selectedPath = openFolderDlg.SelectedPath;
+
+                    if (Directory.Exists(selectedPath))
+                    {
+                        // Reject selection if the user navigated into a .gdb folder.
+                        if (selectedPath.EndsWith(".gdb", StringComparison.OrdinalIgnoreCase))
+                        {
+                            MessageBox.Show(
+                                "Please select a plain folder, not a file geodatabase (.gdb).",
+                                "Invalid Selection",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Warning);
+                            return null;
+                        }
+
+                        return selectedPath;
+                    }
                 }
             }
             catch { }
@@ -2733,6 +2775,8 @@ namespace HLU.UI.ViewModel
                     => "Error: Maximum features expected before warning on select must not be greater than 10000. Otherwise set to zero to disable warning",
                 "WorkingFileGDBPath" when String.IsNullOrEmpty(WorkingFileGDBPath)
                     => "Error: You must enter a working File Geodatabase path.",
+                "WorkingFileGDBPath" when WorkingFileGDBPath.EndsWith(".gdb", StringComparison.OrdinalIgnoreCase)
+                    => "Error: The working folder must be a plain folder, not a file geodatabase (.gdb).",
 
                 // User - Updates
                 "DefaultReason" when DefaultReason == null

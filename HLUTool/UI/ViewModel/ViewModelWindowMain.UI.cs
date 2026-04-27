@@ -226,6 +226,11 @@ namespace HLU.UI.ViewModel
         private ICommand _osmmSkipCommand;
         private ICommand _osmmAcceptCommand;
         private ICommand _osmmRejectCommand;
+        private ICommand _applyOSMMUpdateToFormCommand;
+
+        // Tracks that the user has loaded an OSMM update's codes into the form
+        // so that PerformUpdateAsync can set the OSMM status to -1 (Applied) on save.
+        internal bool OsmmUpdateAppliedToForm = false;
 
         #endregion Fields - Commands
 
@@ -1656,6 +1661,16 @@ namespace HLU.UI.ViewModel
                 // If there is a current record and the primary habitat code has changed
                 if ((IncidCurrentRow != null) && (!string.Equals(_incidPrimary, value, StringComparison.Ordinal)))
                 {
+                    // If the proposed primary is not available in the current primary codes list
+                    // (e.g. because HabitatType restricts what is shown, or the list is empty),
+                    // clear HabitatType first so that all primary codes become available.
+                    // This ensures paste and adopt both work regardless of the current habitat type.
+                    if (value != null && (_primaryCodes == null || !_primaryCodes.Any(p => p.Code == value)))
+                    {
+                        HabitatType = null;
+                        OnPropertyChanged(nameof(HabitatType));
+                    }
+
                     // Set the primary habitat code.
                     _incidPrimary = value;
 
@@ -1700,6 +1715,15 @@ namespace HLU.UI.ViewModel
                     OnPropertyChanged(nameof(ShowHabitatSecondariesSuggested));
                     OnPropertyChanged(nameof(ShowHabitatTips));
                     OnPropertyChanged(nameof(HabitatTips));
+
+                    // Refresh the primary habitat and related display fields so that any
+                    // programmatic assignment (e.g. Adopt, Paste) updates the ComboBox even
+                    // when the HabitatType setter was not involved (which is the only other
+                    // place that fires this notification).
+                    OnPropertyChanged(nameof(IncidPrimary));
+                    OnPropertyChanged(nameof(IncidPrimaryCategory));
+                    OnPropertyChanged(nameof(NvcCodes));
+                    OnPropertyChanged(nameof(SecondaryGroupCodesValid));
 
                     // Refresh the BAP habitat environments (in case secondary codes
                     // are, or should be, reflected).
@@ -2237,7 +2261,6 @@ namespace HLU.UI.ViewModel
 
                 // Refresh the secondary habitat table (as they have been pasted).
                 RefreshSecondaryHabitats();
-                //OnPropertyChanged(nameof(IncidSecondarySummary));   // Doesn't seem to be needed.
 
                 // Refresh the BAP habitat environments (in case secondary codes
                 // are, or should be, reflected).
@@ -6308,6 +6331,40 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
+        /// Gets the command to apply the proposed OSMM Update's habitat codes directly to the form
+        /// fields so the user can review and then save (or discard) the changes.
+        /// </summary>
+        /// <value>The command to apply the OSMM update to the form.</value>
+        public ICommand ApplyOSMMUpdateToFormCommand
+        {
+            get
+            {
+                if (_applyOSMMUpdateToFormCommand == null)
+                {
+                    Action<object> action = new(this.ApplyOSMMUpdateToFormClicked);
+                    _applyOSMMUpdateToFormCommand = new RelayCommand(action, param => this.CanApplyOSMMUpdateToForm);
+                }
+                return _applyOSMMUpdateToFormCommand;
+            }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the proposed OSMM Update can be loaded into the form.
+        /// Only enabled in normal edit mode (not OSMM Review or Bulk mode) when a proposed update exists.
+        /// </summary>
+        /// <value><c>true</c> if the OSMM update can be applied to the form; otherwise, <c>false</c>.</value>
+        public bool CanApplyOSMMUpdateToForm
+        {
+            get
+            {
+                return IsEditMode &&
+                    !WorkMode.HasAny(WorkMode.OSMMReview | WorkMode.Bulk) &&
+                    IncidOSMMStatus > 0 &&
+                    IncidOSMMHabitatPrimary != null;
+            }
+        }
+
+        /// <summary>
         /// Can OSMM Update be accepted?
         /// </summary>
         /// <value><c>true</c> if OSMM Update can be accepted; otherwise, <c>false</c>.</value>
@@ -7515,6 +7572,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(IncidPrimary));
             OnPropertyChanged(nameof(NvcCodes));
             OnPropertyChanged(nameof(IncidSecondaryHabitats));
+            OnPropertyChanged(nameof(ShowHabitatSummary));
             OnPropertyChanged(nameof(IncidSecondarySummary));
             OnPropertyChanged(nameof(LegacyHabitatCodes));
             OnPropertyChanged(nameof(IncidLegacyHabitat));
@@ -8529,6 +8587,89 @@ namespace HLU.UI.ViewModel
         #endregion OSMM Review Handler
 
         #region OSMM Update Accept/Reject
+
+        /// <summary>
+        /// ApplyOSMMUpdateToFormCommand event handler.
+        /// Copies the proposed OSMM primary and secondary habitat codes into the form fields
+        /// so the user can review and then click Apply (or discard by navigating away).
+        /// The OSMM status is only updated to -1 (Applied) after a successful save.
+        /// </summary>
+        /// <param name="param">The command parameter (not used).</param>
+        private void ApplyOSMMUpdateToFormClicked(object param)
+        {
+            try
+            {
+                string proposedPrimary = IncidOSMMHabitatPrimary;
+                string proposedSecondaries = IncidOSMMHabitatSecondaries;
+
+                if (string.IsNullOrEmpty(proposedPrimary))
+                    return;
+
+                // --- Set the primary habitat code ---
+                // The IncidPrimary setter will automatically clear HabitatType if the proposed
+                // code is not available in the current primary codes list, so no pre-check needed.
+                IncidPrimary = proposedPrimary;
+
+                // --- Replace secondary habitats ---
+                // Detach the existing collection so clearing doesn't trigger individual row saves.
+                if (_incidSecondaryHabitats != null)
+                {
+                    _incidSecondaryHabitats.CollectionChanged -= IncidSecondaryHabitats_CollectionChanged;
+                    _incidSecondaryHabitats.Clear();
+                    _incidSecondaryHabitats.CollectionChanged += IncidSecondaryHabitats_CollectionChanged;
+                    SecondaryHabitat.SecondaryHabitatList = _incidSecondaryHabitats;
+                }
+
+                // Parse and add each proposed secondary code.
+                if (!string.IsNullOrWhiteSpace(proposedSecondaries))
+                {
+                    // Split on whitespace, commas, and common connectives — same approach as ExpandSuggestedCodes.
+                        string[] tokens = OsmmSecondariesSplitRegex()
+                            .Split(proposedSecondaries.Replace('[', ' ').Replace(']', ' '));
+
+                    foreach (string token in tokens)
+                    {
+                        string code = token.Trim();
+                        if (string.IsNullOrEmpty(code))
+                            continue;
+
+                        // Lookup the secondary group for this code.
+                        string group = SecondaryHabitatCodesAll
+                            ?.FirstOrDefault(s => s.code == code)
+                            ?.code_group;
+
+                        if (group != null &&
+                            (_incidSecondaryHabitats == null ||
+                             !_incidSecondaryHabitats.Any(sh => sh.Secondary_habitat == code)))
+                        {
+                            AddSecondaryHabitat(false, -1, Incid, code, group);
+                        }
+                    }
+                }
+
+                // Refresh the secondary habitat UI.
+                RefreshSecondaryHabitats();
+                OnPropertyChanged(nameof(IncidSecondaryHabitats));
+                OnPropertyChanged(nameof(IncidSecondarySummary));
+
+                // Refresh BAP environments.
+                GetBapEnvironments();
+                OnPropertyChanged(nameof(IncidBapHabitatsAuto));
+                OnPropertyChanged(nameof(IncidBapHabitatsUser));
+                OnPropertyChanged(nameof(BapHabitatsAutoEnabled));
+                OnPropertyChanged(nameof(BapHabitatsUserEnabled));
+
+                // Mark that the OSMM update has been applied to the form, so PerformUpdateAsync
+                // will set the OSMM status to -1 (Applied) on a successful save.
+                OsmmUpdateAppliedToForm = true;
+
+                Changed = true;
+            }
+            catch (Exception ex)
+            {
+                ShowError(ex.Message, MessageCategory.Update);
+            }
+        }
 
         /// <summary>
         /// Accept the proposed OSMM Update.
@@ -10010,6 +10151,13 @@ namespace HLU.UI.ViewModel
         /// </summary>
         [GeneratedRegex(@"^(\d+)-(\d+)$")]
         private static partial Regex SecondaryCodesRangeRegex();
+
+        /// <summary>
+        /// Splits an OSMM proposed-secondaries string on whitespace, commas, and the
+        /// connective words "and", "or", "and/or".
+        /// </summary>
+        [GeneratedRegex(@"[\s,]+|and/or|and|or", RegexOptions.IgnoreCase)]
+        private static partial Regex OsmmSecondariesSplitRegex();
 
         #endregion Regex
     }

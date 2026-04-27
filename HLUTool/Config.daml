@@ -5,13 +5,13 @@
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
 
-	<AddInInfo id="{8bb44fa0-a26d-4f03-a370-b52f39b28c90}" version="4.0.0" desktopVersion="3.4">
+	<AddInInfo id="{8bb44fa0-a26d-4f03-a370-b52f39b28c90}" version="1.0.1" desktopVersion="3.4">
 		<Name>HLUTool</Name>
 		<Description>HLUTool provides a user-friendly interface for searching, displaying and updating habitat and land use attributes held in a relational database alongside spatial features in ArcGIS Pro. Key benefits include: validation of attribute compatibility; comprehensive history log for every change; simple query interface (e.g. all priority habitat features); reduced data volumes through relational data storage; data extraction in bespoke formats; and improved data retrieval and update performance for high-volume, complex data.</Description>
 		<Image>Images\AddInDesktop32.png</Image>
 		<Author>Andy Foy, andy@andyfoyconsulting.co.uk</Author>
 		<Company>Andy Foy Consulting</Company>
-		<Date>16/04/2026 14:18:00</Date>
+		<Date>27/04/2026 12:23:00</Date>
 		<Subject>Framework, Editing, Geodatabase</Subject>
 		<!-- Note subject can be one or more of these topics:
                     Content, Framework, Editing, Geodatabase, Geometry, Geoprocessing, Layouts, Map Authoring, Map Exploration -->
@@ -38,14 +38,15 @@
 				<!-- Toolbar groups -->
 				<tab id="HLUTool_Tab1" caption="HLU Tool" keytip="T0" condition="HLUTool_Tab1_condition" >
 					<group refID="HLUTool_Group_Mode" />
-					<group refID="HLUTool_Group_Edit" />
+					<group refID="HLUTool_Group_Updates" />
 					<group refID="HLUTool_Group_CopyPaste" />
 					<group refID="HLUTool_Group_MapTools" />
-					<group refID="HLUTool_Group_FilterIncids" />
-					<group refID="HLUTool_Group_SelectIncids" />
-					<group refID="HLUTool_Group_SplitMerge" />
+					<group refID="HLUTool_Group_Geometry" />
+					<group refID="HLUTool_Group_Filter" />
+					<group refID="HLUTool_Group_Selection" />
+					<group refID="HLUTool_Group_Topology" />
 					<group refID="HLUTool_Group_Export" />
-					<group refID="HLUTool_Group_Info" />
+					<group refID="HLUTool_Group_Help" />
 				</tab>
 			</tabs>
 
@@ -63,8 +64,8 @@
 					<button refID="HLUTool_btnOSMMBulkUpdateMode" size="middle" />
 				</group>
 
-				<!-- Edit group -->
-				<group id="HLUTool_Group_Edit" caption="Edit" keytip="G2" launcherButtonID="HLUTool_btnUpdatesOptionsLauncher">
+				<!-- Updates group -->
+				<group id="HLUTool_Group_Updates" caption="Updates" keytip="G2" launcherButtonID="HLUTool_btnUpdatesOptionsLauncher">
 					<comboBox refID="HLUTool_cmbActiveLayer" size="middle" />
 					<comboBox refID="HLUTool_cmbReason" size="middle" />
 					<comboBox refID="HLUTool_cmbProcess" size="middle" />
@@ -79,27 +80,34 @@
 				<!-- ESRI Map Tools group -->
 				<group id="HLUTool_Group_MapTools" caption="Map Tools" keytip="G4">
 					<toolPalette refID="esri_mapping_selectToolPalette" />
-					<button refID="esri_mapping_clearSelectionButton" size="middle" />
-					<button refID="esri_editing_SplitCommand" size ="middle" />
+					<button refID="esri_mapping_clearSelectionButton" size="middle" separator="true" />
+					<button refID="esri_mapping_zoomToSelectionButton" size="middle" />
 				</group>
 
-				<!-- Filter Incids group -->
-				<group id="HLUTool_Group_FilterIncids" caption="Filter INCIDs" keytip="G6" launcherButtonID="HLUTool_btnFilterIncidsOptionsLauncher">
+				<!-- ESRI Edit Tools group -->
+				<group id="HLUTool_Group_Geometry" caption="Geometry" keytip="G5">
+					<button refID="esri_editing_SplitCommand" size ="middle" />
+					<button refID="esri_editing_MergeFeatures" size ="middle" />
+					<button refID="esri_editing_EditVerticesModifyFeature" size ="middle" />
+				</group>
+
+				<!-- Filter group -->
+				<group id="HLUTool_Group_Filter" caption="Filter" keytip="G6" launcherButtonID="HLUTool_btnFilterIncidsOptionsLauncher">
 					<button refID="HLUTool_btnFilterByAttributes" size="large" />
-					<button refID="HLUTool_btnClearFilter" size="middle" />
+					<button refID="HLUTool_btnClearFilter" size="middle" separator="true" />
 					<editBox refID="HLUTool_edbFilterByIncid" size="large" />
 				</group>
 
-				<!-- INCID Selection group -->
-				<group id="HLUTool_Group_SelectIncids" caption="Select INCIDs" keytip="G7">
+				<!-- Selection group -->
+				<group id="HLUTool_Group_Selection" caption="Selection" keytip="G7">
 					<button refID="HLUTool_btnGetMapSelection" size="large" />
-					<button refID="HLUTool_btnSelectCurrentIncid" size="middle" />
+					<button refID="HLUTool_btnSelectCurrentIncid" size="middle" separator="true" />
 					<button refID="HLUTool_btnSelectFilteredIncids" size="middle" />
 					<button refID="HLUTool_btnAutoSelectOnGis" size="middle" />
 				</group>
 
-				<!-- Split/Merge group -->
-				<group id="HLUTool_Group_SplitMerge" caption="Split/Merge" keytip="G8" launcherButtonID="HLUTool_btnUpdatesOptionsLauncher">
+				<!-- Topology group -->
+				<group id="HLUTool_Group_Topology" caption="Topology" keytip="G8" launcherButtonID="HLUTool_btnUpdatesOptionsLauncher">
 					<dynamicMenu refID="HLUTool_SplitMenu" size="large" />
 					<dynamicMenu refID="HLUTool_MergeMenu" size="large" />
 				</group>
@@ -109,8 +117,8 @@
 					<button refID="HLUTool_btnExport" size="large" />
 				</group>
 
-				<!-- Info group -->
-				<group id="HLUTool_Group_Info" caption="Info" keytip="G10">
+				<!-- Help group -->
+				<group id="HLUTool_Group_Help" caption="Help" keytip="GI">
 					<button refID="HLUTool_btnOptions" size="middle" />
 					<button refID="HLUTool_btnAbout" size="middle" />
 				</group>

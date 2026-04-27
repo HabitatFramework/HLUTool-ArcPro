@@ -555,20 +555,21 @@ namespace HLU.Helpers
         /// <summary>
         /// Create a new file geodatabase.
         /// </summary>
-        /// <param name="fullPath">The full path to the file geodatabase to create.</param>
+        /// <param name="gdbPath">The full path to the file geodatabase to create.</param>
         /// <returns>The created geodatabase, or null if creation failed.</returns>
-        public static Geodatabase CreateFileGeodatabase(string fullPath)
+        public static Geodatabase CreateFileGeodatabase(string gdbPath)
         {
-            // Check if there is an input full path.
-            if (string.IsNullOrEmpty(fullPath))
+            // Check if there is an input path.
+            if (string.IsNullOrEmpty(gdbPath))
                 return null;
 
             Geodatabase geodatabase;
 
+            // Try to create the geodatabase. If creation fails (e.g., due to an invalid path or existing geodatabase), return null.
             try
             {
                 // Create a FileGeodatabaseConnectionPath with the name of the file geodatabase you wish to create
-                FileGeodatabaseConnectionPath fileGeodatabaseConnectionPath = new(new Uri(fullPath));
+                FileGeodatabaseConnectionPath fileGeodatabaseConnectionPath = new(new Uri(gdbPath));
 
                 // Create and use the file geodatabase
                 geodatabase = SchemaBuilder.CreateGeodatabase(fileGeodatabaseConnectionPath);
@@ -583,19 +584,80 @@ namespace HLU.Helpers
         }
 
         /// <summary>
+        /// Creates a new uniquely-named working file geodatabase inside the specified folder.
+        /// </summary>
+        /// <param name="folderPath">The existing folder in which to create the geodatabase.</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains the full
+        /// path to the newly created geodatabase, or <c>null</c> if creation failed.
+        /// </returns>
+        /// <exception cref="UnauthorizedAccessException">
+        /// Thrown when the specified folder does not allow write access.
+        /// </exception>
+        public static async Task<string> CreateWorkingGeodatabaseAsync(string folderPath)
+        {
+            // Check parameters.
+            if (string.IsNullOrEmpty(folderPath) || !Directory.Exists(folderPath))
+                return null;
+
+            // Verify that the folder is writable before attempting GDB creation.
+            string testFile = Path.Combine(folderPath, Path.GetRandomFileName());
+            try
+            {
+                File.WriteAllText(testFile, string.Empty);
+                File.Delete(testFile);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                throw new UnauthorizedAccessException(
+                    $"Cannot write to the folder '{folderPath}'. Please select a folder you have write access to.");
+            }
+            catch (IOException ex)
+            {
+                throw new IOException(
+                    $"Cannot write to the folder '{folderPath}': {ex.Message}");
+            }
+
+            // Build a unique GDB name for this session.
+            string uniqueID = Guid.NewGuid().ToString("N")[..8];
+            string gdbPath = Path.Combine(folderPath, $"HLUTool_{uniqueID}.gdb");
+
+            string createdPath = null;
+
+            // Try and create the geodatabase on a background thread to avoid blocking the UI. If
+            // creation fails (e.g., due to a name collision, which is unlikely with a GUID-based
+            // name), return null.
+            try
+            {
+                await Task.Run(() =>
+                {
+                    var gdb = CreateFileGeodatabase(gdbPath);
+                    if (gdb != null)
+                        createdPath = gdbPath;
+                });
+            }
+            catch
+            {
+                return null;
+            }
+
+            return createdPath;
+        }
+
+        /// <summary>
         /// Deletes a file geodatabase at the specified path, retrying if it's temporarily locked.
         /// </summary>
-        /// <param name="fullPath">The full path to the .gdb folder to delete.</param>
+        /// <param name="gdbPath">The full path to the .gdb folder to delete.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains true if the geodatabase was successfully deleted; false otherwise.</returns>
-        public static async Task<bool> DeleteFileGeodatabaseAsync(string fullPath)
+        public static async Task<bool> DeleteFileGeodatabaseAsync(string gdbPath)
         {
-            // Check if there is an input full path.
-            if (string.IsNullOrEmpty(fullPath))
+            // Check if there is an input path.
+            if (string.IsNullOrEmpty(gdbPath))
                 return false;
 
             bool success = false;
 
-            // Try up to 5 times in case the geodatabase is temporarily locked.
+            // Try up to 5 times to delete the geodatabase in case it is temporarily locked.
             for (int attempt = 0; attempt < 5; attempt++)
             {
                 try
@@ -603,8 +665,8 @@ namespace HLU.Helpers
                     // Run the delete operation on the QueuedTask to ensure it's on the correct ArcGIS Pro thread.
                     await QueuedTask.Run(() =>
                     {
-                        // Create a FileGeodatabaseConnectionPath using the full path
-                        FileGeodatabaseConnectionPath fileGeodatabaseConnectionPath = new(new Uri(fullPath));
+                        // Create a FileGeodatabaseConnectionPath using the GDB path
+                        FileGeodatabaseConnectionPath fileGeodatabaseConnectionPath = new(new Uri(gdbPath));
 
                         // Delete the file geodatabase using SchemaBuilder
                         SchemaBuilder.DeleteGeodatabase(fileGeodatabaseConnectionPath);

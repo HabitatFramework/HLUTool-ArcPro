@@ -59,12 +59,6 @@
 		<Resource Include="Images\Copy32.png">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Resource>
-		<Resource Include="Images\EditOSMM16.png">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</Resource>
-		<Resource Include="Images\EditOSMM32.png">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</Resource>
 		<Resource Include="Images\Error32.png">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Resource>

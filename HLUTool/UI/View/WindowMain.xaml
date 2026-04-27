@@ -493,6 +493,7 @@
                                 <ColumnDefinition Width="Auto" MinWidth="60" />
                                 <ColumnDefinition Width="Auto" MinWidth="40" />
                                 <ColumnDefinition Width="*" MinWidth="100" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
 
                             <Label
@@ -523,13 +524,30 @@
                             <TextBox
                                 x:Name="TextBoxOSMMSecondaries"
                                 Grid.Column="3"
-                                Margin="0,2,2,0"
+                                Margin="0,2,4,0"
                                 Padding="2,2,2,2"
                                 VerticalAlignment="Center"
                                 IsEnabled="False"
                                 IsReadOnly="True"
                                 Text="{Binding IncidOSMMHabitatSecondaries, Mode=OneWay, ValidatesOnDataErrors=False}"
                                 TextAlignment="Left" />
+
+                            <!--  Adopt OSMM Update into form (normal edit mode only)  -->
+                            <Button
+                                x:Name="ButtonAdoptOSMMUpdate"
+                                Grid.Column="4"
+                                MinWidth="0"
+                                MinHeight="21"
+                                Margin="0,2,2,0"
+                                VerticalAlignment="Center"
+                                Background="CornflowerBlue"
+                                Command="{Binding ApplyOSMMUpdateToFormCommand}"
+                                Content="Adopt"
+                                Foreground="White"
+                                Style="{DynamicResource Esri_Button}"
+                                ToolTip="Adopt the proposed OSMM primary and secondary habitat codes into the form so you can review and then save (or discard) the changes"
+                                ToolTipService.ShowOnDisabled="True"
+                                Visibility="{Binding HideInOSMMReviewMode}" />
                         </Grid>
                     </Grid>
                 </GroupBox>
@@ -708,9 +726,11 @@
                                                 TextSearch.TextPath="Display"
                                                 ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}">
                                                 <ComboBox.ItemContainerStyle>
-                                                    <!--  Inherit theme selection/hover styling.
-                                                          Add a top margin to the first non-preferred item
-                                                          so the separator Rectangle has space to paint into.  -->
+                                                    <!--
+                                                        Inherit theme selection/hover styling.
+                                                        Add a top margin to the first non-preferred item
+                                                        so the separator Rectangle has space to paint into.
+                                                    -->
                                                     <Style BasedOn="{StaticResource {x:Type ComboBoxItem}}" TargetType="ComboBoxItem">
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsSeparator}" Value="True">
@@ -722,14 +742,16 @@
                                                 <ComboBox.ItemTemplate>
                                                     <DataTemplate>
                                                         <Grid>
-                                                            <!--  Separator rule drawn above the first non-preferred item.
-                                                                  Negative top margin lets it paint into the 6 px container
-                                                                  margin added above, so it appears between the two groups.
-                                                                  Fill="Gray" is explicit so it is always visible regardless
-                                                                  of theme.  -->
+                                                            <!--
+                                                                Separator rule drawn above the first non-preferred item.
+                                                                Negative top margin lets it paint into the 6 px container
+                                                                margin added above, so it appears between the two groups.
+                                                                Fill="Gray" is explicit so it is always visible regardless
+                                                                of theme.
+                                                            -->
                                                             <Rectangle
-                                                                Height="1"
                                                                 Width="200"
+                                                                Height="1"
                                                                 Margin="0,-8,0,0"
                                                                 VerticalAlignment="Top"
                                                                 Fill="Gray">
@@ -3420,6 +3442,7 @@
                         x:Name="GridOSMMCommandButtons"
                         Grid.Column="2"
                         Height="Auto"
+                        Margin="0,0,4,0"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Bottom">
                         <Grid.ColumnDefinitions>
@@ -3496,7 +3519,7 @@
 
                 <!--  GridProcessStatus  -->
                 <Grid
-                    Name="GridProcessStatus"
+                    x:Name="GridProcessStatus"
                     Grid.Row="6"
                     Margin="6,6,6,6"
                     Visibility="Visible">

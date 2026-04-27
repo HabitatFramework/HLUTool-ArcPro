@@ -380,6 +380,20 @@ namespace HLU.UI.ViewModel
                 IReadOnlyList<Field> gisFields =
                     await _viewModelMain.GISApplication.GetFCFieldsAsync(layerName);
 
+                // Validate that all tables and fields referenced in the export format exist before building the query.
+                List<string> validationErrors = ValidateExportFields(gisFieldNames);
+                if (validationErrors.Count > 0)
+                {
+                    MessageBox.Show(
+                        "The export format references the following invalid tables or fields:\n\n" +
+                        string.Join("\n", validationErrors) +
+                        "\n\nPlease correct the export format definition and try again.",
+                        "HLU: Export",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Exclamation);
+                    return;
+                }
+
                 // Construct the export table structure and field mappings based on the export fields defined for this export format.
                 ExportJoins(tableAlias, gisFieldNames, gisFields, ref exportFields,
                     out attributeTable, out fieldMapTemplate, out targetList,
@@ -2585,6 +2599,63 @@ namespace HLU.UI.ViewModel
         #endregion ExportJoinContext class
 
         #region Helper Methods
+
+        /// <summary>
+        /// Validates that all tables and columns referenced in the current export field definitions
+        /// exist in either the HLU dataset (for database fields) or the GIS layer (for GIS fields).
+        /// </summary>
+        /// <param name="gisFieldNames">The list of field names available in the active GIS layer.</param>
+        /// <returns>A list of error messages describing any invalid table or field references. An empty list means all references are valid.</returns>
+        private List<string> ValidateExportFields(List<string> gisFieldNames)
+        {
+            List<string> errors = [];
+
+            // Build a lookup of table name -> column names from the HLU dataset for fast validation.
+            List<DataTable> hluTables = [.. _viewModelMain.HluDataset.incid.ChildRelations
+                .Cast<DataRelation>().Select(r => r.ChildTable)];
+            hluTables.Add(_viewModelMain.HluDataset.incid);
+
+            Dictionary<string, HashSet<string>> tableColumnMap = hluTables.ToDictionary(
+                t => t.TableName,
+                t => new HashSet<string>(t.Columns.Cast<DataColumn>().Select(c => c.ColumnName),
+                    StringComparer.OrdinalIgnoreCase),
+                StringComparer.OrdinalIgnoreCase);
+
+            HashSet<string> gisFieldSet = gisFieldNames != null
+                ? new HashSet<string>(gisFieldNames, StringComparer.OrdinalIgnoreCase)
+                : [];
+
+            foreach (HluDataSet.exports_fieldsRow r in _viewModelMain.HluDataset.exports_fields)
+            {
+                string tableName = r.table_name;
+                string columnName = r.column_name;
+
+                // Skip placeholder (empty) fields.
+                if (tableName.Equals("<none>", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                // Validate GIS fields against the live layer field list.
+                if (tableName.Equals("<gis>", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!string.IsNullOrEmpty(columnName) && !gisFieldSet.Contains(columnName))
+                        errors.Add($"GIS field '{columnName}' (export field '{r.field_name}') does not exist in the active GIS layer.");
+                    continue;
+                }
+
+                // Validate database table exists in the HLU dataset.
+                if (!tableColumnMap.TryGetValue(tableName, out HashSet<string> columnNames))
+                {
+                    errors.Add($"Table '{tableName}' (export field '{r.field_name}') does not exist in the HLU dataset.");
+                    continue;
+                }
+
+                // Validate the column exists in that table.
+                if (!string.IsNullOrEmpty(columnName) && !columnNames.Contains(columnName))
+                    errors.Add($"Column '{columnName}' in table '{tableName}' (export field '{r.field_name}') does not exist in the HLU dataset.");
+            }
+
+            return errors;
+        }
 
         /// <summary>
         /// Gets the length of the original input field.

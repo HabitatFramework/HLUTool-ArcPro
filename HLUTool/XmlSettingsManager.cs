@@ -183,16 +183,15 @@ public class AddInSettings
 public class HelpPages
 {
     // Individual help pages
-    public string AppDatabase { get; set; } = "interface/interface.html#database-options";
-
-    public string AppDates { get; set; } = "interface/interface.html#dates-options";
-    public string AppBulkUpdate { get; set; } = "interface/interface.html#bulk-update-options";
-    public string AppUpdates { get; set; } = "interface/interface.html#updates-options";
-    public string AppValidation { get; set; } = "interface/interface.html#updates-options";
-    public string UserGIS { get; set; } = "interface/interface.html#gis-export-options";
-    public string UserInterface { get; set; } = "interface/interface.html#interface-options";
-    public string UserUpdates { get; set; } = "interface/interface.html#updates-options";
-    public string UserSQL { get; set; } = "interface/interface.html#filter-options";
-    public string UserExport { get; set; } = "interface/interface.html#export-options";
-    public string UserHistory { get; set; } = "interface/interface.html#history-options";
+    public string AppDatabase { get; set; } = "options/options.html#options-database";
+    public string AppDates { get; set; } = "options/options.html#options-dates";
+    public string AppBulkUpdate { get; set; } = "options/options.html#options-bulk-update";
+    public string AppUpdates { get; set; } = "options/options.html#options-updates";
+    public string AppValidation { get; set; } = "options/options.html#options-validation";
+    public string UserGIS { get; set; } = "options/options.html#options-gis";
+    public string UserInterface { get; set; } = "options/options.html#options-interface";
+    public string UserUpdates { get; set; } = "options/options.html#options-user-updates";
+    public string UserSQL { get; set; } = "options/options.html#options-filter";
+    public string UserExport { get; set; } = "options/options.html#options-export";
+    public string UserHistory { get; set; } = "options/options.html#options-history";
 }
