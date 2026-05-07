@@ -45,6 +45,7 @@
 					<group refID="HLUTool_Group_Filter" />
 					<group refID="HLUTool_Group_Selection" />
 					<group refID="HLUTool_Group_Topology" />
+					<group refID="HLUTool_Group_FeatureInsert" />
 					<group refID="HLUTool_Group_Export" />
 					<group refID="HLUTool_Group_Help" />
 				</tab>
@@ -112,6 +113,11 @@
 					<dynamicMenu refID="HLUTool_MergeMenu" size="large" />
 				</group>
 
+				<!-- Feature Insert group -->
+				<group id="HLUTool_Group_FeatureInsert" caption="Feature Insert" keytip="GA">
+					<dynamicMenu refID="HLUTool_FeatureInsertMenu" size="large" />
+				</group>
+
 				<!-- Export group -->
 				<group id="HLUTool_Group_Export" caption="Export" keytip="G9" launcherButtonID="HLUTool_btnExportOptionsLauncher">
 					<button refID="HLUTool_btnExport" size="large" />
@@ -135,6 +141,12 @@
 				<subgroup id="HLUTool_SubGroup_Logical" verticalAlignment="Center" horizontalAlignment="Left" size="MediumThenSmallWhenSmall">
 					<button refID="HLUTool_btnLogicalSplit" size="middle" />
 					<button refID="HLUTool_btnLogicalMerge" size="middle" />
+				</subgroup>
+
+				<!-- Feature Insert buttons -->
+				<subgroup id="HLUTool_SubGroup_FeatureInsert" verticalAlignment="Center" horizontalAlignment="Left" size="MediumThenSmallWhenSmall">
+					<button refID="HLUTool_btnInsertFeatureSameIncid" size="middle" />
+					<button refID="HLUTool_btnInsertFeatureSeparateIncid" size="middle" />
 				</subgroup>
 			</subgroups>
 
@@ -228,6 +240,44 @@
 						Merge features physically or logically<disabledText />
 					</tooltip>
 				</dynamicMenu>
+
+				<!-- Feature Insert dropdown: Same INCID + Separate INCIDs -->
+				<dynamicMenu id="HLUTool_FeatureInsertMenu"
+							 caption="Insert Feature"
+							 className="HLU.UI.UserControls.Toolbar.InsertFeatureDynamicMenu"
+							 smallImage="pack://application:,,,/HLUTool;component/Images/InsertFeature16.png"
+							 largeImage="pack://application:,,,/HLUTool;component/Images/InsertFeature32.png"
+							 loadOnClick="false">
+					<tooltip heading="Insert Feature options">
+						Register newly drawn features against one or more new INCIDs<disabledText />
+					</tooltip>
+				</dynamicMenu>
+
+				<button id="HLUTool_btnInsertFeatureSameIncid"
+						caption="Same INCID"
+						className="HLU.UI.UserControls.Toolbar.InsertFeatureSameIncidButton"
+						loadOnClick="false"
+						keytip="IS"
+						smallImage="pack://application:,,,/HLUTool;component/Images/InsertFeatureSameIncid16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/InsertFeatureSameIncid32.png">
+					<tooltip heading="Insert Feature — Same INCID">
+						Register all selected new features under a single new INCID. Use this when the drawn features represent fragments of the same habitat record.
+						<disabledText>Available only when editing is active, a reason and process are selected, and all selected features have no INCID assigned.</disabledText>
+					</tooltip>
+				</button>
+
+				<button id="HLUTool_btnInsertFeatureSeparateIncid"
+						caption="Separate INCIDs"
+						className="HLU.UI.UserControls.Toolbar.InsertFeatureSeparateIncidButton"
+						loadOnClick="false"
+						keytip="IP"
+						smallImage="pack://application:,,,/HLUTool;component/Images/InsertFeatureSeparateIncid16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/InsertFeatureSeparateIncid32.png">
+					<tooltip heading="Insert Feature — Separate INCIDs">
+						Register each selected new feature under its own new INCID. Use this when each drawn feature represents a distinct habitat record.
+						<disabledText>Available only when editing is active, a reason and process are selected, and all selected features have no INCID assigned.</disabledText>
+					</tooltip>
+				</button>
 
 				<comboBox id="HLUTool_cmbActiveLayer"
 						  caption=" Active Layer:"

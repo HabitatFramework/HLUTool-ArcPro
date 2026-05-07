@@ -115,6 +115,13 @@ namespace HLU.UI.ViewModel
 
         #endregion Fields - Split/Merge
 
+        #region Fields - Feature Insert
+
+        // Can one or more new features (with null incids) in the current selection be registered.
+        private bool _canInsertFeature;
+
+        #endregion Fields - Feature Insert
+
         #endregion Fields
 
         #region Properties
@@ -445,6 +452,28 @@ namespace HLU.UI.ViewModel
         public bool CanMerge => _canPhysicallyMerge || _canLogicallyMerge;
 
         #endregion Properties - Split/Merge Commands
+
+        #region Properties - Feature Insert Commands
+
+        /// <summary>
+        /// Can one or more selected features with null incids be registered against the same new INCID?
+        /// </summary>
+        /// <value><c>true</c> if a feature insert (same incid) operation can be performed; otherwise, <c>false</c>.</value>
+        public bool CanInsertFeatureSameIncid => _canInsertFeature;
+
+        /// <summary>
+        /// Can each selected feature with a null incid be registered against its own new INCID?
+        /// </summary>
+        /// <value><c>true</c> if a feature insert (separate incids) operation can be performed; otherwise, <c>false</c>.</value>
+        public bool CanInsertFeatureSeparateIncid => _canInsertFeature;
+
+        /// <summary>
+        /// Can a feature insert operation (same or separate incid) be performed?
+        /// </summary>
+        /// <value><c>true</c> if any feature insert operation can be performed; otherwise, <c>false</c>.</value>
+        public bool CanInsertFeature => _canInsertFeature;
+
+        #endregion Properties - Feature Insert Commands
 
         #endregion Properties
 
@@ -1635,9 +1664,53 @@ namespace HLU.UI.ViewModel
         {
             RefreshSplitEnablement();
             RefreshMergeEnablement();
+            RefreshInsertFeatureEnablement();
         }
 
         #endregion Split/Merge Capability
+
+        #region Feature Insert Capability
+
+        /// <summary>
+        /// Computes whether a feature insert operation can be performed based on the current state.
+        /// All selected features must have a null or empty incid (i.e. they are newly drawn and not
+        /// yet registered in the database).
+        /// </summary>
+        /// <returns><c>true</c> if a feature insert can be performed; otherwise, <c>false</c>.</returns>
+        private bool ComputeCanInsertFeature()
+        {
+            // Must be in a mode that allows edits and ready for edit operations (includes CanEdit + Reason/Process selection).
+            if (!IsEditOperationModeReady)
+                return false;
+
+            // There must be at least one feature selected.
+            if (_gisSelection == null || _gisSelection.Rows.Count == 0)
+                return false;
+
+            // All selected features must have a null or empty incid — meaning they are new,
+            // unregistered features that the user has drawn in the active layer.
+            return _incidsSelectedMap != null &&
+                   _incidsSelectedMap.All(i => string.IsNullOrEmpty(i));
+        }
+
+        /// <summary>
+        /// Refreshes the cached feature insert enablement value.
+        /// </summary>
+        private void RefreshInsertFeatureEnablement()
+        {
+            bool canInsert = ComputeCanInsertFeature();
+
+            if (_canInsertFeature == canInsert)
+                return;
+
+            _canInsertFeature = canInsert;
+
+            OnPropertyChanged(nameof(CanInsertFeature));
+            OnPropertyChanged(nameof(CanInsertFeatureSameIncid));
+            OnPropertyChanged(nameof(CanInsertFeatureSeparateIncid));
+        }
+
+        #endregion Feature Insert Capability
 
         #region Split/Merge Action
 
@@ -1839,6 +1912,50 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion Split/Merge Action
+
+        #region Feature Insert Action
+
+        /// <summary>
+        /// Registers all currently selected new (null-incid) features under a single new INCID.
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        public async Task InsertFeatureSameIncidAsync()
+        {
+            // Clear any existing messages.
+            ClearAllMessages();
+
+            // Re-read the map selection to ensure it is current.
+            await GetMapSelectionAsync(false);
+
+            // Delegate to the feature insert view model (implemented in stage 4/5).
+            ViewModelWindowMainFeatureInsert vmInsert = new(this);
+            if (await vmInsert.InsertFeaturesSameIncidAsync())
+            {
+                ShowSuccess("Feature insert (same INCID) completed.", MessageCategory.Insert);
+            }
+        }
+
+        /// <summary>
+        /// Registers each currently selected new (null-incid) feature under its own new INCID.
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        public async Task InsertFeatureSeparateIncidsAsync()
+        {
+            // Clear any existing messages.
+            ClearAllMessages();
+
+            // Re-read the map selection to ensure it is current.
+            await GetMapSelectionAsync(false);
+
+            // Delegate to the feature insert view model (implemented in stage 4/5).
+            ViewModelWindowMainFeatureInsert vmInsert = new(this);
+            if (await vmInsert.InsertFeaturesSeparateIncidsAsync())
+            {
+                ShowSuccess("Feature insert (separate INCIDs) completed.", MessageCategory.Insert);
+            }
+        }
+
+        #endregion Feature Insert Action
 
         #endregion Methods
     }

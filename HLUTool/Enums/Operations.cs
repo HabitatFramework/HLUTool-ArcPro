@@ -31,7 +31,8 @@ namespace HLU.Enums
         LogicalSplit,
         AttributeUpdate,
         BulkUpdate,
-        OSMMUpdate
+        OSMMUpdate,
+        FeatureInsert
     };
 
     #endregion Enums

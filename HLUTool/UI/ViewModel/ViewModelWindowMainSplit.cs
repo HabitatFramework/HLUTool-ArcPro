@@ -487,8 +487,8 @@ namespace HLU.UI.ViewModel
                 DateTime currDtTm = DateTime.Now;
                 DateTime nowDtTm = new(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
 
-                // find the last used fragid for the selected toid
-                string lastFragID = _viewModelMain.RecIDs.MaxFragmentId(_viewModelMain.ToidsSelectedMap.ElementAt(0));
+                // find the last used fragid for the selected incid
+                string lastFragID = _viewModelMain.RecIDs.MaxFragmentId(_viewModelMain.Incid);
 
                 // Skip all but one of the GIS select criteria as they are all the same in the case of a physical split anyway
                 int skipCount = _viewModelMain.GisSelection.Rows.Count - 1;
