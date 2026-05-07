@@ -136,6 +136,36 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets the HLU map-match table from the database that corresponds to the active
+        /// GIS layer geometry type (polygons, lines or points).
+        /// </summary>
+        internal DataTable GisMMTable => _gisLayerType switch
+        {
+            HluGeometryTypes.Line => (DataTable)_hluDS.incid_mm_lines,
+            HluGeometryTypes.Point => (DataTable)_hluDS.incid_mm_points,
+            _ => (DataTable)_hluDS.incid_mm_polygons
+        };
+
+        /// <summary>
+        /// Gets the <c>shape_length</c> column name for the active GIS map-match table,
+        /// or <c>null</c> for point layers that carry no length measure.
+        /// </summary>
+        internal string GisMMShapeLengthColumnName => _gisLayerType switch
+        {
+            HluGeometryTypes.Point => null,
+            HluGeometryTypes.Line => _hluDS.incid_mm_lines.shape_lengthColumn.ColumnName,
+            _ => _hluDS.incid_mm_polygons.shape_lengthColumn.ColumnName
+        };
+
+        /// <summary>
+        /// Gets the <c>shape_area</c> column name for the active GIS map-match table,
+        /// or <c>null</c> for line and point layers that carry no area measure.
+        /// </summary>
+        internal string GisMMShapeAreaColumnName => _gisLayerType == HluGeometryTypes.Polygon
+            ? _hluDS.incid_mm_polygons.shape_areaColumn.ColumnName
+            : null;
+
         #endregion Properties - GIS Info
 
         #region Properties - Selection State
@@ -1047,7 +1077,7 @@ namespace HLU.UI.ViewModel
 
                 // Get the incid column and table for the where clause
                 DataColumn incidColumn = _incidSelection.Columns[_hluDS.incid.incidColumn.ColumnName];
-                DataTable condTable = _hluDS.incid_mm_polygons;
+                DataTable condTable = GisMMTable;
 
                 // Create a quote function if _gisApp exists, otherwise null.
                 Func<string, string> quoteFunc = _gisApp != null ? _gisApp.QuoteValue : null;
@@ -1171,7 +1201,8 @@ namespace HLU.UI.ViewModel
             {
                 try
                 {
-                    HluDataSet.incid_mm_polygonsDataTable t = new();
+                    DataTable t = GisMMTable;
+                    DataColumn tIncidColumn = t.Columns[_hluDS.incid_mm_polygons.incidColumn.ColumnName];
                     DataTable[] selTables = [t];
 
                     IEnumerable<DataTable> queryTables = whereClause.SelectMany(cond => cond.Select(c => c.Table)).Distinct();
@@ -1182,9 +1213,9 @@ namespace HLU.UI.ViewModel
                     DataRelation rel;
                     IEnumerable<SqlFilterCondition> joinCond = fromTables.Select(st =>
                         st.GetType() == typeof(HluDataSet.incidDataTable) ?
-                        new SqlFilterCondition("AND", t, t.incidColumn, typeof(DataColumn), "(", ")", st.Columns[_hluDS.incid.incidColumn.Ordinal]) :
+                        new SqlFilterCondition("AND", t, tIncidColumn, typeof(DataColumn), "(", ")", st.Columns[_hluDS.incid.incidColumn.Ordinal]) :
                         (rel = GetRelation(_hluDS.incid, st)) != null ?
-                        new SqlFilterCondition("AND", t, t.incidColumn, typeof(DataColumn), "(", ")", rel.ChildColumns[0]) : null).Where(c => c != null);
+                        new SqlFilterCondition("AND", t, tIncidColumn, typeof(DataColumn), "(", ")", rel.ChildColumns[0]) : null).Where(c => c != null);
 
                     // If there is only one long list then chunk
                     // it up into smaller lists.
@@ -1255,7 +1286,8 @@ namespace HLU.UI.ViewModel
             {
                 try
                 {
-                    HluDataSet.incid_mm_polygonsDataTable t = new();
+                    DataTable t = GisMMTable;
+                    DataColumn tIncidColumn = t.Columns[_hluDS.incid_mm_polygons.incidColumn.ColumnName];
                     DataTable[] selTables = [t];
 
                     var fromTables = sqlFromTables.Distinct().Where(q => !selTables.Select(s => s.TableName).Contains(q.TableName));
@@ -1264,16 +1296,16 @@ namespace HLU.UI.ViewModel
                     DataRelation rel;
                     IEnumerable<SqlFilterCondition> joinCond = fromTables.Select(st =>
                         st.GetType() == typeof(HluDataSet.incidDataTable) ?
-                        new SqlFilterCondition("AND", t, t.incidColumn, typeof(DataColumn), "(", ")", st.Columns[_hluDS.incid.incidColumn.Ordinal]) :
+                        new SqlFilterCondition("AND", t, tIncidColumn, typeof(DataColumn), "(", ")", st.Columns[_hluDS.incid.incidColumn.Ordinal]) :
                         (rel = GetRelation(_hluDS.incid, st)) != null ?
-                        new SqlFilterCondition("AND", t, t.incidColumn, typeof(DataColumn), "(", ")", rel.ChildColumns[0]) : null).Where(c => c != null);
+                        new SqlFilterCondition("AND", t, tIncidColumn, typeof(DataColumn), "(", ")", rel.ChildColumns[0]) : null).Where(c => c != null);
 
-                    // Create a selection DataTable of PK values of IncidMMPolygons.
+                    // Create a selection DataTable of PK values of the active GIS map-match table.
                     _incidMMPolygonSelection = await Task.Run(() =>
                         _db.SqlSelect(
                             true,
                             false,
-                            _hluDS.incid_mm_polygons.PrimaryKey,
+                            t.PrimaryKey,
                             [.. whereTables], [.. joinCond], sqlWhereClause));
 
                     // Count the number of fragments from the selection table.
@@ -1374,7 +1406,7 @@ namespace HLU.UI.ViewModel
             _currentIncidToidsInDBCount = (int)_db.ExecuteScalar(String.Format(
                     "SELECT COUNT(*) FROM (SELECT DISTINCT {0} FROM {1} WHERE {2} = {3}) AS T",
                     _db.QuoteIdentifier(_hluDS.incid_mm_polygons.toidColumn.ColumnName),
-                    _db.QualifyTableName(_hluDS.incid_mm_polygons.TableName),
+                    _db.QualifyTableName(GisMMTable.TableName),
                     _db.QuoteIdentifier(_hluDS.incid_mm_polygons.incidColumn.ColumnName),
                     _db.QuoteValue(_incidCurrentRow.incid)),
                     _db.Connection.ConnectionTimeout, CommandType.Text);
@@ -1383,7 +1415,7 @@ namespace HLU.UI.ViewModel
             // this incid.
             _currentIncidFragsInDBCount = (int)_db.ExecuteScalar(String.Format(
                 "SELECT COUNT(*) FROM {0} WHERE {1} = {2}",
-                _db.QualifyTableName(_hluDS.incid_mm_polygons.TableName),
+                _db.QualifyTableName(GisMMTable.TableName),
                 _db.QuoteIdentifier(_hluDS.incid_mm_polygons.incidColumn.ColumnName),
                 _db.QuoteValue(_incidCurrentRow.incid)),
                 _db.Connection.ConnectionTimeout, CommandType.Text);
@@ -1424,7 +1456,7 @@ namespace HLU.UI.ViewModel
                 int toidsIncidSelectionDbCount = 0;
 
                 string sqlFragsDbCount = String.Format("SELECT COUNT(*) FROM {0} WHERE {0}.{1} = {2}",
-                    _db.QualifyTableName(_hluDS.incid_mm_polygons.TableName),
+                    _db.QualifyTableName(GisMMTable.TableName),
                     _db.QuoteIdentifier(_hluDS.incid_mm_polygons.incidColumn.ColumnName),
                     _db.QuoteValue(incid));
 
@@ -1438,7 +1470,7 @@ namespace HLU.UI.ViewModel
                 string _sqlToidsDbCount = String.Format(
                     "SELECT COUNT(*) FROM (SELECT DISTINCT {0} FROM {1} WHERE {2} = {3}) AS T",
                     _db.QuoteIdentifier(_hluDS.incid_mm_polygons.toidColumn.ColumnName),
-                    _db.QualifyTableName(_hluDS.incid_mm_polygons.TableName),
+                    _db.QualifyTableName(GisMMTable.TableName),
                     _db.QuoteIdentifier(_hluDS.incid_mm_polygons.incidColumn.ColumnName),
                     _db.QuoteValue(incid));
 

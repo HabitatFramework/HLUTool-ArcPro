@@ -2582,6 +2582,42 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
+        /// Populates the specified incid_mm_linesDataTable with rows that match the provided filter conditions.
+        /// </summary>
+        /// <param name="whereClause">A collection of filter conditions used to select which rows are retrieved.</param>
+        /// <param name="table">A reference to the incid_mm_linesDataTable that will be filled with the matching rows.</param>
+        internal void GetIncidMMLineRows(List<List<SqlFilterCondition>> whereClause,
+            ref HluDataSet.incid_mm_linesDataTable table)
+        {
+            if ((whereClause != null) && (whereClause.Count > 0))
+            {
+                _hluTableAdapterMgr.incid_mm_linesTableAdapter ??=
+                        new HluTableAdapter<HluDataSet.incid_mm_linesDataTable,
+                            HluDataSet.incid_mm_linesRow>(_db);
+
+                _hluTableAdapterMgr.incid_mm_linesTableAdapter.Fill(table, whereClause);
+            }
+        }
+
+        /// <summary>
+        /// Populates the specified incid_mm_pointsDataTable with rows that match the provided filter conditions.
+        /// </summary>
+        /// <param name="whereClause">A collection of filter conditions used to select which rows are retrieved.</param>
+        /// <param name="table">A reference to the incid_mm_pointsDataTable that will be filled with the matching rows.</param>
+        internal void GetIncidMMPointRows(List<List<SqlFilterCondition>> whereClause,
+            ref HluDataSet.incid_mm_pointsDataTable table)
+        {
+            if ((whereClause != null) && (whereClause.Count > 0))
+            {
+                _hluTableAdapterMgr.incid_mm_pointsTableAdapter ??=
+                        new HluTableAdapter<HluDataSet.incid_mm_pointsDataTable,
+                            HluDataSet.incid_mm_pointsRow>(_db);
+
+                _hluTableAdapterMgr.incid_mm_pointsTableAdapter.Fill(table, whereClause);
+            }
+        }
+
+        /// <summary>
         /// Populates the specified incid_osmm_updatesDataTable with rows that match the provided filter conditions.
         /// </summary>
         /// <remarks>If no filter conditions are provided, the method does not modify the data table. The

@@ -30,6 +30,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using HLU.Data;
 using HLU.Data.Model;
+using HLU.Enums;
 using HLU.Exceptions;
 using HLU.Helpers;
 using HLU.Properties;
@@ -140,6 +141,11 @@ namespace HLU.GISApplication
         /// Field names of the HLU feature class, in the same order as in _hluFieldMap
         /// </summary>
         private string[] _hluFieldNames;
+
+        /// <summary>
+        /// Geometry type of the active HLU layer (polygon, line or point).
+        /// </summary>
+        private HluGeometryTypes _hluGeometryType = HluGeometryTypes.Polygon;
 
         #endregion Fields
 
@@ -3388,6 +3394,17 @@ namespace HLU.GISApplication
             get
             {
                 return _hluFeatureClass;
+            }
+        }
+
+        /// <summary>
+        /// Gets the geometry type of the active HLU layer.
+        /// </summary>
+        public HluGeometryTypes HluGeometryType
+        {
+            get
+            {
+                return _hluGeometryType;
             }
         }
 

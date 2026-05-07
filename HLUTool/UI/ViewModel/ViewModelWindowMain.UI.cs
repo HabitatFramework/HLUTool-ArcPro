@@ -5095,9 +5095,9 @@ namespace HLU.UI.ViewModel
                 .. (from s in Settings.Default.HistoryColumnOrdinals.Cast<string>()
                     where Int32.TryParse(s, out result)
                         && result >= 0
-                        && result < _hluDS.incid_mm_polygons.Columns.Count
+                        && result < GisMMTable.Columns.Count
                         && !_gisIDColumnOrdinals.Contains(result)
-                    select _hluDS.incid_mm_polygons.Columns[Int32.Parse(s)]),
+                    select GisMMTable.Columns[Int32.Parse(s)]),
             ];
         }
 
@@ -10074,18 +10074,37 @@ namespace HLU.UI.ViewModel
 
             // Calculate the area and length measures for the current incid based on associated polygon data.
             _incidMMPolygonsIncidFilter.Value = Incid;
-            HluDataSet.incid_mm_polygonsDataTable table = HluDataset.incid_mm_polygons;
 
             List<SqlFilterCondition> incidCond = new([_incidMMPolygonsIncidFilter]);
             List<List<SqlFilterCondition>> incidCondList = [incidCond];
-            GetIncidMMPolygonRows(incidCondList, ref table);
 
             _incidArea = 0;
             _incidLength = 0;
-            foreach (HluDataSet.incid_mm_polygonsRow r in table)
+
+            switch (_gisLayerType)
             {
-                _incidArea += r.shape_area;
-                _incidLength += r.shape_length;
+                case HluGeometryTypes.Line:
+                {
+                    HluDataSet.incid_mm_linesDataTable table = HluDataset.incid_mm_lines;
+                    GetIncidMMLineRows(incidCondList, ref table);
+                    foreach (HluDataSet.incid_mm_linesRow r in table)
+                        _incidLength += r.shape_length;
+                    break;
+                }
+                case HluGeometryTypes.Point:
+                    // Points have no area or length measures.
+                    break;
+                default:
+                {
+                    HluDataSet.incid_mm_polygonsDataTable table = HluDataset.incid_mm_polygons;
+                    GetIncidMMPolygonRows(incidCondList, ref table);
+                    foreach (HluDataSet.incid_mm_polygonsRow r in table)
+                    {
+                        _incidArea += r.shape_area;
+                        _incidLength += r.shape_length;
+                    }
+                    break;
+                }
             }
 
             // Convert from native storage units (m² / m) to configured

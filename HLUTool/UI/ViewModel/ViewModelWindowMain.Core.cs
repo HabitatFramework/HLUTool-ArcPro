@@ -2185,7 +2185,7 @@ namespace HLU.UI.ViewModel
                 _copySwitches.PropertyChanged += new PropertyChangedEventHandler(CopySwitches_PropertyChanged);
 
                 int result;
-                // Columns that identify map polygons and are returned by GIS
+                // Columns that identify map features and are returned by GIS
                 _gisIDColumnOrdinals = [.. (from s in Settings.Default.GisIDColumnOrdinals.Cast<string>()
                                         where Int32.TryParse(s, out result) && (result >= 0) &&
                                         (result < _hluDS.incid_mm_polygons.Columns.Count)
@@ -2365,6 +2365,39 @@ namespace HLU.UI.ViewModel
             var isActiveHluLayer = !string.IsNullOrEmpty(targetLayerName) &&
                 await _gisApp.IsHluLayerAsync(targetLayerName, true);
 
+            // Sync the geometry type from the GIS application and reinitialise any
+            // geometry-type-dependent state when the active layer changes.
+            if (isActiveHluLayer)
+            {
+                HluGeometryTypes detectedGeometryType = _gisApp.HluGeometryType;
+                if (detectedGeometryType != _gisLayerType)
+                {
+                    _gisLayerType = detectedGeometryType;
+
+                    // Reinitialise GIS ID columns for the new geometry table.
+                    int result;
+                    _gisIDColumnOrdinals = [.. (from s in Settings.Default.GisIDColumnOrdinals.Cast<string>()
+                                            where Int32.TryParse(s, out result) && (result >= 0) &&
+                                            (result < GisMMTable.Columns.Count)
+                                            select Int32.Parse(s))];
+                    _gisIDColumns = [.. _gisIDColumnOrdinals.Select(i => GisMMTable.Columns[i])];
+
+                    // Reinitialise history columns for the new geometry table.
+                    _historyColumns = InitializeHistoryColumns(_historyColumns);
+
+                    // Reinitialise the incid filter for the correct geometry table.
+                    _incidMMPolygonsIncidFilter = new()
+                    {
+                        BooleanOperator = "OR",
+                        OpenParentheses = "(",
+                        Column = GisMMTable.Columns[_hluDS.incid_mm_polygons.incidColumn.ColumnName],
+                        Table = GisMMTable,
+                        Value = String.Empty,
+                        CloseParentheses = ")"
+                    };
+                }
+            }
+
             // Now assign ActiveLayerName — IsEditable is correctly set so
             // UpdateDockPaneCaption() and RefreshEditCapability() see the right value.
             ActiveLayerName = targetLayerName;
@@ -2413,7 +2446,7 @@ namespace HLU.UI.ViewModel
                 return
                 [
                     .. _gisIDColumns,
-                    .. _hluDS.incid_mm_polygons.Columns.Cast<DataColumn>()
+                    .. GisMMTable.Columns.Cast<DataColumn>()
                         .Where(c => !_gisIDColumnOrdinals.Contains(c.Ordinal)
                             && !c.ColumnName.StartsWith("shape_")),
                 ];
@@ -4236,8 +4269,8 @@ namespace HLU.UI.ViewModel
             {
                 BooleanOperator = "OR",
                 OpenParentheses = "(",
-                Column = _hluDS.incid_mm_polygons.incidColumn,
-                Table = _hluDS.incid_mm_polygons,
+                Column = GisMMTable.Columns[_hluDS.incid_mm_polygons.incidColumn.ColumnName],
+                Table = GisMMTable,
                 Value = String.Empty,
                 CloseParentheses = ")"
             };
