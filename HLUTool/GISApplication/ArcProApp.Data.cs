@@ -852,7 +852,10 @@ namespace HLU.GISApplication
                         // Populate the DataRow with feature attributes
                         foreach (DataColumn c in resultTable.Columns)
                         {
-                            dataRow[c.ColumnName] = feature[c.ColumnName];
+                            // feature[fieldName] returns null (not DBNull) for null GIS fields;
+                            // assign DBNull.Value so DataRow consumers that call Field<string>()
+                            // (non-nullable) don't throw InvalidCastException.
+                            dataRow[c.ColumnName] = feature[c.ColumnName] ?? DBNull.Value;
                         }
 
                         // Add the DataRow to the DataTable
@@ -2672,6 +2675,151 @@ namespace HLU.GISApplication
         }
 
         #endregion Update
+
+        #region Feature Insert
+
+        /// <summary>
+        /// Writes the assigned INCID and fragment ID values to a set of newly drawn GIS features
+        /// (identified by object ID), captures geometry metadata for history, and queues the GIS
+        /// field updates into the provided <paramref name="editOperation"/>.
+        /// </summary>
+        /// <param name="oidAssignments">
+        /// A mapping of each feature's object ID to the INCID and fragment ID it should receive.
+        /// Every entry must map to a non-null, non-empty INCID and fragment ID.
+        /// </param>
+        /// <param name="historyColumns">History schema columns used to build the returned table.</param>
+        /// <param name="editOperation">The edit operation into which the GIS field writes are queued.</param>
+        /// <returns>
+        /// A <see cref="DataTable"/> with one row per registered feature.  Each row contains
+        /// the values written to the feature (incid, fragid, geometry dimensions) laid out
+        /// according to <paramref name="historyColumns"/>, plus an extra <c>"oid"</c> column
+        /// carrying the feature's object ID.
+        /// </returns>
+        public async Task<DataTable> RegisterNewFeaturesAsync(
+            Dictionary<long, (string incid, string fragid)> oidAssignments,
+            DataColumn[] historyColumns,
+            EditOperation editOperation)
+        {
+            ArgumentNullException.ThrowIfNull(oidAssignments);
+            ArgumentNullException.ThrowIfNull(editOperation);
+
+            if (_hluLayer == null)
+                throw new HLUToolException("HLU layer is not set.");
+            if (_hluFeatureClass == null)
+                throw new HLUToolException("HLU feature class is not set.");
+            if (_hluLayerStructure == null)
+                throw new HLUToolException("HLU layer structure is not set.");
+
+            // Build history field bindings so we use the same column-mapping logic as every other operation.
+            List<HistoryFieldBindingHelper.HistoryFieldBinding> historyBindings =
+                HistoryFieldBindingHelper.BuildHistoryFieldBindings(
+                    historyColumns,
+                    HistoryAdditionalFieldsDelimiter,
+                    MapField,
+                    FuzzyFieldOrdinal);
+
+            // Create the returned DataTable (history columns + OID column for view-model lookup).
+            DataTable resultTable = new();
+            foreach (var b in historyBindings)
+            {
+                if (!resultTable.Columns.Contains(b.OutputColumnName))
+                    resultTable.Columns.Add(new DataColumn(b.OutputColumnName, b.OutputType));
+            }
+            if (!resultTable.Columns.Contains(ViewModelWindowMain.HistoryGeometry1ColumnName))
+                resultTable.Columns.Add(new DataColumn(ViewModelWindowMain.HistoryGeometry1ColumnName, typeof(double)));
+            if (!resultTable.Columns.Contains(ViewModelWindowMain.HistoryGeometry2ColumnName))
+                resultTable.Columns.Add(new DataColumn(ViewModelWindowMain.HistoryGeometry2ColumnName, typeof(double)));
+
+            // Extra column so the caller can match rows to OIDs (used when building mm-table rows).
+            const string OidColumnName = "oid";
+            if (!resultTable.Columns.Contains(OidColumnName))
+                resultTable.Columns.Add(new DataColumn(OidColumnName, typeof(long)));
+
+            // Resolve the incid and fragid field indexes once.
+            int incidFieldIndex = MapField(_hluLayerStructure.incidColumn.ColumnName);
+            if (incidFieldIndex == -1)
+                incidFieldIndex = FuzzyFieldOrdinal(_hluLayerStructure.incidColumn.ColumnName);
+            if (incidFieldIndex == -1)
+                throw new HLUToolException("Failed to resolve incid field index for the active HLU layer.");
+
+            int fragidFieldIndex = MapField(_hluLayerStructure.fragidColumn.ColumnName);
+            if (fragidFieldIndex == -1)
+                fragidFieldIndex = FuzzyFieldOrdinal(_hluLayerStructure.fragidColumn.ColumnName);
+            if (fragidFieldIndex == -1)
+                throw new HLUToolException("Failed to resolve fragid field index for the active HLU layer.");
+
+            IReadOnlyList<long> oids = [.. oidAssignments.Keys];
+
+            await QueuedTask.Run(() =>
+            {
+                Table hluTable = _hluFeatureClass as Table;
+
+                // Pass 1 — read geometry for history rows.
+                QueryFilter qf = new() { ObjectIDs = oids };
+                using (RowCursor cursor = _hluFeatureClass.Search(qf, false))
+                {
+                    while (cursor.MoveNext())
+                    {
+                        using Feature feature = cursor.Current as Feature;
+                        if (feature == null)
+                            continue;
+
+                        long oid = feature.GetObjectID();
+                        if (!oidAssignments.TryGetValue(oid, out var assignment))
+                            continue;
+
+                        DataRow row = resultTable.NewRow();
+
+                        // Populate history-bound columns with the values being written (the "after" state).
+                        foreach (var b in historyBindings)
+                        {
+                            // For incid/fragid use the assigned value; for everything else read what's in the feature.
+                            if (b.OutputColumnName == _hluLayerStructure.incidColumn.ColumnName ||
+                                b.OutputColumnName == "modified_" + _hluLayerStructure.incidColumn.ColumnName)
+                                row[b.OutputColumnName] = assignment.incid;
+                            else if (b.OutputColumnName == _hluLayerStructure.fragidColumn.ColumnName ||
+                                     b.OutputColumnName == "modified_" + _hluLayerStructure.fragidColumn.ColumnName)
+                                row[b.OutputColumnName] = assignment.fragid;
+                            else
+                            {
+                                object val = feature[b.SourceFieldIndex];
+                                row[b.OutputColumnName] = val ?? DBNull.Value;
+                            }
+                        }
+
+                        Geometry geom = feature.GetShape();
+                        (double geom1, double geom2) = GetGeometryHistoryValues(geom);
+                        row[ViewModelWindowMain.HistoryGeometry1ColumnName] = geom1;
+                        row[ViewModelWindowMain.HistoryGeometry2ColumnName] = geom2;
+                        row[OidColumnName] = oid;
+
+                        resultTable.Rows.Add(row);
+                    }
+                }
+
+                // Pass 2 — queue the edit operation to write incid + fragid.
+                editOperation.Callback(context =>
+                {
+                    using RowCursor updateCursor = _hluFeatureClass.Search(qf, false);
+                    while (updateCursor.MoveNext())
+                    {
+                        using Row row = updateCursor.Current;
+                        long oid = row.GetObjectID();
+                        if (!oidAssignments.TryGetValue(oid, out var assignment))
+                            continue;
+
+                        row[incidFieldIndex] = assignment.incid;
+                        row[fragidFieldIndex] = assignment.fragid;
+                        row.Store();
+                        context.Invalidate(row);
+                    }
+                }, hluTable);
+            });
+
+            return resultTable;
+        }
+
+        #endregion Feature Insert
 
         #region History
 

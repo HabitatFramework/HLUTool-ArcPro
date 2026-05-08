@@ -391,6 +391,15 @@ namespace HLU.UI.ViewModel
             else
                 itemType = "Feature";
 
+            // Check if the selected features in GIS have no INCID (i.e. they are new features that
+            // have not yet been registered in the database).
+            if (_selectedFragsInGISCount > 0 && _selectedIncidsInGISCount == 0)
+            {
+                if (showMessage)
+                    ShowInfo($"{itemType}{(_selectedFragsInGISCount == 1 ? " has" : "s have")} no INCID and {(_selectedFragsInGISCount == 1 ? "has" : "have")} not been registered in the database.", Messagecategory);
+                return false;
+            }
+
             // Check if the GIS features have been physically split by the user but not processed in HLU yet.
             if ((_currentIncidToidsInGISCount == _currentIncidToidsInDBCount) &&
                (_currentIncidFragsInGISCount > _currentIncidFragsInDBCount))
@@ -3154,9 +3163,9 @@ namespace HLU.UI.ViewModel
                         _fragsSelectedMap = from r in _gisSelection.AsEnumerable()
                                             group r by new
                                             {
-                                                incid = r.Field<string>(0),
-                                                toid = r.Field<string>(1),
-                                                fragment = r.Field<string>(2)
+                                                incid = r.IsNull(0) ? null : r.Field<string>(0),
+                                                toid = r.IsNull(1) ? null : r.Field<string>(1),
+                                                fragment = r.IsNull(2) ? null : r.Field<string>(2)
                                             }
                                                 into g
                                             select g.Key.fragment;
@@ -3167,16 +3176,21 @@ namespace HLU.UI.ViewModel
                     case 2:
                         // Get the unique toids selected in GIS.
                         _toidsSelectedMap = _gisSelection.AsEnumerable()
-                            .GroupBy(r => r.Field<string>(_gisIDColumns[1].ColumnName)).Select(g => g.Key);
+                            .GroupBy(r => r.IsNull(_gisIDColumns[1].ColumnName) ? null : r.Field<string>(_gisIDColumns[1].ColumnName)).Select(g => g.Key);
 
                         // Count the number of toids selected in GIS.
                         _selectedToidsInGISCount = _toidsSelectedMap.Count();
                         goto case 1;
                     case 1:
                         // Get the unique incids selected in GIS (ordered so that the filter
-                        // is sorted in incid order).
+                        // is sorted in incid order). Use the nullable Field<string?> overload
+                        // so that DBNull values (e.g. newly drawn features with no INCID)
+                        // don't throw InvalidCastException, and filter those null keys out.
                         _incidsSelectedMap = _gisSelection.AsEnumerable()
-                            .GroupBy(r => r.Field<string>(_gisIDColumns[0].ColumnName)).Select(g => g.Key).OrderBy(s => s);
+                            .GroupBy(r => r.Field<string>(_gisIDColumns[0].ColumnName))
+                            .Select(g => g.Key)
+                            .Where(s => s != null)
+                            .OrderBy(s => s);
 
                         // Count the number of incids selected in GIS.
                         _selectedIncidsInGISCount = _incidsSelectedMap.Count();

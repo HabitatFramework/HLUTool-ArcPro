@@ -170,6 +170,7 @@ namespace HLU.UI.ViewModel
         #region Fields - ComboBox Sources
 
         private readonly ObservableCollection<CodeDescriptionBool> _primaryCodes = [];
+        private bool _forceHabitatTypeRebuild;
 
         private HluDataSet.lut_sourcesRow[] _sourceNames;
         private HluDataSet.lut_habitat_classRow[] _sourceHabitatClassCodes;
@@ -1431,8 +1432,14 @@ namespace HLU.UI.ViewModel
             set
             {
                 // Check if the habitat type has changed.
-                if (string.Equals(_habitatType, value, StringComparison.Ordinal) && _primaryCodes != null && _primaryCodes.Count > 0)
+                // _forceHabitatTypeRebuild is set when the active layer's geometry type changes
+                // so the codes are rebuilt without clearing the collection (which would trigger
+                // the IncidPrimary WPF binding and spuriously mark the record as Changed).
+                if (string.Equals(_habitatType, value, StringComparison.Ordinal) && _primaryCodes != null && _primaryCodes.Count > 0 && !_forceHabitatTypeRebuild)
                     return;
+
+                // Reset the flag immediately — it is only valid for a single forced call.
+                _forceHabitatTypeRebuild = false;
 
                 _habitatType = value;
 
@@ -1457,6 +1464,7 @@ namespace HLU.UI.ViewModel
                         join hc in _lutHabitatClass on p.habitat_class_code equals hc.code
                         from htp in _lutHabitatTypePrimary
                         where htp.code_habitat_type == _habitatType
+                            && PrimaryMatchesLayerType(p)
                             && (p.code == htp.code_primary
                                 || (htp.code_primary.EndsWith('*') &&
                                     Regex.IsMatch(p.code, @"\A" + htp.code_primary.TrimEnd('*') + @"")))
@@ -1477,10 +1485,12 @@ namespace HLU.UI.ViewModel
                     .Concat(
                         // Second query – inferred primary codes via secondary links.
                         from s in _lutSecondary
+                        where SecondaryMatchesLayerType(s)
                         join hts in _lutHabitatTypeSecondary on s.code equals hts.code_secondary
                         join ps in _lutPrimarySecondary on hts.code_secondary equals ps.code_secondary
                         from p in _lutPrimary
                         where (p.code == ps.code_primary || p.code.StartsWith(ps.code_primary))
+                            && PrimaryMatchesLayerType(p)
                         join pc in _lutPrimaryCategory on p.category equals pc.code
                         join hc in _lutHabitatClass on p.habitat_class_code equals hc.code
                         where hts.code_habitat_type == _habitatType
@@ -1526,6 +1536,7 @@ namespace HLU.UI.ViewModel
                          join s in _lutSecondary on hts.code_secondary equals s.code
                          where hts.code_habitat_type == _habitatType
                              && hts.mandatory == 0
+                             && SecondaryMatchesLayerType(s)
                          select s)
                         .OrderBy(r => r.sort_order)
                         .ThenBy(r => r.description)];
@@ -1540,6 +1551,7 @@ namespace HLU.UI.ViewModel
                          join s in _lutSecondary on hts.code_secondary equals s.code
                          where hts.code_habitat_type == _habitatType
                              && hts.mandatory == 1
+                             && SecondaryMatchesLayerType(s)
                          select s)
                         .OrderBy(r => r.sort_order)
                         .ThenBy(r => r.description)];
@@ -1553,6 +1565,7 @@ namespace HLU.UI.ViewModel
                     // and primary habitat category are both flagged as local.
                     CodeDescriptionBool[] allPrimaryCodes = [.. (
                         from p in _lutPrimary
+                        where PrimaryMatchesLayerType(p)
                         join pc in _lutPrimaryCategory on p.category equals pc.code
                         join hc in _lutHabitatClass on p.habitat_class_code equals hc.code
                         orderby hc.sort_order, hc.code, p.sort_order, p.code
@@ -2217,6 +2230,7 @@ namespace HLU.UI.ViewModel
             get
             {
                 _secondaryCodesAll ??= [.. (from s in _lutSecondary
+                                          where SecondaryMatchesLayerType(s)
                                           select s).OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
                 return _secondaryCodesAll;
@@ -2348,18 +2362,27 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // If there are no secondary habitats return null.
-                if (_incidSecondaryHabitats == null || _incidSecondaryHabitats.Count == 0)
+                // Create the concatenated secondary habitats summary.
+                string secondarySummary = (_incidSecondaryHabitats != null && _incidSecondaryHabitats.Count > 0)
+                    ? String.Join(_secondaryCodeDelimiter, _incidSecondaryHabitats
+                        .OrderBy(s => s.Secondary_habitat_int)
+                        .ThenBy(s => s.Secondary_habitat)
+                        .Select(s => s.Secondary_habitat)
+                        .Distinct().ToList())
+                    : null;
+
+                // If neither a primary code nor any secondary codes are available, return null.
+                if (String.IsNullOrEmpty(_incidPrimary) && String.IsNullOrEmpty(secondarySummary))
                     return null;
 
-                // Create the concatenated secondary habitats summary.
-                _incidSecondarySummary = String.Join(_secondaryCodeDelimiter, _incidSecondaryHabitats
-                    .OrderBy(s => s.Secondary_habitat_int)
-                    .ThenBy(s => s.Secondary_habitat)
-                    .Select(s => s.Secondary_habitat)
-                    .Distinct().ToList());
+                // Prepend the primary code if available.
+                _incidSecondarySummary = String.IsNullOrEmpty(secondarySummary)
+                    ? _incidPrimary
+                    : String.IsNullOrEmpty(_incidPrimary)
+                        ? secondarySummary
+                        : _incidPrimary + " " + secondarySummary;
 
-                return _incidSecondarySummary == String.Empty ? null : _incidSecondarySummary;
+                return _incidSecondarySummary;
             }
         }
 
@@ -7096,6 +7119,64 @@ namespace HLU.UI.ViewModel
                 // Switch the GIS layer.
                 if (await _gisApp.IsHluLayerAsync(selectedValue, true))
                 {
+                    // Sync the geometry type from the newly activated layer and
+                    // reinitialise all geometry-type-dependent state when the
+                    // layer type has changed (mirrors the logic in CheckActiveMapAsync).
+                    HluGeometryTypes detectedGeometryType = _gisApp.HluGeometryType;
+                    if (detectedGeometryType != _gisLayerType)
+                    {
+                        _gisLayerType = detectedGeometryType;
+
+                        // Reinitialise GIS ID columns for the new geometry table.
+                        int result;
+                        _gisIDColumnOrdinals = [.. (from s in Settings.Default.GisIDColumnOrdinals.Cast<string>()
+                                                where Int32.TryParse(s, out result) && (result >= 0) &&
+                                                (result < GisMMTable.Columns.Count)
+                                                select Int32.Parse(s))];
+                        _gisIDColumns = [.. _gisIDColumnOrdinals.Select(i => GisMMTable.Columns[i])];
+
+                        // Reinitialise history columns for the new geometry table.
+                        _historyColumns = InitializeHistoryColumns(_historyColumns);
+
+                        // Reinitialise the incid filter for the correct geometry table.
+                        _incidMMPolygonsIncidFilter = new()
+                        {
+                            BooleanOperator = "OR",
+                            OpenParentheses = "(",
+                            Column = GisMMTable.Columns[_hluDS.incid_mm_polygons.incidColumn.ColumnName],
+                            Table = GisMMTable,
+                            Value = String.Empty,
+                            CloseParentheses = ")"
+                        };
+
+                        // Reset cached secondary code lists — they are filtered by geometry type
+                        // and must be rebuilt for the new layer type.
+                        _secondaryCodesAll = null;
+                        _secondaryCodesValid = null;
+
+                        // Force the primary codes combo box to rebuild for the new geometry type.
+                        // Using a flag (rather than _primaryCodes.Clear()) avoids triggering the
+                        // WPF ComboBox binding which would fire the IncidPrimary setter with null
+                        // and spuriously set Changed = true on the current record.
+                        _forceHabitatTypeRebuild = true;
+                        HabitatType = _habitatType;
+
+                        // The HabitatType setter may have nulled _incidPrimary when the current
+                        // primary code is absent from the rebuilt list for the new geometry type.
+                        // Restore it from the incid row so that IsDirtyIncid() — which compares
+                        // _incidPrimary against _incidCurrentRow.habitat_primary — does not see a
+                        // discrepancy and falsely mark the record as changed, triggering the
+                        // "record has been changed" dialog on every layer switch.
+                        // The validation in this["IncidPrimary"] will detect that the restored code
+                        // is absent from _primaryCodes and show the appropriate warning.
+                        if (_incidPrimary == null && _incidCurrentRow != null
+                            && !_incidCurrentRow.Ishabitat_primaryNull())
+                        {
+                            _incidPrimary = _incidCurrentRow.habitat_primary;
+                            OnPropertyChanged(nameof(IncidPrimary));
+                        }
+                    }
+
                     // Set the active HLU layer name.
                     ActiveLayerName = selectedValue;
 
@@ -10151,6 +10232,30 @@ namespace HLU.UI.ViewModel
                 _ => metres / 1_000d // fallback: km
             };
         }
+
+        /// <summary>
+        /// Returns <see langword="true"/> when the <paramref name="row"/> in <c>lut_primary</c>
+        /// is applicable to the active GIS layer geometry type.
+        /// </summary>
+        private bool PrimaryMatchesLayerType(HluDataSet.lut_primaryRow row) =>
+            _gisLayerType switch
+            {
+                HluGeometryTypes.Line    => row.line,
+                HluGeometryTypes.Point   => row.point,
+                _                        => row.polygon   // default: Polygon
+            };
+
+        /// <summary>
+        /// Returns <see langword="true"/> when the <paramref name="row"/> in <c>lut_secondary</c>
+        /// is applicable to the active GIS layer geometry type.
+        /// </summary>
+        private bool SecondaryMatchesLayerType(HluDataSet.lut_secondaryRow row) =>
+            _gisLayerType switch
+            {
+                HluGeometryTypes.Line    => row.line,
+                HluGeometryTypes.Point   => row.point,
+                _                        => row.polygon   // default: Polygon
+            };
 
         #endregion Formatting Helpers
 

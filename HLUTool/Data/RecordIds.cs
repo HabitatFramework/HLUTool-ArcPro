@@ -153,31 +153,33 @@ namespace HLU.Data
         {
             get
             {
-                // If SiteID is not set, get the last one from lut_site_id based on GIS layer type.
+                // Get the last site ID from lut_site_id based on GIS layer type.
                 // If lut_site_id is empty, default to "0000".
-                if (String.IsNullOrEmpty(_siteID))
+                if (_hluDataset.lut_site_id.Count > 0)
                 {
-                    if (_hluDataset.lut_site_id.Count > 0)
+                    var lastRow = _hluDataset.lut_site_id.ElementAt(_hluDataset.lut_site_id.Count - 1);
+                    switch (_gisLayerType)
                     {
-                        switch (_gisLayerType)
-                        {
-                            case HluGeometryTypes.Point:
-                                _siteID = _hluDataset.lut_site_id.ElementAt(_hluDataset.lut_site_id.Count - 1).site_id_point;
-                                break;
+                        case HluGeometryTypes.Point:
+                            _siteID = lastRow.site_id_point;
+                            break;
 
-                            case HluGeometryTypes.Line:
-                                _siteID = _hluDataset.lut_site_id.ElementAt(_hluDataset.lut_site_id.Count - 1).site_id_line;
-                                break;
+                        case HluGeometryTypes.Line:
+                            _siteID = lastRow.site_id_line;
+                            break;
 
-                            case HluGeometryTypes.Polygon:
-                                _siteID = _hluDataset.lut_site_id.ElementAt(_hluDataset.lut_site_id.Count - 1).site_id_polygon;
-                                break;
-                        }
+                        case HluGeometryTypes.Polygon:
+                            _siteID = lastRow.site_id_polygon;
+                            break;
+
+                        default:
+                            _siteID = lastRow.site_id_polygon;
+                            break;
                     }
-                    else
-                    {
-                        _siteID = "0000";
-                    }
+                }
+                else
+                {
+                    _siteID = "0000";
                 }
                 return _siteID;
             }

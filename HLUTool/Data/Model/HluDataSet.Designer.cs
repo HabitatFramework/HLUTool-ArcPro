@@ -4006,7 +4006,6 @@ namespace HLU.Data.Model {
                 this.columnhistory_id.Unique = true;
                 this.columnincid.AllowDBNull = false;
                 this.columnincid.MaxLength = 12;
-                this.columntoid.AllowDBNull = false;
                 this.columntoid.MaxLength = 20;
                 this.columnfragid.AllowDBNull = false;
                 this.columnfragid.MaxLength = 5;
@@ -20443,7 +20442,12 @@ namespace HLU.Data.Model {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             public string toid {
                 get {
-                    return ((string)(this[this.tablehistory.toidColumn]));
+                    if (this.IstoidNull()) {
+                        return null;
+                    }
+                    else {
+                        return ((string)(this[this.tablehistory.toidColumn]));
+                    }
                 }
                 set {
                     this[this.tablehistory.toidColumn] = value;
@@ -20755,6 +20759,18 @@ namespace HLU.Data.Model {
                 set {
                     this.SetParentRow(value, this.Table.ParentRelations["fk_history_incid_mm_polygons"]);
                 }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public bool IstoidNull() {
+                return this.IsNull(this.tablehistory.toidColumn);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public void SettoidNull() {
+                this[this.tablehistory.toidColumn] = global::System.Convert.DBNull;
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -31307,7 +31323,7 @@ FROM            history";
                 this.Adapter.DeleteCommand.Parameters[1].Value = ((string)(Original_incid));
             }
             if ((Original_toid == null)) {
-                throw new global::System.ArgumentNullException("Original_toid");
+                this.Adapter.DeleteCommand.Parameters[2].Value = global::System.DBNull.Value;
             }
             else {
                 this.Adapter.DeleteCommand.Parameters[2].Value = ((string)(Original_toid));
@@ -31468,7 +31484,7 @@ FROM            history";
                 this.Adapter.InsertCommand.Parameters[1].Value = ((string)(incid));
             }
             if ((toid == null)) {
-                throw new global::System.ArgumentNullException("toid");
+                this.Adapter.InsertCommand.Parameters[2].Value = global::System.DBNull.Value;
             }
             else {
                 this.Adapter.InsertCommand.Parameters[2].Value = ((string)(toid));
@@ -31620,7 +31636,7 @@ FROM            history";
                 this.Adapter.UpdateCommand.Parameters[1].Value = ((string)(incid));
             }
             if ((toid == null)) {
-                throw new global::System.ArgumentNullException("toid");
+                this.Adapter.UpdateCommand.Parameters[2].Value = global::System.DBNull.Value;
             }
             else {
                 this.Adapter.UpdateCommand.Parameters[2].Value = ((string)(toid));
@@ -31717,7 +31733,7 @@ FROM            history";
                 this.Adapter.UpdateCommand.Parameters[18].Value = ((string)(Original_incid));
             }
             if ((Original_toid == null)) {
-                throw new global::System.ArgumentNullException("Original_toid");
+                this.Adapter.UpdateCommand.Parameters[19].Value = global::System.DBNull.Value;
             }
             else {
                 this.Adapter.UpdateCommand.Parameters[19].Value = ((string)(Original_toid));

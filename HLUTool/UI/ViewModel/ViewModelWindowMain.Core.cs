@@ -1369,7 +1369,7 @@ namespace HLU.UI.ViewModel
 
                 // If the habitat primary code is missing and not in Bulk Update mode.
                 if (String.IsNullOrEmpty(IncidPrimary) && IsNotBulkMode)
-                    error.Append(Environment.NewLine).Append("Primary Habitat is mandatory for every INCID");
+                    error.Append(Environment.NewLine).Append("Primary habitat is mandatory for every INCID");
 
                 // If the habitat secondary codes validation is error.
                 if (_habitatSecondaryCodeValidation > 1)
@@ -1468,12 +1468,26 @@ namespace HLU.UI.ViewModel
                         // for the parent tab. Otherwise remove the field from the list.
                         if (String.IsNullOrEmpty(IncidPrimary) && IsNotBulkMode)
                         {
-                            error = "Error: Primary Habitat is mandatory for every INCID";
+                            error = "Error: Primary habitat is mandatory for every INCID";
                             AddToErrorList(_habitatErrors, columnName);
+                            RemoveFromErrorList(_habitatWarnings, columnName);
+                        }
+                        else if (!String.IsNullOrEmpty(IncidPrimary) && IsNotBulkMode
+                            && _primaryCodes != null && _primaryCodes.Count > 0
+                            && !_primaryCodes.Any(p => p.Code == IncidPrimary))
+                        {
+                            // The stored code is not in the current combo box list — this happens
+                            // when lut_primary has been edited since the incid was last updated.
+                            // Treat as a warning (not an error) so the user can still navigate
+                            // and the read-only value in the database is preserved.
+                            error = $"Warning: Primary habitat '{IncidPrimary}' is not valid for the available options";
+                            AddToErrorList(_habitatWarnings, columnName);
+                            RemoveFromErrorList(_habitatErrors, columnName);
                         }
                         else
                         {
                             RemoveFromErrorList(_habitatErrors, columnName);
+                            RemoveFromErrorList(_habitatWarnings, columnName);
                         }
                         OnPropertyChanged(nameof(HabitatTabLabel));
                         break;
@@ -2395,10 +2409,33 @@ namespace HLU.UI.ViewModel
                         Value = String.Empty,
                         CloseParentheses = ")"
                     };
+
+                    // Reset cached secondary code lists — they are filtered by geometry type
+                    // and must be rebuilt for the new layer type.
+                    _secondaryCodesAll = null;
+                    _secondaryCodesValid = null;
+
+                    // Force the primary codes combo box to rebuild for the new geometry type.
+                    // Using a flag (rather than _primaryCodes.Clear()) avoids triggering the
+                    // WPF ComboBox binding which would fire the IncidPrimary setter with null
+                    // and spuriously set Changed = true on the current record.
+                    _forceHabitatTypeRebuild = true;
+                    HabitatType = _habitatType;
+
+                    // Restore _incidPrimary from the incid row when the setter nulled it because
+                    // the current primary code is absent from the rebuilt list.  This prevents
+                    // IsDirtyIncid() from seeing a discrepancy and falsely flagging the record
+                    // as changed.  The validation in this["IncidPrimary"] will show the warning.
+                    if (_incidPrimary == null && _incidCurrentRow != null
+                        && !_incidCurrentRow.Ishabitat_primaryNull())
+                    {
+                        _incidPrimary = _incidCurrentRow.habitat_primary;
+                        OnPropertyChanged(nameof(IncidPrimary));
+                    }
                 }
             }
 
-            // Now assign ActiveLayerName — IsEditable is correctly set so
+            // Now assign ActiveLayerName
             // UpdateDockPaneCaption() and RefreshEditCapability() see the right value.
             ActiveLayerName = targetLayerName;
 

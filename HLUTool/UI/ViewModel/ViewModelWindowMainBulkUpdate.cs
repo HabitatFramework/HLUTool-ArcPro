@@ -1637,7 +1637,7 @@ namespace HLU.UI.ViewModel
                 if (_viewModelMain.IncidCurrentRow.Ishabitat_secondariesNull())
                 {
                     updateDBValueList.Add(null);
-                    updateGISValueList.Add("");
+                    updateGISValueList.Add(DBNull.Value);
                 }
                 else
                 {

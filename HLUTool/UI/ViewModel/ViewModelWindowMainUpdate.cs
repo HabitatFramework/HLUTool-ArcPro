@@ -205,10 +205,10 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.HluDataset.incid_mm_polygons.determqtyColumn,
                     _viewModelMain.HluDataset.incid_mm_polygons.interpqtyColumn ];
 
-                object[] updateValues = [ _viewModelMain.IncidPrimary ?? "",
-                        _viewModelMain.IncidSecondarySummary ?? "",
-                        _viewModelMain.IncidQualityDetermination ?? "",
-                        _viewModelMain.IncidQualityInterpretation ?? ""];
+                object[] updateValues = [ (object)_viewModelMain.IncidPrimary ?? DBNull.Value,
+                        (object)_viewModelMain.IncidSecondarySummary ?? DBNull.Value,
+                        (object)_viewModelMain.IncidQualityDetermination ?? DBNull.Value,
+                        (object)_viewModelMain.IncidQualityInterpretation ?? DBNull.Value ];
 
                 // Queue updates to the GIS layer
                 await _viewModelMain.GISApplication.UpdateFeaturesAsync(updateColumns, updateValues,

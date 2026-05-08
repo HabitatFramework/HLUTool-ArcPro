@@ -463,9 +463,11 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Can each selected feature with a null incid be registered against its own new INCID?
+        /// Only meaningful (and therefore enabled) when more than one feature is selected;
+        /// with a single feature the result is identical to <see cref="CanInsertFeatureSameIncid"/>.
         /// </summary>
         /// <value><c>true</c> if a feature insert (separate incids) operation can be performed; otherwise, <c>false</c>.</value>
-        public bool CanInsertFeatureSeparateIncid => _canInsertFeature;
+        public bool CanInsertFeatureSeparateIncid => _canInsertFeature && _gisSelection?.Rows.Count > 1;
 
         /// <summary>
         /// Can a feature insert operation (same or separate incid) be performed?
@@ -1204,7 +1206,7 @@ namespace HLU.UI.ViewModel
 
             DataTable outTable = new();
             foreach (DataColumn c in _gisIDColumns)
-                outTable.Columns.Add(new DataColumn(c.ColumnName, c.DataType));
+                outTable.Columns.Add(new DataColumn(c.ColumnName, c.DataType) { AllowDBNull = true });
             return outTable;
         }
 
@@ -1700,13 +1702,19 @@ namespace HLU.UI.ViewModel
         {
             bool canInsert = ComputeCanInsertFeature();
 
-            if (_canInsertFeature == canInsert)
-                return;
-
+            // Always notify CanInsertFeatureSeparateIncid because its computed value also
+            // depends on the selection count, which may have changed even if canInsert hasn't.
+            bool changed = _canInsertFeature != canInsert;
             _canInsertFeature = canInsert;
 
-            OnPropertyChanged(nameof(CanInsertFeature));
-            OnPropertyChanged(nameof(CanInsertFeatureSameIncid));
+            if (changed)
+            {
+                OnPropertyChanged(nameof(CanInsertFeature));
+                OnPropertyChanged(nameof(CanInsertFeatureSameIncid));
+            }
+
+            // Always fire this one — its value can change even when _canInsertFeature stays true
+            // (e.g. selection count moves between 1 and >1).
             OnPropertyChanged(nameof(CanInsertFeatureSeparateIncid));
         }
 
@@ -1929,9 +1937,10 @@ namespace HLU.UI.ViewModel
 
             // Delegate to the feature insert view model (implemented in stage 4/5).
             ViewModelWindowMainFeatureInsert vmInsert = new(this);
-            if (await vmInsert.InsertFeaturesSameIncidAsync())
+            var (success, featureCount, incidCount) = await vmInsert.InsertFeaturesSameIncidAsync();
+            if (success)
             {
-                ShowSuccess("Feature insert (same INCID) completed.", MessageCategory.Insert);
+                ShowSuccess($"Feature insert (same INCID) completed: {featureCount} {(featureCount == 1 ? "feature" : "features")} registered against 1 new INCID.", MessageCategory.Insert);
             }
         }
 
@@ -1949,9 +1958,10 @@ namespace HLU.UI.ViewModel
 
             // Delegate to the feature insert view model (implemented in stage 4/5).
             ViewModelWindowMainFeatureInsert vmInsert = new(this);
-            if (await vmInsert.InsertFeaturesSeparateIncidsAsync())
+            var (success, featureCount, incidCount) = await vmInsert.InsertFeaturesSeparateIncidsAsync();
+            if (success)
             {
-                ShowSuccess("Feature insert (separate INCIDs) completed.", MessageCategory.Insert);
+                ShowSuccess($"Feature insert (separate INCIDs) completed: {featureCount} {(featureCount == 1 ? "feature" : "features")} registered against {incidCount} new {(incidCount == 1 ? "INCID" : "INCIDs")}.", MessageCategory.Insert);
             }
         }
 
