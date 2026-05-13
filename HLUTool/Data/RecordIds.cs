@@ -158,24 +158,13 @@ namespace HLU.Data
                 if (_hluDataset.lut_site_id.Count > 0)
                 {
                     var lastRow = _hluDataset.lut_site_id.ElementAt(_hluDataset.lut_site_id.Count - 1);
-                    switch (_gisLayerType)
+                    _siteID = _gisLayerType switch
                     {
-                        case HluGeometryTypes.Point:
-                            _siteID = lastRow.site_id_point;
-                            break;
-
-                        case HluGeometryTypes.Line:
-                            _siteID = lastRow.site_id_line;
-                            break;
-
-                        case HluGeometryTypes.Polygon:
-                            _siteID = lastRow.site_id_polygon;
-                            break;
-
-                        default:
-                            _siteID = lastRow.site_id_polygon;
-                            break;
-                    }
+                        HluGeometryTypes.Point => lastRow.site_id_point,
+                        HluGeometryTypes.Line => lastRow.site_id_line,
+                        HluGeometryTypes.Polygon => lastRow.site_id_polygon,
+                        _ => lastRow.site_id_polygon,
+                    };
                 }
                 else
                 {

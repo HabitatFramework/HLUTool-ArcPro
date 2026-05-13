@@ -2333,7 +2333,8 @@ namespace HLU.GISApplication
         public async Task<DataTable> MergeFeaturesLogicallyAsync(
             string keepIncid,
             DataColumn[] historyColumns,
-            EditOperation editOperation)
+            EditOperation editOperation,
+            Dictionary<(string OldIncid, string OldToid, string OldFragid), string> fragidReassignments = null)
         {
             // Check parameters.
             if (String.IsNullOrEmpty(keepIncid))
@@ -2366,6 +2367,15 @@ namespace HLU.GISApplication
 
             // Resolve required field indices.
             int incidFieldIndex = ResolveRequiredFieldIndex(_hluLayerStructure.incidColumn.ColumnName);
+
+            // Resolve toid and fragid field indices (needed if fragid reassignment is requested).
+            int toidFieldIndex = MapField(_hluLayerStructure.toidColumn.ColumnName);
+            if (toidFieldIndex == -1)
+                toidFieldIndex = FuzzyFieldOrdinal(_hluLayerStructure.toidColumn.ColumnName);
+
+            int fragFieldIndex = MapField(_hluLayerStructure.fragidColumn.ColumnName);
+            if (fragFieldIndex == -1)
+                fragFieldIndex = FuzzyFieldOrdinal(_hluLayerStructure.fragidColumn.ColumnName);
 
             // Get the selected object IDs.
             IReadOnlyList<long> selectedObjectIds = await QueuedTask.Run(() =>
@@ -2420,6 +2430,7 @@ namespace HLU.GISApplication
             // Capture keep values + build the list of features to update + build history.
             List<long> objectIdsToUpdate = [];
             Dictionary<int, object> keepValuesByFieldIndex = [];
+            Dictionary<long, string> oidToNewFragid = [];
 
             await QueuedTask.Run(() =>
             {
@@ -2481,6 +2492,16 @@ namespace HLU.GISApplication
                             // Add the OID to the update list.
                             objectIdsToUpdate.Add(oid);
 
+                            // If fragid reassignment was requested, determine the new fragid for this feature.
+                            if (fragidReassignments != null && fragidReassignments.Count > 0 && fragFieldIndex >= 0)
+                            {
+                                string oldIncid = Convert.ToString(row[incidFieldIndex]) ?? String.Empty;
+                                string oldToid = toidFieldIndex >= 0 ? (Convert.ToString(row[toidFieldIndex]) ?? String.Empty) : String.Empty;
+                                string oldFragid = Convert.ToString(row[fragFieldIndex]) ?? String.Empty;
+                                if (fragidReassignments.TryGetValue((oldIncid, oldToid, oldFragid), out string newFragid))
+                                    oidToNewFragid[oid] = newFragid;
+                            }
+
                             // Create a history row.
                             DataRow historyRow = historyTable.NewRow();
 
@@ -2533,6 +2554,10 @@ namespace HLU.GISApplication
                                 {
                                     row[kvp.Key] = kvp.Value;
                                 }
+
+                                // Apply fragid reassignment if this feature needs a new fragid.
+                                if (oidToNewFragid.TryGetValue(oid, out string newFragid) && fragFieldIndex >= 0)
+                                    row[fragFieldIndex] = newFragid;
 
                                 row.Store();
                                 context.Invalidate(row);

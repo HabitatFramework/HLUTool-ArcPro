@@ -350,7 +350,7 @@ namespace HLU.UI.ViewModel
                     HluDataSet.incid_mm_linesRow row = table.Newincid_mm_linesRow();
                     row.incid = incid;
                     row.fragid = fragid;
-                    row.toid = String.Empty;  // NOT NULL column; no OS MasterMap toid for user-drawn features.
+                    // toid is left as NULL — user-drawn features have no OS MasterMap toid.
                     // Remaining habitat / geometry columns default to DBNull on a new row.
                     table.Addincid_mm_linesRow(row);
 
@@ -370,7 +370,7 @@ namespace HLU.UI.ViewModel
                     HluDataSet.incid_mm_pointsRow row = table.Newincid_mm_pointsRow();
                     row.incid = incid;
                     row.fragid = fragid;
-                    row.toid = String.Empty;  // NOT NULL column; no OS MasterMap toid for user-drawn features.
+                    // toid is left as NULL — user-drawn features have no OS MasterMap toid.
                     // Remaining habitat columns default to DBNull on a new row.
                     table.Addincid_mm_pointsRow(row);
 
@@ -390,7 +390,7 @@ namespace HLU.UI.ViewModel
                     HluDataSet.incid_mm_polygonsRow row = table.Newincid_mm_polygonsRow();
                     row.incid = incid;
                     row.fragid = fragid;
-                    row.toid = String.Empty;  // NOT NULL column; no OS MasterMap toid for user-drawn features.
+                    // toid is left as NULL — user-drawn features have no OS MasterMap toid.
                     // Remaining habitat fields and shape dimensions default to DBNull on a new row.
                     table.Addincid_mm_polygonsRow(row);
 

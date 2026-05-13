@@ -6309,6 +6309,8 @@ namespace HLU.Data.Model {
             
             private global::System.Data.DataColumn columnshape_area;
             
+            private global::System.Data.DataColumn columnpolygon_id;
+            
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             public incid_mm_polygonsDataTable() {
@@ -6418,6 +6420,14 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public global::System.Data.DataColumn polygon_idColumn {
+                get {
+                    return this.columnpolygon_id;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             [global::System.ComponentModel.Browsable(false)]
             public int Count {
                 get {
@@ -6464,7 +6474,8 @@ namespace HLU.Data.Model {
                         null,
                         null,
                         shape_length,
-                        shape_area};
+                        shape_area,
+                        null};
                 if ((parentlut_primaryRowByfk_incid_mm_polygons_lut_primary != null)) {
                     columnValuesArray[3] = parentlut_primaryRowByfk_incid_mm_polygons_lut_primary[0];
                 }
@@ -6481,11 +6492,9 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
-            public incid_mm_polygonsRow FindByincidtoidfragid(string incid, string toid, string fragid) {
+            public incid_mm_polygonsRow FindBypolygon_id(int polygon_id) {
                 return ((incid_mm_polygonsRow)(this.Rows.Find(new object[] {
-                            incid,
-                            toid,
-                            fragid})));
+                            polygon_id})));
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -6514,6 +6523,7 @@ namespace HLU.Data.Model {
                 this.columninterpqty = base.Columns["interpqty"];
                 this.columnshape_length = base.Columns["shape_length"];
                 this.columnshape_area = base.Columns["shape_area"];
+                this.columnpolygon_id = base.Columns["polygon_id"];
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -6537,14 +6547,13 @@ namespace HLU.Data.Model {
                 base.Columns.Add(this.columnshape_length);
                 this.columnshape_area = new global::System.Data.DataColumn("shape_area", typeof(double), null, global::System.Data.MappingType.Element);
                 base.Columns.Add(this.columnshape_area);
-                this.Constraints.Add(new global::System.Data.UniqueConstraint("Constraint1", new global::System.Data.DataColumn[] {
-                                this.columnincid,
-                                this.columntoid,
-                                this.columnfragid}, true));
+                this.columnpolygon_id = new global::System.Data.DataColumn("polygon_id", typeof(int), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnpolygon_id);
+                this.Constraints.Add(new global::System.Data.UniqueConstraint("Constraint2", new global::System.Data.DataColumn[] {
+                                this.columnpolygon_id}, true));
                 this.columnincid.AllowDBNull = false;
                 this.columnincid.Caption = "Incid";
                 this.columnincid.MaxLength = 12;
-                this.columntoid.AllowDBNull = false;
                 this.columntoid.Caption = "Toid";
                 this.columntoid.MaxLength = 20;
                 this.columnfragid.AllowDBNull = false;
@@ -6553,6 +6562,12 @@ namespace HLU.Data.Model {
                 this.columnhabsecond.MaxLength = 80;
                 this.columndetermqty.MaxLength = 2;
                 this.columninterpqty.MaxLength = 2;
+                this.columnpolygon_id.AutoIncrement = true;
+                this.columnpolygon_id.AutoIncrementSeed = -1;
+                this.columnpolygon_id.AutoIncrementStep = -1;
+                this.columnpolygon_id.AllowDBNull = false;
+                this.columnpolygon_id.ReadOnly = true;
+                this.columnpolygon_id.Unique = true;
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -19554,7 +19569,6 @@ namespace HLU.Data.Model {
                 this.columnincid.AllowDBNull = false;
                 this.columnincid.Caption = "Incid";
                 this.columnincid.MaxLength = 12;
-                this.columntoid.AllowDBNull = false;
                 this.columntoid.Caption = "Toid";
                 this.columntoid.MaxLength = 20;
                 this.columnfragid.AllowDBNull = false;
@@ -19938,7 +19952,6 @@ namespace HLU.Data.Model {
                 this.columnincid.AllowDBNull = false;
                 this.columnincid.Caption = "Incid";
                 this.columnincid.MaxLength = 12;
-                this.columntoid.AllowDBNull = false;
                 this.columntoid.Caption = "Toid";
                 this.columntoid.MaxLength = 20;
                 this.columnfragid.AllowDBNull = false;
@@ -22001,7 +22014,12 @@ namespace HLU.Data.Model {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             public string toid {
                 get {
-                    return ((string)(this[this.tableincid_mm_polygons.toidColumn]));
+                    if (this.IstoidNull()) {
+                        return null;
+                    }
+                    else {
+                        return ((string)(this[this.tableincid_mm_polygons.toidColumn]));
+                    }
                 }
                 set {
                     this[this.tableincid_mm_polygons.toidColumn] = value;
@@ -22117,6 +22135,17 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public int polygon_id {
+                get {
+                    return ((int)(this[this.tableincid_mm_polygons.polygon_idColumn]));
+                }
+                set {
+                    this[this.tableincid_mm_polygons.polygon_idColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             public lut_quality_interpretationRow lut_quality_interpretationRow {
                 get {
                     return ((lut_quality_interpretationRow)(this.GetParentRow(this.Table.ParentRelations["fk_incid_mm_polygons_lut_quality_interpretation"])));
@@ -22146,6 +22175,18 @@ namespace HLU.Data.Model {
                 set {
                     this.SetParentRow(value, this.Table.ParentRelations["fk_incid_mm_polygons_lut_primary"]);
                 }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public bool IstoidNull() {
+                return this.IsNull(this.tableincid_mm_polygons.toidColumn);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public void SettoidNull() {
+                this[this.tableincid_mm_polygons.toidColumn] = global::System.Convert.DBNull;
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -26454,7 +26495,12 @@ namespace HLU.Data.Model {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             public string toid {
                 get {
-                    return ((string)(this[this.tableincid_mm_lines.toidColumn]));
+                    if (this.IstoidNull()) {
+                        return null;
+                    }
+                    else {
+                        return ((string)(this[this.tableincid_mm_lines.toidColumn]));
+                    }
                 }
                 set {
                     this[this.tableincid_mm_lines.toidColumn] = value;
@@ -26598,6 +26644,18 @@ namespace HLU.Data.Model {
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public bool IstoidNull() {
+                return this.IsNull(this.tableincid_mm_lines.toidColumn);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public void SettoidNull() {
+                this[this.tableincid_mm_lines.toidColumn] = global::System.Convert.DBNull;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             public bool IshabprimaryNull() {
                 return this.IsNull(this.tableincid_mm_lines.habprimaryColumn);
             }
@@ -26686,7 +26744,12 @@ namespace HLU.Data.Model {
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             public string toid {
                 get {
-                    return ((string)(this[this.tableincid_mm_points.toidColumn]));
+                    if (this.IstoidNull()) {
+                        return null;
+                    }
+                    else {
+                        return ((string)(this[this.tableincid_mm_points.toidColumn]));
+                    }
                 }
                 set {
                     this[this.tableincid_mm_points.toidColumn] = value;
@@ -26810,6 +26873,18 @@ namespace HLU.Data.Model {
                 set {
                     this.SetParentRow(value, this.Table.ParentRelations["fk_incid_mm_points_lut_quality_interpretation"]);
                 }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public bool IstoidNull() {
+                return this.IsNull(this.tableincid_mm_points.toidColumn);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public void SettoidNull() {
+                this[this.tableincid_mm_points.toidColumn] = global::System.Convert.DBNull;
             }
             
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -35814,6 +35889,7 @@ SELECT matrix_id, incid, matrix FROM incid_ihs_matrix WHERE (matrix_id = @matrix
             tableMapping.ColumnMappings.Add("interpqty", "interpqty");
             tableMapping.ColumnMappings.Add("shape_length", "shape_length");
             tableMapping.ColumnMappings.Add("shape_area", "shape_area");
+            tableMapping.ColumnMappings.Add("polygon_id", "polygon_id");
             this._adapter.TableMappings.Add(tableMapping);
             this._adapter.DeleteCommand = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._adapter.DeleteCommand.Connection = this.Connection;
@@ -35947,10 +36023,8 @@ WHERE        (incid = @Original_incid) AND (toid = @Original_toid) AND (@IsNull_
             this._adapter.DeleteCommand.Parameters.Add(param);
             this._adapter.InsertCommand = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._adapter.InsertCommand.Connection = this.Connection;
-            this._adapter.InsertCommand.CommandText = @"INSERT INTO incid_mm_polygons
-                         (incid, toid, fragid, habprimary, habsecond, determqty, interpqty, shape_length, shape_area)
-VALUES        (@incid,@toid,@fragid,@habprimary,@habsecond,@determqty,@interpqty,@shape_length,@shape_area);
-SELECT incid, toid, fragid, habprimary, habsecond, determqty, interpqty, shape_length, shape_area FROM incid_mm_polygons WHERE (incid = @incid) AND (toid = @toid) AND (fragid = @fragid)";
+            this._adapter.InsertCommand.CommandText = @"INSERT INTO [incid_mm_polygons] ([incid], [toid], [fragid], [habprimary], [habsecond], [determqty], [interpqty], [shape_length], [shape_area]) VALUES (@incid, @toid, @fragid, @habprimary, @habsecond, @determqty, @interpqty, @shape_length, @shape_area);
+SELECT incid, toid, fragid, habprimary, habsecond, determqty, interpqty, shape_length, shape_area, polygon_id FROM incid_mm_polygons WHERE (polygon_id = SCOPE_IDENTITY())";
             this._adapter.InsertCommand.CommandType = global::System.Data.CommandType.Text;
             param = new global::Microsoft.Data.SqlClient.SqlParameter();
             param.ParameterName = "@incid";
@@ -36212,7 +36286,7 @@ SELECT incid, toid, fragid, habprimary, habsecond, determqty, interpqty, shape_l
             this._commandCollection[0] = new global::Microsoft.Data.SqlClient.SqlCommand();
             this._commandCollection[0].Connection = this.Connection;
             this._commandCollection[0].CommandText = "SELECT        incid, toid, fragid, habprimary, habsecond, determqty, interpqty, s" +
-                "hape_length, shape_area\r\nFROM            incid_mm_polygons";
+                "hape_length, shape_area, polygon_id\r\nFROM            incid_mm_polygons";
             this._commandCollection[0].CommandType = global::System.Data.CommandType.Text;
         }
         

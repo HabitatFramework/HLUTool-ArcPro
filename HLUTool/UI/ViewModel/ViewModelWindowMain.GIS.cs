@@ -1547,12 +1547,26 @@ namespace HLU.UI.ViewModel
             if (!IsEditOperationModeReady)
                 return false;
 
-            return (_gisSelection != null) && (_selectedIncidsInGISCount == 1) &&
-                ((_gisSelection.Rows.Count > 1) && (_selectedFragsInGISCount > 1) ||
-                (_gisSelection.Rows.Count == 1)) &&
-                (_filteredByMap == true) &&
-                ((_currentIncidToidsInGISCount < _currentIncidToidsInDBCount) ||
-                (_currentIncidFragsInGISCount < _currentIncidFragsInDBCount));
+            // There must be at least one feature selected in GIS.
+            bool hasSelection = _gisSelection != null;
+
+            // Only one INCID may be selected (logical split creates a new INCID from a subset).
+            bool singleIncid = _selectedIncidsInGISCount == 1;
+
+            // Either multiple distinct fragments are selected, or exactly one feature is
+            // selected (it can be split away from the remaining DB records for the same INCID).
+            bool validSelectionSize = (_gisSelection?.Rows.Count > 1 && _selectedFragsInGISCount > 1)
+                                   || (_gisSelection?.Rows.Count == 1);
+
+            // The selection must have originated from the map, not from a database filter.
+            bool fromMapSelection = _filteredByMap == true;
+
+            // The database must hold more toids or fragments for this INCID than are currently
+            // shown in GIS, confirming there are features left behind to split from.
+            bool hasRemainingDbFeatures = (_currentIncidToidsInGISCount < _currentIncidToidsInDBCount)
+                                       || (_currentIncidFragsInGISCount < _currentIncidFragsInDBCount);
+
+            return hasSelection && singleIncid && validSelectionSize && fromMapSelection && hasRemainingDbFeatures;
         }
 
         /// <summary>
@@ -1566,14 +1580,25 @@ namespace HLU.UI.ViewModel
             if (!IsEditOperationModeReady)
                 return false;
 
-            return (_gisSelection != null) && (_gisSelection.Rows.Count > 1) &&
-                (_filteredByMap == true) &&
-                (_selectedIncidsInGISCount > 1) && (_selectedFragsInGISCount > 1);
+            // More than one feature must be selected.
+            bool hasMultipleFeatures = _gisSelection != null && _gisSelection.Rows.Count > 1;
+
+            // The selection must have originated from the map, not from a database filter.
+            bool fromMapSelection = _filteredByMap == true;
+
+            // Multiple INCIDs must be selected (logical merge joins features from different INCIDs).
+            bool multipleIncids = _selectedIncidsInGISCount > 1;
+
+            // Multiple fragments must be present in the selection.
+            bool multipleFragments = _selectedFragsInGISCount > 1;
+
+            return hasMultipleFeatures && fromMapSelection && multipleIncids && multipleFragments;
         }
 
         /// <summary>
         /// Computes whether a physical split operation can be performed based on the current state.
         /// At least two features in selection that share the same incid, toid and fragid.
+        /// Not supported for point layers, where physical splitting is not meaningful.
         /// </summary>
         /// <returns><c>true</c> if a physical split can be performed; otherwise, <c>false</c>.</returns>
         public bool ComputeCanPhysicallySplit()
@@ -1582,14 +1607,29 @@ namespace HLU.UI.ViewModel
             if (!IsEditOperationModeReady)
                 return false;
 
-            return (_gisSelection != null) && (_gisSelection.Rows.Count > 1) &&
-                (_filteredByMap == true) &&
-                (_selectedIncidsInGISCount == 1) && (_selectedToidsInGISCount == 1) && (_selectedFragsInGISCount == 1);
+            // Physical split is not meaningful for point geometry layers.
+            if (_gisLayerType == HluGeometryTypes.Point)
+                return false;
+
+            // More than one feature must be selected.
+            bool hasMultipleFeatures = _gisSelection != null && _gisSelection.Rows.Count > 1;
+
+            // The selection must have originated from the map, not from a database filter.
+            bool fromMapSelection = _filteredByMap == true;
+
+            // All selected features must share exactly one INCID, one TOID, and one fragment —
+            // meaning they are duplicate polygon records for the same real-world feature.
+            bool sameSingleUnit = _selectedIncidsInGISCount == 1
+                               && _selectedToidsInGISCount == 1
+                               && _selectedFragsInGISCount == 1;
+
+            return hasMultipleFeatures && fromMapSelection && sameSingleUnit;
         }
 
         /// <summary>
         /// Computes whether a physical merge operation can be performed based on the current state.
         /// At least one feature in selection that share the same incid and toid but *not* the same fragid.
+        /// Not supported for point layers; use logical merge to group point features under one INCID.
         /// </summary>
         /// <returns><c>true</c> if a physical merge operation can be performed; otherwise, <c>false</c>.</returns>
         public bool ComputeCanPhysicallyMerge()
@@ -1598,9 +1638,23 @@ namespace HLU.UI.ViewModel
             if (!IsEditOperationModeReady)
                 return false;
 
-            return (_gisSelection != null) && (_gisSelection.Rows.Count > 1) &&
-                (_filteredByMap == true) &&
-                (_selectedIncidsInGISCount == 1) && (_selectedToidsInGISCount == 1) && (_selectedFragsInGISCount > 1);
+            // Physical merge is not meaningful for point geometry layers.
+            if (_gisLayerType == HluGeometryTypes.Point)
+                return false;
+
+            // More than one feature must be selected.
+            bool hasMultipleFeatures = _gisSelection != null && _gisSelection.Rows.Count > 1;
+
+            // The selection must have originated from the map, not from a database filter.
+            bool fromMapSelection = _filteredByMap == true;
+
+            // All selected features must share the same INCID and TOID but have different
+            // fragment IDs — i.e. separate fragments of the same polygon that can be merged.
+            bool sameIncidAndToidMultipleFrags = _selectedIncidsInGISCount == 1
+                                              && _selectedToidsInGISCount == 1
+                                              && _selectedFragsInGISCount > 1;
+
+            return hasMultipleFeatures && fromMapSelection && sameIncidAndToidMultipleFrags;
         }
 
         /// <summary>

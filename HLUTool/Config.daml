@@ -87,9 +87,11 @@
 
 				<!-- ESRI Edit Tools group -->
 				<group id="HLUTool_Group_Geometry" caption="Geometry" keytip="G5">
-					<button refID="esri_editing_SplitCommand" size ="middle" />
-					<button refID="esri_editing_MergeFeatures" size ="middle" />
+					<button refID="esri_editing_ShowCreateFeaturesBtn" size="middle" />
+					<button refID="esri_editing_ShowEditFeaturesBtn" size="middle" />
 					<button refID="esri_editing_EditVerticesModifyFeature" size ="middle" />
+					<button refID="esri_editing_SplitCommand" size ="middle" separator="true" />
+					<button refID="esri_editing_MergeFeatures" size ="middle" />
 				</group>
 
 				<!-- Filter group -->

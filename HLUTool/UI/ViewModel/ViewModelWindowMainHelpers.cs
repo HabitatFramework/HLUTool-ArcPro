@@ -96,8 +96,17 @@ namespace HLU.UI.ViewModel
                         cond.Column = selectionTable.Columns[keyColumOrdinals[k]];
                         cond.Table = targetTable;
                         cond.ColumnSystemType = selectionTable.Columns[k].DataType;
-                        cond.Operator = "=";
-                        cond.Value = r[keyColumOrdinals[k]];
+                        object rawValue = r[keyColumOrdinals[k]];
+                        if (rawValue == DBNull.Value || rawValue == null)
+                        {
+                            cond.Operator = "IS NULL";
+                            cond.Value = null;
+                        }
+                        else
+                        {
+                            cond.Operator = "=";
+                            cond.Value = rawValue;
+                        }
                         if (k == keyColumOrdinals.Length - 1)
                             cond.CloseParentheses = ")";
                         else

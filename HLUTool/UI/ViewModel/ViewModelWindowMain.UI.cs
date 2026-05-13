@@ -5857,8 +5857,13 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return ((IsFiltered && (IncidCurrentRowIndex < _incidSelection.Rows.Count)) ||
-                    (!IsFiltered && (IncidCurrentRowIndex < _incidRowCount)));
+                // When a filter is active, compare against the number of filtered records.
+                bool withinFilteredRange = IsFiltered && IncidCurrentRowIndex < _incidSelection.Rows.Count;
+
+                // When no filter is active, compare against the total row count.
+                bool withinUnfilteredRange = !IsFiltered && IncidCurrentRowIndex < _incidRowCount;
+
+                return withinFilteredRange || withinUnfilteredRange;
             }
         }
 
@@ -5887,11 +5892,15 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Is the requested record less than the total number of records
-                // if filtered, or the total row count if not filtered?
-                return (IncidCurrentRowIndex > 1) ||
-                    ((IsFiltered && (IncidCurrentRowIndex < _incidSelection.Rows.Count)) ||
-                    (!IsFiltered && (IncidCurrentRowIndex < _incidRowCount)));
+                // Can navigate backward (not already on the first record).
+                bool canGoBack = IncidCurrentRowIndex > 1;
+
+                // Can navigate forward: when filtered compare against the selection size,
+                // otherwise compare against the total row count.
+                bool canGoForward = (IsFiltered && IncidCurrentRowIndex < _incidSelection.Rows.Count)
+                                 || (!IsFiltered && IncidCurrentRowIndex < _incidRowCount);
+
+                return canGoBack || canGoForward;
             }
         }
 
@@ -5986,14 +5995,20 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Must be in a mode that allows edits and ready for edit operations (includes CanEdit + Reason/Process selection),
-                // the user must be authorised for bulk updates,
-                // we must not already be in OSMM Review or OSMM Bulk mode,
-                // and either there must be a filter active or we must already be in Bulk Update mode (i.e. we're clicking the Apply button to action the bulk update).
-                return IsEditReady &&
-                    CanUserBulkUpdate == true &&
-                    !WorkMode.HasAny(WorkMode.OSMMReview | WorkMode.OSMMBulk) &&
-                    (IsFiltered || WorkMode.HasAll(WorkMode.Bulk));
+                // Must be in edit-ready state (CanEdit + Reason/Process both selected).
+                bool editReady = IsEditReady;
+
+                // The current user must be authorised for bulk updates.
+                bool userAuthorised = CanUserBulkUpdate == true;
+
+                // Must not already be in OSMM Review or OSMM Bulk mode.
+                bool notInOSMMMode = !WorkMode.HasAny(WorkMode.OSMMReview | WorkMode.OSMMBulk);
+
+                // Either a filter must be active, or we must already be in Bulk Update mode
+                // (the latter allows the Apply button to be clicked while already in bulk mode).
+                bool filterOrAlreadyBulk = IsFiltered || WorkMode.HasAll(WorkMode.Bulk);
+
+                return editReady && userAuthorised && notInOSMMMode && filterOrAlreadyBulk;
             }
         }
 
@@ -6155,14 +6170,19 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Must be in edit mode,
-                // there must be proposed OSMM Updates for the current filter,
-                // the user must be authorised for bulk updates,
-                // and we must not already be in OSMM Review or OSMM Bulk mode.
-                return IsEditMode &&
-                    AnyOSMMUpdates == true &&
-                    CanUserBulkUpdate == true &&
-                    !WorkMode.HasAny(WorkMode.Bulk | WorkMode.OSMMBulk);
+                // Must be in edit mode (layer editable by the authorised user).
+                bool inEditMode = IsEditMode;
+
+                // There must be proposed OSMM updates present in the database.
+                bool hasOSMMUpdates = AnyOSMMUpdates == true;
+
+                // The current user must be authorised for bulk updates.
+                bool userAuthorised = CanUserBulkUpdate == true;
+
+                // Must not already be in standard Bulk or OSMM Bulk mode.
+                bool notInBulkMode = !WorkMode.HasAny(WorkMode.Bulk | WorkMode.OSMMBulk);
+
+                return inEditMode && hasOSMMUpdates && userAuthorised && notInBulkMode;
             }
         }
 
@@ -6256,13 +6276,21 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Prevent OSMM updates being actioned too quickly.
-                // Check if there are no proposed OSMM Updates
-                // for the current filter.
-                return (_osmmUpdating == false &&
-                    _osmmUpdatesEmpty == false &&
-                    _incidOSMMUpdatesStatus != null &&
-                    (_incidOSMMUpdatesStatus > 0 || _incidOSMMUpdatesStatus < -1));
+                // An OSMM update must not currently be in progress (prevents double-actioning).
+                bool notUpdating = _osmmUpdating == false;
+
+                // The OSMM update queue must not be empty.
+                bool updatesRemaining = _osmmUpdatesEmpty == false;
+
+                // The current incid must have an OSMM update status value.
+                bool hasStatus = _incidOSMMUpdatesStatus != null;
+
+                // The status must represent a proposed update (> 0) or a previously
+                // rejected update (< -1) that can be re-actioned.
+                bool actionableStatus = hasStatus
+                    && (_incidOSMMUpdatesStatus > 0 || _incidOSMMUpdatesStatus < -1);
+
+                return notUpdating && updatesRemaining && actionableStatus;
             }
         }
 
@@ -6380,10 +6408,19 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return IsEditMode &&
-                    !WorkMode.HasAny(WorkMode.OSMMReview | WorkMode.Bulk) &&
-                    IncidOSMMStatus > 0 &&
-                    IncidOSMMHabitatPrimary != null;
+                // Must be in edit mode (layer editable by the authorised user).
+                bool inEditMode = IsEditMode;
+
+                // Must not be in OSMM Review or standard Bulk mode.
+                bool normalEditMode = !WorkMode.HasAny(WorkMode.OSMMReview | WorkMode.Bulk);
+
+                // The current incid must have a proposed OSMM update (status > 0).
+                bool hasProposedUpdate = IncidOSMMStatus > 0;
+
+                // The OSMM update must include a primary habitat code to apply.
+                bool hasPrimaryHabitat = IncidOSMMHabitatPrimary != null;
+
+                return inEditMode && normalEditMode && hasProposedUpdate && hasPrimaryHabitat;
             }
         }
 
@@ -6395,16 +6432,21 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // If in edit mode,
-                // and not in a bulk mode,
-                // and a proposed OSMM update is showing,
-                // and the OSMM update status for the current incid is greater than 0 (i.e. there are proposed updates for this incid)
-                return IsEditMode &&
-                    !WorkMode.HasAny(WorkMode.OSMMReview | WorkMode.Bulk) &&
-                    (_showOSMMUpdates == "Always" ||
-                    _showOSMMUpdates == "When present" ||
-                    _showOSMMUpdates == "When Outstanding") &&
-                    IncidOSMMStatus > 0;
+                // Must be in edit mode (layer editable by the authorised user).
+                bool inEditMode = IsEditMode;
+
+                // Must not be in OSMM Review or standard Bulk mode.
+                bool normalEditMode = !WorkMode.HasAny(WorkMode.OSMMReview | WorkMode.Bulk);
+
+                // The OSMM updates panel must be configured to show updates.
+                bool updatesVisible = _showOSMMUpdates == "Always"
+                                   || _showOSMMUpdates == "When present"
+                                   || _showOSMMUpdates == "When Outstanding";
+
+                // The current incid must have a proposed OSMM update (status > 0).
+                bool hasProposedUpdate = IncidOSMMStatus > 0;
+
+                return inEditMode && normalEditMode && updatesVisible && hasProposedUpdate;
             }
         }
 
@@ -6416,16 +6458,21 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // If in edit mode,
-                // and not in a bulk mode,
-                // and a proposed OSMM update is showing,
-                // and the OSMM update status for the current incid is greater than 0 (i.e. there are proposed updates for this incid)
-                return IsEditMode &&
-                    !WorkMode.HasAny(WorkMode.OSMMReview | WorkMode.Bulk) &&
-                    (_showOSMMUpdates == "Always" ||
-                    _showOSMMUpdates == "When present" ||
-                    _showOSMMUpdates == "When Outstanding") &&
-                    IncidOSMMStatus > 0;
+                // Must be in edit mode (layer editable by the authorised user).
+                bool inEditMode = IsEditMode;
+
+                // Must not be in OSMM Review or standard Bulk mode.
+                bool normalEditMode = !WorkMode.HasAny(WorkMode.OSMMReview | WorkMode.Bulk);
+
+                // The OSMM updates panel must be configured to show updates.
+                bool updatesVisible = _showOSMMUpdates == "Always"
+                                   || _showOSMMUpdates == "When present"
+                                   || _showOSMMUpdates == "When Outstanding";
+
+                // The current incid must have a proposed OSMM update (status > 0).
+                bool hasProposedUpdate = IncidOSMMStatus > 0;
+
+                return inEditMode && normalEditMode && updatesVisible && hasProposedUpdate;
             }
         }
 
@@ -6465,15 +6512,22 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Must be in a mode that allows edits and ready for edit operations (includes CanEdit + Reason/Process selection),
-                // there must be proposed OSMM Updates for the current filter,
-                // the user must be authorised for bulk updates,
-                // and we must not already be in standard Bulk mode (unless already in OSMM Bulk mode).
-                // Switching directly from OSMM Review mode to OSMM Bulk mode is allowed.
-                return IsEditReady &&
-                    AnyOSMMUpdates == true &&
-                    CanUserBulkUpdate == true &&
-                    (!WorkMode.HasAll(WorkMode.Bulk) || WorkMode.HasAll(WorkMode.OSMMBulk) || WorkMode.HasAll(WorkMode.OSMMReview));
+                // Must be in edit-ready state (CanEdit + Reason/Process both selected).
+                bool editReady = IsEditReady;
+
+                // There must be proposed OSMM updates present in the database.
+                bool hasOSMMUpdates = AnyOSMMUpdates == true;
+
+                // The current user must be authorised for bulk updates.
+                bool userAuthorised = CanUserBulkUpdate == true;
+
+                // Must not be in standard Bulk mode, unless already in OSMM Bulk or OSMM Review
+                // mode (switching between OSMM modes is allowed).
+                bool modeCompatible = !WorkMode.HasAll(WorkMode.Bulk)
+                                   || WorkMode.HasAll(WorkMode.OSMMBulk)
+                                   || WorkMode.HasAll(WorkMode.OSMMReview);
+
+                return editReady && hasOSMMUpdates && userAuthorised && modeCompatible;
             }
         }
 
@@ -6577,10 +6631,14 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return IncidCurrentRow != null && _copySwitches != null &&
-                    typeof(WindowMainCopySwitches).GetProperties().Where(p => p.Name.StartsWith("Copy"))
-                    .Any(p => (bool)typeof(WindowMainCopySwitches).GetProperty(p.Name)
-                        .GetValue(_copySwitches, null));
+                // There must be a current incid row and copy switches must be configured.
+                if (IncidCurrentRow == null || _copySwitches == null)
+                    return false;
+
+                // At least one 'Copy*' switch must be enabled.
+                return typeof(WindowMainCopySwitches).GetProperties()
+                    .Where(p => p.Name.StartsWith("Copy"))
+                    .Any(p => (bool)typeof(WindowMainCopySwitches).GetProperty(p.Name).GetValue(_copySwitches, null));
             }
         }
 
@@ -6592,10 +6650,14 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return IncidCurrentRow != null && _copySwitches != null &&
-                    typeof(WindowMainCopySwitches).GetProperties().Where(p => !p.Name.StartsWith("Copy"))
-                    .Any(p => typeof(WindowMainCopySwitches).GetProperty(p.Name)
-                        .GetValue(_copySwitches, null) != null);
+                // There must be a current incid row and copy switches must be configured.
+                if (IncidCurrentRow == null || _copySwitches == null)
+                    return false;
+
+                // At least one non-'Copy*' switch (i.e. a paste target) must hold a value.
+                return typeof(WindowMainCopySwitches).GetProperties()
+                    .Where(p => !p.Name.StartsWith("Copy"))
+                    .Any(p => typeof(WindowMainCopySwitches).GetProperty(p.Name).GetValue(_copySwitches, null) != null);
             }
         }
 

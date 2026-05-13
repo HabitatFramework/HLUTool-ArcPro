@@ -409,8 +409,10 @@ namespace HLU.UI.ViewModel
                     ShowInfo($"{itemType}{(_currentIncidFragsInGISCount == 1 ? "" : "s")} may have been split in GIS but not physically split using HLU Tool.", Messagecategory);
             }
             // Check if there are multiple fragments in GIS that share the same incid and toid.
+            // Physical merge is not applicable for point features.
             else if (_selectedFragsInGISCount > 1 &&
-                (_selectedIncidsInGISCount == 1) && (_selectedToidsInGISCount == 1))
+                (_selectedIncidsInGISCount == 1) && (_selectedToidsInGISCount == 1) &&
+                (_gisApp == null || _gisApp.HluGeometryType != HluGeometryTypes.Point))
             {
                 // Show informational message that physical merge can be performed if desired.
                 if (showMessage)
