@@ -179,6 +179,7 @@ namespace HLU.UI.ViewModel
             if (selectTable.Rows.Count == 0)
                 return false;
 
+            // Create the merge features window.
             _mergeFeaturesWindow = new WindowMergeFeatures
             {
                 // Set ArcGIS Pro as the parent.

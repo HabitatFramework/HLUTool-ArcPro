@@ -146,6 +146,15 @@ namespace HLU.Data
         }
 
         /// <summary>
+        /// Gets or sets the GIS layer geometry type used to select the correct site ID column.
+        /// </summary>
+        public HluGeometryTypes GisLayerType
+        {
+            get => _gisLayerType;
+            set => _gisLayerType = value;
+        }
+
+        /// <summary>
         /// Gets the SiteID from lut_site_id table based on GIS layer type.
         /// </summary>
         /// <value>The SiteID.</value>

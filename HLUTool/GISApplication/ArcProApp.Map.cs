@@ -1127,6 +1127,7 @@ namespace HLU.GISApplication
             /// <param name="featureClass">The feature class of the layer.</param>
             /// <param name="hluFieldMap">The field map for the HLU layer.</param>
             /// <param name="hluFieldNames">The field names for the HLU layer.</param>
+            /// <param name="geometryType">The geometry type of the HLU layer.</param>
             private HluLayerCheckResult(
                 bool isHlu,
                 FeatureLayer featureLayer,
@@ -1160,6 +1161,7 @@ namespace HLU.GISApplication
             /// <param name="featureClass">The feature class of the layer.</param>
             /// <param name="hluFieldMap">The field map for the HLU layer.</param>
             /// <param name="hluFieldNames">The field names for the HLU layer.</param>
+            /// <param name="geometryType">The geometry type of the HLU layer.</param>
             /// <returns>
             /// An <see cref="HluLayerCheckResult"/> representing a valid HLU layer check result.
             /// </returns>

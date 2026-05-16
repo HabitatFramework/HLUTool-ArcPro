@@ -1473,6 +1473,7 @@ namespace HLU.UI.ViewModel
                             RemoveFromErrorList(_habitatWarnings, columnName);
                         }
                         else if (!String.IsNullOrEmpty(IncidPrimary) && IsNotBulkMode
+                            && _incidCurrentRow != null
                             && _primaryCodes != null && _primaryCodes.Count > 0
                             && !_primaryCodes.Any(p => p.Code == IncidPrimary))
                         {
@@ -2387,6 +2388,11 @@ namespace HLU.UI.ViewModel
                 if (detectedGeometryType != _gisLayerType)
                 {
                     _gisLayerType = detectedGeometryType;
+
+                    // Sync the geometry type on the RecordIds object so that SiteID
+                    // returns the correct site ID for the newly active layer type.
+                    if (_recIDs != null)
+                        _recIDs.GisLayerType = _gisLayerType;
 
                     // Reinitialise GIS ID columns for the new geometry table.
                     int result;
@@ -3796,6 +3802,10 @@ namespace HLU.UI.ViewModel
                         String.Format(loadWhereClauseTemplate,
                             _db.QuoteValue(_recIDs.IncidString(seekIncidNumber)),
                             _db.QuoteValue(_recIDs.IncidString(seekIncidNumber + IncidPageSize))), true);
+
+                    // If no rows were loaded, treat as failure.
+                    if (_hluDS.incid.Count == 0)
+                        throw new Exception("No rows returned from the database for the first incid.");
 
                     // Store the min and max row numbers in the page (max is inclusive).
                     _incidPageRowNoMin = seekRowNumber;

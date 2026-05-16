@@ -60,6 +60,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override async void OnClick()
         {
+            // Insert the features, with all features getting the same new INCID.
             try
             {
                 await _viewModel.InsertFeatureSameIncidAsync();
@@ -75,6 +76,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override void OnUpdate()
         {
+            // If the main ViewModel is not available, disable the button and show a tooltip indicating that the main window is not available.
             if (_viewModel == null)
             {
                 Enabled = false;
@@ -82,6 +84,7 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
+            // If the tool is processing, disable the button and show a tooltip indicating why.
             if (_viewModel.IsToolProcessing)
             {
                 Enabled = false;
@@ -89,9 +92,11 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
+            // Enable or disable the button based on CanInsertFeatureSeparateIncid and main window visibility.
             Enabled = _viewModel.CanInsertFeatureSameIncid &&
                       _viewModel.GridMainVisibility == Visibility.Visible;
 
+            // Set the disabled tool tip text (for when it is disabled).
             DisabledTooltip = "Unavailable when:\n\u2022 No reason or process are selected\n" +
                               "\u2022 The selected features already have an INCID\n" +
                               "\u2022 The main window is not visible";

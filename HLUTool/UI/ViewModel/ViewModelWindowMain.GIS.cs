@@ -803,8 +803,10 @@ namespace HLU.UI.ViewModel
         /// Select the current incid record on the map.
         /// </summary>
         /// <param name="updateIncidSelection">Should the incid selection be updated afterwards?</param>
+        /// <param name="suppressNoFeaturesWarning">If <c>true</c>, suppresses the "No features found" warning
+        /// when the incid has no features in the active layer (used during auto-navigation).</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        public async Task SelectOnMapAsync(bool updateIncidSelection)
+        public async Task SelectOnMapAsync(bool updateIncidSelection, bool suppressNoFeaturesWarning = false)
         {
             // Check there is a current row
             if (IncidCurrentRow == null)
@@ -828,11 +830,12 @@ namespace HLU.UI.ViewModel
                 // Save the current table of selected GIS features.
                 prevGISSelection = _gisSelection;
 
+                // Determine if a filter with more than one incid is currently active
+                // (must be checked before resetting _incidSelection).
+                bool multiIncidFilter = (IsFiltered && prevIncidSelection != null && prevIncidSelection.Rows.Count > 1);
+
                 // Reset the table of selected incids.
                 _incidSelection = NewIncidSelectionTable();
-
-                // Determine if a filter with more than one incid is currently active.
-                bool multiIncidFilter = (IsFiltered && _incidSelection.Rows.Count > 1);
 
                 // Set the table of selected incids to the current incid.
                 DataRow selRow = _incidSelection.NewRow();
@@ -917,8 +920,10 @@ namespace HLU.UI.ViewModel
                 // Warn the user that no features were found in GIS.
                 if (_gisSelection == null || _gisSelection.Rows.Count == 0)
                 {
-                    // Display a warning message.
-                    ShowWarning("No features for incid found in active layer.", MessageCategory.GIS);
+                    // Only display the warning when not suppressed (e.g. during auto-navigation
+                    // the incid may simply have no features in the currently active layer).
+                    if (!suppressNoFeaturesWarning)
+                        ShowWarning("No features for incid found in active layer.", MessageCategory.GIS);
 
                     return;
                 }
@@ -1011,7 +1016,7 @@ namespace HLU.UI.ViewModel
                 AnalyzeGisSelectionSet(true);
 
                 // Update the number of features found in the database.
-                _selectedFragsInDBCount = await ExpectedSelectionFeatures(_incidSelectionWhereClause);
+                _selectedFragsInDBCount = await ExpectedSelectionFeaturesAsync(_incidSelectionWhereClause);
 
                 // Store the number of incids found in the database
                 _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -1124,7 +1129,7 @@ namespace HLU.UI.ViewModel
 
                 // Find the expected number of features to be selected in GIS
                 // (by querying the database).
-                int expectedNumFeatures = await ExpectedSelectionFeatures(whereClause);
+                int expectedNumFeatures = await ExpectedSelectionFeaturesAsync(whereClause);
 
                 // Find the expected number of incids to be selected in GIS.
                 int expectedNumIncids = _incidSelection.Rows.Count;
@@ -1220,18 +1225,21 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="whereClause">The list of where clause conditions.</param>
         /// <returns>A task of an integer of the number of fragments expected to be selected.</returns>
-        private async Task<int> ExpectedSelectionFeatures(List<List<SqlFilterCondition>> whereClause)
+        private async Task<int> ExpectedSelectionFeaturesAsync(List<List<SqlFilterCondition>> whereClause)
         {
             int numFragments = 0;
 
             // Track distinct TOIDs across all chunks for an exact unique count.
             HashSet<string> distinctToids = new(StringComparer.OrdinalIgnoreCase);
 
+            // If there is a selection and from tables to query against (and the where clause isn't null or empty).
             if ((_incidSelection != null) && (_incidSelection.Rows.Count > 0) &&
                 (whereClause != null) && (whereClause.Count > 0))
             {
                 try
                 {
+                    // Set up the from tables and join conditions for the SQL query based on the
+                    // tables in the where clause (which may include joined tables such as the incid table).
                     DataTable t = GisMMTable;
                     DataColumn tIncidColumn = t.Columns[_hluDS.incid_mm_polygons.incidColumn.ColumnName];
                     DataTable[] selTables = [t];
@@ -1248,8 +1256,7 @@ namespace HLU.UI.ViewModel
                         (rel = GetRelation(_hluDS.incid, st)) != null ?
                         new SqlFilterCondition("AND", t, tIncidColumn, typeof(DataColumn), "(", ")", rel.ChildColumns[0]) : null).Where(c => c != null);
 
-                    // If there is only one long list then chunk
-                    // it up into smaller lists.
+                    // If there is only one long list then chunk it up into smaller lists.
                     if (whereClause.Count == 1)
                     {
                         try
@@ -1288,6 +1295,7 @@ namespace HLU.UI.ViewModel
                             cond.CloseParentheses = "))";
                         }
 
+                        // Count the number of fragments for this chunk of where conditions (appended to the join conditions).
                         numFragments += await _db.SqlCountAsync(selTables, "*", [.. joinCond, .. whereClause[i]]);
                     }
                 }
@@ -1308,15 +1316,18 @@ namespace HLU.UI.ViewModel
         /// <param name="sqlFromTables">The list of data tables.</param>
         /// <param name="sqlWhereClause">The where clause string.</param>
         /// <returns>A task of an integer of the number of fragments expected to be selected.</returns>
-        private async Task<int> ExpectedSelectionFeatures(List<DataTable> sqlFromTables, string sqlWhereClause)
+        private async Task<int> ExpectedSelectionFeaturesAsync(List<DataTable> sqlFromTables, string sqlWhereClause)
         {
             int numFragments = 0;
 
+            // If there is a selection and from tables to query against (and the where clause isn't null or empty).
             if ((_incidSelection != null) && (_incidSelection.Rows.Count > 0) &&
                 sqlFromTables.Count != 0)
             {
                 try
                 {
+                    // Set up the from tables and join conditions for the SQL query based on the
+                    // tables in the where clause (which may include joined tables such as the incid table).
                     DataTable t = GisMMTable;
                     DataColumn tIncidColumn = t.Columns[_hluDS.incid_mm_polygons.incidColumn.ColumnName];
                     DataTable[] selTables = [t];

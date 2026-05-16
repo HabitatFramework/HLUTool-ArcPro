@@ -60,6 +60,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override void OnUpdate()
         {
+            // If the main ViewModel is not available, disable the button and show a tooltip indicating that the main window is not available.
             if (_viewModel == null)
             {
                 Enabled = false;
@@ -67,6 +68,7 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
+            // If the tool is processing, disable the menu and show a tooltip indicating why.
             if (_viewModel.IsToolProcessing)
             {
                 Enabled = false;
@@ -74,6 +76,7 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
+            // Enable or disable the button based on CanInsertFeature and main window visibility.
             Enabled = _viewModel.CanInsertFeature && _viewModel.GridMainVisibility == Visibility.Visible;
 
             DisabledTooltip = "Unavailable when:\n\u2022 No reason or process are selected\n" +

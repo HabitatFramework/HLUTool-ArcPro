@@ -2312,23 +2312,30 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
-        /// Logically merges the currently selected features by updating their incid to <paramref name="keepIncid"/>
-        /// and copying the non-key attributes from the kept feature onto the merged features.
+        /// Logically merges the currently selected features by updating their incid to <paramref
+        /// name="keepIncid"/> and copying the non-key attributes from the kept feature onto the
+        /// merged features.
         /// </summary>
         /// <remarks>
-        /// This performs edits using an <see cref="EditOperation"/> so it works for all supported ArcGIS Pro data sources
-        /// and supports undo/redo.
+        /// This performs edits using an <see cref="EditOperation"/> so it works for all supported
+        /// ArcGIS Pro data sources and supports undo/redo.
         ///
-        /// Only selected features whose incid is NOT <paramref name="keepIncid"/> are updated. The feature to keep is
-        /// taken from the current selection where incid equals <paramref name="keepIncid"/>. If none is found, an
-        /// exception is thrown.
+        /// Only selected features whose incid is NOT <paramref name="keepIncid"/> are updated. The
+        /// feature to keep is taken from the current selection where incid equals <paramref
+        /// name="keepIncid"/>. If none is found, an exception is thrown.
         ///
-        /// A history table is returned containing the requested history fields plus the geometry columns, for the
-        /// features that were updated (i.e. the features that were merged into <paramref name="keepIncid"/>).
+        /// A history table is returned containing the requested history fields plus the geometry
+        /// columns, for the features that were updated (i.e. the features that were merged into
+        /// <paramref name="keepIncid"/>).
         /// </remarks>
         /// <param name="keepIncid">The incid to keep.</param>
         /// <param name="historyColumns">The history columns requested by the view model.</param>
         /// <param name="editOperation">The edit operation to queue edits onto.</param>
+        /// <param name="fragidReassignments">
+        /// Optional dictionary of fragid reassignments for merged features, keyed by (oldIncid,
+        /// oldToid, oldFragid) and valued by newFragid. If provided, the method will attempt to
+        /// reassign fragids on merged features according to this mapping.
+        /// </param>
         /// <returns>A history table for the updated features.</returns>
         public async Task<DataTable> MergeFeaturesLogicallyAsync(
             string keepIncid,
@@ -2396,6 +2403,7 @@ namespace HLU.GISApplication
                 _hluLayerStructure.incidColumn.ColumnName,
                 _hluLayerStructure.toidColumn.ColumnName,
                 _hluLayerStructure.fragidColumn.ColumnName,
+
                 // Common GIS/system fields (don’t rely on typed dataset columns).
                 "FID",
                 "OBJECTID",

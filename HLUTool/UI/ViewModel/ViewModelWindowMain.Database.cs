@@ -400,6 +400,15 @@ namespace HLU.UI.ViewModel
                 return false;
             }
 
+            // Check if the current incid is not found in the active layer at all
+            // (a GIS selection exists but the current incid has no features in it).
+            if (_gisSelection != null && _currentIncidFragsInGISCount == 0 && _currentIncidFragsInDBCount > 0)
+            {
+                if (showMessage)
+                    ShowWarning("Current incid not found in the active layer.", Messagecategory);
+                return false;
+            }
+
             // Check if the GIS features have been physically split by the user but not processed in HLU yet.
             if ((_currentIncidToidsInGISCount == _currentIncidToidsInDBCount) &&
                (_currentIncidFragsInGISCount > _currentIncidFragsInDBCount))
@@ -2749,7 +2758,7 @@ namespace HLU.UI.ViewModel
                 if (IsFiltered)
                 {
                     // Find the expected number of features to be selected in GIS.
-                    _selectedFragsInDBCount = await ExpectedSelectionFeatures(whereTables, newWhereClause);
+                    _selectedFragsInDBCount = await ExpectedSelectionFeaturesAsync(whereTables, newWhereClause);
 
                     // Store the number of incids found in the database
                     _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -2938,7 +2947,7 @@ namespace HLU.UI.ViewModel
                 if (IsFiltered && selectInGIS)
                 {
                     // Find the expected number of features to be selected in GIS.
-                    _selectedFragsInDBCount = await ExpectedSelectionFeatures(whereTables, newWhereClause);
+                    _selectedFragsInDBCount = await ExpectedSelectionFeaturesAsync(whereTables, newWhereClause);
 
                     // Store the number of incids found in the database
                     _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -3332,7 +3341,7 @@ namespace HLU.UI.ViewModel
                     // If not filtered then seek to the current row index in the incid table and set
                     // the current row.
                     int newRowIndex = SeekIncid(_incidCurrentRowIndex);
-                    if ((canMove = newRowIndex != -1))
+                    if ((canMove = newRowIndex != -1 && newRowIndex < _hluDS.incid.Count))
                         _incidCurrentRow = _hluDS.incid[newRowIndex];
                 }
                 else
@@ -3393,7 +3402,9 @@ namespace HLU.UI.ViewModel
                         if (_autoSelectOnGis && IsNotBulkMode && !_filteredByMap)
                         {
                             // Select the current incid record on the Map.
-                            await SelectOnMapAsync(false);
+                            // Suppress the "no features" warning during auto-navigation because
+                            // the incid may legitimately have no features in the active layer.
+                            await SelectOnMapAsync(false, suppressNoFeaturesWarning: true);
                         }
 
                         // Count the number of toids and fragments for the current incid
@@ -3409,8 +3420,6 @@ namespace HLU.UI.ViewModel
                         ClearForm();
                     }
 
-                    OnPropertyChanged(nameof(IncidCurrentRowIndex));
-                    OnPropertyChanged(nameof(OSMMIncidCurrentRowIndex));
                     OnPropertyChanged(nameof(IncidCurrentRow));
 
                     // Refresh all statuses, headers and fields
@@ -3425,10 +3434,15 @@ namespace HLU.UI.ViewModel
                     RefreshSource2();
                     RefreshSource3();
                     RefreshHistory();
-                }
+                    }
 
-                // Update the editing control state
-                CheckEditingControlState();
+                    // Always notify the row index so the navigation counter stays
+                    // in sync even when the seek fails or no record was retrieved.
+                    OnPropertyChanged(nameof(IncidCurrentRowIndex));
+                    OnPropertyChanged(nameof(OSMMIncidCurrentRowIndex));
+
+                    // Update the editing control state
+                    CheckEditingControlState();
             }
             catch (Exception ex)
             {

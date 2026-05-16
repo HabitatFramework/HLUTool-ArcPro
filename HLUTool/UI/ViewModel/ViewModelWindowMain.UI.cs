@@ -1451,9 +1451,9 @@ namespace HLU.UI.ViewModel
 
                 if (!String.IsNullOrEmpty(_habitatType))
                 {
-                    // Load all primary habitat codes where the primary habitat code
-                    // and primary habitat category are both flagged as local and
-                    // are related to the current habitat type.
+                    // Load all primary habitat codes where the primary habitat code and primary
+                    // habitat category are both flagged as local, are related to the current
+                    // habitat type, and relate to the current layer's geometry type.
 
                     // Combine both primary and secondary-derived codes,
                     // but allow only one entry per code, preferring the one marked as preferred.
@@ -1529,8 +1529,9 @@ namespace HLU.UI.ViewModel
                         _primaryCodes.Add(item);
                     }
 
-                    // Load all secondary habitat codes where the habitat type
-                    // has one of more optional codes.
+                    // Load all secondary habitat codes where the habitat type has one of more
+                    // optional codes, and the secondary habitat code relates to the current layer's
+                    // geometry type.
                     IEnumerable<HluDataSet.lut_secondaryRow> secondaryCodesOptional =
                         [.. (from hts in _lutHabitatTypeSecondary
                          join s in _lutSecondary on hts.code_secondary equals s.code
@@ -1544,8 +1545,9 @@ namespace HLU.UI.ViewModel
                     // Store the list of optional secondary codes.
                     _secondaryCodesOptional = secondaryCodesOptional.Select(hts => hts.code);
 
-                    // Load all secondary habitat codes where the habitat type
-                    // has one of more mandatory codes.
+                    // Load all secondary habitat codes where the habitat type has one of more
+                    // mandatory codes, and the secondary code relates to the current layer's
+                    // geometry type.
                     IEnumerable<HluDataSet.lut_secondaryRow> secondaryCodesMandatory =
                         [.. (from hts in _lutHabitatTypeSecondary
                          join s in _lutSecondary on hts.code_secondary equals s.code
@@ -1561,8 +1563,9 @@ namespace HLU.UI.ViewModel
                 }
                 else
                 {
-                    // Load all primary habitat codes where the primary habitat code
-                    // and primary habitat category are both flagged as local.
+                    // Load all primary habitat codes where the primary habitat code and primary
+                    // habitat category are both flagged as local, and the primary habitat code
+                    // relates to the current layer's geometry type.
                     CodeDescriptionBool[] allPrimaryCodes = [.. (
                         from p in _lutPrimary
                         where PrimaryMatchesLayerType(p)
@@ -2222,7 +2225,8 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets the list of all local secondary habitat codes that are related to any habitat type or primary habitat.
+        /// Gets the list of all local secondary habitat codes that are related to any habitat type
+        /// or primary habitat, and relate to the current layer's geometry type.
         /// </summary>
         /// <value>The list of all local secondary habitat codes.</value>
         public HluDataSet.lut_secondaryRow[] SecondaryHabitatCodesAll
@@ -7248,6 +7252,16 @@ namespace HLU.UI.ViewModel
                     // Recomputes whether editing is currently possible.
                     RefreshEditCapability();
 
+                    // Discard the current row reference from the previous layer before switching.
+                    // The row belongs to the old layer's incid table page; if the table is refilled
+                    // during GetMapSelectionAsync the row becomes detached and any access to its
+                    // fields (e.g. in IsDirtyIncid / CompareIncidCurrentRowClone) throws
+                    // RowNotInTableException. Nulling it here is safe because IsDirtyIncid() and
+                    // CheckDirty() both return early when _incidCurrentRow is null.
+                    _incidCurrentRow = null;
+                    _incidCurrentRowClone = null;
+                    _incidCurrentRowIndex = 1;
+
                     // Get the GIS layer selection and warn the user if no
                     // features are found
                     await GetMapSelectionAsync(true);
@@ -7318,6 +7332,12 @@ namespace HLU.UI.ViewModel
             _incidNVCCodes = null;
             //_incidSecondarySummary = null;
 
+            // Switch to a detached (blank) incid row BEFORE resetting HabitatClass so that
+            // any OnPropertyChanged(nameof(IncidPrimary)) fired inside the HabitatType setter
+            // hits the detached-row guard in the IDataErrorInfo indexer and does not produce
+            // a spurious "Primary habitat is mandatory" validation error on the cleared form.
+            IncidCurrentRow = HluDataset.incid.NewincidRow();
+
             // In Bulk Update mode set the default habitat class immediately so that
             // HabitatTypeCodes is populated when RefreshHabitatTab() fires.
             // In normal mode the class is reset via the HabitatClass getter.
@@ -7325,9 +7345,6 @@ namespace HLU.UI.ViewModel
                 HabitatClass = _defaultHabitatClass;
             else
                 HabitatClass = null;
-
-            // Get a new incid row.
-            IncidCurrentRow = HluDataset.incid.NewincidRow();
 
             // Get new mulitplex rows.
             IncidIhsMatrixRows = [.. Array.Empty<HluDataSet.incid_ihs_matrixRow>()
@@ -9143,7 +9160,7 @@ namespace HLU.UI.ViewModel
                     ChangeCursor(Cursors.Wait, "Counting ...");
 
                     // Find the expected number of features to be selected from the database.
-                    _selectedFragsInDBCount = await ExpectedSelectionFeatures(whereTables, newWhereClause);
+                    _selectedFragsInDBCount = await ExpectedSelectionFeaturesAsync(whereTables, newWhereClause);
 
                     // Store the number of incids found in the database
                     _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -9582,7 +9599,7 @@ namespace HLU.UI.ViewModel
                     if (IsFiltered)
                     {
                         // Find the expected number of features to be selected in GIS.
-                        _selectedFragsInDBCount = await ExpectedSelectionFeatures(whereTables, newWhereClause);
+                        _selectedFragsInDBCount = await ExpectedSelectionFeaturesAsync(whereTables, newWhereClause);
 
                         // Store the number of incids found in the database
                         _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -10224,22 +10241,25 @@ namespace HLU.UI.ViewModel
             _incidArea = 0;
             _incidLength = 0;
 
+            // Get the area and length measures for the current incid based on the geometry type of the active GIS layer.
             switch (_gisLayerType)
             {
                 case HluGeometryTypes.Line:
                 {
-                    HluDataSet.incid_mm_linesDataTable table = HluDataset.incid_mm_lines;
+                        // For line geometries, only calculate length measures.
+                        HluDataSet.incid_mm_linesDataTable table = HluDataset.incid_mm_lines;
                     GetIncidMMLineRows(incidCondList, ref table);
                     foreach (HluDataSet.incid_mm_linesRow r in table)
                         _incidLength += r.shape_length;
                     break;
                 }
                 case HluGeometryTypes.Point:
-                    // Points have no area or length measures.
+                    // For point geometries, there are no area or length measures to calculate, so skip to the end.
                     break;
                 default:
                 {
-                    HluDataSet.incid_mm_polygonsDataTable table = HluDataset.incid_mm_polygons;
+                        // For polygon geometries, calculate both area and length measures.
+                        HluDataSet.incid_mm_polygonsDataTable table = HluDataset.incid_mm_polygons;
                     GetIncidMMPolygonRows(incidCondList, ref table);
                     foreach (HluDataSet.incid_mm_polygonsRow r in table)
                     {
