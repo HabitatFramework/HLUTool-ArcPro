@@ -1051,15 +1051,17 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// If the reason and process code controls are enabled.
+        /// They remain enabled whenever the form is not in bulk or OSMM Review mode,
+        /// regardless of whether a current incid row is loaded.
         /// </summary>
         /// <value><see langword="true"/> if the reason and process code controls are enabled; otherwise, <see langword="false"/>.</value>
         public bool ReasonProcessEnabled
         {
             get
             {
-                // Enable when not in bulk/OSMM mode AND there is a current row
+                // Enable when not in bulk/OSMM mode
                 if (IsNotBulkMode && IsNotOsmmReviewMode)
-                    _reasonProcessEnabled = IncidCurrentRow != null;
+                    _reasonProcessEnabled = true;
 
                 return _reasonProcessEnabled;
             }
@@ -1316,6 +1318,24 @@ namespace HLU.UI.ViewModel
                                           select c).Distinct().OrderBy(c => c.sort_order).ThenBy(c => c.description)];
 
                 return _habitatClassCodes;
+            }
+        }
+
+        /// <summary>
+        /// Gets the list of habitat class codes with a "&lt;None&gt;" option prepended,
+        /// for use in the options window Default Habitat Class selector.
+        /// </summary>
+        /// <value>The list of habitat class codes with a "&lt;None&gt;" option.</value>
+        public HluDataSet.lut_habitat_classRow[] HabitatClassCodesWithNone
+        {
+            get
+            {
+                if (_lutHabitatClass == null || !_lutHabitatClass.Any())
+                    return null;
+
+                _habitatClassCodesWithNone ??= [_noneHabitatClassRow, .. HabitatClassCodes];
+
+                return _habitatClassCodesWithNone;
             }
         }
 
@@ -7192,6 +7212,16 @@ namespace HLU.UI.ViewModel
                     if (detectedGeometryType != _gisLayerType)
                     {
                         _gisLayerType = detectedGeometryType;
+
+                        // Sync the geometry type on the RecordIds object so SiteID
+                        // returns the correct prefix for the newly active layer type.
+                        if (_recIDs != null)
+                            _recIDs.GisLayerType = _gisLayerType;
+
+                        // Force an immediate recount scoped to the new geometry prefix
+                        // so that StatusIncid (which reads _incidRowCount directly)
+                        // shows the correct total for the newly active layer.
+                        IncidRowCount(true);
 
                         // Reinitialise GIS ID columns for the new geometry table.
                         int result;

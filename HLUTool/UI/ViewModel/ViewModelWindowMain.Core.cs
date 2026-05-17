@@ -194,6 +194,8 @@ namespace HLU.UI.ViewModel
         private HluDataSet.lut_reasonRow[] _reasonCodesWithNone;
         private HluDataSet.lut_processRow[] _processCodes;
         private HluDataSet.lut_processRow[] _processCodesWithNone;
+        private HluDataSet.lut_habitat_classRow _noneHabitatClassRow;
+        private HluDataSet.lut_habitat_classRow[] _habitatClassCodesWithNone;
         private HluDataSet.lut_quality_determinationRow[] _qualityDeterminationCodes;
         private HluDataSet.lut_quality_interpretationRow[] _qualityInterpretationCodes;
 
@@ -1298,6 +1300,11 @@ namespace HLU.UI.ViewModel
                     return false;
                 }
 
+                // If there is no current row, or it is detached (e.g. after ClearForm),
+                // there is nothing to compare against — treat as clean.
+                if (_incidCurrentRow == null || _incidCurrentRow.RowState == DataRowState.Detached)
+                    return false;
+
                 // Return true if a field in any of the tables has changed.
                 return IsDirtyIncid() || IsDirtyIncidSecondary() || IsDirtyIncidCondition() || IsDirtyIncidBap() ||
                     IsDirtyIncidSources();
@@ -2196,6 +2203,15 @@ namespace HLU.UI.ViewModel
                     _noneProcessRow.sort_order = -1;
                 }
 
+                // Set the <None> habitat class row
+                if (_noneHabitatClassRow == null)
+                {
+                    _noneHabitatClassRow = HluDataset.lut_habitat_class.Newlut_habitat_classRow();
+                    _noneHabitatClassRow.code = "<None>";
+                    _noneHabitatClassRow.description = "<None>";
+                    _noneHabitatClassRow.sort_order = -1;
+                }
+
                 // Wire up event handler for copy switches
                 _copySwitches.PropertyChanged += new PropertyChangedEventHandler(CopySwitches_PropertyChanged);
 
@@ -2210,15 +2226,17 @@ namespace HLU.UI.ViewModel
                 // Columns to be saved in the history table when records are updated.
                 _historyColumns = InitializeHistoryColumns(_historyColumns);
 
-                // Count rows of incid table
-                IncidRowCount(true);
-
                 // Check for any pending OSMM updates.
                 await CheckAnyOSMMUpdatesAsync();
 
-                // Check the active map is valid
+                // Check the active map is valid — this sets _gisLayerType (and thus
+                // RecordIds.SiteID) to reflect the actual active layer geometry before
+                // the initial row count is performed.
                 if (await CheckActiveMapAsync())
                 {
+                    // Count rows of incid table now that _gisLayerType is correct.
+                    IncidRowCount(true);
+
                     // If it is valid move to first row
                     await MoveIncidCurrentRowIndexAsync(1);
                 }
@@ -2389,10 +2407,18 @@ namespace HLU.UI.ViewModel
                 {
                     _gisLayerType = detectedGeometryType;
 
+                    // Guard: _hluDS may not be initialised yet (e.g. connection dialog still open).
+                    if (GisMMTable == null)
+                        goto skipGeometryReinit;
+
                     // Sync the geometry type on the RecordIds object so that SiteID
                     // returns the correct site ID for the newly active layer type.
                     if (_recIDs != null)
                         _recIDs.GisLayerType = _gisLayerType;
+
+                    // Invalidate the cached row count so it is re-queried with the
+                    // new geometry-specific SiteID prefix on the next access.
+                    _incidRowCount = 0;
 
                     // Reinitialise GIS ID columns for the new geometry table.
                     int result;
@@ -2439,6 +2465,8 @@ namespace HLU.UI.ViewModel
                         OnPropertyChanged(nameof(IncidPrimary));
                     }
                 }
+
+                skipGeometryReinit:;
             }
 
             // Now assign ActiveLayerName
@@ -3557,7 +3585,9 @@ namespace HLU.UI.ViewModel
             // Get user updates options
             _defaultReason = Settings.Default.DefaultReason;
             _defaultProcess = Settings.Default.DefaultProcess;
-            _defaultHabitatClass = Settings.Default.DefaultHabitatClass;
+            // Store null when <None> is selected so HabitatClass getter leaves the field unset.
+            string storedHabitatClass = Settings.Default.DefaultHabitatClass;
+            _defaultHabitatClass = storedHabitatClass == "<None>" ? null : storedHabitatClass;
             _defaultSecondaryGroup = Settings.Default.DefaultSecondaryGroup;
             _secondaryCodeOrder = Settings.Default.SecondaryCodeOrder;
             _notifyOnSplitMerge = Settings.Default.NotifyOnSplitMerge;
@@ -3723,18 +3753,23 @@ namespace HLU.UI.ViewModel
 
             try
             {
-                StringBuilder whereClause = new(String.Format("{0} >= {1}",
-                    _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName), _db.QuoteValue(incid)));
+                string incidCol = _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName);
+                string siteIdFilter = $"{incidCol} LIKE {_db.QuoteValue(_recIDs.SiteID + ":%")}";
+
+                StringBuilder whereClause = new(String.Format("{0} >= {1} AND {2}",
+                    incidCol, _db.QuoteValue(incid), siteIdFilter));
 
                 int seekRowNumber = (int)_db.ExecuteScalar(
-                    String.Format("SELECT COUNT(*) FROM (SELECT {0} FROM {1} ORDER BY {0} ASC) WHERE {2}",
-                    _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName),
-                    _db.QualifyTableName(_hluDS.incid.TableName), whereClause),
+                    String.Format("SELECT COUNT(*) FROM (SELECT {0} FROM {1} WHERE {2} ORDER BY {0} ASC) WHERE {3}",
+                    incidCol,
+                    _db.QualifyTableName(_hluDS.incid.TableName), siteIdFilter, whereClause),
                     _db.Connection.ConnectionTimeout, CommandType.Text);
 
-                whereClause.Append(String.Format(" AND {0} < {1} ORDER BY {0} ASC",
-                    _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName),
-                    _db.QuoteValue(_recIDs.IncidString(RecordIds.IncidNumber(incid) + IncidPageSize))));
+                whereClause = new StringBuilder(String.Format("{0} >= {1} AND {0} < {2} AND {3} ORDER BY {0} ASC",
+                    incidCol,
+                    _db.QuoteValue(incid),
+                    _db.QuoteValue(_recIDs.IncidString(RecordIds.IncidNumber(incid) + IncidPageSize)),
+                    siteIdFilter));
 
                 _hluTableAdapterMgr.Fill(_hluDS, typeof(HluDataSet.incidDataTable), whereClause.ToString(), true);
 
@@ -3778,9 +3813,12 @@ namespace HLU.UI.ViewModel
             int incidPageRowNoMinBak = _incidPageRowNoMin;
             int incidPageRowNoMaxBak = _incidPageRowNoMax;
 
-            // Set-up the SQL load where clause template.
-            string loadWhereClauseTemplate = String.Format("{0} >= {{0}} AND {0} < {{1}} ORDER BY {0} ASC",
-                _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName));
+            // Set-up the SQL load where clause template (scoped to the active layer's SiteID prefix).
+            string siteIdWhere = String.Format("{0} LIKE {1}",
+                _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName),
+                _db.QuoteValue(_recIDs.SiteID + ":%"));
+            string loadWhereClauseTemplate = String.Format("{0} >= {{0}} AND {0} < {{1}} AND {1} ORDER BY {0} ASC",
+                _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName), siteIdWhere);
 
             try
             {
@@ -3789,13 +3827,18 @@ namespace HLU.UI.ViewModel
                 // If seeking very early in the table.
                 if (seekRowNumber < 2)
                 {
-                    // Get the first record.
-                    seekIncidNumber = RecordIds.IncidNumber(
-                        _db.ExecuteScalar(String.Format(
-                        "SELECT TOP 1 {0} FROM {1} ORDER BY {0} ASC",
+                    // Get the first record that matches the active layer SiteID prefix.
+                    object firstResult = _db.ExecuteScalar(String.Format(
+                        "SELECT TOP 1 {0} FROM {1} WHERE {0} LIKE {2} ORDER BY {0} ASC",
                             _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName),
-                            _db.QualifyTableName(_hluDS.incid.TableName)),
-                            _db.Connection.ConnectionTimeout, CommandType.Text).ToString());
+                            _db.QualifyTableName(_hluDS.incid.TableName),
+                            _db.QuoteValue(_recIDs.SiteID + ":%")),
+                            _db.Connection.ConnectionTimeout, CommandType.Text);
+
+                    if (firstResult == null)
+                        return -1;
+
+                    seekIncidNumber = RecordIds.IncidNumber(firstResult.ToString());
 
                     // Fetch records.
                     _hluTableAdapterMgr.Fill(_hluDS, typeof(HluDataSet.incidDataTable),
@@ -3817,13 +3860,18 @@ namespace HLU.UI.ViewModel
                 // If seeking very late in the table.
                 else if (seekRowNumber >= _incidRowCount)
                 {
-                    // Get the last record.
-                    seekIncidNumber = RecordIds.IncidNumber(
-                        _db.ExecuteScalar(String.Format(
-                        "SELECT TOP 1 {0} FROM {1} ORDER BY {0} DESC",
+                    // Get the last record that matches the active layer SiteID prefix.
+                    object lastResult = _db.ExecuteScalar(String.Format(
+                        "SELECT TOP 1 {0} FROM {1} WHERE {0} LIKE {2} ORDER BY {0} DESC",
                             _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName),
-                            _db.QualifyTableName(_hluDS.incid.TableName)),
-                            _db.Connection.ConnectionTimeout, CommandType.Text).ToString());
+                            _db.QualifyTableName(_hluDS.incid.TableName),
+                            _db.QuoteValue(_recIDs.SiteID + ":%")),
+                            _db.Connection.ConnectionTimeout, CommandType.Text);
+
+                    if (lastResult == null)
+                        return -1;
+
+                    seekIncidNumber = RecordIds.IncidNumber(lastResult.ToString());
 
                     // Move back by the page size.
                     if (seekIncidNumber > IncidPageSize)
@@ -3845,9 +3893,11 @@ namespace HLU.UI.ViewModel
                 else
                 {
                     // Directly fetch the incid string at the target row position using a single
-                    // OFFSET query (zero-based offset = seekRowNumber - 1).
+                    // OFFSET query (zero-based offset = seekRowNumber - 1), scoped to the active
+                    // layer's SiteID prefix.
                     string incidCol = _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName);
                     string incidTable = _db.QualifyTableName(_hluDS.incid.TableName);
+                    string siteIdFilter = _db.QuoteValue(_recIDs.SiteID + ":%");
                     int zeroBasedOffset = seekRowNumber - 1;
 
                     string seekSql;
@@ -3857,15 +3907,15 @@ namespace HLU.UI.ViewModel
                         // PostgreSQL does support the ANSI OFFSET … FETCH syntax but it is much less
                         // efficient than using LIMIT/OFFSET, so use LIMIT/OFFSET instead.
                         seekSql = String.Format(
-                            "SELECT {0} FROM {1} ORDER BY {0} ASC LIMIT 1 OFFSET {2}",
-                            incidCol, incidTable, zeroBasedOffset);
+                            "SELECT {0} FROM {1} WHERE {0} LIKE {2} ORDER BY {0} ASC LIMIT 1 OFFSET {3}",
+                            incidCol, incidTable, siteIdFilter, zeroBasedOffset);
                     }
                     else
                     {
                         // SQL Server and Oracle 12c+ both support the ANSI OFFSET … FETCH syntax.
                         seekSql = String.Format(
-                            "SELECT {0} FROM {1} ORDER BY {0} ASC OFFSET {2} ROWS FETCH NEXT 1 ROWS ONLY",
-                            incidCol, incidTable, zeroBasedOffset);
+                            "SELECT {0} FROM {1} WHERE {0} LIKE {2} ORDER BY {0} ASC OFFSET {3} ROWS FETCH NEXT 1 ROWS ONLY",
+                            incidCol, incidTable, siteIdFilter, zeroBasedOffset);
                     }
 
                     object seekResult = _db.ExecuteScalar(seekSql,

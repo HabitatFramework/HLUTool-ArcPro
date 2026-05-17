@@ -510,12 +510,13 @@ namespace HLU.UI.ViewModel
                         }
                         else
                         {
-                            // Use ALL records - filtering overhead not worth it
+                            // Use ALL records for the active geometry type - filtering overhead not worth it
                             SqlFilterCondition cond = new("AND",
                                 _viewModelMain.IncidTable,
-                                _viewModelMain.IncidTable.incidColumn, null)
+                                _viewModelMain.IncidTable.incidColumn,
+                                _viewModelMain.RecIDs.SiteID + ":%")
                             {
-                                Operator = "IS NOT NULL"
+                                Operator = "LIKE"
                             };
 
                             exportFilter = new List<List<SqlFilterCondition>>([
@@ -524,12 +525,13 @@ namespace HLU.UI.ViewModel
                     }
                     else
                     {
-                        // Fallback: export all INCIDs if we couldn't get layer INCIDs
+                        // Fallback: export all INCIDs for the active geometry type if we couldn't get layer INCIDs
                         SqlFilterCondition cond = new("AND",
                             _viewModelMain.IncidTable,
-                            _viewModelMain.IncidTable.incidColumn, null)
+                            _viewModelMain.IncidTable.incidColumn,
+                            _viewModelMain.RecIDs.SiteID + ":%")
                         {
-                            Operator = "IS NOT NULL"
+                            Operator = "LIKE"
                         };
 
                         exportFilter = new List<List<SqlFilterCondition>>([

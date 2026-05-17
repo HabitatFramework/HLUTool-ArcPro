@@ -400,15 +400,6 @@ namespace HLU.UI.ViewModel
                 return false;
             }
 
-            // Check if the current incid is not found in the active layer at all
-            // (a GIS selection exists but the current incid has no features in it).
-            if (_gisSelection != null && _currentIncidFragsInGISCount == 0 && _currentIncidFragsInDBCount > 0)
-            {
-                if (showMessage)
-                    ShowWarning("Current incid not found in the active layer.", Messagecategory);
-                return false;
-            }
-
             // Check if the GIS features have been physically split by the user but not processed in HLU yet.
             if ((_currentIncidToidsInGISCount == _currentIncidToidsInDBCount) &&
                (_currentIncidFragsInGISCount > _currentIncidFragsInDBCount))
@@ -1642,17 +1633,19 @@ namespace HLU.UI.ViewModel
             // If there are any rows not marked as deleted add them to the collection.
             if (incidSecondaryRowsUndel != null)
             {
+                // Create SecondaryHabitat objects first so that the numeric Secondary_habitat_int
+                // property is available for ordering (matching the sort applied in RefreshSecondaryHabitats).
+                IEnumerable<SecondaryHabitat> secondaryHabitats = incidSecondaryRowsUndel.Select(r => new SecondaryHabitat(IsBulkMode, r));
+
                 // Order the secondary codes as required
                 _incidSecondaryHabitats = _secondaryCodeOrder switch
                 {
                     "As entered" => new ObservableCollection<SecondaryHabitat>(
-                           incidSecondaryRowsUndel.OrderBy(r => r.secondary_id).Select(r => new SecondaryHabitat(IsBulkMode, r))),
-                    "By group then code" => new ObservableCollection<SecondaryHabitat>(
-                           incidSecondaryRowsUndel.OrderBy(r => r.secondary_group).ThenBy(r => r.secondary).Select(r => new SecondaryHabitat(IsBulkMode, r))),
+                           secondaryHabitats.OrderBy(sh => sh.Secondary_id)),
                     "By code" => new ObservableCollection<SecondaryHabitat>(
-                           incidSecondaryRowsUndel.OrderBy(r => r.secondary).Select(r => new SecondaryHabitat(IsBulkMode, r))),
+                           secondaryHabitats.OrderBy(sh => sh.Secondary_habitat_int)),
                     _ => new ObservableCollection<SecondaryHabitat>(
-                           incidSecondaryRowsUndel.OrderBy(r => r.secondary_id).Select(r => new SecondaryHabitat(IsBulkMode, r)))
+                           secondaryHabitats.OrderBy(sh => sh.Secondary_id))
                 };
             }
             else
@@ -1747,8 +1740,6 @@ namespace HLU.UI.ViewModel
                 {
                     "As entered" => new ObservableCollection<SecondaryHabitat>(
                             _incidSecondaryHabitats.OrderBy(r => r.Secondary_id)),
-                    "By group then code" => new ObservableCollection<SecondaryHabitat>(
-                            _incidSecondaryHabitats.OrderBy(r => r.Secondary_group).ThenBy(r => r.Secondary_habitat_int)),
                     "By code" => new ObservableCollection<SecondaryHabitat>(
                             _incidSecondaryHabitats.OrderBy(r => r.Secondary_habitat_int)),
                     _ => new ObservableCollection<SecondaryHabitat>(
@@ -2688,7 +2679,10 @@ namespace HLU.UI.ViewModel
         internal async Task<int> CountOSMMUpdatesAsync(CancellationToken cancellationToken = default)
         {
             object result = await _db.ExecuteScalarAsync(String.Format(
-                "SELECT COUNT(*) FROM {0}", _db.QualifyTableName(_hluDS.incid_osmm_updates.TableName)),
+                "SELECT COUNT(*) FROM {0} WHERE {1} LIKE {2}",
+                _db.QualifyTableName(_hluDS.incid_osmm_updates.TableName),
+                _db.QuoteIdentifier(_hluDS.incid_osmm_updates.incidColumn.ColumnName),
+                _db.QuoteValue(_recIDs.SiteID + ":%")),
                 _db.Connection.ConnectionTimeout,
                 CommandType.Text,
                 cancellationToken);
@@ -2878,9 +2872,9 @@ namespace HLU.UI.ViewModel
                 List<DataTable> whereTables = [];
                 whereTables.Add(IncidOSMMUpdatesTable);
 
-                // Always filter out applied updates
+                // Always filter out applied updates, and constrain to the active layer's SiteID prefix.
                 string sqlWhereClause;
-                sqlWhereClause = "[incid_osmm_updates].status <> -1";
+                sqlWhereClause = $"[incid_osmm_updates].incid LIKE '{_recIDs.SiteID}:%' AND [incid_osmm_updates].status <> -1";
 
                 // Add any other filter criteria.
                 if (processFlag != null && processFlag != _codeAnyRow)
@@ -3311,7 +3305,10 @@ namespace HLU.UI.ViewModel
                 try
                 {
                     _incidRowCount = (int)_db.ExecuteScalar(String.Format(
-                        "SELECT COUNT(*) FROM {0}", _db.QualifyTableName(_hluDS.incid.TableName)),
+                        "SELECT COUNT(*) FROM {0} WHERE {1} LIKE {2}",
+                        _db.QualifyTableName(_hluDS.incid.TableName),
+                        _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName),
+                        _db.QuoteValue(_recIDs.SiteID + ":%")),
                         _db.Connection.ConnectionTimeout, CommandType.Text);
 
                     // Refresh the status fields
@@ -3402,9 +3399,7 @@ namespace HLU.UI.ViewModel
                         if (_autoSelectOnGis && IsNotBulkMode && !_filteredByMap)
                         {
                             // Select the current incid record on the Map.
-                            // Suppress the "no features" warning during auto-navigation because
-                            // the incid may legitimately have no features in the active layer.
-                            await SelectOnMapAsync(false, suppressNoFeaturesWarning: true);
+                            await SelectOnMapAsync(false);
                         }
 
                         // Count the number of toids and fragments for the current incid

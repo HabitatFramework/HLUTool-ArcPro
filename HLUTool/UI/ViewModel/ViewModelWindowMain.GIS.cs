@@ -147,7 +147,7 @@ namespace HLU.UI.ViewModel
         /// Gets the HLU map-match table from the database that corresponds to the active
         /// GIS layer geometry type (polygons, lines or points).
         /// </summary>
-        internal DataTable GisMMTable => _gisLayerType switch
+        internal DataTable GisMMTable => _hluDS == null ? null : _gisLayerType switch
         {
             HluGeometryTypes.Line => (DataTable)_hluDS.incid_mm_lines,
             HluGeometryTypes.Point => (DataTable)_hluDS.incid_mm_points,
@@ -803,10 +803,8 @@ namespace HLU.UI.ViewModel
         /// Select the current incid record on the map.
         /// </summary>
         /// <param name="updateIncidSelection">Should the incid selection be updated afterwards?</param>
-        /// <param name="suppressNoFeaturesWarning">If <c>true</c>, suppresses the "No features found" warning
-        /// when the incid has no features in the active layer (used during auto-navigation).</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        public async Task SelectOnMapAsync(bool updateIncidSelection, bool suppressNoFeaturesWarning = false)
+        public async Task SelectOnMapAsync(bool updateIncidSelection)
         {
             // Check there is a current row
             if (IncidCurrentRow == null)
@@ -920,11 +918,7 @@ namespace HLU.UI.ViewModel
                 // Warn the user that no features were found in GIS.
                 if (_gisSelection == null || _gisSelection.Rows.Count == 0)
                 {
-                    // Only display the warning when not suppressed (e.g. during auto-navigation
-                    // the incid may simply have no features in the currently active layer).
-                    if (!suppressNoFeaturesWarning)
-                        ShowWarning("No features for incid found in active layer.", MessageCategory.GIS);
-
+                    ShowWarning("No features for incid found in active layer.", MessageCategory.GIS);
                     return;
                 }
 
@@ -1070,7 +1064,44 @@ namespace HLU.UI.ViewModel
                     ChangeCursor(Cursors.Arrow);
 
                     // Display a warning message.
-                    ShowWarning("No map features selected in active layer.", MessageCategory.GIS);
+                    string geomTypeName = _gisLayerType switch
+                    {
+                        HluGeometryTypes.Line  => "line",
+                        HluGeometryTypes.Point => "point",
+                        _                      => "polygon"
+                    };
+
+                    // Check whether the geometry-type map-match table has any records at all.
+                    // If it is empty the user has not yet registered any features of this type.
+                    int totalDbCount = 0;
+                    try
+                    {
+                        totalDbCount = (int)_db.ExecuteScalar(
+                            $"SELECT COUNT(*) FROM {_db.QualifyTableName(GisMMTable.TableName)}",
+                            _db.Connection.ConnectionTimeout, CommandType.Text);
+                    }
+                    catch { }
+
+                    if (totalDbCount == 0)
+                    {
+                        // No features of this geometry type have been registered yet, so
+                        // clear the form to avoid displaying stale incid details, then
+                        // refresh all UI bindings so every property reflects the cleared state.
+                        ClearForm();
+
+                        // Reset the DB and GIS fragment/toid counts so the status counter
+                        // does not show stale values from the previously active layer.
+                        _currentIncidToidsInGISCount = 0;
+                        _currentIncidFragsInGISCount = 0;
+                        _currentIncidToidsInDBCount = 0;
+                        _currentIncidFragsInDBCount = 0;
+
+                        RefreshAll();
+
+                        ShowWarning($"No {geomTypeName} features have been registered in the database yet.", MessageCategory.GIS);
+                    }
+                    else
+                        ShowWarning($"No {geomTypeName} features selected in active layer.", MessageCategory.GIS);
                 }
             }
             catch (Exception ex)
