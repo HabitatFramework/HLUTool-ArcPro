@@ -2712,7 +2712,7 @@ namespace HLU.GISApplication
         #region Feature Insert
 
         /// <summary>
-        /// Writes the assigned INCID and fragment ID values to a set of newly drawn GIS features
+        /// Writes the assigned INCID and fragment ID values to a set of newly created GIS features
         /// (identified by object ID), captures geometry metadata for history, and queues the GIS
         /// field updates into the provided <paramref name="editOperation"/>.
         /// </summary>

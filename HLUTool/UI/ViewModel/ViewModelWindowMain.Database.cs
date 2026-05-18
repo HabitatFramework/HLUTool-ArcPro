@@ -3189,7 +3189,7 @@ namespace HLU.UI.ViewModel
                     case 1:
                         // Get the unique incids selected in GIS (ordered so that the filter
                         // is sorted in incid order). Use the nullable Field<string?> overload
-                        // so that DBNull values (e.g. newly drawn features with no INCID)
+                        // so that DBNull values (e.g. newly created features with no INCID)
                         // don't throw InvalidCastException, and filter those null keys out.
                         _incidsSelectedMap = _gisSelection.AsEnumerable()
                             .GroupBy(r => r.Field<string>(_gisIDColumns[0].ColumnName))

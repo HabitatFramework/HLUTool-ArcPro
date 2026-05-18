@@ -251,7 +251,7 @@
 							 largeImage="pack://application:,,,/HLUTool;component/Images/InsertFeature32.png"
 							 loadOnClick="false">
 					<tooltip heading="Insert Feature options">
-						Register newly drawn features against one or more new INCIDs<disabledText />
+						Register newly created features against one or more new INCIDs<disabledText />
 					</tooltip>
 				</dynamicMenu>
 
@@ -263,7 +263,7 @@
 						smallImage="pack://application:,,,/HLUTool;component/Images/InsertFeatureSameIncid16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/InsertFeatureSameIncid32.png">
 					<tooltip heading="Insert Feature — Same INCID">
-						Register all selected new features under a single new INCID. Use this when the drawn features represent fragments of the same habitat record.
+						Register all selected new features under a single new INCID. Use this when the created features represent fragments of the same habitat record.
 						<disabledText>Available only when editing is active, a reason and process are selected, and all selected features have no INCID assigned.</disabledText>
 					</tooltip>
 				</button>
@@ -276,7 +276,7 @@
 						smallImage="pack://application:,,,/HLUTool;component/Images/InsertFeatureSeparateIncid16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/InsertFeatureSeparateIncid32.png">
 					<tooltip heading="Insert Feature — Separate INCIDs">
-						Register each selected new feature under its own new INCID. Use this when each drawn feature represents a distinct habitat record.
+						Register each selected new feature under its own new INCID. Use this when each created feature represents a distinct habitat record.
 						<disabledText>Available only when editing is active, a reason and process are selected, and all selected features have no INCID assigned.</disabledText>
 					</tooltip>
 				</button>

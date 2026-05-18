@@ -1771,7 +1771,7 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Computes whether a feature insert operation can be performed based on the current state.
-        /// All selected features must have a null or empty incid (i.e. they are newly drawn and not
+        /// All selected features must have a null or empty incid (i.e. they are newly created and not
         /// yet registered in the database).
         /// </summary>
         /// <returns><c>true</c> if a feature insert can be performed; otherwise, <c>false</c>.</returns>
@@ -1786,7 +1786,7 @@ namespace HLU.UI.ViewModel
                 return false;
 
             // All selected features must have a null or empty incid — meaning they are new,
-            // unregistered features that the user has drawn in the active layer.
+            // unregistered features that the user has created in the active layer.
             return _incidsSelectedMap != null &&
                    _incidsSelectedMap.All(i => string.IsNullOrEmpty(i));
         }

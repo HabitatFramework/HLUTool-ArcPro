@@ -34,7 +34,7 @@ using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 namespace HLU.UI.ViewModel
 {
     /// <summary>
-    /// View model for registering newly drawn GIS features (features with a null INCID)
+    /// View model for registering newly created GIS features (features with a null INCID)
     /// against new database records.  Supports two modes:
     /// <list type="bullet">
     ///   <item>All selected features ? a single new INCID (same-INCID insert).</item>
@@ -350,7 +350,7 @@ namespace HLU.UI.ViewModel
                     HluDataSet.incid_mm_linesRow row = table.Newincid_mm_linesRow();
                     row.incid = incid;
                     row.fragid = fragid;
-                    // toid is left as NULL — user-drawn features have no OS MasterMap toid.
+                    // toid is left as NULL — user-created features have no OS MasterMap toid.
                     // Remaining habitat / geometry columns default to DBNull on a new row.
                     table.Addincid_mm_linesRow(row);
 
@@ -370,7 +370,7 @@ namespace HLU.UI.ViewModel
                     HluDataSet.incid_mm_pointsRow row = table.Newincid_mm_pointsRow();
                     row.incid = incid;
                     row.fragid = fragid;
-                    // toid is left as NULL — user-drawn features have no OS MasterMap toid.
+                    // toid is left as NULL — user-created features have no OS MasterMap toid.
                     // Remaining habitat columns default to DBNull on a new row.
                     table.Addincid_mm_pointsRow(row);
 
@@ -390,7 +390,7 @@ namespace HLU.UI.ViewModel
                     HluDataSet.incid_mm_polygonsRow row = table.Newincid_mm_polygonsRow();
                     row.incid = incid;
                     row.fragid = fragid;
-                    // toid is left as NULL — user-drawn features have no OS MasterMap toid.
+                    // toid is left as NULL — user-created features have no OS MasterMap toid.
                     // Remaining habitat fields and shape dimensions default to DBNull on a new row.
                     table.Addincid_mm_polygonsRow(row);
 
