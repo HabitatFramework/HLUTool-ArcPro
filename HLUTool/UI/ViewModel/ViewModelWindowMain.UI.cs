@@ -2411,6 +2411,27 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
+        /// Returns only the secondary habitat codes (delimiter-separated) without the primary code prefix.
+        /// This is the value stored in the <c>habitat_secondaries</c> database column.
+        /// </summary>
+        public string IncidSecondaryCodesOnly
+        {
+            get
+            {
+                // Create the concatenated secondary habitats summary.
+                string secondarySummary = (_incidSecondaryHabitats != null && _incidSecondaryHabitats.Count > 0)
+                    ? String.Join(_secondaryCodeDelimiter, _incidSecondaryHabitats
+                        .OrderBy(s => s.Secondary_habitat_int)
+                        .ThenBy(s => s.Secondary_habitat)
+                        .Select(s => s.Secondary_habitat)
+                        .Distinct())
+                    : null;
+
+                return secondarySummary;
+            }
+        }
+
+        /// <summary>
         /// Only show the contatenated habitat summary if the option is set, otherwise collapse it.
         /// </summary>
         /// <value>The visibility of the habitat summary.</value>
@@ -5416,6 +5437,27 @@ namespace HLU.UI.ViewModel
             return _lutPrimary
                 .FirstOrDefault(p => p.code == primaryCode)
                 ?.habitat_class_code;
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"/> when <paramref name="primaryCode"/> exists in
+        /// <c>lut_primary</c> and is applicable to the active GIS layer geometry type.
+        /// </summary>
+        /// <param name="primaryCode">The lut_primary code to validate.</param>
+        /// <returns>
+        /// <see langword="true"/> if the code is valid for the current layer geometry type;
+        /// <see langword="false"/> otherwise.
+        /// </returns>
+        public bool IsPrimaryValidForLayerType(string primaryCode)
+        {
+            if (String.IsNullOrEmpty(primaryCode) || _lutPrimary == null)
+                return false;
+
+            var row = _lutPrimary.FirstOrDefault(p => p.code == primaryCode);
+            if (row == null)
+                return false;
+
+            return PrimaryMatchesLayerType(row);
         }
 
         /// <summary>

@@ -1459,6 +1459,16 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public void CountCurrentIncidFrags()
         {
+            // Guard against a null current row (e.g. first insert into a new geometry type).
+            if (_incidCurrentRow == null)
+            {
+                _currentIncidToidsInGISCount = 0;
+                _currentIncidFragsInGISCount = 0;
+                _currentIncidToidsInDBCount = 0;
+                _currentIncidFragsInDBCount = 0;
+                return;
+            }
+
             // Count the number of toids and fragments for this incid selected
             // in the GIS. They are counted here, once when the incid changes,
             // instead of in StatusIncid() which is constantly being called.

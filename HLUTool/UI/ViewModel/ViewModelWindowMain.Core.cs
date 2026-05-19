@@ -719,6 +719,19 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
+        /// <summary>
+        /// Gets the delimiter used to separate secondary habitat codes.
+        /// </summary>
+        /// <value>The secondary code delimiter string.</value>
+        internal string SecondaryCodeDelimiter
+        {
+            get
+            {
+                return _secondaryCodeDelimiter;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets a value indicating whether the system should automatically select features
         /// on the GIS.
         /// </summary>

@@ -571,7 +571,7 @@ namespace HLU.UI.ViewModel
                     .Distinct()];
 
                 // Call the new export method with field filtering and ordering
-                exportSuccess = await _viewModelMain.GISApplication.ExportWithJoinAsync(
+                int exportedFeatureCount = await _viewModelMain.GISApplication.ExportWithJoinAsync(
                     _viewModelMain.GISApplication.HluLayerName,  // Source layer path
                     workingFileGDBpath,                          // Working geodatabase path
                     attributeTableName,                          // Attribute table name
@@ -583,6 +583,8 @@ namespace HLU.UI.ViewModel
                     null,                                        // No field ordering needed
                     null);                                       // No field renaming needed
 
+                exportSuccess = exportedFeatureCount >= 0;
+
                 if (!exportSuccess)
                 {
                     MessageBox.Show(
@@ -593,9 +595,14 @@ namespace HLU.UI.ViewModel
                     return;
                 }
 
-                // Inform the user of success and that the output has been added to the current map
+                // Inform the user of success and that the output has been added to the current map.
+                // Show feature count if available, otherwise fall back to incid record count.
+                string exportCountMessage = exportedFeatureCount > 0
+                    ? $"{exportedFeatureCount} features ({exportRowCount} records)"
+                    : $"{exportRowCount} records";
+
                 MessageBox.Show(
-                    $"Export successful! {exportRowCount} records were exported.\n\n" +
+                    $"Export successful! {exportCountMessage} were exported.\n\n" +
                     $"The exported data has been added to the current map.",
                     "HLU: Export",
                     MessageBoxButton.OK,

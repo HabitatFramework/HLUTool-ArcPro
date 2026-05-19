@@ -3103,46 +3103,51 @@ namespace HLU.UI.ViewModel
 
             ChangeCursor(Cursors.Wait, "Clearing filter ...");
 
-            _incidSelection = null;
-            _incidSelectionWhereClause = null;
-            _gisSelection = null;
-            _selectedIncidsInDBCount = 0;
-            _selectedFragsInDBCount = 0;
-            _selectedIncidsInGISCount = 0;
-            _selectedToidsInGISCount = 0;
-            _selectedFragsInGISCount = 0;
-            _incidPageRowNoMax = -1;
-
-            // Only move to the first incid in the index if required, to save
-            // changing the index here and then again immediately after from
-            // the calling method.
-            if (resetRowIndex)
+            try
             {
-                _incidCurrentRowIndex = 1;
+                _incidSelection = null;
+                _incidSelectionWhereClause = null;
+                _gisSelection = null;
+                _selectedIncidsInDBCount = 0;
+                _selectedFragsInDBCount = 0;
+                _selectedIncidsInGISCount = 0;
+                _selectedToidsInGISCount = 0;
+                _selectedFragsInGISCount = 0;
+                _incidPageRowNoMax = -1;
+
+                // Only move to the first incid in the index if required, to save
+                // changing the index here and then again immediately after from
+                // the calling method.
+                if (resetRowIndex)
+                {
+                    _incidCurrentRowIndex = 1;
+                }
+
+                // Suggest the selection came from the map so that
+                // the map doesn't auto zoom to the first incid.
+                _filteredByMap = true;
+
+                // Re-retrieve the current record (which includes counting the number of
+                // toids and fragments for the current incid selected in the GIS and
+                // in the database).
+                if (resetRowIndex)
+                    await MoveIncidCurrentRowIndexAsync(_incidCurrentRowIndex);
+                else
+                    // Count the number of toids and fragments for the current incid
+                    // selected in the GIS and in the database.
+                    CountCurrentIncidFrags();
+
+                // Indicate the selection didn't come from the map.
+                _filteredByMap = false;
+
+                // Refresh all the status type fields.
+                RefreshStatus();
             }
-
-            // Suggest the selection came from the map so that
-            // the map doesn't auto zoom to the first incid.
-            _filteredByMap = true;
-
-            // Re-retrieve the current record (which includes counting the number of
-            // toids and fragments for the current incid selected in the GIS and
-            // in the database).
-            if (resetRowIndex)
-                await MoveIncidCurrentRowIndexAsync(_incidCurrentRowIndex);
-            else
-                // Count the number of toids and fragments for the current incid
-                // selected in the GIS and in the database.
-                CountCurrentIncidFrags();
-
-            // Indicate the selection didn't come from the map.
-            _filteredByMap = false;
-
-            // Refresh all the status type fields.
-            RefreshStatus();
-
-            // Reset the cursor back to normal.
-            ChangeCursor(Cursors.Arrow);
+            finally
+            {
+                // Reset the cursor back to normal.
+                ChangeCursor(Cursors.Arrow);
+            }
         }
 
         #endregion Clear Filter Operation

@@ -2712,13 +2712,15 @@ namespace HLU.GISApplication
         #region Feature Insert
 
         /// <summary>
-        /// Writes the assigned INCID and fragment ID values to a set of newly created GIS features
-        /// (identified by object ID), captures geometry metadata for history, and queues the GIS
-        /// field updates into the provided <paramref name="editOperation"/>.
+        /// Writes the assigned INCID, fragment ID, and validated habitat attribute values
+        /// to a set of newly created GIS features (identified by object ID), captures geometry
+        /// metadata for history, and queues the GIS field updates into the provided
         /// </summary>
         /// <param name="oidAssignments">
-        /// A mapping of each feature's object ID to the INCID and fragment ID it should receive.
-        /// Every entry must map to a non-null, non-empty INCID and fragment ID.
+        /// A mapping of each feature's object ID to the INCID, fragment ID, and validated
+        /// habitat attribute values it should receive.  Every entry must map to a non-null,
+        /// non-empty INCID and fragment ID; the habitat values may be null (which clears the
+        /// corresponding GIS field).
         /// </param>
         /// <param name="historyColumns">History schema columns used to build the returned table.</param>
         /// <param name="editOperation">The edit operation into which the GIS field writes are queued.</param>
@@ -2729,7 +2731,7 @@ namespace HLU.GISApplication
         /// carrying the feature's object ID.
         /// </returns>
         public async Task<DataTable> RegisterNewFeaturesAsync(
-            Dictionary<long, (string incid, string fragid)> oidAssignments,
+            Dictionary<long, (string incid, string fragid, string habprimary, string habsecond, string determqty, string interpqty)> oidAssignments,
             DataColumn[] historyColumns,
             EditOperation editOperation)
         {
@@ -2781,6 +2783,24 @@ namespace HLU.GISApplication
             if (fragidFieldIndex == -1)
                 throw new HLUToolException("Failed to resolve fragid field index for the active HLU layer.");
 
+            // habsecond, habprimary, determqty and interpqty are optional — if a field is absent
+            // from the layer its index will be -1 and the write is silently skipped.
+            int habprimaryFieldIndex = MapField(_hluLayerStructure.habprimaryColumn.ColumnName);
+            if (habprimaryFieldIndex == -1)
+                habprimaryFieldIndex = FuzzyFieldOrdinal(_hluLayerStructure.habprimaryColumn.ColumnName);
+
+            int habsecondFieldIndex = MapField(_hluLayerStructure.habsecondColumn.ColumnName);
+            if (habsecondFieldIndex == -1)
+                habsecondFieldIndex = FuzzyFieldOrdinal(_hluLayerStructure.habsecondColumn.ColumnName);
+
+            int determqtyFieldIndex = MapField(_hluLayerStructure.determqtyColumn.ColumnName);
+            if (determqtyFieldIndex == -1)
+                determqtyFieldIndex = FuzzyFieldOrdinal(_hluLayerStructure.determqtyColumn.ColumnName);
+
+            int interpqtyFieldIndex = MapField(_hluLayerStructure.interpqtyColumn.ColumnName);
+            if (interpqtyFieldIndex == -1)
+                interpqtyFieldIndex = FuzzyFieldOrdinal(_hluLayerStructure.interpqtyColumn.ColumnName);
+
             IReadOnlyList<long> oids = [.. oidAssignments.Keys];
 
             await QueuedTask.Run(() =>
@@ -2806,13 +2826,32 @@ namespace HLU.GISApplication
                         // Populate history-bound columns with the values being written (the "after" state).
                         foreach (var b in historyBindings)
                         {
-                            // For incid/fragid use the assigned value; for everything else read what's in the feature.
+                            // For incid/fragid use the assigned value; for the four habitat
+                            // fields use the validated values from the assignment (so history
+                            // records exactly what was written); for everything else read
+                            // what's in the feature.
                             if (b.OutputColumnName == _hluLayerStructure.incidColumn.ColumnName ||
                                 b.OutputColumnName == "modified_" + _hluLayerStructure.incidColumn.ColumnName)
                                 row[b.OutputColumnName] = assignment.incid;
                             else if (b.OutputColumnName == _hluLayerStructure.fragidColumn.ColumnName ||
                                      b.OutputColumnName == "modified_" + _hluLayerStructure.fragidColumn.ColumnName)
                                 row[b.OutputColumnName] = assignment.fragid;
+                            else if (habprimaryFieldIndex != -1 &&
+                                     (b.OutputColumnName == _hluLayerStructure.habprimaryColumn.ColumnName ||
+                                      b.OutputColumnName == "modified_" + _hluLayerStructure.habprimaryColumn.ColumnName))
+                                row[b.OutputColumnName] = (object)assignment.habprimary ?? DBNull.Value;
+                            else if (habsecondFieldIndex != -1 &&
+                                     (b.OutputColumnName == _hluLayerStructure.habsecondColumn.ColumnName ||
+                                      b.OutputColumnName == "modified_" + _hluLayerStructure.habsecondColumn.ColumnName))
+                                row[b.OutputColumnName] = (object)assignment.habsecond ?? DBNull.Value;
+                            else if (determqtyFieldIndex != -1 &&
+                                     (b.OutputColumnName == _hluLayerStructure.determqtyColumn.ColumnName ||
+                                      b.OutputColumnName == "modified_" + _hluLayerStructure.determqtyColumn.ColumnName))
+                                row[b.OutputColumnName] = (object)assignment.determqty ?? DBNull.Value;
+                            else if (interpqtyFieldIndex != -1 &&
+                                     (b.OutputColumnName == _hluLayerStructure.interpqtyColumn.ColumnName ||
+                                      b.OutputColumnName == "modified_" + _hluLayerStructure.interpqtyColumn.ColumnName))
+                                row[b.OutputColumnName] = (object)assignment.interpqty ?? DBNull.Value;
                             else
                             {
                                 object val = feature[b.SourceFieldIndex];
@@ -2830,7 +2869,7 @@ namespace HLU.GISApplication
                     }
                 }
 
-                // Pass 2 — queue the edit operation to write incid + fragid.
+                // Pass 2 — queue the edit operation to write incid, fragid, and validated habitat fields.
                 editOperation.Callback(context =>
                 {
                     using RowCursor updateCursor = _hluFeatureClass.Search(qf, false);
@@ -2841,8 +2880,20 @@ namespace HLU.GISApplication
                         if (!oidAssignments.TryGetValue(oid, out var assignment))
                             continue;
 
-                        row[incidFieldIndex] = assignment.incid;
+                        row[incidFieldIndex]  = assignment.incid;
                         row[fragidFieldIndex] = assignment.fragid;
+
+                        // Overwrite each habitat field with the validated value (null clears an
+                        // invalid value that was previously stored on the feature).
+                        if (habprimaryFieldIndex != -1)
+                            row[habprimaryFieldIndex] = (object)assignment.habprimary ?? DBNull.Value;
+                        if (habsecondFieldIndex != -1)
+                            row[habsecondFieldIndex]  = (object)assignment.habsecond  ?? DBNull.Value;
+                        if (determqtyFieldIndex != -1)
+                            row[determqtyFieldIndex]  = (object)assignment.determqty  ?? DBNull.Value;
+                        if (interpqtyFieldIndex != -1)
+                            row[interpqtyFieldIndex]  = (object)assignment.interpqty  ?? DBNull.Value;
+
                         row.Store();
                         context.Invalidate(row);
                     }
@@ -2850,6 +2901,76 @@ namespace HLU.GISApplication
             });
 
             return resultTable;
+        }
+
+        /// <summary>
+        /// Reads the four insert-time habitat attributes (<c>habprimary</c>, <c>habsecond</c>,
+        /// <c>determqty</c>, <c>interpqty</c>) from the selected features, returning a mapping
+        /// from OID to the four raw string values.  Fields absent from the layer, or fields
+        /// that are null/empty, yield <see langword="null"/> for the affected OID.
+        /// </summary>
+        /// <param name="oids">The object IDs of the features to read.</param>
+        /// <returns>A dictionary mapping each OID to a tuple of (habprimary, habsecond, determqty, interpqty).</returns>
+        public async Task<Dictionary<long, (string habprimary, string habsecond, string determqty, string interpqty)>>
+            ReadInsertAttributesAsync(IReadOnlyList<long> oids)
+        {
+            var result = new Dictionary<long, (string habprimary, string habsecond, string determqty, string interpqty)>();
+
+            // Check input parameters and state.
+            if (_hluFeatureClass == null || oids == null || oids.Count == 0)
+                return result;
+
+            await QueuedTask.Run(() =>
+            {
+                // Read the four fields using the fuzzy mapping logic to get their indexes.
+                int habprimaryIdx = FuzzyFieldOrdinal("habprimary");
+                int habsecondIdx  = FuzzyFieldOrdinal("habsecond");
+                int determqtyIdx  = FuzzyFieldOrdinal("determqty");
+                int interpqtyIdx  = FuzzyFieldOrdinal("interpqty");
+
+                // If none of the four fields exist in the layer there is nothing to propagate.
+                if (habprimaryIdx == -1 && habsecondIdx == -1 &&
+                    determqtyIdx  == -1 && interpqtyIdx  == -1)
+                    return;
+
+                // Build a query filter to read the features by OID.
+                QueryFilter qf = new() { ObjectIDs = oids };
+
+                // Use a RowCursor to read the features and extract the four fields, applying the
+                // fuzzy mapping logic and trimming/normalizing string values. Store results in the
+                // output dictionary keyed by OID.
+                using RowCursor cursor = _hluFeatureClass.Search(qf, false);
+                while (cursor.MoveNext())
+                {
+                    // Get the current feature.
+                    using Feature feature = cursor.Current as Feature;
+                    if (feature == null)
+                        continue;
+
+                    // Get the OID for this feature.
+                    long oid = feature.GetObjectID();
+
+                    // Declare a local function to get the string value for a field index, applying
+                    // trimming and normalization logic.
+                    string GetVal(int idx)
+                    {
+                        if (idx < 0) return null;
+                        object v = feature[idx];
+                        if (v == null || v is DBNull) return null;
+                        string s = v.ToString().Trim();
+                        return string.IsNullOrEmpty(s) ? null : s;
+                    }
+
+                    // Get the values for the four fields and store in the result dictionary.
+                    result[oid] = (
+                        GetVal(habprimaryIdx),
+                        GetVal(habsecondIdx),
+                        GetVal(determqtyIdx),
+                        GetVal(interpqtyIdx));
+                }
+            });
+
+            return result;
         }
 
         #endregion Feature Insert
@@ -3221,7 +3342,7 @@ namespace HLU.GISApplication
         /// <param name="cancellationToken">Optional cancellation token to allow cancellation of the export.</param>
         /// <returns>True if the export succeeded; false otherwise.</returns>
         /// <exception cref="HLUToolException">Thrown when export fails due to missing layer, invalid parameters, or I/O errors.</exception>
-        public async Task<bool> ExportWithJoinAsync(
+        public async Task<int> ExportWithJoinAsync(
             string sourceLayerPath,
             string gdbPath,
             string tableName,
@@ -3396,7 +3517,23 @@ namespace HLU.GISApplication
                 if (!addSuccess)
                     throw new HLUToolException("Failed to add output to map.");
 
-                return true;
+                // Get the exported feature count from the output feature class.
+                int exportedFeatureCount = await QueuedTask.Run(() =>
+                {
+                    try
+                    {
+                        using var gdb = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(outputWorkspace)));
+                        string fcName = System.IO.Path.GetFileNameWithoutExtension(outputFeatureClassName);
+                        using var fc = gdb.OpenDataset<FeatureClass>(fcName);
+                        return (int)fc.GetCount();
+                    }
+                    catch
+                    {
+                        return -1;
+                    }
+                });
+
+                return exportedFeatureCount;
             }
             catch (Exception ex)
             {
