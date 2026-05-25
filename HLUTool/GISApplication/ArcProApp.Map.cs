@@ -27,6 +27,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using HLU.Data;
 using HLU.Data.Model;
+using HLU.Enums;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -986,10 +987,23 @@ namespace HLU.GISApplication
                     if (definition == null)
                         return HluLayerCheckResult.Invalid();
 
-                    // Check the featureLayer is a polygon feature featureLayer.
-                    //BasicFeatureLayer basicFeatureLayer = featureLayer as BasicFeatureLayer;
-                    if (featureLayer.ShapeType != esriGeometryType.esriGeometryPolygon)
-                        return HluLayerCheckResult.Invalid();
+                    // Check the featureLayer is a supported geometry type (polygon, polyline or point).
+                    HluGeometryTypes detectedGeometryType;
+                    switch (featureLayer.ShapeType)
+                    {
+                        case esriGeometryType.esriGeometryPolygon:
+                            detectedGeometryType = HluGeometryTypes.Polygon;
+                            break;
+                        case esriGeometryType.esriGeometryPolyline:
+                            detectedGeometryType = HluGeometryTypes.Line;
+                            break;
+                        case esriGeometryType.esriGeometryPoint:
+                        case esriGeometryType.esriGeometryMultipoint:
+                            detectedGeometryType = HluGeometryTypes.Point;
+                            break;
+                        default:
+                            return HluLayerCheckResult.Invalid();
+                    }
 
                     int[] hluFieldMap = new int[_hluLayerStructure.Columns.Count];
                     string[] hluFieldNames = new string[_hluLayerStructure.Columns.Count];
@@ -1033,7 +1047,8 @@ namespace HLU.GISApplication
                         featureLayer,
                         featureClass,
                         hluFieldMap,
-                        hluFieldNames);
+                        hluFieldNames,
+                        detectedGeometryType);
                 });
 
                 // If not a valid HLU layer return false.
@@ -1047,6 +1062,7 @@ namespace HLU.GISApplication
                     _hluFieldMap = result.HluFieldMap;
                     _hluFieldNames = result.HluFieldNames;
                     _hluFeatureClass = result.FeatureClass;
+                    _hluGeometryType = result.GeometryType;
 
                     // Check if the featureLayer is editable.
                     bool isEditable = await IsLayerEditableAsync(_hluLayer);
@@ -1095,6 +1111,14 @@ namespace HLU.GISApplication
             }
 
             /// <summary>
+            /// Gets the geometry type of the validated HLU layer.
+            /// </summary>
+            public HluGeometryTypes GeometryType
+            {
+                get;
+            }
+
+            /// <summary>
             /// Initializes a new instance of the <see cref="HluLayerCheckResult"/> struct with the
             /// specified values.
             /// </summary>
@@ -1103,18 +1127,21 @@ namespace HLU.GISApplication
             /// <param name="featureClass">The feature class of the layer.</param>
             /// <param name="hluFieldMap">The field map for the HLU layer.</param>
             /// <param name="hluFieldNames">The field names for the HLU layer.</param>
+            /// <param name="geometryType">The geometry type of the HLU layer.</param>
             private HluLayerCheckResult(
                 bool isHlu,
                 FeatureLayer featureLayer,
                 FeatureClass featureClass,
                 int[] hluFieldMap,
-                string[] hluFieldNames)
+                string[] hluFieldNames,
+                HluGeometryTypes geometryType = HluGeometryTypes.Polygon)
             {
                 IsHlu = isHlu;
                 FeatureLayer = featureLayer;
                 FeatureClass = featureClass;
                 HluFieldMap = hluFieldMap;
                 HluFieldNames = hluFieldNames;
+                GeometryType = geometryType;
             }
 
             /// <summary>
@@ -1134,6 +1161,7 @@ namespace HLU.GISApplication
             /// <param name="featureClass">The feature class of the layer.</param>
             /// <param name="hluFieldMap">The field map for the HLU layer.</param>
             /// <param name="hluFieldNames">The field names for the HLU layer.</param>
+            /// <param name="geometryType">The geometry type of the HLU layer.</param>
             /// <returns>
             /// An <see cref="HluLayerCheckResult"/> representing a valid HLU layer check result.
             /// </returns>
@@ -1141,8 +1169,9 @@ namespace HLU.GISApplication
                 FeatureLayer featureLayer,
                 FeatureClass featureClass,
                 int[] hluFieldMap,
-                string[] hluFieldNames)
-                => new(true, featureLayer, featureClass, hluFieldMap, hluFieldNames);
+                string[] hluFieldNames,
+                HluGeometryTypes geometryType = HluGeometryTypes.Polygon)
+                => new(true, featureLayer, featureClass, hluFieldMap, hluFieldNames, geometryType);
         }
 
         #endregion HLULayers

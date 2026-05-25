@@ -154,9 +154,9 @@ namespace HLU.UI.ViewModel
         {
             // Set the default value to 'All'.
             if (_makeDefaultReponse == true)
-                RequestClose?.Invoke(true, true, 2);
+                RequestClose?.Invoke(true, false, 2);
             else
-                RequestClose?.Invoke(true, true, null);
+                RequestClose?.Invoke(true, false, null);
         }
 
         #endregion No Command

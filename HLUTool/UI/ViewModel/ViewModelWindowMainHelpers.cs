@@ -65,24 +65,31 @@ namespace HLU.UI.ViewModel
             DataRow[] selectedRows, int[] keyColumOrdinals, int blockSize, T targetTable)
             where T : DataTable
         {
+            // Get the source table from the first selected row.
             DataTable selectionTable = selectedRows[0].Table;
 
             List<List<SqlFilterCondition>> whereClause = [];
 
+            // Outer loop: advance through selected rows, one block at a time.
             int i = 0;
             while (i < selectedRows.Length)
             {
                 List<SqlFilterCondition> whereClauseBlock = [];
                 int j = i;
 
+                // Inner loop: add rows to the current block until blockSize is reached.
                 while (j < selectedRows.Length)
                 {
                     DataRow r = selectedRows[j];
 
+                    // Build one condition per key column for this row.
+                    // Multiple key columns produce AND-joined conditions wrapped in parentheses,
+                    // e.g. (col1 = 'A' AND col2 = 'B') OR (col1 = 'C' AND col2 = 'D').
                     for (int k = 0; k < keyColumOrdinals.Length; k++)
                     {
                         SqlFilterCondition cond = new();
 
+                        // The first key column opens a new OR group; subsequent columns AND within it.
                         if (k == 0)
                         {
                             cond.BooleanOperator = "OR";
@@ -96,8 +103,21 @@ namespace HLU.UI.ViewModel
                         cond.Column = selectionTable.Columns[keyColumOrdinals[k]];
                         cond.Table = targetTable;
                         cond.ColumnSystemType = selectionTable.Columns[k].DataType;
-                        cond.Operator = "=";
-                        cond.Value = r[keyColumOrdinals[k]];
+                        object rawValue = r[keyColumOrdinals[k]];
+
+                        // Use IS NULL for null/DBNull values; otherwise use equality.
+                        if (rawValue == DBNull.Value || rawValue == null)
+                        {
+                            cond.Operator = "IS NULL";
+                            cond.Value = null;
+                        }
+                        else
+                        {
+                            cond.Operator = "=";
+                            cond.Value = rawValue;
+                        }
+
+                        // The last key column closes the parentheses for this row's group.
                         if (k == keyColumOrdinals.Length - 1)
                             cond.CloseParentheses = ")";
                         else
@@ -107,13 +127,16 @@ namespace HLU.UI.ViewModel
                     }
 
                     j++;
+                    // Stop filling this block once the condition count reaches blockSize.
                     if (whereClauseBlock.Count >= blockSize)
                         break;
                 }
 
+                // Add the completed block to the result if it contains any conditions.
                 if (whereClauseBlock.Count > 0)
                     whereClause.Add(whereClauseBlock);
 
+                // Move the outer index forward to the next unprocessed row.
                 i = j;
             }
 

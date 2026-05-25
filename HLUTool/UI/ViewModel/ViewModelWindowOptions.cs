@@ -1846,7 +1846,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return _viewModelMain.HabitatClassCodes;
+                return _viewModelMain.HabitatClassCodesWithNone;
             }
         }
 
@@ -1854,12 +1854,16 @@ namespace HLU.UI.ViewModel
         /// Gets or sets the default habitat class.
         /// </summary>
         /// <value>
-        /// The default habitat class.
+        /// The default habitat class, or "&lt;None&gt;" if no default is set.
         /// </value>
         public string DefaultHabitatClass
         {
             get
             {
+                // Allow <None> as a valid selection.
+                if (_defaultHabitatClass == "<None>")
+                    return "<None>";
+
                 var q = HabitatClassCodes.Where(h => h.code == _defaultHabitatClass);
                 if (q.Any())
                     return _defaultHabitatClass;
@@ -2565,14 +2569,13 @@ namespace HLU.UI.ViewModel
         private void BrowseExportPathClicked(object param)
         {
             _bakExportPath = _exportPath;
-            _exportPath = String.Empty;
-            _exportPath = GetExportPath();
+            ExportPath = String.Empty;
+            ExportPath = GetExportPath();
 
-            if (String.IsNullOrEmpty(_exportPath))
+            if (String.IsNullOrEmpty(ExportPath))
             {
-                _exportPath = _bakExportPath;
+                ExportPath = _bakExportPath;
             }
-            OnPropertyChanged(nameof(ExportPath));
         }
 
         /// <summary>
@@ -2751,7 +2754,7 @@ namespace HLU.UI.ViewModel
                     => "Error: Select your default habitat class.",
                 "DefaultSecondaryGroup" when DefaultSecondaryGroup == null
                     => "Error: Select your default secondary group.",
-                "SecondaryCodeOrder" when SecondaryCodeOrder == null
+                "SecondaryCodeOrder" when string.IsNullOrEmpty(SecondaryCodeOrder)
                     => "Error: Select display order of secondary codes.",
 
                 // User - GIS options

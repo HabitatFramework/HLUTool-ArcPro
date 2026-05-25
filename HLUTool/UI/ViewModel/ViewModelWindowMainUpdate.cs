@@ -195,8 +195,18 @@ namespace HLU.UI.ViewModel
                 else if (historyTable.Rows.Count == 0)
                     throw new Exception("No GIS features were updated.");
 
+                // Compute the secondary-only habitat summary (without the primary code prefix)
+                // for storage in the GIS layer's habsecond field.
+                string habSecond = (_viewModelMain.IncidSecondaryHabitats != null && _viewModelMain.IncidSecondaryHabitats.Count > 0)
+                    ? String.Join(_viewModelMain.SecondaryCodeDelimiter, _viewModelMain.IncidSecondaryHabitats
+                        .OrderBy(s => s.Secondary_habitat_int)
+                        .ThenBy(s => s.Secondary_habitat)
+                        .Select(s => s.Secondary_habitat)
+                        .Distinct())
+                    : null;
+
                 // Perform database shadow copy update
-                UpdateGISShadowCopy(incidCond);
+                UpdateGISShadowCopy(incidCond, habSecond);
 
                 // Build a list of columns and values to update
                 DataColumn[] updateColumns = [
@@ -205,10 +215,10 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.HluDataset.incid_mm_polygons.determqtyColumn,
                     _viewModelMain.HluDataset.incid_mm_polygons.interpqtyColumn ];
 
-                object[] updateValues = [ _viewModelMain.IncidPrimary ?? "",
-                        _viewModelMain.IncidSecondarySummary ?? "",
-                        _viewModelMain.IncidQualityDetermination ?? "",
-                        _viewModelMain.IncidQualityInterpretation ?? ""];
+                object[] updateValues = [ (object)_viewModelMain.IncidPrimary ?? DBNull.Value,
+                        (object)habSecond ?? DBNull.Value,
+                        (object)_viewModelMain.IncidQualityDetermination ?? DBNull.Value,
+                        (object)_viewModelMain.IncidQualityInterpretation ?? DBNull.Value ];
 
                 // Queue updates to the GIS layer
                 await _viewModelMain.GISApplication.UpdateFeaturesAsync(updateColumns, updateValues,
@@ -340,7 +350,7 @@ namespace HLU.UI.ViewModel
         /// Updates the GIS shadow copy (the incid_mm_polygons table).
         /// </summary>
         /// <param name="incidCond">The conditions to filter the rows to be updated.</param>
-        private void UpdateGISShadowCopy(List<SqlFilterCondition> incidCond)
+        private void UpdateGISShadowCopy(List<SqlFilterCondition> incidCond, string habSecond)
         {
             string updateStatement = string.Format(
                 "UPDATE {0} SET {1}={2}, {3}={4}, {5}={6}, {7}={8} WHERE {9}",
@@ -348,7 +358,7 @@ namespace HLU.UI.ViewModel
                 _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.habprimaryColumn.ColumnName),
                 _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidPrimary),
                 _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.habsecondColumn.ColumnName),
-                _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidSecondarySummary),
+                _viewModelMain.DataBase.QuoteValue(habSecond),
                 _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.determqtyColumn.ColumnName),
                 _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidQualityDetermination),
                 _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.interpqtyColumn.ColumnName),
@@ -626,7 +636,7 @@ namespace HLU.UI.ViewModel
 
             // Update other incid vales
             viewModelMain.IncidCurrentRow.habitat_primary = viewModelMain.IncidPrimary;
-            viewModelMain.IncidCurrentRow.habitat_secondaries = viewModelMain.IncidSecondarySummary;
+            viewModelMain.IncidCurrentRow.habitat_secondaries = viewModelMain.IncidSecondaryCodesOnly;
             viewModelMain.IncidCurrentRow.habitat_class = viewModelMain.IncidHabitatClass;
             viewModelMain.IncidCurrentRow.habitat_version = viewModelMain.IncidHabitatVersion;
         }

@@ -26,6 +26,10 @@ namespace HLU.Data.Model {
         
         private incid_mm_polygonsDataTable tableincid_mm_polygons;
         
+        private incid_mm_linesDataTable tableincid_mm_lines;
+        
+        private incid_mm_pointsDataTable tableincid_mm_points;
+        
         private global::System.Data.SchemaSerializationMode _schemaSerializationMode = global::System.Data.SchemaSerializationMode.IncludeSchema;
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -59,6 +63,12 @@ namespace HLU.Data.Model {
                 if ((ds.Tables["incid_mm_polygons"] != null)) {
                     base.Tables.Add(new incid_mm_polygonsDataTable(ds.Tables["incid_mm_polygons"]));
                 }
+                if ((ds.Tables["incid_mm_lines"] != null)) {
+                    base.Tables.Add(new incid_mm_linesDataTable(ds.Tables["incid_mm_lines"]));
+                }
+                if ((ds.Tables["incid_mm_points"] != null)) {
+                    base.Tables.Add(new incid_mm_pointsDataTable(ds.Tables["incid_mm_points"]));
+                }
                 this.DataSetName = ds.DataSetName;
                 this.Prefix = ds.Prefix;
                 this.Namespace = ds.Namespace;
@@ -84,6 +94,26 @@ namespace HLU.Data.Model {
         public incid_mm_polygonsDataTable incid_mm_polygons {
             get {
                 return this.tableincid_mm_polygons;
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+        [global::System.ComponentModel.Browsable(false)]
+        [global::System.ComponentModel.DesignerSerializationVisibility(global::System.ComponentModel.DesignerSerializationVisibility.Content)]
+        public incid_mm_linesDataTable incid_mm_lines {
+            get {
+                return this.tableincid_mm_lines;
+            }
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+        [global::System.ComponentModel.Browsable(false)]
+        [global::System.ComponentModel.DesignerSerializationVisibility(global::System.ComponentModel.DesignerSerializationVisibility.Content)]
+        public incid_mm_pointsDataTable incid_mm_points {
+            get {
+                return this.tableincid_mm_points;
             }
         }
         
@@ -157,6 +187,12 @@ namespace HLU.Data.Model {
                 if ((ds.Tables["incid_mm_polygons"] != null)) {
                     base.Tables.Add(new incid_mm_polygonsDataTable(ds.Tables["incid_mm_polygons"]));
                 }
+                if ((ds.Tables["incid_mm_lines"] != null)) {
+                    base.Tables.Add(new incid_mm_linesDataTable(ds.Tables["incid_mm_lines"]));
+                }
+                if ((ds.Tables["incid_mm_points"] != null)) {
+                    base.Tables.Add(new incid_mm_pointsDataTable(ds.Tables["incid_mm_points"]));
+                }
                 this.DataSetName = ds.DataSetName;
                 this.Prefix = ds.Prefix;
                 this.Namespace = ds.Namespace;
@@ -196,6 +232,18 @@ namespace HLU.Data.Model {
                     this.tableincid_mm_polygons.InitVars();
                 }
             }
+            this.tableincid_mm_lines = ((incid_mm_linesDataTable)(base.Tables["incid_mm_lines"]));
+            if ((initTable == true)) {
+                if ((this.tableincid_mm_lines != null)) {
+                    this.tableincid_mm_lines.InitVars();
+                }
+            }
+            this.tableincid_mm_points = ((incid_mm_pointsDataTable)(base.Tables["incid_mm_points"]));
+            if ((initTable == true)) {
+                if ((this.tableincid_mm_points != null)) {
+                    this.tableincid_mm_points.InitVars();
+                }
+            }
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
@@ -208,11 +256,27 @@ namespace HLU.Data.Model {
             this.SchemaSerializationMode = global::System.Data.SchemaSerializationMode.IncludeSchema;
             this.tableincid_mm_polygons = new incid_mm_polygonsDataTable();
             base.Tables.Add(this.tableincid_mm_polygons);
+            this.tableincid_mm_lines = new incid_mm_linesDataTable();
+            base.Tables.Add(this.tableincid_mm_lines);
+            this.tableincid_mm_points = new incid_mm_pointsDataTable();
+            base.Tables.Add(this.tableincid_mm_points);
         }
         
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         private bool ShouldSerializeincid_mm_polygons() {
+            return false;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+        private bool ShouldSerializeincid_mm_lines() {
+            return false;
+        }
+        
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+        private bool ShouldSerializeincid_mm_points() {
             return false;
         }
         
@@ -273,6 +337,12 @@ namespace HLU.Data.Model {
         
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         public delegate void incid_mm_polygonsRowChangeEventHandler(object sender, incid_mm_polygonsRowChangeEvent e);
+        
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+        public delegate void incid_mm_linesRowChangeEventHandler(object sender, incid_mm_linesRowChangeEvent e);
+        
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+        public delegate void incid_mm_pointsRowChangeEventHandler(object sender, incid_mm_pointsRowChangeEvent e);
         
         /// <summary>
         ///Represents the strongly named DataTable class.
@@ -631,6 +701,718 @@ namespace HLU.Data.Model {
         }
         
         /// <summary>
+        ///Represents the strongly named DataTable class.
+        ///</summary>
+        [global::System.Serializable()]
+        [global::System.Xml.Serialization.XmlSchemaProviderAttribute("GetTypedTableSchema")]
+        public partial class incid_mm_linesDataTable : global::System.Data.TypedTableBase<incid_mm_linesRow> {
+
+            private global::System.Data.DataColumn columnincid;
+            
+            private global::System.Data.DataColumn columntoid;
+            
+            private global::System.Data.DataColumn columnfragid;
+            
+            private global::System.Data.DataColumn columnhabprimary;
+            
+            private global::System.Data.DataColumn columnhabsecond;
+            
+            private global::System.Data.DataColumn columndetermqty;
+            
+            private global::System.Data.DataColumn columninterpqty;
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public incid_mm_linesDataTable() {
+                this.TableName = "incid_mm_lines";
+                this.BeginInit();
+                this.InitClass();
+                this.EndInit();
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            internal incid_mm_linesDataTable(global::System.Data.DataTable table) {
+                this.TableName = table.TableName;
+                if ((table.CaseSensitive != table.DataSet.CaseSensitive)) {
+                    this.CaseSensitive = table.CaseSensitive;
+                }
+                if ((table.Locale.ToString() != table.DataSet.Locale.ToString())) {
+                    this.Locale = table.Locale;
+                }
+                if ((table.Namespace != table.DataSet.Namespace)) {
+                    this.Namespace = table.Namespace;
+                }
+                this.Prefix = table.Prefix;
+                this.MinimumCapacity = table.MinimumCapacity;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            [System.ObsoleteAttribute("This API supports obsolete formatter-based serialization. It should not be called" +
+                " or extended by application code.", DiagnosticId="SYSLIB0051")]
+            protected incid_mm_linesDataTable(global::System.Runtime.Serialization.SerializationInfo info, global::System.Runtime.Serialization.StreamingContext context) : 
+                    base(info, context) {
+                this.InitVars();
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public global::System.Data.DataColumn incidColumn {
+                get {
+                    return this.columnincid;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public global::System.Data.DataColumn toidColumn {
+                get {
+                    return this.columntoid;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public global::System.Data.DataColumn fragidColumn {
+                get {
+                    return this.columnfragid;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public global::System.Data.DataColumn habprimaryColumn {
+                get {
+                    return this.columnhabprimary;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public global::System.Data.DataColumn habsecondColumn {
+                get {
+                    return this.columnhabsecond;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public global::System.Data.DataColumn determqtyColumn {
+                get {
+                    return this.columndetermqty;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public global::System.Data.DataColumn interpqtyColumn {
+                get {
+                    return this.columninterpqty;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            [global::System.ComponentModel.Browsable(false)]
+            public int Count {
+                get {
+                    return this.Rows.Count;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public incid_mm_linesRow this[int index] {
+                get {
+                    return ((incid_mm_linesRow)(this.Rows[index]));
+                }
+            }
+            
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public event incid_mm_linesRowChangeEventHandler incid_mm_linesRowChanging;
+            
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public event incid_mm_linesRowChangeEventHandler incid_mm_linesRowChanged;
+            
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public event incid_mm_linesRowChangeEventHandler incid_mm_linesRowDeleting;
+            
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public event incid_mm_linesRowChangeEventHandler incid_mm_linesRowDeleted;
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public void Addincid_mm_linesRow(incid_mm_linesRow row) {
+                this.Rows.Add(row);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public incid_mm_linesRow Addincid_mm_linesRow(string incid, string toid, string fragid, string habprimary, string habsecond, string determqty, string interpqty) {
+                incid_mm_linesRow rowincid_mm_linesRow = ((incid_mm_linesRow)(this.NewRow()));
+                object[] columnValuesArray = new object[] {
+                        incid,
+                        toid,
+                        fragid,
+                        habprimary,
+                        habsecond,
+                        determqty,
+                        interpqty};
+                rowincid_mm_linesRow.ItemArray = columnValuesArray;
+                this.Rows.Add(rowincid_mm_linesRow);
+                return rowincid_mm_linesRow;
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public incid_mm_linesRow FindByincidtoidfragid(string incid, string toid, string fragid) {
+                return ((incid_mm_linesRow)(this.Rows.Find(new object[] {
+                            incid,
+                            toid,
+                            fragid})));
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public override global::System.Data.DataTable Clone() {
+                incid_mm_linesDataTable cln = ((incid_mm_linesDataTable)(base.Clone()));
+                cln.InitVars();
+                return cln;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            protected override global::System.Data.DataTable CreateInstance() {
+                return new incid_mm_linesDataTable();
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            internal void InitVars() {
+                this.columnincid = base.Columns["incid"];
+                this.columntoid = base.Columns["toid"];
+                this.columnfragid = base.Columns["fragid"];
+                this.columnhabprimary = base.Columns["habprimary"];
+                this.columnhabsecond = base.Columns["habsecond"];
+                this.columndetermqty = base.Columns["determqty"];
+                this.columninterpqty = base.Columns["interpqty"];
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            private void InitClass() {
+                this.columnincid = new global::System.Data.DataColumn("incid", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnincid);
+                this.columntoid = new global::System.Data.DataColumn("toid", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columntoid);
+                this.columnfragid = new global::System.Data.DataColumn("fragid", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnfragid);
+                this.columnhabprimary = new global::System.Data.DataColumn("habprimary", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnhabprimary);
+                this.columnhabsecond = new global::System.Data.DataColumn("habsecond", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnhabsecond);
+                this.columndetermqty = new global::System.Data.DataColumn("determqty", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columndetermqty);
+                this.columninterpqty = new global::System.Data.DataColumn("interpqty", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columninterpqty);
+                this.Constraints.Add(new global::System.Data.UniqueConstraint("PK_INCID_MM_Lines", new global::System.Data.DataColumn[] {
+                                this.columnincid,
+                                this.columntoid,
+                                this.columnfragid}, true));
+                this.columnincid.AllowDBNull = false;
+                this.columnincid.MaxLength = 12;
+                this.columntoid.AllowDBNull = false;
+                this.columntoid.MaxLength = 20;
+                this.columnfragid.AllowDBNull = false;
+                this.columnfragid.MaxLength = 5;
+                this.columnhabprimary.MaxLength = 8;
+                this.columnhabsecond.MaxLength = 80;
+                this.columndetermqty.MaxLength = 2;
+                this.columninterpqty.MaxLength = 2;
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public incid_mm_linesRow Newincid_mm_linesRow() {
+                return ((incid_mm_linesRow)(this.NewRow()));
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            protected override global::System.Data.DataRow NewRowFromBuilder(global::System.Data.DataRowBuilder builder) {
+                return new incid_mm_linesRow(builder);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            protected override global::System.Type GetRowType() {
+                return typeof(incid_mm_linesRow);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            protected override void OnRowChanged(global::System.Data.DataRowChangeEventArgs e) {
+                base.OnRowChanged(e);
+                if ((this.incid_mm_linesRowChanged != null)) {
+                    this.incid_mm_linesRowChanged(this, new incid_mm_linesRowChangeEvent(((incid_mm_linesRow)(e.Row)), e.Action));
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            protected override void OnRowChanging(global::System.Data.DataRowChangeEventArgs e) {
+                base.OnRowChanging(e);
+                if ((this.incid_mm_linesRowChanging != null)) {
+                    this.incid_mm_linesRowChanging(this, new incid_mm_linesRowChangeEvent(((incid_mm_linesRow)(e.Row)), e.Action));
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            protected override void OnRowDeleted(global::System.Data.DataRowChangeEventArgs e) {
+                base.OnRowDeleted(e);
+                if ((this.incid_mm_linesRowDeleted != null)) {
+                    this.incid_mm_linesRowDeleted(this, new incid_mm_linesRowChangeEvent(((incid_mm_linesRow)(e.Row)), e.Action));
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            protected override void OnRowDeleting(global::System.Data.DataRowChangeEventArgs e) {
+                base.OnRowDeleting(e);
+                if ((this.incid_mm_linesRowDeleting != null)) {
+                    this.incid_mm_linesRowDeleting(this, new incid_mm_linesRowChangeEvent(((incid_mm_linesRow)(e.Row)), e.Action));
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public void Removeincid_mm_linesRow(incid_mm_linesRow row) {
+                this.Rows.Remove(row);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public static global::System.Xml.Schema.XmlSchemaComplexType GetTypedTableSchema(global::System.Xml.Schema.XmlSchemaSet xs) {
+                global::System.Xml.Schema.XmlSchemaComplexType type = new global::System.Xml.Schema.XmlSchemaComplexType();
+                global::System.Xml.Schema.XmlSchemaSequence sequence = new global::System.Xml.Schema.XmlSchemaSequence();
+                HluGISLayer ds = new HluGISLayer();
+                global::System.Xml.Schema.XmlSchemaAny any1 = new global::System.Xml.Schema.XmlSchemaAny();
+                any1.Namespace = "http://www.w3.org/2001/XMLSchema";
+                any1.MinOccurs = new decimal(0);
+                any1.MaxOccurs = decimal.MaxValue;
+                any1.ProcessContents = global::System.Xml.Schema.XmlSchemaContentProcessing.Lax;
+                sequence.Items.Add(any1);
+                global::System.Xml.Schema.XmlSchemaAny any2 = new global::System.Xml.Schema.XmlSchemaAny();
+                any2.Namespace = "urn:schemas-microsoft-com:xml-diffgram-v1";
+                any2.MinOccurs = new decimal(1);
+                any2.ProcessContents = global::System.Xml.Schema.XmlSchemaContentProcessing.Lax;
+                sequence.Items.Add(any2);
+                global::System.Xml.Schema.XmlSchemaAttribute attribute1 = new global::System.Xml.Schema.XmlSchemaAttribute();
+                attribute1.Name = "namespace";
+                attribute1.FixedValue = ds.Namespace;
+                type.Attributes.Add(attribute1);
+                global::System.Xml.Schema.XmlSchemaAttribute attribute2 = new global::System.Xml.Schema.XmlSchemaAttribute();
+                attribute2.Name = "tableTypeName";
+                attribute2.FixedValue = "incid_mm_linesDataTable";
+                type.Attributes.Add(attribute2);
+                type.Particle = sequence;
+                global::System.Xml.Schema.XmlSchema dsSchema = ds.GetSchemaSerializable();
+                if (xs.Contains(dsSchema.TargetNamespace)) {
+                    global::System.IO.MemoryStream s1 = new global::System.IO.MemoryStream();
+                    global::System.IO.MemoryStream s2 = new global::System.IO.MemoryStream();
+                    try {
+                        global::System.Xml.Schema.XmlSchema schema = null;
+                        dsSchema.Write(s1);
+                        for (global::System.Collections.IEnumerator schemas = xs.Schemas(dsSchema.TargetNamespace).GetEnumerator(); schemas.MoveNext(); ) {
+                            schema = ((global::System.Xml.Schema.XmlSchema)(schemas.Current));
+                            s2.SetLength(0);
+                            schema.Write(s2);
+                            if ((s1.Length == s2.Length)) {
+                                s1.Position = 0;
+                                s2.Position = 0;
+                                for (; ((s1.Position != s1.Length) 
+                                            && (s1.ReadByte() == s2.ReadByte())); ) {
+                                    ;
+                                }
+                                if ((s1.Position == s1.Length)) {
+                                    return type;
+                                }
+                            }
+                        }
+                    }
+                    finally {
+                        if ((s1 != null)) {
+                            s1.Close();
+                        }
+                        if ((s2 != null)) {
+                            s2.Close();
+                        }
+                    }
+                }
+                xs.Add(dsSchema);
+                return type;
+            }
+        }
+        
+        /// <summary>
+        ///Represents the strongly named DataTable class.
+        ///</summary>
+        [global::System.Serializable()]
+        [global::System.Xml.Serialization.XmlSchemaProviderAttribute("GetTypedTableSchema")]
+        public partial class incid_mm_pointsDataTable : global::System.Data.TypedTableBase<incid_mm_pointsRow> {
+
+            private global::System.Data.DataColumn columnincid;
+            
+            private global::System.Data.DataColumn columntoid;
+            
+            private global::System.Data.DataColumn columnfragid;
+            
+            private global::System.Data.DataColumn columnhabprimary;
+            
+            private global::System.Data.DataColumn columnhabsecond;
+            
+            private global::System.Data.DataColumn columndetermqty;
+            
+            private global::System.Data.DataColumn columninterpqty;
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public incid_mm_pointsDataTable() {
+                this.TableName = "incid_mm_points";
+                this.BeginInit();
+                this.InitClass();
+                this.EndInit();
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            internal incid_mm_pointsDataTable(global::System.Data.DataTable table) {
+                this.TableName = table.TableName;
+                if ((table.CaseSensitive != table.DataSet.CaseSensitive)) {
+                    this.CaseSensitive = table.CaseSensitive;
+                }
+                if ((table.Locale.ToString() != table.DataSet.Locale.ToString())) {
+                    this.Locale = table.Locale;
+                }
+                if ((table.Namespace != table.DataSet.Namespace)) {
+                    this.Namespace = table.Namespace;
+                }
+                this.Prefix = table.Prefix;
+                this.MinimumCapacity = table.MinimumCapacity;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            [System.ObsoleteAttribute("This API supports obsolete formatter-based serialization. It should not be called" +
+                " or extended by application code.", DiagnosticId="SYSLIB0051")]
+            protected incid_mm_pointsDataTable(global::System.Runtime.Serialization.SerializationInfo info, global::System.Runtime.Serialization.StreamingContext context) : 
+                    base(info, context) {
+                this.InitVars();
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public global::System.Data.DataColumn incidColumn {
+                get {
+                    return this.columnincid;
+                }
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public global::System.Data.DataColumn toidColumn {
+                get {
+                    return this.columntoid;
+                }
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public global::System.Data.DataColumn fragidColumn {
+                get {
+                    return this.columnfragid;
+                }
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public global::System.Data.DataColumn habprimaryColumn {
+                get {
+                    return this.columnhabprimary;
+                }
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public global::System.Data.DataColumn habsecondColumn {
+                get {
+                    return this.columnhabsecond;
+                }
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public global::System.Data.DataColumn determqtyColumn {
+                get {
+                    return this.columndetermqty;
+                }
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public global::System.Data.DataColumn interpqtyColumn {
+                get {
+                    return this.columninterpqty;
+                }
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            [global::System.ComponentModel.Browsable(false)]
+            public int Count {
+                get {
+                    return this.Rows.Count;
+                }
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public incid_mm_pointsRow this[int index] {
+                get {
+                    return ((incid_mm_pointsRow)(this.Rows[index]));
+                }
+            }
+            
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public event incid_mm_pointsRowChangeEventHandler incid_mm_pointsRowChanging;
+            
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public event incid_mm_pointsRowChangeEventHandler incid_mm_pointsRowChanged;
+            
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public event incid_mm_pointsRowChangeEventHandler incid_mm_pointsRowDeleting;
+            
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public event incid_mm_pointsRowChangeEventHandler incid_mm_pointsRowDeleted;
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public void Addincid_mm_pointsRow(incid_mm_pointsRow row) {
+                this.Rows.Add(row);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public incid_mm_pointsRow Addincid_mm_pointsRow(string incid, string toid, string fragid, string habprimary, string habsecond, string determqty, string interpqty) {
+                incid_mm_pointsRow rowincid_mm_pointsRow = ((incid_mm_pointsRow)(this.NewRow()));
+                object[] columnValuesArray = new object[] {
+                        incid,
+                        toid,
+                        fragid,
+                        habprimary,
+                        habsecond,
+                        determqty,
+                        interpqty};
+                rowincid_mm_pointsRow.ItemArray = columnValuesArray;
+                this.Rows.Add(rowincid_mm_pointsRow);
+                return rowincid_mm_pointsRow;
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public incid_mm_pointsRow FindByincidtoidfragid(string incid, string toid, string fragid) {
+                return ((incid_mm_pointsRow)(this.Rows.Find(new object[] {
+                            incid,
+                            toid,
+                            fragid})));
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public override global::System.Data.DataTable Clone() {
+                incid_mm_pointsDataTable cln = ((incid_mm_pointsDataTable)(base.Clone()));
+                cln.InitVars();
+                return cln;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            protected override global::System.Data.DataTable CreateInstance() {
+                return new incid_mm_pointsDataTable();
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            internal void InitVars() {
+                this.columnincid = base.Columns["incid"];
+                this.columntoid = base.Columns["toid"];
+                this.columnfragid = base.Columns["fragid"];
+                this.columnhabprimary = base.Columns["habprimary"];
+                this.columnhabsecond = base.Columns["habsecond"];
+                this.columndetermqty = base.Columns["determqty"];
+                this.columninterpqty = base.Columns["interpqty"];
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            private void InitClass() {
+                this.columnincid = new global::System.Data.DataColumn("incid", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnincid);
+                this.columntoid = new global::System.Data.DataColumn("toid", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columntoid);
+                this.columnfragid = new global::System.Data.DataColumn("fragid", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnfragid);
+                this.columnhabprimary = new global::System.Data.DataColumn("habprimary", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnhabprimary);
+                this.columnhabsecond = new global::System.Data.DataColumn("habsecond", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columnhabsecond);
+                this.columndetermqty = new global::System.Data.DataColumn("determqty", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columndetermqty);
+                this.columninterpqty = new global::System.Data.DataColumn("interpqty", typeof(string), null, global::System.Data.MappingType.Element);
+                base.Columns.Add(this.columninterpqty);
+                this.Constraints.Add(new global::System.Data.UniqueConstraint("PK_INCID_MM_Points", new global::System.Data.DataColumn[] {
+                                this.columnincid,
+                                this.columntoid,
+                                this.columnfragid}, true));
+                this.columnincid.AllowDBNull = false;
+                this.columnincid.MaxLength = 12;
+                this.columntoid.AllowDBNull = false;
+                this.columntoid.MaxLength = 20;
+                this.columnfragid.AllowDBNull = false;
+                this.columnfragid.MaxLength = 5;
+                this.columnhabprimary.MaxLength = 8;
+                this.columnhabsecond.MaxLength = 80;
+                this.columndetermqty.MaxLength = 2;
+                this.columninterpqty.MaxLength = 2;
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public incid_mm_pointsRow Newincid_mm_pointsRow() {
+                return ((incid_mm_pointsRow)(this.NewRow()));
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            protected override global::System.Data.DataRow NewRowFromBuilder(global::System.Data.DataRowBuilder builder) {
+                return new incid_mm_pointsRow(builder);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            protected override global::System.Type GetRowType() {
+                return typeof(incid_mm_pointsRow);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            protected override void OnRowChanged(global::System.Data.DataRowChangeEventArgs e) {
+                base.OnRowChanged(e);
+                if ((this.incid_mm_pointsRowChanged != null)) {
+                    this.incid_mm_pointsRowChanged(this, new incid_mm_pointsRowChangeEvent(((incid_mm_pointsRow)(e.Row)), e.Action));
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            protected override void OnRowChanging(global::System.Data.DataRowChangeEventArgs e) {
+                base.OnRowChanging(e);
+                if ((this.incid_mm_pointsRowChanging != null)) {
+                    this.incid_mm_pointsRowChanging(this, new incid_mm_pointsRowChangeEvent(((incid_mm_pointsRow)(e.Row)), e.Action));
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            protected override void OnRowDeleted(global::System.Data.DataRowChangeEventArgs e) {
+                base.OnRowDeleted(e);
+                if ((this.incid_mm_pointsRowDeleted != null)) {
+                    this.incid_mm_pointsRowDeleted(this, new incid_mm_pointsRowChangeEvent(((incid_mm_pointsRow)(e.Row)), e.Action));
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            protected override void OnRowDeleting(global::System.Data.DataRowChangeEventArgs e) {
+                base.OnRowDeleting(e);
+                if ((this.incid_mm_pointsRowDeleting != null)) {
+                    this.incid_mm_pointsRowDeleting(this, new incid_mm_pointsRowChangeEvent(((incid_mm_pointsRow)(e.Row)), e.Action));
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public void Removeincid_mm_pointsRow(incid_mm_pointsRow row) {
+                this.Rows.Remove(row);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public static global::System.Xml.Schema.XmlSchemaComplexType GetTypedTableSchema(global::System.Xml.Schema.XmlSchemaSet xs) {
+                global::System.Xml.Schema.XmlSchemaComplexType type = new global::System.Xml.Schema.XmlSchemaComplexType();
+                global::System.Xml.Schema.XmlSchemaSequence sequence = new global::System.Xml.Schema.XmlSchemaSequence();
+                HluGISLayer ds = new HluGISLayer();
+                global::System.Xml.Schema.XmlSchemaAny any1 = new global::System.Xml.Schema.XmlSchemaAny();
+                any1.Namespace = "http://www.w3.org/2001/XMLSchema";
+                any1.MinOccurs = new decimal(0);
+                any1.MaxOccurs = decimal.MaxValue;
+                any1.ProcessContents = global::System.Xml.Schema.XmlSchemaContentProcessing.Lax;
+                sequence.Items.Add(any1);
+                global::System.Xml.Schema.XmlSchemaAny any2 = new global::System.Xml.Schema.XmlSchemaAny();
+                any2.Namespace = "urn:schemas-microsoft-com:xml-diffgram-v1";
+                any2.MinOccurs = new decimal(1);
+                any2.ProcessContents = global::System.Xml.Schema.XmlSchemaContentProcessing.Lax;
+                sequence.Items.Add(any2);
+                global::System.Xml.Schema.XmlSchemaAttribute attribute1 = new global::System.Xml.Schema.XmlSchemaAttribute();
+                attribute1.Name = "namespace";
+                attribute1.FixedValue = ds.Namespace;
+                type.Attributes.Add(attribute1);
+                global::System.Xml.Schema.XmlSchemaAttribute attribute2 = new global::System.Xml.Schema.XmlSchemaAttribute();
+                attribute2.Name = "tableTypeName";
+                attribute2.FixedValue = "incid_mm_pointsDataTable";
+                type.Attributes.Add(attribute2);
+                type.Particle = sequence;
+                global::System.Xml.Schema.XmlSchema dsSchema = ds.GetSchemaSerializable();
+                if (xs.Contains(dsSchema.TargetNamespace)) {
+                    global::System.IO.MemoryStream s1 = new global::System.IO.MemoryStream();
+                    global::System.IO.MemoryStream s2 = new global::System.IO.MemoryStream();
+                    try {
+                        global::System.Xml.Schema.XmlSchema schema = null;
+                        dsSchema.Write(s1);
+                        for (global::System.Collections.IEnumerator schemas = xs.Schemas(dsSchema.TargetNamespace).GetEnumerator(); schemas.MoveNext(); ) {
+                            schema = ((global::System.Xml.Schema.XmlSchema)(schemas.Current));
+                            s2.SetLength(0);
+                            schema.Write(s2);
+                            if ((s1.Length == s2.Length)) {
+                                s1.Position = 0;
+                                s2.Position = 0;
+                                for (; ((s1.Position != s1.Length) 
+                                            && (s1.ReadByte() == s2.ReadByte())); ) {
+                                    ;
+                                }
+                                if ((s1.Position == s1.Length)) {
+                                    return type;
+                                }
+                            }
+                        }
+                    }
+                    finally {
+                        if ((s1 != null)) {
+                            s1.Close();
+                        }
+                        if ((s2 != null)) {
+                            s2.Close();
+                        }
+                    }
+                }
+                xs.Add(dsSchema);
+                return type;
+            }
+        }
+        
+        /// <summary>
         ///Represents strongly named DataRow class.
         ///</summary>
         public partial class incid_mm_polygonsRow : global::System.Data.DataRow {
@@ -791,11 +1573,331 @@ namespace HLU.Data.Model {
         }
         
         /// <summary>
+        ///Represents strongly named DataRow class.
+        ///</summary>
+        public partial class incid_mm_linesRow : global::System.Data.DataRow {
+            
+            private incid_mm_linesDataTable tableincid_mm_lines;
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            internal incid_mm_linesRow(global::System.Data.DataRowBuilder rb) : 
+                    base(rb) {
+                this.tableincid_mm_lines = ((incid_mm_linesDataTable)(this.Table));
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public string incid {
+                get {
+                    return ((string)(this[this.tableincid_mm_lines.incidColumn]));
+                }
+                set {
+                    this[this.tableincid_mm_lines.incidColumn] = value;
+                }
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public string toid {
+                get {
+                    return ((string)(this[this.tableincid_mm_lines.toidColumn]));
+                }
+                set {
+                    this[this.tableincid_mm_lines.toidColumn] = value;
+                }
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public string fragid {
+                get {
+                    return ((string)(this[this.tableincid_mm_lines.fragidColumn]));
+                }
+                set {
+                    this[this.tableincid_mm_lines.fragidColumn] = value;
+                }
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public string habprimary {
+                get {
+                    try {
+                        return ((string)(this[this.tableincid_mm_lines.habprimaryColumn]));
+                    }
+                    catch (global::System.InvalidCastException e) {
+                        throw new global::System.Data.StrongTypingException("The value for column \'habprimary\' in table \'incid_mm_lines\' is DBNull.", e);
+                    }
+                }
+                set {
+                    this[this.tableincid_mm_lines.habprimaryColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public string habsecond {
+                get {
+                    try {
+                        return ((string)(this[this.tableincid_mm_lines.habsecondColumn]));
+                    }
+                    catch (global::System.InvalidCastException e) {
+                        throw new global::System.Data.StrongTypingException("The value for column \'habsecond\' in table \'incid_mm_lines\' is DBNull.", e);
+                    }
+                }
+                set {
+                    this[this.tableincid_mm_lines.habsecondColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public string determqty {
+                get {
+                    try {
+                        return ((string)(this[this.tableincid_mm_lines.determqtyColumn]));
+                    }
+                    catch (global::System.InvalidCastException e) {
+                        throw new global::System.Data.StrongTypingException("The value for column \'determqty\' in table \'incid_mm_lines\' is DBNull.", e);
+                    }
+                }
+                set {
+                    this[this.tableincid_mm_lines.determqtyColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public string interpqty {
+                get {
+                    try {
+                        return ((string)(this[this.tableincid_mm_lines.interpqtyColumn]));
+                    }
+                    catch (global::System.InvalidCastException e) {
+                        throw new global::System.Data.StrongTypingException("The value for column \'interpqty\' in table \'incid_mm_lines\' is DBNull.", e);
+                    }
+                }
+                set {
+                    this[this.tableincid_mm_lines.interpqtyColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public bool IshabprimaryNull() {
+                return this.IsNull(this.tableincid_mm_lines.habprimaryColumn);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public void SethabprimaryNull() {
+                this[this.tableincid_mm_lines.habprimaryColumn] = global::System.Convert.DBNull;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public bool IshabsecondNull() {
+                return this.IsNull(this.tableincid_mm_lines.habsecondColumn);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public void SethabsecondNull() {
+                this[this.tableincid_mm_lines.habsecondColumn] = global::System.Convert.DBNull;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public bool IsdetermqtyNull() {
+                return this.IsNull(this.tableincid_mm_lines.determqtyColumn);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public void SetdetermqtyNull() {
+                this[this.tableincid_mm_lines.determqtyColumn] = global::System.Convert.DBNull;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public bool IsinterpqtyNull() {
+                return this.IsNull(this.tableincid_mm_lines.interpqtyColumn);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public void SetinterpqtyNull() {
+                this[this.tableincid_mm_lines.interpqtyColumn] = global::System.Convert.DBNull;
+            }
+        }
+
+        /// <summary>
+        ///Represents strongly named DataRow class.
+        ///</summary>
+        public partial class incid_mm_pointsRow : global::System.Data.DataRow {
+
+            private incid_mm_pointsDataTable tableincid_mm_points;
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            internal incid_mm_pointsRow(global::System.Data.DataRowBuilder rb) : 
+                    base(rb) {
+                this.tableincid_mm_points = ((incid_mm_pointsDataTable)(this.Table));
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public string incid {
+                get {
+                    return ((string)(this[this.tableincid_mm_points.incidColumn]));
+                }
+                set {
+                    this[this.tableincid_mm_points.incidColumn] = value;
+                }
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public string toid {
+                get {
+                    return ((string)(this[this.tableincid_mm_points.toidColumn]));
+                }
+                set {
+                    this[this.tableincid_mm_points.toidColumn] = value;
+                }
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public string fragid {
+                get {
+                    return ((string)(this[this.tableincid_mm_points.fragidColumn]));
+                }
+                set {
+                    this[this.tableincid_mm_points.fragidColumn] = value;
+                }
+            }
+
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public string habprimary {
+                get {
+                    try {
+                        return ((string)(this[this.tableincid_mm_points.habprimaryColumn]));
+                    }
+                    catch (global::System.InvalidCastException e) {
+                        throw new global::System.Data.StrongTypingException("The value for column \'habprimary\' in table \'incid_mm_points\' is DBNull.", e);
+                    }
+                }
+                set {
+                    this[this.tableincid_mm_points.habprimaryColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public string habsecond {
+                get {
+                    try {
+                        return ((string)(this[this.tableincid_mm_points.habsecondColumn]));
+                    }
+                    catch (global::System.InvalidCastException e) {
+                        throw new global::System.Data.StrongTypingException("The value for column \'habsecond\' in table \'incid_mm_points\' is DBNull.", e);
+                    }
+                }
+                set {
+                    this[this.tableincid_mm_points.habsecondColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public string determqty {
+                get {
+                    try {
+                        return ((string)(this[this.tableincid_mm_points.determqtyColumn]));
+                    }
+                    catch (global::System.InvalidCastException e) {
+                        throw new global::System.Data.StrongTypingException("The value for column \'determqty\' in table \'incid_mm_points\' is DBNull.", e);
+                    }
+                }
+                set {
+                    this[this.tableincid_mm_points.determqtyColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public string interpqty {
+                get {
+                    try {
+                        return ((string)(this[this.tableincid_mm_points.interpqtyColumn]));
+                    }
+                    catch (global::System.InvalidCastException e) {
+                        throw new global::System.Data.StrongTypingException("The value for column \'interpqty\' in table \'incid_mm_points\' is DBNull.", e);
+                    }
+                }
+                set {
+                    this[this.tableincid_mm_points.interpqtyColumn] = value;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public bool IshabprimaryNull() {
+                return this.IsNull(this.tableincid_mm_points.habprimaryColumn);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public void SethabprimaryNull() {
+                this[this.tableincid_mm_points.habprimaryColumn] = global::System.Convert.DBNull;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public bool IshabsecondNull() {
+                return this.IsNull(this.tableincid_mm_points.habsecondColumn);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public void SethabsecondNull() {
+                this[this.tableincid_mm_points.habsecondColumn] = global::System.Convert.DBNull;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public bool IsdetermqtyNull() {
+                return this.IsNull(this.tableincid_mm_points.determqtyColumn);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public void SetdetermqtyNull() {
+                this[this.tableincid_mm_points.determqtyColumn] = global::System.Convert.DBNull;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public bool IsinterpqtyNull() {
+                return this.IsNull(this.tableincid_mm_points.interpqtyColumn);
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public void SetinterpqtyNull() {
+                this[this.tableincid_mm_points.interpqtyColumn] = global::System.Convert.DBNull;
+            }
+        }
+
+        /// <summary>
         ///Row event argument class
         ///</summary>
         [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
         public class incid_mm_polygonsRowChangeEvent : global::System.EventArgs {
-            
+
             private incid_mm_polygonsRow eventRow;
             
             private global::System.Data.DataRowAction eventAction;
@@ -810,6 +1912,74 @@ namespace HLU.Data.Model {
             [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
             [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
             public incid_mm_polygonsRow Row {
+                get {
+                    return this.eventRow;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public global::System.Data.DataRowAction Action {
+                get {
+                    return this.eventAction;
+                }
+            }
+        }
+        
+        /// <summary>
+        ///Row event argument class
+        ///</summary>
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+        public class incid_mm_linesRowChangeEvent : global::System.EventArgs {
+            
+            private incid_mm_linesRow eventRow;
+            
+            private global::System.Data.DataRowAction eventAction;
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public incid_mm_linesRowChangeEvent(incid_mm_linesRow row, global::System.Data.DataRowAction action) {
+                this.eventRow = row;
+                this.eventAction = action;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public incid_mm_linesRow Row {
+                get {
+                    return this.eventRow;
+                }
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public global::System.Data.DataRowAction Action {
+                get {
+                    return this.eventAction;
+                }
+            }
+        }
+        
+        /// <summary>
+        ///Row event argument class
+        ///</summary>
+        [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+        public class incid_mm_pointsRowChangeEvent : global::System.EventArgs {
+            
+            private incid_mm_pointsRow eventRow;
+            
+            private global::System.Data.DataRowAction eventAction;
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public incid_mm_pointsRowChangeEvent(incid_mm_pointsRow row, global::System.Data.DataRowAction action) {
+                this.eventRow = row;
+                this.eventAction = action;
+            }
+            
+            [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+            [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Data.Design.TypedDataSetGenerator", "17.0.0.0")]
+            public incid_mm_pointsRow Row {
                 get {
                     return this.eventRow;
                 }

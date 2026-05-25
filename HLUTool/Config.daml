@@ -5,13 +5,13 @@
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
 
-	<AddInInfo id="{8bb44fa0-a26d-4f03-a370-b52f39b28c90}" version="1.0.1" desktopVersion="3.4">
+	<AddInInfo id="{8bb44fa0-a26d-4f03-a370-b52f39b28c90}" version="1.1.0" desktopVersion="3.4">
 		<Name>HLUTool</Name>
 		<Description>HLUTool provides a user-friendly interface for searching, displaying and updating habitat and land use attributes held in a relational database alongside spatial features in ArcGIS Pro. Key benefits include: validation of attribute compatibility; comprehensive history log for every change; simple query interface (e.g. all priority habitat features); reduced data volumes through relational data storage; data extraction in bespoke formats; and improved data retrieval and update performance for high-volume, complex data.</Description>
 		<Image>Images\AddInDesktop32.png</Image>
 		<Author>Andy Foy, andy@andyfoyconsulting.co.uk</Author>
 		<Company>Andy Foy Consulting</Company>
-		<Date>27/04/2026 14:19:00</Date>
+		<Date>15/05/2026 14:19:00</Date>
 		<Subject>Framework, Editing, Geodatabase</Subject>
 		<!-- Note subject can be one or more of these topics:
                     Content, Framework, Editing, Geodatabase, Geometry, Geoprocessing, Layouts, Map Authoring, Map Exploration -->
@@ -45,6 +45,7 @@
 					<group refID="HLUTool_Group_Filter" />
 					<group refID="HLUTool_Group_Selection" />
 					<group refID="HLUTool_Group_Topology" />
+					<group refID="HLUTool_Group_FeatureInsert" />
 					<group refID="HLUTool_Group_Export" />
 					<group refID="HLUTool_Group_Help" />
 				</tab>
@@ -86,9 +87,11 @@
 
 				<!-- ESRI Edit Tools group -->
 				<group id="HLUTool_Group_Geometry" caption="Geometry" keytip="G5">
-					<button refID="esri_editing_SplitCommand" size ="middle" />
-					<button refID="esri_editing_MergeFeatures" size ="middle" />
+					<button refID="esri_editing_ShowCreateFeaturesBtn" size="middle" />
+					<button refID="esri_editing_ShowEditFeaturesBtn" size="middle" />
 					<button refID="esri_editing_EditVerticesModifyFeature" size ="middle" />
+					<button refID="esri_editing_SplitCommand" size ="middle" separator="true" />
+					<button refID="esri_editing_MergeFeatures" size ="middle" />
 				</group>
 
 				<!-- Filter group -->
@@ -110,6 +113,11 @@
 				<group id="HLUTool_Group_Topology" caption="Topology" keytip="G8" launcherButtonID="HLUTool_btnUpdatesOptionsLauncher">
 					<dynamicMenu refID="HLUTool_SplitMenu" size="large" />
 					<dynamicMenu refID="HLUTool_MergeMenu" size="large" />
+				</group>
+
+				<!-- Feature Insert group -->
+				<group id="HLUTool_Group_FeatureInsert" caption="Feature Insert" keytip="GA">
+					<dynamicMenu refID="HLUTool_FeatureInsertMenu" size="large" />
 				</group>
 
 				<!-- Export group -->
@@ -135,6 +143,12 @@
 				<subgroup id="HLUTool_SubGroup_Logical" verticalAlignment="Center" horizontalAlignment="Left" size="MediumThenSmallWhenSmall">
 					<button refID="HLUTool_btnLogicalSplit" size="middle" />
 					<button refID="HLUTool_btnLogicalMerge" size="middle" />
+				</subgroup>
+
+				<!-- Feature Insert buttons -->
+				<subgroup id="HLUTool_SubGroup_FeatureInsert" verticalAlignment="Center" horizontalAlignment="Left" size="MediumThenSmallWhenSmall">
+					<button refID="HLUTool_btnInsertFeatureSameIncid" size="middle" />
+					<button refID="HLUTool_btnInsertFeatureSeparateIncid" size="middle" />
 				</subgroup>
 			</subgroups>
 
@@ -228,6 +242,44 @@
 						Merge features physically or logically<disabledText />
 					</tooltip>
 				</dynamicMenu>
+
+				<!-- Feature Insert dropdown: Same INCID + Separate INCIDs -->
+				<dynamicMenu id="HLUTool_FeatureInsertMenu"
+							 caption="Insert Feature"
+							 className="HLU.UI.UserControls.Toolbar.InsertFeatureDynamicMenu"
+							 smallImage="pack://application:,,,/HLUTool;component/Images/InsertFeature16.png"
+							 largeImage="pack://application:,,,/HLUTool;component/Images/InsertFeature32.png"
+							 loadOnClick="false">
+					<tooltip heading="Insert Feature options">
+						Register newly created features against one or more new INCIDs<disabledText />
+					</tooltip>
+				</dynamicMenu>
+
+				<button id="HLUTool_btnInsertFeatureSameIncid"
+						caption="Same INCID"
+						className="HLU.UI.UserControls.Toolbar.InsertFeatureSameIncidButton"
+						loadOnClick="false"
+						keytip="IS"
+						smallImage="pack://application:,,,/HLUTool;component/Images/InsertFeatureSameIncid16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/InsertFeatureSameIncid32.png">
+					<tooltip heading="Insert Feature — Same INCID">
+						Register all selected new features under a single new INCID. Use this when the created features represent fragments of the same habitat record.
+						<disabledText>Available only when editing is active, a reason and process are selected, and all selected features have no INCID assigned.</disabledText>
+					</tooltip>
+				</button>
+
+				<button id="HLUTool_btnInsertFeatureSeparateIncid"
+						caption="Separate INCIDs"
+						className="HLU.UI.UserControls.Toolbar.InsertFeatureSeparateIncidButton"
+						loadOnClick="false"
+						keytip="IP"
+						smallImage="pack://application:,,,/HLUTool;component/Images/InsertFeatureSeparateIncid16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/InsertFeatureSeparateIncid32.png">
+					<tooltip heading="Insert Feature — Separate INCIDs">
+						Register each selected new feature under its own new INCID. Use this when each created feature represents a distinct habitat record.
+						<disabledText>Available only when editing is active, a reason and process are selected, and all selected features have no INCID assigned.</disabledText>
+					</tooltip>
+				</button>
 
 				<comboBox id="HLUTool_cmbActiveLayer"
 						  caption=" Active Layer:"

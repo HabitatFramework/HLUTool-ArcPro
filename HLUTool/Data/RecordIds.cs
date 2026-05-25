@@ -146,6 +146,15 @@ namespace HLU.Data
         }
 
         /// <summary>
+        /// Gets or sets the GIS layer geometry type used to select the correct site ID column.
+        /// </summary>
+        public HluGeometryTypes GisLayerType
+        {
+            get => _gisLayerType;
+            set => _gisLayerType = value;
+        }
+
+        /// <summary>
         /// Gets the SiteID from lut_site_id table based on GIS layer type.
         /// </summary>
         /// <value>The SiteID.</value>
@@ -153,31 +162,22 @@ namespace HLU.Data
         {
             get
             {
-                // If SiteID is not set, get the last one from lut_site_id based on GIS layer type.
+                // Get the last site ID from lut_site_id based on GIS layer type.
                 // If lut_site_id is empty, default to "0000".
-                if (String.IsNullOrEmpty(_siteID))
+                if (_hluDataset.lut_site_id.Count > 0)
                 {
-                    if (_hluDataset.lut_site_id.Count > 0)
+                    var lastRow = _hluDataset.lut_site_id.ElementAt(_hluDataset.lut_site_id.Count - 1);
+                    _siteID = _gisLayerType switch
                     {
-                        switch (_gisLayerType)
-                        {
-                            case HluGeometryTypes.Point:
-                                _siteID = _hluDataset.lut_site_id.ElementAt(_hluDataset.lut_site_id.Count - 1).site_id_point;
-                                break;
-
-                            case HluGeometryTypes.Line:
-                                _siteID = _hluDataset.lut_site_id.ElementAt(_hluDataset.lut_site_id.Count - 1).site_id_line;
-                                break;
-
-                            case HluGeometryTypes.Polygon:
-                                _siteID = _hluDataset.lut_site_id.ElementAt(_hluDataset.lut_site_id.Count - 1).site_id_polygon;
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        _siteID = "0000";
-                    }
+                        HluGeometryTypes.Point => lastRow.site_id_point,
+                        HluGeometryTypes.Line => lastRow.site_id_line,
+                        HluGeometryTypes.Polygon => lastRow.site_id_polygon,
+                        _ => lastRow.site_id_polygon,
+                    };
+                }
+                else
+                {
+                    _siteID = "0000";
                 }
                 return _siteID;
             }
@@ -347,27 +347,52 @@ namespace HLU.Data
         }
 
         /// <summary>
-        /// Gets the maximum fragment ID for a given TOID.
+        /// Gets the maximum fragment ID for a given INCID across the appropriate mm table
+        /// for the active GIS layer geometry type.
         /// </summary>
-        /// <param name="toid">The TOID to get the maximum fragment ID for.</param>
-        /// <returns>The maximum fragment ID, or null if the TOID is invalid.</returns>
-        public string MaxFragmentId(string toid)
+        /// <param name="incid">The INCID to get the maximum fragment ID for.</param>
+        /// <returns>The maximum fragment ID, or null if the INCID is invalid.</returns>
+        public string MaxFragmentId(string incid)
         {
             // Check parameter.
-            if (String.IsNullOrEmpty(toid))
+            if (String.IsNullOrEmpty(incid))
                 return null;
+
+            // Select the correct mm table and column names based on the geometry type.
+            string tableName;
+            string fragidColumnName;
+            string incidColumnName;
+
+            switch (_gisLayerType)
+            {
+                case HluGeometryTypes.Line:
+                    tableName = _hluDataset.incid_mm_lines.TableName;
+                    fragidColumnName = _hluDataset.incid_mm_lines.fragidColumn.ColumnName;
+                    incidColumnName = _hluDataset.incid_mm_lines.incidColumn.ColumnName;
+                    break;
+                case HluGeometryTypes.Point:
+                    tableName = _hluDataset.incid_mm_points.TableName;
+                    fragidColumnName = _hluDataset.incid_mm_points.fragidColumn.ColumnName;
+                    incidColumnName = _hluDataset.incid_mm_points.incidColumn.ColumnName;
+                    break;
+                default:
+                    tableName = _hluDataset.incid_mm_polygons.TableName;
+                    fragidColumnName = _hluDataset.incid_mm_polygons.fragidColumn.ColumnName;
+                    incidColumnName = _hluDataset.incid_mm_polygons.incidColumn.ColumnName;
+                    break;
+            }
 
             try
             {
-                // Build SQL to get the maximum fragment ID for the given TOID and execute it.
+                // Build SQL to get the maximum fragment ID for the given INCID and execute it.
                 object retVal = _db.ExecuteScalar(String.Format("SELECT MAX({0}) FROM {1} WHERE {2} = {3}",
-                    _db.QuoteIdentifier(_hluDataset.incid_mm_polygons.fragidColumn.ColumnName),
-                    _db.QualifyTableName(_hluDataset.incid_mm_polygons.TableName),
-                    _db.QuoteIdentifier(_hluDataset.incid_mm_polygons.toidColumn.ColumnName),
-                    _db.QuoteValue(toid)), _db.Connection.ConnectionTimeout, CommandType.Text);
+                    _db.QuoteIdentifier(fragidColumnName),
+                    _db.QualifyTableName(tableName),
+                    _db.QuoteIdentifier(incidColumnName),
+                    _db.QuoteValue(incid)), _db.Connection.ConnectionTimeout, CommandType.Text);
 
                 // Return the maximum fragment ID with leading zeros, or "00000" if null.
-                return retVal.ToString() ?? "00000";
+                return retVal?.ToString() ?? "00000";
             }
             catch { return null; }
         }

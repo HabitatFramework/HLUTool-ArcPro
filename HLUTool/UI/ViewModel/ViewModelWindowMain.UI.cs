@@ -170,6 +170,7 @@ namespace HLU.UI.ViewModel
         #region Fields - ComboBox Sources
 
         private readonly ObservableCollection<CodeDescriptionBool> _primaryCodes = [];
+        private bool _forceHabitatTypeRebuild;
 
         private HluDataSet.lut_sourcesRow[] _sourceNames;
         private HluDataSet.lut_habitat_classRow[] _sourceHabitatClassCodes;
@@ -1050,15 +1051,17 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// If the reason and process code controls are enabled.
+        /// They remain enabled whenever the form is not in bulk or OSMM Review mode,
+        /// regardless of whether a current incid row is loaded.
         /// </summary>
         /// <value><see langword="true"/> if the reason and process code controls are enabled; otherwise, <see langword="false"/>.</value>
         public bool ReasonProcessEnabled
         {
             get
             {
-                // Enable when not in bulk/OSMM mode AND there is a current row
+                // Enable when not in bulk/OSMM mode
                 if (IsNotBulkMode && IsNotOsmmReviewMode)
-                    _reasonProcessEnabled = IncidCurrentRow != null;
+                    _reasonProcessEnabled = true;
 
                 return _reasonProcessEnabled;
             }
@@ -1319,6 +1322,24 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
+        /// Gets the list of habitat class codes with a "&lt;None&gt;" option prepended,
+        /// for use in the options window Default Habitat Class selector.
+        /// </summary>
+        /// <value>The list of habitat class codes with a "&lt;None&gt;" option.</value>
+        public HluDataSet.lut_habitat_classRow[] HabitatClassCodesWithNone
+        {
+            get
+            {
+                if (_lutHabitatClass == null || !_lutHabitatClass.Any())
+                    return null;
+
+                _habitatClassCodesWithNone ??= [_noneHabitatClassRow, .. HabitatClassCodes];
+
+                return _habitatClassCodesWithNone;
+            }
+        }
+
+        /// <summary>
         /// Gets the list of habitat classes to be used in the options window.
         /// This is set to all local habitat classes with local habitat types, regardless
         /// of whether they relate to a primary habitat type that is local, as the options
@@ -1431,8 +1452,14 @@ namespace HLU.UI.ViewModel
             set
             {
                 // Check if the habitat type has changed.
-                if (string.Equals(_habitatType, value, StringComparison.Ordinal) && _primaryCodes != null && _primaryCodes.Count > 0)
+                // _forceHabitatTypeRebuild is set when the active layer's geometry type changes
+                // so the codes are rebuilt without clearing the collection (which would trigger
+                // the IncidPrimary WPF binding and spuriously mark the record as Changed).
+                if (string.Equals(_habitatType, value, StringComparison.Ordinal) && _primaryCodes != null && _primaryCodes.Count > 0 && !_forceHabitatTypeRebuild)
                     return;
+
+                // Reset the flag immediately — it is only valid for a single forced call.
+                _forceHabitatTypeRebuild = false;
 
                 _habitatType = value;
 
@@ -1444,9 +1471,9 @@ namespace HLU.UI.ViewModel
 
                 if (!String.IsNullOrEmpty(_habitatType))
                 {
-                    // Load all primary habitat codes where the primary habitat code
-                    // and primary habitat category are both flagged as local and
-                    // are related to the current habitat type.
+                    // Load all primary habitat codes where the primary habitat code and primary
+                    // habitat category are both flagged as local, are related to the current
+                    // habitat type, and relate to the current layer's geometry type.
 
                     // Combine both primary and secondary-derived codes,
                     // but allow only one entry per code, preferring the one marked as preferred.
@@ -1457,6 +1484,7 @@ namespace HLU.UI.ViewModel
                         join hc in _lutHabitatClass on p.habitat_class_code equals hc.code
                         from htp in _lutHabitatTypePrimary
                         where htp.code_habitat_type == _habitatType
+                            && PrimaryMatchesLayerType(p)
                             && (p.code == htp.code_primary
                                 || (htp.code_primary.EndsWith('*') &&
                                     Regex.IsMatch(p.code, @"\A" + htp.code_primary.TrimEnd('*') + @"")))
@@ -1477,10 +1505,12 @@ namespace HLU.UI.ViewModel
                     .Concat(
                         // Second query – inferred primary codes via secondary links.
                         from s in _lutSecondary
+                        where SecondaryMatchesLayerType(s)
                         join hts in _lutHabitatTypeSecondary on s.code equals hts.code_secondary
                         join ps in _lutPrimarySecondary on hts.code_secondary equals ps.code_secondary
                         from p in _lutPrimary
                         where (p.code == ps.code_primary || p.code.StartsWith(ps.code_primary))
+                            && PrimaryMatchesLayerType(p)
                         join pc in _lutPrimaryCategory on p.category equals pc.code
                         join hc in _lutHabitatClass on p.habitat_class_code equals hc.code
                         where hts.code_habitat_type == _habitatType
@@ -1519,13 +1549,15 @@ namespace HLU.UI.ViewModel
                         _primaryCodes.Add(item);
                     }
 
-                    // Load all secondary habitat codes where the habitat type
-                    // has one of more optional codes.
+                    // Load all secondary habitat codes where the habitat type has one of more
+                    // optional codes, and the secondary habitat code relates to the current layer's
+                    // geometry type.
                     IEnumerable<HluDataSet.lut_secondaryRow> secondaryCodesOptional =
                         [.. (from hts in _lutHabitatTypeSecondary
                          join s in _lutSecondary on hts.code_secondary equals s.code
                          where hts.code_habitat_type == _habitatType
                              && hts.mandatory == 0
+                             && SecondaryMatchesLayerType(s)
                          select s)
                         .OrderBy(r => r.sort_order)
                         .ThenBy(r => r.description)];
@@ -1533,13 +1565,15 @@ namespace HLU.UI.ViewModel
                     // Store the list of optional secondary codes.
                     _secondaryCodesOptional = secondaryCodesOptional.Select(hts => hts.code);
 
-                    // Load all secondary habitat codes where the habitat type
-                    // has one of more mandatory codes.
+                    // Load all secondary habitat codes where the habitat type has one of more
+                    // mandatory codes, and the secondary code relates to the current layer's
+                    // geometry type.
                     IEnumerable<HluDataSet.lut_secondaryRow> secondaryCodesMandatory =
                         [.. (from hts in _lutHabitatTypeSecondary
                          join s in _lutSecondary on hts.code_secondary equals s.code
                          where hts.code_habitat_type == _habitatType
                              && hts.mandatory == 1
+                             && SecondaryMatchesLayerType(s)
                          select s)
                         .OrderBy(r => r.sort_order)
                         .ThenBy(r => r.description)];
@@ -1549,10 +1583,12 @@ namespace HLU.UI.ViewModel
                 }
                 else
                 {
-                    // Load all primary habitat codes where the primary habitat code
-                    // and primary habitat category are both flagged as local.
+                    // Load all primary habitat codes where the primary habitat code and primary
+                    // habitat category are both flagged as local, and the primary habitat code
+                    // relates to the current layer's geometry type.
                     CodeDescriptionBool[] allPrimaryCodes = [.. (
                         from p in _lutPrimary
+                        where PrimaryMatchesLayerType(p)
                         join pc in _lutPrimaryCategory on p.category equals pc.code
                         join hc in _lutHabitatClass on p.habitat_class_code equals hc.code
                         orderby hc.sort_order, hc.code, p.sort_order, p.code
@@ -2209,7 +2245,8 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets the list of all local secondary habitat codes that are related to any habitat type or primary habitat.
+        /// Gets the list of all local secondary habitat codes that are related to any habitat type
+        /// or primary habitat, and relate to the current layer's geometry type.
         /// </summary>
         /// <value>The list of all local secondary habitat codes.</value>
         public HluDataSet.lut_secondaryRow[] SecondaryHabitatCodesAll
@@ -2217,6 +2254,7 @@ namespace HLU.UI.ViewModel
             get
             {
                 _secondaryCodesAll ??= [.. (from s in _lutSecondary
+                                          where SecondaryMatchesLayerType(s)
                                           select s).OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
                 return _secondaryCodesAll;
@@ -2348,18 +2386,48 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // If there are no secondary habitats return null.
-                if (_incidSecondaryHabitats == null || _incidSecondaryHabitats.Count == 0)
+                // Create the concatenated secondary habitats summary.
+                string secondarySummary = (_incidSecondaryHabitats != null && _incidSecondaryHabitats.Count > 0)
+                    ? String.Join(_secondaryCodeDelimiter, _incidSecondaryHabitats
+                        .OrderBy(s => s.Secondary_habitat_int)
+                        .ThenBy(s => s.Secondary_habitat)
+                        .Select(s => s.Secondary_habitat)
+                        .Distinct().ToList())
+                    : null;
+
+                // If neither a primary code nor any secondary codes are available, return null.
+                if (String.IsNullOrEmpty(_incidPrimary) && String.IsNullOrEmpty(secondarySummary))
                     return null;
 
-                // Create the concatenated secondary habitats summary.
-                _incidSecondarySummary = String.Join(_secondaryCodeDelimiter, _incidSecondaryHabitats
-                    .OrderBy(s => s.Secondary_habitat_int)
-                    .ThenBy(s => s.Secondary_habitat)
-                    .Select(s => s.Secondary_habitat)
-                    .Distinct().ToList());
+                // Prepend the primary code if available.
+                _incidSecondarySummary = String.IsNullOrEmpty(secondarySummary)
+                    ? _incidPrimary
+                    : String.IsNullOrEmpty(_incidPrimary)
+                        ? secondarySummary
+                        : _incidPrimary + " " + secondarySummary;
 
-                return _incidSecondarySummary == String.Empty ? null : _incidSecondarySummary;
+                return _incidSecondarySummary;
+            }
+        }
+
+        /// <summary>
+        /// Returns only the secondary habitat codes (delimiter-separated) without the primary code prefix.
+        /// This is the value stored in the <c>habitat_secondaries</c> database column.
+        /// </summary>
+        public string IncidSecondaryCodesOnly
+        {
+            get
+            {
+                // Create the concatenated secondary habitats summary.
+                string secondarySummary = (_incidSecondaryHabitats != null && _incidSecondaryHabitats.Count > 0)
+                    ? String.Join(_secondaryCodeDelimiter, _incidSecondaryHabitats
+                        .OrderBy(s => s.Secondary_habitat_int)
+                        .ThenBy(s => s.Secondary_habitat)
+                        .Select(s => s.Secondary_habitat)
+                        .Distinct())
+                    : null;
+
+                return secondarySummary;
             }
         }
 
@@ -5095,9 +5163,9 @@ namespace HLU.UI.ViewModel
                 .. (from s in Settings.Default.HistoryColumnOrdinals.Cast<string>()
                     where Int32.TryParse(s, out result)
                         && result >= 0
-                        && result < _hluDS.incid_mm_polygons.Columns.Count
+                        && result < GisMMTable.Columns.Count
                         && !_gisIDColumnOrdinals.Contains(result)
-                    select _hluDS.incid_mm_polygons.Columns[Int32.Parse(s)]),
+                    select GisMMTable.Columns[Int32.Parse(s)]),
             ];
         }
 
@@ -5369,6 +5437,27 @@ namespace HLU.UI.ViewModel
             return _lutPrimary
                 .FirstOrDefault(p => p.code == primaryCode)
                 ?.habitat_class_code;
+        }
+
+        /// <summary>
+        /// Returns <see langword="true"/> when <paramref name="primaryCode"/> exists in
+        /// <c>lut_primary</c> and is applicable to the active GIS layer geometry type.
+        /// </summary>
+        /// <param name="primaryCode">The lut_primary code to validate.</param>
+        /// <returns>
+        /// <see langword="true"/> if the code is valid for the current layer geometry type;
+        /// <see langword="false"/> otherwise.
+        /// </returns>
+        public bool IsPrimaryValidForLayerType(string primaryCode)
+        {
+            if (String.IsNullOrEmpty(primaryCode) || _lutPrimary == null)
+                return false;
+
+            var row = _lutPrimary.FirstOrDefault(p => p.code == primaryCode);
+            if (row == null)
+                return false;
+
+            return PrimaryMatchesLayerType(row);
         }
 
         /// <summary>
@@ -5834,8 +5923,13 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return ((IsFiltered && (IncidCurrentRowIndex < _incidSelection.Rows.Count)) ||
-                    (!IsFiltered && (IncidCurrentRowIndex < _incidRowCount)));
+                // When a filter is active, compare against the number of filtered records.
+                bool withinFilteredRange = IsFiltered && IncidCurrentRowIndex < _incidSelection.Rows.Count;
+
+                // When no filter is active, compare against the total row count.
+                bool withinUnfilteredRange = !IsFiltered && IncidCurrentRowIndex < _incidRowCount;
+
+                return withinFilteredRange || withinUnfilteredRange;
             }
         }
 
@@ -5864,11 +5958,15 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Is the requested record less than the total number of records
-                // if filtered, or the total row count if not filtered?
-                return (IncidCurrentRowIndex > 1) ||
-                    ((IsFiltered && (IncidCurrentRowIndex < _incidSelection.Rows.Count)) ||
-                    (!IsFiltered && (IncidCurrentRowIndex < _incidRowCount)));
+                // Can navigate backward (not already on the first record).
+                bool canGoBack = IncidCurrentRowIndex > 1;
+
+                // Can navigate forward: when filtered compare against the selection size,
+                // otherwise compare against the total row count.
+                bool canGoForward = (IsFiltered && IncidCurrentRowIndex < _incidSelection.Rows.Count)
+                                 || (!IsFiltered && IncidCurrentRowIndex < _incidRowCount);
+
+                return canGoBack || canGoForward;
             }
         }
 
@@ -5963,14 +6061,20 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Must be in a mode that allows edits and ready for edit operations (includes CanEdit + Reason/Process selection),
-                // the user must be authorised for bulk updates,
-                // we must not already be in OSMM Review or OSMM Bulk mode,
-                // and either there must be a filter active or we must already be in Bulk Update mode (i.e. we're clicking the Apply button to action the bulk update).
-                return IsEditReady &&
-                    CanUserBulkUpdate == true &&
-                    !WorkMode.HasAny(WorkMode.OSMMReview | WorkMode.OSMMBulk) &&
-                    (IsFiltered || WorkMode.HasAll(WorkMode.Bulk));
+                // Must be in edit-ready state (CanEdit + Reason/Process both selected).
+                bool editReady = IsEditReady;
+
+                // The current user must be authorised for bulk updates.
+                bool userAuthorised = CanUserBulkUpdate == true;
+
+                // Must not already be in OSMM Review or OSMM Bulk mode.
+                bool notInOSMMMode = !WorkMode.HasAny(WorkMode.OSMMReview | WorkMode.OSMMBulk);
+
+                // Either a filter must be active, or we must already be in Bulk Update mode
+                // (the latter allows the Apply button to be clicked while already in bulk mode).
+                bool filterOrAlreadyBulk = IsFiltered || WorkMode.HasAll(WorkMode.Bulk);
+
+                return editReady && userAuthorised && notInOSMMMode && filterOrAlreadyBulk;
             }
         }
 
@@ -6132,14 +6236,19 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Must be in edit mode,
-                // there must be proposed OSMM Updates for the current filter,
-                // the user must be authorised for bulk updates,
-                // and we must not already be in OSMM Review or OSMM Bulk mode.
-                return IsEditMode &&
-                    AnyOSMMUpdates == true &&
-                    CanUserBulkUpdate == true &&
-                    !WorkMode.HasAny(WorkMode.Bulk | WorkMode.OSMMBulk);
+                // Must be in edit mode (layer editable by the authorised user).
+                bool inEditMode = IsEditMode;
+
+                // There must be proposed OSMM updates present in the database.
+                bool hasOSMMUpdates = AnyOSMMUpdates == true;
+
+                // The current user must be authorised for bulk updates.
+                bool userAuthorised = CanUserBulkUpdate == true;
+
+                // Must not already be in standard Bulk or OSMM Bulk mode.
+                bool notInBulkMode = !WorkMode.HasAny(WorkMode.Bulk | WorkMode.OSMMBulk);
+
+                return inEditMode && hasOSMMUpdates && userAuthorised && notInBulkMode;
             }
         }
 
@@ -6233,13 +6342,21 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Prevent OSMM updates being actioned too quickly.
-                // Check if there are no proposed OSMM Updates
-                // for the current filter.
-                return (_osmmUpdating == false &&
-                    _osmmUpdatesEmpty == false &&
-                    _incidOSMMUpdatesStatus != null &&
-                    (_incidOSMMUpdatesStatus > 0 || _incidOSMMUpdatesStatus < -1));
+                // An OSMM update must not currently be in progress (prevents double-actioning).
+                bool notUpdating = _osmmUpdating == false;
+
+                // The OSMM update queue must not be empty.
+                bool updatesRemaining = _osmmUpdatesEmpty == false;
+
+                // The current incid must have an OSMM update status value.
+                bool hasStatus = _incidOSMMUpdatesStatus != null;
+
+                // The status must represent a proposed update (> 0) or a previously
+                // rejected update (< -1) that can be re-actioned.
+                bool actionableStatus = hasStatus
+                    && (_incidOSMMUpdatesStatus > 0 || _incidOSMMUpdatesStatus < -1);
+
+                return notUpdating && updatesRemaining && actionableStatus;
             }
         }
 
@@ -6357,10 +6474,19 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return IsEditMode &&
-                    !WorkMode.HasAny(WorkMode.OSMMReview | WorkMode.Bulk) &&
-                    IncidOSMMStatus > 0 &&
-                    IncidOSMMHabitatPrimary != null;
+                // Must be in edit mode (layer editable by the authorised user).
+                bool inEditMode = IsEditMode;
+
+                // Must not be in OSMM Review or standard Bulk mode.
+                bool normalEditMode = !WorkMode.HasAny(WorkMode.OSMMReview | WorkMode.Bulk);
+
+                // The current incid must have a proposed OSMM update (status > 0).
+                bool hasProposedUpdate = IncidOSMMStatus > 0;
+
+                // The OSMM update must include a primary habitat code to apply.
+                bool hasPrimaryHabitat = IncidOSMMHabitatPrimary != null;
+
+                return inEditMode && normalEditMode && hasProposedUpdate && hasPrimaryHabitat;
             }
         }
 
@@ -6372,16 +6498,21 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // If in edit mode,
-                // and not in a bulk mode,
-                // and a proposed OSMM update is showing,
-                // and the OSMM update status for the current incid is greater than 0 (i.e. there are proposed updates for this incid)
-                return IsEditMode &&
-                    !WorkMode.HasAny(WorkMode.OSMMReview | WorkMode.Bulk) &&
-                    (_showOSMMUpdates == "Always" ||
-                    _showOSMMUpdates == "When present" ||
-                    _showOSMMUpdates == "When Outstanding") &&
-                    IncidOSMMStatus > 0;
+                // Must be in edit mode (layer editable by the authorised user).
+                bool inEditMode = IsEditMode;
+
+                // Must not be in OSMM Review or standard Bulk mode.
+                bool normalEditMode = !WorkMode.HasAny(WorkMode.OSMMReview | WorkMode.Bulk);
+
+                // The OSMM updates panel must be configured to show updates.
+                bool updatesVisible = _showOSMMUpdates == "Always"
+                                   || _showOSMMUpdates == "When present"
+                                   || _showOSMMUpdates == "When Outstanding";
+
+                // The current incid must have a proposed OSMM update (status > 0).
+                bool hasProposedUpdate = IncidOSMMStatus > 0;
+
+                return inEditMode && normalEditMode && updatesVisible && hasProposedUpdate;
             }
         }
 
@@ -6393,16 +6524,21 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // If in edit mode,
-                // and not in a bulk mode,
-                // and a proposed OSMM update is showing,
-                // and the OSMM update status for the current incid is greater than 0 (i.e. there are proposed updates for this incid)
-                return IsEditMode &&
-                    !WorkMode.HasAny(WorkMode.OSMMReview | WorkMode.Bulk) &&
-                    (_showOSMMUpdates == "Always" ||
-                    _showOSMMUpdates == "When present" ||
-                    _showOSMMUpdates == "When Outstanding") &&
-                    IncidOSMMStatus > 0;
+                // Must be in edit mode (layer editable by the authorised user).
+                bool inEditMode = IsEditMode;
+
+                // Must not be in OSMM Review or standard Bulk mode.
+                bool normalEditMode = !WorkMode.HasAny(WorkMode.OSMMReview | WorkMode.Bulk);
+
+                // The OSMM updates panel must be configured to show updates.
+                bool updatesVisible = _showOSMMUpdates == "Always"
+                                   || _showOSMMUpdates == "When present"
+                                   || _showOSMMUpdates == "When Outstanding";
+
+                // The current incid must have a proposed OSMM update (status > 0).
+                bool hasProposedUpdate = IncidOSMMStatus > 0;
+
+                return inEditMode && normalEditMode && updatesVisible && hasProposedUpdate;
             }
         }
 
@@ -6442,15 +6578,22 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                // Must be in a mode that allows edits and ready for edit operations (includes CanEdit + Reason/Process selection),
-                // there must be proposed OSMM Updates for the current filter,
-                // the user must be authorised for bulk updates,
-                // and we must not already be in standard Bulk mode (unless already in OSMM Bulk mode).
-                // Switching directly from OSMM Review mode to OSMM Bulk mode is allowed.
-                return IsEditReady &&
-                    AnyOSMMUpdates == true &&
-                    CanUserBulkUpdate == true &&
-                    (!WorkMode.HasAll(WorkMode.Bulk) || WorkMode.HasAll(WorkMode.OSMMBulk) || WorkMode.HasAll(WorkMode.OSMMReview));
+                // Must be in edit-ready state (CanEdit + Reason/Process both selected).
+                bool editReady = IsEditReady;
+
+                // There must be proposed OSMM updates present in the database.
+                bool hasOSMMUpdates = AnyOSMMUpdates == true;
+
+                // The current user must be authorised for bulk updates.
+                bool userAuthorised = CanUserBulkUpdate == true;
+
+                // Must not be in standard Bulk mode, unless already in OSMM Bulk or OSMM Review
+                // mode (switching between OSMM modes is allowed).
+                bool modeCompatible = !WorkMode.HasAll(WorkMode.Bulk)
+                                   || WorkMode.HasAll(WorkMode.OSMMBulk)
+                                   || WorkMode.HasAll(WorkMode.OSMMReview);
+
+                return editReady && hasOSMMUpdates && userAuthorised && modeCompatible;
             }
         }
 
@@ -6554,10 +6697,14 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return IncidCurrentRow != null && _copySwitches != null &&
-                    typeof(WindowMainCopySwitches).GetProperties().Where(p => p.Name.StartsWith("Copy"))
-                    .Any(p => (bool)typeof(WindowMainCopySwitches).GetProperty(p.Name)
-                        .GetValue(_copySwitches, null));
+                // There must be a current incid row and copy switches must be configured.
+                if (IncidCurrentRow == null || _copySwitches == null)
+                    return false;
+
+                // At least one 'Copy*' switch must be enabled.
+                return typeof(WindowMainCopySwitches).GetProperties()
+                    .Where(p => p.Name.StartsWith("Copy"))
+                    .Any(p => (bool)typeof(WindowMainCopySwitches).GetProperty(p.Name).GetValue(_copySwitches, null));
             }
         }
 
@@ -6569,10 +6716,14 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return IncidCurrentRow != null && _copySwitches != null &&
-                    typeof(WindowMainCopySwitches).GetProperties().Where(p => !p.Name.StartsWith("Copy"))
-                    .Any(p => typeof(WindowMainCopySwitches).GetProperty(p.Name)
-                        .GetValue(_copySwitches, null) != null);
+                // There must be a current incid row and copy switches must be configured.
+                if (IncidCurrentRow == null || _copySwitches == null)
+                    return false;
+
+                // At least one non-'Copy*' switch (i.e. a paste target) must hold a value.
+                return typeof(WindowMainCopySwitches).GetProperties()
+                    .Where(p => !p.Name.StartsWith("Copy"))
+                    .Any(p => typeof(WindowMainCopySwitches).GetProperty(p.Name).GetValue(_copySwitches, null) != null);
             }
         }
 
@@ -7096,6 +7247,74 @@ namespace HLU.UI.ViewModel
                 // Switch the GIS layer.
                 if (await _gisApp.IsHluLayerAsync(selectedValue, true))
                 {
+                    // Sync the geometry type from the newly activated layer and
+                    // reinitialise all geometry-type-dependent state when the
+                    // layer type has changed (mirrors the logic in CheckActiveMapAsync).
+                    HluGeometryTypes detectedGeometryType = _gisApp.HluGeometryType;
+                    if (detectedGeometryType != _gisLayerType)
+                    {
+                        _gisLayerType = detectedGeometryType;
+
+                        // Sync the geometry type on the RecordIds object so SiteID
+                        // returns the correct prefix for the newly active layer type.
+                        if (_recIDs != null)
+                            _recIDs.GisLayerType = _gisLayerType;
+
+                        // Force an immediate recount scoped to the new geometry prefix
+                        // so that StatusIncid (which reads _incidRowCount directly)
+                        // shows the correct total for the newly active layer.
+                        IncidRowCount(true);
+
+                        // Reinitialise GIS ID columns for the new geometry table.
+                        int result;
+                        _gisIDColumnOrdinals = [.. (from s in Settings.Default.GisIDColumnOrdinals.Cast<string>()
+                                                where Int32.TryParse(s, out result) && (result >= 0) &&
+                                                (result < GisMMTable.Columns.Count)
+                                                select Int32.Parse(s))];
+                        _gisIDColumns = [.. _gisIDColumnOrdinals.Select(i => GisMMTable.Columns[i])];
+
+                        // Reinitialise history columns for the new geometry table.
+                        _historyColumns = InitializeHistoryColumns(_historyColumns);
+
+                        // Reinitialise the incid filter for the correct geometry table.
+                        _incidMMPolygonsIncidFilter = new()
+                        {
+                            BooleanOperator = "OR",
+                            OpenParentheses = "(",
+                            Column = GisMMTable.Columns[_hluDS.incid_mm_polygons.incidColumn.ColumnName],
+                            Table = GisMMTable,
+                            Value = String.Empty,
+                            CloseParentheses = ")"
+                        };
+
+                        // Reset cached secondary code lists — they are filtered by geometry type
+                        // and must be rebuilt for the new layer type.
+                        _secondaryCodesAll = null;
+                        _secondaryCodesValid = null;
+
+                        // Force the primary codes combo box to rebuild for the new geometry type.
+                        // Using a flag (rather than _primaryCodes.Clear()) avoids triggering the
+                        // WPF ComboBox binding which would fire the IncidPrimary setter with null
+                        // and spuriously set Changed = true on the current record.
+                        _forceHabitatTypeRebuild = true;
+                        HabitatType = _habitatType;
+
+                        // The HabitatType setter may have nulled _incidPrimary when the current
+                        // primary code is absent from the rebuilt list for the new geometry type.
+                        // Restore it from the incid row so that IsDirtyIncid() — which compares
+                        // _incidPrimary against _incidCurrentRow.habitat_primary — does not see a
+                        // discrepancy and falsely mark the record as changed, triggering the
+                        // "record has been changed" dialog on every layer switch.
+                        // The validation in this["IncidPrimary"] will detect that the restored code
+                        // is absent from _primaryCodes and show the appropriate warning.
+                        if (_incidPrimary == null && _incidCurrentRow != null
+                            && !_incidCurrentRow.Ishabitat_primaryNull())
+                        {
+                            _incidPrimary = _incidCurrentRow.habitat_primary;
+                            OnPropertyChanged(nameof(IncidPrimary));
+                        }
+                    }
+
                     // Set the active HLU layer name.
                     ActiveLayerName = selectedValue;
 
@@ -7104,6 +7323,16 @@ namespace HLU.UI.ViewModel
 
                     // Recomputes whether editing is currently possible.
                     RefreshEditCapability();
+
+                    // Discard the current row reference from the previous layer before switching.
+                    // The row belongs to the old layer's incid table page; if the table is refilled
+                    // during GetMapSelectionAsync the row becomes detached and any access to its
+                    // fields (e.g. in IsDirtyIncid / CompareIncidCurrentRowClone) throws
+                    // RowNotInTableException. Nulling it here is safe because IsDirtyIncid() and
+                    // CheckDirty() both return early when _incidCurrentRow is null.
+                    _incidCurrentRow = null;
+                    _incidCurrentRowClone = null;
+                    _incidCurrentRowIndex = 1;
 
                     // Get the GIS layer selection and warn the user if no
                     // features are found
@@ -7175,6 +7404,12 @@ namespace HLU.UI.ViewModel
             _incidNVCCodes = null;
             //_incidSecondarySummary = null;
 
+            // Switch to a detached (blank) incid row BEFORE resetting HabitatClass so that
+            // any OnPropertyChanged(nameof(IncidPrimary)) fired inside the HabitatType setter
+            // hits the detached-row guard in the IDataErrorInfo indexer and does not produce
+            // a spurious "Primary habitat is mandatory" validation error on the cleared form.
+            IncidCurrentRow = HluDataset.incid.NewincidRow();
+
             // In Bulk Update mode set the default habitat class immediately so that
             // HabitatTypeCodes is populated when RefreshHabitatTab() fires.
             // In normal mode the class is reset via the HabitatClass getter.
@@ -7182,9 +7417,6 @@ namespace HLU.UI.ViewModel
                 HabitatClass = _defaultHabitatClass;
             else
                 HabitatClass = null;
-
-            // Get a new incid row.
-            IncidCurrentRow = HluDataset.incid.NewincidRow();
 
             // Get new mulitplex rows.
             IncidIhsMatrixRows = [.. Array.Empty<HluDataSet.incid_ihs_matrixRow>()
@@ -9000,7 +9232,7 @@ namespace HLU.UI.ViewModel
                     ChangeCursor(Cursors.Wait, "Counting ...");
 
                     // Find the expected number of features to be selected from the database.
-                    _selectedFragsInDBCount = await ExpectedSelectionFeatures(whereTables, newWhereClause);
+                    _selectedFragsInDBCount = await ExpectedSelectionFeaturesAsync(whereTables, newWhereClause);
 
                     // Store the number of incids found in the database
                     _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -9439,7 +9671,7 @@ namespace HLU.UI.ViewModel
                     if (IsFiltered)
                     {
                         // Find the expected number of features to be selected in GIS.
-                        _selectedFragsInDBCount = await ExpectedSelectionFeatures(whereTables, newWhereClause);
+                        _selectedFragsInDBCount = await ExpectedSelectionFeaturesAsync(whereTables, newWhereClause);
 
                         // Store the number of incids found in the database
                         _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -10074,18 +10306,40 @@ namespace HLU.UI.ViewModel
 
             // Calculate the area and length measures for the current incid based on associated polygon data.
             _incidMMPolygonsIncidFilter.Value = Incid;
-            HluDataSet.incid_mm_polygonsDataTable table = HluDataset.incid_mm_polygons;
 
             List<SqlFilterCondition> incidCond = new([_incidMMPolygonsIncidFilter]);
             List<List<SqlFilterCondition>> incidCondList = [incidCond];
-            GetIncidMMPolygonRows(incidCondList, ref table);
 
             _incidArea = 0;
             _incidLength = 0;
-            foreach (HluDataSet.incid_mm_polygonsRow r in table)
+
+            // Get the area and length measures for the current incid based on the geometry type of the active GIS layer.
+            switch (_gisLayerType)
             {
-                _incidArea += r.shape_area;
-                _incidLength += r.shape_length;
+                case HluGeometryTypes.Line:
+                {
+                        // For line geometries, only calculate length measures.
+                        HluDataSet.incid_mm_linesDataTable table = HluDataset.incid_mm_lines;
+                    GetIncidMMLineRows(incidCondList, ref table);
+                    foreach (HluDataSet.incid_mm_linesRow r in table)
+                        _incidLength += r.shape_length;
+                    break;
+                }
+                case HluGeometryTypes.Point:
+                    // For point geometries, there are no area or length measures to calculate, so skip to the end.
+                    break;
+                default:
+                {
+                        // For polygon geometries, calculate both area and length measures.
+                        HluDataSet.incid_mm_polygonsDataTable table = HluDataset.incid_mm_polygons;
+                    GetIncidMMPolygonRows(incidCondList, ref table);
+                    foreach (HluDataSet.incid_mm_polygonsRow r in table)
+                    {
+                        _incidArea += r.shape_area;
+                        _incidLength += r.shape_length;
+                    }
+                    break;
+                }
             }
 
             // Convert from native storage units (m² / m) to configured
@@ -10132,6 +10386,30 @@ namespace HLU.UI.ViewModel
                 _ => metres / 1_000d // fallback: km
             };
         }
+
+        /// <summary>
+        /// Returns <see langword="true"/> when the <paramref name="row"/> in <c>lut_primary</c>
+        /// is applicable to the active GIS layer geometry type.
+        /// </summary>
+        private bool PrimaryMatchesLayerType(HluDataSet.lut_primaryRow row) =>
+            _gisLayerType switch
+            {
+                HluGeometryTypes.Line    => row.line,
+                HluGeometryTypes.Point   => row.point,
+                _                        => row.polygon   // default: Polygon
+            };
+
+        /// <summary>
+        /// Returns <see langword="true"/> when the <paramref name="row"/> in <c>lut_secondary</c>
+        /// is applicable to the active GIS layer geometry type.
+        /// </summary>
+        private bool SecondaryMatchesLayerType(HluDataSet.lut_secondaryRow row) =>
+            _gisLayerType switch
+            {
+                HluGeometryTypes.Line    => row.line,
+                HluGeometryTypes.Point   => row.point,
+                _                        => row.polygon   // default: Polygon
+            };
 
         #endregion Formatting Helpers
 
