@@ -66,7 +66,9 @@ namespace HLU.Data
 
         public int GetHashCode(HluDataSet.historyRow obj)
         {
-            return obj.incid.GetHashCode() ^ obj.toid.GetHashCode() ^ obj.fragid.GetHashCode();
+            return (obj.incid?.GetHashCode() ?? 0) ^
+                   (obj.toid?.GetHashCode() ?? 0) ^
+                   (obj.fragid?.GetHashCode() ?? 0);
         }
 
         #endregion IEqualityComparer<historyRow> Members

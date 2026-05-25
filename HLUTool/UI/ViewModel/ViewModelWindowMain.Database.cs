@@ -391,6 +391,15 @@ namespace HLU.UI.ViewModel
             else
                 itemType = "Feature";
 
+            // Check if the selected features in GIS have no INCID (i.e. they are new features that
+            // have not yet been registered in the database).
+            if (_selectedFragsInGISCount > 0 && _selectedIncidsInGISCount == 0)
+            {
+                if (showMessage)
+                    ShowInfo($"{itemType}{(_selectedFragsInGISCount == 1 ? " has" : "s have")} no INCID and {(_selectedFragsInGISCount == 1 ? "has" : "have")} not been registered in the database.", Messagecategory);
+                return false;
+            }
+
             // Check if the GIS features have been physically split by the user but not processed in HLU yet.
             if ((_currentIncidToidsInGISCount == _currentIncidToidsInDBCount) &&
                (_currentIncidFragsInGISCount > _currentIncidFragsInDBCount))
@@ -400,8 +409,10 @@ namespace HLU.UI.ViewModel
                     ShowInfo($"{itemType}{(_currentIncidFragsInGISCount == 1 ? "" : "s")} may have been split in GIS but not physically split using HLU Tool.", Messagecategory);
             }
             // Check if there are multiple fragments in GIS that share the same incid and toid.
+            // Physical merge is not applicable for point features.
             else if (_selectedFragsInGISCount > 1 &&
-                (_selectedIncidsInGISCount == 1) && (_selectedToidsInGISCount == 1))
+                (_selectedIncidsInGISCount == 1) && (_selectedToidsInGISCount == 1) &&
+                (_gisApp == null || _gisApp.HluGeometryType != HluGeometryTypes.Point))
             {
                 // Show informational message that physical merge can be performed if desired.
                 if (showMessage)
@@ -1622,17 +1633,19 @@ namespace HLU.UI.ViewModel
             // If there are any rows not marked as deleted add them to the collection.
             if (incidSecondaryRowsUndel != null)
             {
+                // Create SecondaryHabitat objects first so that the numeric Secondary_habitat_int
+                // property is available for ordering (matching the sort applied in RefreshSecondaryHabitats).
+                IEnumerable<SecondaryHabitat> secondaryHabitats = incidSecondaryRowsUndel.Select(r => new SecondaryHabitat(IsBulkMode, r));
+
                 // Order the secondary codes as required
                 _incidSecondaryHabitats = _secondaryCodeOrder switch
                 {
                     "As entered" => new ObservableCollection<SecondaryHabitat>(
-                           incidSecondaryRowsUndel.OrderBy(r => r.secondary_id).Select(r => new SecondaryHabitat(IsBulkMode, r))),
-                    "By group then code" => new ObservableCollection<SecondaryHabitat>(
-                           incidSecondaryRowsUndel.OrderBy(r => r.secondary_group).ThenBy(r => r.secondary).Select(r => new SecondaryHabitat(IsBulkMode, r))),
+                           secondaryHabitats.OrderBy(sh => sh.Secondary_id)),
                     "By code" => new ObservableCollection<SecondaryHabitat>(
-                           incidSecondaryRowsUndel.OrderBy(r => r.secondary).Select(r => new SecondaryHabitat(IsBulkMode, r))),
+                           secondaryHabitats.OrderBy(sh => sh.Secondary_habitat_int)),
                     _ => new ObservableCollection<SecondaryHabitat>(
-                           incidSecondaryRowsUndel.OrderBy(r => r.secondary_id).Select(r => new SecondaryHabitat(IsBulkMode, r)))
+                           secondaryHabitats.OrderBy(sh => sh.Secondary_id))
                 };
             }
             else
@@ -1727,8 +1740,6 @@ namespace HLU.UI.ViewModel
                 {
                     "As entered" => new ObservableCollection<SecondaryHabitat>(
                             _incidSecondaryHabitats.OrderBy(r => r.Secondary_id)),
-                    "By group then code" => new ObservableCollection<SecondaryHabitat>(
-                            _incidSecondaryHabitats.OrderBy(r => r.Secondary_group).ThenBy(r => r.Secondary_habitat_int)),
                     "By code" => new ObservableCollection<SecondaryHabitat>(
                             _incidSecondaryHabitats.OrderBy(r => r.Secondary_habitat_int)),
                     _ => new ObservableCollection<SecondaryHabitat>(
@@ -2582,6 +2593,42 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
+        /// Populates the specified incid_mm_linesDataTable with rows that match the provided filter conditions.
+        /// </summary>
+        /// <param name="whereClause">A collection of filter conditions used to select which rows are retrieved.</param>
+        /// <param name="table">A reference to the incid_mm_linesDataTable that will be filled with the matching rows.</param>
+        internal void GetIncidMMLineRows(List<List<SqlFilterCondition>> whereClause,
+            ref HluDataSet.incid_mm_linesDataTable table)
+        {
+            if ((whereClause != null) && (whereClause.Count > 0))
+            {
+                _hluTableAdapterMgr.incid_mm_linesTableAdapter ??=
+                        new HluTableAdapter<HluDataSet.incid_mm_linesDataTable,
+                            HluDataSet.incid_mm_linesRow>(_db);
+
+                _hluTableAdapterMgr.incid_mm_linesTableAdapter.Fill(table, whereClause);
+            }
+        }
+
+        /// <summary>
+        /// Populates the specified incid_mm_pointsDataTable with rows that match the provided filter conditions.
+        /// </summary>
+        /// <param name="whereClause">A collection of filter conditions used to select which rows are retrieved.</param>
+        /// <param name="table">A reference to the incid_mm_pointsDataTable that will be filled with the matching rows.</param>
+        internal void GetIncidMMPointRows(List<List<SqlFilterCondition>> whereClause,
+            ref HluDataSet.incid_mm_pointsDataTable table)
+        {
+            if ((whereClause != null) && (whereClause.Count > 0))
+            {
+                _hluTableAdapterMgr.incid_mm_pointsTableAdapter ??=
+                        new HluTableAdapter<HluDataSet.incid_mm_pointsDataTable,
+                            HluDataSet.incid_mm_pointsRow>(_db);
+
+                _hluTableAdapterMgr.incid_mm_pointsTableAdapter.Fill(table, whereClause);
+            }
+        }
+
+        /// <summary>
         /// Populates the specified incid_osmm_updatesDataTable with rows that match the provided filter conditions.
         /// </summary>
         /// <remarks>If no filter conditions are provided, the method does not modify the data table. The
@@ -2632,7 +2679,10 @@ namespace HLU.UI.ViewModel
         internal async Task<int> CountOSMMUpdatesAsync(CancellationToken cancellationToken = default)
         {
             object result = await _db.ExecuteScalarAsync(String.Format(
-                "SELECT COUNT(*) FROM {0}", _db.QualifyTableName(_hluDS.incid_osmm_updates.TableName)),
+                "SELECT COUNT(*) FROM {0} WHERE {1} LIKE {2}",
+                _db.QualifyTableName(_hluDS.incid_osmm_updates.TableName),
+                _db.QuoteIdentifier(_hluDS.incid_osmm_updates.incidColumn.ColumnName),
+                _db.QuoteValue(_recIDs.SiteID + ":%")),
                 _db.Connection.ConnectionTimeout,
                 CommandType.Text,
                 cancellationToken);
@@ -2702,7 +2752,7 @@ namespace HLU.UI.ViewModel
                 if (IsFiltered)
                 {
                     // Find the expected number of features to be selected in GIS.
-                    _selectedFragsInDBCount = await ExpectedSelectionFeatures(whereTables, newWhereClause);
+                    _selectedFragsInDBCount = await ExpectedSelectionFeaturesAsync(whereTables, newWhereClause);
 
                     // Store the number of incids found in the database
                     _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -2822,9 +2872,9 @@ namespace HLU.UI.ViewModel
                 List<DataTable> whereTables = [];
                 whereTables.Add(IncidOSMMUpdatesTable);
 
-                // Always filter out applied updates
+                // Always filter out applied updates, and constrain to the active layer's SiteID prefix.
                 string sqlWhereClause;
-                sqlWhereClause = "[incid_osmm_updates].status <> -1";
+                sqlWhereClause = $"[incid_osmm_updates].incid LIKE '{_recIDs.SiteID}:%' AND [incid_osmm_updates].status <> -1";
 
                 // Add any other filter criteria.
                 if (processFlag != null && processFlag != _codeAnyRow)
@@ -2891,7 +2941,7 @@ namespace HLU.UI.ViewModel
                 if (IsFiltered && selectInGIS)
                 {
                     // Find the expected number of features to be selected in GIS.
-                    _selectedFragsInDBCount = await ExpectedSelectionFeatures(whereTables, newWhereClause);
+                    _selectedFragsInDBCount = await ExpectedSelectionFeaturesAsync(whereTables, newWhereClause);
 
                     // Store the number of incids found in the database
                     _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -3053,46 +3103,51 @@ namespace HLU.UI.ViewModel
 
             ChangeCursor(Cursors.Wait, "Clearing filter ...");
 
-            _incidSelection = null;
-            _incidSelectionWhereClause = null;
-            _gisSelection = null;
-            _selectedIncidsInDBCount = 0;
-            _selectedFragsInDBCount = 0;
-            _selectedIncidsInGISCount = 0;
-            _selectedToidsInGISCount = 0;
-            _selectedFragsInGISCount = 0;
-            _incidPageRowNoMax = -1;
-
-            // Only move to the first incid in the index if required, to save
-            // changing the index here and then again immediately after from
-            // the calling method.
-            if (resetRowIndex)
+            try
             {
-                _incidCurrentRowIndex = 1;
+                _incidSelection = null;
+                _incidSelectionWhereClause = null;
+                _gisSelection = null;
+                _selectedIncidsInDBCount = 0;
+                _selectedFragsInDBCount = 0;
+                _selectedIncidsInGISCount = 0;
+                _selectedToidsInGISCount = 0;
+                _selectedFragsInGISCount = 0;
+                _incidPageRowNoMax = -1;
+
+                // Only move to the first incid in the index if required, to save
+                // changing the index here and then again immediately after from
+                // the calling method.
+                if (resetRowIndex)
+                {
+                    _incidCurrentRowIndex = 1;
+                }
+
+                // Suggest the selection came from the map so that
+                // the map doesn't auto zoom to the first incid.
+                _filteredByMap = true;
+
+                // Re-retrieve the current record (which includes counting the number of
+                // toids and fragments for the current incid selected in the GIS and
+                // in the database).
+                if (resetRowIndex)
+                    await MoveIncidCurrentRowIndexAsync(_incidCurrentRowIndex);
+                else
+                    // Count the number of toids and fragments for the current incid
+                    // selected in the GIS and in the database.
+                    CountCurrentIncidFrags();
+
+                // Indicate the selection didn't come from the map.
+                _filteredByMap = false;
+
+                // Refresh all the status type fields.
+                RefreshStatus();
             }
-
-            // Suggest the selection came from the map so that
-            // the map doesn't auto zoom to the first incid.
-            _filteredByMap = true;
-
-            // Re-retrieve the current record (which includes counting the number of
-            // toids and fragments for the current incid selected in the GIS and
-            // in the database).
-            if (resetRowIndex)
-                await MoveIncidCurrentRowIndexAsync(_incidCurrentRowIndex);
-            else
-                // Count the number of toids and fragments for the current incid
-                // selected in the GIS and in the database.
-                CountCurrentIncidFrags();
-
-            // Indicate the selection didn't come from the map.
-            _filteredByMap = false;
-
-            // Refresh all the status type fields.
-            RefreshStatus();
-
-            // Reset the cursor back to normal.
-            ChangeCursor(Cursors.Arrow);
+            finally
+            {
+                // Reset the cursor back to normal.
+                ChangeCursor(Cursors.Arrow);
+            }
         }
 
         #endregion Clear Filter Operation
@@ -3118,9 +3173,9 @@ namespace HLU.UI.ViewModel
                         _fragsSelectedMap = from r in _gisSelection.AsEnumerable()
                                             group r by new
                                             {
-                                                incid = r.Field<string>(0),
-                                                toid = r.Field<string>(1),
-                                                fragment = r.Field<string>(2)
+                                                incid = r.IsNull(0) ? null : r.Field<string>(0),
+                                                toid = r.IsNull(1) ? null : r.Field<string>(1),
+                                                fragment = r.IsNull(2) ? null : r.Field<string>(2)
                                             }
                                                 into g
                                             select g.Key.fragment;
@@ -3131,16 +3186,21 @@ namespace HLU.UI.ViewModel
                     case 2:
                         // Get the unique toids selected in GIS.
                         _toidsSelectedMap = _gisSelection.AsEnumerable()
-                            .GroupBy(r => r.Field<string>(_gisIDColumns[1].ColumnName)).Select(g => g.Key);
+                            .GroupBy(r => r.IsNull(_gisIDColumns[1].ColumnName) ? null : r.Field<string>(_gisIDColumns[1].ColumnName)).Select(g => g.Key);
 
                         // Count the number of toids selected in GIS.
                         _selectedToidsInGISCount = _toidsSelectedMap.Count();
                         goto case 1;
                     case 1:
                         // Get the unique incids selected in GIS (ordered so that the filter
-                        // is sorted in incid order).
+                        // is sorted in incid order). Use the nullable Field<string?> overload
+                        // so that DBNull values (e.g. newly created features with no INCID)
+                        // don't throw InvalidCastException, and filter those null keys out.
                         _incidsSelectedMap = _gisSelection.AsEnumerable()
-                            .GroupBy(r => r.Field<string>(_gisIDColumns[0].ColumnName)).Select(g => g.Key).OrderBy(s => s);
+                            .GroupBy(r => r.Field<string>(_gisIDColumns[0].ColumnName))
+                            .Select(g => g.Key)
+                            .Where(s => s != null)
+                            .OrderBy(s => s);
 
                         // Count the number of incids selected in GIS.
                         _selectedIncidsInGISCount = _incidsSelectedMap.Count();
@@ -3250,7 +3310,10 @@ namespace HLU.UI.ViewModel
                 try
                 {
                     _incidRowCount = (int)_db.ExecuteScalar(String.Format(
-                        "SELECT COUNT(*) FROM {0}", _db.QualifyTableName(_hluDS.incid.TableName)),
+                        "SELECT COUNT(*) FROM {0} WHERE {1} LIKE {2}",
+                        _db.QualifyTableName(_hluDS.incid.TableName),
+                        _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName),
+                        _db.QuoteValue(_recIDs.SiteID + ":%")),
                         _db.Connection.ConnectionTimeout, CommandType.Text);
 
                     // Refresh the status fields
@@ -3280,7 +3343,7 @@ namespace HLU.UI.ViewModel
                     // If not filtered then seek to the current row index in the incid table and set
                     // the current row.
                     int newRowIndex = SeekIncid(_incidCurrentRowIndex);
-                    if ((canMove = newRowIndex != -1))
+                    if ((canMove = newRowIndex != -1 && newRowIndex < _hluDS.incid.Count))
                         _incidCurrentRow = _hluDS.incid[newRowIndex];
                 }
                 else
@@ -3357,8 +3420,6 @@ namespace HLU.UI.ViewModel
                         ClearForm();
                     }
 
-                    OnPropertyChanged(nameof(IncidCurrentRowIndex));
-                    OnPropertyChanged(nameof(OSMMIncidCurrentRowIndex));
                     OnPropertyChanged(nameof(IncidCurrentRow));
 
                     // Refresh all statuses, headers and fields
@@ -3373,10 +3434,15 @@ namespace HLU.UI.ViewModel
                     RefreshSource2();
                     RefreshSource3();
                     RefreshHistory();
-                }
+                    }
 
-                // Update the editing control state
-                CheckEditingControlState();
+                    // Always notify the row index so the navigation counter stays
+                    // in sync even when the seek fails or no record was retrieved.
+                    OnPropertyChanged(nameof(IncidCurrentRowIndex));
+                    OnPropertyChanged(nameof(OSMMIncidCurrentRowIndex));
+
+                    // Update the editing control state
+                    CheckEditingControlState();
             }
             catch (Exception ex)
             {

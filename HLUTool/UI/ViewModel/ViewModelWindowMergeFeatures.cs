@@ -47,8 +47,8 @@ namespace HLU.UI.ViewModel
         private string _displayName = "Merge Features";
         private T _selectedFeatures;
         private R _resultFeature;
-        private HluDataSet.incid_mm_polygonsRow[] _childRows;
-        private HluDataSet.incid_mm_polygonsRow[] _currChildRows;
+        private DataRow[] _childRows;
+        private DataRow[] _currChildRows;
         private int _incidOrdinal;
         private int _selectedIndex = -1;
         private int[] _keyOrdinals;
@@ -67,7 +67,7 @@ namespace HLU.UI.ViewModel
         /// <param name="childRows">The child rows associated with the selected features.</param>
         /// <param name="gisApp">The GIS application instance.</param>
         public ViewModelWindowMergeFeatures(T selectedFeatures, int[] keyOrdinals, int incidOrdinal,
-            HluDataSet.incid_mm_polygonsRow[] childRows, ArcProApp gisApp)
+            DataRow[] childRows, ArcProApp gisApp)
         {
             _selectedFeatures = selectedFeatures;
             _keyOrdinals = keyOrdinals;
@@ -340,7 +340,7 @@ namespace HLU.UI.ViewModel
                 if ((_resultFeature is HluDataSet.incidRow) && (_childRows != null))
                 {
                     string incid = _resultFeature.Field<string>(_incidOrdinal);
-                    _currChildRows = [.. _childRows.Where(r => r.incid == incid)];
+                    _currChildRows = [.. _childRows.Where(r => r.Field<string>("incid") == incid)];
                 }
 
                 // Flash the selected feature on the map.

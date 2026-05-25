@@ -294,7 +294,7 @@ namespace HLU.UI.ViewModel
 
                 // Update the primary and secondary habitats on the incid table
                 _viewModelMain.IncidCurrentRow.habitat_primary = _viewModelMain.IncidPrimary;
-                _viewModelMain.IncidCurrentRow.habitat_secondaries = _viewModelMain.IncidSecondarySummary;
+                _viewModelMain.IncidCurrentRow.habitat_secondaries = _viewModelMain.IncidSecondaryCodesOnly;
 
                 // Update the habitat class if the primary habitat has changed
                 if (!_viewModelMain.IncidCurrentRow.Ishabitat_primaryNull())
@@ -1637,7 +1637,7 @@ namespace HLU.UI.ViewModel
                 if (_viewModelMain.IncidCurrentRow.Ishabitat_secondariesNull())
                 {
                     updateDBValueList.Add(null);
-                    updateGISValueList.Add("");
+                    updateGISValueList.Add(DBNull.Value);
                 }
                 else
                 {

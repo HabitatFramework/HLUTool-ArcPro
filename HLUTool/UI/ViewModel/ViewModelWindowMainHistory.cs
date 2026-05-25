@@ -124,10 +124,9 @@ namespace HLU.UI.ViewModel
                     if (!String.IsNullOrEmpty(operationCode))
                         fixedValueDict.Add(_viewModelMain.HluDataset.history.modified_operationColumn.Ordinal,
                             operationCode);
-                    else
-                        // Missing reason/process/operation codes are a state/config problem.
-                        throw new InvalidOperationException(
-                            $"Missing or indeterminate operation code for {operation}.");
+                    // If no matching entry exists in lut_operation (e.g. for a newly-added operation
+                    // not yet present in the database), leave modified_operation as DBNull rather than
+                    // failing the whole history write.  The column is nullable so the INSERT will succeed.
                 }
 
                 // rename the generically named geom1 and geom2 fields according to layer type

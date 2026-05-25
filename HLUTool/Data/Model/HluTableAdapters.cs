@@ -562,6 +562,10 @@ namespace HLU.Data.Model
 
         private HluTableAdapter<HluDataSet.incid_mm_polygonsDataTable, HluDataSet.incid_mm_polygonsRow> _incid_mm_polygonsTableAdapter;
 
+        private HluTableAdapter<HluDataSet.incid_mm_linesDataTable, HluDataSet.incid_mm_linesRow> _incid_mm_linesTableAdapter;
+
+        private HluTableAdapter<HluDataSet.incid_mm_pointsDataTable, HluDataSet.incid_mm_pointsRow> _incid_mm_pointsTableAdapter;
+
         private HluTableAdapter<HluDataSet.incid_sourcesDataTable, HluDataSet.incid_sourcesRow> _incid_sourcesTableAdapter;
 
         private HluTableAdapter<HluDataSet.incid_osmm_updatesDataTable, HluDataSet.incid_osmm_updatesRow> _incid_osmm_updatesTableAdapter;
@@ -907,6 +911,34 @@ namespace HLU.Data.Model
                 if (!MatchTableAdapterConnection(value.Connection))
                     throw new ArgumentException(_sameConnErrorMsg);
                 _incid_mm_polygonsTableAdapter = value;
+            }
+        }
+
+        public HluTableAdapter<HluDataSet.incid_mm_linesDataTable, HluDataSet.incid_mm_linesRow> incid_mm_linesTableAdapter
+        {
+            get
+            {
+                return _incid_mm_linesTableAdapter;
+            }
+            set
+            {
+                if (!MatchTableAdapterConnection(value.Connection))
+                    throw new ArgumentException(_sameConnErrorMsg);
+                _incid_mm_linesTableAdapter = value;
+            }
+        }
+
+        public HluTableAdapter<HluDataSet.incid_mm_pointsDataTable, HluDataSet.incid_mm_pointsRow> incid_mm_pointsTableAdapter
+        {
+            get
+            {
+                return _incid_mm_pointsTableAdapter;
+            }
+            set
+            {
+                if (!MatchTableAdapterConnection(value.Connection))
+                    throw new ArgumentException(_sameConnErrorMsg);
+                _incid_mm_pointsTableAdapter = value;
             }
         }
 
@@ -1511,6 +1543,12 @@ namespace HLU.Data.Model
                 if (_incid_mm_polygonsTableAdapter != null)
                     count++;
 
+                if (_incid_mm_linesTableAdapter != null)
+                    count++;
+
+                if (_incid_mm_pointsTableAdapter != null)
+                    count++;
+
                 if (_incid_sourcesTableAdapter != null)
                     count++;
 
@@ -1802,6 +1840,22 @@ namespace HLU.Data.Model
         private void CreateAdapterMMPolygons()
         {
             _incid_mm_polygonsTableAdapter = new(_db);
+        }
+
+        /// <summary>
+        /// Initializes the MM Lines table adapter.
+        /// </summary>
+        private void CreateAdapterMMLines()
+        {
+            _incid_mm_linesTableAdapter = new(_db);
+        }
+
+        /// <summary>
+        /// Initializes the MM Points table adapter.
+        /// </summary>
+        private void CreateAdapterMMPoints()
+        {
+            _incid_mm_pointsTableAdapter = new(_db);
         }
 
         /// <summary>

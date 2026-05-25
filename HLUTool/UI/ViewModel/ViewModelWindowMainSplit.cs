@@ -1,4 +1,4 @@
-﻿// HLUTool is used to view and maintain habitat and land use GIS data.
+// HLUTool is used to view and maintain habitat and land use GIS data.
 // Copyright © 2011 Hampshire Biodiversity Information Centre
 // Copyright © 2013 Thames Valley Environmental Records Centre
 // Copyright © 2014 Sussex Biodiversity Record Centre
@@ -118,8 +118,13 @@ namespace HLU.UI.ViewModel
                 // Create a count query to determine how many features exist for the current incid.
                 String cntSQL = String.Format(
                     "SELECT COUNT(*) FROM {0} WHERE {1} = {2}",
-                    _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
-                    _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid_mm_polygons.incidColumn.ColumnName),
+                    _viewModelMain.DataBase.QualifyTableName(_viewModelMain.GisMMTable.TableName),
+                    _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.GisLayerType switch
+                    {
+                        HluGeometryTypes.Line => _viewModelMain.HluDataset.incid_mm_lines.incidColumn.ColumnName,
+                        HluGeometryTypes.Point => _viewModelMain.HluDataset.incid_mm_points.incidColumn.ColumnName,
+                        _ => _viewModelMain.HluDataset.incid_mm_polygons.incidColumn.ColumnName
+                    }),
                     _viewModelMain.DataBase.QuoteValue(_viewModelMain.Incid));
 
                 // Execute the count query.
@@ -204,15 +209,21 @@ namespace HLU.UI.ViewModel
                 // Prepare the history columns for the split operation.
                 // This adds an additional history request column that maps "modified_fragid"
                 // to the source GIS field "fragid" using the delimiter mechanism.
+                string mmFragidColName = _viewModelMain.GisLayerType switch
+                {
+                    HluGeometryTypes.Line => _viewModelMain.HluDataset.incid_mm_lines.fragidColumn.ColumnName,
+                    HluGeometryTypes.Point => _viewModelMain.HluDataset.incid_mm_points.fragidColumn.ColumnName,
+                    _ => _viewModelMain.HluDataset.incid_mm_polygons.fragidColumn.ColumnName
+                };
                 DataColumn[] historyColumns =
                     [
                         .. _viewModelMain.HistoryColumns,
                         new(
                         _viewModelMain.HluDataset.history.modified_fragidColumn.ColumnName.Replace(
-                        _viewModelMain.HluDataset.incid_mm_polygons.fragidColumn.ColumnName,
+                        mmFragidColName,
                         String.Empty) +
                         ArcProApp.HistoryAdditionalFieldsDelimiter +
-                        _viewModelMain.HluDataset.incid_mm_polygons.fragidColumn.ColumnName,
+                        mmFragidColName,
                         _viewModelMain.HluDataset.history.modified_fragidColumn.DataType)
                     ];
 
@@ -229,28 +240,77 @@ namespace HLU.UI.ViewModel
                 if ((historyTable == null) || (historyTable.Rows.Count == 0))
                     throw new Exception("Failed to update GIS layer.");
 
-                // Create a shadow copy of the incid_mm_polygons rows.
-                HluDataSet.incid_mm_polygonsDataTable polygons = new();
+                // Create a shadow copy of the GIS map-match rows for the current incid.
+                DataTable mmTable = _viewModelMain.GisMMTable;
 
-                // Get the incid_mm_polygons rows for the selected GIS features.
-                _viewModelMain.GetIncidMMPolygonRows(
-                    ViewModelWindowMainHelpers.GisSelectionToWhereClause(
-                        _viewModelMain.GisSelection.Select(),
-                        _viewModelMain.GisIDColumnOrdinals,
-                        ViewModelWindowMain.IncidPageSize,
-                        polygons),
-                    ref polygons);
+                // Get the map-match rows for the selected GIS features.
+                List<List<SqlFilterCondition>> mmWhereClause = ViewModelWindowMainHelpers.GisSelectionToWhereClause(
+                    _viewModelMain.GisSelection.Select(),
+                    _viewModelMain.GisIDColumnOrdinals,
+                    ViewModelWindowMain.IncidPageSize,
+                    mmTable);
+                switch (_viewModelMain.GisLayerType)
+                {
+                    case HluGeometryTypes.Line:
+                    {
+                        var t = _viewModelMain.HluDataset.incid_mm_lines;
+                        _viewModelMain.GetIncidMMLineRows(mmWhereClause, ref t);
+                        break;
+                    }
+                    case HluGeometryTypes.Point:
+                    {
+                        var t = _viewModelMain.HluDataset.incid_mm_points;
+                        _viewModelMain.GetIncidMMPointRows(mmWhereClause, ref t);
+                        break;
+                    }
+                    default:
+                    {
+                        var t = _viewModelMain.HluDataset.incid_mm_polygons;
+                        _viewModelMain.GetIncidMMPolygonRows(mmWhereClause, ref t);
+                        break;
+                    }
+                }
 
-                // Get the primary key columns for the history table.
-                historyTable.PrimaryKey = [.. historyTable.Columns.Cast<DataColumn>().Where(c => _viewModelMain.GisIDColumnOrdinals.Contains(c.Ordinal))];
+                // Resolve the incid, toid and fragid column names for the active geometry type.
+                string incidColName = _viewModelMain.GisLayerType switch
+                {
+                    HluGeometryTypes.Line => _viewModelMain.HluDataset.incid_mm_lines.incidColumn.ColumnName,
+                    HluGeometryTypes.Point => _viewModelMain.HluDataset.incid_mm_points.incidColumn.ColumnName,
+                    _ => _viewModelMain.HluDataset.incid_mm_polygons.incidColumn.ColumnName
+                };
+                string fragidColName = _viewModelMain.GisLayerType switch
+                {
+                    HluGeometryTypes.Line => _viewModelMain.HluDataset.incid_mm_lines.fragidColumn.ColumnName,
+                    HluGeometryTypes.Point => _viewModelMain.HluDataset.incid_mm_points.fragidColumn.ColumnName,
+                    _ => _viewModelMain.HluDataset.incid_mm_polygons.fragidColumn.ColumnName
+                };
+                string toidColName = _viewModelMain.GisLayerType switch
+                {
+                    HluGeometryTypes.Line => _viewModelMain.HluDataset.incid_mm_lines.toidColumn.ColumnName,
+                    HluGeometryTypes.Point => _viewModelMain.HluDataset.incid_mm_points.toidColumn.ColumnName,
+                    _ => _viewModelMain.HluDataset.incid_mm_polygons.toidColumn.ColumnName
+                };
 
-                // Loop through the shadow copy of the incid_mm_polygons rows and update
+                // Set the history table primary key to incid + fragid only.
+                // toid is intentionally excluded: it is nullable for all geometry types
+                // and incid + fragid together uniquely identify every feature.
+                historyTable.PrimaryKey = [.. historyTable.Columns.Cast<DataColumn>()
+                    .Where(c => c.ColumnName == incidColName || c.ColumnName == fragidColName)];
+
+                // Loop through the shadow copy of the map-match rows and update
                 // the fragid and incid where necessary.
-                foreach (HluDataSet.incid_mm_polygonsRow r in polygons)
+
+                // Collect old→new key mappings so that existing history rows can be
+                // updated to reflect the new (incid, toid, fragid) values.  This
+                // replicates the ON UPDATE CASCADE that previously existed on the
+                // FK from history → incid_mm_polygons (and the other mm tables).
+                List<(string oldIncid, string toid, string oldFragid, string newFragid)> splitKeyMappings = [];
+
+                foreach (DataRow r in mmTable.Rows)
                 {
                     // If the feature in GIS belongs to the current incid then update the
                     // fragid and incid.
-                    if (r.incid == _viewModelMain.Incid)
+                    if ((string)r[incidColName] == _viewModelMain.Incid)
                     {
                         // Get the key values in the same order as the history table primary key columns.
                         object[] historyKeyValues = [.. historyTable.PrimaryKey.Select(pkCol => r[pkCol.ColumnName])];
@@ -267,16 +327,39 @@ namespace HLU.UI.ViewModel
                             throw new HLUToolException($"Failed to match GIS history row for split feature. Key: {keyText}");
                         }
 
-                        // Update the fragid and incid from the history row.
-                        r.fragid = historyRow.Field<string>(
+                        string newFragid = historyRow.Field<string>(
                             _viewModelMain.HluDataset.history.modified_fragidColumn.ColumnName);
-                        r.incid = newIncid;
+
+                        // Record the old key before overwriting so history can be updated.
+                        // Use `as string` to safely handle DBNull when toid is null.
+                        splitKeyMappings.Add((
+                            (string)r[incidColName],
+                            r[toidColName] as string,
+                            (string)r[fragidColName],
+                            newFragid));
+
+                        // Update the fragid and incid from the history row.
+                        r[fragidColName] = newFragid;
+                        r[incidColName] = newIncid;
                     }
                 }
 
-                // Update the shadow copy of the incid_mm_polygons table.
-                if (_viewModelMain.HluTableAdapterManager.incid_mm_polygonsTableAdapter.Update(polygons) == -1)
-                    throw new Exception($"Failed to update table [{_viewModelMain.HluDataset.incid_mm_polygons.TableName}].");
+                // Update the shadow copy of the map-match table.
+                int updateCount = _viewModelMain.GisLayerType switch
+                {
+                    HluGeometryTypes.Line => _viewModelMain.HluTableAdapterManager.incid_mm_linesTableAdapter?.Update(
+                        _viewModelMain.HluDataset.incid_mm_lines) ?? -1,
+                    HluGeometryTypes.Point => _viewModelMain.HluTableAdapterManager.incid_mm_pointsTableAdapter?.Update(
+                        _viewModelMain.HluDataset.incid_mm_points) ?? -1,
+                    _ => _viewModelMain.HluTableAdapterManager.incid_mm_polygonsTableAdapter?.Update(
+                        _viewModelMain.HluDataset.incid_mm_polygons) ?? -1
+                };
+                if (updateCount == -1)
+                    throw new Exception($"Failed to update table [{mmTable.TableName}].");
+
+                // Update existing history rows whose (incid, toid, fragid) key has changed,
+                // replacing the ON UPDATE CASCADE that was removed from the database FK.
+                UpdateHistoryForLogicalSplit(newIncid, splitKeyMappings);
 
                 // Create the fixed values dictionary for history writing.
                 Dictionary<int, string> fixedValues = new()
@@ -457,8 +540,8 @@ namespace HLU.UI.ViewModel
                 DateTime currDtTm = DateTime.Now;
                 DateTime nowDtTm = new(currDtTm.Year, currDtTm.Month, currDtTm.Day, currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
 
-                // find the last used fragid for the selected toid
-                string lastFragID = _viewModelMain.RecIDs.MaxFragmentId(_viewModelMain.ToidsSelectedMap.ElementAt(0));
+                // find the last used fragid for the selected incid
+                string lastFragID = _viewModelMain.RecIDs.MaxFragmentId(_viewModelMain.Incid);
 
                 // Skip all but one of the GIS select criteria as they are all the same in the case of a physical split anyway
                 int skipCount = _viewModelMain.GisSelection.Rows.Count - 1;
@@ -466,7 +549,7 @@ namespace HLU.UI.ViewModel
                 // get a filter from the GIS selection
                 List<List<SqlFilterCondition>> featuresFilter = ViewModelWindowMainHelpers.GisSelectionToWhereClause(
                     [.. _viewModelMain.GisSelection.AsEnumerable().Skip(skipCount)], _viewModelMain.GisIDColumnOrdinals,
-                    ViewModelWindowMain.IncidPageSize, _viewModelMain.HluDataset.incid_mm_polygons);
+                    ViewModelWindowMain.IncidPageSize, _viewModelMain.GisMMTable);
 
                 if (featuresFilter.Count != 1)
                     throw new Exception("Error finding features in database.");
@@ -478,9 +561,9 @@ namespace HLU.UI.ViewModel
                 // This queues the GIS edits into the provided EditOperation but does not execute it.
                 DataTable newFeatures = await _viewModelMain.GISApplication.SplitFeaturesPhysicallyAsync(currentFragmentID,
                     lastFragID, featuresFilter[0],
-                    [.. _viewModelMain.HluDataset.incid_mm_polygons.Columns.Cast<DataColumn>().Where(c =>
-                        c.ColumnName != _viewModelMain.HluDataset.incid_mm_polygons.shape_lengthColumn.ColumnName &&
-                        c.ColumnName != _viewModelMain.HluDataset.incid_mm_polygons.shape_areaColumn.ColumnName)],
+                    [.. _viewModelMain.GisMMTable.Columns.Cast<DataColumn>().Where(c =>
+                        c.ColumnName != _viewModelMain.GisMMShapeLengthColumnName &&
+                        c.ColumnName != _viewModelMain.GisMMShapeAreaColumnName)],
                     editOperation);
 
                 // If an error occurred when updating the GIS layer or
@@ -491,14 +574,37 @@ namespace HLU.UI.ViewModel
                 // get a where clause for the original split feature
                 List<List<SqlFilterCondition>> originalFeatureWhereClause = ViewModelWindowMainHelpers.GisSelectionToWhereClause(
                     [.. _viewModelMain.GisSelection.AsEnumerable().Take(1)], _viewModelMain.GisIDColumnOrdinals,
-                    ViewModelWindowMain.IncidPageSize, _viewModelMain.HluDataset.incid_mm_polygons);
+                    ViewModelWindowMain.IncidPageSize, _viewModelMain.GisMMTable);
 
                 if (originalFeatureWhereClause.Count != 1)
                     throw new Exception("Error finding features in database.");
 
                 // get the attributes of the split feature
-                HluDataSet.incid_mm_polygonsDataTable updTable = new();
-                _viewModelMain.GetIncidMMPolygonRows(originalFeatureWhereClause, ref updTable);
+                DataTable updTable;
+                switch (_viewModelMain.GisLayerType)
+                {
+                    case HluGeometryTypes.Line:
+                    {
+                        var t = _viewModelMain.HluDataset.incid_mm_lines;
+                        _viewModelMain.GetIncidMMLineRows(originalFeatureWhereClause, ref t);
+                        updTable = t;
+                        break;
+                    }
+                    case HluGeometryTypes.Point:
+                    {
+                        var t = _viewModelMain.HluDataset.incid_mm_points;
+                        _viewModelMain.GetIncidMMPointRows(originalFeatureWhereClause, ref t);
+                        updTable = t;
+                        break;
+                    }
+                    default:
+                    {
+                        var t = _viewModelMain.HluDataset.incid_mm_polygons;
+                        _viewModelMain.GetIncidMMPolygonRows(originalFeatureWhereClause, ref t);
+                        updTable = t;
+                        break;
+                    }
+}
 
                 // If an error occurred when fetching the original split feature then throw an exception.
                 if ((updTable == null) || (updTable.Rows.Count != 1))
@@ -509,12 +615,22 @@ namespace HLU.UI.ViewModel
                 // reference the correct column names.
                 ViewModelWindowMainHistory vmHist = new(_viewModelMain);
                 vmHist.HistoryRenameGeometryPropertyColumns(
-                    _viewModelMain.HluDataset.incid_mm_polygons.shape_lengthColumn.ColumnName,
-                    _viewModelMain.HluDataset.incid_mm_polygons.shape_areaColumn.ColumnName, ref newFeatures);
+                    _viewModelMain.GisMMShapeLengthColumnName,
+                    _viewModelMain.GisMMShapeAreaColumnName, ref newFeatures);
 
-                // update the original row
+                // Remove any generic geometry columns that were not renamed (i.e. have no
+                // corresponding column in the target DB table). For lines, geom2 is never
+                // renamed because incid_mm_lines has no shape_area column. For points,
+                // neither geom1 nor geom2 is renamed.
+                if (newFeatures.Columns.Contains(ViewModelWindowMain.HistoryGeometry1ColumnName))
+                    newFeatures.Columns.Remove(ViewModelWindowMain.HistoryGeometry1ColumnName);
+                if (newFeatures.Columns.Contains(ViewModelWindowMain.HistoryGeometry2ColumnName))
+                    newFeatures.Columns.Remove(ViewModelWindowMain.HistoryGeometry2ColumnName);
+
+                // update the original row (only the geometry will have changed, but update all
+                // columns to be safe and to keep the local copy in sync with the DB)
                 string updateStatement = String.Format("UPDATE {0} SET {1} WHERE {2}",
-                    _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
+                    _viewModelMain.DataBase.QualifyTableName(_viewModelMain.GisMMTable.TableName),
                     String.Join(",", [.. newFeatures.Rows[0].ItemArray.Select((i, index) =>
                         new
                         {
@@ -535,12 +651,12 @@ namespace HLU.UI.ViewModel
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception($"Failed to update original row in table [{_viewModelMain.HluDataset.incid_mm_polygons.TableName}].", ex);
+                    throw new Exception($"Failed to update original row in table [{_viewModelMain.GisMMTable.TableName}].", ex);
                 }
 
                 // build an insert statement for DB shadow copy of GIS layer
                 string insertCommand = String.Format("INSERT INTO {0} ({1}) VALUES (",
-                    _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName),
+                    _viewModelMain.DataBase.QualifyTableName(_viewModelMain.GisMMTable.TableName),
                     String.Join(",", [.. newFeatures.Columns.Cast<DataColumn>().Select(c =>
                     _viewModelMain.DataBase.QuoteIdentifier(c.ColumnName))])) + "{0})";
 
@@ -563,7 +679,7 @@ namespace HLU.UI.ViewModel
                     }
                     catch (Exception ex)
                     {
-                        throw new Exception($"Failed to insert new rows into table [{_viewModelMain.HluDataset.incid_mm_polygons.TableName}].", ex);
+                        throw new Exception($"Failed to insert new rows into table [{_viewModelMain.GisMMTable.TableName}].", ex);
                     }
                 }
 
@@ -573,8 +689,12 @@ namespace HLU.UI.ViewModel
                 // HistoryRenameGeometryPropertyColumns call. Rename them back to the generic
                 // HistoryGeometry names on a copy so that HistoryWrite can map them correctly.
                 DataTable historyTable = newFeatures.Copy();
-                historyTable.Columns[updTable.shape_lengthColumn.ColumnName].ColumnName = ViewModelWindowMain.HistoryGeometry1ColumnName;
-                historyTable.Columns[updTable.shape_areaColumn.ColumnName].ColumnName = ViewModelWindowMain.HistoryGeometry2ColumnName;
+                if (_viewModelMain.GisMMShapeLengthColumnName != null &&
+                    historyTable.Columns.Contains(_viewModelMain.GisMMShapeLengthColumnName))
+                    historyTable.Columns[_viewModelMain.GisMMShapeLengthColumnName].ColumnName = ViewModelWindowMain.HistoryGeometry1ColumnName;
+                if (_viewModelMain.GisMMShapeAreaColumnName != null &&
+                    historyTable.Columns.Contains(_viewModelMain.GisMMShapeAreaColumnName))
+                    historyTable.Columns[_viewModelMain.GisMMShapeAreaColumnName].ColumnName = ViewModelWindowMain.HistoryGeometry2ColumnName;
                 vmHist.HistoryWrite(null, historyTable, Operations.PhysicalSplit, nowDtTm);
 
                 // Update the incid modified columns (i.e. last modified user and date).
@@ -1325,6 +1445,64 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion Clone Incid
+
+        #region History Cascade Replacement
+
+        /// <summary>
+        /// Updates existing history rows whose (incid, toid, fragid) key changed during a logical
+        /// split, replicating the behaviour that was previously provided by the ON UPDATE CASCADE
+        /// foreign key from the <c>history</c> table to the <c>incid_mm_*</c> tables.
+        /// </summary>
+        /// <param name="newIncid">The new INCID that the split features have been assigned to.</param>
+        /// <param name="keyMappings">Old-to-new (incid, toid, fragid) mappings collected while
+        /// updating the in-memory map-match rows.</param>
+        private void UpdateHistoryForLogicalSplit(
+            string newIncid,
+            List<(string oldIncid, string toid, string oldFragid, string newFragid)> keyMappings)
+        {
+            if (String.IsNullOrWhiteSpace(newIncid))
+                return;
+            if (keyMappings == null || keyMappings.Count == 0)
+                return;
+
+            string histTable = _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.history.TableName);
+            string incidCol  = _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.history.incidColumn.ColumnName);
+            string toidCol   = _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.history.toidColumn.ColumnName);
+            string fragidCol = _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.history.fragidColumn.ColumnName);
+
+            foreach (var (oldIncid, toid, oldFragid, newFragid) in keyMappings)
+            {
+                // Build the toid condition using IS NULL when the value is null, because
+                // `toid = NULL` is always false in SQL (NULL comparisons require IS NULL).
+                string toidCondition = toid != null
+                    ? $"{toidCol} = {_viewModelMain.DataBase.QuoteValue(toid)}"
+                    : $"{toidCol} IS NULL";
+
+                string updateStatement = String.Format(
+                    "UPDATE {0} SET {1} = {2}, {3} = {4} WHERE {1} = {5} AND {6} AND {3} = {7}",
+                    histTable,
+                    incidCol,  _viewModelMain.DataBase.QuoteValue(newIncid),
+                    fragidCol, _viewModelMain.DataBase.QuoteValue(newFragid),
+                    _viewModelMain.DataBase.QuoteValue(oldIncid),
+                    toidCondition,
+                    _viewModelMain.DataBase.QuoteValue(oldFragid));
+
+                try
+                {
+                    _viewModelMain.DataBase.ExecuteNonQuery(
+                        updateStatement,
+                        _viewModelMain.DataBase.Connection.ConnectionTimeout,
+                        CommandType.Text);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception(
+                        $"Failed to update history rows for logical split in table [{_viewModelMain.HluDataset.history.TableName}].", ex);
+                }
+            }
+        }
+
+        #endregion History Cascade Replacement
 
         #region Update IncidBap Row
 

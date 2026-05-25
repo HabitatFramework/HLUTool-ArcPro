@@ -115,6 +115,13 @@ namespace HLU.UI.ViewModel
 
         #endregion Fields - Split/Merge
 
+        #region Fields - Feature Insert
+
+        // Can one or more new features (with null incids) in the current selection be registered.
+        private bool _canInsertFeature;
+
+        #endregion Fields - Feature Insert
+
         #endregion Fields
 
         #region Properties
@@ -135,6 +142,36 @@ namespace HLU.UI.ViewModel
                 return _gisLayerType;
             }
         }
+
+        /// <summary>
+        /// Gets the HLU map-match table from the database that corresponds to the active
+        /// GIS layer geometry type (polygons, lines or points).
+        /// </summary>
+        internal DataTable GisMMTable => _hluDS == null ? null : _gisLayerType switch
+        {
+            HluGeometryTypes.Line => (DataTable)_hluDS.incid_mm_lines,
+            HluGeometryTypes.Point => (DataTable)_hluDS.incid_mm_points,
+            _ => (DataTable)_hluDS.incid_mm_polygons
+        };
+
+        /// <summary>
+        /// Gets the <c>shape_length</c> column name for the active GIS map-match table,
+        /// or <c>null</c> for point layers that carry no length measure.
+        /// </summary>
+        internal string GisMMShapeLengthColumnName => _gisLayerType switch
+        {
+            HluGeometryTypes.Point => null,
+            HluGeometryTypes.Line => _hluDS.incid_mm_lines.shape_lengthColumn.ColumnName,
+            _ => _hluDS.incid_mm_polygons.shape_lengthColumn.ColumnName
+        };
+
+        /// <summary>
+        /// Gets the <c>shape_area</c> column name for the active GIS map-match table,
+        /// or <c>null</c> for line and point layers that carry no area measure.
+        /// </summary>
+        internal string GisMMShapeAreaColumnName => _gisLayerType == HluGeometryTypes.Polygon
+            ? _hluDS.incid_mm_polygons.shape_areaColumn.ColumnName
+            : null;
 
         #endregion Properties - GIS Info
 
@@ -415,6 +452,30 @@ namespace HLU.UI.ViewModel
         public bool CanMerge => _canPhysicallyMerge || _canLogicallyMerge;
 
         #endregion Properties - Split/Merge Commands
+
+        #region Properties - Feature Insert Commands
+
+        /// <summary>
+        /// Can one or more selected features with null incids be registered against the same new INCID?
+        /// </summary>
+        /// <value><c>true</c> if a feature insert (same incid) operation can be performed; otherwise, <c>false</c>.</value>
+        public bool CanInsertFeatureSameIncid => _canInsertFeature;
+
+        /// <summary>
+        /// Can each selected feature with a null incid be registered against its own new INCID?
+        /// Only meaningful (and therefore enabled) when more than one feature is selected;
+        /// with a single feature the result is identical to <see cref="CanInsertFeatureSameIncid"/>.
+        /// </summary>
+        /// <value><c>true</c> if a feature insert (separate incids) operation can be performed; otherwise, <c>false</c>.</value>
+        public bool CanInsertFeatureSeparateIncid => _canInsertFeature && _gisSelection?.Rows.Count > 1;
+
+        /// <summary>
+        /// Can a feature insert operation (same or separate incid) be performed?
+        /// </summary>
+        /// <value><c>true</c> if any feature insert operation can be performed; otherwise, <c>false</c>.</value>
+        public bool CanInsertFeature => _canInsertFeature;
+
+        #endregion Properties - Feature Insert Commands
 
         #endregion Properties
 
@@ -767,11 +828,12 @@ namespace HLU.UI.ViewModel
                 // Save the current table of selected GIS features.
                 prevGISSelection = _gisSelection;
 
+                // Determine if a filter with more than one incid is currently active
+                // (must be checked before resetting _incidSelection).
+                bool multiIncidFilter = (IsFiltered && prevIncidSelection != null && prevIncidSelection.Rows.Count > 1);
+
                 // Reset the table of selected incids.
                 _incidSelection = NewIncidSelectionTable();
-
-                // Determine if a filter with more than one incid is currently active.
-                bool multiIncidFilter = (IsFiltered && _incidSelection.Rows.Count > 1);
 
                 // Set the table of selected incids to the current incid.
                 DataRow selRow = _incidSelection.NewRow();
@@ -856,9 +918,7 @@ namespace HLU.UI.ViewModel
                 // Warn the user that no features were found in GIS.
                 if (_gisSelection == null || _gisSelection.Rows.Count == 0)
                 {
-                    // Display a warning message.
                     ShowWarning("No features for incid found in active layer.", MessageCategory.GIS);
-
                     return;
                 }
 
@@ -950,7 +1010,7 @@ namespace HLU.UI.ViewModel
                 AnalyzeGisSelectionSet(true);
 
                 // Update the number of features found in the database.
-                _selectedFragsInDBCount = await ExpectedSelectionFeatures(_incidSelectionWhereClause);
+                _selectedFragsInDBCount = await ExpectedSelectionFeaturesAsync(_incidSelectionWhereClause);
 
                 // Store the number of incids found in the database
                 _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -1004,7 +1064,44 @@ namespace HLU.UI.ViewModel
                     ChangeCursor(Cursors.Arrow);
 
                     // Display a warning message.
-                    ShowWarning("No map features selected in active layer.", MessageCategory.GIS);
+                    string geomTypeName = _gisLayerType switch
+                    {
+                        HluGeometryTypes.Line  => "line",
+                        HluGeometryTypes.Point => "point",
+                        _                      => "polygon"
+                    };
+
+                    // Check whether the geometry-type map-match table has any records at all.
+                    // If it is empty the user has not yet registered any features of this type.
+                    int totalDbCount = 0;
+                    try
+                    {
+                        totalDbCount = (int)_db.ExecuteScalar(
+                            $"SELECT COUNT(*) FROM {_db.QualifyTableName(GisMMTable.TableName)}",
+                            _db.Connection.ConnectionTimeout, CommandType.Text);
+                    }
+                    catch { }
+
+                    if (totalDbCount == 0)
+                    {
+                        // No features of this geometry type have been registered yet, so
+                        // clear the form to avoid displaying stale incid details, then
+                        // refresh all UI bindings so every property reflects the cleared state.
+                        ClearForm();
+
+                        // Reset the DB and GIS fragment/toid counts so the status counter
+                        // does not show stale values from the previously active layer.
+                        _currentIncidToidsInGISCount = 0;
+                        _currentIncidFragsInGISCount = 0;
+                        _currentIncidToidsInDBCount = 0;
+                        _currentIncidFragsInDBCount = 0;
+
+                        RefreshAll();
+
+                        ShowWarning($"No {geomTypeName} features have been registered in the database yet.", MessageCategory.GIS);
+                    }
+                    else
+                        ShowWarning($"No {geomTypeName} features selected in active layer.", MessageCategory.GIS);
                 }
             }
             catch (Exception ex)
@@ -1047,7 +1144,7 @@ namespace HLU.UI.ViewModel
 
                 // Get the incid column and table for the where clause
                 DataColumn incidColumn = _incidSelection.Columns[_hluDS.incid.incidColumn.ColumnName];
-                DataTable condTable = _hluDS.incid_mm_polygons;
+                DataTable condTable = GisMMTable;
 
                 // Create a quote function if _gisApp exists, otherwise null.
                 Func<string, string> quoteFunc = _gisApp != null ? _gisApp.QuoteValue : null;
@@ -1063,7 +1160,7 @@ namespace HLU.UI.ViewModel
 
                 // Find the expected number of features to be selected in GIS
                 // (by querying the database).
-                int expectedNumFeatures = await ExpectedSelectionFeatures(whereClause);
+                int expectedNumFeatures = await ExpectedSelectionFeaturesAsync(whereClause);
 
                 // Find the expected number of incids to be selected in GIS.
                 int expectedNumIncids = _incidSelection.Rows.Count;
@@ -1145,7 +1242,7 @@ namespace HLU.UI.ViewModel
 
             DataTable outTable = new();
             foreach (DataColumn c in _gisIDColumns)
-                outTable.Columns.Add(new DataColumn(c.ColumnName, c.DataType));
+                outTable.Columns.Add(new DataColumn(c.ColumnName, c.DataType) { AllowDBNull = true });
             return outTable;
         }
 
@@ -1159,19 +1256,23 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="whereClause">The list of where clause conditions.</param>
         /// <returns>A task of an integer of the number of fragments expected to be selected.</returns>
-        private async Task<int> ExpectedSelectionFeatures(List<List<SqlFilterCondition>> whereClause)
+        private async Task<int> ExpectedSelectionFeaturesAsync(List<List<SqlFilterCondition>> whereClause)
         {
             int numFragments = 0;
 
             // Track distinct TOIDs across all chunks for an exact unique count.
             HashSet<string> distinctToids = new(StringComparer.OrdinalIgnoreCase);
 
+            // If there is a selection and from tables to query against (and the where clause isn't null or empty).
             if ((_incidSelection != null) && (_incidSelection.Rows.Count > 0) &&
                 (whereClause != null) && (whereClause.Count > 0))
             {
                 try
                 {
-                    HluDataSet.incid_mm_polygonsDataTable t = new();
+                    // Set up the from tables and join conditions for the SQL query based on the
+                    // tables in the where clause (which may include joined tables such as the incid table).
+                    DataTable t = GisMMTable;
+                    DataColumn tIncidColumn = t.Columns[_hluDS.incid_mm_polygons.incidColumn.ColumnName];
                     DataTable[] selTables = [t];
 
                     IEnumerable<DataTable> queryTables = whereClause.SelectMany(cond => cond.Select(c => c.Table)).Distinct();
@@ -1182,12 +1283,11 @@ namespace HLU.UI.ViewModel
                     DataRelation rel;
                     IEnumerable<SqlFilterCondition> joinCond = fromTables.Select(st =>
                         st.GetType() == typeof(HluDataSet.incidDataTable) ?
-                        new SqlFilterCondition("AND", t, t.incidColumn, typeof(DataColumn), "(", ")", st.Columns[_hluDS.incid.incidColumn.Ordinal]) :
+                        new SqlFilterCondition("AND", t, tIncidColumn, typeof(DataColumn), "(", ")", st.Columns[_hluDS.incid.incidColumn.Ordinal]) :
                         (rel = GetRelation(_hluDS.incid, st)) != null ?
-                        new SqlFilterCondition("AND", t, t.incidColumn, typeof(DataColumn), "(", ")", rel.ChildColumns[0]) : null).Where(c => c != null);
+                        new SqlFilterCondition("AND", t, tIncidColumn, typeof(DataColumn), "(", ")", rel.ChildColumns[0]) : null).Where(c => c != null);
 
-                    // If there is only one long list then chunk
-                    // it up into smaller lists.
+                    // If there is only one long list then chunk it up into smaller lists.
                     if (whereClause.Count == 1)
                     {
                         try
@@ -1226,6 +1326,7 @@ namespace HLU.UI.ViewModel
                             cond.CloseParentheses = "))";
                         }
 
+                        // Count the number of fragments for this chunk of where conditions (appended to the join conditions).
                         numFragments += await _db.SqlCountAsync(selTables, "*", [.. joinCond, .. whereClause[i]]);
                     }
                 }
@@ -1246,16 +1347,20 @@ namespace HLU.UI.ViewModel
         /// <param name="sqlFromTables">The list of data tables.</param>
         /// <param name="sqlWhereClause">The where clause string.</param>
         /// <returns>A task of an integer of the number of fragments expected to be selected.</returns>
-        private async Task<int> ExpectedSelectionFeatures(List<DataTable> sqlFromTables, string sqlWhereClause)
+        private async Task<int> ExpectedSelectionFeaturesAsync(List<DataTable> sqlFromTables, string sqlWhereClause)
         {
             int numFragments = 0;
 
+            // If there is a selection and from tables to query against (and the where clause isn't null or empty).
             if ((_incidSelection != null) && (_incidSelection.Rows.Count > 0) &&
                 sqlFromTables.Count != 0)
             {
                 try
                 {
-                    HluDataSet.incid_mm_polygonsDataTable t = new();
+                    // Set up the from tables and join conditions for the SQL query based on the
+                    // tables in the where clause (which may include joined tables such as the incid table).
+                    DataTable t = GisMMTable;
+                    DataColumn tIncidColumn = t.Columns[_hluDS.incid_mm_polygons.incidColumn.ColumnName];
                     DataTable[] selTables = [t];
 
                     var fromTables = sqlFromTables.Distinct().Where(q => !selTables.Select(s => s.TableName).Contains(q.TableName));
@@ -1264,16 +1369,16 @@ namespace HLU.UI.ViewModel
                     DataRelation rel;
                     IEnumerable<SqlFilterCondition> joinCond = fromTables.Select(st =>
                         st.GetType() == typeof(HluDataSet.incidDataTable) ?
-                        new SqlFilterCondition("AND", t, t.incidColumn, typeof(DataColumn), "(", ")", st.Columns[_hluDS.incid.incidColumn.Ordinal]) :
+                        new SqlFilterCondition("AND", t, tIncidColumn, typeof(DataColumn), "(", ")", st.Columns[_hluDS.incid.incidColumn.Ordinal]) :
                         (rel = GetRelation(_hluDS.incid, st)) != null ?
-                        new SqlFilterCondition("AND", t, t.incidColumn, typeof(DataColumn), "(", ")", rel.ChildColumns[0]) : null).Where(c => c != null);
+                        new SqlFilterCondition("AND", t, tIncidColumn, typeof(DataColumn), "(", ")", rel.ChildColumns[0]) : null).Where(c => c != null);
 
-                    // Create a selection DataTable of PK values of IncidMMPolygons.
+                    // Create a selection DataTable of PK values of the active GIS map-match table.
                     _incidMMPolygonSelection = await Task.Run(() =>
                         _db.SqlSelect(
                             true,
                             false,
-                            _hluDS.incid_mm_polygons.PrimaryKey,
+                            t.PrimaryKey,
                             [.. whereTables], [.. joinCond], sqlWhereClause));
 
                     // Count the number of fragments from the selection table.
@@ -1354,6 +1459,16 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public void CountCurrentIncidFrags()
         {
+            // Guard against a null current row (e.g. first insert into a new geometry type).
+            if (_incidCurrentRow == null)
+            {
+                _currentIncidToidsInGISCount = 0;
+                _currentIncidFragsInGISCount = 0;
+                _currentIncidToidsInDBCount = 0;
+                _currentIncidFragsInDBCount = 0;
+                return;
+            }
+
             // Count the number of toids and fragments for this incid selected
             // in the GIS. They are counted here, once when the incid changes,
             // instead of in StatusIncid() which is constantly being called.
@@ -1374,7 +1489,7 @@ namespace HLU.UI.ViewModel
             _currentIncidToidsInDBCount = (int)_db.ExecuteScalar(String.Format(
                     "SELECT COUNT(*) FROM (SELECT DISTINCT {0} FROM {1} WHERE {2} = {3}) AS T",
                     _db.QuoteIdentifier(_hluDS.incid_mm_polygons.toidColumn.ColumnName),
-                    _db.QualifyTableName(_hluDS.incid_mm_polygons.TableName),
+                    _db.QualifyTableName(GisMMTable.TableName),
                     _db.QuoteIdentifier(_hluDS.incid_mm_polygons.incidColumn.ColumnName),
                     _db.QuoteValue(_incidCurrentRow.incid)),
                     _db.Connection.ConnectionTimeout, CommandType.Text);
@@ -1383,7 +1498,7 @@ namespace HLU.UI.ViewModel
             // this incid.
             _currentIncidFragsInDBCount = (int)_db.ExecuteScalar(String.Format(
                 "SELECT COUNT(*) FROM {0} WHERE {1} = {2}",
-                _db.QualifyTableName(_hluDS.incid_mm_polygons.TableName),
+                _db.QualifyTableName(GisMMTable.TableName),
                 _db.QuoteIdentifier(_hluDS.incid_mm_polygons.incidColumn.ColumnName),
                 _db.QuoteValue(_incidCurrentRow.incid)),
                 _db.Connection.ConnectionTimeout, CommandType.Text);
@@ -1424,7 +1539,7 @@ namespace HLU.UI.ViewModel
                 int toidsIncidSelectionDbCount = 0;
 
                 string sqlFragsDbCount = String.Format("SELECT COUNT(*) FROM {0} WHERE {0}.{1} = {2}",
-                    _db.QualifyTableName(_hluDS.incid_mm_polygons.TableName),
+                    _db.QualifyTableName(GisMMTable.TableName),
                     _db.QuoteIdentifier(_hluDS.incid_mm_polygons.incidColumn.ColumnName),
                     _db.QuoteValue(incid));
 
@@ -1438,7 +1553,7 @@ namespace HLU.UI.ViewModel
                 string _sqlToidsDbCount = String.Format(
                     "SELECT COUNT(*) FROM (SELECT DISTINCT {0} FROM {1} WHERE {2} = {3}) AS T",
                     _db.QuoteIdentifier(_hluDS.incid_mm_polygons.toidColumn.ColumnName),
-                    _db.QualifyTableName(_hluDS.incid_mm_polygons.TableName),
+                    _db.QualifyTableName(GisMMTable.TableName),
                     _db.QuoteIdentifier(_hluDS.incid_mm_polygons.incidColumn.ColumnName),
                     _db.QuoteValue(incid));
 
@@ -1484,12 +1599,26 @@ namespace HLU.UI.ViewModel
             if (!IsEditOperationModeReady)
                 return false;
 
-            return (_gisSelection != null) && (_selectedIncidsInGISCount == 1) &&
-                ((_gisSelection.Rows.Count > 1) && (_selectedFragsInGISCount > 1) ||
-                (_gisSelection.Rows.Count == 1)) &&
-                (_filteredByMap == true) &&
-                ((_currentIncidToidsInGISCount < _currentIncidToidsInDBCount) ||
-                (_currentIncidFragsInGISCount < _currentIncidFragsInDBCount));
+            // There must be at least one feature selected in GIS.
+            bool hasSelection = _gisSelection != null;
+
+            // Only one INCID may be selected (logical split creates a new INCID from a subset).
+            bool singleIncid = _selectedIncidsInGISCount == 1;
+
+            // Either multiple distinct fragments are selected, or exactly one feature is
+            // selected (it can be split away from the remaining DB records for the same INCID).
+            bool validSelectionSize = (_gisSelection?.Rows.Count > 1 && _selectedFragsInGISCount > 1)
+                                   || (_gisSelection?.Rows.Count == 1);
+
+            // The selection must have originated from the map, not from a database filter.
+            bool fromMapSelection = _filteredByMap == true;
+
+            // The database must hold more toids or fragments for this INCID than are currently
+            // shown in GIS, confirming there are features left behind to split from.
+            bool hasRemainingDbFeatures = (_currentIncidToidsInGISCount < _currentIncidToidsInDBCount)
+                                       || (_currentIncidFragsInGISCount < _currentIncidFragsInDBCount);
+
+            return hasSelection && singleIncid && validSelectionSize && fromMapSelection && hasRemainingDbFeatures;
         }
 
         /// <summary>
@@ -1503,14 +1632,25 @@ namespace HLU.UI.ViewModel
             if (!IsEditOperationModeReady)
                 return false;
 
-            return (_gisSelection != null) && (_gisSelection.Rows.Count > 1) &&
-                (_filteredByMap == true) &&
-                (_selectedIncidsInGISCount > 1) && (_selectedFragsInGISCount > 1);
+            // More than one feature must be selected.
+            bool hasMultipleFeatures = _gisSelection != null && _gisSelection.Rows.Count > 1;
+
+            // The selection must have originated from the map, not from a database filter.
+            bool fromMapSelection = _filteredByMap == true;
+
+            // Multiple INCIDs must be selected (logical merge joins features from different INCIDs).
+            bool multipleIncids = _selectedIncidsInGISCount > 1;
+
+            // Multiple fragments must be present in the selection.
+            bool multipleFragments = _selectedFragsInGISCount > 1;
+
+            return hasMultipleFeatures && fromMapSelection && multipleIncids && multipleFragments;
         }
 
         /// <summary>
         /// Computes whether a physical split operation can be performed based on the current state.
         /// At least two features in selection that share the same incid, toid and fragid.
+        /// Not supported for point layers, where physical splitting is not meaningful.
         /// </summary>
         /// <returns><c>true</c> if a physical split can be performed; otherwise, <c>false</c>.</returns>
         public bool ComputeCanPhysicallySplit()
@@ -1519,14 +1659,29 @@ namespace HLU.UI.ViewModel
             if (!IsEditOperationModeReady)
                 return false;
 
-            return (_gisSelection != null) && (_gisSelection.Rows.Count > 1) &&
-                (_filteredByMap == true) &&
-                (_selectedIncidsInGISCount == 1) && (_selectedToidsInGISCount == 1) && (_selectedFragsInGISCount == 1);
+            // Physical split is not meaningful for point geometry layers.
+            if (_gisLayerType == HluGeometryTypes.Point)
+                return false;
+
+            // More than one feature must be selected.
+            bool hasMultipleFeatures = _gisSelection != null && _gisSelection.Rows.Count > 1;
+
+            // The selection must have originated from the map, not from a database filter.
+            bool fromMapSelection = _filteredByMap == true;
+
+            // All selected features must share exactly one INCID, one TOID, and one fragment —
+            // meaning they are duplicate polygon records for the same real-world feature.
+            bool sameSingleUnit = _selectedIncidsInGISCount == 1
+                               && _selectedToidsInGISCount == 1
+                               && _selectedFragsInGISCount == 1;
+
+            return hasMultipleFeatures && fromMapSelection && sameSingleUnit;
         }
 
         /// <summary>
         /// Computes whether a physical merge operation can be performed based on the current state.
         /// At least one feature in selection that share the same incid and toid but *not* the same fragid.
+        /// Not supported for point layers; use logical merge to group point features under one INCID.
         /// </summary>
         /// <returns><c>true</c> if a physical merge operation can be performed; otherwise, <c>false</c>.</returns>
         public bool ComputeCanPhysicallyMerge()
@@ -1535,9 +1690,23 @@ namespace HLU.UI.ViewModel
             if (!IsEditOperationModeReady)
                 return false;
 
-            return (_gisSelection != null) && (_gisSelection.Rows.Count > 1) &&
-                (_filteredByMap == true) &&
-                (_selectedIncidsInGISCount == 1) && (_selectedToidsInGISCount == 1) && (_selectedFragsInGISCount > 1);
+            // Physical merge is not meaningful for point geometry layers.
+            if (_gisLayerType == HluGeometryTypes.Point)
+                return false;
+
+            // More than one feature must be selected.
+            bool hasMultipleFeatures = _gisSelection != null && _gisSelection.Rows.Count > 1;
+
+            // The selection must have originated from the map, not from a database filter.
+            bool fromMapSelection = _filteredByMap == true;
+
+            // All selected features must share the same INCID and TOID but have different
+            // fragment IDs — i.e. separate fragments of the same polygon that can be merged.
+            bool sameIncidAndToidMultipleFrags = _selectedIncidsInGISCount == 1
+                                              && _selectedToidsInGISCount == 1
+                                              && _selectedFragsInGISCount > 1;
+
+            return hasMultipleFeatures && fromMapSelection && sameIncidAndToidMultipleFrags;
         }
 
         /// <summary>
@@ -1603,9 +1772,59 @@ namespace HLU.UI.ViewModel
         {
             RefreshSplitEnablement();
             RefreshMergeEnablement();
+            RefreshInsertFeatureEnablement();
         }
 
         #endregion Split/Merge Capability
+
+        #region Feature Insert Capability
+
+        /// <summary>
+        /// Computes whether a feature insert operation can be performed based on the current state.
+        /// All selected features must have a null or empty incid (i.e. they are newly created and not
+        /// yet registered in the database).
+        /// </summary>
+        /// <returns><c>true</c> if a feature insert can be performed; otherwise, <c>false</c>.</returns>
+        private bool ComputeCanInsertFeature()
+        {
+            // Must be in a mode that allows edits and ready for edit operations (includes CanEdit + Reason/Process selection).
+            if (!IsEditOperationModeReady)
+                return false;
+
+            // There must be at least one feature selected.
+            if (_gisSelection == null || _gisSelection.Rows.Count == 0)
+                return false;
+
+            // All selected features must have a null or empty incid — meaning they are new,
+            // unregistered features that the user has created in the active layer.
+            return _incidsSelectedMap != null &&
+                   _incidsSelectedMap.All(i => string.IsNullOrEmpty(i));
+        }
+
+        /// <summary>
+        /// Refreshes the cached feature insert enablement value.
+        /// </summary>
+        private void RefreshInsertFeatureEnablement()
+        {
+            bool canInsert = ComputeCanInsertFeature();
+
+            // Always notify CanInsertFeatureSeparateIncid because its computed value also
+            // depends on the selection count, which may have changed even if canInsert hasn't.
+            bool changed = _canInsertFeature != canInsert;
+            _canInsertFeature = canInsert;
+
+            if (changed)
+            {
+                OnPropertyChanged(nameof(CanInsertFeature));
+                OnPropertyChanged(nameof(CanInsertFeatureSameIncid));
+            }
+
+            // Always fire this one — its value can change even when _canInsertFeature stays true
+            // (e.g. selection count moves between 1 and >1).
+            OnPropertyChanged(nameof(CanInsertFeatureSeparateIncid));
+        }
+
+        #endregion Feature Insert Capability
 
         #region Split/Merge Action
 
@@ -1807,6 +2026,52 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion Split/Merge Action
+
+        #region Feature Insert Action
+
+        /// <summary>
+        /// Registers all currently selected new (null-incid) features under a single new INCID.
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        public async Task InsertFeatureSameIncidAsync()
+        {
+            // Clear any existing messages.
+            ClearAllMessages();
+
+            // Re-read the map selection to ensure it is current.
+            await GetMapSelectionAsync(false);
+
+            // Delegate to the feature insert view model (implemented in stage 4/5).
+            ViewModelWindowMainFeatureInsert vmInsert = new(this);
+            var (success, featureCount, incidCount) = await vmInsert.InsertFeaturesSameIncidAsync();
+            if (success)
+            {
+                ShowSuccess($"Feature insert (same INCID) completed: {featureCount} {(featureCount == 1 ? "feature" : "features")} registered against 1 new INCID.", MessageCategory.Insert);
+            }
+        }
+
+        /// <summary>
+        /// Registers each currently selected new (null-incid) feature under its own new INCID.
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        public async Task InsertFeatureSeparateIncidsAsync()
+        {
+            // Clear any existing messages.
+            ClearAllMessages();
+
+            // Re-read the map selection to ensure it is current.
+            await GetMapSelectionAsync(false);
+
+            // Delegate to the feature insert view model (implemented in stage 4/5).
+            ViewModelWindowMainFeatureInsert vmInsert = new(this);
+            var (success, featureCount, incidCount) = await vmInsert.InsertFeaturesSeparateIncidsAsync();
+            if (success)
+            {
+                ShowSuccess($"Feature insert (separate INCIDs) completed: {featureCount} {(featureCount == 1 ? "feature" : "features")} registered against {incidCount} new {(incidCount == 1 ? "INCID" : "INCIDs")}.", MessageCategory.Insert);
+            }
+        }
+
+        #endregion Feature Insert Action
 
         #endregion Methods
     }

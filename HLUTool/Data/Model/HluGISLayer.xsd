@@ -67,10 +67,132 @@
             </xs:sequence>
           </xs:complexType>
         </xs:element>
+        <xs:element name="incid_mm_lines" msprop:Generator_RowClassName="incid_mm_linesRow" msprop:Generator_RowEvHandlerName="incid_mm_linesRowChangeEventHandler" msprop:Generator_RowDeletedName="incid_mm_linesRowDeleted" msprop:Generator_RowDeletingName="incid_mm_linesRowDeleting" msprop:Generator_RowEvArgName="incid_mm_linesRowChangeEvent" msprop:Generator_TablePropName="incid_mm_lines" msprop:Generator_RowChangedName="incid_mm_linesRowChanged" msprop:Generator_UserTableName="incid_mm_lines" msprop:Generator_RowChangingName="incid_mm_linesRowChanging" msprop:Generator_TableClassName="incid_mm_linesDataTable" msprop:Generator_TableVarName="tableincid_mm_lines">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="incid" msprop:Generator_ColumnPropNameInTable="incidColumn" msprop:nullValue="_null" msprop:Generator_ColumnPropNameInRow="incid" msprop:Generator_UserColumnName="incid" msprop:Generator_ColumnVarNameInTable="columnincid" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="12" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="toid" msprop:Generator_ColumnPropNameInTable="toidColumn" msprop:nullValue="_null" msprop:Generator_ColumnPropNameInRow="toid" msprop:Generator_UserColumnName="toid" msprop:Generator_ColumnVarNameInTable="columntoid" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="20" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="fragid" msprop:Generator_ColumnPropNameInTable="fragidColumn" msprop:nullValue="_null" msprop:Generator_ColumnPropNameInRow="fragid" msprop:Generator_UserColumnName="fragid" msprop:Generator_ColumnVarNameInTable="columnfragid" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="5" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="habprimary" msprop:Generator_UserColumnName="habprimary" msprop:Generator_ColumnPropNameInTable="habprimaryColumn" msprop:Generator_ColumnPropNameInRow="habprimary" msprop:Generator_ColumnVarNameInTable="columnhabprimary" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="8" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="habsecond" msprop:Generator_UserColumnName="habsecond" msprop:Generator_ColumnPropNameInTable="habsecondColumn" msprop:Generator_ColumnPropNameInRow="habsecond" msprop:Generator_ColumnVarNameInTable="columnhabsecond" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="80" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="determqty" msprop:Generator_UserColumnName="determqty" msprop:Generator_ColumnPropNameInTable="determqtyColumn" msprop:Generator_ColumnPropNameInRow="determqty" msprop:Generator_ColumnVarNameInTable="columndetermqty" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="2" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="interpqty" msprop:Generator_UserColumnName="interpqty" msprop:Generator_ColumnPropNameInTable="interpqtyColumn" msprop:Generator_ColumnPropNameInRow="interpqty" msprop:Generator_ColumnVarNameInTable="columninterpqty" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="2" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="incid_mm_points" msprop:Generator_RowClassName="incid_mm_pointsRow" msprop:Generator_RowEvHandlerName="incid_mm_pointsRowChangeEventHandler" msprop:Generator_RowDeletedName="incid_mm_pointsRowDeleted" msprop:Generator_RowDeletingName="incid_mm_pointsRowDeleting" msprop:Generator_RowEvArgName="incid_mm_pointsRowChangeEvent" msprop:Generator_TablePropName="incid_mm_points" msprop:Generator_RowChangedName="incid_mm_pointsRowChanged" msprop:Generator_UserTableName="incid_mm_points" msprop:Generator_RowChangingName="incid_mm_pointsRowChanging" msprop:Generator_TableClassName="incid_mm_pointsDataTable" msprop:Generator_TableVarName="tableincid_mm_points">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="incid" msprop:Generator_ColumnPropNameInTable="incidColumn" msprop:nullValue="_null" msprop:Generator_ColumnPropNameInRow="incid" msprop:Generator_UserColumnName="incid" msprop:Generator_ColumnVarNameInTable="columnincid" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="12" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="toid" msprop:Generator_ColumnPropNameInTable="toidColumn" msprop:nullValue="_null" msprop:Generator_ColumnPropNameInRow="toid" msprop:Generator_UserColumnName="toid" msprop:Generator_ColumnVarNameInTable="columntoid" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="20" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="fragid" msprop:Generator_ColumnPropNameInTable="fragidColumn" msprop:nullValue="_null" msprop:Generator_ColumnPropNameInRow="fragid" msprop:Generator_UserColumnName="fragid" msprop:Generator_ColumnVarNameInTable="columnfragid" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="5" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="habprimary" msprop:Generator_UserColumnName="habprimary" msprop:Generator_ColumnPropNameInTable="habprimaryColumn" msprop:Generator_ColumnPropNameInRow="habprimary" msprop:Generator_ColumnVarNameInTable="columnhabprimary" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="8" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="habsecond" msprop:Generator_UserColumnName="habsecond" msprop:Generator_ColumnPropNameInTable="habsecondColumn" msprop:Generator_ColumnPropNameInRow="habsecond" msprop:Generator_ColumnVarNameInTable="columnhabsecond" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="80" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="determqty" msprop:Generator_UserColumnName="determqty" msprop:Generator_ColumnPropNameInTable="determqtyColumn" msprop:Generator_ColumnPropNameInRow="determqty" msprop:Generator_ColumnVarNameInTable="columndetermqty" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="2" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+              <xs:element name="interpqty" msprop:Generator_UserColumnName="interpqty" msprop:Generator_ColumnPropNameInTable="interpqtyColumn" msprop:Generator_ColumnPropNameInRow="interpqty" msprop:Generator_ColumnVarNameInTable="columninterpqty" minOccurs="0">
+                <xs:simpleType>
+                  <xs:restriction base="xs:string">
+                    <xs:maxLength value="2" />
+                  </xs:restriction>
+                </xs:simpleType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
       </xs:choice>
     </xs:complexType>
     <xs:unique name="PK_INCID_MM_Polygons" msdata:PrimaryKey="true">
       <xs:selector xpath=".//mstns:incid_mm_polygons" />
+      <xs:field xpath="mstns:incid" />
+      <xs:field xpath="mstns:toid" />
+      <xs:field xpath="mstns:fragid" />
+    </xs:unique>
+    <xs:unique name="incid_mm_lines_PK_INCID_MM_Polygons" msdata:ConstraintName="PK_INCID_MM_Polygons" msdata:PrimaryKey="true">
+      <xs:selector xpath=".//mstns:incid_mm_lines" />
+      <xs:field xpath="mstns:incid" />
+      <xs:field xpath="mstns:toid" />
+      <xs:field xpath="mstns:fragid" />
+    </xs:unique>
+    <xs:unique name="incid_mm_points_PK_INCID_MM_Polygons" msdata:ConstraintName="PK_INCID_MM_Polygons" msdata:PrimaryKey="true">
+      <xs:selector xpath=".//mstns:incid_mm_points" />
       <xs:field xpath="mstns:incid" />
       <xs:field xpath="mstns:toid" />
       <xs:field xpath="mstns:fragid" />

@@ -194,6 +194,8 @@ namespace HLU.UI.ViewModel
         private HluDataSet.lut_reasonRow[] _reasonCodesWithNone;
         private HluDataSet.lut_processRow[] _processCodes;
         private HluDataSet.lut_processRow[] _processCodesWithNone;
+        private HluDataSet.lut_habitat_classRow _noneHabitatClassRow;
+        private HluDataSet.lut_habitat_classRow[] _habitatClassCodesWithNone;
         private HluDataSet.lut_quality_determinationRow[] _qualityDeterminationCodes;
         private HluDataSet.lut_quality_interpretationRow[] _qualityInterpretationCodes;
 
@@ -713,6 +715,19 @@ namespace HLU.UI.ViewModel
             get
             {
                 return _clearIHSUpdateAction;
+            }
+        }
+
+        /// <summary>
+        /// <summary>
+        /// Gets the delimiter used to separate secondary habitat codes.
+        /// </summary>
+        /// <value>The secondary code delimiter string.</value>
+        internal string SecondaryCodeDelimiter
+        {
+            get
+            {
+                return _secondaryCodeDelimiter;
             }
         }
 
@@ -1298,6 +1313,11 @@ namespace HLU.UI.ViewModel
                     return false;
                 }
 
+                // If there is no current row, or it is detached (e.g. after ClearForm),
+                // there is nothing to compare against — treat as clean.
+                if (_incidCurrentRow == null || _incidCurrentRow.RowState == DataRowState.Detached)
+                    return false;
+
                 // Return true if a field in any of the tables has changed.
                 return IsDirtyIncid() || IsDirtyIncidSecondary() || IsDirtyIncidCondition() || IsDirtyIncidBap() ||
                     IsDirtyIncidSources();
@@ -1369,7 +1389,7 @@ namespace HLU.UI.ViewModel
 
                 // If the habitat primary code is missing and not in Bulk Update mode.
                 if (String.IsNullOrEmpty(IncidPrimary) && IsNotBulkMode)
-                    error.Append(Environment.NewLine).Append("Primary Habitat is mandatory for every INCID");
+                    error.Append(Environment.NewLine).Append("Primary habitat is mandatory for every INCID");
 
                 // If the habitat secondary codes validation is error.
                 if (_habitatSecondaryCodeValidation > 1)
@@ -1468,12 +1488,27 @@ namespace HLU.UI.ViewModel
                         // for the parent tab. Otherwise remove the field from the list.
                         if (String.IsNullOrEmpty(IncidPrimary) && IsNotBulkMode)
                         {
-                            error = "Error: Primary Habitat is mandatory for every INCID";
+                            error = "Error: Primary habitat is mandatory for every INCID";
                             AddToErrorList(_habitatErrors, columnName);
+                            RemoveFromErrorList(_habitatWarnings, columnName);
+                        }
+                        else if (!String.IsNullOrEmpty(IncidPrimary) && IsNotBulkMode
+                            && _incidCurrentRow != null
+                            && _primaryCodes != null && _primaryCodes.Count > 0
+                            && !_primaryCodes.Any(p => p.Code == IncidPrimary))
+                        {
+                            // The stored code is not in the current combo box list — this happens
+                            // when lut_primary has been edited since the incid was last updated.
+                            // Treat as a warning (not an error) so the user can still navigate
+                            // and the read-only value in the database is preserved.
+                            error = $"Warning: Primary habitat '{IncidPrimary}' is not valid for the available options";
+                            AddToErrorList(_habitatWarnings, columnName);
+                            RemoveFromErrorList(_habitatErrors, columnName);
                         }
                         else
                         {
                             RemoveFromErrorList(_habitatErrors, columnName);
+                            RemoveFromErrorList(_habitatWarnings, columnName);
                         }
                         OnPropertyChanged(nameof(HabitatTabLabel));
                         break;
@@ -2181,11 +2216,20 @@ namespace HLU.UI.ViewModel
                     _noneProcessRow.sort_order = -1;
                 }
 
+                // Set the <None> habitat class row
+                if (_noneHabitatClassRow == null)
+                {
+                    _noneHabitatClassRow = HluDataset.lut_habitat_class.Newlut_habitat_classRow();
+                    _noneHabitatClassRow.code = "<None>";
+                    _noneHabitatClassRow.description = "<None>";
+                    _noneHabitatClassRow.sort_order = -1;
+                }
+
                 // Wire up event handler for copy switches
                 _copySwitches.PropertyChanged += new PropertyChangedEventHandler(CopySwitches_PropertyChanged);
 
                 int result;
-                // Columns that identify map polygons and are returned by GIS
+                // Columns that identify map features and are returned by GIS
                 _gisIDColumnOrdinals = [.. (from s in Settings.Default.GisIDColumnOrdinals.Cast<string>()
                                         where Int32.TryParse(s, out result) && (result >= 0) &&
                                         (result < _hluDS.incid_mm_polygons.Columns.Count)
@@ -2195,15 +2239,17 @@ namespace HLU.UI.ViewModel
                 // Columns to be saved in the history table when records are updated.
                 _historyColumns = InitializeHistoryColumns(_historyColumns);
 
-                // Count rows of incid table
-                IncidRowCount(true);
-
                 // Check for any pending OSMM updates.
                 await CheckAnyOSMMUpdatesAsync();
 
-                // Check the active map is valid
+                // Check the active map is valid — this sets _gisLayerType (and thus
+                // RecordIds.SiteID) to reflect the actual active layer geometry before
+                // the initial row count is performed.
                 if (await CheckActiveMapAsync())
                 {
+                    // Count rows of incid table now that _gisLayerType is correct.
+                    IncidRowCount(true);
+
                     // If it is valid move to first row
                     await MoveIncidCurrentRowIndexAsync(1);
                 }
@@ -2365,7 +2411,78 @@ namespace HLU.UI.ViewModel
             var isActiveHluLayer = !string.IsNullOrEmpty(targetLayerName) &&
                 await _gisApp.IsHluLayerAsync(targetLayerName, true);
 
-            // Now assign ActiveLayerName — IsEditable is correctly set so
+            // Sync the geometry type from the GIS application and reinitialise any
+            // geometry-type-dependent state when the active layer changes.
+            if (isActiveHluLayer)
+            {
+                HluGeometryTypes detectedGeometryType = _gisApp.HluGeometryType;
+                if (detectedGeometryType != _gisLayerType)
+                {
+                    _gisLayerType = detectedGeometryType;
+
+                    // Guard: _hluDS may not be initialised yet (e.g. connection dialog still open).
+                    if (GisMMTable == null)
+                        goto skipGeometryReinit;
+
+                    // Sync the geometry type on the RecordIds object so that SiteID
+                    // returns the correct site ID for the newly active layer type.
+                    if (_recIDs != null)
+                        _recIDs.GisLayerType = _gisLayerType;
+
+                    // Invalidate the cached row count so it is re-queried with the
+                    // new geometry-specific SiteID prefix on the next access.
+                    _incidRowCount = 0;
+
+                    // Reinitialise GIS ID columns for the new geometry table.
+                    int result;
+                    _gisIDColumnOrdinals = [.. (from s in Settings.Default.GisIDColumnOrdinals.Cast<string>()
+                                            where Int32.TryParse(s, out result) && (result >= 0) &&
+                                            (result < GisMMTable.Columns.Count)
+                                            select Int32.Parse(s))];
+                    _gisIDColumns = [.. _gisIDColumnOrdinals.Select(i => GisMMTable.Columns[i])];
+
+                    // Reinitialise history columns for the new geometry table.
+                    _historyColumns = InitializeHistoryColumns(_historyColumns);
+
+                    // Reinitialise the incid filter for the correct geometry table.
+                    _incidMMPolygonsIncidFilter = new()
+                    {
+                        BooleanOperator = "OR",
+                        OpenParentheses = "(",
+                        Column = GisMMTable.Columns[_hluDS.incid_mm_polygons.incidColumn.ColumnName],
+                        Table = GisMMTable,
+                        Value = String.Empty,
+                        CloseParentheses = ")"
+                    };
+
+                    // Reset cached secondary code lists — they are filtered by geometry type
+                    // and must be rebuilt for the new layer type.
+                    _secondaryCodesAll = null;
+                    _secondaryCodesValid = null;
+
+                    // Force the primary codes combo box to rebuild for the new geometry type.
+                    // Using a flag (rather than _primaryCodes.Clear()) avoids triggering the
+                    // WPF ComboBox binding which would fire the IncidPrimary setter with null
+                    // and spuriously set Changed = true on the current record.
+                    _forceHabitatTypeRebuild = true;
+                    HabitatType = _habitatType;
+
+                    // Restore _incidPrimary from the incid row when the setter nulled it because
+                    // the current primary code is absent from the rebuilt list.  This prevents
+                    // IsDirtyIncid() from seeing a discrepancy and falsely flagging the record
+                    // as changed.  The validation in this["IncidPrimary"] will show the warning.
+                    if (_incidPrimary == null && _incidCurrentRow != null
+                        && !_incidCurrentRow.Ishabitat_primaryNull())
+                    {
+                        _incidPrimary = _incidCurrentRow.habitat_primary;
+                        OnPropertyChanged(nameof(IncidPrimary));
+                    }
+                }
+
+                skipGeometryReinit:;
+            }
+
+            // Now assign ActiveLayerName
             // UpdateDockPaneCaption() and RefreshEditCapability() see the right value.
             ActiveLayerName = targetLayerName;
 
@@ -2413,7 +2530,7 @@ namespace HLU.UI.ViewModel
                 return
                 [
                     .. _gisIDColumns,
-                    .. _hluDS.incid_mm_polygons.Columns.Cast<DataColumn>()
+                    .. GisMMTable.Columns.Cast<DataColumn>()
                         .Where(c => !_gisIDColumnOrdinals.Contains(c.Ordinal)
                             && !c.ColumnName.StartsWith("shape_")),
                 ];
@@ -3481,7 +3598,9 @@ namespace HLU.UI.ViewModel
             // Get user updates options
             _defaultReason = Settings.Default.DefaultReason;
             _defaultProcess = Settings.Default.DefaultProcess;
-            _defaultHabitatClass = Settings.Default.DefaultHabitatClass;
+            // Store null when <None> is selected so HabitatClass getter leaves the field unset.
+            string storedHabitatClass = Settings.Default.DefaultHabitatClass;
+            _defaultHabitatClass = storedHabitatClass == "<None>" ? null : storedHabitatClass;
             _defaultSecondaryGroup = Settings.Default.DefaultSecondaryGroup;
             _secondaryCodeOrder = Settings.Default.SecondaryCodeOrder;
             _notifyOnSplitMerge = Settings.Default.NotifyOnSplitMerge;
@@ -3647,18 +3766,23 @@ namespace HLU.UI.ViewModel
 
             try
             {
-                StringBuilder whereClause = new(String.Format("{0} >= {1}",
-                    _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName), _db.QuoteValue(incid)));
+                string incidCol = _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName);
+                string siteIdFilter = $"{incidCol} LIKE {_db.QuoteValue(_recIDs.SiteID + ":%")}";
+
+                StringBuilder whereClause = new(String.Format("{0} >= {1} AND {2}",
+                    incidCol, _db.QuoteValue(incid), siteIdFilter));
 
                 int seekRowNumber = (int)_db.ExecuteScalar(
-                    String.Format("SELECT COUNT(*) FROM (SELECT {0} FROM {1} ORDER BY {0} ASC) WHERE {2}",
-                    _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName),
-                    _db.QualifyTableName(_hluDS.incid.TableName), whereClause),
+                    String.Format("SELECT COUNT(*) FROM (SELECT {0} FROM {1} WHERE {2} ORDER BY {0} ASC) WHERE {3}",
+                    incidCol,
+                    _db.QualifyTableName(_hluDS.incid.TableName), siteIdFilter, whereClause),
                     _db.Connection.ConnectionTimeout, CommandType.Text);
 
-                whereClause.Append(String.Format(" AND {0} < {1} ORDER BY {0} ASC",
-                    _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName),
-                    _db.QuoteValue(_recIDs.IncidString(RecordIds.IncidNumber(incid) + IncidPageSize))));
+                whereClause = new StringBuilder(String.Format("{0} >= {1} AND {0} < {2} AND {3} ORDER BY {0} ASC",
+                    incidCol,
+                    _db.QuoteValue(incid),
+                    _db.QuoteValue(_recIDs.IncidString(RecordIds.IncidNumber(incid) + IncidPageSize)),
+                    siteIdFilter));
 
                 _hluTableAdapterMgr.Fill(_hluDS, typeof(HluDataSet.incidDataTable), whereClause.ToString(), true);
 
@@ -3702,9 +3826,12 @@ namespace HLU.UI.ViewModel
             int incidPageRowNoMinBak = _incidPageRowNoMin;
             int incidPageRowNoMaxBak = _incidPageRowNoMax;
 
-            // Set-up the SQL load where clause template.
-            string loadWhereClauseTemplate = String.Format("{0} >= {{0}} AND {0} < {{1}} ORDER BY {0} ASC",
-                _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName));
+            // Set-up the SQL load where clause template (scoped to the active layer's SiteID prefix).
+            string siteIdWhere = String.Format("{0} LIKE {1}",
+                _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName),
+                _db.QuoteValue(_recIDs.SiteID + ":%"));
+            string loadWhereClauseTemplate = String.Format("{0} >= {{0}} AND {0} < {{1}} AND {1} ORDER BY {0} ASC",
+                _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName), siteIdWhere);
 
             try
             {
@@ -3713,19 +3840,28 @@ namespace HLU.UI.ViewModel
                 // If seeking very early in the table.
                 if (seekRowNumber < 2)
                 {
-                    // Get the first record.
-                    seekIncidNumber = RecordIds.IncidNumber(
-                        _db.ExecuteScalar(String.Format(
-                        "SELECT TOP 1 {0} FROM {1} ORDER BY {0} ASC",
+                    // Get the first record that matches the active layer SiteID prefix.
+                    object firstResult = _db.ExecuteScalar(String.Format(
+                        "SELECT TOP 1 {0} FROM {1} WHERE {0} LIKE {2} ORDER BY {0} ASC",
                             _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName),
-                            _db.QualifyTableName(_hluDS.incid.TableName)),
-                            _db.Connection.ConnectionTimeout, CommandType.Text).ToString());
+                            _db.QualifyTableName(_hluDS.incid.TableName),
+                            _db.QuoteValue(_recIDs.SiteID + ":%")),
+                            _db.Connection.ConnectionTimeout, CommandType.Text);
+
+                    if (firstResult == null)
+                        return -1;
+
+                    seekIncidNumber = RecordIds.IncidNumber(firstResult.ToString());
 
                     // Fetch records.
                     _hluTableAdapterMgr.Fill(_hluDS, typeof(HluDataSet.incidDataTable),
                         String.Format(loadWhereClauseTemplate,
                             _db.QuoteValue(_recIDs.IncidString(seekIncidNumber)),
                             _db.QuoteValue(_recIDs.IncidString(seekIncidNumber + IncidPageSize))), true);
+
+                    // If no rows were loaded, treat as failure.
+                    if (_hluDS.incid.Count == 0)
+                        throw new Exception("No rows returned from the database for the first incid.");
 
                     // Store the min and max row numbers in the page (max is inclusive).
                     _incidPageRowNoMin = seekRowNumber;
@@ -3737,13 +3873,18 @@ namespace HLU.UI.ViewModel
                 // If seeking very late in the table.
                 else if (seekRowNumber >= _incidRowCount)
                 {
-                    // Get the last record.
-                    seekIncidNumber = RecordIds.IncidNumber(
-                        _db.ExecuteScalar(String.Format(
-                        "SELECT TOP 1 {0} FROM {1} ORDER BY {0} DESC",
+                    // Get the last record that matches the active layer SiteID prefix.
+                    object lastResult = _db.ExecuteScalar(String.Format(
+                        "SELECT TOP 1 {0} FROM {1} WHERE {0} LIKE {2} ORDER BY {0} DESC",
                             _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName),
-                            _db.QualifyTableName(_hluDS.incid.TableName)),
-                            _db.Connection.ConnectionTimeout, CommandType.Text).ToString());
+                            _db.QualifyTableName(_hluDS.incid.TableName),
+                            _db.QuoteValue(_recIDs.SiteID + ":%")),
+                            _db.Connection.ConnectionTimeout, CommandType.Text);
+
+                    if (lastResult == null)
+                        return -1;
+
+                    seekIncidNumber = RecordIds.IncidNumber(lastResult.ToString());
 
                     // Move back by the page size.
                     if (seekIncidNumber > IncidPageSize)
@@ -3765,9 +3906,11 @@ namespace HLU.UI.ViewModel
                 else
                 {
                     // Directly fetch the incid string at the target row position using a single
-                    // OFFSET query (zero-based offset = seekRowNumber - 1).
+                    // OFFSET query (zero-based offset = seekRowNumber - 1), scoped to the active
+                    // layer's SiteID prefix.
                     string incidCol = _db.QuoteIdentifier(_hluDS.incid.incidColumn.ColumnName);
                     string incidTable = _db.QualifyTableName(_hluDS.incid.TableName);
+                    string siteIdFilter = _db.QuoteValue(_recIDs.SiteID + ":%");
                     int zeroBasedOffset = seekRowNumber - 1;
 
                     string seekSql;
@@ -3777,15 +3920,15 @@ namespace HLU.UI.ViewModel
                         // PostgreSQL does support the ANSI OFFSET … FETCH syntax but it is much less
                         // efficient than using LIMIT/OFFSET, so use LIMIT/OFFSET instead.
                         seekSql = String.Format(
-                            "SELECT {0} FROM {1} ORDER BY {0} ASC LIMIT 1 OFFSET {2}",
-                            incidCol, incidTable, zeroBasedOffset);
+                            "SELECT {0} FROM {1} WHERE {0} LIKE {2} ORDER BY {0} ASC LIMIT 1 OFFSET {3}",
+                            incidCol, incidTable, siteIdFilter, zeroBasedOffset);
                     }
                     else
                     {
                         // SQL Server and Oracle 12c+ both support the ANSI OFFSET … FETCH syntax.
                         seekSql = String.Format(
-                            "SELECT {0} FROM {1} ORDER BY {0} ASC OFFSET {2} ROWS FETCH NEXT 1 ROWS ONLY",
-                            incidCol, incidTable, zeroBasedOffset);
+                            "SELECT {0} FROM {1} WHERE {0} LIKE {2} ORDER BY {0} ASC OFFSET {3} ROWS FETCH NEXT 1 ROWS ONLY",
+                            incidCol, incidTable, siteIdFilter, zeroBasedOffset);
                     }
 
                     object seekResult = _db.ExecuteScalar(seekSql,
@@ -4236,8 +4379,8 @@ namespace HLU.UI.ViewModel
             {
                 BooleanOperator = "OR",
                 OpenParentheses = "(",
-                Column = _hluDS.incid_mm_polygons.incidColumn,
-                Table = _hluDS.incid_mm_polygons,
+                Column = GisMMTable.Columns[_hluDS.incid_mm_polygons.incidColumn.ColumnName],
+                Table = GisMMTable,
                 Value = String.Empty,
                 CloseParentheses = ")"
             };
