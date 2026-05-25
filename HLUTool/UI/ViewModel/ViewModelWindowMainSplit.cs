@@ -618,7 +618,17 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.GisMMShapeLengthColumnName,
                     _viewModelMain.GisMMShapeAreaColumnName, ref newFeatures);
 
-                // update the original row
+                // Remove any generic geometry columns that were not renamed (i.e. have no
+                // corresponding column in the target DB table). For lines, geom2 is never
+                // renamed because incid_mm_lines has no shape_area column. For points,
+                // neither geom1 nor geom2 is renamed.
+                if (newFeatures.Columns.Contains(ViewModelWindowMain.HistoryGeometry1ColumnName))
+                    newFeatures.Columns.Remove(ViewModelWindowMain.HistoryGeometry1ColumnName);
+                if (newFeatures.Columns.Contains(ViewModelWindowMain.HistoryGeometry2ColumnName))
+                    newFeatures.Columns.Remove(ViewModelWindowMain.HistoryGeometry2ColumnName);
+
+                // update the original row (only the geometry will have changed, but update all
+                // columns to be safe and to keep the local copy in sync with the DB)
                 string updateStatement = String.Format("UPDATE {0} SET {1} WHERE {2}",
                     _viewModelMain.DataBase.QualifyTableName(_viewModelMain.GisMMTable.TableName),
                     String.Join(",", [.. newFeatures.Rows[0].ItemArray.Select((i, index) =>
