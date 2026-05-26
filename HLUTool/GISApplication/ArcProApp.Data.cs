@@ -3170,6 +3170,67 @@ namespace HLU.GISApplication
             return result;
         }
 
+        /// <summary>
+        /// Reads the values of a single named field from the specified feature layer for the given OIDs.
+        /// Returns a dictionary mapping each OID to the trimmed string value of the field, or
+        /// <see langword="null"/> when the field is absent from the layer or the value is null/empty.
+        /// </summary>
+        /// <param name="layerName">Name of the feature layer to read from.</param>
+        /// <param name="oids">The object IDs of the features to read.</param>
+        /// <param name="fieldName">The name of the field to read.</param>
+        public async Task<Dictionary<long, string>> ReadSourceFieldValuesAsync(
+            string layerName, IReadOnlyList<long> oids, string fieldName)
+        {
+            var result = new Dictionary<long, string>();
+
+            if (string.IsNullOrEmpty(layerName) || string.IsNullOrEmpty(fieldName) ||
+                oids == null || oids.Count == 0)
+                return result;
+
+            FeatureLayer sourceLayer = await FindLayerAsync(layerName);
+            if (sourceLayer == null)
+                return result;
+
+            await QueuedTask.Run(() =>
+            {
+                using Table table = sourceLayer.GetTable();
+                if (table == null)
+                    return;
+
+                using TableDefinition def = table.GetDefinition();
+                IReadOnlyList<Field> fields = def.GetFields();
+
+                int fieldIdx = -1;
+                for (int i = 0; i < fields.Count; i++)
+                {
+                    if (string.Equals(fields[i].Name, fieldName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        fieldIdx = i;
+                        break;
+                    }
+                }
+
+                if (fieldIdx < 0)
+                    return;
+
+                QueryFilter qf = new() { ObjectIDs = oids };
+                using RowCursor cursor = table.Search(qf, false);
+                while (cursor.MoveNext())
+                {
+                    using Row row = cursor.Current;
+                    if (row == null)
+                        continue;
+
+                    long oid = row.GetObjectID();
+                    object v = row[fieldIdx];
+                    string s = (v == null || v is DBNull) ? null : v.ToString().Trim();
+                    result[oid] = string.IsNullOrEmpty(s) ? null : s;
+                }
+            });
+
+            return result;
+        }
+
         #endregion Feature Insert
 
         #region History

@@ -2187,7 +2187,7 @@ namespace HLU.UI.ViewModel
             // Re-read the map selection to ensure it is current.
             await GetMapSelectionAsync(false);
 
-            ViewModelWindowMainOSMMLoadUnload vmLoadUnload = new(this);
+            ViewModelWindowMainOSMMBulkLoad vmLoadUnload = new(this);
             bool success = await vmLoadUnload.OSMMUnloadAsync();
             if (success)
             {
@@ -2218,7 +2218,7 @@ namespace HLU.UI.ViewModel
             if (fieldMapping == null)
                 return; // user cancelled
 
-            ViewModelWindowMainOSMMLoadUnload vmLoadUnload = new(this);
+            ViewModelWindowMainOSMMBulkLoad vmLoadUnload = new(this);
             var (success, featureCount, incidCount) = await vmLoadUnload.OSMMLoadAsync(fieldMapping);
             if (success)
             {

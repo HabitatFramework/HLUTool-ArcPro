@@ -25,9 +25,12 @@ namespace HLU.UI.ViewModel
     /// </summary>
     internal sealed record OsmmFieldMapping(
         string LayerName,
+        string ToidField,
         string MakeField,
         string DescGroupField,
         string DescTermField,
         string ThemeField,
-        string FeatCodeField);
+        string FeatCodeField,
+        string OutputWorkspace,
+        string OutputFeatureClassName);
 }

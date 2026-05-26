@@ -16,11 +16,14 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Properties;
 using HLU.UI;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -48,11 +51,17 @@ namespace HLU.UI.ViewModel
         private ObservableCollection<string> _availableLayerNames = [];
         private ObservableCollection<string> _availableFields = [];
 
+        private string _toidField;
         private string _makeField;
         private string _descGroupField;
         private string _descTermField;
         private string _themeField;
         private string _featCodeField;
+
+        // Output layer
+        private string _outputWorkspace;
+        private string _outputFeatureClassName;
+        private ICommand _browseOutputCommand;
 
         #endregion Fields
 
@@ -92,6 +101,11 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public async Task LoadAsync()
         {
+            // Pre-populate the output path from the application setting.
+            string defaultLayer = _viewModelMain.AddInSettings?.DefaultOSMMBulkLoadLayer;
+            if (!string.IsNullOrWhiteSpace(defaultLayer))
+                ApplyOutputPath(defaultLayer);
+
             // Get every feature layer currently in the map.
             List<ArcGIS.Desktop.Mapping.FeatureLayer> allLayers =
                 await ArcGIS.Desktop.Framework.Threading.Tasks.QueuedTask.Run(
@@ -104,12 +118,11 @@ namespace HLU.UI.ViewModel
             IEnumerable<string> hluNames = _viewModelMain.GISApplication.ValidHluLayerNames
                 ?? Enumerable.Empty<string>();
 
-            List<string> nonHluNames = allLayers
+            List<string> nonHluNames = [.. allLayers
                 .Select(l => l.Name)
                 .Where(n => !hluNames.Contains(n, StringComparer.OrdinalIgnoreCase))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(n => n)
-                .ToList();
+                .OrderBy(n => n)];
 
             _availableLayerNames = new ObservableCollection<string>(nonHluNames);
             OnPropertyChanged(nameof(AvailableLayerNames));
@@ -153,6 +166,13 @@ namespace HLU.UI.ViewModel
         /// <summary>Gets the field names for the currently selected layer.</summary>
         public ObservableCollection<string> AvailableFields => _availableFields;
 
+        /// <summary>Gets or sets the input layer field mapped to the TOID attribute (optional).</summary>
+        public string ToidField
+        {
+            get => _toidField;
+            set { _toidField = value; OnPropertyChanged(nameof(ToidField)); }
+        }
+
         /// <summary>Gets or sets the input layer field mapped to <c>lut_osmm_habitat_xref.make</c>.</summary>
         public string MakeField
         {
@@ -190,6 +210,159 @@ namespace HLU.UI.ViewModel
 
         #endregion Properties — Fields
 
+        #region Properties — Output
+
+        /// <summary>Gets or sets the output workspace (folder for shapefile, .gdb path for GDB feature class).</summary>
+        public string OutputWorkspace
+        {
+            get => _outputWorkspace;
+            set
+            {
+                _outputWorkspace = value;
+                OnPropertyChanged(nameof(OutputWorkspace));
+                OnPropertyChanged(nameof(OutputDisplayPath));
+                OnPropertyChanged(nameof(OutputExistsWarning));
+                OnPropertyChanged(nameof(CanOk));
+            }
+        }
+
+        /// <summary>Gets or sets the output feature class name (including .shp for shapefiles).</summary>
+        public string OutputFeatureClassName
+        {
+            get => _outputFeatureClassName;
+            set
+            {
+                _outputFeatureClassName = value;
+                OnPropertyChanged(nameof(OutputFeatureClassName));
+                OnPropertyChanged(nameof(OutputDisplayPath));
+                OnPropertyChanged(nameof(OutputExistsWarning));
+                OnPropertyChanged(nameof(CanOk));
+            }
+        }
+
+        /// <summary>Gets the combined display path shown in the text box.</summary>
+        public string OutputDisplayPath
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_outputWorkspace) || string.IsNullOrEmpty(_outputFeatureClassName))
+                    return string.Empty;
+                return Path.Combine(_outputWorkspace, _outputFeatureClassName);
+            }
+        }
+
+        /// <summary>Returns a warning message when the output already exists, otherwise null.</summary>
+        public string OutputExistsWarning
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_outputWorkspace) || string.IsNullOrEmpty(_outputFeatureClassName))
+                    return null;
+
+                bool isShp = _outputFeatureClassName.EndsWith(".shp", StringComparison.OrdinalIgnoreCase);
+                bool exists;
+
+                if (isShp)
+                {
+                    exists = File.Exists(Path.Combine(_outputWorkspace, _outputFeatureClassName));
+                }
+                else
+                {
+                    // For a GDB feature class the workspace must be a .gdb folder.
+                    // The feature class itself is stored as a subfolder inside the .gdb.
+                    exists = _outputWorkspace.EndsWith(".gdb", StringComparison.OrdinalIgnoreCase)
+                          && Directory.Exists(_outputWorkspace)
+                          && Directory.Exists(Path.Combine(_outputWorkspace, _outputFeatureClassName));
+                }
+
+                return exists ? "Warning: The output already exists and will be overwritten." : null;
+            }
+        }
+
+        /// <summary>Gets the command to browse for the output location.</summary>
+        public ICommand BrowseOutputCommand
+        {
+            get
+            {
+                _browseOutputCommand ??= new RelayCommand(_ => BrowseOutput());
+                return _browseOutputCommand;
+            }
+        }
+
+        private void BrowseOutput()
+        {
+            // Determine initial directory from current output or the export path setting.
+            string initialDir = _outputWorkspace;
+            if (string.IsNullOrWhiteSpace(initialDir))
+                initialDir = Settings.Default.ExportPath;
+            if (string.IsNullOrWhiteSpace(initialDir) || !Directory.Exists(initialDir))
+                initialDir = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
+            // Show a SaveFileDialog that handles both shapefile and GDB feature class.
+            // Because a combined shapefile/GDB filter works well with SaveFileDialog:
+            var dlg = new SaveFileDialog
+            {
+                Title = "Save Output Staging Layer",
+                Filter = "Shapefile (*.shp)|*.shp|File Geodatabase Feature Class|*.gdb",
+                FilterIndex = 1,
+                InitialDirectory = initialDir,
+                FileName = _outputFeatureClassName ?? "OSMM_Staging"
+            };
+
+            if (dlg.ShowDialog() != true)
+                return;
+
+            ApplyOutputPath(dlg.FileName);
+        }
+
+        /// <summary>
+        /// Splits a full output path into workspace + feature class name and updates the bound properties.
+        /// Handles both shapefile paths (ends in .shp) and plain GDB paths (parent ends in .gdb).
+        /// </summary>
+        private void ApplyOutputPath(string fullPath)
+        {
+            if (string.IsNullOrWhiteSpace(fullPath))
+                return;
+
+            if (fullPath.EndsWith(".shp", StringComparison.OrdinalIgnoreCase))
+            {
+                OutputWorkspace = Path.GetDirectoryName(fullPath);
+                OutputFeatureClassName = Path.GetFileName(fullPath);
+            }
+            else if (fullPath.EndsWith(".gdb", StringComparison.OrdinalIgnoreCase))
+            {
+                // Caller passed just a .gdb path — treat the file stem as the feature class name.
+                OutputWorkspace = Path.GetDirectoryName(fullPath);
+                OutputFeatureClassName = Path.GetFileNameWithoutExtension(fullPath);
+            }
+            else
+            {
+                // Could be a bare name, a GDB feature class path like C:\data\my.gdb\MyFC,
+                // or a folder\name combo without extension.
+                string parent = Path.GetDirectoryName(fullPath);
+                if (!string.IsNullOrEmpty(parent) &&
+                    parent.EndsWith(".gdb", StringComparison.OrdinalIgnoreCase) &&
+                    Directory.Exists(parent))
+                {
+                    OutputWorkspace = parent;
+                    OutputFeatureClassName = Path.GetFileName(fullPath);
+                }
+                else
+                {
+                    // Treat as shapefile without extension — add .shp.
+                    OutputWorkspace = string.IsNullOrEmpty(parent)
+                        ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
+                        : parent;
+                    string name = Path.GetFileName(fullPath);
+                    OutputFeatureClassName = name.EndsWith(".shp", StringComparison.OrdinalIgnoreCase)
+                        ? name
+                        : name + ".shp";
+                }
+            }
+        }
+
+        #endregion Properties — Output
+
         #region Ok Command
 
         /// <summary>Gets whether the Ok button should be enabled.</summary>
@@ -199,7 +372,9 @@ namespace HLU.UI.ViewModel
             !string.IsNullOrEmpty(_descGroupField) &&
             !string.IsNullOrEmpty(_descTermField) &&
             !string.IsNullOrEmpty(_themeField) &&
-            !string.IsNullOrEmpty(_featCodeField);
+            !string.IsNullOrEmpty(_featCodeField) &&
+            !string.IsNullOrEmpty(_outputWorkspace) &&
+            !string.IsNullOrEmpty(_outputFeatureClassName);
 
         public ICommand OkCommand
         {
@@ -216,11 +391,14 @@ namespace HLU.UI.ViewModel
         {
             RequestClose?.Invoke(true, new OsmmFieldMapping(
                 _selectedLayerName,
+                _toidField,
                 _makeField,
                 _descGroupField,
                 _descTermField,
                 _themeField,
-                _featCodeField));
+                _featCodeField,
+                _outputWorkspace,
+                _outputFeatureClassName));
         }
 
         #endregion Ok Command
@@ -255,12 +433,14 @@ namespace HLU.UI.ViewModel
 
         private void ClearFieldMappings()
         {
+            _toidField = null;
             _makeField = null;
             _descGroupField = null;
             _descTermField = null;
             _themeField = null;
             _featCodeField = null;
 
+            OnPropertyChanged(nameof(ToidField));
             OnPropertyChanged(nameof(MakeField));
             OnPropertyChanged(nameof(DescGroupField));
             OnPropertyChanged(nameof(DescTermField));
