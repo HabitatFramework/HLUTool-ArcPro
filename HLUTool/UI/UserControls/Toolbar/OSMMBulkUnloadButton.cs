@@ -82,9 +82,7 @@ namespace HLU.UI.UserControls.Toolbar
             Enabled = _viewModel.CanOSMMUnload &&
                       _viewModel.GridMainVisibility == Visibility.Visible;
 
-            DisabledTooltip = "Unavailable when:\n\u2022 No reason or process are selected\n" +
-                              "\u2022 No registered features are selected on the map\n" +
-                              "\u2022 The main window is not visible";
+            DisabledTooltip = "Unavailable when:\n\u2022 The tool is not in normal update mode\n\u2022 No reason or process are selected\n\u2022 No registered features are selected on the map\n\u2022 The main window is not visible";
         }
 
         #endregion Overrides
