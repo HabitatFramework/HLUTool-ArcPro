@@ -21,6 +21,7 @@ using HLU.UI.ViewModel;
 using System;
 using System.IO;
 using System.Windows;
+using System.Windows.Forms;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.View
@@ -104,7 +105,7 @@ namespace HLU.UI.View
                     startDir = parent;
             }
 
-            using var folderDialog = new System.Windows.Forms.FolderBrowserDialog
+            using var folderDialog = new FolderBrowserDialog
             {
                 Description = "Select the File Geodatabase (.gdb) to export into:",
                 UseDescriptionForTitle = true,

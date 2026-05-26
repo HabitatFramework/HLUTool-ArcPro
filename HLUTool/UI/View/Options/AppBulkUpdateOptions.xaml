@@ -236,7 +236,7 @@
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
-                            Description="The default name of the staging layer in the current map that contains the new OSMM features to bulk load. This will be pre-selected in the OSMM load dialog."
+                            Description="The default name of the staging layer in the current map that contains the new OSMM features to bulk load. This will be pre-selected in the OSMM bulk load dialog."
                             Header="Default OSMM Staging Layer Name" />
                     </Grid>
                 </Grid>

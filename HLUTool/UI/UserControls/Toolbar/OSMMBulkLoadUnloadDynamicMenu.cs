@@ -27,7 +27,7 @@ namespace HLU.UI.UserControls.Toolbar
     /// Dynamic menu that hosts the OSMM Unload and Load buttons. The menu is enabled when either
     /// operation can be performed.
     /// </summary>
-    internal sealed class OSMMBulkLoadDynamicMenu : DynamicMenu
+    internal sealed class OSMMBulkLoadUnloadDynamicMenu : DynamicMenu
     {
         #region Fields
 
@@ -37,7 +37,7 @@ namespace HLU.UI.UserControls.Toolbar
 
         #region Constructor
 
-        public OSMMBulkLoadDynamicMenu()
+        public OSMMBulkLoadUnloadDynamicMenu()
         {
             DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
             if (pane == null)
@@ -69,7 +69,8 @@ namespace HLU.UI.UserControls.Toolbar
             Enabled = _viewModel.CanOSMMLoadUnload &&
                       _viewModel.GridMainVisibility == Visibility.Visible;
 
-            DisabledTooltip = "Unavailable when:\n\u2022 No reason or process are selected\n" +
+            DisabledTooltip = "Unavailable when:\n\u2022 The tool is not in normal update mode\n" +
+                              "\u2022 No reason or process are selected\n" +
                               "\u2022 No suitable features are selected on the map\n" +
                               "\u2022 The main window is not visible";
         }

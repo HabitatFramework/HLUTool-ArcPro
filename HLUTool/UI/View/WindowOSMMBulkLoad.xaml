@@ -1,5 +1,5 @@
 <controls:ProWindow
-    x:Class="HLU.UI.View.WindowOSMMLoad"
+    x:Class="HLU.UI.View.WindowOSMMBulkLoad"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
@@ -8,7 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="{Binding WindowTitle}"
     MinWidth="480"
-    d:DataContext="{d:DesignInstance Type=local:ViewModelWindowOSMMLoad}"
+    d:DataContext="{d:DesignInstance Type=local:ViewModelWindowOSMMBulkLoad}"
     Icon="..\..\Images\HLUTool16.png"
     ResizeMode="NoResize"
     ShowInTaskbar="False"

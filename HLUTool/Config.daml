@@ -46,7 +46,7 @@
 					<group refID="HLUTool_Group_Selection" />
 					<group refID="HLUTool_Group_Topology" />
 					<group refID="HLUTool_Group_FeatureInsert" />
-					<group refID="HLUTool_Group_OSMMBulkLoad"/>
+					<group refID="HLUTool_Group_OSMMBulkLoadUnload"/>
 					<group refID="HLUTool_Group_Export" />
 					<group refID="HLUTool_Group_Help" />
 				</tab>
@@ -121,9 +121,9 @@
 					<dynamicMenu refID="HLUTool_FeatureInsertMenu" size="large" />
 				</group>
 
-				<!-- OSMM Bulk Load group -->
-				<group id="HLUTool_Group_OSMMBulkLoad" caption="OSMM Load/Unload" keytip="GB">
-					<dynamicMenu refID="HLUTool_OSMMBulkLoadMenu" size="large" />
+				<!-- OSMM Bulk Load/Unload group -->
+				<group id="HLUTool_Group_OSMMBulkLoadUnload" caption="OSMM Load" keytip="GB">
+					<dynamicMenu refID="HLUTool_OSMMBulkLoadUnloadMenu" size="large" />
 				</group>
 
 				<!-- Export group -->
@@ -275,13 +275,13 @@
 				</button>
 
 				<!-- OSMM Bulk Load/Unload dropdown -->
-				<dynamicMenu id="HLUTool_OSMMBulkLoadMenu"
-							 caption="OSMM Bulk Load/Unload"
-							 className="HLU.UI.UserControls.Toolbar.OSMMBulkLoadDynamicMenu"
+				<dynamicMenu id="HLUTool_OSMMBulkLoadUnloadMenu"
+							 caption="OSMM Bulk Load"
+							 className="HLU.UI.UserControls.Toolbar.OSMMBulkLoadUnloadDynamicMenu"
 							 smallImage="pack://application:,,,/HLUTool;component/Images/OSMMLoad16.png"
 							 largeImage="pack://application:,,,/HLUTool;component/Images/OSMMLoad32.png"
 							 loadOnClick="false">
-					<tooltip heading="OSMM Bulk Load/Unload options">
+					<tooltip heading="OSMM Bulk Load options">
 						Bulk unload or load OSMM features<disabledText />
 					</tooltip>
 				</dynamicMenu>

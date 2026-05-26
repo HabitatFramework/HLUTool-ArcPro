@@ -52,13 +52,13 @@ namespace HLU.UI.ViewModel
     /// the GIS features are used to populate the new INCID records. A history entry is written
     /// for every registered feature.</para>
     /// </summary>
-    internal class ViewModelWindowMainOSMMBulkLoad
+    internal class ViewModelWindowMainOSMMBulkLoadUnload
     {
         #region Fields
 
         private readonly ViewModelWindowMain _viewModelMain;
 
-        /// <summary>Field mapping chosen by the user in the OSMM Load setup dialog.</summary>
+        /// <summary>Field mapping chosen by the user in the OSMM Bulk Load setup dialog.</summary>
         private OsmmFieldMapping _fieldMapping;
 
         /// <summary>Width of formatted fragment ID strings (e.g. 5 → "00001").</summary>
@@ -71,7 +71,7 @@ namespace HLU.UI.ViewModel
 
         #region Constructor
 
-        public ViewModelWindowMainOSMMBulkLoad(ViewModelWindowMain viewModelMain)
+        public ViewModelWindowMainOSMMBulkLoadUnload(ViewModelWindowMain viewModelMain)
         {
             _viewModelMain = viewModelMain;
         }
@@ -84,28 +84,28 @@ namespace HLU.UI.ViewModel
         /// Validates that the current selection is suitable for an OSMM unload operation and, if so,
         /// shows the layer-picker dialog and performs the unload across all checked layers.
         /// </summary>
-        /// <returns><c>true</c> if the unload completed successfully; otherwise <c>false</c>.</returns>
-        internal async Task<bool> OSMMUnloadAsync()
+        /// <returns>The number of features unloaded; 0 if the operation failed or was cancelled.</returns>
+        internal async Task<int> OSMMUnloadAsync()
         {
             // Must have a map selection.
             if (_viewModelMain.GisSelection == null || _viewModelMain.GisSelection.Rows.Count == 0)
             {
                 _viewModelMain.ShowWarning("Cannot unload: Nothing is selected on the map.", MessageCategory.OSMMLoad);
-                return false;
+                return 0;
             }
 
             // All selected features must exist in the database.
             if (!_viewModelMain.CheckSelectedFrags(false))
             {
                 _viewModelMain.ShowWarning("Cannot unload: One or more selected map features missing from database.", MessageCategory.OSMMLoad);
-                return false;
+                return 0;
             }
 
             // Show the layer-picker dialog so the user can choose which live HLU
             // layers to include in the unload.
             IReadOnlyList<string> targetLayerNames = await ShowUnloadLayerPickerAsync();
             if (targetLayerNames == null || targetLayerNames.Count == 0)
-                return false;
+                return 0;
 
             return await PerformUnloadAsync(targetLayerNames);
         }
@@ -122,8 +122,8 @@ namespace HLU.UI.ViewModel
                 ?? [];
             string activeName = _viewModelMain.ActiveLayerName;
 
-            var vm = new ViewModelWindowOSMMUnload(availableNames, activeName);
-            var window = new WindowOSMMUnload
+            var vm = new ViewModelWindowOSMMBulkUnload(availableNames, activeName);
+            var window = new WindowOSMMBulkUnload
             {
                 Owner = FrameworkApplication.Current.MainWindow,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
@@ -153,10 +153,11 @@ namespace HLU.UI.ViewModel
         /// The ordered list of valid HLU layer names to process. Each layer is activated in turn
         /// so that the layer-specific GIS and MM-table context is correct.
         /// </param>
-        private async Task<bool> PerformUnloadAsync(IReadOnlyList<string> targetLayerNames)
+        /// <returns>The number of features unloaded; 0 if the operation failed.</returns>
+        private async Task<int> PerformUnloadAsync(IReadOnlyList<string> targetLayerNames)
         {
             _viewModelMain.ChangeCursor(Cursors.Wait, "Unloading ...");
-            bool success = true;
+            int totalFeaturesUnloaded = 0;
 
             // Remember the originally active layer so we can restore it afterwards.
             string originalLayerName = _viewModelMain.ActiveLayerName;
@@ -220,6 +221,9 @@ namespace HLU.UI.ViewModel
 
                     if (layerSelection == null || layerSelection.Rows.Count == 0)
                         continue; // Nothing selected in this layer — skip.
+
+                    // Count features in this layer before deletion.
+                    totalFeaturesUnloaded += layerSelection.Rows.Count;
 
                     // Collect the distinct INCIDs being removed from this layer.
                     string localIncidColName = layerSelection.Columns.Contains(incidColName)
@@ -348,56 +352,70 @@ namespace HLU.UI.ViewModel
                 // ---------------------------------------------------------------
                 if (allRemovedIncids.Count > 0)
                 {
-                    // An INCID is an orphan only when it has no rows in any of the three MM tables.
-                    // We check all three tables and take the intersection.
-                    string quotedIncids = string.Join(",",
-                        allRemovedIncids.Select(i => _viewModelMain.DataBase.QuoteValue(i)));
-
                     string incidTableQ    = _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid.TableName);
                     string incidColQ      = _viewModelMain.DataBase.QuoteIdentifier(incidColName);
                     string mmPolygonsQ    = _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName);
                     string mmLinesQ       = _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_lines.TableName);
                     string mmPointsQ      = _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_points.TableName);
 
-                    // Select INCIDs from the candidate set that have no rows in any MM table.
-                    string sqlOrphans = $@"
-SELECT i.{incidColQ}
-FROM {incidTableQ} i
-WHERE i.{incidColQ} IN ({quotedIncids})
-  AND NOT EXISTS (SELECT 1 FROM {mmPolygonsQ} mp WHERE mp.{incidColQ} = i.{incidColQ})
-  AND NOT EXISTS (SELECT 1 FROM {mmLinesQ}    ml WHERE ml.{incidColQ} = i.{incidColQ})
-  AND NOT EXISTS (SELECT 1 FROM {mmPointsQ}   mpt WHERE mpt.{incidColQ} = i.{incidColQ})";
+                    // Process INCIDs in batches to avoid SQL statement length limits
+                    // and ensure better query performance.
+                    List<string> allOrphanIncids = [];
+                    List<string> incidList = [.. allRemovedIncids];
+                    int batchSize = ViewModelWindowMain.IncidPageSize;
 
-                    IDataReader delReader = _viewModelMain.DataBase.ExecuteReader(
-                        sqlOrphans, _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text);
-
-                    if (delReader == null)
-                        throw new Exception("Error checking for orphaned INCID records.");
-
-                    List<string> orphanIncids = [];
-                    while (delReader.Read())
-                        orphanIncids.Add(delReader.GetString(0));
-                    delReader.Close();
-
-                    if (orphanIncids.Count > 0)
+                    for (int i = 0; i < incidList.Count; i += batchSize)
                     {
-                        string deleteStatement = string.Format(
-                            "DELETE FROM {0} WHERE {1} IN ({2})",
-                            _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid.TableName),
-                            _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.incidColumn.ColumnName),
-                            string.Join(",", orphanIncids.Select(i => _viewModelMain.DataBase.QuoteValue(i))));
+                        int count = Math.Min(batchSize, incidList.Count - i);
+                        List<string> batchIncids = incidList.GetRange(i, count);
 
-                        try
+                        string quotedIncids = string.Join(",",
+                            batchIncids.Select(id => _viewModelMain.DataBase.QuoteValue(id)));
+
+                        // Select INCIDs from the current batch that have no rows in any MM table.
+                        string sqlOrphans = $@"SELECT i.{incidColQ} FROM {incidTableQ} i
+                            WHERE i.{incidColQ} IN ({quotedIncids})
+                            AND NOT EXISTS (SELECT 1 FROM {mmPolygonsQ} mp WHERE mp.{incidColQ} = i.{incidColQ})
+                            AND NOT EXISTS (SELECT 1 FROM {mmLinesQ}    ml WHERE ml.{incidColQ} = i.{incidColQ})
+                            AND NOT EXISTS (SELECT 1 FROM {mmPointsQ}   mpt WHERE mpt.{incidColQ} = i.{incidColQ})";
+
+                        IDataReader delReader = _viewModelMain.DataBase.ExecuteReader(
+                            sqlOrphans, _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text);
+
+                        if (delReader == null)
+                            throw new Exception("Error checking for orphaned INCID records.");
+
+                        while (delReader.Read())
+                            allOrphanIncids.Add(delReader.GetString(0));
+                        delReader.Close();
+                    }
+
+                    // Delete orphan INCIDs in batches.
+                    if (allOrphanIncids.Count > 0)
+                    {
+                        for (int i = 0; i < allOrphanIncids.Count; i += batchSize)
                         {
-                            _viewModelMain.DataBase.ExecuteNonQuery(
-                                deleteStatement,
-                                _viewModelMain.DataBase.Connection.ConnectionTimeout,
-                                CommandType.Text);
-                        }
-                        catch (Exception ex)
-                        {
-                            throw new Exception(
-                                $"Failed to delete orphaned rows from table [{_viewModelMain.HluDataset.incid.TableName}].", ex);
+                            int count = Math.Min(batchSize, allOrphanIncids.Count - i);
+                            List<string> batchOrphans = allOrphanIncids.GetRange(i, count);
+
+                            string deleteStatement = string.Format(
+                                "DELETE FROM {0} WHERE {1} IN ({2})",
+                                incidTableQ,
+                                _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.incidColumn.ColumnName),
+                                string.Join(",", batchOrphans.Select(id => _viewModelMain.DataBase.QuoteValue(id))));
+
+                            try
+                            {
+                                _viewModelMain.DataBase.ExecuteNonQuery(
+                                    deleteStatement,
+                                    _viewModelMain.DataBase.Connection.ConnectionTimeout,
+                                    CommandType.Text);
+                            }
+                            catch (Exception ex)
+                            {
+                                throw new Exception(
+                                    $"Failed to delete orphaned rows from table [{_viewModelMain.HluDataset.incid.TableName}].", ex);
+                            }
                         }
                     }
                 }
@@ -426,7 +444,6 @@ WHERE i.{incidColQ} IN ({quotedIncids})
             catch (Exception ex)
             {
                 _viewModelMain.DataBase.RollbackTransaction();
-                success = false;
 
                 if (!gisExecuted)
                 {
@@ -438,6 +455,8 @@ WHERE i.{incidColQ} IN ({quotedIncids})
                 MessageBox.Show(
                     $"OSMM Unload failed. The error message returned was:\n\n{exMessage}",
                     "HLU: Unload Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                return 0; // Failure
             }
             finally
             {
@@ -451,7 +470,7 @@ WHERE i.{incidColQ} IN ({quotedIncids})
                     catch { /* ignore */ }
                 }
 
-                if (success)
+                if (totalFeaturesUnloaded > 0)
                 {
                     _viewModelMain.IncidRowCount(true);
                     await _viewModelMain.ClearFilterAsync(false);
@@ -462,7 +481,7 @@ WHERE i.{incidColQ} IN ({quotedIncids})
                 _viewModelMain.ChangeCursor(Cursors.Arrow);
             }
 
-            return success;
+            return totalFeaturesUnloaded;
         }
 
         #endregion Unload
@@ -470,12 +489,12 @@ WHERE i.{incidColQ} IN ({quotedIncids})
         #region Load
 
         /// <summary>
-        /// Validates that the current selection is suitable for an OSMM load operation and, if so,
+        /// Validates that the current selection is suitable for an OSMM bulk load operation and, if so,
         /// performs the load. Each selected new (null-INCID) feature is registered under its own new
         /// INCID, using habitat attributes already present on the GIS feature.
         /// </summary>
         /// <param name="fieldMapping">
-        /// The layer name and field-name mapping chosen by the user in the OSMM Load setup dialog.
+        /// The layer name and field-name mapping chosen by the user in the OSMM Bulk Load setup dialog.
         /// These map the input layer's fields to the five <c>lut_osmm_habitat_xref</c> lookup columns
         /// (<c>make</c>, <c>desc_group</c>, <c>desc_term</c>, <c>theme</c>, <c>feat_code</c>).
         /// </param>
@@ -483,21 +502,6 @@ WHERE i.{incidColQ} IN ({quotedIncids})
         internal async Task<(bool success, int featureCount, int incidCount)> OSMMLoadAsync(OsmmFieldMapping fieldMapping)
         {
             _fieldMapping = fieldMapping;
-
-            // Must have a map selection.
-            if (_viewModelMain.GisSelection == null || _viewModelMain.GisSelection.Rows.Count == 0)
-            {
-                _viewModelMain.ShowWarning("Cannot load: Nothing is selected on the map.", MessageCategory.OSMMLoad);
-                return (false, 0, 0);
-            }
-
-            // All selected features must have a null or empty INCID (i.e. new, unregistered features).
-            if (_viewModelMain.IncidsSelectedMap == null ||
-                !_viewModelMain.IncidsSelectedMap.All(i => string.IsNullOrEmpty(i)))
-            {
-                _viewModelMain.ShowWarning("Cannot load: One or more selected features already have an INCID assigned.", MessageCategory.OSMMLoad);
-                return (false, 0, 0);
-            }
 
             // If the user specified an output path, delete any pre-existing dataset there
             // before starting the load so that the copy step at the end succeeds cleanly.
@@ -627,8 +631,8 @@ WHERE i.{incidColQ} IN ({quotedIncids})
 
             WindowOSMMXrefPreview previewWindow = new()
             {
-                Owner = ArcGIS.Desktop.Framework.FrameworkApplication.Current.MainWindow,
-                WindowStartupLocation = System.Windows.WindowStartupLocation.CenterOwner,
+                Owner = FrameworkApplication.Current.MainWindow,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Topmost = true,
                 DataContext = previewVm
             };
@@ -649,7 +653,7 @@ WHERE i.{incidColQ} IN ({quotedIncids})
         }
 
         /// <summary>
-        /// Performs the OSMM load: registers each selected null-INCID feature under its own new INCID,
+        /// Performs the OSMM Bulk load: registers each selected null-INCID feature under its own new INCID,
         /// mirroring the separate-INCID variant of the feature-insert workflow but using
         /// <see cref="Operations.OSMMLoad"/> as the history operation code.
         /// </summary>
@@ -664,7 +668,7 @@ WHERE i.{incidColQ} IN ({quotedIncids})
 
             EditOperation editOperation = new()
             {
-                Name = "OSMM Load GIS Features"
+                Name = "OSMM Bulk Load GIS Features"
             };
 
             bool gisExecuted = false;
@@ -891,8 +895,8 @@ WHERE i.{incidColQ} IN ({quotedIncids})
 
                 string exMessage = DbBase.GetSqlErrorMessage(ex);
                 MessageBox.Show(
-                    $"OSMM Load failed. The error message returned was:\n\n{exMessage}",
-                    "HLU: Load Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    $"OSMM Bulk Load failed. The error message returned was:\n\n{exMessage}",
+                    "HLU: Bulk Load Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -918,8 +922,8 @@ WHERE i.{incidColQ} IN ({quotedIncids})
                         if (!created)
                         {
                             MessageBox.Show(
-                                $"The OSMM load completed successfully, but the staging output layer could not be created at:\n\n{fullOutputPath}\n\nYou can manually export the source layer if required.",
-                                "HLU: OSMM Load - Output Warning",
+                                $"The OSMM bulk load completed successfully, but the staging output layer could not be created at:\n\n{fullOutputPath}\n\nYou can manually export the source layer if required.",
+                                "HLU: OSMM Bulk Load - Output Warning",
                                 MessageBoxButton.OK,
                                 MessageBoxImage.Warning);
                         }

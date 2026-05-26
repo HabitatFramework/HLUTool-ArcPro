@@ -1,5 +1,5 @@
 <controls:ProWindow
-    x:Class="HLU.UI.View.WindowOSMMUnload"
+    x:Class="HLU.UI.View.WindowOSMMBulkUnload"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
@@ -8,7 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="{Binding WindowTitle}"
     MinWidth="340"
-    d:DataContext="{d:DesignInstance Type=local:ViewModelWindowOSMMUnload}"
+    d:DataContext="{d:DesignInstance Type=local:ViewModelWindowOSMMBulkUnload}"
     Icon="..\..\Images\HLUTool16.png"
     ResizeMode="NoResize"
     ShowInTaskbar="False"
@@ -40,9 +40,7 @@
                     <ItemsControl ItemsSource="{Binding Layers}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <CheckBox
-                                    Margin="4,2"
-                                    IsChecked="{Binding IsChecked, Mode=TwoWay}">
+                                <CheckBox Margin="4,2" IsChecked="{Binding IsChecked, Mode=TwoWay}">
                                     <TextBlock Text="{Binding LayerName}" />
                                 </CheckBox>
                             </DataTemplate>

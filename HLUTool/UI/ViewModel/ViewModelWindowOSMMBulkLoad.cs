@@ -32,12 +32,12 @@ using System.Windows.Input;
 namespace HLU.UI.ViewModel
 {
     /// <summary>
-    /// ViewModel for the OSMM Load setup dialog.
+    /// ViewModel for the OSMM Bulk Load setup dialog.
     /// Lets the user choose the input (non-HLU) layer and map each of its
     /// fields to the five <c>lut_osmm_habitat_xref</c> lookup attributes:
     /// <c>make</c>, <c>desc_group</c>, <c>desc_term</c>, <c>theme</c> and <c>feat_code</c>.
     /// </summary>
-    internal class ViewModelWindowOSMMLoad : ViewModelBase, IDataErrorInfo
+    internal class ViewModelWindowOSMMBulkLoad : ViewModelBase, IDataErrorInfo
     {
         #region Fields
 
@@ -46,7 +46,7 @@ namespace HLU.UI.ViewModel
         private ICommand _okCommand;
         private ICommand _cancelCommand;
 
-        private string _displayName = "OSMM Load Setup";
+        private string _displayName = "OSMM Bulk Load Setup";
 
         private string _selectedLayerName;
         private ObservableCollection<string> _availableLayerNames = [];
@@ -68,7 +68,7 @@ namespace HLU.UI.ViewModel
 
         #region Constructor
 
-        public ViewModelWindowOSMMLoad(ViewModelWindowMain viewModelMain)
+        public ViewModelWindowOSMMBulkLoad(ViewModelWindowMain viewModelMain)
         {
             _viewModelMain = viewModelMain;
         }

@@ -19,7 +19,7 @@
 namespace HLU.UI.ViewModel
 {
     /// <summary>
-    /// Carries the user's selections from the OSMM Load setup dialog:
+    /// Carries the user's selections from the OSMM Bulk Load setup dialog:
     /// the name of the input layer and the five field-name mappings that
     /// correspond to the <c>lut_osmm_habitat_xref</c> lookup columns.
     /// </summary>

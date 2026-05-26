@@ -17,17 +17,25 @@
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using ArcGIS.Desktop.Framework.Controls;
+using HLU.UI.ViewModel;
 
 namespace HLU.UI.View
 {
     /// <summary>
-    /// Interaction logic for WindowOSMMUnload.xaml
+    /// Interaction logic for WindowOSMMBulkLoad.xaml
     /// </summary>
-    public partial class WindowOSMMUnload : ProWindow
+    public partial class WindowOSMMBulkLoad : ProWindow
     {
-        public WindowOSMMUnload()
+        public WindowOSMMBulkLoad()
         {
             InitializeComponent();
+
+            // Populate the layer list once the window is fully loaded.
+            Loaded += async (_, _) =>
+            {
+                if (DataContext is ViewModelWindowOSMMBulkLoad vm)
+                    await vm.LoadAsync();
+            };
         }
     }
 }

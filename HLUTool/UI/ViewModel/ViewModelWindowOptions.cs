@@ -2350,7 +2350,7 @@ namespace HLU.UI.ViewModel
 
         #endregion User Updates
 
-        #region App Bulk Update - OSMM Load
+        #region App Bulk Update - OSMM Bulk Load
 
         /// <summary>
         /// Gets or sets the default staging layer name used when bulk loading OSMM data.
@@ -2369,7 +2369,7 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        #endregion App Bulk Update - OSMM Load
+        #endregion App Bulk Update - OSMM Bulk Load
 
         #region User SQL
 

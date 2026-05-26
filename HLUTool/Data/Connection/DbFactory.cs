@@ -219,7 +219,7 @@ namespace HLU.Data.Connection
             // blocking any thread. The dialog sets it when it closes.
             var tcs = new TaskCompletionSource<ConnectionTypes>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            var dispatcher = System.Windows.Application.Current.Dispatcher;
+            var dispatcher = Application.Current.Dispatcher;
 
             // Window creation and Show must happen on the UI thread.
             if (dispatcher.CheckAccess())
