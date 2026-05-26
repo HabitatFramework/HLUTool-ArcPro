@@ -23,6 +23,7 @@ using HLU.Data.Model;
 using HLU.Enums;
 using HLU.Exceptions;
 using HLU.Helpers;
+using HLU.UI.View;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -397,7 +398,128 @@ namespace HLU.UI.ViewModel
                 }
             }
 
+            // Show the xref preview window so the user can review attribute
+            // combinations and match status before the load proceeds.
+            bool proceed = await ShowXrefPreviewAsync();
+            if (!proceed)
+                return (false, 0, 0);
+
             return await PerformLoadAsync();
+        }
+
+        /// <summary>
+        /// Reads the OSMM attribute values for the selected features, joins them against
+        /// the xref cache to determine match status, builds the preview rows grouped by
+        /// unique attribute combination, and shows the <see cref="WindowOSMMXrefPreview"/>
+        /// modal window.
+        /// </summary>
+        /// <returns>
+        /// <see langword="true"/> if the user chose to proceed; otherwise <see langword="false"/>.
+        /// </returns>
+        private async Task<bool> ShowXrefPreviewAsync()
+        {
+            string sourceLayerName = _fieldMapping?.LayerName
+                ?? _viewModelMain.ActiveLayerName;
+
+            // Collect selected OIDs from the source layer.
+            IReadOnlyList<long> selectedOids = await ArcGIS.Desktop.Framework.Threading.Tasks.QueuedTask.Run(() =>
+            {
+                var selection = ArcGIS.Desktop.Mapping.MapView.Active?.Map
+                    ?.GetLayersAsFlattenedList()
+                    .OfType<ArcGIS.Desktop.Mapping.FeatureLayer>()
+                    .FirstOrDefault(l => l.Name == sourceLayerName)
+                    ?.GetSelection();
+
+                return (IReadOnlyList<long>)(selection?.GetObjectIDs() ?? []);
+            });
+
+            if (selectedOids.Count == 0)
+                return false;
+
+            // Read OSMM xref attributes for every selected feature.
+            Dictionary<long, (string make, string descGroup, string descTerm, string theme, string featCode)> osmmAttribs =
+                await _viewModelMain.GISApplication.ReadOsmmAttributesAsync(
+                    sourceLayerName,
+                    selectedOids,
+                    _fieldMapping?.MakeField,
+                    _fieldMapping?.DescGroupField,
+                    _fieldMapping?.DescTermField,
+                    _fieldMapping?.ThemeField,
+                    _fieldMapping?.FeatCodeField);
+
+            // Build the xref cache (same call reused in PerformLoadAsync).
+            Dictionary<(string, string, string, string, string), (string habprimary, string habsecond)> xrefCache =
+                BuildXrefCache();
+
+            static string Norm(string v) =>
+                string.IsNullOrWhiteSpace(v) ? string.Empty : v.Trim();
+
+            // Group by unique (make, descGroup, descTerm, theme, featCode) combination.
+            var previewRows = osmmAttribs.Values
+                .GroupBy(
+                    a => (
+                        Norm(a.make),
+                        Norm(a.descGroup),
+                        Norm(a.descTerm),
+                        Norm(a.theme),
+                        Norm(a.featCode)),
+                    comparer: new TupleOrdinalIgnoreCaseComparer())
+                .OrderBy(g => g.Key.Item1, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(g => g.Key.Item2,  StringComparer.OrdinalIgnoreCase)
+                .ThenBy(g => g.Key.Item3,  StringComparer.OrdinalIgnoreCase)
+                .ThenBy(g => g.Key.Item4,  StringComparer.OrdinalIgnoreCase)
+                .ThenBy(g => g.Key.Item5,  StringComparer.OrdinalIgnoreCase)
+                .Select(g =>
+                {
+                    bool matched = xrefCache.TryGetValue(
+                        (g.Key.Item1, g.Key.Item2, g.Key.Item3,
+                         g.Key.Item4, g.Key.Item5),
+                        out var xref);
+
+                    return new OsmmXrefPreviewRow
+                    {
+                        Make               = g.Key.Item1,
+                        DescGroup          = g.Key.Item2,
+                        DescTerm           = g.Key.Item3,
+                        Theme              = g.Key.Item4,
+                        FeatCode           = g.Key.Item5,
+                        Count              = g.Count(),
+                        HabitatPrimary     = matched ? xref.habprimary : null,
+                        HabitatSecondaries = matched ? xref.habsecond  : null,
+                        IsMatched          = matched
+                    };
+                })
+                .ToList();
+
+            // Build and show the modal preview window.
+            bool userProceeded = false;
+
+            ViewModelWindowOSMMXrefPreview previewVm = new(previewRows)
+            {
+                DisplayName = "OSMM Attribute Preview"
+            };
+
+            WindowOSMMXrefPreview previewWindow = new()
+            {
+                Owner = ArcGIS.Desktop.Framework.FrameworkApplication.Current.MainWindow,
+                WindowStartupLocation = System.Windows.WindowStartupLocation.CenterOwner,
+                Topmost = true,
+                DataContext = previewVm
+            };
+
+            void OnPreviewRequestClose(bool proceed)
+            {
+                previewVm.RequestClose -= OnPreviewRequestClose;
+                userProceeded = proceed;
+                previewWindow.Close();
+            }
+
+            previewVm.RequestClose -= OnPreviewRequestClose; // avoid double subscription
+            previewVm.RequestClose += OnPreviewRequestClose;
+
+            previewWindow.ShowDialog();
+
+            return userProceeded;
         }
 
         /// <summary>
