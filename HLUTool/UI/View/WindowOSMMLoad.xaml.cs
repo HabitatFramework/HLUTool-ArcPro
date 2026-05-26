@@ -1,5 +1,5 @@
-﻿// HLUTool is used to view and maintain habitat and land use GIS data.
-// Copyright © 2025-2026 Andy Foy Consulting
+// HLUTool is used to view and maintain habitat and land use GIS data.
+// Copyright � 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -16,26 +16,26 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace HLU.Enums
+using ArcGIS.Desktop.Framework.Controls;
+using HLU.UI.ViewModel;
+
+namespace HLU.UI.View
 {
-    #region Enums
-
     /// <summary>
-    /// Update operations.
+    /// Interaction logic for WindowOSMMLoad.xaml
     /// </summary>
-    public enum Operations
+    public partial class WindowOSMMLoad : ProWindow
     {
-        PhysicalMerge,
-        PhysicalSplit,
-        LogicalMerge,
-        LogicalSplit,
-        AttributeUpdate,
-        BulkUpdate,
-        OSMMUpdate,
-        FeatureInsert,
-        OSMMUnload,
-        OSMMLoad
-    };
+        public WindowOSMMLoad()
+        {
+            InitializeComponent();
 
-    #endregion Enums
+            // Populate the layer list once the window is fully loaded.
+            Loaded += async (_, _) =>
+            {
+                if (DataContext is ViewModelWindowOSMMLoad vm)
+                    await vm.LoadAsync();
+            };
+        }
+    }
 }

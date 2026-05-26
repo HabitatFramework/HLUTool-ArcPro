@@ -122,6 +122,14 @@ namespace HLU.UI.ViewModel
 
         #endregion Fields - Feature Insert
 
+        #region Fields - OSMM Load/Unload
+
+        // Can the OSMM unload or load operation be performed.
+        private bool _canOSMMUnload;
+        private bool _canOSMMLoad;
+
+        #endregion Fields - OSMM Load/Unload
+
         #endregion Fields
 
         #region Properties
@@ -476,6 +484,32 @@ namespace HLU.UI.ViewModel
         public bool CanInsertFeature => _canInsertFeature;
 
         #endregion Properties - Feature Insert Commands
+
+        #region Properties - OSMM Load/Unload Commands
+
+        /// <summary>
+        /// Can an OSMM unload operation be performed?
+        /// Unload removes selected GIS features that already have an INCID, deletes their shadow
+        /// map-match rows, and cleans up any orphaned INCID records.
+        /// </summary>
+        /// <value><c>true</c> if an OSMM unload can be performed; otherwise, <c>false</c>.</value>
+        public bool CanOSMMUnload => _canOSMMUnload;
+
+        /// <summary>
+        /// Can an OSMM load operation be performed?
+        /// Load registers selected new (null-INCID) GIS features under new INCID records, exactly
+        /// as the separate-INCID feature insert does, but tagged with the OSMMLoad history operation.
+        /// </summary>
+        /// <value><c>true</c> if an OSMM load can be performed; otherwise, <c>false</c>.</value>
+        public bool CanOSMMLoad => _canOSMMLoad;
+
+        /// <summary>
+        /// Can either an OSMM unload or load operation be performed?
+        /// </summary>
+        /// <value><c>true</c> if any OSMM load/unload operation can be performed; otherwise, <c>false</c>.</value>
+        public bool CanOSMMLoadUnload => _canOSMMUnload || _canOSMMLoad;
+
+        #endregion Properties - OSMM Load/Unload Commands
 
         #endregion Properties
 
@@ -1773,6 +1807,7 @@ namespace HLU.UI.ViewModel
             RefreshSplitEnablement();
             RefreshMergeEnablement();
             RefreshInsertFeatureEnablement();
+            RefreshOSMMLoadUnloadEnablement();
         }
 
         #endregion Split/Merge Capability
@@ -1825,6 +1860,70 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion Feature Insert Capability
+
+        #region OSMM Load/Unload Capability
+
+        /// <summary>
+        /// Computes whether an OSMM unload can be performed. The selection must contain at least one
+        /// registered (non-null INCID) feature that exists in the database.
+        /// </summary>
+        private bool ComputeCanOSMMUnload()
+        {
+            // Must be in a mode that allows edits and ready for edit operations.
+            if (!IsEditOperationModeReady)
+                return false;
+
+            // There must be at least one feature selected.
+            if (_gisSelection == null || _gisSelection.Rows.Count == 0)
+                return false;
+
+            // All selected features must have a non-null, non-empty INCID (i.e. they are already
+            // registered in the database and can therefore be unloaded).
+            return _incidsSelectedMap != null &&
+                   _incidsSelectedMap.Any() &&
+                   _incidsSelectedMap.All(i => !string.IsNullOrEmpty(i));
+        }
+
+        /// <summary>
+        /// Computes whether an OSMM load can be performed. The selection must contain only new
+        /// (null-INCID) features that are not yet registered in the database.
+        /// </summary>
+        private bool ComputeCanOSMMLoad()
+        {
+            // Must be in a mode that allows edits and ready for edit operations.
+            if (!IsEditOperationModeReady)
+                return false;
+
+            // There must be at least one feature selected.
+            if (_gisSelection == null || _gisSelection.Rows.Count == 0)
+                return false;
+
+            // All selected features must have a null or empty INCID (not yet registered).
+            return _incidsSelectedMap != null &&
+                   _incidsSelectedMap.All(i => string.IsNullOrEmpty(i));
+        }
+
+        /// <summary>
+        /// Refreshes the cached OSMM load/unload enablement values.
+        /// </summary>
+        private void RefreshOSMMLoadUnloadEnablement()
+        {
+            bool canUnload = ComputeCanOSMMUnload();
+            bool canLoad   = ComputeCanOSMMLoad();
+
+            bool changed = (_canOSMMUnload != canUnload) || (_canOSMMLoad != canLoad);
+            _canOSMMUnload = canUnload;
+            _canOSMMLoad   = canLoad;
+
+            if (changed)
+            {
+                OnPropertyChanged(nameof(CanOSMMUnload));
+                OnPropertyChanged(nameof(CanOSMMLoad));
+                OnPropertyChanged(nameof(CanOSMMLoadUnload));
+            }
+        }
+
+        #endregion OSMM Load/Unload Capability
 
         #region Split/Merge Action
 
@@ -2072,6 +2171,103 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion Feature Insert Action
+
+        #region OSMM Load/Unload Action
+
+        /// <summary>
+        /// Removes the currently selected registered GIS features from the layer, deletes their
+        /// shadow map-match rows, and cleans up any orphaned INCID records.
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        public async Task OSMMUnloadAsync()
+        {
+            // Clear any existing messages.
+            ClearAllMessages();
+
+            // Re-read the map selection to ensure it is current.
+            await GetMapSelectionAsync(false);
+
+            ViewModelWindowMainOSMMLoadUnload vmLoadUnload = new(this);
+            bool success = await vmLoadUnload.OSMMUnloadAsync();
+            if (success)
+            {
+                int count = _gisSelection?.Rows.Count ?? 0;
+                ShowSuccess(
+                    $"OSMM Unload completed: {count} {(count == 1 ? "feature" : "features")} removed.",
+                    MessageCategory.OSMMLoad);
+            }
+        }
+
+        /// <summary>
+        /// Registers each currently selected new (null-INCID) GIS feature under its own new INCID,
+        /// using habitat attributes already present on the feature, and tags history with the
+        /// OSMMLoad operation code.
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        public async Task OSMMLoadAsync()
+        {
+            // Clear any existing messages.
+            ClearAllMessages();
+
+            // Re-read the map selection to ensure it is current.
+            await GetMapSelectionAsync(false);
+
+            // Show the OSMM Load setup dialog so the user can select the source layer
+            // and map its fields to the lut_osmm_habitat_xref lookup columns.
+            OsmmFieldMapping fieldMapping = await ShowOSMMLoadDialogAsync();
+            if (fieldMapping == null)
+                return; // user cancelled
+
+            ViewModelWindowMainOSMMLoadUnload vmLoadUnload = new(this);
+            var (success, featureCount, incidCount) = await vmLoadUnload.OSMMLoadAsync(fieldMapping);
+            if (success)
+            {
+                ShowSuccess(
+                    $"OSMM Load completed: {featureCount} {(featureCount == 1 ? "feature" : "features")} registered against {incidCount} new {(incidCount == 1 ? "INCID" : "INCIDs")}.",
+                    MessageCategory.OSMMLoad);
+            }
+        }
+
+        /// <summary>
+        /// Creates, shows and awaits the OSMM Load setup dialog.
+        /// </summary>
+        /// <returns>
+        /// The <see cref="OsmmFieldMapping"/> chosen by the user, or <c>null</c> if the dialog was cancelled.
+        /// </returns>
+        private Task<OsmmFieldMapping> ShowOSMMLoadDialogAsync()
+        {
+            var tcs = new System.Threading.Tasks.TaskCompletionSource<OsmmFieldMapping>();
+
+            var window = new HLU.UI.View.WindowOSMMLoad
+            {
+                Owner = FrameworkApplication.Current.MainWindow,
+                WindowStartupLocation = System.Windows.WindowStartupLocation.CenterOwner,
+                Topmost = true
+            };
+
+            var vm = new ViewModelWindowOSMMLoad(this);
+
+            vm.RequestClose -= OnOSMMLoadDialogClose; // safety
+            vm.RequestClose += OnOSMMLoadDialogClose;
+
+            window.DataContext = vm;
+
+            // Wire the close event to resolve the task.
+            vm.RequestClose += (apply, mapping) =>
+            {
+                window.Close();
+                tcs.TrySetResult(apply ? mapping : null);
+            };
+
+            window.ShowDialog();
+
+            return tcs.Task;
+        }
+
+        // Dummy handler to satisfy the -= safety unsubscription above (lambda is the real handler).
+        private static void OnOSMMLoadDialogClose(bool apply, OsmmFieldMapping mapping) { }
+
+        #endregion OSMM Load/Unload Action
 
         #endregion Methods
     }

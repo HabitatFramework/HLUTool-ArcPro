@@ -120,6 +120,11 @@
 					<dynamicMenu refID="HLUTool_FeatureInsertMenu" size="large" />
 				</group>
 
+				<!-- OSMM Load/Unload group -->
+				<group id="HLUTool_Group_OSMMLoadUnload" caption="OSMM Load/Unload" keytip="GB">
+					<dynamicMenu refID="HLUTool_OSMMLoadUnloadMenu" size="large" />
+				</group>
+
 				<!-- Export group -->
 				<group id="HLUTool_Group_Export" caption="Export" keytip="G9" launcherButtonID="HLUTool_btnExportOptionsLauncher">
 					<button refID="HLUTool_btnExport" size="large" />
@@ -264,6 +269,46 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/InsertFeatureSameIncid32.png">
 					<tooltip heading="Insert Feature — Same INCID">
 						Register all selected new features under a single new INCID. Use this when the created features represent fragments of the same habitat record.
+						<disabledText>Available only when editing is active, a reason and process are selected, and all selected features have no INCID assigned.</disabledText>
+					</tooltip>
+				</button>
+
+				<!-- OSMM Load/Unload dropdown -->
+				<dynamicMenu id="HLUTool_OSMMLoadUnloadMenu"
+							 caption="OSMM Load/Unload"
+							 className="HLU.UI.UserControls.Toolbar.OSMMLoadUnloadDynamicMenu"
+							 smallImage="pack://application:,,,/HLUTool;component/Images/OSMMLoad16.png"
+							 largeImage="pack://application:,,,/HLUTool;component/Images/OSMMLoad32.png"
+							 loadOnClick="false">
+					<tooltip heading="OSMM Load/Unload options">
+						Unload or load OSMM features<disabledText />
+					</tooltip>
+				</dynamicMenu>
+
+				<!-- OSMM Unload button -->
+				<button id="HLUTool_btnOSMMUnload"
+						caption="Unload"
+						className="HLU.UI.UserControls.Toolbar.OSMMUnloadButton"
+						loadOnClick="false"
+						keytip="UL"
+						smallImage="pack://application:,,,/HLUTool;component/Images/OSMMUnload16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/OSMMUnload32.png">
+					<tooltip heading="OSMM Unload">
+						Remove selected registered features from the GIS layer and clean up their database records.
+						<disabledText>Available only when editing is active, a reason and process are selected, and all selected features have an INCID assigned.</disabledText>
+					</tooltip>
+				</button>
+
+				<!-- OSMM Load button -->
+				<button id="HLUTool_btnOSMMLoad"
+						caption="Load"
+						className="HLU.UI.UserControls.Toolbar.OSMMLoadButton"
+						loadOnClick="false"
+						keytip="LL"
+						smallImage="pack://application:,,,/HLUTool;component/Images/OSMMLoad16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/OSMMLoad32.png">
+					<tooltip heading="OSMM Load">
+						Register each selected new feature under its own new INCID using attributes already on the feature.
 						<disabledText>Available only when editing is active, a reason and process are selected, and all selected features have no INCID assigned.</disabledText>
 					</tooltip>
 				</button>

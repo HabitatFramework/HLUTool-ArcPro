@@ -103,6 +103,7 @@ namespace HLU.UI.ViewModel
         private bool _resetOSMMUpdatesStatus;
 
         // Application Bulk Update options
+        private string _defaultOSMMBulkLoadLayer;
         private bool _bulkDeleteOrphanBapHabitats;
 
         private bool _bulkDeletePotentialBapHabitats;
@@ -231,6 +232,7 @@ namespace HLU.UI.ViewModel
             _resetOSMMUpdatesStatus = _addInSettings.ResetOSMMUpdatesStatus;
 
             // Set the application bulk Update options
+            _defaultOSMMBulkLoadLayer = _addInSettings.DefaultOSMMBulkLoadLayer;
             _bulkDeleteOrphanBapHabitats = _addInSettings.BulkUpdateDeleteOrphanBapHabitats;
             _bulkDeletePotentialBapHabitats = _addInSettings.BulkUpdateDeletePotentialBapHabitats;
             _bulkDeleteIHSCodes = _addInSettings.BulkUpdateDeleteIHSCodes;
@@ -754,6 +756,7 @@ namespace HLU.UI.ViewModel
             _addInSettings.BulkUpdateDeterminationQuality = _bulkDeterminationQuality;
             _addInSettings.BulkUpdateInterpretationQuality = _bulkInterpretationQuality;
             _addInSettings.BulkOSMMSourceId = (int)_bulkOSMMSourceId;
+            _addInSettings.DefaultOSMMBulkLoadLayer = _defaultOSMMBulkLoadLayer;
 
             // Save changes back to XML in main window.
             _viewModelMain.SaveAddInSettings(_addInSettings);
@@ -2346,6 +2349,27 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion User Updates
+
+        #region App Bulk Update - OSMM Load
+
+        /// <summary>
+        /// Gets or sets the default staging layer name used when bulk loading OSMM data.
+        /// </summary>
+        public string DefaultOSMMBulkLoadLayer
+        {
+            get
+            {
+                return _defaultOSMMBulkLoadLayer;
+            }
+            set
+            {
+                _defaultOSMMBulkLoadLayer = value;
+                OnPropertyChanged(nameof(DefaultOSMMBulkLoadLayer));
+                NotifyNavigationItemErrorsChanged();
+            }
+        }
+
+        #endregion App Bulk Update - OSMM Load
 
         #region User SQL
 

@@ -1,5 +1,5 @@
-﻿// HLUTool is used to view and maintain habitat and land use GIS data.
-// Copyright © 2025-2026 Andy Foy Consulting
+// HLUTool is used to view and maintain habitat and land use GIS data.
+// Copyright � 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -16,26 +16,18 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace HLU.Enums
+namespace HLU.UI.ViewModel
 {
-    #region Enums
-
     /// <summary>
-    /// Update operations.
+    /// Carries the user's selections from the OSMM Load setup dialog:
+    /// the name of the input layer and the five field-name mappings that
+    /// correspond to the <c>lut_osmm_habitat_xref</c> lookup columns.
     /// </summary>
-    public enum Operations
-    {
-        PhysicalMerge,
-        PhysicalSplit,
-        LogicalMerge,
-        LogicalSplit,
-        AttributeUpdate,
-        BulkUpdate,
-        OSMMUpdate,
-        FeatureInsert,
-        OSMMUnload,
-        OSMMLoad
-    };
-
-    #endregion Enums
+    internal sealed record OsmmFieldMapping(
+        string LayerName,
+        string MakeField,
+        string DescGroupField,
+        string DescTermField,
+        string ThemeField,
+        string FeatCodeField);
 }

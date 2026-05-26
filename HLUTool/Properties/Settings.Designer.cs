@@ -689,11 +689,9 @@ namespace HLU.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute(@"<?xml version=""1.0"" encoding=""utf-16""?>
-<ArrayOfString xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"">
-  <string>As entered</string>
-  <string>By code</string>
-</ArrayOfString>")]
+        [global::System.Configuration.DefaultSettingValueAttribute("<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n<ArrayOfString xmlns:xsd=\"http://www.w3." +
+            "org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\r\n  <s" +
+            "tring>As entered</string>\r\n  <string>By code</string>\r\n</ArrayOfString>")]
         public global::System.Collections.Specialized.StringCollection SecondaryCodeOrderOptions {
             get {
                 return ((global::System.Collections.Specialized.StringCollection)(this["SecondaryCodeOrderOptions"]));
@@ -963,6 +961,19 @@ namespace HLU.Properties {
             }
             set {
                 this["ResetDbConnection"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("hlu_osmm_staging")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
+        public string DefaultOSMMBulkLoadLayer {
+            get {
+                return ((string)(this["DefaultOSMMBulkLoadLayer"]));
+            }
+            set {
+                this["DefaultOSMMBulkLoadLayer"] = value;
             }
         }
     }

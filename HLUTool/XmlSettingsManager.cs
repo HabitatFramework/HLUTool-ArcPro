@@ -175,6 +175,9 @@ public class AddInSettings
 
     // Application GIS export options
     public int? BulkOSMMSourceId { get; set; } = null;
+
+    // Application OSMM bulk load options
+    public string DefaultOSMMBulkLoadLayer { get; set; } = null;
 }
 
 /// <summary>

@@ -201,6 +201,49 @@
 
             <Expander
                 Margin="6,10,0,0"
+                Header="OSMM Bulk Load Defaults"
+                IsExpanded="True">
+
+                <Grid Margin="12,4,4,2" HorizontalAlignment="Left">
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid
+                        x:Name="GridOSMMBulkLoadLayer"
+                        Grid.Row="0"
+                        HorizontalAlignment="Left">
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" MinWidth="170" />
+                            <ColumnDefinition Width="Auto" MinWidth="300" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Label
+                            x:Name="LabelOSMMBulkLoadLayer"
+                            Grid.Column="0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Content="Default staging layer name" />
+                        <TextBox
+                            x:Name="TextBoxOSMMBulkLoadLayer"
+                            Grid.Column="1"
+                            BorderThickness="1"
+                            Text="{Binding DefaultOSMMBulkLoadLayer, UpdateSourceTrigger=PropertyChanged}"
+                            ToolTip="The default name of the staging layer in the current map that contains the new OSMM features to bulk load." />
+                        <controls:InfoButton
+                            Grid.Column="2"
+                            Margin="5,0,0,0"
+                            Description="The default name of the staging layer in the current map that contains the new OSMM features to bulk load. This will be pre-selected in the OSMM load dialog."
+                            Header="Default OSMM Staging Layer Name" />
+                    </Grid>
+                </Grid>
+            </Expander>
+
+            <Expander
+                Margin="6,10,0,0"
                 Header="OSMM Bulk Update Defaults"
                 IsExpanded="True">
 

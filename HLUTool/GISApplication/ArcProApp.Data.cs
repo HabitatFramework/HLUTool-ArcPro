@@ -2059,6 +2059,107 @@ namespace HLU.GISApplication
         #region Merge
 
         /// <summary>
+        /// Deletes all currently selected features from the HLU layer, capturing a history row for
+        /// each before deletion.
+        /// </summary>
+        /// <remarks>
+        /// The edits are queued onto <paramref name="editOperation"/> but not executed; the caller
+        /// is responsible for calling <see cref="EditOperation.ExecuteAsync"/> and saving edits.
+        /// </remarks>
+        /// <param name="historyColumns">The history columns to capture for each deleted feature.</param>
+        /// <param name="editOperation">The edit operation to queue deletes onto.</param>
+        /// <returns>
+        /// A history <see cref="DataTable"/> with one row per deleted feature, or <c>null</c>
+        /// if no features are selected.
+        /// </returns>
+        public async Task<DataTable> DeleteSelectedFeaturesAsync(
+            DataColumn[] historyColumns,
+            EditOperation editOperation)
+        {
+            ArgumentNullException.ThrowIfNull(historyColumns);
+            ArgumentNullException.ThrowIfNull(editOperation);
+
+            if (_hluLayer == null)
+                throw new HLUToolException("HLU layer is not set.");
+            if (_hluFeatureClass == null)
+                throw new HLUToolException("HLU feature class is not set.");
+            if (_hluLayerStructure == null)
+                throw new HLUToolException("HLU layer structure is not set.");
+
+            List<HistoryFieldBindingHelper.HistoryFieldBinding> historyBindings =
+                HistoryFieldBindingHelper.BuildHistoryFieldBindings(
+                    historyColumns,
+                    HistoryAdditionalFieldsDelimiter,
+                    MapField,
+                    FuzzyFieldOrdinal);
+
+            DataTable historyTable = CreateHistoryDataTable(historyBindings);
+
+            await QueuedTask.Run(() =>
+            {
+                try
+                {
+                    Selection selection = _hluLayer.GetSelection();
+                    IReadOnlyList<long> selectedObjectIds = selection?.GetObjectIDs() ?? [];
+
+                    if (selectedObjectIds.Count == 0)
+                        return;
+
+                    if (_hluFeatureClass is not Table hluTable)
+                        throw new HLUToolException("HLU feature class is not a valid table.");
+
+                    // Capture history for every feature before queuing the delete.
+                    List<long> toDelete = [.. selectedObjectIds];
+
+                    foreach (long oid in toDelete)
+                    {
+                        ArcGISProHelpers.WithRowByObjectId(_hluFeatureClass, oid, row =>
+                        {
+                            DataRow historyRow = historyTable.NewRow();
+
+                            foreach (HistoryFieldBindingHelper.HistoryFieldBinding b in historyBindings)
+                                historyRow[b.OutputColumnName] = row[b.SourceFieldIndex] ?? DBNull.Value;
+
+                            if (row is Feature feature)
+                            {
+                                Geometry geom = feature.GetShape();
+                                (double geom1, double geom2) = GetGeometryHistoryValues(geom);
+                                historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = geom1;
+                                historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = geom2;
+                            }
+                            else
+                            {
+                                historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = DBNull.Value;
+                                historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = DBNull.Value;
+                            }
+
+                            historyTable.Rows.Add(historyRow);
+                        });
+                    }
+
+                    // Queue the deletes.
+                    editOperation.Callback(context =>
+                    {
+                        foreach (long oid in toDelete)
+                        {
+                            ArcGISProHelpers.WithRowByObjectId(_hluFeatureClass, oid, row =>
+                            {
+                                row.Delete();
+                                context.Invalidate(row);
+                            });
+                        }
+                    }, hluTable);
+                }
+                catch (Exception ex)
+                {
+                    throw new HLUToolException("Error deleting selected GIS features: " + ex.Message, ex);
+                }
+            });
+
+            return historyTable;
+        }
+
+        /// <summary>
         /// Physically merges the currently selected features by unioning their geometries into a single result feature,
         /// deleting the other selected features, and setting the result feature's fragid to
         /// <paramref name="newFragmentID"/>.
@@ -2967,6 +3068,102 @@ namespace HLU.GISApplication
                         GetVal(habsecondIdx),
                         GetVal(determqtyIdx),
                         GetVal(interpqtyIdx));
+                }
+            });
+
+            return result;
+        }
+
+        /// <summary>
+        /// Reads the five OSMM cross-reference attribute values from the specified feature layer
+        /// for every OID in <paramref name="oids"/>, using the caller-supplied field name mappings.
+        /// Fields that are absent from the layer, or whose value is null/empty, yield
+        /// <see langword="null"/> for the affected OID.
+        /// </summary>
+        /// <param name="layerName">Name of the non-HLU source layer to read from.</param>
+        /// <param name="oids">The object IDs of the features to read.</param>
+        /// <param name="makeField">Source field mapped to <c>lut_osmm_habitat_xref.make</c>.</param>
+        /// <param name="descGroupField">Source field mapped to <c>lut_osmm_habitat_xref.desc_group</c>.</param>
+        /// <param name="descTermField">Source field mapped to <c>lut_osmm_habitat_xref.desc_term</c>.</param>
+        /// <param name="themeField">Source field mapped to <c>lut_osmm_habitat_xref.theme</c>.</param>
+        /// <param name="featCodeField">Source field mapped to <c>lut_osmm_habitat_xref.feat_code</c>.</param>
+        /// <returns>
+        /// A dictionary mapping each OID to a tuple of
+        /// (make, descGroup, descTerm, theme, featCode).
+        /// </returns>
+        public async Task<Dictionary<long, (string make, string descGroup, string descTerm, string theme, string featCode)>>
+            ReadOsmmAttributesAsync(
+                string layerName,
+                IReadOnlyList<long> oids,
+                string makeField,
+                string descGroupField,
+                string descTermField,
+                string themeField,
+                string featCodeField)
+        {
+            var result = new Dictionary<long, (string make, string descGroup, string descTerm, string theme, string featCode)>();
+
+            if (string.IsNullOrEmpty(layerName) || oids == null || oids.Count == 0)
+                return result;
+
+            // Find the source feature layer by name.
+            FeatureLayer sourceLayer = await FindLayerAsync(layerName);
+            if (sourceLayer == null)
+                return result;
+
+            await QueuedTask.Run(() =>
+            {
+                using Table table = sourceLayer.GetTable();
+                if (table == null)
+                    return;
+
+                // Resolve field indexes once — -1 means the field is absent.
+                using TableDefinition def = table.GetDefinition();
+                IReadOnlyList<Field> fields = def.GetFields();
+
+                int IdxOf(string fieldName)
+                {
+                    if (string.IsNullOrEmpty(fieldName))
+                        return -1;
+                    for (int i = 0; i < fields.Count; i++)
+                        if (string.Equals(fields[i].Name, fieldName, StringComparison.OrdinalIgnoreCase))
+                            return i;
+                    return -1;
+                }
+
+                int makeIdx      = IdxOf(makeField);
+                int descGroupIdx = IdxOf(descGroupField);
+                int descTermIdx  = IdxOf(descTermField);
+                int themeIdx     = IdxOf(themeField);
+                int featCodeIdx  = IdxOf(featCodeField);
+
+                // Helper to safely extract a trimmed string value from a row.
+                string GetVal(Row row, int idx)
+                {
+                    if (idx < 0)
+                        return null;
+                    object v = row[idx];
+                    if (v == null || v is DBNull)
+                        return null;
+                    string s = v.ToString().Trim();
+                    return string.IsNullOrEmpty(s) ? null : s;
+                }
+
+                QueryFilter qf = new() { ObjectIDs = oids };
+                using RowCursor cursor = table.Search(qf, false);
+                while (cursor.MoveNext())
+                {
+                    using Row row = cursor.Current;
+                    if (row == null)
+                        continue;
+
+                    long oid = row.GetObjectID();
+                    result[oid] = (
+                        GetVal(row, makeIdx),
+                        GetVal(row, descGroupIdx),
+                        GetVal(row, descTermIdx),
+                        GetVal(row, themeIdx),
+                        GetVal(row, featCodeIdx));
                 }
             });
 
