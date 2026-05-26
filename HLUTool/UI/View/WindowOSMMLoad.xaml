@@ -43,10 +43,8 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- Layer selection -->
-            <GroupBox
-                Grid.Row="0"
-                Header="Input Layer">
+            <!--  Layer selection  -->
+            <GroupBox Grid.Row="0" Header="Input Layer">
                 <Grid Margin="4,8,4,4">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="140" />
@@ -69,164 +67,166 @@
                 </Grid>
             </GroupBox>
 
-            <!-- Field mappings -->
-                    <GroupBox
-                        Grid.Row="2"
-                        Header="Field Mappings  (input layer field ? lut_osmm_habitat_xref column)">
-                        <GroupBox.Resources>
-                            <!-- Disable each field ComboBox until a layer has been chosen. -->
-                            <Style x:Key="FieldComboStyle" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+            <!--  Field mappings  -->
+            <GroupBox Grid.Row="2" Header="Field Mappings  (input layer field → lut_osmm_habitat_xref column)">
+                <GroupBox.Resources>
+                    <!--  Disable each field ComboBox until a layer has been chosen.  -->
+                    <Style
+                        x:Key="FieldComboStyle"
+                        BasedOn="{StaticResource {x:Type ComboBox}}"
+                        TargetType="ComboBox">
+                        <Setter Property="IsEnabled" Value="False" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedLayerName}" Value="{x:Null}">
                                 <Setter Property="IsEnabled" Value="False" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedLayerName}" Value="{x:Null}">
-                                        <Setter Property="IsEnabled" Value="False" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                            <Style x:Key="FieldComboEnabledStyle" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
-                                <Setter Property="IsEnabled" Value="True" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedLayerName}" Value="{x:Null}">
-                                        <Setter Property="IsEnabled" Value="False" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </GroupBox.Resources>
-                        <Grid Margin="4,8,4,4">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="4" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="4" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="4" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="4" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="4" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="4" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="140" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                    <Style
+                        x:Key="FieldComboEnabledStyle"
+                        BasedOn="{StaticResource {x:Type ComboBox}}"
+                        TargetType="ComboBox">
+                        <Setter Property="IsEnabled" Value="True" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedLayerName}" Value="{x:Null}">
+                                <Setter Property="IsEnabled" Value="False" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </GroupBox.Resources>
+                <Grid Margin="4,8,4,4">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="4" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="4" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="4" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="4" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="4" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="4" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="140" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
 
-                            <!-- toid (optional) -->
-                            <Label
-                                Grid.Row="0"
-                                Grid.Column="0"
-                                Margin="4,0,8,0"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Center"
-                                Content="toid (optional):" />
-                            <ComboBox
-                                Grid.Row="0"
-                                Grid.Column="1"
-                                Margin="0,0,4,0"
-                                VerticalAlignment="Center"
-                                Style="{StaticResource FieldComboEnabledStyle}"
-                                ItemsSource="{Binding AvailableFields}"
-                                SelectedItem="{Binding ToidField, UpdateSourceTrigger=PropertyChanged}"
-                                ToolTip="Input layer field that contains the OSMM TOID (optional). When present the TOID is copied into the staging layer and registered in the incid_mm_* table." />
+                    <!--  toid (optional)  -->
+                    <Label
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Margin="4,0,8,0"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Content="toid (optional):" />
+                    <ComboBox
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Margin="0,0,4,0"
+                        VerticalAlignment="Center"
+                        ItemsSource="{Binding AvailableFields}"
+                        SelectedItem="{Binding ToidField, UpdateSourceTrigger=PropertyChanged}"
+                        Style="{StaticResource FieldComboEnabledStyle}"
+                        ToolTip="Input layer field that contains the OSMM TOID (optional). When present the TOID is copied into the staging layer and registered in the incid_mm_* table." />
 
-                            <!-- make -->
-                            <Label
-                                Grid.Row="2"
-                                Grid.Column="0"
-                                Margin="4,0,8,0"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Center"
-                                Content="make:" />
-                            <ComboBox
-                                Grid.Row="2"
-                                Grid.Column="1"
-                                Margin="0,0,4,0"
-                                VerticalAlignment="Center"
-                                Style="{StaticResource FieldComboEnabledStyle}"
-                                ItemsSource="{Binding AvailableFields}"
-                                SelectedItem="{Binding MakeField, UpdateSourceTrigger=PropertyChanged}"
-                                ToolTip="Input layer field that corresponds to the OSMM 'make' attribute." />
+                    <!--  make  -->
+                    <Label
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        Margin="4,0,8,0"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Content="make:" />
+                    <ComboBox
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        Margin="0,0,4,0"
+                        VerticalAlignment="Center"
+                        ItemsSource="{Binding AvailableFields}"
+                        SelectedItem="{Binding MakeField, UpdateSourceTrigger=PropertyChanged}"
+                        Style="{StaticResource FieldComboEnabledStyle}"
+                        ToolTip="Input layer field that corresponds to the OSMM 'make' attribute." />
 
-                            <!-- desc_group -->
-                            <Label
-                                Grid.Row="4"
-                                Grid.Column="0"
-                                Margin="4,0,8,0"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Center"
-                                Content="desc_group:" />
-                            <ComboBox
-                                Grid.Row="4"
-                                Grid.Column="1"
-                                Margin="0,0,4,0"
-                                VerticalAlignment="Center"
-                                Style="{StaticResource FieldComboEnabledStyle}"
-                                ItemsSource="{Binding AvailableFields}"
-                                SelectedItem="{Binding DescGroupField, UpdateSourceTrigger=PropertyChanged}"
-                                ToolTip="Input layer field that corresponds to the OSMM 'desc_group' attribute." />
+                    <!--  desc_group  -->
+                    <Label
+                        Grid.Row="4"
+                        Grid.Column="0"
+                        Margin="4,0,8,0"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Content="desc_group:" />
+                    <ComboBox
+                        Grid.Row="4"
+                        Grid.Column="1"
+                        Margin="0,0,4,0"
+                        VerticalAlignment="Center"
+                        ItemsSource="{Binding AvailableFields}"
+                        SelectedItem="{Binding DescGroupField, UpdateSourceTrigger=PropertyChanged}"
+                        Style="{StaticResource FieldComboEnabledStyle}"
+                        ToolTip="Input layer field that corresponds to the OSMM 'desc_group' attribute." />
 
-                            <!-- desc_term -->
-                            <Label
-                                Grid.Row="6"
-                                Grid.Column="0"
-                                Margin="4,0,8,0"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Center"
-                                Content="desc_term:" />
-                            <ComboBox
-                                Grid.Row="6"
-                                Grid.Column="1"
-                                Margin="0,0,4,0"
-                                VerticalAlignment="Center"
-                                Style="{StaticResource FieldComboEnabledStyle}"
-                                ItemsSource="{Binding AvailableFields}"
-                                SelectedItem="{Binding DescTermField, UpdateSourceTrigger=PropertyChanged}"
-                                ToolTip="Input layer field that corresponds to the OSMM 'desc_term' attribute." />
+                    <!--  desc_term  -->
+                    <Label
+                        Grid.Row="6"
+                        Grid.Column="0"
+                        Margin="4,0,8,0"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Content="desc_term:" />
+                    <ComboBox
+                        Grid.Row="6"
+                        Grid.Column="1"
+                        Margin="0,0,4,0"
+                        VerticalAlignment="Center"
+                        ItemsSource="{Binding AvailableFields}"
+                        SelectedItem="{Binding DescTermField, UpdateSourceTrigger=PropertyChanged}"
+                        Style="{StaticResource FieldComboEnabledStyle}"
+                        ToolTip="Input layer field that corresponds to the OSMM 'desc_term' attribute." />
 
-                            <!-- theme -->
-                            <Label
-                                Grid.Row="8"
-                                Grid.Column="0"
-                                Margin="4,0,8,0"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Center"
-                                Content="theme:" />
-                            <ComboBox
-                                Grid.Row="8"
-                                Grid.Column="1"
-                                Margin="0,0,4,0"
-                                VerticalAlignment="Center"
-                                Style="{StaticResource FieldComboEnabledStyle}"
-                                ItemsSource="{Binding AvailableFields}"
-                                SelectedItem="{Binding ThemeField, UpdateSourceTrigger=PropertyChanged}"
-                                ToolTip="Input layer field that corresponds to the OSMM 'theme' attribute." />
+                    <!--  theme  -->
+                    <Label
+                        Grid.Row="8"
+                        Grid.Column="0"
+                        Margin="4,0,8,0"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Content="theme:" />
+                    <ComboBox
+                        Grid.Row="8"
+                        Grid.Column="1"
+                        Margin="0,0,4,0"
+                        VerticalAlignment="Center"
+                        ItemsSource="{Binding AvailableFields}"
+                        SelectedItem="{Binding ThemeField, UpdateSourceTrigger=PropertyChanged}"
+                        Style="{StaticResource FieldComboEnabledStyle}"
+                        ToolTip="Input layer field that corresponds to the OSMM 'theme' attribute." />
 
-                            <!-- feat_code -->
-                            <Label
-                                Grid.Row="10"
-                                Grid.Column="0"
-                                Margin="4,0,8,0"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Center"
-                                Content="feat_code:" />
-                            <ComboBox
-                                Grid.Row="10"
-                                Grid.Column="1"
-                                Margin="0,0,4,4"
-                                VerticalAlignment="Center"
-                                Style="{StaticResource FieldComboEnabledStyle}"
-                                ItemsSource="{Binding AvailableFields}"
-                                SelectedItem="{Binding FeatCodeField, UpdateSourceTrigger=PropertyChanged}"
-                                ToolTip="Input layer field that corresponds to the OSMM 'feat_code' attribute." />
-                        </Grid>
-                    </GroupBox>
+                    <!--  feat_code  -->
+                    <Label
+                        Grid.Row="10"
+                        Grid.Column="0"
+                        Margin="4,0,8,0"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Content="feat_code:" />
+                    <ComboBox
+                        Grid.Row="10"
+                        Grid.Column="1"
+                        Margin="0,0,4,4"
+                        VerticalAlignment="Center"
+                        ItemsSource="{Binding AvailableFields}"
+                        SelectedItem="{Binding FeatCodeField, UpdateSourceTrigger=PropertyChanged}"
+                        Style="{StaticResource FieldComboEnabledStyle}"
+                        ToolTip="Input layer field that corresponds to the OSMM 'feat_code' attribute." />
+                </Grid>
+            </GroupBox>
 
-            <!-- Output layer -->
-            <GroupBox
-                Grid.Row="4"
-                Header="Output Layer">
+            <!--  Output layer  -->
+            <GroupBox Grid.Row="4" Header="Output Layer">
                 <StackPanel Margin="4,8,4,4">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -250,18 +250,18 @@
                             ToolTip="The shapefile or geodatabase feature class to write the staged OSMM features to." />
                         <Button
                             Grid.Column="2"
-                            Margin="0,0,4,0"
                             Width="70"
-                            Content="Browse..."
+                            Margin="0,0,4,0"
                             Command="{Binding BrowseOutputCommand}"
+                            Content="Browse..."
                             Style="{DynamicResource Esri_SimpleButton}" />
                     </Grid>
 
-                    <!-- Error: output path is required -->
+                    <!--  Error: output path is required  -->
                     <TextBlock
                         Margin="144,4,4,0"
-                        Foreground="Red"
                         FontWeight="Medium"
+                        Foreground="Red"
                         Text="An output layer path is required."
                         TextWrapping="Wrap">
                         <TextBlock.Style>
@@ -276,11 +276,11 @@
                         </TextBlock.Style>
                     </TextBlock>
 
-                    <!-- Warning: output already exists -->
+                    <!--  Warning: output already exists  -->
                     <TextBlock
                         Margin="144,4,4,0"
-                        Foreground="DarkOrange"
                         FontWeight="Medium"
+                        Foreground="DarkOrange"
                         Text="{Binding OutputExistsWarning}"
                         TextWrapping="Wrap">
                         <TextBlock.Style>
@@ -297,10 +297,8 @@
                 </StackPanel>
             </GroupBox>
 
-            <!-- Ok / Cancel buttons -->
-            <Grid
-                Grid.Row="6"
-                Margin="4">
+            <!--  Ok / Cancel buttons  -->
+            <Grid Grid.Row="6" Margin="4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
@@ -311,15 +309,15 @@
                 <Button
                     Grid.Column="1"
                     Width="75"
-                    Content="OK"
                     Command="{Binding OkCommand}"
+                    Content="OK"
                     IsDefault="True"
                     Style="{DynamicResource Esri_SimpleButton}" />
                 <Button
                     Grid.Column="3"
                     Width="75"
-                    Content="Cancel"
                     Command="{Binding CancelCommand}"
+                    Content="Cancel"
                     IsCancel="True"
                     Style="{DynamicResource Esri_SimpleButton}" />
             </Grid>

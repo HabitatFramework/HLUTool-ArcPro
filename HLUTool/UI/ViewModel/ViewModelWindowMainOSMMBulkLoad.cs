@@ -17,6 +17,8 @@
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using ArcGIS.Desktop.Editing;
+using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Mapping;
 using HLU.Data;
 using HLU.Data.Connection;
 using HLU.Data.Model;
@@ -31,6 +33,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using CommandType = System.Data.CommandType;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
@@ -79,7 +82,7 @@ namespace HLU.UI.ViewModel
 
         /// <summary>
         /// Validates that the current selection is suitable for an OSMM unload operation and, if so,
-        /// performs the unload.
+        /// shows the layer-picker dialog and performs the unload across all checked layers.
         /// </summary>
         /// <returns><c>true</c> if the unload completed successfully; otherwise <c>false</c>.</returns>
         internal async Task<bool> OSMMUnloadAsync()
@@ -98,17 +101,65 @@ namespace HLU.UI.ViewModel
                 return false;
             }
 
-            return await PerformUnloadAsync();
+            // Show the layer-picker dialog so the user can choose which live HLU
+            // layers to include in the unload.
+            IReadOnlyList<string> targetLayerNames = await ShowUnloadLayerPickerAsync();
+            if (targetLayerNames == null || targetLayerNames.Count == 0)
+                return false;
+
+            return await PerformUnloadAsync(targetLayerNames);
         }
 
         /// <summary>
-        /// Performs the OSMM unload: deletes the selected GIS features and their corresponding
-        /// database records, then cleans up any INCIDs that are left with no remaining features.
+        /// Shows the OSMM Unload layer-picker dialog and returns the list of layer names
+        /// the user checked, or an empty list if cancelled.
         /// </summary>
-        private async Task<bool> PerformUnloadAsync()
+        private Task<IReadOnlyList<string>> ShowUnloadLayerPickerAsync()
+        {
+            var tcs = new TaskCompletionSource<IReadOnlyList<string>>();
+
+            IReadOnlyList<string> availableNames = _viewModelMain.GISApplication.ValidHluLayerNames
+                ?? [];
+            string activeName = _viewModelMain.ActiveLayerName;
+
+            var vm = new ViewModelWindowOSMMUnload(availableNames, activeName);
+            var window = new WindowOSMMUnload
+            {
+                Owner = FrameworkApplication.Current.MainWindow,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Topmost = true,
+                DataContext = vm
+            };
+
+            void OnRequestClose(bool proceed, IReadOnlyList<string> selectedNames)
+            {
+                vm.RequestClose -= OnRequestClose;
+                tcs.TrySetResult(proceed ? selectedNames : []);
+                window.Close();
+            }
+
+            vm.RequestClose += OnRequestClose;
+            window.ShowDialog();
+
+            return tcs.Task;
+        }
+
+        /// <summary>
+        /// Performs the OSMM unload across the specified HLU layers: for each layer, deletes
+        /// the selected GIS features and their shadow map-match rows, then — after all layers
+        /// have been processed — cleans up any INCIDs that are left with no remaining features.
+        /// </summary>
+        /// <param name="targetLayerNames">
+        /// The ordered list of valid HLU layer names to process. Each layer is activated in turn
+        /// so that the layer-specific GIS and MM-table context is correct.
+        /// </param>
+        private async Task<bool> PerformUnloadAsync(IReadOnlyList<string> targetLayerNames)
         {
             _viewModelMain.ChangeCursor(Cursors.Wait, "Unloading ...");
             bool success = true;
+
+            // Remember the originally active layer so we can restore it afterwards.
+            string originalLayerName = _viewModelMain.ActiveLayerName;
 
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
@@ -119,6 +170,17 @@ namespace HLU.UI.ViewModel
 
             bool gisExecuted = false;
 
+            // Accumulate all removed INCIDs across every layer so that orphan cleanup
+            // is done once after all layers have been processed.
+            HashSet<string> allRemovedIncids = new(StringComparer.OrdinalIgnoreCase);
+
+            // The incid column name is the same for all geometry types — use the polygon
+            // table as the canonical source (the column name is identical across all three).
+            string incidColName = _viewModelMain.HluDataset.incid_mm_polygons.incidColumn.ColumnName;
+
+            // Combined history table schema (will be built from the first layer that returns rows).
+            DataTable combinedHistory = null;
+
             try
             {
                 DateTime currDtTm = DateTime.Now;
@@ -126,88 +188,130 @@ namespace HLU.UI.ViewModel
                     currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
 
                 // ---------------------------------------------------------------
-                // 1. Identify the INCIDs and shadow map-match rows to remove.
+                // Process each target layer in turn.
                 // ---------------------------------------------------------------
-                string incidColName = _viewModelMain.GisLayerType switch
+                foreach (string layerName in targetLayerNames)
                 {
-                    HluGeometryTypes.Line => _viewModelMain.HluDataset.incid_mm_lines.incidColumn.ColumnName,
-                    HluGeometryTypes.Point => _viewModelMain.HluDataset.incid_mm_points.incidColumn.ColumnName,
-                    _ => _viewModelMain.HluDataset.incid_mm_polygons.incidColumn.ColumnName
-                };
+                    // Activate the layer so that _hluLayer, _hluFeatureClass, and
+                    // _hluGeometryType all reflect this layer for the duration of this iteration.
+                    bool activated = await _viewModelMain.GISApplication.IsHluLayerAsync(layerName, activate: true);
+                    if (!activated)
+                        throw new HLUToolException($"Layer '{layerName}' could not be activated as a valid HLU layer.");
 
-                // Collect the distinct INCIDs that are being removed from GIS.
-                List<string> removedIncids = [.. _viewModelMain.IncidsSelectedMap
-                    .Where(i => !string.IsNullOrEmpty(i))
-                    .Distinct(StringComparer.OrdinalIgnoreCase)];
+                    // Obtain the FeatureLayer reference used to read the selection.
+                    FeatureLayer featureLayer =
+                        await ArcGIS.Desktop.Framework.Threading.Tasks.QueuedTask.Run(() =>
+                            MapView.Active?.Map
+                                ?.GetLayersAsFlattenedList()
+                                .OfType<FeatureLayer>()
+                                .FirstOrDefault(l => l.Name == layerName));
 
-                // ---------------------------------------------------------------
-                // 2. Capture history and queue the GIS deletes.
-                // ---------------------------------------------------------------
-                DataTable historyTable = await _viewModelMain.GISApplication.DeleteSelectedFeaturesAsync(
-                    _viewModelMain.HistoryColumns,
-                    editOperation);
+                    if (featureLayer == null)
+                        throw new HLUToolException($"Could not locate layer '{layerName}' in the active map.");
 
-                if (historyTable == null || historyTable.Rows.Count == 0)
-                    throw new HLUToolException("Failed to capture history for unload: no features found.");
+                    // Read this layer's selection into a local GIS selection table
+                    // using the current GIS ID column schema.
+                    DataTable layerSelection = new();
+                    foreach (DataColumn c in _viewModelMain.GisIDColumns)
+                        layerSelection.Columns.Add(new DataColumn(c.ColumnName, c.DataType) { AllowDBNull = true });
 
-                // ---------------------------------------------------------------
-                // 3. Delete the shadow map-match rows for the selected features.
-                // ---------------------------------------------------------------
-                List<List<SqlFilterCondition>> mmWhereClause = ViewModelWindowMainHelpers.GisSelectionToWhereClause(
-                    [.. _viewModelMain.GisSelection.AsEnumerable()],
-                    _viewModelMain.GisIDColumnOrdinals,
-                    ViewModelWindowMain.IncidPageSize,
-                    _viewModelMain.GisMMTable);
+                    layerSelection = await _viewModelMain.GISApplication.ReadMapSelectionForLayerAsync(
+                        featureLayer, layerSelection);
 
-                switch (_viewModelMain.GisLayerType)
-                {
-                    case HluGeometryTypes.Line:
+                    if (layerSelection == null || layerSelection.Rows.Count == 0)
+                        continue; // Nothing selected in this layer — skip.
+
+                    // Collect the distinct INCIDs being removed from this layer.
+                    string localIncidColName = layerSelection.Columns.Contains(incidColName)
+                        ? incidColName
+                        : null;
+
+                    if (localIncidColName != null)
                     {
-                        var t = _viewModelMain.HluDataset.incid_mm_lines;
-                        _viewModelMain.GetIncidMMLineRows(mmWhereClause, ref t);
-
-                        foreach (DataRow r in t.Rows)
-                            r.Delete();
-
-                        if (_viewModelMain.HluTableAdapterManager.incid_mm_linesTableAdapter?.Update(t) == -1)
-                            throw new Exception($"Failed to delete rows from table [{t.TableName}].");
-                        break;
+                        foreach (DataRow r in layerSelection.Rows)
+                        {
+                            string incid = r[localIncidColName]?.ToString();
+                            if (!string.IsNullOrEmpty(incid))
+                                allRemovedIncids.Add(incid);
+                        }
                     }
-                    case HluGeometryTypes.Point:
+
+                    // ---------------------------------------------------------------
+                    // 2. Capture history and queue the GIS deletes for this layer.
+                    // ---------------------------------------------------------------
+                    DataTable layerHistory = await _viewModelMain.GISApplication.DeleteSelectedFeaturesAsync(
+                        _viewModelMain.HistoryColumns,
+                        editOperation);
+
+                    if (layerHistory == null || layerHistory.Rows.Count == 0)
+                        continue; // No history rows captured — layer may have had no selected features.
+
+                    // Merge into the combined history table.
+                    combinedHistory ??= layerHistory.Clone();
+                    foreach (DataRow r in layerHistory.Rows)
+                        combinedHistory.ImportRow(r);
+
+                    // ---------------------------------------------------------------
+                    // 3. Delete the shadow map-match rows for this layer's selection.
+                    // ---------------------------------------------------------------
+                    HluGeometryTypes layerGeomType = _viewModelMain.GISApplication.HluGeometryType;
+
+                    DataTable layerMMTable = layerGeomType switch
                     {
-                        var t = _viewModelMain.HluDataset.incid_mm_points;
-                        _viewModelMain.GetIncidMMPointRows(mmWhereClause, ref t);
+                        HluGeometryTypes.Line  => (DataTable)_viewModelMain.HluDataset.incid_mm_lines,
+                        HluGeometryTypes.Point => (DataTable)_viewModelMain.HluDataset.incid_mm_points,
+                        _                      => (DataTable)_viewModelMain.HluDataset.incid_mm_polygons
+                    };
 
-                        foreach (DataRow r in t.Rows)
-                            r.Delete();
+                    List<List<SqlFilterCondition>> mmWhereClause = ViewModelWindowMainHelpers.GisSelectionToWhereClause(
+                        [.. layerSelection.AsEnumerable()],
+                        _viewModelMain.GisIDColumnOrdinals,
+                        ViewModelWindowMain.IncidPageSize,
+                        layerMMTable);
 
-                        if (_viewModelMain.HluTableAdapterManager.incid_mm_pointsTableAdapter?.Update(t) == -1)
-                            throw new Exception($"Failed to delete rows from table [{t.TableName}].");
-                        break;
-                    }
-                    default:
+                    switch (layerGeomType)
                     {
-                        var t = _viewModelMain.HluDataset.incid_mm_polygons;
-                        _viewModelMain.GetIncidMMPolygonRows(mmWhereClause, ref t);
-
-                        foreach (DataRow r in t.Rows)
-                            r.Delete();
-
-                        if (_viewModelMain.HluTableAdapterManager.incid_mm_polygonsTableAdapter?.Update(t) == -1)
-                            throw new Exception($"Failed to delete rows from table [{t.TableName}].");
-                        break;
+                        case HluGeometryTypes.Line:
+                        {
+                            var t = _viewModelMain.HluDataset.incid_mm_lines;
+                            _viewModelMain.GetIncidMMLineRows(mmWhereClause, ref t);
+                            foreach (DataRow r in t.Rows) r.Delete();
+                            if (_viewModelMain.HluTableAdapterManager.incid_mm_linesTableAdapter?.Update(t) == -1)
+                                throw new Exception($"Failed to delete rows from table [{t.TableName}].");
+                            break;
+                        }
+                        case HluGeometryTypes.Point:
+                        {
+                            var t = _viewModelMain.HluDataset.incid_mm_points;
+                            _viewModelMain.GetIncidMMPointRows(mmWhereClause, ref t);
+                            foreach (DataRow r in t.Rows) r.Delete();
+                            if (_viewModelMain.HluTableAdapterManager.incid_mm_pointsTableAdapter?.Update(t) == -1)
+                                throw new Exception($"Failed to delete rows from table [{t.TableName}].");
+                            break;
+                        }
+                        default:
+                        {
+                            var t = _viewModelMain.HluDataset.incid_mm_polygons;
+                            _viewModelMain.GetIncidMMPolygonRows(mmWhereClause, ref t);
+                            foreach (DataRow r in t.Rows) r.Delete();
+                            if (_viewModelMain.HluTableAdapterManager.incid_mm_polygonsTableAdapter?.Update(t) == -1)
+                                throw new Exception($"Failed to delete rows from table [{t.TableName}].");
+                            break;
+                        }
                     }
                 }
 
+                if (combinedHistory == null || combinedHistory.Rows.Count == 0)
+                    throw new HLUToolException("Failed to capture history for unload: no features found in any selected layer.");
+
                 // ---------------------------------------------------------------
-                // 4. Write history for the deleted features.
+                // 4. Write history — one entry per INCID across all layers.
                 // ---------------------------------------------------------------
                 ViewModelWindowMainHistory vmHist = new(_viewModelMain);
 
-                // Group history rows by INCID so each INCID gets its own history entry.
-                string histIncidColName = historyTable.Columns.Contains(incidColName)
+                string histIncidColName = combinedHistory.Columns.Contains(incidColName)
                     ? incidColName
-                    : historyTable.Columns.Contains("modified_" + incidColName)
+                    : combinedHistory.Columns.Contains("modified_" + incidColName)
                         ? "modified_" + incidColName
                         : null;
 
@@ -215,13 +319,13 @@ namespace HLU.UI.ViewModel
 
                 if (histIncidColName != null)
                 {
-                    var groups = historyTable.AsEnumerable()
+                    var groups = combinedHistory.AsEnumerable()
                         .GroupBy(r => r[histIncidColName]?.ToString());
 
                     foreach (var grp in groups)
                     {
                         string groupIncid = grp.Key;
-                        DataTable groupTable = historyTable.Clone();
+                        DataTable groupTable = combinedHistory.Clone();
                         foreach (DataRow r in grp)
                             groupTable.ImportRow(r);
 
@@ -235,28 +339,40 @@ namespace HLU.UI.ViewModel
                 }
                 else
                 {
-                    vmHist.HistoryWrite(null, historyTable, Operations.OSMMUnload, nowDtTm);
+                    vmHist.HistoryWrite(null, combinedHistory, Operations.OSMMUnload, nowDtTm);
                 }
 
                 // ---------------------------------------------------------------
-                // 5. Delete orphaned INCID records (those with no remaining map-match rows).
-                //    Mirrors the merge-side orphan cleanup from ViewModelWindowMainMerge.
+                // 5. Delete orphaned INCID records (those with no remaining map-match rows
+                //    in ANY of the three MM tables) after all layers have been processed.
                 // ---------------------------------------------------------------
-                if (removedIncids.Count > 0)
+                if (allRemovedIncids.Count > 0)
                 {
-                    string sqlCount = string.Format(
-                        "SELECT {0}.{1} FROM {0} LEFT JOIN {2} ON {2}.{3} = {0}.{1} WHERE {0}.{1} IN ({4}) GROUP BY {0}.{1} HAVING COUNT({2}.{3}) = 0",
-                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.IncidTable.TableName),
-                        _viewModelMain.DataBase.QuoteIdentifier(incidColName),
-                        _viewModelMain.DataBase.QualifyTableName(_viewModelMain.GisMMTable.TableName),
-                        _viewModelMain.DataBase.QuoteIdentifier(incidColName),
-                        string.Join(",", removedIncids.Select(i => _viewModelMain.DataBase.QuoteValue(i))));
+                    // An INCID is an orphan only when it has no rows in any of the three MM tables.
+                    // We check all three tables and take the intersection.
+                    string quotedIncids = string.Join(",",
+                        allRemovedIncids.Select(i => _viewModelMain.DataBase.QuoteValue(i)));
+
+                    string incidTableQ    = _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid.TableName);
+                    string incidColQ      = _viewModelMain.DataBase.QuoteIdentifier(incidColName);
+                    string mmPolygonsQ    = _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_polygons.TableName);
+                    string mmLinesQ       = _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_lines.TableName);
+                    string mmPointsQ      = _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.incid_mm_points.TableName);
+
+                    // Select INCIDs from the candidate set that have no rows in any MM table.
+                    string sqlOrphans = $@"
+SELECT i.{incidColQ}
+FROM {incidTableQ} i
+WHERE i.{incidColQ} IN ({quotedIncids})
+  AND NOT EXISTS (SELECT 1 FROM {mmPolygonsQ} mp WHERE mp.{incidColQ} = i.{incidColQ})
+  AND NOT EXISTS (SELECT 1 FROM {mmLinesQ}    ml WHERE ml.{incidColQ} = i.{incidColQ})
+  AND NOT EXISTS (SELECT 1 FROM {mmPointsQ}   mpt WHERE mpt.{incidColQ} = i.{incidColQ})";
 
                     IDataReader delReader = _viewModelMain.DataBase.ExecuteReader(
-                        sqlCount, _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text);
+                        sqlOrphans, _viewModelMain.DataBase.Connection.ConnectionTimeout, CommandType.Text);
 
                     if (delReader == null)
-                        throw new Exception($"Error counting incid and {_viewModelMain.GisMMTable.TableName} database records.");
+                        throw new Exception("Error checking for orphaned INCID records.");
 
                     List<string> orphanIncids = [];
                     while (delReader.Read())
@@ -325,6 +441,16 @@ namespace HLU.UI.ViewModel
             }
             finally
             {
+                // Restore the originally active layer (best-effort; ignore errors).
+                if (!string.IsNullOrEmpty(originalLayerName))
+                {
+                    try
+                    {
+                        await _viewModelMain.GISApplication.IsHluLayerAsync(originalLayerName, activate: true);
+                    }
+                    catch { /* ignore */ }
+                }
+
                 if (success)
                 {
                     _viewModelMain.IncidRowCount(true);
@@ -424,9 +550,9 @@ namespace HLU.UI.ViewModel
             // Collect selected OIDs from the source layer.
             IReadOnlyList<long> selectedOids = await ArcGIS.Desktop.Framework.Threading.Tasks.QueuedTask.Run(() =>
             {
-                var selection = ArcGIS.Desktop.Mapping.MapView.Active?.Map
+                var selection = MapView.Active?.Map
                     ?.GetLayersAsFlattenedList()
-                    .OfType<ArcGIS.Desktop.Mapping.FeatureLayer>()
+                    .OfType<FeatureLayer>()
                     .FirstOrDefault(l => l.Name == sourceLayerName)
                     ?.GetSelection();
 
@@ -554,9 +680,9 @@ namespace HLU.UI.ViewModel
 
                 IReadOnlyList<long> selectedOids = await ArcGIS.Desktop.Framework.Threading.Tasks.QueuedTask.Run(() =>
                 {
-                    var selection = ArcGIS.Desktop.Mapping.MapView.Active?.Map
+                    var selection = MapView.Active?.Map
                         ?.GetLayersAsFlattenedList()
-                        .OfType<ArcGIS.Desktop.Mapping.FeatureLayer>()
+                        .OfType<FeatureLayer>()
                         .FirstOrDefault(l => l.Name == sourceLayerName)
                         ?.GetSelection();
 

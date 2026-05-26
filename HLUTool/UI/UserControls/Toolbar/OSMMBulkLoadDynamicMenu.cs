@@ -19,16 +19,15 @@
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using HLU.UI.ViewModel;
-using System;
 using System.Windows;
 
 namespace HLU.UI.UserControls.Toolbar
 {
     /// <summary>
-    /// Button implementation that removes the currently selected registered GIS features from the
-    /// HLU layer, deletes their shadow map-match rows, and cleans up any orphaned INCID records.
+    /// Dynamic menu that hosts the OSMM Unload and Load buttons. The menu is enabled when either
+    /// operation can be performed.
     /// </summary>
-    internal class OSMMUnloadButton : Button
+    internal sealed class OSMMBulkLoadDynamicMenu : DynamicMenu
     {
         #region Fields
 
@@ -38,7 +37,7 @@ namespace HLU.UI.UserControls.Toolbar
 
         #region Constructor
 
-        public OSMMUnloadButton()
+        public OSMMBulkLoadDynamicMenu()
         {
             DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
             if (pane == null)
@@ -50,18 +49,6 @@ namespace HLU.UI.UserControls.Toolbar
         #endregion Constructor
 
         #region Overrides
-
-        protected override async void OnClick()
-        {
-            try
-            {
-                await _viewModel.OSMMUnloadAsync();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine(ex);
-            }
-        }
 
         protected override void OnUpdate()
         {
@@ -79,12 +66,18 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            Enabled = _viewModel.CanOSMMUnload &&
+            Enabled = _viewModel.CanOSMMLoadUnload &&
                       _viewModel.GridMainVisibility == Visibility.Visible;
 
             DisabledTooltip = "Unavailable when:\n\u2022 No reason or process are selected\n" +
-                              "\u2022 No registered features are selected on the map\n" +
+                              "\u2022 No suitable features are selected on the map\n" +
                               "\u2022 The main window is not visible";
+        }
+
+        protected override void OnPopup()
+        {
+            AddReference("HLUTool_btnOSMMBulkUnload");
+            AddReference("HLUTool_btnOSMMBulkLoad");
         }
 
         #endregion Overrides

@@ -25,11 +25,10 @@ using System.Windows;
 namespace HLU.UI.UserControls.Toolbar
 {
     /// <summary>
-    /// Button implementation that registers each currently selected new (null-INCID) GIS feature
-    /// under its own new INCID, using habitat attributes already on the feature, and tags history
-    /// with the OSMMLoad operation code.
+    /// Button implementation that removes the currently selected registered GIS features from the
+    /// HLU layer, deletes their shadow map-match rows, and cleans up any orphaned INCID records.
     /// </summary>
-    internal class OSMMLoadButton : Button
+    internal class OSMMBulkUnloadButton : Button
     {
         #region Fields
 
@@ -39,7 +38,7 @@ namespace HLU.UI.UserControls.Toolbar
 
         #region Constructor
 
-        public OSMMLoadButton()
+        public OSMMBulkUnloadButton()
         {
             DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
             if (pane == null)
@@ -56,7 +55,7 @@ namespace HLU.UI.UserControls.Toolbar
         {
             try
             {
-                await _viewModel.OSMMLoadAsync();
+                await _viewModel.OSMMUnloadAsync();
             }
             catch (Exception ex)
             {
@@ -80,11 +79,11 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            Enabled = _viewModel.CanOSMMLoad &&
+            Enabled = _viewModel.CanOSMMUnload &&
                       _viewModel.GridMainVisibility == Visibility.Visible;
 
             DisabledTooltip = "Unavailable when:\n\u2022 No reason or process are selected\n" +
-                              "\u2022 The selected features already have an INCID assigned\n" +
+                              "\u2022 No registered features are selected on the map\n" +
                               "\u2022 The main window is not visible";
         }
 

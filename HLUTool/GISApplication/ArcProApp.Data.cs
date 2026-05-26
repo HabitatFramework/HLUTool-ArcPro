@@ -2160,6 +2160,174 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
+        /// Deletes all features that are currently selected in the specified <paramref name="featureLayer"/>,
+        /// capturing a history row for each before deletion.
+        /// </summary>
+        /// <remarks>
+        /// This overload accepts an explicit layer and feature class so that callers can target a layer
+        /// other than the active <c>_hluLayer</c> (for example, during a multi-layer OSMM unload).
+        /// The edits are queued onto <paramref name="editOperation"/> but not executed; the caller
+        /// is responsible for calling <see cref="EditOperation.ExecuteAsync"/> and saving edits.
+        /// </remarks>
+        /// <param name="featureLayer">The HLU feature layer whose selected features should be deleted.</param>
+        /// <param name="featureClass">The feature class backing <paramref name="featureLayer"/>.</param>
+        /// <param name="historyColumns">The history columns to capture for each deleted feature.</param>
+        /// <param name="editOperation">The edit operation to queue deletes onto.</param>
+        /// <returns>
+        /// A history <see cref="DataTable"/> with one row per deleted feature, or an empty table
+        /// if no features are selected in the layer.
+        /// </returns>
+        public async Task<DataTable> DeleteSelectedFeaturesForLayerAsync(
+            FeatureLayer featureLayer,
+            FeatureClass featureClass,
+            DataColumn[] historyColumns,
+            EditOperation editOperation)
+        {
+            ArgumentNullException.ThrowIfNull(featureLayer);
+            ArgumentNullException.ThrowIfNull(featureClass);
+            ArgumentNullException.ThrowIfNull(historyColumns);
+            ArgumentNullException.ThrowIfNull(editOperation);
+
+            if (_hluLayerStructure == null)
+                throw new HLUToolException("HLU layer structure is not set.");
+
+            List<HistoryFieldBindingHelper.HistoryFieldBinding> historyBindings =
+                HistoryFieldBindingHelper.BuildHistoryFieldBindings(
+                    historyColumns,
+                    HistoryAdditionalFieldsDelimiter,
+                    MapField,
+                    FuzzyFieldOrdinal);
+
+            DataTable historyTable = CreateHistoryDataTable(historyBindings);
+
+            await QueuedTask.Run(() =>
+            {
+                try
+                {
+                    Selection selection = featureLayer.GetSelection();
+                    IReadOnlyList<long> selectedObjectIds = selection?.GetObjectIDs() ?? [];
+
+                    if (selectedObjectIds.Count == 0)
+                        return;
+
+                    if (featureClass is not Table hluTable)
+                        throw new HLUToolException("HLU feature class is not a valid table.");
+
+                    List<long> toDelete = [.. selectedObjectIds];
+
+                    foreach (long oid in toDelete)
+                    {
+                        ArcGISProHelpers.WithRowByObjectId(featureClass, oid, row =>
+                        {
+                            DataRow historyRow = historyTable.NewRow();
+
+                            foreach (HistoryFieldBindingHelper.HistoryFieldBinding b in historyBindings)
+                                historyRow[b.OutputColumnName] = row[b.SourceFieldIndex] ?? DBNull.Value;
+
+                            if (row is Feature feature)
+                            {
+                                Geometry geom = feature.GetShape();
+                                (double geom1, double geom2) = GetGeometryHistoryValues(geom);
+                                historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = geom1;
+                                historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = geom2;
+                            }
+                            else
+                            {
+                                historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = DBNull.Value;
+                                historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = DBNull.Value;
+                            }
+
+                            historyTable.Rows.Add(historyRow);
+                        });
+                    }
+
+                    editOperation.Callback(context =>
+                    {
+                        foreach (long oid in toDelete)
+                        {
+                            ArcGISProHelpers.WithRowByObjectId(featureClass, oid, row =>
+                            {
+                                row.Delete();
+                                context.Invalidate(row);
+                            });
+                        }
+                    }, hluTable);
+                }
+                catch (Exception ex)
+                {
+                    throw new HLUToolException("Error deleting selected GIS features: " + ex.Message, ex);
+                }
+            });
+
+            return historyTable;
+        }
+
+        /// <summary>
+        /// Reads the current selection from the specified <paramref name="featureLayer"/> into
+        /// <paramref name="resultTable"/>, without changing the active HLU layer.
+        /// </summary>
+        /// <param name="featureLayer">The feature layer to read the selection from.</param>
+        /// <param name="resultTable">A DataTable defining the schema of the rows to be returned.</param>
+        /// <returns>The populated <paramref name="resultTable"/>.</returns>
+        public async Task<DataTable> ReadMapSelectionForLayerAsync(
+            FeatureLayer featureLayer,
+            DataTable resultTable)
+        {
+            if (resultTable == null)
+                return resultTable;
+
+            if (featureLayer == null)
+                throw new GisSelectionException("No feature layer supplied.");
+
+            await QueuedTask.Run(() =>
+            {
+                try
+                {
+                    var selection = featureLayer.GetSelection();
+
+                    if (selection.GetCount() == 0)
+                        return;
+
+                    var table = featureLayer.GetTable();
+                    var def = table.GetDefinition();
+
+                    var missing = resultTable.Columns
+                        .Cast<DataColumn>()
+                        .Select(c => c.ColumnName)
+                        .Where(colName => def.FindField(colName) < 0)
+                        .ToList();
+
+                    if (missing.Count > 0)
+                        throw new MissingLayerFieldsException(missing);
+
+                    using RowCursor rowCursor = selection.Search();
+
+                    while (rowCursor.MoveNext())
+                    {
+                        using Feature feature = (Feature)rowCursor.Current;
+
+                        DataRow dataRow = resultTable.NewRow();
+
+                        foreach (DataColumn c in resultTable.Columns)
+                            dataRow[c.ColumnName] = feature[c.ColumnName] ?? DBNull.Value;
+
+                        resultTable.Rows.Add(dataRow);
+                    }
+                }
+                catch (HLUToolException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    throw new HLUToolException("Error reading map selection: " + ex.Message, ex);
+                }
+            });
+
+            return resultTable;
+        }
+
+        /// <summary>
         /// Physically merges the currently selected features by unioning their geometries into a single result feature,
         /// deleting the other selected features, and setting the result feature's fragid to
         /// <paramref name="newFragmentID"/>.

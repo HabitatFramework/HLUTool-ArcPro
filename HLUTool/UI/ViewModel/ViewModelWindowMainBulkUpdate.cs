@@ -1751,7 +1751,6 @@ namespace HLU.UI.ViewModel
                 new Action<R>(r => adapter.Delete(r)));
 
             // Set the property name for the primary key
-            // Set the property name for the primary key
             string recordIdPropertyName = String.Concat(dbRows.TableName.Split('_')
                 .Select(s => String.Format("{0}{1}", char.ToUpper(s[0]), s.Substring(1))))
                 .Insert(0, "Next") + "Id";

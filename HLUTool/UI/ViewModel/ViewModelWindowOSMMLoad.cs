@@ -16,6 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Desktop.Mapping;
 using HLU.Properties;
 using HLU.UI;
 using Microsoft.Win32;
@@ -107,7 +108,7 @@ namespace HLU.UI.ViewModel
                 ApplyOutputPath(defaultLayer);
 
             // Get every feature layer currently in the map.
-            List<ArcGIS.Desktop.Mapping.FeatureLayer> allLayers =
+            List<FeatureLayer> allLayers =
                 await ArcGIS.Desktop.Framework.Threading.Tasks.QueuedTask.Run(
                     () => _viewModelMain.GISApplication.GetFeatureLayers());
 
