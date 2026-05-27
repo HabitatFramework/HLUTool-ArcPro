@@ -100,7 +100,9 @@ namespace HLU.UI.UserControls.Toolbar
             Enabled = canGetMapSelection;
 
             // Set the disabled tool tip text (for when it is disabled).
-            DisabledTooltip = "Unavailable when:\n\u2022 Bulk Update mode is active\n\u2022 The main window is not visible";
+            DisabledTooltip = "Unavailable when:\n" +
+                "\u2022 Bulk Update mode is active\n" +
+                "\u2022 The main window is not visible";
         }
 
         #endregion Overrides

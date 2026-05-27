@@ -123,13 +123,13 @@ namespace HLU.UI.ViewModel
 
         #endregion Fields - Feature Insert
 
-        #region Fields - OSMM Bulk Load/Unload
+        #region Fields - Bulk Load/Unload
 
-        // Can the OSMM unload or load operation be performed.
-        private bool _canOSMMUnload;
-        private bool _canOSMMLoad;
+        // Can the Bulk unload or load operation be performed.
+        private bool _canBulkUnload;
+        private bool _canBulkLoad;
 
-        #endregion Fields - OSMM Bulk Load/Unload
+        #endregion Fields - Bulk Load/Unload
 
         #endregion Fields
 
@@ -486,31 +486,31 @@ namespace HLU.UI.ViewModel
 
         #endregion Properties - Feature Insert Commands
 
-        #region Properties - OSMM Bulk Load/Unload Commands
+        #region Properties - Bulk Load/Unload Commands
 
         /// <summary>
-        /// Can an OSMM unload operation be performed?
+        /// Can a bulk unload operation be performed?
         /// Unload removes selected GIS features that already have an INCID, deletes their shadow
         /// map-match rows, and cleans up any orphaned INCID records.
         /// </summary>
-        /// <value><c>true</c> if an OSMM unload can be performed; otherwise, <c>false</c>.</value>
-        public bool CanOSMMUnload => _canOSMMUnload;
+        /// <value><c>true</c> if an bulk unload can be performed; otherwise, <c>false</c>.</value>
+        public bool CanBulkUnload => _canBulkUnload;
 
         /// <summary>
-        /// Can an OSMM bulk load operation be performed?
+        /// Can a bulk load operation be performed?
         /// Load registers selected new (null-INCID) GIS features under new INCID records, exactly
         /// as the separate-INCID feature insert does, but tagged with the OSMMLoad history operation.
         /// </summary>
-        /// <value><c>true</c> if an OSMM bulk load can be performed; otherwise, <c>false</c>.</value>
-        public bool CanOSMMLoad => _canOSMMLoad;
+        /// <value><c>true</c> if a bulk load can be performed; otherwise, <c>false</c>.</value>
+        public bool CanBulkLoad => _canBulkLoad;
 
         /// <summary>
-        /// Can either an OSMM unload or load operation be performed?
+        /// Can either an bulk unload or load operation be performed?
         /// </summary>
-        /// <value><c>true</c> if any OSMM bulk load/unload operation can be performed; otherwise, <c>false</c>.</value>
-        public bool CanOSMMLoadUnload => _canOSMMUnload || _canOSMMLoad;
+        /// <value><c>true</c> if any bulk load/unload operation can be performed; otherwise, <c>false</c>.</value>
+        public bool CanBulkLoadUnload => _canBulkUnload || _canBulkLoad;
 
-        #endregion Properties - OSMM Bulk Load/Unload Commands
+        #endregion Properties - Bulk Load/Unload Commands
 
         #endregion Properties
 
@@ -1862,7 +1862,7 @@ namespace HLU.UI.ViewModel
 
         #endregion Feature Insert Capability
 
-        #region OSMM Bulk Load/Unload Capability
+        #region Bulk Load/Unload Capability
 
         /// <summary>
         /// Computes whether an OSMM unload can be performed. The selection must contain at least one
@@ -1886,9 +1886,9 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Computes whether an OSMM bulk load can be performed.
-        /// OSMM Load requires normal update mode (not bulk update, OSMM review, or OSMM bulk update modes).
-        /// Note: OSMM Load operates on a source layer (not the active HLU layer), so selection state
+        /// Computes whether an bulk load can be performed.
+        /// Bulk Load requires normal update mode (not bulk update, OSMM review, or OSMM bulk update modes).
+        /// Note: Bulk Load operates on a source layer (not the active HLU layer), so selection state
         /// is validated later in the load workflow, not here.
         /// </summary>
         private bool ComputeCanOSMMLoad()
@@ -1901,26 +1901,26 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Refreshes the cached OSMM bulk load/unload enablement values.
+        /// Refreshes the cached bulk load/unload enablement values.
         /// </summary>
         private void RefreshOSMMLoadUnloadEnablement()
         {
             bool canUnload = ComputeCanOSMMUnload();
             bool canLoad   = ComputeCanOSMMLoad();
 
-            bool changed = (_canOSMMUnload != canUnload) || (_canOSMMLoad != canLoad);
-            _canOSMMUnload = canUnload;
-            _canOSMMLoad   = canLoad;
+            bool changed = (_canBulkUnload != canUnload) || (_canBulkLoad != canLoad);
+            _canBulkUnload = canUnload;
+            _canBulkLoad   = canLoad;
 
             if (changed)
             {
-                OnPropertyChanged(nameof(CanOSMMUnload));
-                OnPropertyChanged(nameof(CanOSMMLoad));
-                OnPropertyChanged(nameof(CanOSMMLoadUnload));
+                OnPropertyChanged(nameof(CanBulkUnload));
+                OnPropertyChanged(nameof(CanBulkLoad));
+                OnPropertyChanged(nameof(CanBulkLoadUnload));
             }
         }
 
-        #endregion OSMM Bulk Load/Unload Capability
+        #endregion Bulk Load/Unload Capability
 
         #region Split/Merge Action
 
@@ -2169,7 +2169,7 @@ namespace HLU.UI.ViewModel
 
         #endregion Feature Insert Action
 
-        #region OSMM Bulk Load/Unload Action
+        #region Bulk Load/Unload Action
 
         /// <summary>
         /// Removes the currently selected registered GIS features from the layer, deletes their
@@ -2201,7 +2201,7 @@ namespace HLU.UI.ViewModel
                 return;
             }
 
-            ViewModelWindowMainOSMMBulkLoadUnload vmLoadUnload = new(this);
+            ViewModelWindowMainBulkLoadUnload vmLoadUnload = new(this);
             int featureCount = await vmLoadUnload.OSMMUnloadAsync();
             if (featureCount > 0)
             {
@@ -2225,40 +2225,66 @@ namespace HLU.UI.ViewModel
             // Re-read the map selection to ensure it is current.
             await GetMapSelectionAsync(false);
 
-            // Show the OSMM Bulk Load setup dialog so the user can select the source layer
+            // Show the Bulk Load setup dialog so the user can select the source layer
             // and map its fields to the lut_osmm_habitat_xref lookup columns.
-            OsmmFieldMapping fieldMapping = await ShowOSMMLoadDialogAsync();
-            if (fieldMapping == null)
+            var dialogResult = await ShowOSMMLoadDialogAsync();
+            if (dialogResult == default)
                 return; // user cancelled
 
-            ViewModelWindowMainOSMMBulkLoadUnload vmLoadUnload = new(this);
-            var (success, featureCount, incidCount) = await vmLoadUnload.OSMMLoadAsync(fieldMapping);
+            (OsmmFieldMapping fieldMapping, bool selectedOnly, ViewModelWindowBulkLoad.OutputType outputType) = dialogResult;
+
+            // Get the default export path.
+            string exportPath = Settings.Default.ExportPath;
+            if (string.IsNullOrEmpty(exportPath) || !System.IO.Directory.Exists(exportPath))
+                exportPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
+            // Prompt the user for the output location and feature class name.
+            var exportDetails = await GISApplication.ExportPromptAsync(
+                exportPath,
+                outputType == ViewModelWindowBulkLoad.OutputType.FileGeodatabase);
+
+            // If the user didn't provide export details then exit.
+            if (exportDetails == default)
+            {
+                ShowInfo("Bulk Load cancelled by user.", MessageCategory.OSMMLoad);
+                return;
+            }
+
+            // Extract the export details.
+            string outputWorkspace = exportDetails.outputWorkspace;
+            string outputFeatureClassName = exportDetails.outputFeatureClassName;
+
+            ViewModelWindowMainBulkLoadUnload vmLoadUnload = new(this);
+            var (success, featureCount, incidCount) = await vmLoadUnload.OSMMLoadAsync(
+                fieldMapping, outputWorkspace, outputFeatureClassName, selectedOnly);
+
             if (success)
             {
                 ShowSuccess(
-                    $"OSMM Bulk Load completed: {featureCount} {(featureCount == 1 ? "feature" : "features")} registered against {incidCount} new {(incidCount == 1 ? "INCID" : "INCIDs")}.",
+                    $"Bulk Load completed: {featureCount} {(featureCount == 1 ? "feature" : "features")} registered against {incidCount} new {(incidCount == 1 ? "INCID" : "INCIDs")}.",
                     MessageCategory.OSMMLoad);
             }
         }
 
         /// <summary>
-        /// Creates, shows and awaits the OSMM Bulk Load setup dialog.
+        /// Creates, shows and awaits the Bulk Load setup dialog.
         /// </summary>
         /// <returns>
-        /// The <see cref="OsmmFieldMapping"/> chosen by the user, or <c>null</c> if the dialog was cancelled.
+        /// A tuple containing the <see cref="OsmmFieldMapping"/> chosen by the user, the selectedOnly flag,
+        /// and the output type; or default if the dialog was cancelled.
         /// </returns>
-        private Task<OsmmFieldMapping> ShowOSMMLoadDialogAsync()
+        private Task<(OsmmFieldMapping mapping, bool selectedOnly, ViewModelWindowBulkLoad.OutputType outputType)> ShowOSMMLoadDialogAsync()
         {
-            var tcs = new TaskCompletionSource<OsmmFieldMapping>();
+            var tcs = new TaskCompletionSource<(OsmmFieldMapping, bool, ViewModelWindowBulkLoad.OutputType)>();
 
-            var window = new WindowOSMMBulkLoad
+            var window = new WindowBulkLoad
             {
                 Owner = FrameworkApplication.Current.MainWindow,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
                 Topmost = true
             };
 
-            var vm = new ViewModelWindowOSMMBulkLoad(this);
+            var vm = new ViewModelWindowBulkLoad(this);
 
             vm.RequestClose -= OnOSMMLoadDialogClose; // safety
             vm.RequestClose += OnOSMMLoadDialogClose;
@@ -2266,10 +2292,10 @@ namespace HLU.UI.ViewModel
             window.DataContext = vm;
 
             // Wire the close event to resolve the task.
-            vm.RequestClose += (apply, mapping) =>
+            vm.RequestClose += (apply, mapping, selectedOnly, outputType) =>
             {
                 window.Close();
-                tcs.TrySetResult(apply ? mapping : null);
+                tcs.TrySetResult(apply ? (mapping, selectedOnly, outputType) : default);
             };
 
             window.ShowDialog();
@@ -2278,9 +2304,9 @@ namespace HLU.UI.ViewModel
         }
 
         // Dummy handler to satisfy the -= safety unsubscription above (lambda is the real handler).
-        private static void OnOSMMLoadDialogClose(bool apply, OsmmFieldMapping mapping) { }
+        private static void OnOSMMLoadDialogClose(bool apply, OsmmFieldMapping mapping, bool selectedOnly, ViewModelWindowBulkLoad.OutputType outputType) { }
 
-        #endregion OSMM Bulk Load/Unload Action
+        #endregion Bulk Load/Unload Action
 
         #endregion Methods
     }

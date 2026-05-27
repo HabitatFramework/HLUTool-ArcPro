@@ -22,18 +22,18 @@ using HLU.UI.ViewModel;
 namespace HLU.UI.View
 {
     /// <summary>
-    /// Interaction logic for WindowOSMMBulkLoad.xaml
+    /// Interaction logic for WindowBulkLoad.xaml
     /// </summary>
-    public partial class WindowOSMMBulkLoad : ProWindow
+    public partial class WindowBulkLoad : ProWindow
     {
-        public WindowOSMMBulkLoad()
+        public WindowBulkLoad()
         {
             InitializeComponent();
 
             // Populate the layer list once the window is fully loaded.
             Loaded += async (_, _) =>
             {
-                if (DataContext is ViewModelWindowOSMMBulkLoad vm)
+                if (DataContext is ViewModelWindowBulkLoad vm)
                     await vm.LoadAsync();
             };
         }

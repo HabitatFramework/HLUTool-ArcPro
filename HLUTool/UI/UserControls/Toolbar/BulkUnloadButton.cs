@@ -28,7 +28,7 @@ namespace HLU.UI.UserControls.Toolbar
     /// Button implementation that removes the currently selected registered GIS features from the
     /// HLU layer, deletes their shadow map-match rows, and cleans up any orphaned INCID records.
     /// </summary>
-    internal class OSMMBulkUnloadButton : Button
+    internal class BulkUnloadButton : Button
     {
         #region Fields
 
@@ -38,7 +38,7 @@ namespace HLU.UI.UserControls.Toolbar
 
         #region Constructor
 
-        public OSMMBulkUnloadButton()
+        public BulkUnloadButton()
         {
             DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
             if (pane == null)
@@ -79,10 +79,14 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            Enabled = _viewModel.CanOSMMUnload &&
+            Enabled = _viewModel.CanBulkUnload &&
                       _viewModel.GridMainVisibility == Visibility.Visible;
 
-            DisabledTooltip = "Unavailable when:\n\u2022 The tool is not in normal update mode\n\u2022 No reason or process are selected\n\u2022 No registered features are selected on the map\n\u2022 The main window is not visible";
+            DisabledTooltip = "Unavailable when:\n" +
+                "\u2022 The tool is not in normal update mode\n" +
+                "\u2022 No reason or process are selected\n" +
+                "\u2022 No registered features are selected on the map\n" +
+                "\u2022 The main window is not visible";
         }
 
         #endregion Overrides

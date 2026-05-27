@@ -52,14 +52,23 @@ namespace HLU.UI.ViewModel
     /// the GIS features are used to populate the new INCID records. A history entry is written
     /// for every registered feature.</para>
     /// </summary>
-    internal class ViewModelWindowMainOSMMBulkLoadUnload
+    internal class ViewModelWindowMainBulkLoadUnload
     {
         #region Fields
 
         private readonly ViewModelWindowMain _viewModelMain;
 
-        /// <summary>Field mapping chosen by the user in the OSMM Bulk Load setup dialog.</summary>
+        /// <summary>Field mapping chosen by the user in the Bulk Load setup dialog.</summary>
         private OsmmFieldMapping _fieldMapping;
+
+        /// <summary>Output workspace for the staging layer (folder for shapefile, .gdb path for geodatabase).</summary>
+        private string _outputWorkspace;
+
+        /// <summary>Output feature class name for the staging layer (including .shp for shapefiles).</summary>
+        private string _outputFeatureClassName;
+
+        /// <summary>True to load only selected features; false to load all features.</summary>
+        private bool _selectedOnly;
 
         /// <summary>Width of formatted fragment ID strings (e.g. 5 → "00001").</summary>
         private const int FragIdWidth = 5;
@@ -71,7 +80,7 @@ namespace HLU.UI.ViewModel
 
         #region Constructor
 
-        public ViewModelWindowMainOSMMBulkLoadUnload(ViewModelWindowMain viewModelMain)
+        public ViewModelWindowMainBulkLoadUnload(ViewModelWindowMain viewModelMain)
         {
             _viewModelMain = viewModelMain;
         }
@@ -122,8 +131,8 @@ namespace HLU.UI.ViewModel
                 ?? [];
             string activeName = _viewModelMain.ActiveLayerName;
 
-            var vm = new ViewModelWindowOSMMBulkUnload(availableNames, activeName);
-            var window = new WindowOSMMBulkUnload
+            var vm = new ViewModelWindowBulkUnload(availableNames, activeName);
+            var window = new WindowBulkUnload
             {
                 Owner = FrameworkApplication.Current.MainWindow,
                 WindowStartupLocation = WindowStartupLocation.CenterOwner,
@@ -489,32 +498,42 @@ namespace HLU.UI.ViewModel
         #region Load
 
         /// <summary>
-        /// Validates that the current selection is suitable for an OSMM bulk load operation and, if so,
+        /// Validates that the current selection is suitable for a bulk load operation and, if so,
         /// performs the load. Each selected new (null-INCID) feature is registered under its own new
         /// INCID, using habitat attributes already present on the GIS feature.
         /// </summary>
         /// <param name="fieldMapping">
-        /// The layer name and field-name mapping chosen by the user in the OSMM Bulk Load setup dialog.
+        /// The layer name and field-name mapping chosen by the user in the Bulk Load setup dialog.
         /// These map the input layer's fields to the five <c>lut_osmm_habitat_xref</c> lookup columns
         /// (<c>make</c>, <c>desc_group</c>, <c>desc_term</c>, <c>theme</c>, <c>feat_code</c>).
         /// </param>
+        /// <param name="outputWorkspace">The output workspace path (folder for shapefiles, .gdb path for geodatabase).</param>
+        /// <param name="outputFeatureClassName">The output feature class name (including .shp for shapefiles).</param>
+        /// <param name="selectedOnly">True to load only selected features; false to load all features.</param>
         /// <returns>A tuple of (success, featureCount, incidCount).</returns>
-        internal async Task<(bool success, int featureCount, int incidCount)> OSMMLoadAsync(OsmmFieldMapping fieldMapping)
+        internal async Task<(bool success, int featureCount, int incidCount)> OSMMLoadAsync(
+            OsmmFieldMapping fieldMapping,
+            string outputWorkspace,
+            string outputFeatureClassName,
+            bool selectedOnly)
         {
             _fieldMapping = fieldMapping;
+            _outputWorkspace = outputWorkspace;
+            _outputFeatureClassName = outputFeatureClassName;
+            _selectedOnly = selectedOnly;
 
             // If the user specified an output path, delete any pre-existing dataset there
             // before starting the load so that the copy step at the end succeeds cleanly.
-            if (!string.IsNullOrEmpty(_fieldMapping?.OutputWorkspace) &&
-                !string.IsNullOrEmpty(_fieldMapping?.OutputFeatureClassName))
+            if (!string.IsNullOrEmpty(_outputWorkspace) &&
+                !string.IsNullOrEmpty(_outputFeatureClassName))
             {
                 bool outputExists = await ArcGISProHelpers.FeatureClassExistsAsync(
-                    _fieldMapping.OutputWorkspace, _fieldMapping.OutputFeatureClassName);
+                    _outputWorkspace, _outputFeatureClassName);
 
                 if (outputExists)
                 {
                     string fullOutputPath = System.IO.Path.Combine(
-                        _fieldMapping.OutputWorkspace, _fieldMapping.OutputFeatureClassName);
+                        _outputWorkspace, _outputFeatureClassName);
 
                     bool deleted = await ArcGISProHelpers.DeleteFeatureClassAsync(fullOutputPath);
                     if (!deleted)
@@ -653,7 +672,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Performs the OSMM Bulk load: registers each selected null-INCID feature under its own new INCID,
+        /// Performs the Bulk load: registers each selected null-INCID feature under its own new INCID,
         /// mirroring the separate-INCID variant of the feature-insert workflow but using
         /// <see cref="Operations.OSMMLoad"/> as the history operation code.
         /// </summary>
@@ -668,7 +687,7 @@ namespace HLU.UI.ViewModel
 
             EditOperation editOperation = new()
             {
-                Name = "OSMM Bulk Load GIS Features"
+                Name = "Bulk Load GIS Features"
             };
 
             bool gisExecuted = false;
@@ -895,7 +914,7 @@ namespace HLU.UI.ViewModel
 
                 string exMessage = DbBase.GetSqlErrorMessage(ex);
                 MessageBox.Show(
-                    $"OSMM Bulk Load failed. The error message returned was:\n\n{exMessage}",
+                    $"Bulk Load failed. The error message returned was:\n\n{exMessage}",
                     "HLU: Bulk Load Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -908,11 +927,11 @@ namespace HLU.UI.ViewModel
                     await _viewModelMain.GetMapSelectionAsync(false);
 
                     // Create the HLU-schema staging output from the loaded OSMM features.
-                    if (!string.IsNullOrEmpty(_fieldMapping?.OutputWorkspace) &&
-                        !string.IsNullOrEmpty(_fieldMapping?.OutputFeatureClassName))
+                    if (!string.IsNullOrEmpty(_outputWorkspace) &&
+                        !string.IsNullOrEmpty(_outputFeatureClassName))
                     {
                         string fullOutputPath = System.IO.Path.Combine(
-                            _fieldMapping.OutputWorkspace, _fieldMapping.OutputFeatureClassName);
+                            _outputWorkspace, _outputFeatureClassName);
 
                         _viewModelMain.ChangeCursor(Cursors.Wait, "Creating staging output layer ...");
 
@@ -922,8 +941,8 @@ namespace HLU.UI.ViewModel
                         if (!created)
                         {
                             MessageBox.Show(
-                                $"The OSMM bulk load completed successfully, but the staging output layer could not be created at:\n\n{fullOutputPath}\n\nYou can manually export the source layer if required.",
-                                "HLU: OSMM Bulk Load - Output Warning",
+                                $"The bulk load completed successfully, but the staging output layer could not be created at:\n\n{fullOutputPath}\n\nYou can manually export the source layer if required.",
+                                "HLU: Bulk Load - Output Warning",
                                 MessageBoxButton.OK,
                                 MessageBoxImage.Warning);
                         }

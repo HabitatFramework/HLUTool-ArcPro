@@ -968,12 +968,12 @@ namespace HLU.Properties {
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("hlu_osmm_staging")]
         [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public string DefaultOSMMBulkLoadLayer {
+        public string DefaultBulkLoadLayer {
             get {
-                return ((string)(this["DefaultOSMMBulkLoadLayer"]));
+                return ((string)(this["DefaultBulkLoadLayer"]));
             }
             set {
-                this["DefaultOSMMBulkLoadLayer"] = value;
+                this["DefaultBulkLoadLayer"] = value;
             }
         }
     }

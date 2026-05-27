@@ -293,7 +293,7 @@
     <Setting Name="ResetDbConnection" Roaming="true" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="DefaultOSMMBulkLoadLayer" Roaming="true" Type="System.String" Scope="User">
+    <Setting Name="DefaultBulkLoadLayer" Roaming="true" Type="System.String" Scope="User">
       <Value Profile="(Default)">hlu_osmm_staging</Value>
     </Setting>
   </Settings>

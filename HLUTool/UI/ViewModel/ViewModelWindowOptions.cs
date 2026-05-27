@@ -103,7 +103,7 @@ namespace HLU.UI.ViewModel
         private bool _resetOSMMUpdatesStatus;
 
         // Application Bulk Update options
-        private string _defaultOSMMBulkLoadLayer;
+        private string _defaultBulkLoadLayer;
         private bool _bulkDeleteOrphanBapHabitats;
 
         private bool _bulkDeletePotentialBapHabitats;
@@ -232,7 +232,7 @@ namespace HLU.UI.ViewModel
             _resetOSMMUpdatesStatus = _addInSettings.ResetOSMMUpdatesStatus;
 
             // Set the application bulk Update options
-            _defaultOSMMBulkLoadLayer = _addInSettings.DefaultOSMMBulkLoadLayer;
+            _defaultBulkLoadLayer = _addInSettings.DefaultBulkLoadLayer;
             _bulkDeleteOrphanBapHabitats = _addInSettings.BulkUpdateDeleteOrphanBapHabitats;
             _bulkDeletePotentialBapHabitats = _addInSettings.BulkUpdateDeletePotentialBapHabitats;
             _bulkDeleteIHSCodes = _addInSettings.BulkUpdateDeleteIHSCodes;
@@ -756,7 +756,7 @@ namespace HLU.UI.ViewModel
             _addInSettings.BulkUpdateDeterminationQuality = _bulkDeterminationQuality;
             _addInSettings.BulkUpdateInterpretationQuality = _bulkInterpretationQuality;
             _addInSettings.BulkOSMMSourceId = (int)_bulkOSMMSourceId;
-            _addInSettings.DefaultOSMMBulkLoadLayer = _defaultOSMMBulkLoadLayer;
+            _addInSettings.DefaultBulkLoadLayer = _defaultBulkLoadLayer;
 
             // Save changes back to XML in main window.
             _viewModelMain.SaveAddInSettings(_addInSettings);
@@ -2350,26 +2350,26 @@ namespace HLU.UI.ViewModel
 
         #endregion User Updates
 
-        #region App Bulk Update - OSMM Bulk Load
+        #region App Bulk Update - Bulk Load
 
         /// <summary>
-        /// Gets or sets the default staging layer name used when bulk loading OSMM data.
+        /// Gets or sets the default staging layer name used when bulk loading data.
         /// </summary>
-        public string DefaultOSMMBulkLoadLayer
+        public string DefaultBulkLoadLayer
         {
             get
             {
-                return _defaultOSMMBulkLoadLayer;
+                return _defaultBulkLoadLayer;
             }
             set
             {
-                _defaultOSMMBulkLoadLayer = value;
-                OnPropertyChanged(nameof(DefaultOSMMBulkLoadLayer));
+                _defaultBulkLoadLayer = value;
+                OnPropertyChanged(nameof(DefaultBulkLoadLayer));
                 NotifyNavigationItemErrorsChanged();
             }
         }
 
-        #endregion App Bulk Update - OSMM Bulk Load
+        #endregion App Bulk Update - Bulk Load
 
         #region User SQL
 

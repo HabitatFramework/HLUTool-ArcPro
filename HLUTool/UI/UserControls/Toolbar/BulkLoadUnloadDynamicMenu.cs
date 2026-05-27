@@ -19,17 +19,15 @@
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using HLU.UI.ViewModel;
-using System;
 using System.Windows;
 
 namespace HLU.UI.UserControls.Toolbar
 {
     /// <summary>
-    /// Button implementation that registers each currently selected new (null-INCID) GIS feature
-    /// under its own new INCID, using habitat attributes already on the feature, and tags history
-    /// with the OSMMLoad operation code.
+    /// Dynamic menu that hosts the Bulk Unload and Load buttons. The menu is enabled when either
+    /// operation can be performed.
     /// </summary>
-    internal class OSMMBulkLoadButton : Button
+    internal sealed class BulkLoadUnloadDynamicMenu : DynamicMenu
     {
         #region Fields
 
@@ -39,7 +37,7 @@ namespace HLU.UI.UserControls.Toolbar
 
         #region Constructor
 
-        public OSMMBulkLoadButton()
+        public BulkLoadUnloadDynamicMenu()
         {
             DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
             if (pane == null)
@@ -51,18 +49,6 @@ namespace HLU.UI.UserControls.Toolbar
         #endregion Constructor
 
         #region Overrides
-
-        protected override async void OnClick()
-        {
-            try
-            {
-                await _viewModel.OSMMLoadAsync();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine(ex);
-            }
-        }
 
         protected override void OnUpdate()
         {
@@ -80,10 +66,20 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            Enabled = _viewModel.CanOSMMLoad &&
+            Enabled = _viewModel.CanBulkLoadUnload &&
                       _viewModel.GridMainVisibility == Visibility.Visible;
 
-            DisabledTooltip = "Unavailable when:\n\u2022 The tool is not in normal update mode\n\u2022 The main window is not visible";
+            DisabledTooltip = "Unavailable when:\n" +
+                "\u2022 The tool is not in normal update mode\n" +
+                "\u2022 No reason or process are selected\n" +
+                "\u2022 No suitable features are selected on the map\n" +
+                "\u2022 The main window is not visible";
+        }
+
+        protected override void OnPopup()
+        {
+            AddReference("HLUTool_btnBulkUnload");
+            AddReference("HLUTool_btnBulkLoad");
         }
 
         #endregion Overrides

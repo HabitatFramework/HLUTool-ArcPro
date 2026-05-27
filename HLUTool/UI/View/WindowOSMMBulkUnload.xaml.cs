@@ -21,11 +21,11 @@ using ArcGIS.Desktop.Framework.Controls;
 namespace HLU.UI.View
 {
     /// <summary>
-    /// Interaction logic for WindowOSMMBulkUnload.xaml
+    /// Interaction logic for WindowBulkUnload.xaml
     /// </summary>
-    public partial class WindowOSMMBulkUnload : ProWindow
+    public partial class WindowBulkUnload : ProWindow
     {
-        public WindowOSMMBulkUnload()
+        public WindowBulkUnload()
         {
             InitializeComponent();
         }

@@ -302,7 +302,11 @@ namespace HLU.UI.ViewModel
             }
             set
             {
-                _exportID = value;
+                if (_exportID != value)
+                {
+                    _exportID = value;
+                    OnPropertyChanged(nameof(ExportID));
+                }
             }
         }
 

@@ -201,7 +201,7 @@
 
             <Expander
                 Margin="6,10,0,0"
-                Header="OSMM Bulk Load Defaults"
+                Header="Bulk Load Defaults"
                 IsExpanded="True">
 
                 <Grid Margin="12,4,4,2" HorizontalAlignment="Left">
@@ -211,7 +211,7 @@
                     </Grid.RowDefinitions>
 
                     <Grid
-                        x:Name="GridOSMMBulkLoadLayer"
+                        x:Name="GridBulkLoadLayer"
                         Grid.Row="0"
                         HorizontalAlignment="Left">
 
@@ -222,21 +222,21 @@
                         </Grid.ColumnDefinitions>
 
                         <Label
-                            x:Name="LabelOSMMBulkLoadLayer"
+                            x:Name="LabelBulkLoadLayer"
                             Grid.Column="0"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Center"
                             Content="Default staging layer name" />
                         <TextBox
-                            x:Name="TextBoxOSMMBulkLoadLayer"
+                            x:Name="TextBoxBulkLoadLayer"
                             Grid.Column="1"
                             BorderThickness="1"
-                            Text="{Binding DefaultOSMMBulkLoadLayer, UpdateSourceTrigger=PropertyChanged}"
+                            Text="{Binding DefaultBulkLoadLayer, UpdateSourceTrigger=PropertyChanged}"
                             ToolTip="The default name of the staging layer in the current map that contains the new OSMM features to bulk load." />
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="5,0,0,0"
-                            Description="The default name of the staging layer in the current map that contains the new OSMM features to bulk load. This will be pre-selected in the OSMM bulk load dialog."
+                            Description="The default name of the staging layer in the current map that contains the new OSMM features to bulk load. This will be pre-selected in the bulk load dialog."
                             Header="Default OSMM Staging Layer Name" />
                     </Grid>
                 </Grid>

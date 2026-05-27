@@ -54,7 +54,7 @@ namespace HLU.UI.ViewModel
     /// Presents the user with a checklist of valid HLU layers so they can choose
     /// which layers to include in the unload operation.
     /// </summary>
-    internal class ViewModelWindowOSMMBulkUnload : ViewModelBase
+    internal class ViewModelWindowBulkUnload : ViewModelBase
     {
         #region Fields
 
@@ -72,7 +72,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="availableLayerNames">All valid HLU layer names in the current map.</param>
         /// <param name="activeLayerName">The currently active HLU layer name (pre-checked).</param>
-        public ViewModelWindowOSMMBulkUnload(IEnumerable<string> availableLayerNames, string activeLayerName)
+        public ViewModelWindowBulkUnload(IEnumerable<string> availableLayerNames, string activeLayerName)
         {
             Layers = new ObservableCollection<OsmmUnloadLayerItem>(
                 (availableLayerNames ?? [])
