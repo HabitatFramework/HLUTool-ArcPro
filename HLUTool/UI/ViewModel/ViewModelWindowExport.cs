@@ -360,7 +360,9 @@ namespace HLU.UI.ViewModel
                         _selectedNumber.ToString("N0"),
                         _totalCount.ToString("N0"),
                         _totalCount > 1 ? "s" : String.Empty)
-                    : String.Empty;
+                    : String.Format("({0} feature{1})",
+                        _totalCount.ToString("N0"),
+                        _totalCount > 1 ? "s" : String.Empty);
             }
         }
 
