@@ -2238,8 +2238,8 @@ namespace HLU.UI.ViewModel
             if (string.IsNullOrEmpty(exportPath) || !System.IO.Directory.Exists(exportPath))
                 exportPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
-            // Prompt the user for the output location and feature class name.
-            var exportDetails = await GISApplication.ExportPromptAsync(
+            // Prompt the user for the staging layer output location and feature class name.
+            var exportDetails = await GISApplication.BulkLoadPromptAsync(
                 exportPath,
                 outputType == ViewModelWindowBulkLoad.OutputType.FileGeodatabase);
 

@@ -3706,6 +3706,100 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
+        /// Prompts the user for the bulk load staging layer location and feature class name.
+        /// The output format is already known from the Bulk Load window, so the
+        /// appropriate dialog is shown directly without a format-chooser step.
+        /// For the GDB branch a single combined dialog collects both the
+        /// target geodatabase path and the feature class name.
+        /// </summary>
+        /// <param name="initialDirectory">
+        /// The initial directory for the dialogs.
+        /// Falls back to the project home folder, then My Documents.
+        /// </param>
+        /// <param name="isGdb">
+        /// True to show the File Geodatabase combined dialog;
+        /// false to show the Shapefile Save dialog.
+        /// </param>
+        /// <returns>
+        /// A tuple of (outputWorkspace, outputFeatureClassName),
+        /// both null if the user cancels.
+        /// </returns>
+        public async Task<(string outputWorkspace, string outputFeatureClassName)>
+            BulkLoadPromptAsync(string initialDirectory, bool isGdb = false)
+        {
+            string outputWorkspace = null;
+            string outputFeatureClassName = null;
+
+            await FrameworkApplication.Current.Dispatcher.InvokeAsync(() =>
+            {
+                // Resolve the initial directory with fallback logic.
+                string dialogInitialDir = initialDirectory;
+
+                if (String.IsNullOrWhiteSpace(dialogInitialDir))
+                    dialogInitialDir = Project.Current?.HomeFolderPath;
+
+                if (String.IsNullOrWhiteSpace(dialogInitialDir))
+                    dialogInitialDir = Environment.GetFolderPath(
+                        Environment.SpecialFolder.MyDocuments);
+
+                if (!isGdb)
+                {
+                    // ── Shapefile branch ──────────────────────────────────
+                    SaveFileDialog shpDialog = new()
+                    {
+                        Title = "Staging Layer – Shapefile",
+                        Filter = "Shapefile (*.shp)|*.shp",
+                        DefaultExt = "shp",
+                        FileName = "HLU_BulkLoad",
+                        InitialDirectory = dialogInitialDir
+                    };
+
+                    if (shpDialog.ShowDialog() != true)
+                        return;
+
+                    string shpPath = shpDialog.FileName;
+
+                    if (!shpPath.EndsWith(".shp", StringComparison.OrdinalIgnoreCase))
+                        shpPath += ".shp";
+
+                    outputWorkspace = System.IO.Path.GetDirectoryName(shpPath);
+                    outputFeatureClassName = System.IO.Path.GetFileName(shpPath);
+                    return;
+                }
+
+                // ── GDB branch ────────────────────────────────────────────
+                // A single combined dialog collects both the .gdb workspace
+                // path (via an inline Browse button) and the feature class name.
+                // This avoids the confusing two-dialog sequence.
+
+                // If the initial directory is itself a .gdb, pre-populate it.
+                string initialGdbPath =
+                    dialogInitialDir.EndsWith(".gdb", StringComparison.OrdinalIgnoreCase) &&
+                    System.IO.Directory.Exists(dialogInitialDir)
+                        ? dialogInitialDir
+                        : String.Empty;
+
+                string initialFeatureName = String.IsNullOrWhiteSpace(initialGdbPath)
+                    ? "HLU_BulkLoad"
+                    : System.IO.Path.GetFileNameWithoutExtension(initialGdbPath);
+
+                var (gdbPath, featureClassName) = PromptForGdbBulkLoad(
+                    initialGdbPath,
+                    initialFeatureName,
+                    dialogInitialDir);
+
+                if (String.IsNullOrWhiteSpace(gdbPath) ||
+                    String.IsNullOrWhiteSpace(featureClassName))
+                    return;
+
+                outputWorkspace = gdbPath;
+                outputFeatureClassName = featureClassName;
+            });
+
+            return (outputWorkspace, outputFeatureClassName);
+        }
+
+        /// <summary>
         /// Shows a single combined dialog that lets the user choose a File
         /// Geodatabase workspace and enter a feature class name.
         /// </summary>
@@ -3729,6 +3823,43 @@ namespace HLU.GISApplication
                 string browserInitialDir)
         {
             var dialog = new HLU.UI.View.WindowGdbExport(
+                initialGdbPath,
+                initialFeatureName)
+            {
+                Owner = FrameworkApplication.Current.MainWindow
+            };
+
+            bool? result = dialog.ShowDialog();
+
+            return result == true
+                ? (dialog.GdbPath, dialog.FeatureClassName)
+                : (String.Empty, String.Empty);
+        }
+
+        /// <summary>
+        /// Shows a single combined dialog that lets the user choose a File
+        /// Geodatabase workspace and enter a feature class name for bulk load staging.
+        /// </summary>
+        /// <param name="initialGdbPath">
+        /// Pre-populated .gdb folder path, or empty string for none.
+        /// </param>
+        /// <param name="initialFeatureName">
+        /// Pre-populated feature class name suggestion.
+        /// </param>
+        /// <param name="browserInitialDir">
+        /// The directory the folder browser opens in when Browse is clicked.
+        /// Unused — the window derives the start directory from the GDB path.
+        /// </param>
+        /// <returns>
+        /// A tuple of (gdbPath, featureClassName); both empty if cancelled.
+        /// </returns>
+        private static (string gdbPath, string featureClassName)
+            PromptForGdbBulkLoad(
+                string initialGdbPath,
+                string initialFeatureName,
+                string browserInitialDir)
+        {
+            var dialog = new HLU.UI.View.WindowGdbBulkLoad(
                 initialGdbPath,
                 initialFeatureName)
             {

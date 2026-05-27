@@ -219,11 +219,11 @@ namespace HLU.UI.ViewModel
 
                 // Return "X of Y features" if there is a selection, otherwise just "Y features".
                 return HaveSelection
-                    ? String.Format("{0} of {1} feature{2}",
+                    ? String.Format("({0} of {1} feature{2})",
                         _selectedNumber.ToString("N0"),
                         _totalCount.ToString("N0"),
                         _totalCount > 1 ? "s" : String.Empty)
-                    : String.Format("{0} feature{1}",
+                    : String.Format("({0} feature{1})",
                         _totalCount.ToString("N0"),
                         _totalCount > 1 ? "s" : String.Empty);
             }
