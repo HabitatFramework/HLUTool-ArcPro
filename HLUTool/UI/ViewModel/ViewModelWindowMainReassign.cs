@@ -16,8 +16,13 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using ArcGIS.Desktop.Framework.Dialogs;
+using ArcGIS.Desktop.Framework;
 using HLU.Enums;
+using HLU.UI.View;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
 {
@@ -29,6 +34,9 @@ namespace HLU.UI.ViewModel
         #region Fields
 
         private readonly ViewModelWindowMain _viewModelMain;
+
+        private WindowReassign _windowReassign;
+        private ViewModelWindowReassign _viewModelReassign;
 
         #endregion Fields
 
@@ -48,7 +56,7 @@ namespace HLU.UI.ViewModel
         #region Methods
 
         /// <summary>
-        /// Initiates the reassign features process.
+        /// Initiates the reassign features process by opening the Reassign dialog.
         /// </summary>
         public void InitiateReassign()
         {
@@ -64,12 +72,81 @@ namespace HLU.UI.ViewModel
                 return;
             }
 
-            // TODO: implement the full reassign dialog and process in a future iteration.
-            MessageBox.Show(
-                "The Reassign Features process is not yet implemented.",
-                "HLU: Reassign Features",
-                System.Windows.MessageBoxButton.OK,
-                System.Windows.MessageBoxImage.Information);
+            // Build the list of target layers: all available HLU layers except the active source layer.
+            string sourceLayerName = _viewModelMain.ActiveLayerName;
+            List<string> targetLayerNames = _viewModelMain.AvailableHLULayerNames
+                .Where(n => n != sourceLayerName)
+                .ToList();
+
+            if (targetLayerNames.Count == 0)
+            {
+                MessageBox.Show(
+                    "No other HLU layers are available to reassign features to.\n\n" +
+                    "Please ensure at least two HLU layers are present in the active map.",
+                    "HLU: Reassign Features",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Exclamation);
+                return;
+            }
+
+            // Get the reassign rules configured in the options.
+            List<ReassignRule> rules = _viewModelMain.AddInSettings?.ReassignRules ?? [];
+
+            if (rules.Count == 0)
+            {
+                MessageBox.Show(
+                    "No reassign rules have been configured.\n\n" +
+                    "Please add at least one rule in Options ? Application ? Reassign.",
+                    "HLU: Reassign Features",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Exclamation);
+                return;
+            }
+
+            // Open the Reassign dialog.
+            _windowReassign = new WindowReassign
+            {
+                Owner = FrameworkApplication.Current.MainWindow,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Topmost = true
+            };
+
+            _viewModelReassign = new ViewModelWindowReassign(
+                sourceLayerName,
+                targetLayerNames,
+                rules,
+                featureCount: 0)
+            {
+                DisplayName = "Reassign Features"
+            };
+
+            // Guard against double subscription.
+            _viewModelReassign.RequestClose -= ViewModelReassign_RequestClose;
+            _viewModelReassign.RequestClose +=
+                new ViewModelWindowReassign.RequestCloseEventHandler(ViewModelReassign_RequestClose);
+
+            _windowReassign.DataContext = _viewModelReassign;
+            _windowReassign.ShowDialog();
+        }
+
+        /// <summary>
+        /// Handles the RequestClose event from the Reassign dialog.
+        /// </summary>
+        /// <param name="targetLayerName">The selected target layer, or <see langword="null"/> if cancelled.</param>
+        /// <param name="rule">The selected reassign rule, or <see langword="null"/> if cancelled.</param>
+        private void ViewModelReassign_RequestClose(string targetLayerName, ReassignRule rule)
+        {
+            _viewModelReassign.RequestClose -= ViewModelReassign_RequestClose;
+            _windowReassign.Close();
+
+            // Cancelled.
+            if (targetLayerName == null || rule == null)
+                return;
+
+            // TODO: implement the actual feature reassignment logic using targetLayerName and rule.
+            _viewModelMain.ShowInfo(
+                $"Reassign Features: rule '{rule.RuleName}' ? layer '{targetLayerName}' (not yet implemented).",
+                MessageCategory.Update);
         }
 
         #endregion Methods
