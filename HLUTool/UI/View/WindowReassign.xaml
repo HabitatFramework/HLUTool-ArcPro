@@ -49,6 +49,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -118,10 +119,33 @@
                         ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
                         Validation.ErrorTemplate="{StaticResource ErrorTemplate}" />
 
+                    <!--  Where Clause  -->
+                    <Label
+                        Name="LabelWhereClause"
+                        Grid.Row="3"
+                        Grid.Column="0"
+                        Margin="0,0,0,8"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Top">
+                        Where Clause
+                    </Label>
+                    <TextBox
+                        Name="TextBoxWhereClause"
+                        Grid.Row="3"
+                        Grid.Column="1"
+                        Margin="8,0,8,8"
+                        IsEnabled="False"
+                        MinWidth="240"
+                        MaxWidth="400"
+                        MaxHeight="80"
+                        TextWrapping="Wrap"
+                        VerticalScrollBarVisibility="Auto"
+                        Text="{Binding WhereClauseText}" />
+
                     <!--  Feature Count  -->
                     <Label
                         Name="LabelFeatureCount"
-                        Grid.Row="3"
+                        Grid.Row="4"
                         Grid.Column="0"
                         Margin="0,0,0,2"
                         HorizontalAlignment="Right"
@@ -130,7 +154,7 @@
                     </Label>
                     <TextBox
                         Name="TextBoxFeatureCount"
-                        Grid.Row="3"
+                        Grid.Row="4"
                         Grid.Column="1"
                         Margin="8,0,8,2"
                         IsEnabled="False"

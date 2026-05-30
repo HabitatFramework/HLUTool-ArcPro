@@ -1177,6 +1177,29 @@ namespace HLU.GISApplication
             }).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Counts the features in the active HLU layer that match the supplied SQL WHERE clause,
+        /// without modifying the map selection.
+        /// </summary>
+        /// <param name="whereClause">
+        /// The SQL WHERE clause to apply. Pass <see langword="null"/> or an empty string to count
+        /// all features.
+        /// </param>
+        /// <returns>
+        /// A task whose result is the number of matching features, or -1 if no active layer is set.
+        /// </returns>
+        public async Task<int> CountFeaturesMatchingWhereClauseAsync(string whereClause)
+        {
+            if (_hluFeatureClass == null)
+                return -1;
+
+            return await QueuedTask.Run(() =>
+            {
+                QueryFilter qf = new() { WhereClause = whereClause ?? string.Empty };
+                return (int)_hluFeatureClass.GetCount(qf);
+            }).ConfigureAwait(false);
+        }
+
         #endregion Selection
 
         #region Expected Count

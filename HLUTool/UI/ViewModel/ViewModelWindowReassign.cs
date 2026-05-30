@@ -19,6 +19,7 @@ using HLU.Data;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace HLU.UI.ViewModel
@@ -38,7 +39,14 @@ namespace HLU.UI.ViewModel
         private string _targetLayerName;
         private readonly List<ReassignRule> _rules;
         private ReassignRule _selectedRule;
-        private readonly int _featureCount;
+        private int _featureCount = -1;
+        private bool _isCountingFeatures;
+
+        /// <summary>
+        /// Async delegate supplied by the orchestrator that counts features matching a WHERE clause
+        /// on the active source layer.
+        /// </summary>
+        private readonly Func<string, Task<int>> _countFeaturesAsync;
 
         private string _displayName = "Reassign Features";
 
@@ -52,17 +60,20 @@ namespace HLU.UI.ViewModel
         /// <param name="sourceLayerName">Name of the currently active HLU layer.</param>
         /// <param name="targetLayerNames">All valid HLU layer names (excluding the source layer).</param>
         /// <param name="rules">Reassign rules configured in the options.</param>
-        /// <param name="featureCount">Number of features that will be reassigned.</param>
+        /// <param name="countFeaturesAsync">
+        /// Async delegate that, given a SQL WHERE clause, returns the number of matching features
+        /// in the source layer.
+        /// </param>
         public ViewModelWindowReassign(
             string sourceLayerName,
             List<string> targetLayerNames,
             List<ReassignRule> rules,
-            int featureCount)
+            Func<string, Task<int>> countFeaturesAsync)
         {
             _sourceLayerName = sourceLayerName;
             _targetLayerNames = targetLayerNames;
             _rules = rules;
-            _featureCount = featureCount;
+            _countFeaturesAsync = countFeaturesAsync;
         }
 
         #endregion Constructor
@@ -108,7 +119,7 @@ namespace HLU.UI.ViewModel
         }
 
         private bool CanOk =>
-            !string.IsNullOrEmpty(_targetLayerName) && _selectedRule != null;
+            !string.IsNullOrEmpty(_targetLayerName) && _selectedRule != null && !_isCountingFeatures;
 
         #endregion Ok Command
 
@@ -168,7 +179,7 @@ namespace HLU.UI.ViewModel
         public List<ReassignRule> Rules => _rules;
 
         /// <summary>
-        /// Gets or sets the selected reassign rule.
+        /// Gets or sets the selected reassign rule. Automatically triggers a feature count refresh.
         /// </summary>
         public ReassignRule SelectedRule
         {
@@ -179,17 +190,71 @@ namespace HLU.UI.ViewModel
                 {
                     _selectedRule = value;
                     OnPropertyChanged(nameof(SelectedRule));
+                    OnPropertyChanged(nameof(WhereClauseText));
+                    _ = RefreshFeatureCountAsync(value);
                 }
             }
         }
 
         /// <summary>
-        /// Gets the feature count text to display.
+        /// Gets the SQL WHERE clause of the currently selected rule, or an empty string if none is selected.
         /// </summary>
-        public string FeatureCountText =>
-            _featureCount > 0 ? _featureCount.ToString("N0") : "All";
+        public string WhereClauseText =>
+            _selectedRule?.WhereClause ?? string.Empty;
+
+        /// <summary>
+        /// Gets the feature count text to display. Shows a counting indicator while the query runs.
+        /// </summary>
+        public string FeatureCountText
+        {
+            get
+            {
+                if (_isCountingFeatures)
+                    return "Counting…";
+                if (_featureCount < 0)
+                    return string.Empty;
+                return _featureCount.ToString("N0");
+            }
+        }
 
         #endregion Control Properties
+
+        #region Feature Count
+
+        /// <summary>
+        /// Queries the source layer for the number of features matching the selected rule's WHERE
+        /// clause, then updates <see cref="FeatureCountText"/>.
+        /// </summary>
+        private async Task RefreshFeatureCountAsync(ReassignRule rule)
+        {
+            if (_countFeaturesAsync == null || rule == null)
+            {
+                _featureCount = -1;
+                _isCountingFeatures = false;
+                OnPropertyChanged(nameof(FeatureCountText));
+                return;
+            }
+
+            _isCountingFeatures = true;
+            OnPropertyChanged(nameof(FeatureCountText));
+
+            try
+            {
+                int count = await _countFeaturesAsync(rule.WhereClause);
+                _featureCount = count;
+            }
+            catch
+            {
+                _featureCount = -1;
+            }
+            finally
+            {
+                _isCountingFeatures = false;
+                OnPropertyChanged(nameof(FeatureCountText));
+            }
+        }
+
+        #endregion Feature Count
 
         #region IDataErrorInfo
 

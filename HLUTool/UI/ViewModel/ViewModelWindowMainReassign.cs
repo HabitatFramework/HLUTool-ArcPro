@@ -91,9 +91,6 @@ namespace HLU.UI.ViewModel
                 return;
             }
 
-            // Count how many features the rule will match so the dialog can display a preview count.
-            int featureCount = 0;
-
             // Get the reassign rules configured in the options.
             List<ReassignRule> rules = _viewModelMain.AddInSettings?.ReassignRules ?? [];
 
@@ -120,7 +117,8 @@ namespace HLU.UI.ViewModel
                 sourceLayerName,
                 targetLayerNames,
                 rules,
-                featureCount: featureCount)
+                countFeaturesAsync: whereClause =>
+                    _viewModelMain.GISApplication.CountFeaturesMatchingWhereClauseAsync(whereClause))
             {
                 DisplayName = "Reassign Features"
             };
