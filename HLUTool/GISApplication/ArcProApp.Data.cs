@@ -4202,6 +4202,171 @@ namespace HLU.GISApplication
 
         #endregion Export
 
+        #region Reassign
+
+        /// <summary>
+        /// Copies all features from the active HLU layer that match <paramref name="whereClause"/>
+        /// into <paramref name="targetLayerName"/>, then deletes them from the source layer.
+        /// All edits are queued onto a single <see cref="EditOperation"/>; the caller is
+        /// responsible for executing and saving it.
+        /// </summary>
+        /// <param name="targetLayerName">The name of the destination HLU layer.</param>
+        /// <param name="whereClause">SQL WHERE clause used to select features to move.</param>
+        /// <param name="editOperation">The edit operation to queue edits onto.</param>
+        /// <returns>
+        /// A task whose result is the number of features moved, or -1 if the target layer
+        /// could not be found or the source layer is not set.
+        /// </returns>
+        public async Task<int> ReassignFeaturesAsync(
+            string targetLayerName,
+            string whereClause,
+            EditOperation editOperation)
+        {
+            ArgumentNullException.ThrowIfNull(editOperation);
+
+            if (_hluLayer == null || _hluFeatureClass == null)
+                return -1;
+
+            if (string.IsNullOrWhiteSpace(targetLayerName))
+                return -1;
+
+            // Locate the target feature layer in the active map.
+            FeatureLayer targetLayer = await FindLayerAsync(targetLayerName);
+            if (targetLayer == null)
+                return -1;
+
+            int movedCount = 0;
+
+            await QueuedTask.Run(() =>
+            {
+                // Get the target feature class.
+                FeatureClass targetFeatureClass = targetLayer.GetFeatureClass();
+                if (targetFeatureClass == null)
+                    return;
+
+                // Resolve field definitions for both source and target so we can map by name.
+                using FeatureClassDefinition sourceDef = _hluFeatureClass.GetDefinition();
+                using FeatureClassDefinition targetDef = targetFeatureClass.GetDefinition();
+
+                IReadOnlyList<Field> sourceFields = sourceDef.GetFields();
+                IReadOnlyList<Field> targetFields = targetDef.GetFields();
+
+                string sourceShapeField = sourceDef.GetShapeField();
+                string targetShapeField = targetDef.GetShapeField();
+
+                // Build a mapping: source field index → target field index, for all copyable fields.
+                // Exclude system/read-only fields (OID, shape length/area) and the shape field itself
+                // (geometry is copied explicitly via SetShape).
+                HashSet<string> skipFields = new(StringComparer.OrdinalIgnoreCase)
+                {
+                    sourceDef.GetObjectIDField(),
+                    sourceShapeField,
+                    "Shape_Length", "SHAPE_Length",
+                    "Shape_Area",   "SHAPE_Area",
+                    "GlobalID",     "GLOBALID"
+                };
+
+                // Map source field index → target field index for fields that exist in both layers.
+                List<(int SourceIdx, int TargetIdx)> fieldMap = [];
+
+                for (int si = 0; si < sourceFields.Count; si++)
+                {
+                    Field sf = sourceFields[si];
+                    if (skipFields.Contains(sf.Name))
+                        continue;
+
+                    // Find matching field in target by name (case-insensitive).
+                    for (int ti = 0; ti < targetFields.Count; ti++)
+                    {
+                        if (string.Equals(sf.Name, targetFields[ti].Name, StringComparison.OrdinalIgnoreCase))
+                        {
+                            fieldMap.Add((si, ti));
+                            break;
+                        }
+                    }
+                }
+
+                // Select source features matching the where clause.
+                QueryFilter qf = new() { WhereClause = whereClause ?? string.Empty };
+
+                // First pass: read source features and buffer their data.
+                // We cannot delete while iterating the same cursor.
+                List<(long Oid, Geometry Shape, List<(int TargetIdx, object Value)> FieldValues)> buffer = [];
+
+                using (RowCursor cursor = _hluFeatureClass.Search(qf, false))
+                {
+                    while (cursor.MoveNext())
+                    {
+                        using Feature sourceFeature = cursor.Current as Feature;
+                        if (sourceFeature == null)
+                            continue;
+
+                        long oid = sourceFeature.GetObjectID();
+                        Geometry shape = sourceFeature.GetShape();
+
+                        List<(int TargetIdx, object Value)> fieldValues = [];
+                        foreach ((int si, int ti) in fieldMap)
+                        {
+                            object val = sourceFeature[si];
+                            fieldValues.Add((ti, val));
+                        }
+
+                        buffer.Add((oid, shape, fieldValues));
+                    }
+                }
+
+                if (buffer.Count == 0)
+                    return;
+
+                Table sourceTable = _hluFeatureClass as Table;
+                Table targetTable = targetFeatureClass as Table;
+
+                // Queue all inserts into the target and deletes from the source in one callback.
+                editOperation.Callback(context =>
+                {
+                    // Insert into target.
+                    using InsertCursor insertCursor = targetFeatureClass.CreateInsertCursor();
+
+                    foreach ((long oid, Geometry shape, List<(int TargetIdx, object Value)> fieldValues) in buffer)
+                    {
+                        using RowBuffer rowBuffer = targetFeatureClass.CreateRowBuffer();
+
+                        // Copy attributes.
+                        foreach ((int targetIdx, object val) in fieldValues)
+                        {
+                            rowBuffer[targetIdx] = val ?? DBNull.Value;
+                        }
+
+                        // Copy geometry.
+                        if (shape != null && !string.IsNullOrEmpty(targetShapeField))
+                            rowBuffer[targetShapeField] = shape;
+
+                        insertCursor.Insert(rowBuffer);
+                    }
+
+                    insertCursor.Flush();
+
+                    // Delete from source.
+                    IReadOnlyList<long> oidsToDelete = [.. buffer.Select(b => b.Oid)];
+                    QueryFilter deleteFilter = new() { ObjectIDs = oidsToDelete };
+
+                    using RowCursor deleteCursor = _hluFeatureClass.Search(deleteFilter, false);
+                    while (deleteCursor.MoveNext())
+                    {
+                        using Row row = deleteCursor.Current;
+                        row.Delete();
+                        context.Invalidate(row);
+                    }
+                }, sourceTable, targetTable);
+
+                movedCount = buffer.Count;
+            });
+
+            return movedCount;
+        }
+
+        #endregion Reassign
+
         #region HLU Layer Management
 
         /// <summary>
