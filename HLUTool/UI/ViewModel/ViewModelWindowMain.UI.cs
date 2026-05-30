@@ -5698,6 +5698,28 @@ namespace HLU.UI.ViewModel
 
         #endregion Properties - Export
 
+        #region Properties - Reassign
+
+        /// <summary>
+        /// Gets a value indicating whether the Reassign Features process can be started.
+        /// The button is enabled only when the tool is in normal edit mode (not bulk or OSMM
+        /// Review mode), the database is loaded, and the active HLU layer is editable.
+        /// </summary>
+        /// <value><c>true</c> if the reassign process can be started; otherwise, <c>false</c>.</value>
+        public bool CanReassign
+        {
+            get
+            {
+                return IsEditMode &&
+                       IsNotBulkMode &&
+                       IsNotOsmmReviewMode &&
+                       _hluDS != null &&
+                       _gisApp?.ActiveHluLayer?.IsEditable == true;
+            }
+        }
+
+        #endregion Properties - Reassign
+
         #region Properties - Filter
 
         /// <summary>
@@ -7649,6 +7671,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(CanFilterByAttributes));
             OnPropertyChanged(nameof(CanClearFilter));
             OnPropertyChanged(nameof(CanExport));
+            OnPropertyChanged(nameof(CanReassign));
 
             // Update the editing control state
             CheckEditingControlState();

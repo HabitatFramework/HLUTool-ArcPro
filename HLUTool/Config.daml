@@ -47,6 +47,7 @@
 					<group refID="HLUTool_Group_Topology" />
 					<group refID="HLUTool_Group_FeatureInsert" />
 					<group refID="HLUTool_Group_BulkLoadUnload"/>
+					<group refID="HLUTool_Group_Reassign" />
 					<group refID="HLUTool_Group_Export" />
 					<group refID="HLUTool_Group_Help" />
 				</tab>
@@ -126,10 +127,15 @@
 					<dynamicMenu refID="HLUTool_BulkLoadUnloadMenu" size="large" />
 				</group>
 
-				<!-- Export group -->
-				<group id="HLUTool_Group_Export" caption="Export" keytip="G9" launcherButtonID="HLUTool_btnExportOptionsLauncher">
-					<button refID="HLUTool_btnExport" size="large" />
+				<!-- Reassign group -->
+				<group id="HLUTool_Group_Reassign" caption="Reassign" keytip="GR">
+					<button refID="HLUTool_btnReassign" size="large" />
 				</group>
+
+				<!-- Export group -->
+					<group id="HLUTool_Group_Export" caption="Export" keytip="G9" launcherButtonID="HLUTool_btnExportOptionsLauncher">
+						<button refID="HLUTool_btnExport" size="large" />
+					</group>
 
 				<!-- Help group -->
 				<group id="HLUTool_Group_Help" caption="Help" keytip="GI">
@@ -569,6 +575,19 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/Options32.png">
 					<tooltip heading="Tool Options">
 						View and update the application and user tool options.<disabledText />
+					</tooltip>
+				</button>
+
+				<button id="HLUTool_btnReassign"
+						caption="Reassign Features"
+						className="HLU.UI.UserControls.Toolbar.ReassignFeaturesButton"
+						loadOnClick="false"
+						keytip="RF"
+						smallImage="pack://application:,,,/HLUTool;component/Images/Reassign16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/Reassign32.png">
+					<tooltip heading="Reassign Features">
+						Reassign features to the correct HLU layer based on primary and secondary habitat codes.
+						<disabledText>Available only in normal edit mode with an editable active layer.</disabledText>
 					</tooltip>
 				</button>
 
