@@ -167,6 +167,9 @@ namespace HLU.UI.ViewModel
 
         private int? _maxFeaturesExport;
 
+        // Application Reassign options
+        private ObservableCollection<ReassignRule> _reassignRules;
+
         // Backup variables
         private string _bakSQLPath;
 
@@ -307,6 +310,10 @@ namespace HLU.UI.ViewModel
             _exportPath = Settings.Default.ExportPath;
             _maxFeaturesExport = Settings.Default.MaxFeaturesExport;
 
+            // Set the application reassign options
+            _reassignRules = new ObservableCollection<ReassignRule>(
+                _addInSettings.ReassignRules ?? []);
+
             // Load the navigation items (the individual options pages).
             NavigationItems =
             [
@@ -315,6 +322,7 @@ namespace HLU.UI.ViewModel
                 new () { Name = "Validation", Category = "Application", Content = new AppValidationOptions() },
                 new () { Name = "Updates", Category = "Application", Content = new AppUpdatesOptions() },
                 new () { Name = "Bulk Updates", Category = "Application", Content = new AppBulkUpdateOptions() },
+                new () { Name = "Reassign", Category = "Application", Content = new AppReassignOptions() },
                 new () { Name = "Interface", Category = "User", Content = new UserInterfaceOptions() },
                 new () { Name = "GIS", Category = "User", Content = new UserGISOptions() },
                 new () { Name = "Updates", Category = "User", Content = new UserUpdatesOptions() },
@@ -459,6 +467,22 @@ namespace HLU.UI.ViewModel
             get
             {
                 if (Uri.TryCreate(string.Format("{0}/{1}", _addInSettings.HelpURL, _addInSettings.HelpPages.AppBulkUpdate), UriKind.Absolute, out Uri uri))
+                    return uri;
+                else
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// Gets the hyperlink for the application reassign help page, which is constructed from
+        /// the base help URL and the specific help page for the application reassign options.
+        /// </summary>
+        /// <value>The hyperlink for the application reassign help page.</value>
+        public Uri Hyperlink_AppReassignHelp
+        {
+            get
+            {
+                if (Uri.TryCreate(string.Format("{0}/{1}", _addInSettings.HelpURL, _addInSettings.HelpPages.AppReassign), UriKind.Absolute, out Uri uri))
                     return uri;
                 else
                     return null;
@@ -757,6 +781,9 @@ namespace HLU.UI.ViewModel
             _addInSettings.BulkUpdateInterpretationQuality = _bulkInterpretationQuality;
             _addInSettings.BulkOSMMSourceId = (int)_bulkOSMMSourceId;
             _addInSettings.DefaultBulkLoadLayer = _defaultBulkLoadLayer;
+
+            // Update add-in reassign options
+            _addInSettings.ReassignRules = [.. _reassignRules];
 
             // Save changes back to XML in main window.
             _viewModelMain.SaveAddInSettings(_addInSettings);
@@ -2673,6 +2700,23 @@ namespace HLU.UI.ViewModel
 
         #endregion User Export
 
+        #region Application Reassign
+
+        /// <summary>
+        /// Gets the collection of reassign rules configured by the user.
+        /// Changes to the collection (add/remove/edit) are reflected immediately via
+        /// <see cref="ObservableCollection{T}"/>.
+        /// </summary>
+        public ObservableCollection<ReassignRule> ReassignRules
+        {
+            get
+            {
+                return _reassignRules;
+            }
+        }
+
+        #endregion Application Reassign
+
         #region Error Handling
 
         /// <summary>
@@ -2823,6 +2867,14 @@ namespace HLU.UI.ViewModel
                 "HistoryDisplayLastN" when (Convert.ToInt32(HistoryDisplayLastN) <= 0 || HistoryDisplayLastN == null)
                     => "Error: Number of history rows to be displayed must be greater than 0.",
 
+                // Application - Reassign options
+                "ReassignRules" when _reassignRules != null && _reassignRules.Any(r => string.IsNullOrWhiteSpace(r.RuleName))
+                    => "Error: Every reassign rule must have a name.",
+                "ReassignRules" when _reassignRules != null && _reassignRules.Any(r => string.IsNullOrWhiteSpace(r.WhereClause))
+                    => "Error: Every reassign rule must have a SQL WHERE clause.",
+                "ReassignRules" when _reassignRules != null && _reassignRules.GroupBy(r => r.RuleName.Trim(), StringComparer.OrdinalIgnoreCase).Any(g => g.Count() > 1)
+                    => "Error: Reassign rule names must be unique.",
+
                 // User - Export options
                 "ExportPath" when String.IsNullOrEmpty(ExportPath)
                     => "Error: You must enter a default export path.",
@@ -2878,6 +2930,7 @@ namespace HLU.UI.ViewModel
                 ("Application", "Validation") => ["HabitatSecondaryCodeValidation", "PrimarySecondaryCodeValidation", "QualityValidation", "PotentialPriorityDetermQtyValidation"],
                 ("Application", "Updates") => ["SubsetUpdateAction", "ClearIHSUpdateAction", "SecondaryCodeDelimiter"],
                 ("Application", "Bulk Updates") => ["BulkDeterminationQuality", "BulkInterpretationQuality", "OSMMSourceId"],
+                ("Application", "Reassign") => ["ReassignRules"],
                 ("User", "Interface") => ["ShowOSMMUpdatesOption", "MessageAutoDismissError", "MessageAutoDismissWarning", "MessageAutoDismissInfo", "MessageAutoDismissSuccess"],
                 ("User", "GIS") => ["AutoZoomToSelectionOption", "MinAutoZoom", "DisplayAreaUnits", "DisplayDistanceUnits", "MaxFeaturesGISSelect", "WorkingFileGDBPath"],
                 ("User", "Updates") => ["DefaultReason", "DefaultProcess", "DefaultHabitatClass", "DefaultSecondaryGroup", "SecondaryCodeOrder", "NotifyOnSplitMerge"],

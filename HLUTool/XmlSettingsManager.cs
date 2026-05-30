@@ -18,6 +18,7 @@
 
 using ArcGIS.Desktop.Framework;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
@@ -178,6 +179,21 @@ public class AddInSettings
 
     // Application bulk load options
     public string DefaultBulkLoadLayer { get; set; } = null;
+
+    // Application reassign options
+    public List<ReassignRule> ReassignRules { get; set; } = [];
+}
+
+/// <summary>
+/// Represents a single rule used to reassign features to a target HLU layer.
+/// </summary>
+public class ReassignRule
+{
+    /// <summary>Gets or sets the display name of this rule.</summary>
+    public string RuleName { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the SQL WHERE clause used to select features for this rule.</summary>
+    public string WhereClause { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -197,4 +213,5 @@ public class HelpPages
     public string UserSQL { get; set; } = "options/options.html#options-filter";
     public string UserExport { get; set; } = "options/options.html#options-export";
     public string UserHistory { get; set; } = "options/options.html#options-history";
+    public string AppReassign { get; set; } = "options/options.html#options-reassign";
 }
