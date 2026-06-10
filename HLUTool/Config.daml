@@ -489,7 +489,7 @@
 				</button>
 
 				<editBox id="HLUTool_edbFilterByIncid"
-						 caption="Find Incid:"
+						 caption="Incid:"
 						 className="HLU.UI.UserControls.Toolbar.FilterByIncidEditBox"
 						 condition="esri_mapping_mapPane"
 						 dataType="string"
@@ -529,13 +529,13 @@
 				</button>
 
 				<button id="HLUTool_btnSelectFilteredIncids"
-						caption="Select All Filtered INCIDs"
+						caption="Select Filtered INCIDs"
 						className="HLU.UI.UserControls.Toolbar.SelectFilteredIncidsButton"
 						loadOnClick="false"
 						keytip="SA"
 						smallImage="pack://application:,,,/HLUTool;component/Images/SelectAllOnMap16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/SelectAllOnMap32.png">
-					<tooltip heading="Select All Filtered INCIDs">
+					<tooltip heading="Select Filtered INCIDs">
 						Select all of the features associated with all of the currently filtered INCID records in the active GIS layer.
 						<disabledText>Available only when not in bulk or OSMM Review mode.</disabledText>
 					</tooltip>

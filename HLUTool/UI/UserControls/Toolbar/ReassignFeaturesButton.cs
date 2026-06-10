@@ -67,7 +67,10 @@ namespace HLU.UI.UserControls.Toolbar
 
             try
             {
-                viewModelReassign.InitiateReassign();
+                System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                {
+                    viewModelReassign.InitiateReassign();
+                });
             }
             catch (Exception ex)
             {

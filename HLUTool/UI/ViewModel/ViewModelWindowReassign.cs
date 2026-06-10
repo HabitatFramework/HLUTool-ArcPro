@@ -41,6 +41,7 @@ namespace HLU.UI.ViewModel
         private ReassignRule _selectedRule;
         private int _featureCount = -1;
         private bool _isCountingFeatures;
+        private string _featureCountError;
 
         /// <summary>
         /// Async delegate supplied by the orchestrator that counts features matching a WHERE clause
@@ -90,13 +91,17 @@ namespace HLU.UI.ViewModel
 
         #endregion ViewModelBase Members
 
-        #region RequestClose
+        #region Events
 
-        public delegate void RequestCloseEventHandler(string targetLayerName, ReassignRule rule);
+        /// <summary>Fired when the user clicks OK to run the reassign. The window stays open.</summary>
+        public delegate void RequestRunEventHandler(string targetLayerName, ReassignRule rule);
+        public event RequestRunEventHandler RequestRun;
 
+        /// <summary>Fired when the user clicks Cancel to close the window.</summary>
+        public delegate void RequestCloseEventHandler();
         public event RequestCloseEventHandler RequestClose;
 
-        #endregion RequestClose
+        #endregion Events
 
         #region Ok Command
 
@@ -115,7 +120,7 @@ namespace HLU.UI.ViewModel
 
         private void OkCommandClick(object param)
         {
-            RequestClose?.Invoke(_targetLayerName, _selectedRule);
+            RequestRun?.Invoke(_targetLayerName, _selectedRule);
         }
 
         private bool CanOk =>
@@ -140,7 +145,7 @@ namespace HLU.UI.ViewModel
 
         private void CancelCommandClick(object param)
         {
-            RequestClose?.Invoke(null, null);
+            RequestClose?.Invoke();
         }
 
         #endregion Cancel Command
@@ -213,6 +218,7 @@ namespace HLU.UI.ViewModel
                     return "Counting…";
                 if (_featureCount < 0)
                     return string.Empty;
+
                 return _featureCount.ToString("N0");
             }
         }
@@ -227,11 +233,14 @@ namespace HLU.UI.ViewModel
         /// </summary>
         private async Task RefreshFeatureCountAsync(ReassignRule rule)
         {
+            _featureCountError = null;
+
             if (_countFeaturesAsync == null || rule == null)
             {
                 _featureCount = -1;
                 _isCountingFeatures = false;
                 OnPropertyChanged(nameof(FeatureCountText));
+                OnPropertyChanged(nameof(SelectedRule));
                 return;
             }
 
@@ -243,14 +252,19 @@ namespace HLU.UI.ViewModel
                 int count = await _countFeaturesAsync(rule.WhereClause);
                 _featureCount = count;
             }
-            catch
+            catch (Exception ex)
             {
                 _featureCount = -1;
+                _featureCountError = string.IsNullOrWhiteSpace(ex.Message)
+                    ? "The where clause is invalid."
+                    : ex.Message;
             }
             finally
             {
                 _isCountingFeatures = false;
                 OnPropertyChanged(nameof(FeatureCountText));
+                OnPropertyChanged(nameof(SelectedRule));
+                CommandManager.InvalidateRequerySuggested();
             }
         }
 
@@ -274,6 +288,8 @@ namespace HLU.UI.ViewModel
                     case nameof(SelectedRule):
                         if (_selectedRule == null)
                             error = "A reassign rule must be selected.";
+                        else if (!string.IsNullOrEmpty(_featureCountError))
+                            error = _featureCountError;
                         break;
                 }
                 return error;

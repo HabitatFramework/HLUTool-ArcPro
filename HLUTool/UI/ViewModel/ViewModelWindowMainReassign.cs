@@ -1,5 +1,5 @@
-// HLUTool is used to view and maintain habitat and land use GIS data.
-// Copyright � 2025-2026 Andy Foy Consulting
+﻿// HLUTool is used to view and maintain habitat and land use GIS data.
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.ViewModel
@@ -60,7 +61,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Initiates the reassign features process by opening the Reassign dialog.
         /// </summary>
-        public async void InitiateReassign()
+        public void InitiateReassign()
         {
             if (_viewModelMain == null)
                 return;
@@ -76,9 +77,7 @@ namespace HLU.UI.ViewModel
 
             // Build the list of target layers: all available HLU layers except the active source layer.
             string sourceLayerName = _viewModelMain.ActiveLayerName;
-            List<string> targetLayerNames = _viewModelMain.AvailableHLULayerNames
-                .Where(n => n != sourceLayerName)
-                .ToList();
+            List<string> targetLayerNames = [.. _viewModelMain.AvailableHLULayerNames.Where(n => n != sourceLayerName)];
 
             if (targetLayerNames.Count == 0)
             {
@@ -98,7 +97,7 @@ namespace HLU.UI.ViewModel
             {
                 MessageBox.Show(
                     "No reassign rules have been configured.\n\n" +
-                    "Please add at least one rule in Options ? Application ? Reassign.",
+                    "Please add at least one rule in Options → Application → Reassign.",
                     "HLU: Reassign Features",
                     MessageBoxButton.OK,
                     MessageBoxImage.Exclamation);
@@ -124,6 +123,10 @@ namespace HLU.UI.ViewModel
             };
 
             // Guard against double subscription.
+            _viewModelReassign.RequestRun -= ViewModelReassign_RequestRun;
+            _viewModelReassign.RequestRun +=
+                new ViewModelWindowReassign.RequestRunEventHandler(ViewModelReassign_RequestRun);
+
             _viewModelReassign.RequestClose -= ViewModelReassign_RequestClose;
             _viewModelReassign.RequestClose +=
                 new ViewModelWindowReassign.RequestCloseEventHandler(ViewModelReassign_RequestClose);
@@ -133,20 +136,22 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Handles the RequestClose event from the Reassign dialog.
+        /// Handles the RequestRun event from the Reassign dialog (OK button).
+        /// Runs the reassign without closing the window so the user can run further rules.
         /// </summary>
-        /// <param name="targetLayerName">The selected target layer, or <see langword="null"/> if cancelled.</param>
-        /// <param name="rule">The selected reassign rule, or <see langword="null"/> if cancelled.</param>
-        private async void ViewModelReassign_RequestClose(string targetLayerName, ReassignRule rule)
+        private async void ViewModelReassign_RequestRun(string targetLayerName, ReassignRule rule)
         {
+            await ExecuteReassignAsync(targetLayerName, rule);
+        }
+
+        /// <summary>
+        /// Handles the RequestClose event from the Reassign dialog (Cancel button).
+        /// </summary>
+        private void ViewModelReassign_RequestClose()
+        {
+            _viewModelReassign.RequestRun -= ViewModelReassign_RequestRun;
             _viewModelReassign.RequestClose -= ViewModelReassign_RequestClose;
             _windowReassign.Close();
-
-            // Cancelled.
-            if (targetLayerName == null || rule == null)
-                return;
-
-            await ExecuteReassignAsync(targetLayerName, rule);
         }
 
         /// <summary>
@@ -155,13 +160,17 @@ namespace HLU.UI.ViewModel
         /// </summary>
         private async Task ExecuteReassignAsync(string targetLayerName, ReassignRule rule)
         {
+            // Hide the dialog and show the main UI processing indicator.
+            _windowReassign.Hide();
+            _viewModelMain.ChangeCursor(Cursors.Wait, $"Reassigning features using rule '{rule.RuleName}'…");
+
             try
             {
                 // Build and execute the GIS edit operation.
                 EditOperation editOperation = new()
                 {
-                    Name = $"Reassign Features � {rule.RuleName}",
-                    ProgressMessage = $"Moving features to '{targetLayerName}'�"
+                    Name = $"Reassign Features – {rule.RuleName}",
+                    ProgressMessage = $"Moving features to '{targetLayerName}'…"
                 };
 
                 int moved = await _viewModelMain.GISApplication.ReassignFeaturesAsync(
@@ -216,6 +225,12 @@ namespace HLU.UI.ViewModel
                     "HLU: Reassign Features",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
+            }
+            finally
+            {
+                // Restore the cursor and show the dialog again.
+                _viewModelMain.ChangeCursor(Cursors.Arrow);
+                _windowReassign.Show();
             }
         }
 

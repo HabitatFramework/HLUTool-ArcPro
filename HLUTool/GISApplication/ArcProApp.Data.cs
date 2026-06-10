@@ -4258,7 +4258,16 @@ namespace HLU.GISApplication
             if (targetLayer == null)
                 return -1;
 
-            int movedCount = 0;
+            // The return value must be known before ExecuteAsync() runs the callback,
+            // so count matching features now with a cheap server-side COUNT query.
+            // This also lets us short-circuit immediately when nothing matches.
+            QueryFilter qf = new() { WhereClause = whereClause ?? string.Empty };
+
+            int matchingCount = await QueuedTask.Run(() =>
+                (int)_hluFeatureClass.GetCount(qf)).ConfigureAwait(false);
+
+            if (matchingCount == 0)
+                return 0;
 
             await QueuedTask.Run(() =>
             {
@@ -4274,7 +4283,6 @@ namespace HLU.GISApplication
                 IReadOnlyList<Field> sourceFields = sourceDef.GetFields();
                 IReadOnlyList<Field> targetFields = targetDef.GetFields();
 
-                string sourceShapeField = sourceDef.GetShapeField();
                 string targetShapeField = targetDef.GetShapeField();
 
                 // Build a mapping: source field index → target field index, for all copyable fields.
@@ -4283,7 +4291,7 @@ namespace HLU.GISApplication
                 HashSet<string> skipFields = new(StringComparer.OrdinalIgnoreCase)
                 {
                     sourceDef.GetObjectIDField(),
-                    sourceShapeField,
+                    sourceDef.GetShapeField(),
                     "Shape_Length", "SHAPE_Length",
                     "Shape_Area",   "SHAPE_Area",
                     "GlobalID",     "GLOBALID"
@@ -4309,83 +4317,59 @@ namespace HLU.GISApplication
                     }
                 }
 
-                // Select source features matching the where clause.
-                QueryFilter qf = new() { WhereClause = whereClause ?? string.Empty };
-
-                // First pass: read source features and buffer their data.
-                // We cannot delete while iterating the same cursor.
-                List<(long Oid, Geometry Shape, List<(int TargetIdx, object Value)> FieldValues)> buffer = [];
-
-                using (RowCursor cursor = _hluFeatureClass.Search(qf, false))
-                {
-                    while (cursor.MoveNext())
-                    {
-                        using Feature sourceFeature = cursor.Current as Feature;
-                        if (sourceFeature == null)
-                            continue;
-
-                        long oid = sourceFeature.GetObjectID();
-                        Geometry shape = sourceFeature.GetShape();
-
-                        List<(int TargetIdx, object Value)> fieldValues = [];
-                        foreach ((int si, int ti) in fieldMap)
-                        {
-                            object val = sourceFeature[si];
-                            fieldValues.Add((ti, val));
-                        }
-
-                        buffer.Add((oid, shape, fieldValues));
-                    }
-                }
-
-                if (buffer.Count == 0)
-                    return;
-
                 Table sourceTable = _hluFeatureClass as Table;
                 Table targetTable = targetFeatureClass as Table;
 
-                // Queue all inserts into the target and deletes from the source in one callback.
+                // Queue inserts into the target and deletes from the source in one callback.
+                // Features are streamed directly from source to target inside the callback —
+                // no geometry buffer is held in memory — so this scales to any feature count.
                 editOperation.Callback(context =>
                 {
-                    // Insert into target.
-                    using InsertCursor insertCursor = targetFeatureClass.CreateInsertCursor();
-
-                    foreach ((long oid, Geometry shape, List<(int TargetIdx, object Value)> fieldValues) in buffer)
+                    // Pass 1: stream source features directly into the target.
+                    using (RowCursor sourceCursor = _hluFeatureClass.Search(qf, false))
+                    using (InsertCursor insertCursor = targetFeatureClass.CreateInsertCursor())
+                    using (RowBuffer rowBuffer = targetFeatureClass.CreateRowBuffer())
                     {
-                        using RowBuffer rowBuffer = targetFeatureClass.CreateRowBuffer();
-
-                        // Copy attributes.
-                        foreach ((int targetIdx, object val) in fieldValues)
+                        while (sourceCursor.MoveNext())
                         {
-                            rowBuffer[targetIdx] = val ?? DBNull.Value;
+                            using Feature sourceFeature = sourceCursor.Current as Feature;
+                            if (sourceFeature == null)
+                                continue;
+
+                            // Copy attributes into the reusable row buffer.
+                            foreach ((int si, int ti) in fieldMap)
+                                rowBuffer[ti] = sourceFeature[si] ?? DBNull.Value;
+
+                            // Copy geometry.
+                            Geometry shape = sourceFeature.GetShape();
+                            if (shape != null && !string.IsNullOrEmpty(targetShapeField))
+                                rowBuffer[targetShapeField] = shape;
+
+                            insertCursor.Insert(rowBuffer);
                         }
 
-                        // Copy geometry.
-                        if (shape != null && !string.IsNullOrEmpty(targetShapeField))
-                            rowBuffer[targetShapeField] = shape;
-
-                        insertCursor.Insert(rowBuffer);
+                        // Flush any buffered inserts to the datastore.
+                        insertCursor.Flush();
                     }
 
-                    insertCursor.Flush();
-
-                    // Delete from source.
-                    IReadOnlyList<long> oidsToDelete = [.. buffer.Select(b => b.Oid)];
-                    QueryFilter deleteFilter = new() { ObjectIDs = oidsToDelete };
-
-                    using RowCursor deleteCursor = _hluFeatureClass.Search(deleteFilter, false);
-                    while (deleteCursor.MoveNext())
+                    // Pass 2: delete source features using the same where clause filter.
+                    // Avoids building a potentially huge OID list.
+                    using (RowCursor deleteCursor = _hluFeatureClass.Search(qf, false))
                     {
-                        using Row row = deleteCursor.Current;
-                        row.Delete();
-                        context.Invalidate(row);
+                        while (deleteCursor.MoveNext())
+                        {
+                            using Row row = deleteCursor.Current;
+                            row.Delete();
+                        }
                     }
-                }, sourceTable, targetTable);
 
-                movedCount = buffer.Count;
+                    // Invalidate at table level (one call each) rather than per row.
+                    context.Invalidate(sourceTable);
+                    context.Invalidate(targetTable);
+                }, sourceTable, targetTable);
             });
 
-            return movedCount;
+            return matchingCount;
         }
 
         #endregion Reassign

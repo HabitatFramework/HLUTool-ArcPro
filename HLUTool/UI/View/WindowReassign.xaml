@@ -72,7 +72,7 @@
                         Grid.Column="1"
                         Margin="8,0,8,8"
                         IsEnabled="False"
-                        Text="{Binding SourceLayerName}" />
+                        Text="{Binding SourceLayerName, Mode=OneWay}" />
 
                     <!--  Target Layer  -->
                     <Label
@@ -140,7 +140,7 @@
                         MaxHeight="80"
                         TextWrapping="Wrap"
                         VerticalScrollBarVisibility="Auto"
-                        Text="{Binding WhereClauseText}" />
+                        Text="{Binding WhereClauseText, Mode=OneWay}" />
 
                     <!--  Feature Count  -->
                     <Label
@@ -158,7 +158,7 @@
                         Grid.Column="1"
                         Margin="8,0,8,2"
                         IsEnabled="False"
-                        Text="{Binding FeatureCountText}" />
+                        Text="{Binding FeatureCountText, Mode=OneWay}" />
                 </Grid>
             </GroupBox>
 
