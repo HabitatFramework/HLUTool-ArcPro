@@ -160,8 +160,16 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(AvailableLayerNames));
 
             // Pre-select the first layer if exactly one exists.
+            // Inline the setter logic and await RefreshFeatureCountsAsync so that
+            // _selectedNumber is populated before SelectedOnly is initialised below.
             if (_availableLayerNames.Count == 1)
-                SelectedLayerName = _availableLayerNames[0];
+            {
+                _selectedLayerName = _availableLayerNames[0];
+                OnPropertyChanged(nameof(SelectedLayerName));
+                ClearFieldMappings();
+                _ = RefreshFieldsAsync();
+                await RefreshFeatureCountsAsync();
+            }
 
             // Initialize SelectedOnly based on whether features are selected.
             _selectedOnly = _selectedNumber > 0;
@@ -597,6 +605,92 @@ namespace HLU.UI.ViewModel
             // Raise PropertyChanged for both available fields collections.
             OnPropertyChanged(nameof(AvailableFieldsWithNone));
             OnPropertyChanged(nameof(AvailableFields));
+
+            // Automatically preselect fields if matching field names are found.
+            PreselectFieldMappings(fieldNames);
+        }
+
+        /// <summary>
+        /// Automatically preselects field mappings if the layer contains fields that match
+        /// the expected default names (case-insensitive).
+        /// </summary>
+        /// <param name="fieldNames">The list of field names from the selected layer.</param>
+        private void PreselectFieldMappings(List<string> fieldNames)
+        {
+            if (fieldNames == null || fieldNames.Count == 0)
+                return;
+
+            // Create a case-insensitive lookup dictionary for faster matching.
+            var fieldLookup = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (string fieldName in fieldNames)
+            {
+                if (!fieldLookup.ContainsKey(fieldName))
+                    fieldLookup[fieldName] = fieldName;
+            }
+
+            // Define the expected default field names for each mapping.
+            var defaultMappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "toid", "toid" },
+                { "make", "make" },
+                { "descriptivegroup", "descriptive_group" },
+                { "descriptiveterm", "descriptive_term" },
+                { "theme", "theme" },
+                { "featurecode", "feature_code" }
+            };
+
+            // Try to match each expected field name against the available fields.
+            // If a match is found, set the corresponding property.
+            if (fieldLookup.TryGetValue("toid", out string toidMatch))
+            {
+                _toidField = toidMatch;
+                OnPropertyChanged(nameof(ToidField));
+            }
+            else
+            {
+                // If TOID field is not found, default to "<None>" since it's optional.
+                _toidField = NoneOptionText;
+                OnPropertyChanged(nameof(ToidField));
+            }
+
+            if (fieldLookup.TryGetValue("make", out string makeMatch))
+            {
+                _makeField = makeMatch;
+                OnPropertyChanged(nameof(MakeField));
+            }
+
+            // Try multiple possible variations for descriptive_group
+            if (fieldLookup.TryGetValue("descriptive_group", out string descGroupMatch) ||
+                fieldLookup.TryGetValue("descriptivegroup", out descGroupMatch))
+            {
+                _descGroupField = descGroupMatch;
+                OnPropertyChanged(nameof(DescGroupField));
+            }
+
+            // Try multiple possible variations for descriptive_term
+            if (fieldLookup.TryGetValue("descriptive_term", out string descTermMatch) ||
+                fieldLookup.TryGetValue("descriptiveterm", out descTermMatch))
+            {
+                _descTermField = descTermMatch;
+                OnPropertyChanged(nameof(DescTermField));
+            }
+
+            if (fieldLookup.TryGetValue("theme", out string themeMatch))
+            {
+                _themeField = themeMatch;
+                OnPropertyChanged(nameof(ThemeField));
+            }
+
+            // Try multiple possible variations for feature_code
+            if (fieldLookup.TryGetValue("feature_code", out string featCodeMatch) ||
+                fieldLookup.TryGetValue("featurecode", out featCodeMatch))
+            {
+                _featCodeField = featCodeMatch;
+                OnPropertyChanged(nameof(FeatCodeField));
+            }
+
+            // Raise PropertyChanged for CanOk to update the Ok button state.
+            OnPropertyChanged(nameof(CanOk));
         }
 
         #endregion Private Helpers

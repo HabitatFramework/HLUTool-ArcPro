@@ -255,17 +255,19 @@ namespace HLU.UI.ViewModel
             _maxFeaturesGISSelect = Settings.Default.MaxFeaturesGISSelect;
             _workingFileGDBPath = Settings.Default.WorkingFileGDBPath;
 
-            // Get the history column ordinals from the settings, excluding the GIS ID columns and
-            // shape columns.
+            // Get the history column ordinals from the settings, excluding the GIS ID columns,
+            // shape columns, and polygon_id.
             List<int> historyColumnOrdinals = [.. Settings.Default.HistoryColumnOrdinals.Cast<string>()
                 .Select(s => Int32.Parse(s)).Where(i => !_gisIDColumnOrdinals.Contains(i) &&
-                    !_incidMMPolygonsTable.Columns[i].ColumnName.StartsWith("shape_"))];
+                    !_incidMMPolygonsTable.Columns[i].ColumnName.StartsWith("shape_") &&
+                    _incidMMPolygonsTable.Columns[i].ColumnName != "polygon_id")];
 
             // Get the history columns for the options window by getting the column names from the incid table,
-            // excluding the GIS ID columns and shape columns.
+            // excluding the GIS ID columns, shape columns, and polygon_id.
             _historyColumns = new SelectionList<string>([.. _incidMMPolygonsTable.Columns.Cast<DataColumn>()
                 .Where(c => !_gisIDColumnOrdinals.Contains(c.Ordinal)
-                    && !c.ColumnName.StartsWith("shape_"))
+                    && !c.ColumnName.StartsWith("shape_")
+                    && c.ColumnName != "polygon_id")
                 .Select(c => EscapeAccessKey(c.ColumnName))]);
 
             // Set the IsSelected property of the history columns based on whether their ordinals

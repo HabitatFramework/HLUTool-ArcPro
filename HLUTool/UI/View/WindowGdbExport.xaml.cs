@@ -21,7 +21,7 @@ using HLU.UI.ViewModel;
 using System;
 using System.IO;
 using System.Windows;
-using System.Windows.Forms;
+using Microsoft.Win32;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace HLU.UI.View
@@ -36,6 +36,7 @@ namespace HLU.UI.View
         #region Fields
 
         private readonly ViewModelWindowGdbExport _viewModel;
+        private readonly string _browserInitialDir;
 
         #endregion Fields
 
@@ -66,12 +67,15 @@ namespace HLU.UI.View
         /// </param>
         public WindowGdbExport(
             string initialGdbPath = "",
-            string initialFeatureName = "HLU_Export")
+            string initialFeatureName = "HLU_Export",
+            string browserInitialDir = "")
         {
             InitializeComponent();
 
             _viewModel = new ViewModelWindowGdbExport(
                 initialGdbPath, initialFeatureName);
+
+            _browserInitialDir = browserInitialDir ?? String.Empty;
 
             DataContext = _viewModel;
 
@@ -94,8 +98,8 @@ namespace HLU.UI.View
         private void ButtonBrowse_Click(object sender, RoutedEventArgs e)
         {
             // Open the browser in the parent of the current GDB path
-            // (if set and valid), otherwise fall back to an empty string
-            // so the dialog opens at the default location.
+            // (if set and valid), otherwise fall back to the initial directory
+            // supplied by the caller, so the dialog opens in the right place.
             string startDir = String.Empty;
 
             if (!String.IsNullOrWhiteSpace(_viewModel.GdbPath))
@@ -105,18 +109,24 @@ namespace HLU.UI.View
                     startDir = parent;
             }
 
-            using var folderDialog = new FolderBrowserDialog
+            if (String.IsNullOrWhiteSpace(startDir) &&
+                !String.IsNullOrWhiteSpace(_browserInitialDir) &&
+                Directory.Exists(_browserInitialDir))
             {
-                Description = "Select the File Geodatabase (.gdb) to export into:",
-                UseDescriptionForTitle = true,
-                ShowNewFolderButton = false,
-                SelectedPath = startDir
+                startDir = _browserInitialDir;
+            }
+
+            var folderDialog = new OpenFolderDialog
+            {
+                Title = "Select the File Geodatabase (.gdb) to export into:",
+                InitialDirectory = startDir,
+                Multiselect = false
             };
 
-            if (folderDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+            if (folderDialog.ShowDialog() != true)
                 return;
 
-            string chosen = folderDialog.SelectedPath;
+            string chosen = folderDialog.FolderName;
 
             if (!chosen.EndsWith(".gdb", StringComparison.OrdinalIgnoreCase))
             {
@@ -129,13 +139,16 @@ namespace HLU.UI.View
                 return;
             }
 
+            // Capture the current feature class name BEFORE updating GdbPath
+            // to avoid any side effects from property notifications.
+            string currentName = _viewModel.FeatureClassName?.Trim() ?? String.Empty;
+
             // Update the VM — this triggers validation and re-evaluates IsValid.
             _viewModel.GdbPath = chosen;
 
             // Auto-suggest the GDB base name only when the feature class name
             // box still holds the default, to avoid overwriting a deliberate edit.
             string baseName = Path.GetFileNameWithoutExtension(chosen);
-            string currentName = _viewModel.FeatureClassName?.Trim() ?? String.Empty;
 
             if (String.IsNullOrWhiteSpace(currentName) ||
                 currentName == "HLU_Export")

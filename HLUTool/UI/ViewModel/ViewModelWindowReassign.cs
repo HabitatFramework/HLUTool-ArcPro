@@ -18,7 +18,9 @@
 using HLU.Data;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -36,12 +38,8 @@ namespace HLU.UI.ViewModel
 
         private readonly string _sourceLayerName;
         private readonly List<string> _targetLayerNames;
-        private string _targetLayerName;
-        private readonly List<ReassignRule> _rules;
-        private ReassignRule _selectedRule;
-        private int _featureCount = -1;
-        private bool _isCountingFeatures;
-        private string _featureCountError;
+        private readonly List<string> _targetLayerNamesWithSkip;
+        private readonly ObservableCollection<RuleRow> _ruleRows;
 
         /// <summary>
         /// Async delegate supplied by the orchestrator that counts features matching a WHERE clause
@@ -72,9 +70,25 @@ namespace HLU.UI.ViewModel
             Func<string, Task<int>> countFeaturesAsync)
         {
             _sourceLayerName = sourceLayerName;
-            _targetLayerNames = targetLayerNames;
-            _rules = rules;
+            _targetLayerNames = targetLayerNames ?? [];
             _countFeaturesAsync = countFeaturesAsync;
+
+            // Create the target layer list with <Skip> option
+            _targetLayerNamesWithSkip = ["<Skip>", .. _targetLayerNames];
+
+            // Create a RuleRow for each rule and start counting features
+            _ruleRows = [];
+            if (rules != null)
+            {
+                foreach (var rule in rules)
+                {
+                    var ruleRow = new RuleRow(rule, _targetLayerNamesWithSkip);
+                    _ruleRows.Add(ruleRow);
+
+                    // Start counting features asynchronously
+                    _ = CountFeaturesForRuleAsync(ruleRow);
+                }
+            }
         }
 
         #endregion Constructor
@@ -93,9 +107,9 @@ namespace HLU.UI.ViewModel
 
         #region Events
 
-        /// <summary>Fired when the user clicks OK to run the reassign. The window stays open.</summary>
-        public delegate void RequestRunEventHandler(string targetLayerName, ReassignRule rule);
-        public event RequestRunEventHandler RequestRun;
+        /// <summary>Fired when the user clicks OK to process all rules. Passes a list of (targetLayerName, rule) pairs for rules not marked as <Skip>.</summary>
+        public delegate void RequestProcessAllEventHandler(List<(string targetLayerName, ReassignRule rule)> assignments);
+        public event RequestProcessAllEventHandler RequestProcessAll;
 
         /// <summary>Fired when the user clicks Cancel to close the window.</summary>
         public delegate void RequestCloseEventHandler();
@@ -120,11 +134,25 @@ namespace HLU.UI.ViewModel
 
         private void OkCommandClick(object param)
         {
-            RequestRun?.Invoke(_targetLayerName, _selectedRule);
+            // Build the list of (targetLayerName, rule) assignments for rules not marked as <Skip>
+            var assignments = _ruleRows
+                .Where(r => !string.IsNullOrEmpty(r.SelectedTargetLayer) && r.SelectedTargetLayer != "<Skip>")
+                .Select(r => (r.SelectedTargetLayer, r.Rule))
+                .ToList();
+
+            RequestProcessAll?.Invoke(assignments);
         }
 
-        private bool CanOk =>
-            !string.IsNullOrEmpty(_targetLayerName) && _selectedRule != null && !_isCountingFeatures;
+        private bool CanOk
+        {
+            get
+            {
+                // Can OK if at least one rule has a valid target layer selected and no rules are still counting
+                return _ruleRows != null &&
+                       _ruleRows.Any(r => !string.IsNullOrEmpty(r.SelectedTargetLayer) && r.SelectedTargetLayer != "<Skip>") &&
+                       !_ruleRows.Any(r => r.IsCountingFeatures);
+            }
+        }
 
         #endregion Ok Command
 
@@ -158,112 +186,50 @@ namespace HLU.UI.ViewModel
         public string SourceLayerName => _sourceLayerName;
 
         /// <summary>
-        /// Gets the list of available target HLU layer names.
+        /// Gets the list of available target HLU layer names (with <Skip> option).
         /// </summary>
-        public List<string> TargetLayerNames => _targetLayerNames;
+        public List<string> TargetLayerNamesWithSkip => _targetLayerNamesWithSkip;
 
         /// <summary>
-        /// Gets or sets the selected target layer name.
+        /// Gets the observable collection of rule rows for display in the DataGrid.
         /// </summary>
-        public string TargetLayerName
-        {
-            get => _targetLayerName;
-            set
-            {
-                if (_targetLayerName != value)
-                {
-                    _targetLayerName = value;
-                    OnPropertyChanged(nameof(TargetLayerName));
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets the list of reassign rules available for selection.
-        /// </summary>
-        public List<ReassignRule> Rules => _rules;
-
-        /// <summary>
-        /// Gets or sets the selected reassign rule. Automatically triggers a feature count refresh.
-        /// </summary>
-        public ReassignRule SelectedRule
-        {
-            get => _selectedRule;
-            set
-            {
-                if (_selectedRule != value)
-                {
-                    _selectedRule = value;
-                    OnPropertyChanged(nameof(SelectedRule));
-                    OnPropertyChanged(nameof(WhereClauseText));
-                    _ = RefreshFeatureCountAsync(value);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets the SQL WHERE clause of the currently selected rule, or an empty string if none is selected.
-        /// </summary>
-        public string WhereClauseText =>
-            _selectedRule?.WhereClause ?? string.Empty;
-
-        /// <summary>
-        /// Gets the feature count text to display. Shows a counting indicator while the query runs.
-        /// </summary>
-        public string FeatureCountText
-        {
-            get
-            {
-                if (_isCountingFeatures)
-                    return "Counting…";
-                if (_featureCount < 0)
-                    return string.Empty;
-
-                return _featureCount.ToString("N0");
-            }
-        }
+        public ObservableCollection<RuleRow> RuleRows => _ruleRows;
 
         #endregion Control Properties
 
         #region Feature Count
 
         /// <summary>
-        /// Queries the source layer for the number of features matching the selected rule's WHERE
-        /// clause, then updates <see cref="FeatureCountText"/>.
+        /// Queries the source layer for the number of features matching the rule's WHERE
+        /// clause, then updates the RuleRow's feature count.
         /// </summary>
-        private async Task RefreshFeatureCountAsync(ReassignRule rule)
+        private async Task CountFeaturesForRuleAsync(RuleRow ruleRow)
         {
-            _featureCountError = null;
-
-            if (_countFeaturesAsync == null || rule == null)
+            if (_countFeaturesAsync == null || ruleRow == null)
             {
-                _featureCount = -1;
-                _isCountingFeatures = false;
-                OnPropertyChanged(nameof(FeatureCountText));
-                OnPropertyChanged(nameof(SelectedRule));
+                ruleRow.FeatureCount = -1;
+                ruleRow.IsCountingFeatures = false;
                 return;
             }
 
-            _isCountingFeatures = true;
-            OnPropertyChanged(nameof(FeatureCountText));
+            ruleRow.IsCountingFeatures = true;
 
             try
             {
-                int count = await _countFeaturesAsync(rule.WhereClause);
-                _featureCount = count;
+                int count = await _countFeaturesAsync(ruleRow.Rule.WhereClause);
+                ruleRow.FeatureCount = count;
+                ruleRow.FeatureCountError = null;
             }
             catch (Exception ex)
             {
-                _featureCount = -1;
-                _featureCountError = string.IsNullOrWhiteSpace(ex.Message)
+                ruleRow.FeatureCount = -1;
+                ruleRow.FeatureCountError = string.IsNullOrWhiteSpace(ex.Message)
                     ? "The where clause is invalid."
                     : ex.Message;
             }
             finally
             {
-                _isCountingFeatures = false;
-                OnPropertyChanged(nameof(FeatureCountText));
-                OnPropertyChanged(nameof(SelectedRule));
+                ruleRow.IsCountingFeatures = false;
                 CommandManager.InvalidateRequerySuggested();
             }
         }
@@ -278,24 +244,125 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                string error = null;
-                switch (columnName)
-                {
-                    case nameof(TargetLayerName):
-                        if (string.IsNullOrEmpty(_targetLayerName))
-                            error = "A target layer must be selected.";
-                        break;
-                    case nameof(SelectedRule):
-                        if (_selectedRule == null)
-                            error = "A reassign rule must be selected.";
-                        else if (!string.IsNullOrEmpty(_featureCountError))
-                            error = _featureCountError;
-                        break;
-                }
-                return error;
+                // No validation needed at the view model level anymore;
+                // validation is per-row in the RuleRow class
+                return null;
             }
         }
 
         #endregion IDataErrorInfo
+
+        #region RuleRow Class
+
+        /// <summary>
+        /// Represents a single row in the rules DataGrid, containing a rule,
+        /// its feature count, and the selected target layer.
+        /// </summary>
+        public class RuleRow : INotifyPropertyChanged
+        {
+            private string _selectedTargetLayer;
+            private int _featureCount = -1;
+            private bool _isCountingFeatures;
+            private string _featureCountError;
+
+            public RuleRow(ReassignRule rule, List<string> availableTargetLayers)
+            {
+                Rule = rule;
+                AvailableTargetLayers = availableTargetLayers;
+                // Default to <Skip> so users must explicitly choose a target
+                _selectedTargetLayer = "<Skip>";
+            }
+
+            public ReassignRule Rule { get; }
+
+            public string RuleName => Rule?.RuleName ?? string.Empty;
+
+            public string WhereClause => Rule?.WhereClause ?? string.Empty;
+
+            public List<string> AvailableTargetLayers { get; }
+
+            public string SelectedTargetLayer
+            {
+                get => _selectedTargetLayer;
+                set
+                {
+                    if (_selectedTargetLayer != value)
+                    {
+                        _selectedTargetLayer = value;
+                        OnPropertyChanged(nameof(SelectedTargetLayer));
+                    }
+                }
+            }
+
+            public int FeatureCount
+            {
+                get => _featureCount;
+                set
+                {
+                    if (_featureCount != value)
+                    {
+                        _featureCount = value;
+                        OnPropertyChanged(nameof(FeatureCount));
+                        OnPropertyChanged(nameof(FeatureCountText));
+                        OnPropertyChanged(nameof(CanReassign));
+                    }
+                }
+            }
+
+            public bool IsCountingFeatures
+            {
+                get => _isCountingFeatures;
+                set
+                {
+                    if (_isCountingFeatures != value)
+                    {
+                        _isCountingFeatures = value;
+                        OnPropertyChanged(nameof(IsCountingFeatures));
+                        OnPropertyChanged(nameof(FeatureCountText));
+                        OnPropertyChanged(nameof(CanReassign));
+                    }
+                }
+            }
+
+            public string FeatureCountError
+            {
+                get => _featureCountError;
+                set
+                {
+                    if (_featureCountError != value)
+                    {
+                        _featureCountError = value;
+                        OnPropertyChanged(nameof(FeatureCountError));
+                        OnPropertyChanged(nameof(CanReassign));
+                    }
+                }
+            }
+
+            public string FeatureCountText
+            {
+                get
+                {
+                    if (_isCountingFeatures)
+                        return "Counting…";
+                    if (_featureCount < 0)
+                        return string.Empty;
+                    return _featureCount.ToString("N0");
+                }
+            }
+
+            /// <summary>
+            /// Gets whether this rule can be reassigned (has features and no errors).
+            /// </summary>
+            public bool CanReassign => _featureCount > 0 && string.IsNullOrEmpty(_featureCountError) && !_isCountingFeatures;
+
+            public event PropertyChangedEventHandler PropertyChanged;
+
+            protected void OnPropertyChanged(string propertyName)
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+
+        #endregion RuleRow Class
     }
 }

@@ -1071,13 +1071,22 @@ namespace HLU.UI.ViewModel
             }
             set
             {
-                // If this is another change by the user but the data is no longer
-                // dirty (i.e. the user has reversed out their changes) then
-                // reset the changed flag.
-                if (value == true && !IsDirty)
-                    _changed = false;
-                else
+                // In bulk update mode, trust the caller - we can't check IsDirty because
+                // there's no meaningful row state to compare against (the row is detached).
+                if (IsBulkMode)
+                {
                     _changed = value;
+                }
+                else
+                {
+                    // If this is another change by the user but the data is no longer
+                    // dirty (i.e. the user has reversed out their changes) then
+                    // reset the changed flag.
+                    if (value == true && !IsDirty)
+                        _changed = false;
+                    else
+                        _changed = value;
+                }
 
                 OnPropertyChanged(nameof(CanUpdate));
             }

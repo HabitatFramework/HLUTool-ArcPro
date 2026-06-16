@@ -68,7 +68,7 @@ namespace HLU.UI.UserControls.Toolbar
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine(
-                    $"Error setting Update Mode: {ex}");
+                    $"Error Starting Update Mode: {ex}");
             }
         }
 

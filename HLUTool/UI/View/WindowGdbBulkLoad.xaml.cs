@@ -66,7 +66,7 @@ namespace HLU.UI.View
         /// </param>
         public WindowGdbBulkLoad(
             string initialGdbPath = "",
-            string initialFeatureName = "HLU_BulkLoad")
+            string initialFeatureName = "HLU_Staging")
         {
             InitializeComponent();
 
@@ -129,16 +129,19 @@ namespace HLU.UI.View
                 return;
             }
 
+            // Capture the current feature class name BEFORE updating GdbPath
+            // to avoid any side effects from property notifications.
+            string currentName = _viewModel.FeatureClassName?.Trim() ?? String.Empty;
+
             // Update the VM — this triggers validation and re-evaluates IsValid.
             _viewModel.GdbPath = chosen;
 
             // Auto-suggest the GDB base name only when the feature class name
             // box still holds the default, to avoid overwriting a deliberate edit.
             string baseName = Path.GetFileNameWithoutExtension(chosen);
-            string currentName = _viewModel.FeatureClassName?.Trim() ?? String.Empty;
 
             if (String.IsNullOrWhiteSpace(currentName) ||
-                currentName == "HLU_BulkLoad")
+                currentName == "HLU_Staging")
             {
                 _viewModel.FeatureClassName = baseName;
             }

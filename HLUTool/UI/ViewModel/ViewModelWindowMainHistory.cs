@@ -1,7 +1,7 @@
-ï»¿// HLUTool is used to view and maintain habitat and land use GIS data.
-// Copyright Â© 2011 Hampshire Biodiversity Information Centre
-// Copyright Â© 2013 Thames Valley Environmental Records Centre
-// Copyright Â© 2025-2026 Andy Foy Consulting
+// HLUTool is used to view and maintain habitat and land use GIS data.
+// Copyright © 2011 Hampshire Biodiversity Information Centre
+// Copyright © 2013 Thames Valley Environmental Records Centre
+// Copyright © 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -173,10 +173,8 @@ namespace HLU.UI.ViewModel
                         }
                         else if (newHistoryColumns[i] != -1)
                         {
-                            // Replace blanks for null to ensure foreign key integrity
-                            if (r[newHistoryColumns[i]].ToString() == String.Empty)
-                                newRow[i] = null;
-                            else if (!r.IsNull(newHistoryColumns[i]))
+                            // Copy value from source row
+                            if (!r.IsNull(newHistoryColumns[i]))
                                 newRow[i] = r[newHistoryColumns[i]];
                         }
                         else
@@ -185,13 +183,36 @@ namespace HLU.UI.ViewModel
                             if (fixedValueDict.TryGetValue(i, out val))
                                 newRow[i] = val;
                         }
+
+                        // Convert any empty or whitespace-only strings to null to ensure foreign key integrity
+                        // (this is necessary because shapefiles use empty strings for missing values)
+                        if (newRow[i] != null && newRow[i] != DBNull.Value)
+                        {
+                            string strVal = newRow[i].ToString();
+                            if (string.IsNullOrWhiteSpace(strVal))
+                            {
+                                newRow[i] = DBNull.Value;
+                            }
+                        }
                     }
                     historyTable.AddhistoryRow(newRow);
                 }
 
                 // insert new rows
-                if (_viewModelMain.HluTableAdapterManager.historyTableAdapter.Update(historyTable) == -1)
-                    throw new Exception("Failed to update history table.");
+                int updateResult;
+                try
+                {
+                    updateResult = _viewModelMain.HluTableAdapterManager.historyTableAdapter.Update(historyTable);
+                }
+                catch (Exception updateEx)
+                {
+                    throw new Exception($"Failed to update history table: {updateEx.Message}", updateEx);
+                }
+
+                if (updateResult == -1)
+                {
+                    throw new Exception("Failed to update history table (returned -1).");
+                }
 
                 // Commit the transaction if one was started.
                 if (startTransaction)

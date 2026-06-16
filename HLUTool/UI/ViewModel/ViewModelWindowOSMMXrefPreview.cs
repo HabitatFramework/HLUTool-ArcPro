@@ -98,6 +98,12 @@ namespace HLU.UI.ViewModel
         public bool HasUnmatched { get; }
 
         /// <summary>
+        /// Gets a value indicating whether any rows have invalid primary or secondary codes
+        /// for the active layer geometry type.
+        /// </summary>
+        public bool HasInvalidCodes => Rows.Any(r => r.IsMatched && (!r.IsPrimaryValid || !r.AreSecondariesValid));
+
+        /// <summary>
         /// Gets the warning message shown when unmatched combinations exist.
         /// Returns <see langword="null"/> when all combinations are matched so the
         /// warning panel collapses automatically via a <c>DataTrigger</c> binding.
@@ -106,6 +112,17 @@ namespace HLU.UI.ViewModel
             ? "Warning: one or more attribute combinations were not found in " +
               "lut_osmm_habitat_xref. Features with no match will be loaded " +
               "without habitat values assigned."
+            : null;
+
+        /// <summary>
+        /// Gets the warning message shown when invalid habitat codes exist.
+        /// Returns <see langword="null"/> when all codes are valid so the
+        /// warning panel collapses automatically via a <c>DataTrigger</c> binding.
+        /// </summary>
+        public string InvalidCodesWarning => HasInvalidCodes
+            ? "Warning: one or more habitat codes are not valid for the active " +
+              "layer geometry type (polygon/line/point flags). " +
+              "Features with invalid codes will be loaded without those habitat values."
             : null;
 
         #endregion Properties

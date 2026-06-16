@@ -5,7 +5,7 @@
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
 
-	<AddInInfo id="{8bb44fa0-a26d-4f03-a370-b52f39b28c90}" version="1.1.0" desktopVersion="3.4">
+	<AddInInfo id="{8bb44fa0-a26d-4f03-a370-b52f39b28c90}" version="1.2.0" desktopVersion="3.4">
 		<Name>HLUTool</Name>
 		<Description>HLUTool provides a user-friendly interface for searching, displaying and updating habitat and land use attributes held in a relational database alongside spatial features in ArcGIS Pro. Key benefits include: validation of attribute compatibility; comprehensive history log for every change; simple query interface (e.g. all priority habitat features); reduced data volumes through relational data storage; data extraction in bespoke formats; and improved data retrieval and update performance for high-volume, complex data.</Description>
 		<Image>Images\AddInDesktop32.png</Image>
@@ -92,15 +92,15 @@
 					<button refID="esri_editing_ShowCreateFeaturesBtn" size="middle" />
 					<button refID="esri_editing_ShowEditFeaturesBtn" size="middle" />
 					<button refID="esri_editing_EditVerticesModifyFeature" size ="middle" />
-					<button refID="esri_editing_SplitCommand" size ="middle" separator="true" />
+					<button refID="esri_editing_SplitCommand" size ="middle" />
 					<button refID="esri_editing_MergeFeatures" size ="middle" />
 				</group>
 
 				<!-- Filter group -->
 				<group id="HLUTool_Group_Filter" caption="Filter" keytip="G6" launcherButtonID="HLUTool_btnFilterIncidsOptionsLauncher">
-					<button refID="HLUTool_btnFilterByAttributes" size="large" />
-					<button refID="HLUTool_btnClearFilter" size="middle" separator="true" />
-					<editBox refID="HLUTool_edbFilterByIncid" size="large" />
+					<button refID="HLUTool_btnFilterByAttributes" size="middle" />
+					<button refID="HLUTool_btnClearFilter" size="middle" />
+					<editBox refID="HLUTool_edbFilterByIncid" size="middle" />
 				</group>
 
 				<!-- Selection group -->
@@ -381,7 +381,7 @@
 						  caption=" Active Layer:"
 						  extendedCaption="Select Active Layer"
 						  className="HLU.UI.UserControls.Toolbar.ActiveLayerComboBox"
-						  itemWidth="200"
+						  itemWidth="160"
 						  isEditable="true"
 						  condition="esri_mapping_mapPane"
 						  isReadOnly="true"
@@ -396,7 +396,7 @@
 						  caption=" Reason:"
 						  extendedCaption="Select reason for updates"
 						  className="HLU.UI.UserControls.Toolbar.ReasonComboBox"
-						  itemWidth="220"
+						  itemWidth="160"
 						  isEditable="true"
 						  isReadOnly="true"
 						  resizable="true"
@@ -411,7 +411,7 @@
 						  caption=" Process:"
 						  extendedCaption="Select process for updates"
 						  className="HLU.UI.UserControls.Toolbar.ProcessComboBox"
-						  itemWidth="220"
+						  itemWidth="160"
 						  isEditable="true"
 						  isReadOnly="true"
 						  resizable="true"

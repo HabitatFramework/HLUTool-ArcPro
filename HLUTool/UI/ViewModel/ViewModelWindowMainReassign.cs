@@ -61,7 +61,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Initiates the reassign features process by opening the Reassign dialog.
         /// </summary>
-        public void InitiateReassign()
+        public async void InitiateReassign()
         {
             if (_viewModelMain == null)
                 return;
@@ -75,15 +75,29 @@ namespace HLU.UI.ViewModel
                 return;
             }
 
-            // Build the list of target layers: all available HLU layers except the active source layer.
+            // Build the list of target layers: all available HLU layers except the active source layer
+            // and only those with matching geometry type.
             string sourceLayerName = _viewModelMain.ActiveLayerName;
-            List<string> targetLayerNames = [.. _viewModelMain.AvailableHLULayerNames.Where(n => n != sourceLayerName)];
+            HluGeometryTypes sourceGeometryType = _viewModelMain.GISApplication.HluGeometryType;
+
+            // Filter target layers to only include those with matching geometry type
+            List<string> candidateLayerNames = [.. _viewModelMain.AvailableHLULayerNames.Where(n => n != sourceLayerName)];
+            List<string> targetLayerNames = [];
+
+            foreach (string layerName in candidateLayerNames)
+            {
+                HluGeometryTypes layerGeometryType = await _viewModelMain.GISApplication.GetLayerGeometryTypeAsync(layerName);
+                if (layerGeometryType != HluGeometryTypes.Unknown && layerGeometryType == sourceGeometryType)
+                {
+                    targetLayerNames.Add(layerName);
+                }
+            }
 
             if (targetLayerNames.Count == 0)
             {
                 MessageBox.Show(
-                    "No other HLU layers are available to reassign features to.\n\n" +
-                    "Please ensure at least two HLU layers are present in the active map.",
+                    $"No other HLU layers with matching geometry type ({sourceGeometryType}) are available to reassign features to.\n\n" +
+                    "Please ensure at least two HLU layers with the same geometry type are present in the active map.",
                     "HLU: Reassign Features",
                     MessageBoxButton.OK,
                     MessageBoxImage.Exclamation);
@@ -123,9 +137,9 @@ namespace HLU.UI.ViewModel
             };
 
             // Guard against double subscription.
-            _viewModelReassign.RequestRun -= ViewModelReassign_RequestRun;
-            _viewModelReassign.RequestRun +=
-                new ViewModelWindowReassign.RequestRunEventHandler(ViewModelReassign_RequestRun);
+            _viewModelReassign.RequestProcessAll -= ViewModelReassign_RequestProcessAll;
+            _viewModelReassign.RequestProcessAll +=
+                new ViewModelWindowReassign.RequestProcessAllEventHandler(ViewModelReassign_RequestProcessAll);
 
             _viewModelReassign.RequestClose -= ViewModelReassign_RequestClose;
             _viewModelReassign.RequestClose +=
@@ -136,12 +150,89 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Handles the RequestRun event from the Reassign dialog (OK button).
-        /// Runs the reassign without closing the window so the user can run further rules.
+        /// Handles the RequestProcessAll event from the Reassign dialog (OK button).
+        /// Processes all rule assignments sequentially, then closes the dialog.
         /// </summary>
-        private async void ViewModelReassign_RequestRun(string targetLayerName, ReassignRule rule)
+        private async void ViewModelReassign_RequestProcessAll(List<(string targetLayerName, ReassignRule rule)> assignments)
         {
-            await ExecuteReassignAsync(targetLayerName, rule);
+            if (assignments == null || assignments.Count == 0)
+                return;
+
+            // Hide the dialog and show the main UI processing indicator.
+            _windowReassign.Hide();
+
+            try
+            {
+                int totalMoved = 0;
+                int successCount = 0;
+                int failureCount = 0;
+                List<string> errorMessages = [];
+
+                // Process each rule assignment sequentially
+                foreach (var (targetLayerName, rule) in assignments)
+                {
+                    _viewModelMain.ChangeCursor(Cursors.Wait, $"Reassigning features using rule '{rule.RuleName}'…");
+
+                    try
+                    {
+                        int moved = await ExecuteSingleReassignAsync(targetLayerName, rule);
+                        if (moved >= 0)
+                        {
+                            totalMoved += moved;
+                            successCount++;
+                        }
+                        else
+                        {
+                            failureCount++;
+                            errorMessages.Add($"Rule '{rule.RuleName}': target layer '{targetLayerName}' not found.");
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        failureCount++;
+                        errorMessages.Add($"Rule '{rule.RuleName}': {ex.Message}");
+                    }
+                }
+
+                // Show summary
+                string summaryMessage = $"{totalMoved} feature(s) reassigned using {successCount} rule(s).";
+                if (failureCount > 0)
+                {
+                    summaryMessage += $"\n\n{failureCount} rule(s) failed:";
+                    foreach (var errMsg in errorMessages)
+                    {
+                        summaryMessage += $"\n• {errMsg}";
+                    }
+
+                    MessageBox.Show(
+                        summaryMessage,
+                        "HLU: Reassign Features",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                }
+                else
+                {
+                    _viewModelMain.ShowInfo(summaryMessage, MessageCategory.Update);
+                }
+
+                // Close the dialog
+                _viewModelReassign.RequestProcessAll -= ViewModelReassign_RequestProcessAll;
+                _viewModelReassign.RequestClose -= ViewModelReassign_RequestClose;
+                _windowReassign.Close();
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show(
+                    $"Reassign Features process failed.\n\n{ex.Message}",
+                    "HLU: Reassign Features",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                _windowReassign.Show();
+            }
+            finally
+            {
+                _viewModelMain.ChangeCursor(Cursors.Arrow);
+            }
         }
 
         /// <summary>
@@ -149,89 +240,59 @@ namespace HLU.UI.ViewModel
         /// </summary>
         private void ViewModelReassign_RequestClose()
         {
-            _viewModelReassign.RequestRun -= ViewModelReassign_RequestRun;
+            _viewModelReassign.RequestProcessAll -= ViewModelReassign_RequestProcessAll;
             _viewModelReassign.RequestClose -= ViewModelReassign_RequestClose;
             _windowReassign.Close();
         }
 
         /// <summary>
-        /// Executes the feature reassignment: moves features matching the rule's WHERE clause
+        /// Executes a single feature reassignment: moves features matching the rule's WHERE clause
         /// from the active source HLU layer to <paramref name="targetLayerName"/>.
+        /// Returns the number of features moved, or -1 if the target layer was not found.
         /// </summary>
-        private async Task ExecuteReassignAsync(string targetLayerName, ReassignRule rule)
+        private async Task<int> ExecuteSingleReassignAsync(string targetLayerName, ReassignRule rule)
         {
-            // Hide the dialog and show the main UI processing indicator.
-            _windowReassign.Hide();
-            _viewModelMain.ChangeCursor(Cursors.Wait, $"Reassigning features using rule '{rule.RuleName}'…");
-
-            try
+            // Build and execute the GIS edit operation.
+            EditOperation editOperation = new()
             {
-                // Build and execute the GIS edit operation.
-                EditOperation editOperation = new()
-                {
-                    Name = $"Reassign Features – {rule.RuleName}",
-                    ProgressMessage = $"Moving features to '{targetLayerName}'…"
-                };
+                Name = $"Reassign Features – {rule.RuleName}",
+                ProgressMessage = $"Moving features to '{targetLayerName}'…"
+            };
 
-                int moved = await _viewModelMain.GISApplication.ReassignFeaturesAsync(
-                    targetLayerName,
-                    rule.WhereClause,
-                    editOperation);
+            int moved = await _viewModelMain.GISApplication.ReassignFeaturesAsync(
+                targetLayerName,
+                rule.WhereClause,
+                editOperation);
 
-                if (moved < 0)
-                {
-                    MessageBox.Show(
-                        $"The target layer '{targetLayerName}' could not be found in the active map.",
-                        "HLU: Reassign Features",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Warning);
-                    return;
-                }
-
-                if (moved == 0)
-                {
-                    MessageBox.Show(
-                        $"No features matched the rule '{rule.RuleName}'.\n\nNo changes were made.",
-                        "HLU: Reassign Features",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
-                    return;
-                }
-
-                // Execute the queued edits.
-                bool executed = await editOperation.ExecuteAsync();
-                if (!executed)
-                {
-                    string details = editOperation.ErrorMessage;
-                    if (string.IsNullOrWhiteSpace(details))
-                        details = "No additional details were provided by the edit operation.";
-
-                    throw new System.Exception($"GIS edit operation failed. {details}");
-                }
-
-                // Save edits.
-                bool saved = await ArcGIS.Desktop.Core.Project.Current.SaveEditsAsync();
-                if (!saved)
-                    throw new System.Exception("Features were moved but edits could not be saved.");
-
-                _viewModelMain.ShowInfo(
-                    $"{moved} feature(s) reassigned to layer '{targetLayerName}' using rule '{rule.RuleName}'.",
-                    MessageCategory.Update);
-            }
-            catch (System.Exception ex)
+            if (moved < 0)
             {
-                MessageBox.Show(
-                    $"Reassign Features failed.\n\n{ex.Message}",
-                    "HLU: Reassign Features",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                // Target layer not found
+                return -1;
             }
-            finally
+
+            if (moved == 0)
             {
-                // Restore the cursor and show the dialog again.
-                _viewModelMain.ChangeCursor(Cursors.Arrow);
-                _windowReassign.Show();
+                // No features matched the rule, but this is not an error
+                return 0;
             }
+
+            // Execute the queued edits.
+            bool executed = await editOperation.ExecuteAsync();
+            if (!executed)
+            {
+                string details = editOperation.ErrorMessage;
+                if (string.IsNullOrWhiteSpace(details))
+                    details = "No additional details were provided by the edit operation.";
+
+                throw new System.Exception($"GIS edit operation failed. {details}");
+            }
+
+            // Save edits.
+            bool saved = await ArcGIS.Desktop.Core.Project.Current.SaveEditsAsync();
+            if (!saved)
+                throw new System.Exception("Features were moved but edits could not be saved.");
+
+            return moved;
         }
 
         #endregion Methods

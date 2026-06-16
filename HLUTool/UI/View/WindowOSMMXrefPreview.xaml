@@ -7,9 +7,10 @@
     xmlns:local="clr-namespace:HLU.UI.ViewModel"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="{Binding WindowTitle}"
-    Width="900"
+    Width="Auto"
     MinWidth="600"
     MinHeight="250"
+    MaxWidth="900"
     MaxHeight="700"
     d:DataContext="{d:DesignInstance Type=local:ViewModelWindowOSMMXrefPreview}"
     Icon="..\..\Images\HLUTool16.png"
@@ -24,14 +25,13 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="4" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Preview data grid -->
-        <GroupBox
-            Grid.Row="0"
-            Header="OSMM Attribute Combinations">
+        <!--  Preview data grid  -->
+        <GroupBox Grid.Row="0" Header="OSMM Attribute Combinations">
             <DataGrid
                 Margin="4,0,4,4"
                 AutoGenerateColumns="False"
@@ -52,34 +52,34 @@
                 <DataGrid.Columns>
                     <DataGridTextColumn
                         Width="Auto"
+                        MinWidth="60"
                         Binding="{Binding Make}"
-                        Header="Make"
-                        MinWidth="60" />
+                        Header="Make" />
                     <DataGridTextColumn
                         Width="Auto"
+                        MinWidth="80"
                         Binding="{Binding DescGroup}"
-                        Header="Desc Group"
-                        MinWidth="80" />
+                        Header="Desc Group" />
                     <DataGridTextColumn
                         Width="*"
+                        MinWidth="100"
                         Binding="{Binding DescTerm}"
-                        Header="Desc Term"
-                        MinWidth="100" />
+                        Header="Desc Term" />
                     <DataGridTextColumn
                         Width="Auto"
+                        MinWidth="80"
                         Binding="{Binding Theme}"
-                        Header="Theme"
-                        MinWidth="80" />
+                        Header="Theme" />
                     <DataGridTextColumn
                         Width="Auto"
+                        MinWidth="67"
                         Binding="{Binding FeatCode}"
-                        Header="Feat Code"
-                        MinWidth="70" />
+                        Header="Feat Code" />
                     <DataGridTextColumn
                         Width="Auto"
+                        MinWidth="50"
                         Binding="{Binding Count}"
-                        Header="Count"
-                        MinWidth="50">
+                        Header="Count">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="HorizontalAlignment" Value="Right" />
@@ -89,19 +89,19 @@
                     </DataGridTextColumn>
                     <DataGridTextColumn
                         Width="Auto"
+                        MinWidth="93"
                         Binding="{Binding HabitatPrimary}"
-                        Header="Habitat Primary"
-                        MinWidth="100" />
+                        Header="Habitat Primary" />
                     <DataGridTextColumn
                         Width="Auto"
+                        MinWidth="130"
                         Binding="{Binding HabitatSecondaries}"
-                        Header="Habitat Secondaries"
-                        MinWidth="130" />
-                    <!-- Status column with colour coding -->
+                        Header="Habitat Secondaries" />
+                    <!--  Status column with colour coding  -->
                     <DataGridTemplateColumn
                         Width="Auto"
-                        Header="Status"
-                        MinWidth="90">
+                        MinWidth="150"
+                        Header="Status">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock
@@ -110,15 +110,37 @@
                                     Text="{Binding Status}">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
+                                            <Setter Property="FontWeight" Value="SemiBold" />
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsMatched}" Value="True">
-                                                    <Setter Property="Foreground" Value="#FF006400" />
-                                                    <Setter Property="FontWeight" Value="SemiBold" />
-                                                </DataTrigger>
+                                                <!--  No match (red)  -->
                                                 <DataTrigger Binding="{Binding IsMatched}" Value="False">
                                                     <Setter Property="Foreground" Value="#FFC00000" />
-                                                    <Setter Property="FontWeight" Value="SemiBold" />
                                                 </DataTrigger>
+                                                <!--  Matched but invalid primary (orange)  -->
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding IsMatched}" Value="True" />
+                                                        <Condition Binding="{Binding IsPrimaryValid}" Value="False" />
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Foreground" Value="#FFFF8C00" />
+                                                </MultiDataTrigger>
+                                                <!--  Matched but invalid secondaries (orange)  -->
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding IsMatched}" Value="True" />
+                                                        <Condition Binding="{Binding AreSecondariesValid}" Value="False" />
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Foreground" Value="#FFFF8C00" />
+                                                </MultiDataTrigger>
+                                                <!--  Matched and all valid (green) - must be last to override  -->
+                                                <MultiDataTrigger>
+                                                    <MultiDataTrigger.Conditions>
+                                                        <Condition Binding="{Binding IsMatched}" Value="True" />
+                                                        <Condition Binding="{Binding IsPrimaryValid}" Value="True" />
+                                                        <Condition Binding="{Binding AreSecondariesValid}" Value="True" />
+                                                    </MultiDataTrigger.Conditions>
+                                                    <Setter Property="Foreground" Value="#FF006400" />
+                                                </MultiDataTrigger>
                                             </Style.Triggers>
                                         </Style>
                                     </TextBlock.Style>
@@ -130,7 +152,7 @@
             </DataGrid>
         </GroupBox>
 
-        <!-- Warning panel - visible only when unmatched rows exist -->
+        <!--  Warning panel - visible only when unmatched rows exist  -->
         <Border
             Grid.Row="1"
             Margin="4,4,4,0"
@@ -142,9 +164,7 @@
             <Border.Style>
                 <Style TargetType="Border">
                     <Style.Triggers>
-                        <DataTrigger
-                            Binding="{Binding UnmatchedWarning}"
-                            Value="{x:Null}">
+                        <DataTrigger Binding="{Binding UnmatchedWarning}" Value="{x:Null}">
                             <Setter Property="Visibility" Value="Collapsed" />
                         </DataTrigger>
                     </Style.Triggers>
@@ -156,10 +176,32 @@
                 TextWrapping="Wrap" />
         </Border>
 
-        <!-- Button row -->
-        <Grid
-            Grid.Row="3"
-            Margin="4">
+        <!--  Warning panel - visible only when invalid codes exist  -->
+        <Border
+            Grid.Row="2"
+            Margin="4,4,4,0"
+            Padding="8,6"
+            Background="#FFFFE0B2"
+            BorderBrush="#FFFF9800"
+            BorderThickness="1"
+            CornerRadius="2">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding InvalidCodesWarning}" Value="{x:Null}">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <TextBlock
+                Foreground="#FFE65100"
+                Text="{Binding InvalidCodesWarning}"
+                TextWrapping="Wrap" />
+        </Border>
+
+        <!--  Button row  -->
+        <Grid Grid.Row="4" Margin="4">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />

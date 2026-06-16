@@ -2186,18 +2186,18 @@ namespace HLU.UI.ViewModel
 
             // Prompt the user to confirm they have backed up the features before unloading.
             MessageBoxResult result = MessageBox.Show(
-                "The OSMM Unload operation will permanently remove the selected features from the GIS layer and delete their associated database records.\n\n" +
+                "The Bulk Unload operation will permanently remove the selected features from the active layer and delete their associated database records.\n\n" +
                 "Have you exported the selected features as a backup or snapshot and performed a database backup before proceeding?\n\n" +
                 "Click 'Yes' to continue with the unload operation.\n" +
                 "Click 'No' to cancel and perform an export and create a backup first.",
-                "HLU: OSMM Unload - Backup Reminder",
+                "HLU: Bulk Unload - Backup Reminder",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
 
             // If the user clicked No, cancel the operation.
             if (result == MessageBoxResult.No)
             {
-                ShowInfo("OSMM Unload operation cancelled. Please create a backup before unloading.", MessageCategory.OSMMLoad);
+                ShowInfo("Bulk Unload operation cancelled. Please create a backup before unloading.", MessageCategory.OSMMLoad);
                 return;
             }
 
@@ -2206,7 +2206,7 @@ namespace HLU.UI.ViewModel
             if (featureCount > 0)
             {
                 ShowSuccess(
-                    $"OSMM Unload completed: {featureCount} {(featureCount == 1 ? "feature" : "features")} removed.",
+                    $"Bulk Unload completed: {featureCount} {(featureCount == 1 ? "feature" : "features")} removed.",
                     MessageCategory.OSMMLoad);
             }
         }

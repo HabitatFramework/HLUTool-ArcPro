@@ -16,6 +16,8 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Mapping;
@@ -39,7 +41,7 @@ using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 namespace HLU.UI.ViewModel
 {
     /// <summary>
-    /// Implements the OSMM Unload and Load operations.
+    /// Implements the Bulk Unload and Load operations.
     ///
     /// <para><b>Unload</b> removes the currently selected HLU features from the GIS layer, deletes
     /// their shadow map-match rows, and (for any INCID that no longer has remaining features)
@@ -90,7 +92,7 @@ namespace HLU.UI.ViewModel
         #region Unload
 
         /// <summary>
-        /// Validates that the current selection is suitable for an OSMM unload operation and, if so,
+        /// Validates that the current selection is suitable for an Bulk unload operation and, if so,
         /// shows the layer-picker dialog and performs the unload across all checked layers.
         /// </summary>
         /// <returns>The number of features unloaded; 0 if the operation failed or was cancelled.</returns>
@@ -120,18 +122,62 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Shows the OSMM Unload layer-picker dialog and returns the list of layer names
+        /// Shows the Bulk Unload layer-picker dialog and returns the list of layer names
         /// the user checked, or an empty list if cancelled.
         /// </summary>
-        private Task<IReadOnlyList<string>> ShowUnloadLayerPickerAsync()
+        private async Task<IReadOnlyList<string>> ShowUnloadLayerPickerAsync()
         {
             var tcs = new TaskCompletionSource<IReadOnlyList<string>>();
 
-            IReadOnlyList<string> availableNames = _viewModelMain.GISApplication.ValidHluLayerNames
+            IReadOnlyList<string> allAvailableNames = _viewModelMain.GISApplication.ValidHluLayerNames
                 ?? [];
             string activeName = _viewModelMain.ActiveLayerName;
 
-            var vm = new ViewModelWindowBulkUnload(availableNames, activeName);
+            // Get the geometry type of the active layer to filter other layers.
+            HluGeometryTypes activeGeometryType = _viewModelMain.GISApplication.HluGeometryType;
+
+            // Filter layers to only include those with the same geometry type as the active layer.
+            var filteredNames = new List<string>();
+            foreach (string name in allAvailableNames)
+            {
+                try
+                {
+                    HluGeometryTypes layerGeometryType = await _viewModelMain.GISApplication
+                        .GetLayerGeometryTypeAsync(name);
+
+                    if (layerGeometryType == activeGeometryType)
+                    {
+                        filteredNames.Add(name);
+                    }
+                }
+                catch
+                {
+                    // If geometry type cannot be determined, exclude the layer.
+                }
+            }
+
+            IReadOnlyList<string> availableNames = filteredNames;
+
+            // Gather selected/total feature counts for every available layer.
+            var layerCounts = new Dictionary<string, (int Selected, long Total)>(
+                StringComparer.OrdinalIgnoreCase);
+
+            foreach (string name in availableNames)
+            {
+                try
+                {
+                    (int sel, long tot) = await _viewModelMain.GISApplication
+                        .CountLayerFeaturesAsync(name);
+                    layerCounts[name] = (sel, tot);
+                }
+                catch
+                {
+                    // If counts cannot be retrieved for a layer, leave it absent
+                    // from the dictionary so the dialog shows no count for that entry.
+                }
+            }
+
+            var vm = new ViewModelWindowBulkUnload(availableNames, activeName, layerCounts);
             var window = new WindowBulkUnload
             {
                 Owner = FrameworkApplication.Current.MainWindow,
@@ -150,11 +196,11 @@ namespace HLU.UI.ViewModel
             vm.RequestClose += OnRequestClose;
             window.ShowDialog();
 
-            return tcs.Task;
+            return tcs.Task.Result;
         }
 
         /// <summary>
-        /// Performs the OSMM unload across the specified HLU layers: for each layer, deletes
+        /// Performs the Bulk unload across the specified HLU layers: for each layer, deletes
         /// the selected GIS features and their shadow map-match rows, then — after all layers
         /// have been processed — cleans up any INCIDs that are left with no remaining features.
         /// </summary>
@@ -175,7 +221,7 @@ namespace HLU.UI.ViewModel
 
             EditOperation editOperation = new()
             {
-                Name = "OSMM Unload GIS Features"
+                Name = "Bulk Unload GIS Features"
             };
 
             bool gisExecuted = false;
@@ -208,16 +254,22 @@ namespace HLU.UI.ViewModel
                     if (!activated)
                         throw new HLUToolException($"Layer '{layerName}' could not be activated as a valid HLU layer.");
 
-                    // Obtain the FeatureLayer reference used to read the selection.
-                    FeatureLayer featureLayer =
+                    // Obtain the FeatureLayer and FeatureClass references used to read and delete the selection.
+                    (FeatureLayer featureLayer, FeatureClass layerFeatureClass) =
                         await ArcGIS.Desktop.Framework.Threading.Tasks.QueuedTask.Run(() =>
-                            MapView.Active?.Map
+                        {
+                            var fl = MapView.Active?.Map
                                 ?.GetLayersAsFlattenedList()
                                 .OfType<FeatureLayer>()
-                                .FirstOrDefault(l => l.Name == layerName));
+                                .FirstOrDefault(l => l.Name == layerName);
+                            return (fl, fl?.GetTable() as FeatureClass);
+                        });
 
                     if (featureLayer == null)
                         throw new HLUToolException($"Could not locate layer '{layerName}' in the active map.");
+
+                    if (layerFeatureClass == null)
+                        throw new HLUToolException($"Could not obtain feature class for layer '{layerName}'.");
 
                     // Read this layer's selection into a local GIS selection table
                     // using the current GIS ID column schema.
@@ -252,7 +304,9 @@ namespace HLU.UI.ViewModel
                     // ---------------------------------------------------------------
                     // 2. Capture history and queue the GIS deletes for this layer.
                     // ---------------------------------------------------------------
-                    DataTable layerHistory = await _viewModelMain.GISApplication.DeleteSelectedFeaturesAsync(
+                    DataTable layerHistory = await _viewModelMain.GISApplication.DeleteSelectedFeaturesForLayerAsync(
+                        featureLayer,
+                        layerFeatureClass,
                         _viewModelMain.HistoryColumns,
                         editOperation);
 
@@ -462,7 +516,7 @@ namespace HLU.UI.ViewModel
 
                 string exMessage = DbBase.GetSqlErrorMessage(ex);
                 MessageBox.Show(
-                    $"OSMM Unload failed. The error message returned was:\n\n{exMessage}",
+                    $"Bulk Unload failed. The error message returned was:\n\n{exMessage}",
                     "HLU: Unload Error", MessageBoxButton.OK, MessageBoxImage.Error);
 
                 return 0; // Failure
@@ -570,6 +624,9 @@ namespace HLU.UI.ViewModel
             string sourceLayerName = _fieldMapping?.LayerName
                 ?? _viewModelMain.ActiveLayerName;
 
+            // Get the geometry type of the active layer for validation.
+            HluGeometryTypes activeGeometryType = _viewModelMain.GISApplication.HluGeometryType;
+
             // Collect selected OIDs from the source layer.
             IReadOnlyList<long> selectedOids = await ArcGIS.Desktop.Framework.Threading.Tasks.QueuedTask.Run(() =>
             {
@@ -625,17 +682,39 @@ namespace HLU.UI.ViewModel
                          g.Key.Item4, g.Key.Item5),
                         out var xref);
 
+                    // Validate primary and secondary codes against geometry type.
+                    bool isPrimaryValid = true;
+                    bool areSecondariesValid = true;
+
+                    if (matched)
+                    {
+                        if (!string.IsNullOrEmpty(xref.habprimary))
+                            isPrimaryValid = IsHabitatCodeValidForGeometryType(xref.habprimary, activeGeometryType, true);
+
+                        if (!string.IsNullOrEmpty(xref.habsecond))
+                        {
+                            string[] secondaryCodes = xref.habsecond.Split(
+                                [_viewModelMain.SecondaryCodeDelimiter],
+                                StringSplitOptions.RemoveEmptyEntries);
+
+                            areSecondariesValid = secondaryCodes.All(code =>
+                                IsHabitatCodeValidForGeometryType(code.Trim(), activeGeometryType, false));
+                        }
+                    }
+
                     return new OsmmXrefPreviewRow
                     {
-                        Make               = g.Key.Item1,
-                        DescGroup          = g.Key.Item2,
-                        DescTerm           = g.Key.Item3,
-                        Theme              = g.Key.Item4,
-                        FeatCode           = g.Key.Item5,
-                        Count              = g.Count(),
-                        HabitatPrimary     = matched ? xref.habprimary : null,
-                        HabitatSecondaries = matched ? xref.habsecond  : null,
-                        IsMatched          = matched
+                        Make                 = g.Key.Item1,
+                        DescGroup            = g.Key.Item2,
+                        DescTerm             = g.Key.Item3,
+                        Theme                = g.Key.Item4,
+                        FeatCode             = g.Key.Item5,
+                        Count                = g.Count(),
+                        HabitatPrimary       = matched ? xref.habprimary : null,
+                        HabitatSecondaries   = matched ? xref.habsecond  : null,
+                        IsMatched            = matched,
+                        IsPrimaryValid       = isPrimaryValid,
+                        AreSecondariesValid  = areSecondariesValid
                     };
                 })
                 .ToList();
@@ -679,18 +758,12 @@ namespace HLU.UI.ViewModel
         private async Task<(bool success, int featureCount, int incidCount)> PerformLoadAsync()
         {
             _viewModelMain.ChangeCursor(Cursors.Wait, "Loading ...");
-            bool success = false;
             int featureCount = 0;
             int incidCount = 0;
 
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
-            EditOperation editOperation = new()
-            {
-                Name = "Bulk Load GIS Features"
-            };
-
-            bool gisExecuted = false;
+            bool loadSuccess = false;
             string sourceLayerName = _fieldMapping?.LayerName ?? _viewModelMain.ActiveLayerName;
             Dictionary<long, (string incid, string fragid, string habprimary, string habsecond, string determqty, string interpqty)> oidAssignments = [];
             Dictionary<long, string> toidByOid = [];
@@ -712,8 +785,11 @@ namespace HLU.UI.ViewModel
                     return (IReadOnlyList<long>)(selection?.GetObjectIDs() ?? []);
                 });
 
+
                 if (selectedOids.Count == 0)
+                {
                     throw new HLUToolException($"No features are selected in layer '{sourceLayerName}'.");
+                }
 
                 // ---------------------------------------------------------------
                 // 2. Read OSMM xref attributes from the source layer using the field mapping.
@@ -727,6 +803,7 @@ namespace HLU.UI.ViewModel
                         _fieldMapping?.DescTermField,
                         _fieldMapping?.ThemeField,
                         _fieldMapping?.FeatCodeField);
+
 
                 // ---------------------------------------------------------------
                 // 2a. Read TOID values from the source layer (if a field was mapped).
@@ -743,12 +820,14 @@ namespace HLU.UI.ViewModel
                 Dictionary<long, (string habprimary, string habsecond, string determqty, string interpqty)> insertAttribs =
                     await _viewModelMain.GISApplication.ReadInsertAttributesAsync(selectedOids);
 
+
                 // ---------------------------------------------------------------
                 // 3. Build OID → (incid, fragid, ...) assignment map.
                 //    Look up lut_osmm_habitat_xref via SQL using the mapped attribute
                 //    values to resolve primary/secondary habitat for each feature.
                 //    Each feature gets its own INCID with fragment "00001".
                 // ---------------------------------------------------------------
+
                 DateTime currDtTm = DateTime.Now;
                 DateTime nowDtTm = new(currDtTm.Year, currDtTm.Month, currDtTm.Day,
                     currDtTm.Hour, currDtTm.Minute, currDtTm.Second, DateTimeKind.Local);
@@ -758,9 +837,11 @@ namespace HLU.UI.ViewModel
                 Dictionary<(string, string, string, string, string), (string habprimary, string habsecond)> xrefCache =
                     BuildXrefCache();
 
+
                 List<long> orderedOids = [.. selectedOids.OrderBy(o => o)];
                 List<(string incid, string toid, string fragid, string habprimary, string habsecond, string determqty, string interpqty)> mmRowsToCreate = [];
 
+                int assignmentCount = 0;
                 foreach (long oid in orderedOids)
                 {
                     string newIncid = _viewModelMain.NextIncid;
@@ -787,6 +868,9 @@ namespace HLU.UI.ViewModel
                             if (!string.IsNullOrEmpty(xref.habsecond))
                                 resolvedHabsecond = xref.habsecond;
                         }
+                        else
+                        {
+                        }
                     }
 
                     List<string> validSecondaryCodes = ResolveValidSecondaryCodes(resolvedHabsecond);
@@ -810,10 +894,14 @@ namespace HLU.UI.ViewModel
 
                     oidAssignments[oid] = (newIncid, FirstFragId, validHabprimary, habsecondMM, validDetermqty, validInterpqty);
                     mmRowsToCreate.Add((newIncid, sourceToid, FirstFragId, resolvedHabprimary, habsecondMM, a.determqty, a.interpqty));
+
+                    assignmentCount++;
                 }
+
 
                 incidCount = orderedOids.Count;
                 featureCount = orderedOids.Count;
+
 
                 // ---------------------------------------------------------------
                 // 4. Insert incid_mm_* shadow rows.
@@ -822,33 +910,145 @@ namespace HLU.UI.ViewModel
                     CreateMMRow(incid, toid, fragid, habprimary, habsecond, determqty, interpqty);
 
                 // ---------------------------------------------------------------
-                // 5. Write incid + fragid to the GIS layer; capture history.
+                // 5. Create the staging output (this populates the HLU fields).
+                //    The OSMM source layer is read-only, so we skip GIS edits
+                //    and write directly to the staging output instead.
                 // ---------------------------------------------------------------
-                DataTable historyTable = await _viewModelMain.GISApplication.RegisterNewFeaturesAsync(
-                    oidAssignments,
-                    _viewModelMain.HistoryColumns,
-                    editOperation);
-
-                if (historyTable == null || historyTable.Rows.Count == 0)
-                    throw new HLUToolException("No GIS features were updated during the load.");
-
-                // ---------------------------------------------------------------
-                // 6. Execute the queued GIS edits.
-                // ---------------------------------------------------------------
-                bool executed = await editOperation.ExecuteAsync();
-                if (!executed)
+                if (string.IsNullOrEmpty(_outputWorkspace) ||
+                    string.IsNullOrEmpty(_outputFeatureClassName))
                 {
-                    string details = editOperation.ErrorMessage;
-                    if (string.IsNullOrWhiteSpace(details))
-                        details = "No additional details were provided by the edit operation.";
-                    throw new HLUToolException($"Failed to update GIS layer. {details}");
+                    throw new HLUToolException(
+                        "Bulk load requires an output workspace and feature class name for the staging layer.");
                 }
 
-                bool saved = await ArcGIS.Desktop.Core.Project.Current.SaveEditsAsync();
-                if (!saved)
-                    throw new HLUToolException("GIS edits were applied but could not be saved.");
+                string fullOutputPath = System.IO.Path.Combine(
+                    _outputWorkspace, _outputFeatureClassName);
 
-                gisExecuted = true;
+                _viewModelMain.ChangeCursor(Cursors.Wait, "Creating staging output layer ...");
+
+
+                bool created = await CreateStagingOutputAsync(
+                    sourceLayerName, fullOutputPath, oidAssignments, toidByOid);
+
+                if (!created)
+                    throw new HLUToolException(
+                        $"The staging output layer could not be created at:\n\n{fullOutputPath}");
+
+
+                // ---------------------------------------------------------------
+                // 6. Build history from the staging output layer.
+                //    The staging output only has the 7 HLU fields (incid, toid, fragid,
+                //    habprimary, habsecond, determqty, interpqty) plus geometry.
+                //    For bulk load history, we only need these fields — HistoryWrite will
+                //    handle filling in the standard history metadata fields.
+                // ---------------------------------------------------------------
+
+                // Build a minimal history table with only the fields that exist in the staging output.
+                DataTable historyTable = new();
+
+                // Add only the HLU fields that we know exist in the staging output.
+                string[] stagingFields = ["incid", "toid", "fragid", "habprimary", "habsecond", "determqty", "interpqty"];
+                foreach (string fieldName in stagingFields)
+                {
+                    historyTable.Columns.Add(new DataColumn(fieldName, typeof(string)));
+                }
+
+                // Add geometry history columns.
+                historyTable.Columns.Add(new DataColumn(ViewModelWindowMain.HistoryGeometry1ColumnName, typeof(double)));
+                historyTable.Columns.Add(new DataColumn(ViewModelWindowMain.HistoryGeometry2ColumnName, typeof(double)));
+
+                // Read the staging output to build history rows.
+                string stagingLayerName = System.IO.Path.GetFileNameWithoutExtension(_outputFeatureClassName);
+                bool isShapefile = fullOutputPath.EndsWith(".shp", StringComparison.OrdinalIgnoreCase);
+
+                await ArcGIS.Desktop.Framework.Threading.Tasks.QueuedTask.Run(() =>
+                {
+                    try
+                    {
+                        string dir = System.IO.Path.GetDirectoryName(fullOutputPath);
+                        string name = System.IO.Path.GetFileNameWithoutExtension(fullOutputPath);
+
+                        FeatureClass fc;
+
+                        if (isShapefile)
+                        {
+                            // Open shapefile from folder - use full path including .shp extension
+                            var folderConnection = new FileSystemConnectionPath(
+                                new Uri(dir), FileSystemDatastoreType.Shapefile);
+                            using var folderDatastore = new FileSystemDatastore(folderConnection);
+                            // For shapefiles, include the .shp extension in the dataset name
+                            fc = folderDatastore.OpenDataset<FeatureClass>(name + ".shp");
+                        }
+                        else
+                        {
+                            // Open feature class from geodatabase.
+                            using var gdb = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(dir)));
+                            fc = gdb.OpenDataset<FeatureClass>(name);
+                        }
+
+                        using (fc)
+                        {
+                            using var def = fc.GetDefinition();
+
+                            // Build field index map for staging fields.
+                            Dictionary<string, int> fieldIndexMap = [];
+                            foreach (string fieldName in stagingFields)
+                            {
+                                int idx = def.FindField(fieldName);
+                                if (idx >= 0)
+                                    fieldIndexMap[fieldName] = idx;
+                            }
+
+                            // Read ALL features from staging output (no OID filter needed).
+                            QueryFilter qf = new();
+
+                            using RowCursor cursor = fc.Search(qf, false);
+                            while (cursor.MoveNext())
+                            {
+                                using Feature feature = cursor.Current as Feature;
+                                if (feature == null)
+                                    continue;
+
+                                DataRow historyRow = historyTable.NewRow();
+
+                                // Read only the fields that exist in the staging output.
+                                foreach (string fieldName in stagingFields)
+                                {
+                                    if (fieldIndexMap.TryGetValue(fieldName, out int idx))
+                                    {
+                                        object val = feature[idx];
+                                        // Convert empty strings back to DBNull for proper history storage.
+                                        historyRow[fieldName] = (val != null && val.ToString() == string.Empty) ? DBNull.Value : val;
+                                    }
+                                    else
+                                    {
+                                        historyRow[fieldName] = DBNull.Value;
+                                    }
+                                }
+
+                                // Get geometry history values.
+                                Geometry geom = feature.GetShape();
+                                (double geom1, double geom2) = GetGeometryHistoryValues(geom);
+                                historyRow[ViewModelWindowMain.HistoryGeometry1ColumnName] = geom1;
+                                historyRow[ViewModelWindowMain.HistoryGeometry2ColumnName] = geom2;
+
+                                historyTable.Rows.Add(historyRow);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new HLUToolException("Error building history from staging output: " + ex.Message, ex);
+                    }
+                });
+
+
+                if (historyTable == null || historyTable.Rows.Count == 0)
+                {
+                    throw new HLUToolException("No history rows were built from staging output.");
+                }
+
+                // No GIS edits needed — the staging output already contains the populated HLU fields.
 
                 // ---------------------------------------------------------------
                 // 7. Write history — one entry per INCID.
@@ -860,6 +1060,7 @@ namespace HLU.UI.ViewModel
                 if (historyForWrite.Columns.Contains(OidColumnName))
                     historyForWrite.Columns.Remove(OidColumnName);
 
+
                 string incidColName = _viewModelMain.HluDataset.history.incidColumn.ColumnName;
                 int incidColOrdinal = _viewModelMain.HluDataset.history.incidColumn.Ordinal;
 
@@ -869,30 +1070,51 @@ namespace HLU.UI.ViewModel
                         ? "modified_" + incidColName
                         : null;
 
+
                 if (histIncidColName != null)
                 {
                     var groups = historyForWrite.AsEnumerable()
                         .GroupBy(r => r[histIncidColName]?.ToString());
 
+                    int groupCount = 0;
                     foreach (var grp in groups)
                     {
                         string groupIncid = grp.Key;
+                        groupCount++;
+
                         DataTable groupTable = historyForWrite.Clone();
                         foreach (DataRow r in grp)
                             groupTable.ImportRow(r);
 
+                        // Build fixed values - only include INCID.
+                        // Reason and Process will be taken from the current ribbon values by HistoryWrite.
+                        // Only the Operation is set to OSMMLoad (which maps to "OL" in lut_operation).
                         Dictionary<int, string> fixedValues = new()
                         {
                             { incidColOrdinal, groupIncid }
                         };
 
-                        vmHist.HistoryWrite(fixedValues, groupTable, Operations.OSMMLoad, nowDtTm);
+                        try
+                        {
+                            vmHist.HistoryWrite(fixedValues, groupTable, Operations.OSMMLoad, nowDtTm);
+                        }
+                        catch (Exception ex)
+                        {
+                            if (ex.InnerException != null)
+                            {
+                            }
+                            throw;
+                        }
                     }
                 }
                 else
                 {
+
+                    // No fixed values needed - reason and process will come from the ribbon.
+                    // Only the Operation is set to OSMMLoad (which maps to "OL" in lut_operation).
                     vmHist.HistoryWrite(null, historyForWrite, Operations.OSMMLoad, nowDtTm);
                 }
+
 
                 // ---------------------------------------------------------------
                 // 8. Commit.
@@ -900,17 +1122,11 @@ namespace HLU.UI.ViewModel
                 _viewModelMain.DataBase.CommitTransaction();
                 _viewModelMain.HluDataset.AcceptChanges();
 
-                success = true;
+                loadSuccess = true;
             }
             catch (Exception ex)
             {
                 _viewModelMain.DataBase.RollbackTransaction();
-
-                if (!gisExecuted)
-                {
-                    try { editOperation.Abort(); }
-                    catch { /* ignore */ }
-                }
 
                 string exMessage = DbBase.GetSqlErrorMessage(ex);
                 MessageBox.Show(
@@ -919,40 +1135,18 @@ namespace HLU.UI.ViewModel
             }
             finally
             {
-                if (success)
+                if (loadSuccess)
                 {
                     _viewModelMain.IncidRowCount(true);
                     await _viewModelMain.ClearFilterAsync(false);
                     _viewModelMain.RefillIncidTable = true;
                     await _viewModelMain.GetMapSelectionAsync(false);
-
-                    // Create the HLU-schema staging output from the loaded OSMM features.
-                    if (!string.IsNullOrEmpty(_outputWorkspace) &&
-                        !string.IsNullOrEmpty(_outputFeatureClassName))
-                    {
-                        string fullOutputPath = System.IO.Path.Combine(
-                            _outputWorkspace, _outputFeatureClassName);
-
-                        _viewModelMain.ChangeCursor(Cursors.Wait, "Creating staging output layer ...");
-
-                        bool created = await CreateStagingOutputAsync(
-                            sourceLayerName, fullOutputPath, oidAssignments, toidByOid);
-
-                        if (!created)
-                        {
-                            MessageBox.Show(
-                                $"The bulk load completed successfully, but the staging output layer could not be created at:\n\n{fullOutputPath}\n\nYou can manually export the source layer if required.",
-                                "HLU: Bulk Load - Output Warning",
-                                MessageBoxButton.OK,
-                                MessageBoxImage.Warning);
-                        }
-                    }
                 }
 
                 _viewModelMain.ChangeCursor(Cursors.Arrow);
             }
 
-            return (success, featureCount, incidCount);
+            return (loadSuccess, featureCount, incidCount);
         }
 
         #endregion Load
@@ -968,6 +1162,14 @@ namespace HLU.UI.ViewModel
         /// The <c>toid</c> field is left blank because the new INCIDs created during an OSMM bulk
         /// load do not yet have TOIDs assigned. <c>fragid</c> is set to the first fragment identifier.
         /// </para>
+        /// <para><b>Note on Shapefile Nullable Fields:</b></para>
+        /// <para>
+        /// All HLU fields are created with <c>fieldIsNullable: true</c> to match the live HLU layer schema.
+        /// For file geodatabases, this creates truly nullable fields. However, for shapefiles, the nullable
+        /// parameter is <b>ignored</b> because the DBF format does not support true NULL values for text fields.
+        /// Shapefiles use empty strings to represent missing values instead, which is why Step 3 writes empty
+        /// strings rather than <c>null</c> or <c>DBNull.Value</c> for shapefile text fields.
+        /// </para>
         /// </summary>
         private async Task<bool> CreateStagingOutputAsync(
             string sourceLayerName,
@@ -975,30 +1177,154 @@ namespace HLU.UI.ViewModel
             Dictionary<long, (string incid, string fragid, string habprimary, string habsecond, string determqty, string interpqty)> oidAssignments,
             Dictionary<long, string> toidByOid = null)
         {
+
             if (string.IsNullOrEmpty(sourceLayerName) || string.IsNullOrEmpty(fullOutputPath) ||
                 oidAssignments == null || oidAssignments.Count == 0)
+            {
                 return false;
+            }
 
-            // Step 1: Copy the selected OSMM source features to the output path.
-            bool copied = await ArcGISProHelpers.CopyFeaturesAsync(sourceLayerName, fullOutputPath, addToMap: false);
+            // Validate that the output directory exists and is writable before attempting to copy features.
+            string outputDir = System.IO.Path.GetDirectoryName(fullOutputPath);
+
+            if (string.IsNullOrEmpty(outputDir) || !System.IO.Directory.Exists(outputDir))
+            {
+                return false;
+            }
+
+            // Step 1: Copy the selected OSMM source features with controlled HLU schema.
+            // Use FeatureClassToFeatureClass with field mapping to ensure:
+            // - HLU fields have data model lengths (especially toid = 20 chars)
+            // - Fields are in data model order
+            // - Shapefile geometry fields (Shape_Leng, Shape_Area) are included
+            bool isShapefile = fullOutputPath.EndsWith(".shp", StringComparison.OrdinalIgnoreCase);
+
+            // Use the polygon MM table as the canonical source for field metadata (field names/lengths are identical across all geometry types).
+            DataTable mmTable = (DataTable)_viewModelMain.HluDataset.incid_mm_polygons;
+
+            (bool copied, string errorDetails) = await CreateHluStagingFeatureClassAsync(sourceLayerName, fullOutputPath, isShapefile, mmTable);
+
             if (!copied)
-                return false;
+            {
 
-            // Step 2: Add the seven mandatory HLU attribute fields.
-            // Fields that already exist in the source layer are skipped silently by AddField.
+                // Show detailed error to user
+                if (!string.IsNullOrEmpty(errorDetails))
+                {
+                    MessageBox.Show(
+                        $"Failed to create staging feature class:\n\n{errorDetails}",
+                        "Create Staging Layer Error",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+
+                return false;
+            }
+
+            // Step 1a: Read the field names already present in the copied feature class so that
+            // Step 2 can skip AddField for any field that was carried over from the source layer
+            // (e.g. 'toid'). management.AddField raises ERROR 000012 if the field already exists.
+
+            HashSet<string> existingFieldNames = await ArcGIS.Desktop.Framework.Threading.Tasks.QueuedTask.Run(() =>
+            {
+                try
+                {
+                    string dir  = System.IO.Path.GetDirectoryName(fullOutputPath);
+                    string name = System.IO.Path.GetFileNameWithoutExtension(fullOutputPath);
+
+                    if (dir == null || !System.IO.Directory.Exists(dir))
+                    {
+                        return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    }
+
+                    ArcGIS.Core.Data.FeatureClass fc;
+
+                    if (isShapefile)
+                    {
+                        // Open shapefile from folder - use full path including .shp extension
+                        var folderConnection = new ArcGIS.Core.Data.FileSystemConnectionPath(
+                            new Uri(dir), ArcGIS.Core.Data.FileSystemDatastoreType.Shapefile);
+                        using var folderDatastore = new ArcGIS.Core.Data.FileSystemDatastore(folderConnection);
+                        // For shapefiles, include the .shp extension in the dataset name
+                        fc = folderDatastore.OpenDataset<ArcGIS.Core.Data.FeatureClass>(name + ".shp");
+                    }
+                    else
+                    {
+                        // Open feature class from geodatabase.
+                        using var gdb = new ArcGIS.Core.Data.Geodatabase(
+                            new ArcGIS.Core.Data.FileGeodatabaseConnectionPath(new Uri(dir)));
+                        fc = gdb.OpenDataset<ArcGIS.Core.Data.FeatureClass>(name);
+                    }
+
+                    using (fc)
+                    {
+                        var fieldNames = new HashSet<string>(
+                            fc.GetDefinition().GetFields().Select(f => f.Name),
+                            StringComparer.OrdinalIgnoreCase);
+
+                        return fieldNames;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                }
+            });
+
+            // Step 2: Add the seven mandatory HLU attribute fields, skipping any that already
+            // exist in the copied feature class to avoid GP ERROR 000012.
+            // All fields are explicitly created as nullable to match the live HLU layer schema.
             bool ok = true;
-            ok &= await ArcGISProHelpers.AddFieldAsync(fullOutputPath, "incid",      fieldLength: 12);
-            ok &= await ArcGISProHelpers.AddFieldAsync(fullOutputPath, "toid",       fieldLength: 20);
-            ok &= await ArcGISProHelpers.AddFieldAsync(fullOutputPath, "fragid",     fieldLength: 5);
-            ok &= await ArcGISProHelpers.AddFieldAsync(fullOutputPath, "habprimary", fieldLength: 8);
-            ok &= await ArcGISProHelpers.AddFieldAsync(fullOutputPath, "habsecond",  fieldLength: 80);
-            ok &= await ArcGISProHelpers.AddFieldAsync(fullOutputPath, "determqty",  fieldLength: 2);
-            ok &= await ArcGISProHelpers.AddFieldAsync(fullOutputPath, "interpqty",  fieldLength: 2);
+            if (!existingFieldNames.Contains("incid"))
+            {
+                ok &= await ArcGISProHelpers.AddFieldAsync(fullOutputPath, "incid", fieldLength: 12, fieldIsNullable: true);
+            }
+            if (!existingFieldNames.Contains("toid"))
+            {
+                ok &= await ArcGISProHelpers.AddFieldAsync(fullOutputPath, "toid", fieldLength: 20, fieldIsNullable: true);
+            }
+            if (!existingFieldNames.Contains("fragid"))
+            {
+                ok &= await ArcGISProHelpers.AddFieldAsync(fullOutputPath, "fragid", fieldLength: 5, fieldIsNullable: true);
+            }
+            if (!existingFieldNames.Contains("habprimary"))
+            {
+                ok &= await ArcGISProHelpers.AddFieldAsync(fullOutputPath, "habprimary", fieldLength: 8, fieldIsNullable: true);
+            }
+            if (!existingFieldNames.Contains("habsecond"))
+            {
+                ok &= await ArcGISProHelpers.AddFieldAsync(fullOutputPath, "habsecond", fieldLength: 80, fieldIsNullable: true);
+            }
+            if (!existingFieldNames.Contains("determqty"))
+            {
+                ok &= await ArcGISProHelpers.AddFieldAsync(fullOutputPath, "determqty", fieldLength: 2, fieldIsNullable: true);
+            }
+            if (!existingFieldNames.Contains("interpqty"))
+            {
+                ok &= await ArcGISProHelpers.AddFieldAsync(fullOutputPath, "interpqty", fieldLength: 2, fieldIsNullable: true);
+            }
 
             if (!ok)
+            {
                 return false;
+            }
 
-            // Step 3: Populate the HLU fields on each feature by OID and collect non-HLU field names for cleanup.
+            // Step 2b: Build a mapping from source TOID to assignment data, since the copied
+            // output features have new OIDs (1, 2, 3, ...) not the original source OIDs.
+            Dictionary<string, (string incid, string fragid, string habprimary, string habsecond, string determqty, string interpqty)> assignmentByToid = [];
+
+            if (toidByOid != null)
+            {
+                foreach (var kvp in oidAssignments)
+                {
+                    long sourceOid = kvp.Key;
+                    if (toidByOid.TryGetValue(sourceOid, out string toid) && !string.IsNullOrEmpty(toid))
+                    {
+                        assignmentByToid[toid] = kvp.Value;
+                    }
+                }
+            }
+
+            // Step 3: Populate the HLU fields on each feature by TOID and collect non-HLU field names for cleanup.
             // The set of HLU field names that must be retained in the staging layer.
             HashSet<string> hluFieldNames = new(StringComparer.OrdinalIgnoreCase)
             {
@@ -1014,25 +1340,36 @@ namespace HLU.UI.ViewModel
                     string dir  = System.IO.Path.GetDirectoryName(fullOutputPath);
                     string name = System.IO.Path.GetFileNameWithoutExtension(fullOutputPath);
 
-                    if (dir == null || !System.IO.Directory.Exists(dir))
-                        return false;
 
-                    ArcGIS.Core.Data.FeatureClass fc = null;
-                    try
+                    if (dir == null || !System.IO.Directory.Exists(dir))
                     {
+                        return false;
+                    }
+
+                    ArcGIS.Core.Data.FeatureClass fc;
+
+                    if (isShapefile)
+                    {
+                        // Open shapefile from folder - use full path including .shp extension
+                        var folderConnection = new ArcGIS.Core.Data.FileSystemConnectionPath(
+                            new Uri(dir), ArcGIS.Core.Data.FileSystemDatastoreType.Shapefile);
+                        using var folderDatastore = new ArcGIS.Core.Data.FileSystemDatastore(folderConnection);
+                        // For shapefiles, include the .shp extension in the dataset name
+                        fc = folderDatastore.OpenDataset<ArcGIS.Core.Data.FeatureClass>(name + ".shp");
+                    }
+                    else
+                    {
+                        // Open feature class from geodatabase.
                         using var gdb = new ArcGIS.Core.Data.Geodatabase(
                             new ArcGIS.Core.Data.FileGeodatabaseConnectionPath(new Uri(dir)));
                         fc = gdb.OpenDataset<ArcGIS.Core.Data.FeatureClass>(name);
                     }
-                    catch { fc = null; }
-
-                    if (fc == null)
-                        return false;
 
                     using (fc)
                     {
                         ArcGIS.Core.Data.TableDefinition def = fc.GetDefinition();
                         IReadOnlyList<ArcGIS.Core.Data.Field> allFields = def.GetFields();
+
 
                         // Identify non-HLU fields to delete after populating (exclude system/geometry fields).
                         HashSet<string> systemFields = new(StringComparer.OrdinalIgnoreCase)
@@ -1048,6 +1385,7 @@ namespace HLU.UI.ViewModel
                                 fieldsToDelete.Add(f.Name);
                         }
 
+
                         // Cache field indices.
                         int idxIncid      = def.FindField("incid");
                         int idxToid       = def.FindField("toid");
@@ -1057,59 +1395,225 @@ namespace HLU.UI.ViewModel
                         int idxDetermqty  = def.FindField("determqty");
                         int idxInterpqty  = def.FindField("interpqty");
 
-                        ArcGIS.Core.Data.QueryFilter qf = new()
-                        {
-                            ObjectIDs = [.. oidAssignments.Keys]
-                        };
+
+                        // Query ALL features (no OID filter) since the copied output has new OIDs
+                        ArcGIS.Core.Data.QueryFilter qf = new();
+
+                        long totalFeatures = fc.GetCount();
 
                         using ArcGIS.Core.Data.RowCursor cursor = fc.Search(qf, false);
 
+                        int rowsUpdated = 0;
                         while (cursor.MoveNext())
                         {
                             using ArcGIS.Core.Data.Row row = cursor.Current;
                             long oid = row.GetObjectID();
 
-                            if (!oidAssignments.TryGetValue(oid, out var a))
+                            // Look up assignment by TOID (if available)
+                            string featureToid = null;
+                            if (idxToid >= 0 && row[idxToid] != null && row[idxToid] != DBNull.Value)
+                                featureToid = row[idxToid].ToString();
+
+                            if (string.IsNullOrEmpty(featureToid) || !assignmentByToid.TryGetValue(featureToid, out var a))
                                 continue;
 
-                            string toid = null;
-                            toidByOid?.TryGetValue(oid, out toid);
-
-                            if (idxIncid      >= 0) row[idxIncid]      = a.incid      ?? (object)DBNull.Value;
-                            if (idxToid       >= 0) row[idxToid]       = toid         ?? (object)DBNull.Value;
-                            if (idxFragid     >= 0) row[idxFragid]     = a.fragid     ?? (object)DBNull.Value;
-                            if (idxHabprimary >= 0) row[idxHabprimary] = a.habprimary ?? (object)DBNull.Value;
-                            if (idxHabsecond  >= 0) row[idxHabsecond]  = a.habsecond  ?? (object)DBNull.Value;
-                            if (idxDetermqty  >= 0) row[idxDetermqty]  = a.determqty  ?? (object)DBNull.Value;
-                            if (idxInterpqty  >= 0) row[idxInterpqty]  = a.interpqty  ?? (object)DBNull.Value;
+                            // Write empty strings for empty values (shapefiles don't support true NULL for text fields)
+                            if (idxIncid >= 0)
+                                row[idxIncid] = a.incid ?? string.Empty;
+                            // toid is already present from the copy, don't overwrite
+                            if (idxFragid >= 0)
+                                row[idxFragid] = a.fragid ?? string.Empty;
+                            if (idxHabprimary >= 0)
+                                row[idxHabprimary] = a.habprimary ?? string.Empty;
+                            if (idxHabsecond >= 0)
+                                row[idxHabsecond] = a.habsecond ?? string.Empty;
+                            if (idxDetermqty >= 0)
+                                row[idxDetermqty] = a.determqty ?? string.Empty;
+                            if (idxInterpqty >= 0)
+                                row[idxInterpqty] = a.interpqty ?? string.Empty;
 
                             row.Store();
+                            rowsUpdated++;
                         }
+
                     }
 
                     return true;
                 }
-                catch
+                catch (Exception ex)
                 {
                     return false;
                 }
             });
 
             if (!updated)
+            {
                 return false;
+            }
 
             // Step 4: Remove non-HLU fields from the staging layer now that the HLU values are written.
             if (fieldsToDelete.Count > 0)
             {
                 string dropList = string.Join(";", fieldsToDelete);
                 // Best-effort: ignore failure — a warning would appear from the GP tool itself.
-                await ArcGISProHelpers.DeleteFieldAsync(fullOutputPath, dropList);
+                bool deleted = await ArcGISProHelpers.DeleteFieldAsync(fullOutputPath, dropList);
             }
 
             // Step 5: Add the completed staging layer to the map.
-            return await ArcGISProHelpers.AddFeatureLayerToMapAsync(
-                System.IO.Path.GetDirectoryName(fullOutputPath),
-                System.IO.Path.GetFileNameWithoutExtension(fullOutputPath));
+            bool addedToMap = await ArcGISProHelpers.AddFeatureLayerToMapAsync(fullOutputPath);
+
+
+            return addedToMap;
+        }
+
+        /// <summary>
+        /// Creates a staging feature class by copying features from a source layer and then adding
+        /// HLU fields with correct lengths from the data model. This approach avoids field mapping
+        /// issues when the source layer doesn't already have the HLU fields.
+        /// </summary>
+        /// <param name="sourceLayerName">The name of the source layer in the map to copy from.</param>
+        /// <param name="fullOutputPath">The full path to the output feature class (including .shp for shapefiles).</param>
+        /// <param name="isShapefile">True if the output is a shapefile; false for geodatabase.</param>
+        /// <param name="mmTable">The MM table to extract field metadata from (typically incid_mm_polygons).</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains (success, errorDetails).</returns>
+        private static async Task<(bool success, string errorDetails)> CreateHluStagingFeatureClassAsync(string sourceLayerName, string fullOutputPath, bool isShapefile, DataTable mmTable)
+        {
+            if (string.IsNullOrEmpty(sourceLayerName) || string.IsNullOrEmpty(fullOutputPath))
+            {
+                return (false, "Invalid parameters: source layer name or output path is empty.");
+            }
+
+            string outputDir = System.IO.Path.GetDirectoryName(fullOutputPath);
+
+            if (string.IsNullOrEmpty(outputDir) || !System.IO.Directory.Exists(outputDir))
+            {
+                return (false, $"Output directory does not exist: {outputDir}");
+            }
+
+            try
+            {
+                // Step 1: Copy features from source layer using CopyFeatures (works with map layers).
+                var parameters = ArcGIS.Desktop.Core.Geoprocessing.Geoprocessing.MakeValueArray(
+                    sourceLayerName,      // in_features
+                    fullOutputPath);      // out_feature_class
+
+                var environments = ArcGIS.Desktop.Core.Geoprocessing.Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
+
+                ArcGIS.Desktop.Core.Geoprocessing.GPExecuteToolFlags executeFlags =
+                    ArcGIS.Desktop.Core.Geoprocessing.GPExecuteToolFlags.GPThread;
+
+
+                // Execute CopyFeatures (works with map layers, including selection sets).
+                ArcGIS.Desktop.Core.Geoprocessing.IGPResult result =
+                    await ArcGIS.Desktop.Core.Geoprocessing.Geoprocessing.ExecuteToolAsync(
+                        "management.CopyFeatures",
+                        parameters,
+                        environments,
+                        null,
+                        null,
+                        executeFlags);
+
+                if (result.IsFailed)
+                {
+                    // Log ALL messages for debugging
+
+                    var errorText = new System.Text.StringBuilder();
+                    errorText.AppendLine("CopyFeatures failed:");
+                    errorText.AppendLine($"Input: {sourceLayerName}");
+                    errorText.AppendLine($"Output: {fullOutputPath}");
+                    errorText.AppendLine();
+                    errorText.AppendLine("Error Messages:");
+
+                    foreach (var msg in result.Messages)
+                    {
+                        if (msg.Type == ArcGIS.Desktop.Core.Geoprocessing.GPMessageType.Error ||
+                            msg.Type == ArcGIS.Desktop.Core.Geoprocessing.GPMessageType.Warning)
+                        {
+                            errorText.AppendLine($"  [{msg.Type}] {msg.Text}");
+                        }
+                    }
+
+                    string fullError = errorText.ToString();
+
+                    // Show the GP message box to user
+                    ArcGIS.Desktop.Core.Geoprocessing.Geoprocessing.ShowMessageBox(
+                        result.Messages, "Create Staging Layer - Copy Failed", ArcGIS.Desktop.Core.Geoprocessing.GPMessageBoxStyle.Error);
+
+                    return (false, fullError);
+                }
+
+
+                // Step 2: Add the HLU fields that don't exist in the source (all except toid, which may already exist).
+
+                // Define the HLU fields in data model order using column metadata (skip toid since it may exist).
+                string[] hluFieldNames = ["incid", "fragid", "habprimary", "habsecond", "determqty", "interpqty"];
+
+                foreach (string fieldName in hluFieldNames)
+                {
+                    DataColumn col = mmTable.Columns[fieldName];
+                    if (col != null)
+                    {
+                        int length = col.MaxLength > 0 ? col.MaxLength : 0;
+
+
+                        bool added = await ArcGISProHelpers.AddFieldAsync(fullOutputPath, fieldName, fieldLength: length, fieldIsNullable: true);
+                        if (!added)
+                        {
+                            string error = $"Failed to add field '{fieldName}' to staging layer.";
+                            return (false, error);
+                        }
+                    }
+                    else
+                    {
+                    }
+                }
+
+
+                // For shapefiles, recalculate the geometry fields to populate Shape_Leng and Shape_Area.
+                if (isShapefile)
+                {
+
+                    var calcParams = ArcGIS.Desktop.Core.Geoprocessing.Geoprocessing.MakeValueArray(
+                        fullOutputPath,
+                        "Shape_Leng LENGTH_GEODESIC;Shape_Area AREA_GEODESIC",
+                        "",  // length_unit (default)
+                        "", // area_unit (default)
+                        "");  // coordinate_system (default)
+
+                    ArcGIS.Desktop.Core.Geoprocessing.IGPResult calcResult =
+                        await ArcGIS.Desktop.Core.Geoprocessing.Geoprocessing.ExecuteToolAsync(
+                            "management.CalculateGeometryAttributes",
+                            calcParams,
+                            environments,
+                            null,
+                            null,
+                            ArcGIS.Desktop.Core.Geoprocessing.GPExecuteToolFlags.GPThread);
+
+                    if (calcResult.IsFailed)
+                    {
+                        // Non-fatal: geometry fields may not be critical for validation.
+                    }
+                    else
+                    {
+                    }
+                }
+
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null)
+                {
+                }
+
+                string errorMsg = $"Exception creating staging layer: {ex.Message}";
+                if (ex.InnerException != null)
+                {
+                    errorMsg += $"\n\nInner exception: {ex.InnerException.Message}";
+                }
+
+                return (false, errorMsg);
+            }
         }
 
         #endregion Helpers — staging output
@@ -1294,6 +1798,67 @@ namespace HLU.UI.ViewModel
         #region Helpers — OSMM xref lookup
 
         /// <summary>
+        /// Checks whether a habitat code (primary or secondary) is valid for the specified geometry type
+        /// by querying the appropriate lookup table (<c>lut_primary</c> or <c>lut_secondary</c>)
+        /// and checking the <c>is_poly</c>, <c>is_line</c>, and <c>is_point</c> flags.
+        /// </summary>
+        /// <param name="code">The habitat code to validate.</param>
+        /// <param name="geometryType">The geometry type to validate against.</param>
+        /// <param name="isPrimary">True to check <c>lut_primary</c>; false to check <c>lut_secondary</c>.</param>
+        /// <returns>True if the code is valid for the geometry type; otherwise false.</returns>
+        private bool IsHabitatCodeValidForGeometryType(string code, HluGeometryTypes geometryType, bool isPrimary)
+        {
+            if (string.IsNullOrWhiteSpace(code))
+                return true; // Empty codes are considered valid (they won't be written)
+
+            var db = _viewModelMain.DataBase;
+            string tableName = isPrimary
+                ? _viewModelMain.HluDataset.lut_primary.TableName
+                : _viewModelMain.HluDataset.lut_secondary.TableName;
+
+            string qualTable = db.QualifyTableName(tableName);
+            string codeColumn = db.QuoteIdentifier("code");
+            string isPolyColumn = db.QuoteIdentifier("polygon");
+            string isLineColumn = db.QuoteIdentifier("line");
+            string isPointColumn = db.QuoteIdentifier("point");
+
+            string sql = string.Format(
+                "SELECT {0}, {1}, {2} FROM {3} WHERE {4} = {5}",
+                isPolyColumn, isLineColumn, isPointColumn,
+                qualTable,
+                codeColumn,
+                db.QuoteValue(code));
+
+            IDataReader reader = null;
+            try
+            {
+                reader = db.ExecuteReader(sql, db.Connection.ConnectionTimeout, CommandType.Text);
+                if (reader == null || !reader.Read())
+                    return false; // Code not found in lookup table
+
+                bool isPoly = !reader.IsDBNull(0) && reader.GetBoolean(0);
+                bool isLine = !reader.IsDBNull(1) && reader.GetBoolean(1);
+                bool isPoint = !reader.IsDBNull(2) && reader.GetBoolean(2);
+
+                return geometryType switch
+                {
+                    HluGeometryTypes.Polygon => isPoly,
+                    HluGeometryTypes.Line => isLine,
+                    HluGeometryTypes.Point => isPoint,
+                    _ => false
+                };
+            }
+            catch
+            {
+                return false;
+            }
+            finally
+            {
+                reader?.Close();
+            }
+        }
+
+        /// <summary>
         /// Queries <c>lut_osmm_habitat_xref</c> via SQL and returns a dictionary keyed by the
         /// five OSMM attribute values (<c>make</c>, <c>desc_group</c>, <c>desc_term</c>,
         /// <c>theme</c>, <c>feat_code</c>) that maps to the resolved
@@ -1378,5 +1943,35 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion Helpers — OSMM xref lookup
+
+        #region Helpers — geometry
+
+        /// <summary>
+        /// Computes the two geometry history values.
+        /// Polygons: (length, area). Polylines: (length, -1). Points: (X, Y).
+        /// </summary>
+        private static (double Geom1, double Geom2) GetGeometryHistoryValues(Geometry geometry)
+        {
+            if (geometry == null)
+                return (-1, -1);
+
+            switch (geometry.GeometryType)
+            {
+                case GeometryType.Polygon:
+                    return (GeometryEngine.Instance.Length(geometry), GeometryEngine.Instance.Area(geometry));
+
+                case GeometryType.Polyline:
+                    return (GeometryEngine.Instance.Length(geometry), -1);
+
+                case GeometryType.Point:
+                    MapPoint p = (MapPoint)geometry;
+                    return (p.X, p.Y);
+
+                default:
+                    return (-1, -1);
+            }
+        }
+
+        #endregion Helpers — geometry
     }
 }

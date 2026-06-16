@@ -63,8 +63,34 @@ namespace HLU.UI.ViewModel
         public bool IsMatched { get; init; }
 
         /// <summary>
+        /// Gets a value indicating whether the resolved primary habitat code
+        /// is valid for the active layer geometry type.
+        /// </summary>
+        public bool IsPrimaryValid { get; init; }
+
+        /// <summary>
+        /// Gets a value indicating whether all resolved secondary habitat codes
+        /// are valid for the active layer geometry type.
+        /// </summary>
+        public bool AreSecondariesValid { get; init; }
+
+        /// <summary>
         /// Gets a display string for the match status column.
         /// </summary>
-        public string Status => IsMatched ? "? Matched" : "? No match";
+        public string Status
+        {
+            get
+            {
+                if (!IsMatched)
+                    return "No match";
+                if (!IsPrimaryValid && !AreSecondariesValid)
+                    return "Invalid primary/secondaries";
+                if (!IsPrimaryValid)
+                    return "Invalid primary";
+                if (!AreSecondariesValid)
+                    return "Invalid secondaries";
+                return "Matched";
+            }
+        }
     }
 }

@@ -17,6 +17,7 @@
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using HLU.UI;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -26,13 +27,33 @@ using System.Windows.Input;
 namespace HLU.UI.ViewModel
 {
     /// <summary>
-    /// Represents a single HLU layer entry in the OSMM Unload layer-picker checklist.
+    /// Represents a single HLU layer entry in the Bulk Unload layer-picker checklist.
     /// </summary>
     internal class OsmmUnloadLayerItem : INotifyPropertyChanged
     {
         private bool _isChecked;
 
         public string LayerName { get; init; }
+
+        /// <summary>Gets the number of currently selected features in this layer.</summary>
+        public int SelectedCount { get; init; }
+
+        /// <summary>Gets the total number of features in this layer.</summary>
+        public long TotalCount { get; init; }
+
+        /// <summary>
+        /// Gets a formatted string showing the selected and total feature counts,
+        /// in the same format as the Export window.
+        /// </summary>
+        public string SelectionText =>
+            SelectedCount > 0
+                ? String.Format("({0} of {1} feature{2})",
+                    SelectedCount.ToString("N0"),
+                    TotalCount.ToString("N0"),
+                    TotalCount > 1 ? "s" : String.Empty)
+                : String.Format("({0} feature{1})",
+                    TotalCount.ToString("N0"),
+                    TotalCount > 1 ? "s" : String.Empty);
 
         public bool IsChecked
         {
@@ -50,7 +71,7 @@ namespace HLU.UI.ViewModel
     }
 
     /// <summary>
-    /// ViewModel for the OSMM Unload layer-picker dialog.
+    /// ViewModel for the Bulk Unload layer-picker dialog.
     /// Presents the user with a checklist of valid HLU layers so they can choose
     /// which layers to include in the unload operation.
     /// </summary>
@@ -60,7 +81,7 @@ namespace HLU.UI.ViewModel
 
         private ICommand _okCommand;
         private ICommand _cancelCommand;
-        private string _displayName = "OSMM Unload — Select Layers";
+        private string _displayName = "Bulk Unload — Select Layers";
 
         #endregion Fields
 
@@ -72,14 +93,30 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="availableLayerNames">All valid HLU layer names in the current map.</param>
         /// <param name="activeLayerName">The currently active HLU layer name (pre-checked).</param>
-        public ViewModelWindowBulkUnload(IEnumerable<string> availableLayerNames, string activeLayerName)
+        /// <param name="layerCounts">
+        /// Optional per-layer (Selected, Total) feature counts keyed by layer name.
+        /// When omitted or a layer is absent from the dictionary, counts display as zero.
+        /// </param>
+        public ViewModelWindowBulkUnload(
+            IEnumerable<string> availableLayerNames,
+            string activeLayerName,
+            IReadOnlyDictionary<string, (int Selected, long Total)> layerCounts = null)
         {
             Layers = new ObservableCollection<OsmmUnloadLayerItem>(
                 (availableLayerNames ?? [])
-                .Select(n => new OsmmUnloadLayerItem
+                .Select(n =>
                 {
-                    LayerName = n,
-                    IsChecked = string.Equals(n, activeLayerName, System.StringComparison.OrdinalIgnoreCase)
+                    (int sel, long tot) = layerCounts != null && layerCounts.TryGetValue(n, out var c)
+                        ? c
+                        : (0, 0L);
+
+                    return new OsmmUnloadLayerItem
+                    {
+                        LayerName = n,
+                        SelectedCount = sel,
+                        TotalCount = tot,
+                        IsChecked = string.Equals(n, activeLayerName, System.StringComparison.OrdinalIgnoreCase)
+                    };
                 }));
         }
 

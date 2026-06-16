@@ -41,7 +41,13 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <CheckBox Margin="4,2" IsChecked="{Binding IsChecked, Mode=TwoWay}">
-                                    <TextBlock Text="{Binding LayerName}" />
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding LayerName}" />
+                                        <TextBlock
+                                            Margin="6,0,0,0"
+                                            Foreground="Gray"
+                                            Text="{Binding SelectionText}" />
+                                    </StackPanel>
                                 </CheckBox>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>

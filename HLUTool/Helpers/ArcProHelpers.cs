@@ -266,6 +266,14 @@ namespace HLU.Helpers
         /// <summary>
         /// Add a field to a feature class or table.
         /// </summary>
+        /// <remarks>
+        /// <para><b>Note on Nullable Fields:</b></para>
+        /// <para>For file geodatabases, the <paramref name="fieldIsNullable"/> parameter controls whether the field
+        /// can store NULL values. However, for shapefiles, this parameter is <b>ignored</b> because the DBF format
+        /// (used by shapefiles for attribute tables) does not support true NULL values for text fields.
+        /// Shapefiles use empty strings to represent missing values instead.</para>
+        /// <para>If you require true nullable text fields, use a file geodatabase instead of a shapefile.</para>
+        /// </remarks>
         /// <param name="inTable">The input table or feature class.</param>
         /// <param name="fieldName">The name of the field to add.</param>
         /// <param name="fieldType">The type of the field.</param>
@@ -273,7 +281,7 @@ namespace HLU.Helpers
         /// <param name="fieldScale">The scale of the field.</param>
         /// <param name="fieldLength">The length of the field.</param>
         /// <param name="fieldAlias">The alias of the field.</param>
-        /// <param name="fieldIsNullable">Whether the field is nullable.</param>
+        /// <param name="fieldIsNullable">Whether the field is nullable (ignored for shapefiles - see remarks).</param>
         /// <param name="fieldIsRequred">Whether the field is required.</param>
         /// <param name="fieldDomain">The domain of the field.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains true if the field was successfully added, otherwise false.</returns>

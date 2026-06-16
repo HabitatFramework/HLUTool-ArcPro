@@ -519,7 +519,10 @@ namespace HLU.GISApplication
         {
             if ((targetColumns == null) || (targetColumns.Length == 0))
                 return false;
-            return targetColumns.Any(c => GetFieldName(_hluLayerStructure.Columns[c.ColumnName].Ordinal) == null);
+            // Only check columns that exist in the GIS layer structure
+            return targetColumns
+                .Where(c => _hluLayerStructure.Columns.Contains(c.ColumnName))
+                .Any(c => GetFieldName(_hluLayerStructure.Columns[c.ColumnName].Ordinal) == null);
         }
 
         /// <summary>
@@ -551,6 +554,10 @@ namespace HLU.GISApplication
                 string columnAlias;
                 foreach (DataColumn c in targetColumns)
                 {
+                    // Skip columns that don't exist in the GIS layer structure (e.g. database-only autonumber fields)
+                    if (!_hluLayerStructure.Columns.Contains(c.ColumnName))
+                        continue;
+
                     fieldName = GetFieldName(_hluLayerStructure.Columns[c.ColumnName].Ordinal);
                     if (qualifyColumns)
                     {
@@ -1116,6 +1123,40 @@ namespace HLU.GISApplication
 
                 // Return the total feature count.
                 return table.GetCount();
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Returns the selected and total feature counts for the named feature layer.
+        /// </summary>
+        /// <param name="layerName">The exact name of the layer as it appears in the active map.</param>
+        /// <returns>
+        /// A task that returns a tuple containing:
+        /// <list type="bullet">
+        /// <item><term>Selected</term><description>The number of currently selected features.</description></item>
+        /// <item><term>Total</term><description>The total number of features in the layer.</description></item>
+        /// </list>
+        /// Returns <c>(0, 0)</c> when the named layer cannot be found.
+        /// </returns>
+        public async Task<(int Selected, long Total)> CountLayerFeaturesAsync(string layerName)
+        {
+            return await QueuedTask.Run(() =>
+            {
+                // Locate the named layer in the active map.
+                FeatureLayer fl = MapView.Active?.Map
+                    ?.GetLayersAsFlattenedList()
+                    .OfType<FeatureLayer>()
+                    .FirstOrDefault(l => string.Equals(l.Name, layerName, StringComparison.OrdinalIgnoreCase));
+
+                if (fl == null)
+                    return (0, 0L);
+
+                int selected = fl.SelectionCount;
+
+                using Table table = fl.GetTable();
+                long total = table.GetCount();
+
+                return (selected, total);
             }).ConfigureAwait(false);
         }
 
@@ -2188,7 +2229,7 @@ namespace HLU.GISApplication
         /// </summary>
         /// <remarks>
         /// This overload accepts an explicit layer and feature class so that callers can target a layer
-        /// other than the active <c>_hluLayer</c> (for example, during a multi-layer OSMM unload).
+        /// other than the active <c>_hluLayer</c> (for example, during a multi-layer Bulk unload).
         /// The edits are queued onto <paramref name="editOperation"/> but not executed; the caller
         /// is responsible for calling <see cref="EditOperation.ExecuteAsync"/> and saving edits.
         /// </remarks>
@@ -3027,13 +3068,48 @@ namespace HLU.GISApplication
             DataColumn[] historyColumns,
             EditOperation editOperation)
         {
+            return await RegisterNewFeaturesAsync(
+                _hluLayer,
+                _hluFeatureClass,
+                oidAssignments,
+                historyColumns,
+                editOperation);
+        }
+
+        /// <summary>
+        /// Writes the assigned INCID, fragment ID, and validated habitat attribute values
+        /// to a set of newly created GIS features (identified by object ID) in the specified layer,
+        /// captures geometry metadata for history, and queues the GIS field updates into the provided
+        /// edit operation.
+        /// </summary>
+        /// <param name="targetLayer">The feature layer to update.</param>
+        /// <param name="targetFeatureClass">The feature class backing the target layer.</param>
+        /// <param name="oidAssignments">
+        /// A mapping of each feature's object ID to the INCID, fragment ID, and validated
+        /// habitat attribute values it should receive.  Every entry must map to a non-null,
+        /// non-empty INCID and fragment ID; the habitat values may be null (which clears the
+        /// corresponding GIS field).
+        /// </param>
+        /// <param name="historyColumns">History schema columns used to build the returned table.</param>
+        /// <param name="editOperation">The edit operation into which the GIS field writes are queued.</param>
+        /// <returns>
+        /// A <see cref="DataTable"/> with one row per registered feature.  Each row contains
+        /// the values written to the feature (incid, fragid, geometry dimensions) laid out
+        /// according to <paramref name="historyColumns"/>, plus an extra <c>"oid"</c> column
+        /// carrying the feature's object ID.
+        /// </returns>
+        public async Task<DataTable> RegisterNewFeaturesAsync(
+            FeatureLayer targetLayer,
+            FeatureClass targetFeatureClass,
+            Dictionary<long, (string incid, string fragid, string habprimary, string habsecond, string determqty, string interpqty)> oidAssignments,
+            DataColumn[] historyColumns,
+            EditOperation editOperation)
+        {
+            ArgumentNullException.ThrowIfNull(targetLayer);
+            ArgumentNullException.ThrowIfNull(targetFeatureClass);
             ArgumentNullException.ThrowIfNull(oidAssignments);
             ArgumentNullException.ThrowIfNull(editOperation);
 
-            if (_hluLayer == null)
-                throw new HLUToolException("HLU layer is not set.");
-            if (_hluFeatureClass == null)
-                throw new HLUToolException("HLU feature class is not set.");
             if (_hluLayerStructure == null)
                 throw new HLUToolException("HLU layer structure is not set.");
 
@@ -3715,7 +3791,7 @@ namespace HLU.GISApplication
                 var (gdbPath, featureClassName) = PromptForGdbExport(
                     initialGdbPath,
                     initialFeatureName,
-                    dialogInitialDir);
+                    String.IsNullOrWhiteSpace(initialGdbPath) ? dialogInitialDir : String.Empty);
 
                 if (String.IsNullOrWhiteSpace(gdbPath) ||
                     String.IsNullOrWhiteSpace(featureClassName))
@@ -3773,7 +3849,7 @@ namespace HLU.GISApplication
                         Title = "Staging Layer – Shapefile",
                         Filter = "Shapefile (*.shp)|*.shp",
                         DefaultExt = "shp",
-                        FileName = "HLU_BulkLoad",
+                        FileName = "HLU_Staging",
                         InitialDirectory = dialogInitialDir
                     };
 
@@ -3803,7 +3879,7 @@ namespace HLU.GISApplication
                         : String.Empty;
 
                 string initialFeatureName = String.IsNullOrWhiteSpace(initialGdbPath)
-                    ? "HLU_BulkLoad"
+                    ? "HLU_Staging"
                     : System.IO.Path.GetFileNameWithoutExtension(initialGdbPath);
 
                 var (gdbPath, featureClassName) = PromptForGdbBulkLoad(
@@ -3847,7 +3923,8 @@ namespace HLU.GISApplication
         {
             var dialog = new HLU.UI.View.WindowGdbExport(
                 initialGdbPath,
-                initialFeatureName)
+                initialFeatureName,
+                browserInitialDir)
             {
                 Owner = FrameworkApplication.Current.MainWindow
             };
@@ -4071,18 +4148,24 @@ namespace HLU.GISApplication
                 if (!finalCopySuccess)
                     throw new HLUToolException("Failed to copy to final output.");
 
-                // STEP 5: Recalculate geometry attributes
-                var (lengthField, areaField) = await ArcGISProHelpers.GetGeometryFieldNamesAsync(outputPath);
-
-                if (!string.IsNullOrEmpty(lengthField) || !string.IsNullOrEmpty(areaField))
+                // STEP 5: Recalculate geometry attributes (shapefiles only).
+                // In a File Geodatabase, Shape_Length and Shape_Area are system-managed and
+                // are updated automatically by the GDB engine; the CalculateGeometryAttributes
+                // GP tool cannot edit them and will fail with "Field is not editable".
+                if (isShapefile)
                 {
-                    bool recalcSuccess = await ArcGISProHelpers.RecalculateGeometryAttributesAsync(
-                        outputPath,
-                        lengthField,
-                        areaField);
+                    var (lengthField, areaField) = await ArcGISProHelpers.GetGeometryFieldNamesAsync(outputPath);
 
-                    if (!recalcSuccess)
-                        throw new HLUToolException("Failed to recalculate geometry attributes.");
+                    if (!string.IsNullOrEmpty(lengthField) || !string.IsNullOrEmpty(areaField))
+                    {
+                        bool recalcSuccess = await ArcGISProHelpers.RecalculateGeometryAttributesAsync(
+                            outputPath,
+                            lengthField,
+                            areaField);
+
+                        if (!recalcSuccess)
+                            throw new HLUToolException("Failed to recalculate geometry attributes.");
+                    }
                 }
 
                 // STEP 6: Add to map
@@ -4638,8 +4721,11 @@ namespace HLU.GISApplication
                 // Check for length match if string type.
                 if (expectedType == FieldType.String && expectedMaxLength > 0)
                 {
-                    // If the field length exceeds the expected maximum length, return -1.
-                    if (field.Length > expectedMaxLength)
+                    // If the field length is less than the expected maximum length, return -1.
+                    // Allow fields that are the same length or longer to be valid (shapefiles may have
+                    // been created with longer field lengths, and we want to allow them to be recognized
+                    // as valid HLU layers as long as they meet the minimum required length).
+                    if (field.Length < expectedMaxLength)
                         return -1;
                 }
 

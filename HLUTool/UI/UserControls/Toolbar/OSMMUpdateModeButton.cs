@@ -66,7 +66,7 @@ namespace HLU.UI.UserControls.Toolbar
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error setting OSMM Review Mode: {ex}");
+                System.Diagnostics.Debug.WriteLine($"Error Starting OSMM Review Mode: {ex}");
             }
         }
 

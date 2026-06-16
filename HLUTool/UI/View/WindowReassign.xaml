@@ -36,135 +36,87 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="4" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="4" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
+            <!--  Source Layer  -->
             <GroupBox
-                Name="GroupBoxReassign"
+                Name="GroupBoxSource"
                 Grid.Row="0"
-                Header="Reassign Features">
-                <Grid Name="GridReassign" Margin="2,8,2,2">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
+                Header="Source Layer">
+                <TextBox
+                    Name="TextBoxSourceLayer"
+                    Margin="8,8,8,4"
+                    IsEnabled="False"
+                    Text="{Binding SourceLayerName, Mode=OneWay}" />
+            </GroupBox>
 
-                    <!--  Source Layer  -->
-                    <Label
-                        Name="LabelSourceLayer"
-                        Grid.Row="0"
-                        Grid.Column="0"
-                        Margin="0,0,0,8"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Center">
-                        Source Layer
-                    </Label>
-                    <TextBox
-                        Name="TextBoxSourceLayer"
-                        Grid.Row="0"
-                        Grid.Column="1"
-                        Margin="8,0,8,8"
-                        IsEnabled="False"
-                        Text="{Binding SourceLayerName, Mode=OneWay}" />
+            <!--  Rules Grid  -->
+            <GroupBox
+                Name="GroupBoxRules"
+                Grid.Row="2"
+                Header="Reassign Rules">
+                <DataGrid
+                    Name="DataGridRules"
+                    Margin="2,8,2,2"
+                    AutoGenerateColumns="False"
+                    CanUserAddRows="False"
+                    CanUserDeleteRows="False"
+                    CanUserReorderColumns="False"
+                    CanUserResizeRows="False"
+                    CanUserSortColumns="False"
+                    ItemsSource="{Binding RuleRows}"
+                    SelectionMode="Single">
+                    <DataGrid.Columns>
+                        <!--  Rule Name  -->
+                        <DataGridTextColumn
+                            Width="100"
+                            Binding="{Binding RuleName}"
+                            Header="Rule"
+                            IsReadOnly="True" />
 
-                    <!--  Target Layer  -->
-                    <Label
-                        Name="LabelTargetLayer"
-                        Grid.Row="1"
-                        Grid.Column="0"
-                        Margin="0,0,0,8"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Center">
-                        Target Layer
-                    </Label>
-                    <ComboBox
-                        Name="ComboBoxTargetLayer"
-                        Grid.Row="1"
-                        Grid.Column="1"
-                        Margin="8,0,8,8"
-                        IsEditable="False"
-                        ItemsSource="{Binding TargetLayerNames}"
-                        SelectedValue="{Binding TargetLayerName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
-                        Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
-                        ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
-                        Validation.ErrorTemplate="{StaticResource ErrorTemplate}" />
+                        <!--  Where Clause  -->
+                        <DataGridTextColumn
+                            Width="*"
+							MaxWidth="800"
+                            Binding="{Binding WhereClause}"
+                            Header="Where Clause"
+                            IsReadOnly="True" />
 
-                    <!--  Rule  -->
-                    <Label
-                        Name="LabelRule"
-                        Grid.Row="2"
-                        Grid.Column="0"
-                        Margin="0,0,0,8"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Center">
-                        Rule
-                    </Label>
-                    <ComboBox
-                        Name="ComboBoxRule"
-                        Grid.Row="2"
-                        Grid.Column="1"
-                        Margin="8,0,8,8"
-                        DisplayMemberPath="RuleName"
-                        IsEditable="False"
-                        ItemsSource="{Binding Rules}"
-                        SelectedItem="{Binding SelectedRule, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
-                        Tag="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent, Converter={StaticResource errorMessageConverter}}"
-                        ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors).CurrentItem.ErrorContent}"
-                        Validation.ErrorTemplate="{StaticResource ErrorTemplate}" />
+                        <!--  Feature Count  -->
+                        <DataGridTextColumn
+                            Width="80"
+                            Binding="{Binding FeatureCountText}"
+                            Header="Features"
+                            IsReadOnly="True" />
 
-                    <!--  Where Clause  -->
-                    <Label
-                        Name="LabelWhereClause"
-                        Grid.Row="3"
-                        Grid.Column="0"
-                        Margin="0,0,0,8"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Top">
-                        Where Clause
-                    </Label>
-                    <TextBox
-                        Name="TextBoxWhereClause"
-                        Grid.Row="3"
-                        Grid.Column="1"
-                        Margin="8,0,8,8"
-                        IsEnabled="False"
-                        MinWidth="240"
-                        MaxWidth="400"
-                        MaxHeight="80"
-                        TextWrapping="Wrap"
-                        VerticalScrollBarVisibility="Auto"
-                        Text="{Binding WhereClauseText, Mode=OneWay}" />
-
-                    <!--  Feature Count  -->
-                    <Label
-                        Name="LabelFeatureCount"
-                        Grid.Row="4"
-                        Grid.Column="0"
-                        Margin="0,0,0,2"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Center">
-                        Features
-                    </Label>
-                    <TextBox
-                        Name="TextBoxFeatureCount"
-                        Grid.Row="4"
-                        Grid.Column="1"
-                        Margin="8,0,8,2"
-                        IsEnabled="False"
-                        Text="{Binding FeatureCountText, Mode=OneWay}" />
-                </Grid>
+                        <!--  Target Layer  -->
+                        <DataGridComboBoxColumn
+                            Width="150"
+                            Header="Target Layer"
+                            SelectedItemBinding="{Binding SelectedTargetLayer, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                            <DataGridComboBoxColumn.ElementStyle>
+                                <Style TargetType="ComboBox">
+                                    <Setter Property="ItemsSource" Value="{Binding DataContext.TargetLayerNamesWithSkip, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                    <Setter Property="IsEnabled" Value="{Binding CanReassign}" />
+                                </Style>
+                            </DataGridComboBoxColumn.ElementStyle>
+                            <DataGridComboBoxColumn.EditingElementStyle>
+                                <Style TargetType="ComboBox">
+                                    <Setter Property="ItemsSource" Value="{Binding DataContext.TargetLayerNamesWithSkip, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                    <Setter Property="IsEnabled" Value="{Binding CanReassign}" />
+                                </Style>
+                            </DataGridComboBoxColumn.EditingElementStyle>
+                        </DataGridComboBoxColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
             </GroupBox>
 
             <!--  OK / Cancel  -->
             <StackPanel
-                Grid.Row="2"
+                Grid.Row="4"
                 HorizontalAlignment="Right"
                 Orientation="Horizontal">
                 <Button
