@@ -35,7 +35,7 @@ namespace HLU.UI.ViewModel
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="R"></typeparam>
-    class ViewModelWindowMergeFeatures<T, R> : ViewModelBase, IDataErrorInfo
+    internal class ViewModelWindowMergeFeatures<T, R> : ViewModelBase, IDataErrorInfo
         where T : DataTable
         where R : DataRow
     {

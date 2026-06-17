@@ -32,7 +32,7 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// Functionality to process proposed OSMM Updates.
     /// </summary>
-    class ViewModelWindowMainOSMMUpdate
+    internal class ViewModelWindowMainOSMMUpdate
     {
         #region Fields
 

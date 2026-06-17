@@ -96,8 +96,7 @@ namespace HLU.UI.UserControls.Toolbar
             }
 
             // Enable or disable the button based on CanExport and main window visibility.
-            bool canExport = _viewModel.CanExport && _viewModel.GridMainVisibility == Visibility.Visible;
-            Enabled = canExport;
+            Enabled = _viewModel.CanExport && _viewModel.GridMainVisibility == Visibility.Visible;
 
             // Set the disabled tool tip text (for when it is disabled).
             DisabledTooltip = "Unavailable when:\n" +

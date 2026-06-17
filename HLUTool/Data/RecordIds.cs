@@ -370,11 +370,13 @@ namespace HLU.Data
                     fragidColumnName = _hluDataset.incid_mm_lines.fragidColumn.ColumnName;
                     incidColumnName = _hluDataset.incid_mm_lines.incidColumn.ColumnName;
                     break;
+
                 case HluGeometryTypes.Point:
                     tableName = _hluDataset.incid_mm_points.TableName;
                     fragidColumnName = _hluDataset.incid_mm_points.fragidColumn.ColumnName;
                     incidColumnName = _hluDataset.incid_mm_points.incidColumn.ColumnName;
                     break;
+
                 default:
                     tableName = _hluDataset.incid_mm_polygons.TableName;
                     fragidColumnName = _hluDataset.incid_mm_polygons.fragidColumn.ColumnName;

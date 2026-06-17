@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace HLU.UI.ViewModel
+namespace HLU.Data
 {
     /// <summary>
     /// Represents one row in the OSMM xref preview grid: a unique combination
@@ -27,52 +27,85 @@ namespace HLU.UI.ViewModel
     public sealed class OsmmXrefPreviewRow
     {
         /// <summary>Gets the OSMM <c>make</c> attribute value.</summary>
-        public string Make { get; init; }
+        public string Make
+        {
+            get; init;
+        }
 
         /// <summary>Gets the OSMM <c>desc_group</c> attribute value.</summary>
-        public string DescGroup { get; init; }
+        public string DescGroup
+        {
+            get; init;
+        }
 
         /// <summary>Gets the OSMM <c>desc_term</c> attribute value.</summary>
-        public string DescTerm { get; init; }
+        public string DescTerm
+        {
+            get; init;
+        }
 
         /// <summary>Gets the OSMM <c>theme</c> attribute value.</summary>
-        public string Theme { get; init; }
+        public string Theme
+        {
+            get; init;
+        }
 
         /// <summary>Gets the OSMM <c>feat_code</c> attribute value.</summary>
-        public string FeatCode { get; init; }
+        public string FeatCode
+        {
+            get; init;
+        }
 
         /// <summary>Gets the number of selected features with this attribute combination.</summary>
-        public int Count { get; init; }
+        public int Count
+        {
+            get; init;
+        }
 
         /// <summary>
         /// Gets the resolved <c>habitat_primary</c> value from
         /// <c>lut_osmm_habitat_xref</c>, or <c>null</c> when no match was found.
         /// </summary>
-        public string HabitatPrimary { get; init; }
+        public string HabitatPrimary
+        {
+            get; init;
+        }
 
         /// <summary>
         /// Gets the resolved <c>habitat_secondaries</c> value from
         /// <c>lut_osmm_habitat_xref</c>, or <c>null</c> when no match was found.
         /// </summary>
-        public string HabitatSecondaries { get; init; }
+        public string HabitatSecondaries
+        {
+            get; init;
+        }
 
         /// <summary>
         /// Gets a value indicating whether this combination was found in
         /// <c>lut_osmm_habitat_xref</c>.
         /// </summary>
-        public bool IsMatched { get; init; }
+        public bool IsMatched
+        {
+            get; init;
+        }
 
         /// <summary>
         /// Gets a value indicating whether the resolved primary habitat code
         /// is valid for the active layer geometry type.
         /// </summary>
-        public bool IsPrimaryValid { get; init; }
+        public bool IsPrimaryValid
+        {
+            get; init;
+        }
 
         /// <summary>
         /// Gets a value indicating whether all resolved secondary habitat codes
         /// are valid for the active layer geometry type.
         /// </summary>
-        public bool AreSecondariesValid { get; init; }
+        public bool AreSecondariesValid
+        {
+            get; init;
+        }
 
         /// <summary>
         /// Gets a display string for the match status column.

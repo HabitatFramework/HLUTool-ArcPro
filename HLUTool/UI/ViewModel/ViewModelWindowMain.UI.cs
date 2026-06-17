@@ -56,7 +56,7 @@ namespace HLU.UI.ViewModel
     /// UI-focused partial for ViewModelWindowMain.
     /// Contains: All bindable properties, UI state, visibility, formatting, commands, UI coordination.
     /// </summary>
-    partial class ViewModelWindowMain
+    internal partial class ViewModelWindowMain
     {
         #region Fields
 
@@ -71,6 +71,7 @@ namespace HLU.UI.ViewModel
 
         // DockPane fields
         private ViewModelWindowMain _dockPane;
+
         private const string _dockPaneID = "HLUTool_UI_WindowMain";
         private const string _dockPaneBaseCaption = "HLU Tool";
 
@@ -80,6 +81,7 @@ namespace HLU.UI.ViewModel
 
         // Habitat display fields
         private double _incidArea = -1;
+
         private double _incidLength = -1;
         private string _process;
         private string _reason;
@@ -92,6 +94,7 @@ namespace HLU.UI.ViewModel
 
         // IHS/Details display fields
         private string _incidIhsHabitat;
+
         private string _incidPrimary;
         private string _incidPrimaryCategory;
         private string _incidNVCCodes;
@@ -102,6 +105,7 @@ namespace HLU.UI.ViewModel
 
         // OSMM display fields
         private int _incidOSMMUpdatesOSMMXref;
+
         private int _incidOSMMUpdatesProcessFlag;
         private string _incidOSMMUpdatesSpatialFlag;
         private string _incidOSMMUpdatesChangeFlag;
@@ -109,12 +113,14 @@ namespace HLU.UI.ViewModel
 
         // OSMM UI State display fields
         private string _osmmAcceptTag = "A_ccept";
+
         private string _osmmRejectTag = "Re_ject";
         private Nullable<bool> _anyOSMMUpdates;
         private bool _osmmUpdatesEmpty = false;
 
         // Vague date display fields
         private VagueDateInstance _incidConditionDateEntered;
+
         private VagueDateInstance _incidSource1DateEntered;
         private VagueDateInstance _incidSource2DateEntered;
         private VagueDateInstance _incidSource3DateEntered;
@@ -7587,6 +7593,7 @@ namespace HLU.UI.ViewModel
             RefreshSources();
             RefreshHistory();
         }
+
         /// <summary>
         /// Refreshes the state of combo box sources, ensuring that any bound user interface elements reflect the current data.
         /// </summary>
@@ -8879,8 +8886,8 @@ namespace HLU.UI.ViewModel
                 if (!string.IsNullOrWhiteSpace(proposedSecondaries))
                 {
                     // Split on whitespace, commas, and common connectives — same approach as ExpandSuggestedCodes.
-                        string[] tokens = OsmmSecondariesSplitRegex()
-                            .Split(proposedSecondaries.Replace('[', ' ').Replace(']', ' '));
+                    string[] tokens = OsmmSecondariesSplitRegex()
+                        .Split(proposedSecondaries.Replace('[', ' ').Replace(']', ' '));
 
                     foreach (string token in tokens)
                     {
@@ -10340,29 +10347,30 @@ namespace HLU.UI.ViewModel
             switch (_gisLayerType)
             {
                 case HluGeometryTypes.Line:
-                {
+                    {
                         // For line geometries, only calculate length measures.
                         HluDataSet.incid_mm_linesDataTable table = HluDataset.incid_mm_lines;
-                    GetIncidMMLineRows(incidCondList, ref table);
-                    foreach (HluDataSet.incid_mm_linesRow r in table)
-                        _incidLength += r.shape_length;
-                    break;
-                }
+                        GetIncidMMLineRows(incidCondList, ref table);
+                        foreach (HluDataSet.incid_mm_linesRow r in table)
+                            _incidLength += r.shape_length;
+                        break;
+                    }
                 case HluGeometryTypes.Point:
                     // For point geometries, there are no area or length measures to calculate, so skip to the end.
                     break;
+
                 default:
-                {
+                    {
                         // For polygon geometries, calculate both area and length measures.
                         HluDataSet.incid_mm_polygonsDataTable table = HluDataset.incid_mm_polygons;
-                    GetIncidMMPolygonRows(incidCondList, ref table);
-                    foreach (HluDataSet.incid_mm_polygonsRow r in table)
-                    {
-                        _incidArea += r.shape_area;
-                        _incidLength += r.shape_length;
+                        GetIncidMMPolygonRows(incidCondList, ref table);
+                        foreach (HluDataSet.incid_mm_polygonsRow r in table)
+                        {
+                            _incidArea += r.shape_area;
+                            _incidLength += r.shape_length;
+                        }
+                        break;
                     }
-                    break;
-                }
             }
 
             // Convert from native storage units (m² / m) to configured
@@ -10417,9 +10425,9 @@ namespace HLU.UI.ViewModel
         private bool PrimaryMatchesLayerType(HluDataSet.lut_primaryRow row) =>
             _gisLayerType switch
             {
-                HluGeometryTypes.Line    => row.line,
-                HluGeometryTypes.Point   => row.point,
-                _                        => row.polygon   // default: Polygon
+                HluGeometryTypes.Line => row.line,
+                HluGeometryTypes.Point => row.point,
+                _ => row.polygon   // default: Polygon
             };
 
         /// <summary>
@@ -10429,9 +10437,9 @@ namespace HLU.UI.ViewModel
         private bool SecondaryMatchesLayerType(HluDataSet.lut_secondaryRow row) =>
             _gisLayerType switch
             {
-                HluGeometryTypes.Line    => row.line,
-                HluGeometryTypes.Point   => row.point,
-                _                        => row.polygon   // default: Polygon
+                HluGeometryTypes.Line => row.line,
+                HluGeometryTypes.Point => row.point,
+                _ => row.polygon   // default: Polygon
             };
 
         #endregion Formatting Helpers

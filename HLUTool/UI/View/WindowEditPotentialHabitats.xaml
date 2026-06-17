@@ -201,7 +201,6 @@
             Grid.Column="0"
             Margin="4">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="82" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="82" />
                 <ColumnDefinition Width="82" />
@@ -209,23 +208,21 @@
             <Button
                 Name="ButtonOK"
                 Grid.Row="0"
-                Grid.Column="2"
+                Grid.Column="1"
                 Margin="0,0,2,0"
                 Command="{Binding OkCommand}"
+                Content="_OK"
                 IsDefault="True"
-                Style="{DynamicResource Esri_Button}">
-                _OK
-            </Button>
+                Style="{DynamicResource Esri_Button}" />
             <Button
                 Name="ButtonCancel"
                 Grid.Row="0"
-                Grid.Column="3"
+                Grid.Column="2"
                 Margin="2,0,0,0"
                 Command="{Binding CancelCommand}"
+                Content="_Cancel"
                 IsCancel="True"
-                Style="{DynamicResource Esri_Button}">
-                _Cancel
-            </Button>
+                Style="{DynamicResource Esri_Button}" />
         </Grid>
     </Grid>
 </controls:ProWindow>

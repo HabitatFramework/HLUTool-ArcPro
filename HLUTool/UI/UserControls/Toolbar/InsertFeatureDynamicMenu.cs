@@ -79,6 +79,7 @@ namespace HLU.UI.UserControls.Toolbar
             // Enable or disable the button based on CanInsertFeature and main window visibility.
             Enabled = _viewModel.CanInsertFeature && _viewModel.GridMainVisibility == Visibility.Visible;
 
+            // Set the disabled tool tip text (for when it is disabled).
             DisabledTooltip = "Unavailable when:\n" +
                 "\u2022 No reason or process are selected\n" +
                 "\u2022 Multiple features are not selected\n" +

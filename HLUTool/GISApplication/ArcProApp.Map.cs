@@ -994,13 +994,16 @@ namespace HLU.GISApplication
                         case esriGeometryType.esriGeometryPolygon:
                             detectedGeometryType = HluGeometryTypes.Polygon;
                             break;
+
                         case esriGeometryType.esriGeometryPolyline:
                             detectedGeometryType = HluGeometryTypes.Line;
                             break;
+
                         case esriGeometryType.esriGeometryPoint:
                         case esriGeometryType.esriGeometryMultipoint:
                             detectedGeometryType = HluGeometryTypes.Point;
                             break;
+
                         default:
                             return HluLayerCheckResult.Invalid();
                     }

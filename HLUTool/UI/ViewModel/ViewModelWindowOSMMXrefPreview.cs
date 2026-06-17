@@ -16,6 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Data;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
@@ -75,7 +76,9 @@ namespace HLU.UI.ViewModel
 
         #region RequestClose
 
-        /// <summary>Delegate for the <see cref="RequestClose"/> event.</summary>
+        /// <summary>
+        /// Delegate for the <see cref="RequestClose"/> event.
+        /// </summary>
         public delegate void RequestCloseEventHandler(bool proceed);
 
         /// <summary>
@@ -88,14 +91,22 @@ namespace HLU.UI.ViewModel
 
         #region Properties
 
-        /// <summary>Gets the rows to display in the preview grid.</summary>
-        public ObservableCollection<OsmmXrefPreviewRow> Rows { get; }
+        /// <summary>
+        /// Gets the rows to display in the preview grid.
+        /// </summary>
+        public ObservableCollection<OsmmXrefPreviewRow> Rows
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets a value indicating whether any rows have no match in
         /// <c>lut_osmm_habitat_xref</c>.
         /// </summary>
-        public bool HasUnmatched { get; }
+        public bool HasUnmatched
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets a value indicating whether any rows have invalid primary or secondary codes
@@ -121,7 +132,7 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public string InvalidCodesWarning => HasInvalidCodes
             ? "Warning: one or more habitat codes are not valid for the active " +
-              "layer geometry type (polygon/line/point flags). " +
+              "layer geometry type (polygon/line/point). " +
               "Features with invalid codes will be loaded without those habitat values."
             : null;
 
@@ -129,7 +140,9 @@ namespace HLU.UI.ViewModel
 
         #region Proceed Command
 
-        /// <summary>Gets the command that closes the window and proceeds with the load.</summary>
+        /// <summary>
+        /// Gets the command that closes the window and proceeds with the load.
+        /// </summary>
         public ICommand ProceedCommand
         {
             get
@@ -143,7 +156,9 @@ namespace HLU.UI.ViewModel
 
         #region Cancel Command
 
-        /// <summary>Gets the command that closes the window and cancels the load.</summary>
+        /// <summary>
+        /// Gets the command that closes the window and cancels the load.
+        /// </summary>
         public ICommand CancelCommand
         {
             get
@@ -172,7 +187,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
-        /// <summary>Writes the preview rows to a user-selected CSV file.</summary>
+        /// <summary>
+        /// Writes the preview rows to a user-selected CSV file.
+        /// </summary>
         private void ExportCsv()
         {
             SaveFileDialog dlg = new()
@@ -188,13 +205,15 @@ namespace HLU.UI.ViewModel
 
             try
             {
+                // Open the file for writing. Overwrite if it already exists.
                 using StreamWriter sw = new(dlg.FileName, append: false);
 
-                // Header row.
+                // Write the header row.
                 sw.WriteLine(
                     "Make,Desc Group,Desc Term,Theme,Feat Code," +
                     "Count,Habitat Primary,Habitat Secondaries,Status");
 
+                // Write each row, escaping any embedded double-quotes in the field values.
                 foreach (OsmmXrefPreviewRow r in Rows)
                 {
                     sw.WriteLine(string.Join(",",
@@ -231,9 +250,11 @@ namespace HLU.UI.ViewModel
         /// </summary>
         private static string CsvEscape(string value)
         {
+            // If the value is null or empty, return an empty quoted string.
             if (string.IsNullOrEmpty(value))
                 return "\"\"";
 
+            // Escape any embedded double-quotes by replacing them with two double-quotes.
             return "\"" + value.Replace("\"", "\"\"") + "\"";
         }
 

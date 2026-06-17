@@ -39,11 +39,11 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// View model for the main window updates handling.
     /// </summary>
-    class ViewModelWindowMainUpdate
+    internal class ViewModelWindowMainUpdate
     {
         #region Fields
 
-        ViewModelWindowMain _viewModelMain;
+        private ViewModelWindowMain _viewModelMain;
 
         #endregion Fields
 
@@ -72,7 +72,6 @@ namespace HLU.UI.ViewModel
         /// </returns>
         internal async Task<bool> PerformUpdateAsync()
         {
-            // Start database transaction
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
             // Start a GIS edit operation

@@ -103,8 +103,7 @@ namespace HLU.UI.UserControls.Toolbar
             }
 
             // Enable or disable the ComboBox based on ReasonProcessEnabled and main window visibility.
-            bool reasonProcessEnabled = _viewModel.ReasonProcessEnabled && _viewModel.GridMainVisibility == Visibility.Visible;
-            Enabled = reasonProcessEnabled;
+            Enabled = _viewModel.ReasonProcessEnabled && _viewModel.GridMainVisibility == Visibility.Visible;
 
             // Set the disabled tool tip text (for when it is disabled).
             DisabledTooltip = "Unavailable when: \n" +

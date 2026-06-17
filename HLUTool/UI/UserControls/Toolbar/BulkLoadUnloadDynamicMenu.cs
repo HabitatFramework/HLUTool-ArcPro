@@ -37,12 +37,17 @@ namespace HLU.UI.UserControls.Toolbar
 
         #region Constructor
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public BulkLoadUnloadDynamicMenu()
         {
+            // Get the dockpane DAML id.
             DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
             if (pane == null)
                 return;
 
+            // Get the ViewModel by casting the dockpane.
             _viewModel = pane as ViewModelWindowMain;
         }
 
@@ -50,8 +55,12 @@ namespace HLU.UI.UserControls.Toolbar
 
         #region Overrides
 
+        /// <summary>
+        /// Called periodically by the framework to update menu state.
+        /// </summary>
         protected override void OnUpdate()
         {
+            // If the main ViewModel is not available, disable the button and show a tooltip indicating that the main window is not available.
             if (_viewModel == null)
             {
                 Enabled = false;
@@ -59,6 +68,7 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
+            // If the tool is processing, disable the button and show a tooltip indicating why.
             if (_viewModel.IsToolProcessing)
             {
                 Enabled = false;
@@ -66,9 +76,11 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
+            // Enable or disable the button based on CanBulkLoadUnload and main window visibility.
             Enabled = _viewModel.CanBulkLoadUnload &&
                       _viewModel.GridMainVisibility == Visibility.Visible;
 
+            // Set the disabled tool tip text (for when it is disabled).
             DisabledTooltip = "Unavailable when:\n" +
                 "\u2022 The tool is not in normal update mode\n" +
                 "\u2022 No reason or process are selected\n" +
@@ -76,6 +88,9 @@ namespace HLU.UI.UserControls.Toolbar
                 "\u2022 The main window is not visible";
         }
 
+        /// <summary>
+        /// Populates the menu with the Bulk Unload and Bulk Load buttons when the menu is opened.
+        /// </summary>
         protected override void OnPopup()
         {
             AddReference("HLUTool_btnBulkUnload");

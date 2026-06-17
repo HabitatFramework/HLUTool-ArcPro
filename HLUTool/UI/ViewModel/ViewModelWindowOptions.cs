@@ -37,9 +37,9 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Forms;
@@ -104,6 +104,7 @@ namespace HLU.UI.ViewModel
 
         // Application Bulk Update options
         private string _defaultBulkLoadLayer;
+
         private bool _bulkDeleteOrphanBapHabitats;
 
         private bool _bulkDeletePotentialBapHabitats;

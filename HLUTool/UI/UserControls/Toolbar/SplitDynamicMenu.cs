@@ -76,8 +76,7 @@ namespace HLU.UI.UserControls.Toolbar
             }
 
             // Enable or disable the button based on CanSplit and main window visibility.
-            bool canSplit = (_viewModel.CanSplit && _viewModel.GridMainVisibility == Visibility.Visible);
-            Enabled = canSplit;
+            Enabled = (_viewModel.CanSplit && _viewModel.GridMainVisibility == Visibility.Visible);
 
             // Set the disabled tool tip text (for when it is disabled).
             DisabledTooltip = "Unavailable when:\n" +

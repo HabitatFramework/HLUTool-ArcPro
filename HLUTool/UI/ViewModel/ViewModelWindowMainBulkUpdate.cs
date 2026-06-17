@@ -46,7 +46,7 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// Contains the view model for the main window bulk update functionality.
     /// </summary>
-    class ViewModelWindowMainBulkUpdate
+    internal class ViewModelWindowMainBulkUpdate
     {
         #region Fields
 

@@ -80,10 +80,11 @@ namespace HLU.UI.ViewModel
             string sourceLayerName = _viewModelMain.ActiveLayerName;
             HluGeometryTypes sourceGeometryType = _viewModelMain.GISApplication.HluGeometryType;
 
-            // Filter target layers to only include those with matching geometry type
+            // Filter target layers to only include those with matching geometry type.
             List<string> candidateLayerNames = [.. _viewModelMain.AvailableHLULayerNames.Where(n => n != sourceLayerName)];
             List<string> targetLayerNames = [];
 
+            // Loop through candidate layers and check their geometry type asynchronously.
             foreach (string layerName in candidateLayerNames)
             {
                 HluGeometryTypes layerGeometryType = await _viewModelMain.GISApplication.GetLayerGeometryTypeAsync(layerName);
@@ -93,6 +94,7 @@ namespace HLU.UI.ViewModel
                 }
             }
 
+            // If no target layers are available, show a message and exit.
             if (targetLayerNames.Count == 0)
             {
                 MessageBox.Show(
@@ -107,6 +109,7 @@ namespace HLU.UI.ViewModel
             // Get the reassign rules configured in the options.
             List<ReassignRule> rules = _viewModelMain.AddInSettings?.ReassignRules ?? [];
 
+            // If no rules are configured, show a message and exit.
             if (rules.Count == 0)
             {
                 MessageBox.Show(
@@ -126,6 +129,7 @@ namespace HLU.UI.ViewModel
                 Topmost = true
             };
 
+            // Create the view model for the Reassign dialog.
             _viewModelReassign = new ViewModelWindowReassign(
                 sourceLayerName,
                 targetLayerNames,
@@ -145,6 +149,7 @@ namespace HLU.UI.ViewModel
             _viewModelReassign.RequestClose +=
                 new ViewModelWindowReassign.RequestCloseEventHandler(ViewModelReassign_RequestClose);
 
+            // Show the dialog and set its DataContext to the view model.
             _windowReassign.DataContext = _viewModelReassign;
             _windowReassign.ShowDialog();
         }
@@ -153,8 +158,10 @@ namespace HLU.UI.ViewModel
         /// Handles the RequestProcessAll event from the Reassign dialog (OK button).
         /// Processes all rule assignments sequentially, then closes the dialog.
         /// </summary>
+        /// <param name="assignments">List of tuples containing target layer name and reassign rule to process.</param>
         private async void ViewModelReassign_RequestProcessAll(List<(string targetLayerName, ReassignRule rule)> assignments)
         {
+            // If no assignments were provided, exit early.
             if (assignments == null || assignments.Count == 0)
                 return;
 
@@ -175,7 +182,9 @@ namespace HLU.UI.ViewModel
 
                     try
                     {
+                        // Execute the reassignment for the current rule and target layer.
                         int moved = await ExecuteSingleReassignAsync(targetLayerName, rule);
+
                         if (moved >= 0)
                         {
                             totalMoved += moved;
@@ -194,11 +203,13 @@ namespace HLU.UI.ViewModel
                     }
                 }
 
-                // Show summary
-                string summaryMessage = $"{totalMoved} feature(s) reassigned using {successCount} rule(s).";
+                // Show summary message.
+                string summaryMessage = $"{totalMoved:N0} feature(s) reassigned using {successCount:N0} rule(s).";
+
+                // If there were any failures, show a warning message with details.
                 if (failureCount > 0)
                 {
-                    summaryMessage += $"\n\n{failureCount} rule(s) failed:";
+                    summaryMessage += $"\n\n{failureCount:N0} rule(s) failed:";
                     foreach (var errMsg in errorMessages)
                     {
                         summaryMessage += $"\n• {errMsg}";
@@ -212,6 +223,7 @@ namespace HLU.UI.ViewModel
                 }
                 else
                 {
+                    // Show a success message in the main window's info area.
                     _viewModelMain.ShowInfo(summaryMessage, MessageCategory.Update);
                 }
 
@@ -248,8 +260,10 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Executes a single feature reassignment: moves features matching the rule's WHERE clause
         /// from the active source HLU layer to <paramref name="targetLayerName"/>.
-        /// Returns the number of features moved, or -1 if the target layer was not found.
         /// </summary>
+        /// <param name="targetLayerName">The name of the target HLU layer to move features to.</param>
+        /// <param name="rule">The reassign rule containing the WHERE clause to filter features.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the number of features moved, or -1 if the target layer was not found.</returns>
         private async Task<int> ExecuteSingleReassignAsync(string targetLayerName, ReassignRule rule)
         {
             // Build and execute the GIS edit operation.
@@ -259,20 +273,21 @@ namespace HLU.UI.ViewModel
                 ProgressMessage = $"Moving features to '{targetLayerName}'…"
             };
 
+            // Queue the reassignment operation.
             int moved = await _viewModelMain.GISApplication.ReassignFeaturesAsync(
                 targetLayerName,
                 rule.WhereClause,
                 editOperation);
 
+            // If the target layer was not found, return -1 to indicate failure.
             if (moved < 0)
             {
-                // Target layer not found
                 return -1;
             }
 
+            // If no features matched the rule, return 0 to indicate that no features were moved.
             if (moved == 0)
             {
-                // No features matched the rule, but this is not an error
                 return 0;
             }
 

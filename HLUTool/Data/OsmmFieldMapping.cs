@@ -16,18 +16,19 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using System.Windows.Controls;
-
-namespace HLU.UI.View
+namespace HLU.Data
 {
     /// <summary>
-    /// Interaction logic for AppReassignOptions.xaml
+    /// Carries the user's selections from the Bulk Load setup dialog:
+    /// the name of the input layer and the five field-name mappings that
+    /// correspond to the <c>lut_osmm_habitat_xref</c> lookup columns.
     /// </summary>
-    public partial class AppReassignOptions : UserControl
-    {
-        public AppReassignOptions()
-        {
-            InitializeComponent();
-        }
-    }
+    internal sealed record OsmmFieldMapping(
+        string LayerName,
+        string ToidField,
+        string MakeField,
+        string DescGroupField,
+        string DescTermField,
+        string ThemeField,
+        string FeatCodeField);
 }

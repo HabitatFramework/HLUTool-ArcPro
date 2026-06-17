@@ -40,7 +40,7 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// Contains the view model for the Advanced Query Builder window.
     /// </summary>
-    class ViewModelWindowQueryAdvanced : ViewModelBase, IDataErrorInfo
+    internal class ViewModelWindowQueryAdvanced : ViewModelBase, IDataErrorInfo
     {
         #region Fields
 

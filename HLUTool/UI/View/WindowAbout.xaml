@@ -367,11 +367,10 @@
                     Name="ButtonOk"
                     Grid.Column="2"
                     Command="{Binding OkCommand}"
+                    Content="_OK"
                     ForceCursor="False"
                     IsDefault="True"
-                    Style="{DynamicResource Esri_Button}">
-                    _OK
-                </Button>
+                    Style="{DynamicResource Esri_Button}" />
             </Grid>
         </Grid>
     </DockPanel>

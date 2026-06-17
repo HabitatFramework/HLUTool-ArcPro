@@ -73,7 +73,10 @@ namespace HLU.UI.ViewModel
         /// Registers all currently selected new (null-INCID) features under a single new INCID,
         /// assigning each a unique sequential fragment ID.
         /// </summary>
-        /// <returns>A tuple of (success, featureCount, incidCount).</returns>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains a tuple of
+        /// (success, featureCount, incidCount).
+        /// </returns>
         internal Task<(bool success, int featureCount, int incidCount)> InsertFeaturesSameIncidAsync() =>
             PerformInsertAsync(sameIncid: true);
 
@@ -81,7 +84,10 @@ namespace HLU.UI.ViewModel
         /// Registers each currently selected new (null-INCID) feature under its own new INCID,
         /// assigning every feature fragment ID "00001".
         /// </summary>
-        /// <returns>A tuple of (success, featureCount, incidCount).</returns>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains a tuple of
+        /// (success, featureCount, incidCount).
+        /// </returns>
         internal Task<(bool success, int featureCount, int incidCount)> InsertFeaturesSeparateIncidsAsync() =>
             PerformInsertAsync(sameIncid: false);
 
@@ -92,10 +98,18 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Core insert logic shared by both entry points.
         /// </summary>
-        /// <returns>A tuple of (success, featureCount, incidCount).</returns>
+        /// <param name="sameIncid">
+        /// True to register all features under a single new INCID; false to register each feature
+        /// under its own new INCID.
+        /// </param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains a tuple of
+        /// (success, featureCount, incidCount).
+        /// </returns>
         private async Task<(bool success, int featureCount, int incidCount)> PerformInsertAsync(bool sameIncid)
         {
             _viewModelMain.ChangeCursor(Cursors.Wait, "Inserting features ...");
+
             bool success = false;
             int featureCount = 0;
             int incidCount = 0;
@@ -126,6 +140,7 @@ namespace HLU.UI.ViewModel
                     return (IReadOnlyList<long>)(selection?.GetObjectIDs() ?? []);
                 });
 
+                // If no features are selected, abort the insert operation.
                 if (selectedOids.Count == 0)
                     throw new HLUToolException("No features are selected in the active layer.");
 
@@ -147,9 +162,9 @@ namespace HLU.UI.ViewModel
                     // sufficient since values are stored as codes.
                     bool allMatch = insertAttribs.Values.All(a =>
                         string.Equals(a.habprimary, habprimary, StringComparison.Ordinal) &&
-                        string.Equals(a.habsecond,  habsecond,  StringComparison.Ordinal) &&
-                        string.Equals(a.determqty,  determqty,  StringComparison.Ordinal) &&
-                        string.Equals(a.interpqty,  interpqty,  StringComparison.Ordinal));
+                        string.Equals(a.habsecond, habsecond, StringComparison.Ordinal) &&
+                        string.Equals(a.determqty, determqty, StringComparison.Ordinal) &&
+                        string.Equals(a.interpqty, interpqty, StringComparison.Ordinal));
 
                     // If any attribute differs between features, the insert cannot proceed in same-INCID mode.
                     if (!allMatch)
@@ -174,10 +189,9 @@ namespace HLU.UI.ViewModel
                 // Tracks all (incid, fragid, habprimary, habsecond, determqty, interpqty) tuples that need mm rows, in OID order.
                 List<(string incid, string fragid, string habprimary, string habsecond, string determqty, string interpqty)> mmRowsToCreate = [];
 
+                // If same INCID, all features share one new INCID; each gets a sequential fragid.
                 if (sameIncid)
                 {
-                    // All features share one new INCID; each gets a sequential fragid.
-
                     // Get the next INCID value from the view model; this does not increment the counter yet.
                     string newIncid = _viewModelMain.NextIncid;
 
@@ -200,9 +214,9 @@ namespace HLU.UI.ViewModel
                     // GIS field is cleared rather than left with a stale/invalid value.
                     string validHabprimary = (!string.IsNullOrEmpty(habprimary) &&
                         _viewModelMain.IsPrimaryValidForLayerType(habprimary)) ? habprimary : null;
-                    string validDetermqty  = (!string.IsNullOrEmpty(determqty) &&
+                    string validDetermqty = (!string.IsNullOrEmpty(determqty) &&
                         _viewModelMain.HluDataset.lut_quality_determination.Any(r => r.code == determqty)) ? determqty : null;
-                    string validInterpqty  = (!string.IsNullOrEmpty(interpqty) &&
+                    string validInterpqty = (!string.IsNullOrEmpty(interpqty) &&
                         _viewModelMain.HluDataset.lut_quality_interpretation.Any(r => r.code == interpqty)) ? interpqty : null;
 
                     // Create the single new INCID row in the database.
@@ -253,9 +267,9 @@ namespace HLU.UI.ViewModel
                         // GIS field is cleared rather than left with a stale/invalid value.
                         string validHabprimary = (!string.IsNullOrEmpty(a.habprimary) &&
                             _viewModelMain.IsPrimaryValidForLayerType(a.habprimary)) ? a.habprimary : null;
-                        string validDetermqty  = (!string.IsNullOrEmpty(a.determqty) &&
+                        string validDetermqty = (!string.IsNullOrEmpty(a.determqty) &&
                             _viewModelMain.HluDataset.lut_quality_determination.Any(r => r.code == a.determqty)) ? a.determqty : null;
-                        string validInterpqty  = (!string.IsNullOrEmpty(a.interpqty) &&
+                        string validInterpqty = (!string.IsNullOrEmpty(a.interpqty) &&
                             _viewModelMain.HluDataset.lut_quality_interpretation.Any(r => r.code == a.interpqty)) ? a.interpqty : null;
 
                         // Create the single new INCID row in the database.
@@ -287,6 +301,7 @@ namespace HLU.UI.ViewModel
                     _viewModelMain.HistoryColumns,
                     editOperation);
 
+                // If no history rows were returned, the GIS layer was not updated and the insert has failed.
                 if (historyTable == null || historyTable.Rows.Count == 0)
                     throw new HLUToolException("No GIS features were updated during the insert.");
 
@@ -296,12 +311,16 @@ namespace HLU.UI.ViewModel
                 bool executed = await editOperation.ExecuteAsync();
                 if (!executed)
                 {
+                    // If the edit operation failed, the ErrorMessage property may contain additional details.
                     string details = editOperation.ErrorMessage;
                     if (String.IsNullOrWhiteSpace(details))
                         details = "No additional details were provided by the edit operation.";
+
                     throw new HLUToolException($"Failed to update GIS layer. {details}");
                 }
 
+                // Save the edits to the project; if this fails, the database has been updated but
+                // the GIS layer is not saved.
                 bool saved = await ArcGIS.Desktop.Core.Project.Current.SaveEditsAsync();
                 if (!saved)
                     throw new HLUToolException("GIS edits were applied but could not be saved.");
@@ -330,11 +349,14 @@ namespace HLU.UI.ViewModel
                         ? "modified_" + incidColName
                         : null;
 
+                // If the history table has an incid column, group by it and call HistoryWrite for each group.
                 if (histIncidColName != null)
                 {
+                    // Group the history rows by the incid column so that each call to HistoryWrite gets the right fixedValues.
                     var groups = historyForWrite.AsEnumerable()
                         .GroupBy(r => r[histIncidColName]?.ToString());
 
+                    // Loop through each group and call HistoryWrite with the fixedValues for that group.
                     foreach (var grp in groups)
                     {
                         string groupIncid = grp.Key;
@@ -370,7 +392,10 @@ namespace HLU.UI.ViewModel
 
                 if (!gisExecuted)
                 {
-                    try { editOperation.Abort(); }
+                    try
+                    {
+                        editOperation.Abort();
+                    }
                     catch { /* ignore */ }
                 }
 
@@ -408,10 +433,17 @@ namespace HLU.UI.ViewModel
         /// The row is rejected from the in-memory DataTable immediately after the DB INSERT
         /// so that normal navigation is unaffected.
         /// </summary>
+        /// <param name="newIncid">The new INCID string to insert.</param>
+        /// <param name="nowDtTm">The current timestamp to set in the audit fields.</param>
+        /// <param name="habprimary">Optional primary habitat code to set in the new row.</param>
+        /// <param name="determqty">Optional quality determination code to set in the new row.</param>
+        /// <param name="interpqty">Optional interpretation quality code to set in the new row.</param>
+        /// <param name="validSecondaryCodes">Optional list of valid secondary habitat codes to set in the new row.</param>
         private void CreateIncidRow(string newIncid, DateTime nowDtTm,
             string habprimary = null, string determqty = null, string interpqty = null,
             List<string> validSecondaryCodes = null)
         {
+            // Create a new row in the in-memory DataTable and set the required fields.
             HluDataSet.incidRow newRow = _viewModelMain.IncidTable.NewincidRow();
             newRow.incid = newIncid;
             newRow.habitat_version = "0";
@@ -438,16 +470,20 @@ namespace HLU.UI.ViewModel
                         _viewModelMain.SecondaryCodeDelimiter, validSecondaryCodes);
             }
 
+            // If the quality codes are present and valid, set them; otherwise leave as NULL.
             if (!string.IsNullOrEmpty(determqty) &&
                 _viewModelMain.HluDataset.lut_quality_determination.Any(r => r.code == determqty))
                 newRow.quality_determination = determqty;
 
+            // If the quality codes are present and valid, set them; otherwise leave as NULL.
             if (!string.IsNullOrEmpty(interpqty) &&
                 _viewModelMain.HluDataset.lut_quality_interpretation.Any(r => r.code == interpqty))
                 newRow.quality_interpretation = interpqty;
 
+            // Add the new row to the in-memory DataTable and persist it to the database via the table adapter.
             _viewModelMain.IncidTable.AddincidRow(newRow);
 
+            // Update the database; if the update fails, throw an exception to abort the insert operation.
             if (_viewModelMain.HluTableAdapterManager.incidTableAdapter.Update(
                     _viewModelMain.HluDataset.incid) == -1)
                 throw new Exception($"Failed to insert row into table [{_viewModelMain.HluDataset.incid.TableName}].");
@@ -464,80 +500,100 @@ namespace HLU.UI.ViewModel
         /// columns are left as <see cref="DBNull"/> — they are populated when the GIS
         /// layer geometry is written.
         /// </summary>
+        /// <param name="incid">The INCID string for the new row.</param>
+        /// <param name="fragid">The FRAGID string for the new row.</param>
+        /// <param name="habprimary">Optional primary habitat code to set in the new row.</param>
+        /// <param name="habsecond">Optional secondary habitat code to set in the new row.</param>
+        /// <param name="determqty">Optional quality determination code to set in the new row.</param>
+        /// <param name="interpqty">Optional interpretation quality code to set in the new row.</param>
         private void CreateMMRow(string incid, string fragid,
             string habprimary = null, string habsecond = null,
             string determqty = null, string interpqty = null)
         {
+            // Depending on the geometry type of the active GIS layer, create a new row in the
+            // appropriate incid_mm_* shadow table and set the required fields.
             switch (_viewModelMain.GisLayerType)
             {
                 case HluGeometryTypes.Line:
-                {
-                    var table = _viewModelMain.HluDataset.incid_mm_lines;
-                    HluDataSet.incid_mm_linesRow row = table.Newincid_mm_linesRow();
-                    row.incid = incid;
-                    row.fragid = fragid;
-                    // toid is left as NULL — user-created features have no OS MasterMap toid.
-                    if (!string.IsNullOrEmpty(habprimary)) row.habprimary = habprimary;
-                    if (!string.IsNullOrEmpty(habsecond))  row.habsecond  = habsecond;
-                    if (!string.IsNullOrEmpty(determqty))  row.determqty  = determqty;
-                    if (!string.IsNullOrEmpty(interpqty))  row.interpqty  = interpqty;
-                    table.Addincid_mm_linesRow(row);
+                    {
+                        var table = _viewModelMain.HluDataset.incid_mm_lines;
+                        HluDataSet.incid_mm_linesRow row = table.Newincid_mm_linesRow();
+                        row.incid = incid;
+                        row.fragid = fragid;
+                        // toid is left as NULL — user-created features have no OS MasterMap toid.
+                        if (!string.IsNullOrEmpty(habprimary))
+                            row.habprimary = habprimary;
+                        if (!string.IsNullOrEmpty(habsecond))
+                            row.habsecond = habsecond;
+                        if (!string.IsNullOrEmpty(determqty))
+                            row.determqty = determqty;
+                        if (!string.IsNullOrEmpty(interpqty))
+                            row.interpqty = interpqty;
+                        table.Addincid_mm_linesRow(row);
 
-                    _viewModelMain.HluTableAdapterManager.incid_mm_linesTableAdapter ??=
-                        new HluTableAdapter<HluDataSet.incid_mm_linesDataTable, HluDataSet.incid_mm_linesRow>(_viewModelMain.DataBase);
+                        _viewModelMain.HluTableAdapterManager.incid_mm_linesTableAdapter ??=
+                            new HluTableAdapter<HluDataSet.incid_mm_linesDataTable, HluDataSet.incid_mm_linesRow>(_viewModelMain.DataBase);
 
-                    if (_viewModelMain.HluTableAdapterManager.incid_mm_linesTableAdapter.Update(table) == -1)
-                        throw new Exception($"Failed to insert row into table [{table.TableName}].");
+                        if (_viewModelMain.HluTableAdapterManager.incid_mm_linesTableAdapter.Update(table) == -1)
+                            throw new Exception($"Failed to insert row into table [{table.TableName}].");
 
-                    table.RejectChanges();
-                    break;
-                }
+                        table.RejectChanges();
+                        break;
+                    }
 
                 case HluGeometryTypes.Point:
-                {
-                    var table = _viewModelMain.HluDataset.incid_mm_points;
-                    HluDataSet.incid_mm_pointsRow row = table.Newincid_mm_pointsRow();
-                    row.incid = incid;
-                    row.fragid = fragid;
-                    // toid is left as NULL — user-created features have no OS MasterMap toid.
-                    if (!string.IsNullOrEmpty(habprimary)) row.habprimary = habprimary;
-                    if (!string.IsNullOrEmpty(habsecond))  row.habsecond  = habsecond;
-                    if (!string.IsNullOrEmpty(determqty))  row.determqty  = determqty;
-                    if (!string.IsNullOrEmpty(interpqty))  row.interpqty  = interpqty;
-                    table.Addincid_mm_pointsRow(row);
+                    {
+                        var table = _viewModelMain.HluDataset.incid_mm_points;
+                        HluDataSet.incid_mm_pointsRow row = table.Newincid_mm_pointsRow();
+                        row.incid = incid;
+                        row.fragid = fragid;
+                        // toid is left as NULL — user-created features have no OS MasterMap toid.
+                        if (!string.IsNullOrEmpty(habprimary))
+                            row.habprimary = habprimary;
+                        if (!string.IsNullOrEmpty(habsecond))
+                            row.habsecond = habsecond;
+                        if (!string.IsNullOrEmpty(determqty))
+                            row.determqty = determqty;
+                        if (!string.IsNullOrEmpty(interpqty))
+                            row.interpqty = interpqty;
+                        table.Addincid_mm_pointsRow(row);
 
-                    _viewModelMain.HluTableAdapterManager.incid_mm_pointsTableAdapter ??=
-                        new HluTableAdapter<HluDataSet.incid_mm_pointsDataTable, HluDataSet.incid_mm_pointsRow>(_viewModelMain.DataBase);
+                        _viewModelMain.HluTableAdapterManager.incid_mm_pointsTableAdapter ??=
+                            new HluTableAdapter<HluDataSet.incid_mm_pointsDataTable, HluDataSet.incid_mm_pointsRow>(_viewModelMain.DataBase);
 
-                    if (_viewModelMain.HluTableAdapterManager.incid_mm_pointsTableAdapter.Update(table) == -1)
-                        throw new Exception($"Failed to insert row into table [{table.TableName}].");
+                        if (_viewModelMain.HluTableAdapterManager.incid_mm_pointsTableAdapter.Update(table) == -1)
+                            throw new Exception($"Failed to insert row into table [{table.TableName}].");
 
-                    table.RejectChanges();
-                    break;
-                }
+                        table.RejectChanges();
+                        break;
+                    }
 
                 default: // Polygon
-                {
-                    var table = _viewModelMain.HluDataset.incid_mm_polygons;
-                    HluDataSet.incid_mm_polygonsRow row = table.Newincid_mm_polygonsRow();
-                    row.incid = incid;
-                    row.fragid = fragid;
-                    // toid is left as NULL — user-created features have no OS MasterMap toid.
-                    if (!string.IsNullOrEmpty(habprimary)) row.habprimary = habprimary;
-                    if (!string.IsNullOrEmpty(habsecond))  row.habsecond  = habsecond;
-                    if (!string.IsNullOrEmpty(determqty))  row.determqty  = determqty;
-                    if (!string.IsNullOrEmpty(interpqty))  row.interpqty  = interpqty;
-                    table.Addincid_mm_polygonsRow(row);
+                    {
+                        var table = _viewModelMain.HluDataset.incid_mm_polygons;
+                        HluDataSet.incid_mm_polygonsRow row = table.Newincid_mm_polygonsRow();
+                        row.incid = incid;
+                        row.fragid = fragid;
+                        // toid is left as NULL — user-created features have no OS MasterMap toid.
+                        if (!string.IsNullOrEmpty(habprimary))
+                            row.habprimary = habprimary;
+                        if (!string.IsNullOrEmpty(habsecond))
+                            row.habsecond = habsecond;
+                        if (!string.IsNullOrEmpty(determqty))
+                            row.determqty = determqty;
+                        if (!string.IsNullOrEmpty(interpqty))
+                            row.interpqty = interpqty;
+                        table.Addincid_mm_polygonsRow(row);
 
-                    _viewModelMain.HluTableAdapterManager.incid_mm_polygonsTableAdapter ??=
-                        new HluTableAdapter<HluDataSet.incid_mm_polygonsDataTable, HluDataSet.incid_mm_polygonsRow>(_viewModelMain.DataBase);
+                        _viewModelMain.HluTableAdapterManager.incid_mm_polygonsTableAdapter ??=
+                            new HluTableAdapter<HluDataSet.incid_mm_polygonsDataTable, HluDataSet.incid_mm_polygonsRow>(_viewModelMain.DataBase);
 
-                    if (_viewModelMain.HluTableAdapterManager.incid_mm_polygonsTableAdapter.Update(table) == -1)
-                        throw new Exception($"Failed to insert row into table [{table.TableName}].");
+                        if (_viewModelMain.HluTableAdapterManager.incid_mm_polygonsTableAdapter.Update(table) == -1)
+                            throw new Exception($"Failed to insert row into table [{table.TableName}].");
 
-                    table.RejectChanges();
-                    break;
-                }
+                        table.RejectChanges();
+                        break;
+                    }
             }
         }
 
@@ -547,8 +603,10 @@ namespace HLU.UI.ViewModel
         /// non-duplicate codes that are applicable to the active layer geometry type.
         /// Codes not found in the layer's secondary-habitat lookup are silently ignored.
         /// </summary>
+        /// <param name="habsecond">The raw secondary habitat code string from the GIS layer.</param>
         private List<string> ResolveValidSecondaryCodes(string habsecond)
         {
+            // If the habsecond string is null, empty, or whitespace, return an empty list.
             if (string.IsNullOrWhiteSpace(habsecond))
                 return [];
 
@@ -560,6 +618,7 @@ namespace HLU.UI.ViewModel
                 .Where(s => !string.IsNullOrEmpty(s))
                 .Distinct()];
 
+            // Filter the raw codes to only those that are present in the geometry-type-filtered secondary lookup.
             List<string> validCodes = [];
             foreach (string code in rawCodes)
             {
@@ -576,15 +635,20 @@ namespace HLU.UI.ViewModel
         /// <paramref name="validCodes"/> (pre-validated by <see cref="ResolveValidSecondaryCodes"/>).
         /// The row is persisted immediately via the table adapter.
         /// </summary>
+        /// <param name="incid">The INCID string to associate with the new secondary rows.</param>
+        /// <param name="validCodes">The list of valid secondary habitat codes to insert.</param>
         private void CreateSecondaryRows(string incid, List<string> validCodes)
         {
+            // If the list of valid codes is null or empty, there are no secondary rows to create.
             if (validCodes == null || validCodes.Count == 0)
                 return;
 
+            // Ensure the incid_secondary table adapter is initialized before use.
             _viewModelMain.HluTableAdapterManager.incid_secondaryTableAdapter ??=
                 new HluTableAdapter<HluDataSet.incid_secondaryDataTable, HluDataSet.incid_secondaryRow>(
                     _viewModelMain.DataBase);
 
+            // Loop through the valid secondary codes and create a new incid_secondary row for each.
             foreach (string code in validCodes)
             {
                 string group = _viewModelMain.SecondaryHabitatCodesAll

@@ -16,19 +16,18 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace HLU.UI.ViewModel
+namespace HLU.Enums
 {
+    #region Enums
+
     /// <summary>
-    /// Carries the user's selections from the Bulk Load setup dialog:
-    /// the name of the input layer and the five field-name mappings that
-    /// correspond to the <c>lut_osmm_habitat_xref</c> lookup columns.
+    /// The GIS output format chosen by the user.
     /// </summary>
-    internal sealed record OsmmFieldMapping(
-        string LayerName,
-        string ToidField,
-        string MakeField,
-        string DescGroupField,
-        string DescTermField,
-        string ThemeField,
-        string FeatCodeField);
+    public enum OutputType
+    {
+        Shapefile,
+        FileGeodatabase
+    }
+
+    #endregion Enums
 }

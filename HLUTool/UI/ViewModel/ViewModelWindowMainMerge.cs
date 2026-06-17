@@ -43,7 +43,7 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// Contains methods to perform logical and physical merges of selected GIS features.
     /// </summary>
-    class ViewModelWindowMainMerge
+    internal class ViewModelWindowMainMerge
     {
         #region Fields
 
@@ -147,32 +147,32 @@ namespace HLU.UI.ViewModel
             switch (_viewModelMain.GisLayerType)
             {
                 case HluGeometryTypes.Line:
-                {
-                    var t = _viewModelMain.HluDataset.incid_mm_lines;
-                    _viewModelMain.GetIncidMMLineRows(ViewModelWindowMainHelpers.GisSelectionToWhereClause(
-                        _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals,
-                        ViewModelWindowMain.IncidPageSize, t), ref t);
-                    selectTable = t;
-                    break;
-                }
+                    {
+                        var t = _viewModelMain.HluDataset.incid_mm_lines;
+                        _viewModelMain.GetIncidMMLineRows(ViewModelWindowMainHelpers.GisSelectionToWhereClause(
+                            _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals,
+                            ViewModelWindowMain.IncidPageSize, t), ref t);
+                        selectTable = t;
+                        break;
+                    }
                 case HluGeometryTypes.Point:
-                {
-                    var t = _viewModelMain.HluDataset.incid_mm_points;
-                    _viewModelMain.GetIncidMMPointRows(ViewModelWindowMainHelpers.GisSelectionToWhereClause(
-                        _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals,
-                        ViewModelWindowMain.IncidPageSize, t), ref t);
-                    selectTable = t;
-                    break;
-                }
+                    {
+                        var t = _viewModelMain.HluDataset.incid_mm_points;
+                        _viewModelMain.GetIncidMMPointRows(ViewModelWindowMainHelpers.GisSelectionToWhereClause(
+                            _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals,
+                            ViewModelWindowMain.IncidPageSize, t), ref t);
+                        selectTable = t;
+                        break;
+                    }
                 default:
-                {
-                    var t = _viewModelMain.HluDataset.incid_mm_polygons;
-                    _viewModelMain.GetIncidMMPolygonRows(ViewModelWindowMainHelpers.GisSelectionToWhereClause(
-                        _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals,
-                        ViewModelWindowMain.IncidPageSize, t), ref t);
-                    selectTable = t;
-                    break;
-                }
+                    {
+                        var t = _viewModelMain.HluDataset.incid_mm_polygons;
+                        _viewModelMain.GetIncidMMPolygonRows(ViewModelWindowMainHelpers.GisSelectionToWhereClause(
+                            _viewModelMain.GisSelection.Select(), _viewModelMain.GisIDColumnOrdinals,
+                            ViewModelWindowMain.IncidPageSize, t), ref t);
+                        selectTable = t;
+                        break;
+                    }
             }
 
             // Check there are DB copy rows to update.
@@ -606,24 +606,24 @@ namespace HLU.UI.ViewModel
             switch (_viewModelMain.GisLayerType)
             {
                 case HluGeometryTypes.Line:
-                {
-                    var t = _viewModelMain.HluDataset.incid_mm_lines;
-                    _viewModelMain.GetIncidMMLineRows(selectWhereClause2, ref t);
-                    break;
-                }
+                    {
+                        var t = _viewModelMain.HluDataset.incid_mm_lines;
+                        _viewModelMain.GetIncidMMLineRows(selectWhereClause2, ref t);
+                        break;
+                    }
                 case HluGeometryTypes.Point:
-                {
-                    var t = _viewModelMain.HluDataset.incid_mm_points;
-                    _viewModelMain.GetIncidMMPointRows(selectWhereClause2, ref t);
-                    break;
-                }
+                    {
+                        var t = _viewModelMain.HluDataset.incid_mm_points;
+                        _viewModelMain.GetIncidMMPointRows(selectWhereClause2, ref t);
+                        break;
+                    }
                 default:
-                {
-                    var t = _viewModelMain.HluDataset.incid_mm_polygons;
-                    _viewModelMain.GetIncidMMPolygonRows(selectWhereClause2, ref t);
-                    break;
-                }
-}
+                    {
+                        var t = _viewModelMain.HluDataset.incid_mm_polygons;
+                        _viewModelMain.GetIncidMMPolygonRows(selectWhereClause2, ref t);
+                        break;
+                    }
+            }
 
             // Check there are DB copy rows to update.
             if (selectTable.Rows.Count == 0)

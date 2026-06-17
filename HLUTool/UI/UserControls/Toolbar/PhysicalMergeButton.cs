@@ -93,8 +93,7 @@ namespace HLU.UI.UserControls.Toolbar
             }
 
             // Enable or disable the button based on CanPhysicallyMerge and main window visibility.
-            bool canPhysicallyMerge = _viewModel.CanPhysicallyMerge && _viewModel.GridMainVisibility == Visibility.Visible;
-            Enabled = canPhysicallyMerge;
+            Enabled = _viewModel.CanPhysicallyMerge && _viewModel.GridMainVisibility == Visibility.Visible;
 
             // Set the disabled tool tip text (for when it is disabled).
             DisabledTooltip = "Unavailable when:\n" +

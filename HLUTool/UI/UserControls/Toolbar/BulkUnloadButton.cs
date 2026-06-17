@@ -38,12 +38,17 @@ namespace HLU.UI.UserControls.Toolbar
 
         #region Constructor
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public BulkUnloadButton()
         {
+            // Get the dockpane DAML id.
             DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
             if (pane == null)
                 return;
 
+            // Get the ViewModel by casting the dockpane.
             _viewModel = pane as ViewModelWindowMain;
         }
 
@@ -51,8 +56,12 @@ namespace HLU.UI.UserControls.Toolbar
 
         #region Overrides
 
+        /// <summary>
+        /// Opens the Bulk Unload dialog. Called when the button is clicked.
+        /// </summary>
         protected override async void OnClick()
         {
+            // Open the Bulk Unload dialog. The dialog will handle the actual unloading of the selected features.
             try
             {
                 await _viewModel.OSMMUnloadAsync();
@@ -65,6 +74,7 @@ namespace HLU.UI.UserControls.Toolbar
 
         protected override void OnUpdate()
         {
+            // If the main ViewModel is not available, disable the button and show a tooltip indicating that the main window is not available.
             if (_viewModel == null)
             {
                 Enabled = false;
@@ -72,6 +82,7 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
+            // If the tool is processing, disable the button and show a tooltip indicating why.
             if (_viewModel.IsToolProcessing)
             {
                 Enabled = false;
@@ -79,9 +90,11 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
+            // Enable or disable the button based on CanBulkUnload and main window visibility.
             Enabled = _viewModel.CanBulkUnload &&
                       _viewModel.GridMainVisibility == Visibility.Visible;
 
+            // Set the disabled tool tip text (for when it is disabled).
             DisabledTooltip = "Unavailable when:\n" +
                 "\u2022 The tool is not in normal update mode\n" +
                 "\u2022 No reason or process are selected\n" +

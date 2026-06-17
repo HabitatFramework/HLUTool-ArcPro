@@ -16,7 +16,6 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using HLU.UI;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -33,13 +32,29 @@ namespace HLU.UI.ViewModel
     {
         private bool _isChecked;
 
-        public string LayerName { get; init; }
+        /// <summary>
+        /// Gets the name of the HLU layer represented by this checklist item.
+        /// </summary>
+        public string LayerName
+        {
+            get; init;
+        }
 
-        /// <summary>Gets the number of currently selected features in this layer.</summary>
-        public int SelectedCount { get; init; }
+        /// <summary>
+        /// Gets the number of currently selected features in this layer.
+        /// </summary>
+        public int SelectedCount
+        {
+            get; init;
+        }
 
-        /// <summary>Gets the total number of features in this layer.</summary>
-        public long TotalCount { get; init; }
+        /// <summary>
+        /// Gets the total number of features in this layer.
+        /// </summary>
+        public long TotalCount
+        {
+            get; init;
+        }
 
         /// <summary>
         /// Gets a formatted string showing the selected and total feature counts,
@@ -55,6 +70,9 @@ namespace HLU.UI.ViewModel
                     TotalCount.ToString("N0"),
                     TotalCount > 1 ? "s" : String.Empty);
 
+        /// <summary>
+        /// Gets or sets whether this layer is checked in the checklist.
+        /// </summary>
         public bool IsChecked
         {
             get => _isChecked;
@@ -62,11 +80,15 @@ namespace HLU.UI.ViewModel
             {
                 if (_isChecked == value)
                     return;
+
                 _isChecked = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsChecked)));
             }
         }
 
+        /// <summary>
+        /// Gets or sets the event handler for property changes, used to notify the UI when IsChecked changes.
+        /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
     }
 
@@ -88,20 +110,21 @@ namespace HLU.UI.ViewModel
         #region Constructor
 
         /// <summary>
-        /// Initialises the ViewModel with the supplied list of valid HLU layer names.
-        /// The currently active layer is pre-checked.
+        /// Initialises the ViewModel with the supplied list of valid HLU layer names. The currently
+        /// active layer is pre-checked.
         /// </summary>
         /// <param name="availableLayerNames">All valid HLU layer names in the current map.</param>
         /// <param name="activeLayerName">The currently active HLU layer name (pre-checked).</param>
         /// <param name="layerCounts">
-        /// Optional per-layer (Selected, Total) feature counts keyed by layer name.
-        /// When omitted or a layer is absent from the dictionary, counts display as zero.
+        /// Optional per-layer (Selected, Total) feature counts keyed by layer name. When omitted or
+        /// a layer is absent from the dictionary, counts display as zero.
         /// </param>
         public ViewModelWindowBulkUnload(
             IEnumerable<string> availableLayerNames,
             string activeLayerName,
             IReadOnlyDictionary<string, (int Selected, long Total)> layerCounts = null)
         {
+            // Set up the checklist items, one per valid HLU layer, with the active layer pre-checked.
             Layers = new ObservableCollection<OsmmUnloadLayerItem>(
                 (availableLayerNames ?? [])
                 .Select(n =>
@@ -124,35 +147,57 @@ namespace HLU.UI.ViewModel
 
         #region ViewModelBase Members
 
+        /// <summary>
+        /// Gets or sets the display name of the ViewModel, which is used as the window title.
+        /// </summary>
         public override string DisplayName
         {
             get => _displayName;
             set => _displayName = value;
         }
 
+        /// <summary>
+        /// Gets the window title for the Bulk Unload layer-picker dialog, which is the same as the display name.
+        /// </summary>
         public override string WindowTitle => _displayName;
 
         #endregion ViewModelBase Members
 
         #region RequestClose
 
+        /// <summary>
+        /// Event raised when the user clicks OK or Cancel in the dialog, requesting the window to close.
+        /// </summary>
+        /// <param name="proceed">Indicates whether the user clicked OK (true) or Cancel (false).</param>
+        /// <param name="selectedLayerNames">The list of layer names selected by the user, if OK was clicked.</param>
         public delegate void RequestCloseEventHandler(bool proceed, IReadOnlyList<string> selectedLayerNames);
+
         public event RequestCloseEventHandler RequestClose;
 
         #endregion RequestClose
 
         #region Properties
 
-        /// <summary>Gets the checklist items, one per valid HLU layer.</summary>
-        public ObservableCollection<OsmmUnloadLayerItem> Layers { get; }
+        /// <summary>
+        /// Gets the checklist items, one per valid HLU layer.
+        /// </summary>
+        public ObservableCollection<OsmmUnloadLayerItem> Layers
+        {
+            get;
+        }
 
-        /// <summary>Gets whether the OK button should be enabled (at least one layer checked).</summary>
+        /// <summary>
+        /// Gets whether the OK button should be enabled (at least one layer checked).
+        /// </summary>
         public bool CanOk => Layers.Any(l => l.IsChecked);
 
         #endregion Properties
 
         #region Commands
 
+        /// <summary>
+        /// Gets the command to execute when the OK button is clicked.
+        /// </summary>
         public ICommand OkCommand
         {
             get
@@ -164,6 +209,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets the command to execute when the Cancel button is clicked.
+        /// </summary>
         public ICommand CancelCommand
         {
             get

@@ -188,7 +188,7 @@ namespace HLU.UI.ViewModel
         private async void ViewModelExport_RequestClose(
             int exportID,
             bool selectedOnly,
-            ViewModelWindowExport.ExportOutputType outputType)
+            OutputType outputType)
         {
             _viewModelExport.RequestClose -= ViewModelExport_RequestClose;
             _windowExport.Close();
@@ -224,7 +224,7 @@ namespace HLU.UI.ViewModel
             int userExportId,
             string exportPath,
             bool selectedOnly,
-            ViewModelWindowExport.ExportOutputType outputType)
+            OutputType outputType)
         {
             bool exportSuccess = false;
 
@@ -290,7 +290,7 @@ namespace HLU.UI.ViewModel
             // correct dialog is shown immediately.
             var exportDetails = await _viewModelMain.GISApplication.ExportPromptAsync(
                 exportPath,
-                outputType == ViewModelWindowExport.ExportOutputType.FileGeodatabase);
+                outputType == OutputType.FileGeodatabase);
 
             // If the user didn't provide export details then exit.
             if (exportDetails == default)

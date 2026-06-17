@@ -15,7 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
-using HLU.Data;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -69,6 +68,7 @@ namespace HLU.UI.ViewModel
             List<ReassignRule> rules,
             Func<string, Task<int>> countFeaturesAsync)
         {
+            // Set up the view model fields
             _sourceLayerName = sourceLayerName;
             _targetLayerNames = targetLayerNames ?? [];
             _countFeaturesAsync = countFeaturesAsync;
@@ -95,30 +95,49 @@ namespace HLU.UI.ViewModel
 
         #region ViewModelBase Members
 
+        /// <summary>
+        /// Gets or sets the display name of the dialog window.
+        /// </summary>
         public override string DisplayName
         {
             get => _displayName;
             set => _displayName = value;
         }
 
+        /// <summary>
+        /// Gets the window title for the dialog, which is the same as the display name.
+        /// </summary>
         public override string WindowTitle => _displayName;
 
         #endregion ViewModelBase Members
 
         #region Events
 
-        /// <summary>Fired when the user clicks OK to process all rules. Passes a list of (targetLayerName, rule) pairs for rules not marked as <Skip>.</summary>
+        /// <summary>
+        /// Fired when the user clicks OK to process all rules. Passes a list of
+        /// (targetLayerName, rule) pairs for rules not marked as <Skip>.
+        /// </summary>
         public delegate void RequestProcessAllEventHandler(List<(string targetLayerName, ReassignRule rule)> assignments);
+
         public event RequestProcessAllEventHandler RequestProcessAll;
 
-        /// <summary>Fired when the user clicks Cancel to close the window.</summary>
+        /// <summary>
+        /// Fired when the user clicks Cancel to close the window.
+        /// </summary>
         public delegate void RequestCloseEventHandler();
+
+        /// <summary>
+        /// Fired when the user clicks Cancel to close the window.
+        /// </summary>
         public event RequestCloseEventHandler RequestClose;
 
         #endregion Events
 
         #region Ok Command
 
+        /// <summary>
+        /// Gets the command that is executed when the user clicks the OK button.
+        /// </summary>
         public ICommand OkCommand
         {
             get
@@ -132,6 +151,9 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary> Executes when the user clicks the OK button. Builds a list of
+        /// (targetLayerName, rule) assignments for rules not marked as <Skip> and raises the
+        /// RequestProcessAll event. </summary> <param name="param"></param>
         private void OkCommandClick(object param)
         {
             // Build the list of (targetLayerName, rule) assignments for rules not marked as <Skip>
@@ -143,11 +165,16 @@ namespace HLU.UI.ViewModel
             RequestProcessAll?.Invoke(assignments);
         }
 
+        /// <summary>
+        /// Gets whether the OK button can be clicked. The OK button is enabled if at least one rule
+        /// has a valid target layer selected and no rules are still counting features.
+        /// </summary>
         private bool CanOk
         {
             get
             {
-                // Can OK if at least one rule has a valid target layer selected and no rules are still counting
+                // Can OK if at least one rule has a valid target layer selected and no rules are
+                // still counting
                 return _ruleRows != null &&
                        _ruleRows.Any(r => !string.IsNullOrEmpty(r.SelectedTargetLayer) && r.SelectedTargetLayer != "<Skip>") &&
                        !_ruleRows.Any(r => r.IsCountingFeatures);
@@ -158,6 +185,9 @@ namespace HLU.UI.ViewModel
 
         #region Cancel Command
 
+        /// <summary>
+        /// Gets the command that is executed when the user clicks the Cancel button.
+        /// </summary>
         public ICommand CancelCommand
         {
             get
@@ -171,6 +201,11 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Executes when the user clicks the Cancel button. Raises the RequestClose event to close
+        /// the window.
+        /// </summary>
+        /// <param name="param"></param>
         private void CancelCommandClick(object param)
         {
             RequestClose?.Invoke();
@@ -203,8 +238,12 @@ namespace HLU.UI.ViewModel
         /// Queries the source layer for the number of features matching the rule's WHERE
         /// clause, then updates the RuleRow's feature count.
         /// </summary>
+        /// <param name="ruleRow">The rule row to update with the feature count.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         private async Task CountFeaturesForRuleAsync(RuleRow ruleRow)
         {
+            // If the count delegate is not provided or the ruleRow is null, set feature count to -1
+            // and return.
             if (_countFeaturesAsync == null || ruleRow == null)
             {
                 ruleRow.FeatureCount = -1;
@@ -212,8 +251,10 @@ namespace HLU.UI.ViewModel
                 return;
             }
 
+            // Set the IsCountingFeatures flag to true to indicate that the feature count is being calculated.
             ruleRow.IsCountingFeatures = true;
 
+            // Perform the feature count asynchronously and update the RuleRow with the result.
             try
             {
                 int count = await _countFeaturesAsync(ruleRow.Rule.WhereClause);
@@ -229,6 +270,8 @@ namespace HLU.UI.ViewModel
             }
             finally
             {
+                // Reset the IsCountingFeatures flag to false to indicate that the feature count
+                // calculation is complete.
                 ruleRow.IsCountingFeatures = false;
                 CommandManager.InvalidateRequerySuggested();
             }
@@ -238,8 +281,16 @@ namespace HLU.UI.ViewModel
 
         #region IDataErrorInfo
 
+        /// <summary>
+        /// Gets the error message for the entire object. Not used in this view model.
+        /// </summary>
         public string Error => null;
 
+        /// <summary>
+        /// Gets the error message for a specific property. Not used in this view model.
+        /// </summary>
+        /// <param name="columnName">The name of the property to retrieve the error message for.</param>
+        /// <returns>The error message for the specified property.</returns>
         public string this[string columnName]
         {
             get
@@ -265,6 +316,11 @@ namespace HLU.UI.ViewModel
             private bool _isCountingFeatures;
             private string _featureCountError;
 
+            /// <summary>
+            /// Constructs a RuleRow for the given rule and available target layers.
+            /// </summary>
+            /// <param name="rule">The rule associated with this row.</param>
+            /// <param name="availableTargetLayers">The list of available target layers for reassignment.</param>
             public RuleRow(ReassignRule rule, List<string> availableTargetLayers)
             {
                 Rule = rule;
@@ -273,14 +329,35 @@ namespace HLU.UI.ViewModel
                 _selectedTargetLayer = "<Skip>";
             }
 
-            public ReassignRule Rule { get; }
+            /// <summary>
+            /// Gets the rule associated with this row.
+            /// </summary>
+            public ReassignRule Rule
+            {
+                get;
+            }
 
+            /// <summary>
+            /// Gets the name of the rule for display in the DataGrid.
+            /// </summary>
             public string RuleName => Rule?.RuleName ?? string.Empty;
 
+            /// <summary>
+            /// Gets the WHERE clause of the rule for display in the DataGrid.
+            /// </summary>
             public string WhereClause => Rule?.WhereClause ?? string.Empty;
 
-            public List<string> AvailableTargetLayers { get; }
+            /// <summary>
+            /// Gets the list of available target layers for reassignment, including the <Skip> option.
+            /// </summary>
+            public List<string> AvailableTargetLayers
+            {
+                get;
+            }
 
+            /// <summary>
+            /// Gets or sets the selected target layer for reassignment.
+            /// </summary>
             public string SelectedTargetLayer
             {
                 get => _selectedTargetLayer;
@@ -294,6 +371,9 @@ namespace HLU.UI.ViewModel
                 }
             }
 
+            /// <summary>
+            /// Gets or sets the feature count for this rule.
+            /// </summary>
             public int FeatureCount
             {
                 get => _featureCount;
@@ -309,6 +389,9 @@ namespace HLU.UI.ViewModel
                 }
             }
 
+            /// <summary>
+            /// Gets or sets a value indicating whether the feature count is being calculated.
+            /// </summary>
             public bool IsCountingFeatures
             {
                 get => _isCountingFeatures;
@@ -324,6 +407,9 @@ namespace HLU.UI.ViewModel
                 }
             }
 
+            /// <summary>
+            /// Gets or sets the error message for the feature count calculation.
+            /// </summary>
             public string FeatureCountError
             {
                 get => _featureCountError;
@@ -338,6 +424,9 @@ namespace HLU.UI.ViewModel
                 }
             }
 
+            /// <summary>
+            /// Gets a display string for the feature count.
+            /// </summary>
             public string FeatureCountText
             {
                 get
@@ -355,8 +444,15 @@ namespace HLU.UI.ViewModel
             /// </summary>
             public bool CanReassign => _featureCount > 0 && string.IsNullOrEmpty(_featureCountError) && !_isCountingFeatures;
 
+            /// <summary>
+            /// Gets or sets the event handler for property changes, used to notify the UI when properties change.
+            /// </summary>
             public event PropertyChangedEventHandler PropertyChanged;
 
+            /// <summary>
+            /// Raises the PropertyChanged event for the specified property name.
+            /// </summary>
+            /// <param name="propertyName"></param>
             protected void OnPropertyChanged(string propertyName)
             {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

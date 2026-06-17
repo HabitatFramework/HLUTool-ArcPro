@@ -2090,6 +2090,69 @@ namespace HLU.Helpers
             return await CopyFeaturesAsync(inFeatureClass, outFeatureClass, addToMap);
         }
 
+        /// <summary>
+        /// Calculate geometry attributes for features in a feature class or shapefile.
+        /// </summary>
+        /// <param name="inFeatures">The input feature class or shapefile.</param>
+        /// <param name="geometryProperties">Semicolon-separated list of geometry properties to calculate (e.g., "Shape_Leng LENGTH_GEODESIC;Shape_Area AREA_GEODESIC").</param>
+        /// <param name="lengthUnit">The length unit (optional, defaults to feature class unit).</param>
+        /// <param name="areaUnit">The area unit (optional, defaults to feature class unit).</param>
+        /// <param name="coordinateSystem">The coordinate system (optional, defaults to feature class coordinate system).</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains true if the calculation was successful, otherwise false.</returns>
+        public static async Task<bool> CalculateGeometryAttributesAsync(
+            string inFeatures,
+            string geometryProperties,
+            string lengthUnit = "",
+            string areaUnit = "",
+            string coordinateSystem = "")
+        {
+            // Check if there is an input feature class.
+            if (string.IsNullOrEmpty(inFeatures))
+                return false;
+
+            // Check if there are geometry properties to calculate.
+            if (string.IsNullOrEmpty(geometryProperties))
+                return false;
+
+            // Make a value array of strings to be passed to the tool.
+            var parameters = Geoprocessing.MakeValueArray(
+                inFeatures,
+                geometryProperties,
+                lengthUnit,
+                areaUnit,
+                coordinateSystem);
+
+            // Make a value array of the environments to be passed to the tool.
+            var environments = Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
+
+            // Set the geoprocessing flags.
+            GPExecuteToolFlags executeFlags = GPExecuteToolFlags.GPThread;
+
+            //Geoprocessing.OpenToolDialog("management.CalculateGeometryAttributes", parameters);  // Useful for debugging.
+
+            // Execute the tool.
+            try
+            {
+                IGPResult gp_result = await Geoprocessing.ExecuteToolAsync("management.CalculateGeometryAttributes", parameters, environments, null, null, executeFlags);
+
+                if (gp_result.IsFailed)
+                {
+                    Geoprocessing.ShowMessageBox(gp_result.Messages, "GP Messages", GPMessageBoxStyle.Error);
+
+                    var messages = gp_result.Messages;
+                    var errMessages = gp_result.ErrorMessages;
+                    return false;
+                }
+            }
+            catch (Exception)
+            {
+                // Handle Exception.
+                return false;
+            }
+
+            return true;
+        }
+
         #endregion CopyFeatures
 
         #region Selection

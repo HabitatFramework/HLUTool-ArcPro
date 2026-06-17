@@ -94,7 +94,6 @@
                                     </Style>
                                 </DataGridTextColumn.EditingElementStyle>
                             </DataGridTextColumn>
-
                         </DataGrid.Columns>
                     </DataGrid>
 
@@ -103,11 +102,8 @@
                         FontStyle="Italic"
                         Foreground="Gray"
                         Text="Click on a row to edit it. Press Delete to remove the selected row. Type in the last empty row to add a new rule." />
-
                 </StackPanel>
-
             </Expander>
-
         </StackPanel>
 
         <TextBlock
@@ -122,6 +118,5 @@
                 Learn more about application reassign options
             </Hyperlink>
         </TextBlock>
-
     </Grid>
 </UserControl>

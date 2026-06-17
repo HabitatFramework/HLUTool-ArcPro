@@ -58,19 +58,12 @@ namespace HLU.UI.UserControls.Toolbar
         /// <summary>
         /// Initiate the reassign process. Called when the button is clicked.
         /// </summary>
-        protected override void OnClick()
+        protected override async void OnClick()
         {
-            if (_viewModel == null)
-                return;
-
-            var viewModelReassign = new ViewModelWindowMainReassign(_viewModel);
-
+            // Initiate the reassign process.
             try
             {
-                System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                {
-                    viewModelReassign.InitiateReassign();
-                });
+                await _viewModel.ReassignFeaturesAsync();
             }
             catch (Exception ex)
             {
@@ -83,7 +76,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         protected override void OnUpdate()
         {
-            // If the main ViewModel is not available, disable the button.
+            // If the main ViewModel is not available, disable the button and show a tooltip indicating that the main window is not available.
             if (_viewModel == null)
             {
                 Enabled = false;
@@ -91,7 +84,7 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            // If the tool is processing, disable the button.
+            // If the tool is processing, disable the button and show a tooltip indicating why.
             if (_viewModel.IsToolProcessing)
             {
                 Enabled = false;
@@ -99,12 +92,14 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
-            // Enable or disable based on CanReassign and main window visibility.
-            bool canReassign = _viewModel.CanReassign && _viewModel.GridMainVisibility == Visibility.Visible;
-            Enabled = canReassign;
+            // Enable or disable the buttonbased on CanReassign and main window visibility.
+            Enabled = _viewModel.CanReassign && _viewModel.GridMainVisibility == Visibility.Visible;
 
-            if (!canReassign)
-                DisabledTooltip = "Available only in normal edit mode with an editable active layer.";
+            // Set the disabled tool tip text (for when it is disabled).
+            DisabledTooltip = "Unavailable when:\n" +
+                "\u2022 Bulk Update mode is active\n" +
+                "\u2022 OSMM Review mode is active\n" +
+                "\u2022 The main window is not visible";
         }
 
         #endregion Overrides

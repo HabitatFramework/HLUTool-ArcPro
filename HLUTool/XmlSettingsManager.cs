@@ -36,7 +36,10 @@ public class XmlSettingsManager
     /// <summary>
     /// Gets the directory in which the settings file (and log file) are stored.
     /// </summary>
-    public string SettingsDirectory { get; private set; }
+    public string SettingsDirectory
+    {
+        get; private set;
+    }
 
     /// <summary>
     /// Constructor
@@ -203,6 +206,7 @@ public class HelpPages
 {
     // Individual help pages
     public string AppDatabase { get; set; } = "options/options.html#options-database";
+
     public string AppDates { get; set; } = "options/options.html#options-dates";
     public string AppBulkUpdate { get; set; } = "options/options.html#options-bulk-update";
     public string AppUpdates { get; set; } = "options/options.html#options-updates";

@@ -93,8 +93,7 @@ namespace HLU.UI.UserControls.Toolbar
             }
 
             // Enable or disable the button based on CanSelectOnMap and main window visibility.
-            bool canSelectOnMap = _viewModel.CanSelectOnMap && _viewModel.GridMainVisibility == Visibility.Visible;
-            Enabled = canSelectOnMap;
+            Enabled = _viewModel.CanSelectOnMap && _viewModel.GridMainVisibility == Visibility.Visible;
 
             // Set the disabled tool tip text (for when it is disabled).
             DisabledTooltip = "Unavailable when:\n" +

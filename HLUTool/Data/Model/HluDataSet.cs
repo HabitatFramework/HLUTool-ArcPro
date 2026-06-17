@@ -20,7 +20,7 @@ namespace HLU.Data.Model
 {
     public partial class HluDataSet
     {
-        partial class incid_mm_polygonsDataTable
+        private partial class incid_mm_polygonsDataTable
         {
         }
     }

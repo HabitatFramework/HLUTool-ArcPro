@@ -50,7 +50,7 @@ namespace HLU.UI.ViewModel
     /// Database operations partial for ViewModelWindowMain.
     /// Contains: All database transactions, queries, table adapter operations, data persistence.
     /// </summary>
-    partial class ViewModelWindowMain
+    internal partial class ViewModelWindowMain
     {
         #region Fields
 
@@ -3434,15 +3434,15 @@ namespace HLU.UI.ViewModel
                     RefreshSource2();
                     RefreshSource3();
                     RefreshHistory();
-                    }
+                }
 
-                    // Always notify the row index so the navigation counter stays
-                    // in sync even when the seek fails or no record was retrieved.
-                    OnPropertyChanged(nameof(IncidCurrentRowIndex));
-                    OnPropertyChanged(nameof(OSMMIncidCurrentRowIndex));
+                // Always notify the row index so the navigation counter stays
+                // in sync even when the seek fails or no record was retrieved.
+                OnPropertyChanged(nameof(IncidCurrentRowIndex));
+                OnPropertyChanged(nameof(OSMMIncidCurrentRowIndex));
 
-                    // Update the editing control state
-                    CheckEditingControlState();
+                // Update the editing control state
+                CheckEditingControlState();
             }
             catch (Exception ex)
             {

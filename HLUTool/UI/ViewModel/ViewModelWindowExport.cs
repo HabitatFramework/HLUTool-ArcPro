@@ -19,6 +19,7 @@
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using HLU.Data.Model;
+using HLU.Enums;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -42,22 +43,9 @@ namespace HLU.UI.ViewModel
         private bool _selectedOnly;
         private int _selectedNumber;
         private long _totalCount;
-        private ExportOutputType _outputType = ExportOutputType.Shapefile;
+        private OutputType _outputType = OutputType.Shapefile;
 
         #endregion Fields
-
-        #region Output Type Enum
-
-        /// <summary>
-        /// The GIS output format chosen by the user in the Export window.
-        /// </summary>
-        public enum ExportOutputType
-        {
-            Shapefile,
-            FileGeodatabase
-        }
-
-        #endregion Output Type Enum
 
         #region Constructor
 
@@ -144,7 +132,7 @@ namespace HLU.UI.ViewModel
         public delegate void RequestCloseEventHandler(
             int exportID,
             bool selectedOnly,
-            ExportOutputType outputType);
+            OutputType outputType);
 
         // Declare the event
         public event RequestCloseEventHandler RequestClose;
@@ -375,14 +363,14 @@ namespace HLU.UI.ViewModel
             get;
         } =
         [
-            new OutputTypeItem(ExportOutputType.Shapefile,       "Shapefile (.shp)"),
-            new OutputTypeItem(ExportOutputType.FileGeodatabase, "File Geodatabase (.gdb)")
+            new OutputTypeItem(OutputType.Shapefile,       "Shapefile (.shp)"),
+            new OutputTypeItem(OutputType.FileGeodatabase, "File Geodatabase (.gdb)")
         ];
 
         /// <summary>
         /// Gets or sets the currently selected output type.
         /// </summary>
-        public ExportOutputType OutputType
+        public OutputType OutputType
         {
             get
             {
@@ -406,14 +394,14 @@ namespace HLU.UI.ViewModel
             /// <summary>
             /// Initializes a new instance of <see cref="OutputTypeItem"/>.
             /// </summary>
-            public OutputTypeItem(ExportOutputType value, string display)
+            public OutputTypeItem(OutputType value, string display)
             {
                 Value = value;
                 Display = display;
             }
 
             /// <summary>Gets the enum value.</summary>
-            public ExportOutputType Value
+            public OutputType Value
             {
                 get;
             }

@@ -18,14 +18,12 @@
 
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
-using HLU.Properties;
-using HLU.UI;
-using Microsoft.Win32;
+using HLU.Data;
+using HLU.Enums;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -40,19 +38,6 @@ namespace HLU.UI.ViewModel
     /// </summary>
     internal class ViewModelWindowBulkLoad : ViewModelBase, IDataErrorInfo
     {
-        #region Enums
-
-        /// <summary>
-        /// The GIS output format chosen by the user in the Bulk Load window.
-        /// </summary>
-        public enum OutputType
-        {
-            Shapefile,
-            FileGeodatabase
-        }
-
-        #endregion Enums
-
         #region Fields
 
         private readonly ViewModelWindowMain _viewModelMain;
@@ -79,6 +64,7 @@ namespace HLU.UI.ViewModel
 
         // Feature counts and selection
         private int _selectedNumber;
+
         private long _totalCount;
         private bool _selectedOnly;
 
@@ -89,6 +75,10 @@ namespace HLU.UI.ViewModel
 
         #region Constructor
 
+        /// <summary>
+        /// Initializes a new instance of <see cref="ViewModelWindowBulkLoad"/> with a reference to the main ViewModel.
+        /// </summary>
+        /// <param name="viewModelMain"></param>
         public ViewModelWindowBulkLoad(ViewModelWindowMain viewModelMain)
         {
             _viewModelMain = viewModelMain;
@@ -98,12 +88,18 @@ namespace HLU.UI.ViewModel
 
         #region ViewModelBase Members
 
+        /// <summary>
+        /// <inheritdoc cref="ViewModelBase.DisplayName"/>
+        /// </summary>
         public override string DisplayName
         {
             get => _displayName;
             set => _displayName = value;
         }
 
+        /// <summary>
+        /// <inheritdoc cref="ViewModelBase.WindowTitle"/>
+        /// </summary>
         public override string WindowTitle => _displayName;
 
         #endregion ViewModelBase Members
@@ -124,6 +120,7 @@ namespace HLU.UI.ViewModel
             OsmmFieldMapping mapping,
             bool selectedOnly,
             OutputType outputType);
+
         public event RequestCloseEventHandler RequestClose;
 
         #endregion RequestClose
@@ -134,6 +131,7 @@ namespace HLU.UI.ViewModel
         /// Asynchronously populates the list of non-HLU feature layers available in the
         /// current map. Call this from the <c>Loaded</c> event of the dialog window.
         /// </summary>
+        /// <returns>A task representing the asynchronous operation.</returns>
         public async Task LoadAsync()
         {
             // Get every feature layer currently in the map.
@@ -180,10 +178,14 @@ namespace HLU.UI.ViewModel
 
         #region Properties — Layer
 
-        /// <summary>Gets the list of non-HLU feature layers available for selection.</summary>
+        /// <summary>
+        /// Gets the list of non-HLU feature layers available for selection.
+        /// </summary>
         public ObservableCollection<string> AvailableLayerNames => _availableLayerNames;
 
-        /// <summary>Gets or sets the currently selected input layer name.</summary>
+        /// <summary>
+        /// Gets or sets the currently selected input layer name.
+        /// </summary>
         public string SelectedLayerName
         {
             get => _selectedLayerName;
@@ -210,7 +212,9 @@ namespace HLU.UI.ViewModel
 
         #region Properties — Feature Counts
 
-        /// <summary>Gets a value indicating whether there are selected features.</summary>
+        /// <summary>
+        /// Gets a value indicating whether there are selected features.
+        /// </summary>
         public bool HaveSelection => _selectedNumber > 0;
 
         /// <summary>
@@ -241,52 +245,99 @@ namespace HLU.UI.ViewModel
 
         #region Properties — Fields
 
-        /// <summary>Gets the field names for the currently selected layer (excluding <None> option).</summary>
+        /// <summary>
+        /// Gets the field names for the currently selected layer (excluding <None> option).
+        /// </summary>
         public ObservableCollection<string> AvailableFields => _availableFields;
 
-        /// <summary>Gets the field names for the currently selected layer (including <None> option for TOID).</summary>
+        /// <summary>
+        /// Gets the field names for the currently selected layer (including <None> option
+        /// for TOID).
+        /// </summary>
         public ObservableCollection<string> AvailableFieldsWithNone => _availableFieldsWithNone;
 
-        /// <summary>Gets or sets the input layer field mapped to the TOID attribute (optional).</summary>
+        /// <summary>
+        /// Gets or sets the input layer field mapped to the TOID attribute (optional).
+        /// </summary>
         public string ToidField
         {
             get => _toidField;
-            set { _toidField = value; OnPropertyChanged(nameof(ToidField)); OnPropertyChanged(nameof(CanOk)); }
+            set
+            {
+                _toidField = value;
+                OnPropertyChanged(nameof(ToidField));
+                OnPropertyChanged(nameof(CanOk));
+            }
         }
 
-        /// <summary>Gets or sets the input layer field mapped to <c>lut_osmm_habitat_xref.make</c>.</summary>
+        /// <summary>
+        /// Gets or sets the input layer field mapped to <c>lut_osmm_habitat_xref.make</c>.
+        /// </summary>
         public string MakeField
         {
             get => _makeField;
-            set { _makeField = value; OnPropertyChanged(nameof(MakeField)); OnPropertyChanged(nameof(CanOk)); }
+            set
+            {
+                _makeField = value;
+                OnPropertyChanged(nameof(MakeField));
+                OnPropertyChanged(nameof(CanOk));
+            }
         }
 
-        /// <summary>Gets or sets the input layer field mapped to <c>lut_osmm_habitat_xref.desc_group</c>.</summary>
+        /// <summary>
+        /// Gets or sets the input layer field mapped to <c>lut_osmm_habitat_xref.desc_group</c>.
+        /// </summary>
         public string DescGroupField
         {
             get => _descGroupField;
-            set { _descGroupField = value; OnPropertyChanged(nameof(DescGroupField)); OnPropertyChanged(nameof(CanOk)); }
+            set
+            {
+                _descGroupField = value;
+                OnPropertyChanged(nameof(DescGroupField));
+                OnPropertyChanged(nameof(CanOk));
+            }
         }
 
-        /// <summary>Gets or sets the input layer field mapped to <c>lut_osmm_habitat_xref.desc_term</c>.</summary>
+        /// <summary>
+        /// Gets or sets the input layer field mapped to <c>lut_osmm_habitat_xref.desc_term</c>.
+        /// </summary>
         public string DescTermField
         {
             get => _descTermField;
-            set { _descTermField = value; OnPropertyChanged(nameof(DescTermField)); OnPropertyChanged(nameof(CanOk)); }
+            set
+            {
+                _descTermField = value;
+                OnPropertyChanged(nameof(DescTermField));
+                OnPropertyChanged(nameof(CanOk));
+            }
         }
 
-        /// <summary>Gets or sets the input layer field mapped to <c>lut_osmm_habitat_xref.theme</c>.</summary>
+        /// <summary>
+        /// Gets or sets the input layer field mapped to <c>lut_osmm_habitat_xref.theme</c>.
+        /// </summary>
         public string ThemeField
         {
             get => _themeField;
-            set { _themeField = value; OnPropertyChanged(nameof(ThemeField)); OnPropertyChanged(nameof(CanOk)); }
+            set
+            {
+                _themeField = value;
+                OnPropertyChanged(nameof(ThemeField));
+                OnPropertyChanged(nameof(CanOk));
+            }
         }
 
-        /// <summary>Gets or sets the input layer field mapped to <c>lut_osmm_habitat_xref.feat_code</c>.</summary>
+        /// <summary>
+        /// Gets or sets the input layer field mapped to <c>lut_osmm_habitat_xref.feat_code</c>.
+        /// </summary>
         public string FeatCodeField
         {
             get => _featCodeField;
-            set { _featCodeField = value; OnPropertyChanged(nameof(FeatCodeField)); OnPropertyChanged(nameof(CanOk)); }
+            set
+            {
+                _featCodeField = value;
+                OnPropertyChanged(nameof(FeatCodeField));
+                OnPropertyChanged(nameof(CanOk));
+            }
         }
 
         #endregion Properties — Fields
@@ -306,7 +357,9 @@ namespace HLU.UI.ViewModel
             new OutputTypeItem(OutputType.FileGeodatabase, "File Geodatabase (.gdb)")
         ];
 
-        /// <summary>Gets or sets the currently selected output type.</summary>
+        /// <summary>
+        /// Gets or sets the currently selected output type.
+        /// </summary>
         public OutputType SelectedOutputType
         {
             get => _outputType;
@@ -321,7 +374,9 @@ namespace HLU.UI.ViewModel
 
         #region Properties — Selected Only
 
-        /// <summary>Gets or sets a value indicating whether only selected features should be loaded.</summary>
+        /// <summary>
+        /// Gets or sets a value indicating whether only selected features should be loaded.
+        /// </summary>
         public bool SelectedOnly
         {
             get => _selectedOnly;
@@ -336,7 +391,9 @@ namespace HLU.UI.ViewModel
 
         #region Ok Command
 
-        /// <summary>Gets whether the Ok button should be enabled.</summary>
+        /// <summary>
+        /// Gets whether the Ok button should be enabled.
+        /// </summary>
         public bool CanOk =>
             !string.IsNullOrEmpty(_selectedLayerName) &&
             !string.IsNullOrEmpty(_toidField) &&
@@ -346,6 +403,11 @@ namespace HLU.UI.ViewModel
             !string.IsNullOrEmpty(_themeField) &&
             !string.IsNullOrEmpty(_featCodeField);
 
+        /// <summary>
+        /// Gets the command that is executed when the user clicks the Ok button. This command
+        /// validates the field mappings and raises the RequestClose event with the selected
+        /// mappings and options.
+        /// </summary>
         public ICommand OkCommand
         {
             get
@@ -357,6 +419,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets the action to perform when the Ok command is executed. This method validates the
+        /// field mappings and raises the RequestClose event with the selected mappings and options.
+        /// </summary>
         private void OkCommandClick()
         {
             // If ToidField is "<None>", pass null instead.
@@ -381,6 +447,10 @@ namespace HLU.UI.ViewModel
 
         #region Cancel Command
 
+        /// <summary>
+        /// Gets the command that is executed when the user clicks the Cancel button. This command
+        /// closes the dialog without saving any changes.
+        /// </summary>
         public ICommand CancelCommand
         {
             get
@@ -390,6 +460,10 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets the action to perform when the Cancel command is executed. This method closes the
+        /// dialog without saving any changes and raises the RequestClose event with apply=false.
+        /// </summary>
         private void CancelCommandClick()
         {
             RequestClose?.Invoke(false, null, false, _outputType);
@@ -415,17 +489,31 @@ namespace HLU.UI.ViewModel
                 Display = display;
             }
 
-            /// <summary>Gets the enum value.</summary>
-            public OutputType Value { get; }
+            /// <summary>
+            /// Gets the enum value.
+            /// </summary>
+            public OutputType Value
+            {
+                get;
+            }
 
-            /// <summary>Gets the display string.</summary>
-            public string Display { get; }
+            /// <summary>
+            /// Gets the display string.
+            /// </summary>
+            public string Display
+            {
+                get;
+            }
         }
 
         #endregion OutputTypeItem helper
 
         #region IDataErrorInfo
 
+        /// <summary>
+        /// Gets an error message indicating what is wrong with this object. Returns null if there
+        /// are no errors.
+        /// </summary>
         public string Error
         {
             get
@@ -446,6 +534,11 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets an error message for the property with the given name. Returns null if there are no errors.
+        /// </summary>
+        /// <param name="columnName"></param>
+        /// <returns></returns>
         public string this[string columnName]
         {
             get
@@ -458,22 +551,27 @@ namespace HLU.UI.ViewModel
                         if (string.IsNullOrEmpty(_toidField))
                             error = "Error: You must select a TOID field or choose '<None>'";
                         break;
+
                     case "MakeField":
                         if (string.IsNullOrEmpty(_makeField))
                             error = "Error: You must select a make field";
                         break;
+
                     case "DescGroupField":
                         if (string.IsNullOrEmpty(_descGroupField))
                             error = "Error: You must select a desc_group field";
                         break;
+
                     case "DescTermField":
                         if (string.IsNullOrEmpty(_descTermField))
                             error = "Error: You must select a desc_term field";
                         break;
+
                     case "ThemeField":
                         if (string.IsNullOrEmpty(_themeField))
                             error = "Error: You must select a theme field";
                         break;
+
                     case "FeatCodeField":
                         if (string.IsNullOrEmpty(_featCodeField))
                             error = "Error: You must select a feat_code field";
@@ -512,7 +610,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Refreshes the feature counts for the currently selected layer and updates the related properties.
         /// </summary>
-        /// <returns>A task representing the asynchronous operation.</returns>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         private async Task RefreshFeatureCountsAsync()
         {
             // If no layer is selected, reset counts and return.
@@ -578,9 +676,10 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Refreshes the list of available fields for the currently selected layer and raises PropertyChanged.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         private async Task RefreshFieldsAsync()
         {
+            /// If no layer is selected, clear the available fields and return.
             if (string.IsNullOrEmpty(_selectedLayerName))
             {
                 _availableFields.Clear();

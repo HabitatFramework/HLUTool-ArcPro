@@ -23,17 +23,16 @@
 using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Internal.Framework.Controls;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using HLU.Data;
-using HLU.UI.View;
 using HLU.Data.Model;
 using HLU.Enums;
 using HLU.Exceptions;
 using HLU.GISApplication;
 using HLU.Helpers;
 using HLU.Properties;
+using HLU.UI.View;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -50,7 +49,7 @@ namespace HLU.UI.ViewModel
     /// GIS operations partial for ViewModelWindowMain.
     /// Contains: All ArcGIS Pro SDK interactions, map selection, layer management, spatial operations.
     /// </summary>
-    partial class ViewModelWindowMain
+    internal partial class ViewModelWindowMain
     {
         #region Fields
 
@@ -77,7 +76,7 @@ namespace HLU.UI.ViewModel
         #region Fields - Active Map/Layer
 
         private MapView _activeMapView;
-        string _activeLayerName;
+        private string _activeLayerName;
 
         #endregion Fields - Active Map/Layer
 
@@ -85,21 +84,25 @@ namespace HLU.UI.ViewModel
 
         // The IDs of the currently selected incids, toids and fragments in GIS (set in AnalyzeGisSelectionSet).
         private IEnumerable<string> _incidsSelectedMap;
+
         private IEnumerable<string> _toidsSelectedMap;
         private IEnumerable<string> _fragsSelectedMap;
 
         // How many incids, toids and fragments are selected in GIS (set in AnalyzeGisSelectionSet).
         private int _selectedIncidsInGISCount = 0;
+
         private int _selectedToidsInGISCount = 0;
         private int _selectedFragsInGISCount = 0;
 
         // How many incids and fragments are selected in the database for the current GIS selection
         // (set whenever a filter is applied and in ExpectedSelectionFeatures).
         private int _selectedIncidsInDBCount = 0;
+
         private int _selectedFragsInDBCount = 0;
 
         // How many toids and fragments are selected in GIS and the database for the current incid (set in CountFrags).
         private int _currentIncidToidsInGISCount = 0;
+
         private int _currentIncidFragsInGISCount = 0;
         private int _currentIncidToidsInDBCount = 0;
         private int _currentIncidFragsInDBCount = 0;
@@ -110,6 +113,7 @@ namespace HLU.UI.ViewModel
 
         // Can the current selection be split or merged (set in RefreshSplitMergeStatus).
         private bool _canPhysicallySplit;
+
         private bool _canLogicallySplit;
         private bool _canPhysicallyMerge;
         private bool _canLogicallyMerge;
@@ -127,6 +131,7 @@ namespace HLU.UI.ViewModel
 
         // Can the Bulk unload or load operation be performed.
         private bool _canBulkUnload;
+
         private bool _canBulkLoad;
 
         #endregion Fields - Bulk Load/Unload
@@ -1101,9 +1106,9 @@ namespace HLU.UI.ViewModel
                     // Display a warning message.
                     string geomTypeName = _gisLayerType switch
                     {
-                        HluGeometryTypes.Line  => "line",
+                        HluGeometryTypes.Line => "line",
                         HluGeometryTypes.Point => "point",
-                        _                      => "polygon"
+                        _ => "polygon"
                     };
 
                     // Check whether the geometry-type map-match table has any records at all.
@@ -1906,11 +1911,11 @@ namespace HLU.UI.ViewModel
         private void RefreshOSMMLoadUnloadEnablement()
         {
             bool canUnload = ComputeCanOSMMUnload();
-            bool canLoad   = ComputeCanOSMMLoad();
+            bool canLoad = ComputeCanOSMMLoad();
 
             bool changed = (_canBulkUnload != canUnload) || (_canBulkLoad != canLoad);
             _canBulkUnload = canUnload;
-            _canBulkLoad   = canLoad;
+            _canBulkLoad = canLoad;
 
             if (changed)
             {
@@ -2032,6 +2037,31 @@ namespace HLU.UI.ViewModel
                 // Notify user with pop-up window
                 NotifySplitMerge("Logical merge completed.");
             }
+        }
+
+        /// <summary>
+        /// Initiates the reassign features process.
+        /// </summary>
+        /// <remarks>This method initiates the reassign features process by creating an instance of the
+        /// ViewModelWindowMainReassign class and calling its InitiateReassign method.</remarks>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        public async Task ReassignFeaturesAsync()
+        {
+            // Clear any existing messages
+            ClearAllMessages();
+
+            // Get the GIS layer selection again (just in case).
+            await GetMapSelectionAsync(false);
+
+            // Create ViewModel for reassign class.
+            ViewModelWindowMainReassign vmReassign = new(this);
+
+            // Initiate the reassign process.
+            vmReassign.InitiateReassign();
+
+            // The method completes synchronously, but is declared as async Task to maintain
+            // consistency with other similar methods like LogicalMergeAsync and OSMMLoadAsync.
+            await Task.CompletedTask;
         }
 
         /// <summary>
@@ -2201,8 +2231,8 @@ namespace HLU.UI.ViewModel
                 return;
             }
 
-            ViewModelWindowMainBulkLoadUnload vmLoadUnload = new(this);
-            int featureCount = await vmLoadUnload.OSMMUnloadAsync();
+            ViewModelWindowMainBulkUnload vmUnload = new(this);
+            int featureCount = await vmUnload.OSMMUnloadAsync();
             if (featureCount > 0)
             {
                 ShowSuccess(
@@ -2231,7 +2261,7 @@ namespace HLU.UI.ViewModel
             if (dialogResult == default)
                 return; // user cancelled
 
-            (OsmmFieldMapping fieldMapping, bool selectedOnly, ViewModelWindowBulkLoad.OutputType outputType) = dialogResult;
+            (OsmmFieldMapping fieldMapping, bool selectedOnly, OutputType outputType) = dialogResult;
 
             // Get the default export path.
             string exportPath = Settings.Default.ExportPath;
@@ -2241,7 +2271,7 @@ namespace HLU.UI.ViewModel
             // Prompt the user for the staging layer output location and feature class name.
             var exportDetails = await GISApplication.BulkLoadPromptAsync(
                 exportPath,
-                outputType == ViewModelWindowBulkLoad.OutputType.FileGeodatabase);
+                outputType == OutputType.FileGeodatabase);
 
             // If the user didn't provide export details then exit.
             if (exportDetails == default)
@@ -2254,8 +2284,8 @@ namespace HLU.UI.ViewModel
             string outputWorkspace = exportDetails.outputWorkspace;
             string outputFeatureClassName = exportDetails.outputFeatureClassName;
 
-            ViewModelWindowMainBulkLoadUnload vmLoadUnload = new(this);
-            var (success, featureCount, incidCount) = await vmLoadUnload.OSMMLoadAsync(
+            ViewModelWindowMainBulkLoad vmLoad = new(this);
+            var (success, featureCount, incidCount) = await vmLoad.OSMMLoadAsync(
                 fieldMapping, outputWorkspace, outputFeatureClassName, selectedOnly);
 
             if (success)
@@ -2273,9 +2303,9 @@ namespace HLU.UI.ViewModel
         /// A tuple containing the <see cref="OsmmFieldMapping"/> chosen by the user, the selectedOnly flag,
         /// and the output type; or default if the dialog was cancelled.
         /// </returns>
-        private Task<(OsmmFieldMapping mapping, bool selectedOnly, ViewModelWindowBulkLoad.OutputType outputType)> ShowOSMMLoadDialogAsync()
+        private Task<(OsmmFieldMapping mapping, bool selectedOnly, OutputType outputType)> ShowOSMMLoadDialogAsync()
         {
-            var tcs = new TaskCompletionSource<(OsmmFieldMapping, bool, ViewModelWindowBulkLoad.OutputType)>();
+            var tcs = new TaskCompletionSource<(OsmmFieldMapping, bool, OutputType)>();
 
             var window = new WindowBulkLoad
             {
@@ -2304,7 +2334,9 @@ namespace HLU.UI.ViewModel
         }
 
         // Dummy handler to satisfy the -= safety unsubscription above (lambda is the real handler).
-        private static void OnOSMMLoadDialogClose(bool apply, OsmmFieldMapping mapping, bool selectedOnly, ViewModelWindowBulkLoad.OutputType outputType) { }
+        private static void OnOSMMLoadDialogClose(bool apply, OsmmFieldMapping mapping, bool selectedOnly, OutputType outputType)
+        {
+        }
 
         #endregion Bulk Load/Unload Action
 

@@ -1,22 +1,21 @@
-<controls:ProWindow
-    x:Class="HLU.UI.View.WindowReassign"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:HLU.UI.ViewModel"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Title="{Binding WindowTitle}"
-    MinWidth="380"
-    MinHeight="240"
-    d:DataContext="{d:DesignInstance Type=local:ViewModelWindowReassign}"
-    Icon="..\..\Images\HLUTool16.png"
-    ResizeMode="NoResize"
-    ShowInTaskbar="False"
-    SizeToContent="WidthAndHeight"
-    Style="{DynamicResource ProWindowStyle}"
-    WindowStartupLocation="CenterOwner"
-    mc:Ignorable="d">
+<controls:ProWindow x:Class="HLU.UI.View.WindowReassign"
+                    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                    xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+                    xmlns:local="clr-namespace:HLU.UI.ViewModel"
+                    Title="{Binding WindowTitle}"
+                    MinWidth="380"
+                    MinHeight="240"
+                    d:DataContext="{d:DesignInstance Type=local:ViewModelWindowReassign}"
+                    Icon="..\..\Images\HLUTool16.png"
+                    ResizeMode="NoResize"
+                    ShowInTaskbar="False"
+                    SizeToContent="WidthAndHeight"
+                    Style="{DynamicResource ProWindowStyle}"
+                    WindowStartupLocation="CenterOwner"
+                    mc:Ignorable="d">
 
     <controls:ProWindow.Resources>
         <ResourceDictionary>
@@ -27,11 +26,10 @@
         </ResourceDictionary>
     </controls:ProWindow.Resources>
 
-    <DockPanel
-        Width="Auto"
-        Margin="4,4,4,4"
-        HorizontalAlignment="Stretch"
-        VerticalAlignment="Stretch">
+    <DockPanel Width="Auto"
+               Margin="4,4,4,4"
+               HorizontalAlignment="Stretch"
+               VerticalAlignment="Stretch">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -42,71 +40,67 @@
             </Grid.RowDefinitions>
 
             <!--  Source Layer  -->
-            <GroupBox
-                Name="GroupBoxSource"
-                Grid.Row="0"
-                Header="Source Layer">
-                <TextBox
-                    Name="TextBoxSourceLayer"
-                    Margin="8,8,8,4"
-                    IsEnabled="False"
-                    Text="{Binding SourceLayerName, Mode=OneWay}" />
+            <GroupBox Name="GroupBoxSource"
+                      Grid.Row="0"
+                      Header="Source Layer">
+                <TextBox Name="TextBoxSourceLayer"
+                         Margin="8,8,8,4"
+                         IsEnabled="False"
+                         Text="{Binding SourceLayerName, Mode=OneWay}" />
             </GroupBox>
 
             <!--  Rules Grid  -->
-            <GroupBox
-                Name="GroupBoxRules"
-                Grid.Row="2"
-                Header="Reassign Rules">
-                <DataGrid
-                    Name="DataGridRules"
-                    Margin="2,8,2,2"
-                    AutoGenerateColumns="False"
-                    CanUserAddRows="False"
-                    CanUserDeleteRows="False"
-                    CanUserReorderColumns="False"
-                    CanUserResizeRows="False"
-                    CanUserSortColumns="False"
-                    ItemsSource="{Binding RuleRows}"
-                    SelectionMode="Single">
+            <GroupBox Name="GroupBoxRules"
+                      Grid.Row="2"
+                      Header="Reassign Rules">
+                <DataGrid Name="DataGridRules"
+                          Margin="2,8,2,2"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          CanUserReorderColumns="False"
+                          CanUserResizeRows="False"
+                          CanUserSortColumns="False"
+                          ItemsSource="{Binding RuleRows}"
+                          SelectionMode="Single">
                     <DataGrid.Columns>
                         <!--  Rule Name  -->
-                        <DataGridTextColumn
-                            Width="100"
-                            Binding="{Binding RuleName}"
-                            Header="Rule"
-                            IsReadOnly="True" />
+                        <DataGridTextColumn Width="100"
+                                            Binding="{Binding RuleName}"
+                                            Header="Rule"
+                                            IsReadOnly="True" />
 
                         <!--  Where Clause  -->
-                        <DataGridTextColumn
-                            Width="*"
-							MaxWidth="800"
-                            Binding="{Binding WhereClause}"
-                            Header="Where Clause"
-                            IsReadOnly="True" />
+                        <DataGridTextColumn Width="*"
+                                            MaxWidth="800"
+                                            Binding="{Binding WhereClause}"
+                                            Header="Where Clause"
+                                            IsReadOnly="True" />
 
                         <!--  Feature Count  -->
-                        <DataGridTextColumn
-                            Width="80"
-                            Binding="{Binding FeatureCountText}"
-                            Header="Features"
-                            IsReadOnly="True" />
+                        <DataGridTextColumn Width="80"
+                                            Binding="{Binding FeatureCountText}"
+                                            Header="Features"
+                                            IsReadOnly="True" />
 
                         <!--  Target Layer  -->
-                        <DataGridComboBoxColumn
-                            Width="150"
-                            Header="Target Layer"
-                            SelectedItemBinding="{Binding SelectedTargetLayer, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                        <DataGridComboBoxColumn Width="150"
+                                                Header="Target Layer"
+                                                SelectedItemBinding="{Binding SelectedTargetLayer, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                             <DataGridComboBoxColumn.ElementStyle>
                                 <Style TargetType="ComboBox">
-                                    <Setter Property="ItemsSource" Value="{Binding DataContext.TargetLayerNamesWithSkip, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
-                                    <Setter Property="IsEnabled" Value="{Binding CanReassign}" />
+                                    <Setter Property="ItemsSource"
+                                            Value="{Binding DataContext.TargetLayerNamesWithSkip, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                    <Setter Property="IsEnabled"
+                                            Value="{Binding CanReassign}" />
                                 </Style>
                             </DataGridComboBoxColumn.ElementStyle>
                             <DataGridComboBoxColumn.EditingElementStyle>
                                 <Style TargetType="ComboBox">
-                                    <Setter Property="ItemsSource" Value="{Binding DataContext.TargetLayerNamesWithSkip, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
-                                    <Setter Property="IsEnabled" Value="{Binding CanReassign}" />
+                                    <Setter Property="ItemsSource"
+                                            Value="{Binding DataContext.TargetLayerNamesWithSkip, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                    <Setter Property="IsEnabled"
+                                            Value="{Binding CanReassign}" />
                                 </Style>
                             </DataGridComboBoxColumn.EditingElementStyle>
                         </DataGridComboBoxColumn>
@@ -114,25 +108,28 @@
                 </DataGrid>
             </GroupBox>
 
-            <!--  OK / Cancel  -->
-            <StackPanel
-                Grid.Row="4"
-                HorizontalAlignment="Right"
-                Orientation="Horizontal">
-                <Button
-                    Name="ButtonOk"
-                    Width="65"
-                    Margin="0,0,8,0"
-                    Command="{Binding OkCommand}"
-                    Content="OK"
-                    IsDefault="True" />
-                <Button
-                    Name="ButtonCancel"
-                    Width="65"
-                    Command="{Binding CancelCommand}"
-                    Content="Cancel"
-                    IsCancel="True" />
-            </StackPanel>
+            <!--  Ok / Cancel buttons  -->
+            <Grid Grid.Row="4"
+                  Margin="4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="82" />
+                    <ColumnDefinition Width="82" />
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="1"
+                        Margin="0,0,2,0"
+                        Command="{Binding OkCommand}"
+                        Content="_OK"
+                        IsDefault="True"
+                        Style="{DynamicResource Esri_Button}" />
+                <Button Grid.Column="2"
+                        Margin="2,0,0,0"
+                        Command="{Binding CancelCommand}"
+                        Content="_Cancel"
+                        IsCancel="True"
+                        Style="{DynamicResource Esri_Button}" />
+            </Grid>
         </Grid>
     </DockPanel>
 </controls:ProWindow>

@@ -23,7 +23,6 @@
 using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
-using ArcGIS.Desktop.Internal.Framework.Controls;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using HLU.Data;
@@ -58,7 +57,7 @@ namespace HLU.UI.ViewModel
     /// Core infrastructure partial for ViewModelWindowMain.
     /// Contains: Fields, Properties, Constructor, Lifecycle management, Shared state.
     /// </summary>
-    partial class ViewModelWindowMain : PanelViewModelBase, IDataErrorInfo
+    internal partial class ViewModelWindowMain : ViewModelPanelBase, IDataErrorInfo
     {
         #region Fields
 
@@ -107,6 +106,7 @@ namespace HLU.UI.ViewModel
 
         // Primary state variables that track what's happening now
         private WorkMode _workMode = WorkMode.None;
+
         private bool _changed = false;
         private bool _readingMap = false;
         private bool _moving = false;
@@ -121,6 +121,7 @@ namespace HLU.UI.ViewModel
 
         // Supporting infrastructure for work mode logic
         private const WorkMode DisallowEditOperationsMask = WorkMode.Bulk | WorkMode.OSMMReview | WorkMode.OSMMBulk;
+
         private bool _isNavigating = false;
 
         #endregion Fields - Work Mode
@@ -143,6 +144,7 @@ namespace HLU.UI.ViewModel
 
         // Export options
         private int _minZoom;
+
         private int _autoZoomToSelection;
         private int _warnBeforeMaxFeatures;
 
@@ -151,10 +153,12 @@ namespace HLU.UI.ViewModel
 
         // History options
         private DataColumn[] _historyColumns;
+
         private int _historyDisplayLastN;
 
         // Interface options
         private bool _showGroupHeaders;
+
         private bool _showIHSTab;
         private bool _showSourceHabitatGroup;
         private bool _showHabitatSecondariesSuggested;
@@ -164,6 +168,7 @@ namespace HLU.UI.ViewModel
 
         // Updates options
         private int _subsetUpdateAction;
+
         private string _clearIHSUpdateAction;
         private string _defaultReason;
         private string _defaultProcess;
@@ -175,6 +180,7 @@ namespace HLU.UI.ViewModel
 
         // Validation options
         private bool _resetOSMMUpdatesStatus;
+
         private int _habitatSecondaryCodeValidation;
         private int _primarySecondaryCodeValidation;
         private int _qualityValidation;
@@ -2488,7 +2494,8 @@ namespace HLU.UI.ViewModel
                     }
                 }
 
-                skipGeometryReinit:;
+            skipGeometryReinit:
+                ;
             }
 
             // Now assign ActiveLayerName

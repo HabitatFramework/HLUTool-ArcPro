@@ -31,11 +31,11 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// View model for the main window history handling.
     /// </summary>
-    class ViewModelWindowMainHistory
+    internal class ViewModelWindowMainHistory
     {
         #region Fields
 
-        ViewModelWindowMain _viewModelMain;
+        private ViewModelWindowMain _viewModelMain;
 
         #endregion Fields
 

@@ -39,12 +39,17 @@ namespace HLU.UI.UserControls.Toolbar
 
         #region Constructor
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public BulkLoadButton()
         {
+            // Get the dockpane DAML id.
             DockPane pane = FrameworkApplication.DockPaneManager.Find(ViewModelWindowMain.DockPaneID);
             if (pane == null)
                 return;
 
+            // Get the ViewModel by casting the dockpane.
             _viewModel = pane as ViewModelWindowMain;
         }
 
@@ -52,8 +57,12 @@ namespace HLU.UI.UserControls.Toolbar
 
         #region Overrides
 
+        /// <summary>
+        /// Open the bulk load dialog. Called when the button is clicked.
+        /// </summary>
         protected override async void OnClick()
         {
+            // Open the bulk load dialog. The dialog will handle the actual loading of the selected features.
             try
             {
                 await _viewModel.OSMMLoadAsync();
@@ -64,8 +73,12 @@ namespace HLU.UI.UserControls.Toolbar
             }
         }
 
+        /// <summary>
+        /// Called periodically by the framework to update button state.
+        /// </summary>
         protected override void OnUpdate()
         {
+            // If the main ViewModel is not available, disable the button and show a tooltip indicating that the main window is not available.
             if (_viewModel == null)
             {
                 Enabled = false;
@@ -73,6 +86,7 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
+            // If the tool is processing, disable the button and show a tooltip indicating why.
             if (_viewModel.IsToolProcessing)
             {
                 Enabled = false;
@@ -80,9 +94,11 @@ namespace HLU.UI.UserControls.Toolbar
                 return;
             }
 
+            // Enable or disable the button based on CanBulkLoad and main window visibility.
             Enabled = _viewModel.CanBulkLoad &&
                       _viewModel.GridMainVisibility == Visibility.Visible;
 
+            // Set the disabled tool tip text (for when it is disabled).
             DisabledTooltip = "Unavailable when:\n" +
                 "\u2022 The tool is not in normal update mode\n" +
                 "\u2022 The main window is not visible";

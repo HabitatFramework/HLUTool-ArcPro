@@ -42,11 +42,11 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// Contains methods for performing logical and physical splits of GIS features.
     /// </summary>
-    class ViewModelWindowMainSplit
+    internal class ViewModelWindowMainSplit
     {
         #region Fields
 
-        ViewModelWindowMain _viewModelMain;
+        private ViewModelWindowMain _viewModelMain;
 
         #endregion Fields
 
@@ -252,23 +252,23 @@ namespace HLU.UI.ViewModel
                 switch (_viewModelMain.GisLayerType)
                 {
                     case HluGeometryTypes.Line:
-                    {
-                        var t = _viewModelMain.HluDataset.incid_mm_lines;
-                        _viewModelMain.GetIncidMMLineRows(mmWhereClause, ref t);
-                        break;
-                    }
+                        {
+                            var t = _viewModelMain.HluDataset.incid_mm_lines;
+                            _viewModelMain.GetIncidMMLineRows(mmWhereClause, ref t);
+                            break;
+                        }
                     case HluGeometryTypes.Point:
-                    {
-                        var t = _viewModelMain.HluDataset.incid_mm_points;
-                        _viewModelMain.GetIncidMMPointRows(mmWhereClause, ref t);
-                        break;
-                    }
+                        {
+                            var t = _viewModelMain.HluDataset.incid_mm_points;
+                            _viewModelMain.GetIncidMMPointRows(mmWhereClause, ref t);
+                            break;
+                        }
                     default:
-                    {
-                        var t = _viewModelMain.HluDataset.incid_mm_polygons;
-                        _viewModelMain.GetIncidMMPolygonRows(mmWhereClause, ref t);
-                        break;
-                    }
+                        {
+                            var t = _viewModelMain.HluDataset.incid_mm_polygons;
+                            _viewModelMain.GetIncidMMPolygonRows(mmWhereClause, ref t);
+                            break;
+                        }
                 }
 
                 // Resolve the incid, toid and fragid column names for the active geometry type.
@@ -584,27 +584,27 @@ namespace HLU.UI.ViewModel
                 switch (_viewModelMain.GisLayerType)
                 {
                     case HluGeometryTypes.Line:
-                    {
-                        var t = _viewModelMain.HluDataset.incid_mm_lines;
-                        _viewModelMain.GetIncidMMLineRows(originalFeatureWhereClause, ref t);
-                        updTable = t;
-                        break;
-                    }
+                        {
+                            var t = _viewModelMain.HluDataset.incid_mm_lines;
+                            _viewModelMain.GetIncidMMLineRows(originalFeatureWhereClause, ref t);
+                            updTable = t;
+                            break;
+                        }
                     case HluGeometryTypes.Point:
-                    {
-                        var t = _viewModelMain.HluDataset.incid_mm_points;
-                        _viewModelMain.GetIncidMMPointRows(originalFeatureWhereClause, ref t);
-                        updTable = t;
-                        break;
-                    }
+                        {
+                            var t = _viewModelMain.HluDataset.incid_mm_points;
+                            _viewModelMain.GetIncidMMPointRows(originalFeatureWhereClause, ref t);
+                            updTable = t;
+                            break;
+                        }
                     default:
-                    {
-                        var t = _viewModelMain.HluDataset.incid_mm_polygons;
-                        _viewModelMain.GetIncidMMPolygonRows(originalFeatureWhereClause, ref t);
-                        updTable = t;
-                        break;
-                    }
-}
+                        {
+                            var t = _viewModelMain.HluDataset.incid_mm_polygons;
+                            _viewModelMain.GetIncidMMPolygonRows(originalFeatureWhereClause, ref t);
+                            updTable = t;
+                            break;
+                        }
+                }
 
                 // If an error occurred when fetching the original split feature then throw an exception.
                 if ((updTable == null) || (updTable.Rows.Count != 1))
@@ -1466,8 +1466,8 @@ namespace HLU.UI.ViewModel
                 return;
 
             string histTable = _viewModelMain.DataBase.QualifyTableName(_viewModelMain.HluDataset.history.TableName);
-            string incidCol  = _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.history.incidColumn.ColumnName);
-            string toidCol   = _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.history.toidColumn.ColumnName);
+            string incidCol = _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.history.incidColumn.ColumnName);
+            string toidCol = _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.history.toidColumn.ColumnName);
             string fragidCol = _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.history.fragidColumn.ColumnName);
 
             foreach (var (oldIncid, toid, oldFragid, newFragid) in keyMappings)
@@ -1481,7 +1481,7 @@ namespace HLU.UI.ViewModel
                 string updateStatement = String.Format(
                     "UPDATE {0} SET {1} = {2}, {3} = {4} WHERE {1} = {5} AND {6} AND {3} = {7}",
                     histTable,
-                    incidCol,  _viewModelMain.DataBase.QuoteValue(newIncid),
+                    incidCol, _viewModelMain.DataBase.QuoteValue(newIncid),
                     fragidCol, _viewModelMain.DataBase.QuoteValue(newFragid),
                     _viewModelMain.DataBase.QuoteValue(oldIncid),
                     toidCondition,

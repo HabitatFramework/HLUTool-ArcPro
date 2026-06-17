@@ -1236,7 +1236,10 @@ namespace HLU.GISApplication
 
             return await QueuedTask.Run(() =>
             {
-                QueryFilter qf = new() { WhereClause = whereClause ?? string.Empty };
+                QueryFilter qf = new()
+                {
+                    WhereClause = whereClause ?? string.Empty
+                };
                 return (int)_hluFeatureClass.GetCount(qf);
             }).ConfigureAwait(false);
         }
@@ -3176,7 +3179,10 @@ namespace HLU.GISApplication
                 Table hluTable = _hluFeatureClass as Table;
 
                 // Pass 1 — read geometry for history rows.
-                QueryFilter qf = new() { ObjectIDs = oids };
+                QueryFilter qf = new()
+                {
+                    ObjectIDs = oids
+                };
                 using (RowCursor cursor = _hluFeatureClass.Search(qf, false))
                 {
                     while (cursor.MoveNext())
@@ -3248,7 +3254,7 @@ namespace HLU.GISApplication
                         if (!oidAssignments.TryGetValue(oid, out var assignment))
                             continue;
 
-                        row[incidFieldIndex]  = assignment.incid;
+                        row[incidFieldIndex] = assignment.incid;
                         row[fragidFieldIndex] = assignment.fragid;
 
                         // Overwrite each habitat field with the validated value (null clears an
@@ -3256,11 +3262,11 @@ namespace HLU.GISApplication
                         if (habprimaryFieldIndex != -1)
                             row[habprimaryFieldIndex] = (object)assignment.habprimary ?? DBNull.Value;
                         if (habsecondFieldIndex != -1)
-                            row[habsecondFieldIndex]  = (object)assignment.habsecond  ?? DBNull.Value;
+                            row[habsecondFieldIndex] = (object)assignment.habsecond ?? DBNull.Value;
                         if (determqtyFieldIndex != -1)
-                            row[determqtyFieldIndex]  = (object)assignment.determqty  ?? DBNull.Value;
+                            row[determqtyFieldIndex] = (object)assignment.determqty ?? DBNull.Value;
                         if (interpqtyFieldIndex != -1)
-                            row[interpqtyFieldIndex]  = (object)assignment.interpqty  ?? DBNull.Value;
+                            row[interpqtyFieldIndex] = (object)assignment.interpqty ?? DBNull.Value;
 
                         row.Store();
                         context.Invalidate(row);
@@ -3292,17 +3298,20 @@ namespace HLU.GISApplication
             {
                 // Read the four fields using the fuzzy mapping logic to get their indexes.
                 int habprimaryIdx = FuzzyFieldOrdinal("habprimary");
-                int habsecondIdx  = FuzzyFieldOrdinal("habsecond");
-                int determqtyIdx  = FuzzyFieldOrdinal("determqty");
-                int interpqtyIdx  = FuzzyFieldOrdinal("interpqty");
+                int habsecondIdx = FuzzyFieldOrdinal("habsecond");
+                int determqtyIdx = FuzzyFieldOrdinal("determqty");
+                int interpqtyIdx = FuzzyFieldOrdinal("interpqty");
 
                 // If none of the four fields exist in the layer there is nothing to propagate.
                 if (habprimaryIdx == -1 && habsecondIdx == -1 &&
-                    determqtyIdx  == -1 && interpqtyIdx  == -1)
+                    determqtyIdx == -1 && interpqtyIdx == -1)
                     return;
 
                 // Build a query filter to read the features by OID.
-                QueryFilter qf = new() { ObjectIDs = oids };
+                QueryFilter qf = new()
+                {
+                    ObjectIDs = oids
+                };
 
                 // Use a RowCursor to read the features and extract the four fields, applying the
                 // fuzzy mapping logic and trimming/normalizing string values. Store results in the
@@ -3322,9 +3331,11 @@ namespace HLU.GISApplication
                     // trimming and normalization logic.
                     string GetVal(int idx)
                     {
-                        if (idx < 0) return null;
+                        if (idx < 0)
+                            return null;
                         object v = feature[idx];
-                        if (v == null || v is DBNull) return null;
+                        if (v == null || v is DBNull)
+                            return null;
                         string s = v.ToString().Trim();
                         return string.IsNullOrEmpty(s) ? null : s;
                     }
@@ -3398,11 +3409,11 @@ namespace HLU.GISApplication
                     return -1;
                 }
 
-                int makeIdx      = IdxOf(makeField);
+                int makeIdx = IdxOf(makeField);
                 int descGroupIdx = IdxOf(descGroupField);
-                int descTermIdx  = IdxOf(descTermField);
-                int themeIdx     = IdxOf(themeField);
-                int featCodeIdx  = IdxOf(featCodeField);
+                int descTermIdx = IdxOf(descTermField);
+                int themeIdx = IdxOf(themeField);
+                int featCodeIdx = IdxOf(featCodeField);
 
                 // Helper to safely extract a trimmed string value from a row.
                 string GetVal(Row row, int idx)
@@ -3416,7 +3427,10 @@ namespace HLU.GISApplication
                     return string.IsNullOrEmpty(s) ? null : s;
                 }
 
-                QueryFilter qf = new() { ObjectIDs = oids };
+                QueryFilter qf = new()
+                {
+                    ObjectIDs = oids
+                };
                 using RowCursor cursor = table.Search(qf, false);
                 while (cursor.MoveNext())
                 {
@@ -3480,7 +3494,10 @@ namespace HLU.GISApplication
                 if (fieldIdx < 0)
                     return;
 
-                QueryFilter qf = new() { ObjectIDs = oids };
+                QueryFilter qf = new()
+                {
+                    ObjectIDs = oids
+                };
                 using RowCursor cursor = table.Search(qf, false);
                 while (cursor.MoveNext())
                 {
@@ -4344,7 +4361,10 @@ namespace HLU.GISApplication
             // The return value must be known before ExecuteAsync() runs the callback,
             // so count matching features now with a cheap server-side COUNT query.
             // This also lets us short-circuit immediately when nothing matches.
-            QueryFilter qf = new() { WhereClause = whereClause ?? string.Empty };
+            QueryFilter qf = new()
+            {
+                WhereClause = whereClause ?? string.Empty
+            };
 
             int matchingCount = await QueuedTask.Run(() =>
                 (int)_hluFeatureClass.GetCount(qf)).ConfigureAwait(false);
