@@ -803,12 +803,12 @@ namespace HLU.Properties {
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
         [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public string ExportPath {
+        public string DefaultExportPath {
             get {
-                return ((string)(this["ExportPath"]));
+                return ((string)(this["DefaultExportPath"]));
             }
             set {
-                this["ExportPath"] = value;
+                this["DefaultExportPath"] = value;
             }
         }
         
@@ -974,6 +974,19 @@ namespace HLU.Properties {
             }
             set {
                 this["DefaultBulkLoadLayer"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
+        public string DefaultBulkLoadPath {
+            get {
+                return ((string)(this["DefaultBulkLoadPath"]));
+            }
+            set {
+                this["DefaultBulkLoadPath"] = value;
             }
         }
     }

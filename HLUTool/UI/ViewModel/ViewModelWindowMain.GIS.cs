@@ -2265,26 +2265,26 @@ namespace HLU.UI.ViewModel
 
             (OsmmFieldMapping fieldMapping, bool selectedOnly, OutputType outputType) = dialogResult;
 
-            // Get the default export path.
-            string exportPath = Settings.Default.ExportPath;
-            if (string.IsNullOrEmpty(exportPath) || !System.IO.Directory.Exists(exportPath))
-                exportPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            // Get the default bulk load path.
+            string bulkLoadPath = Settings.Default.DefaultBulkLoadPath;
+            if (string.IsNullOrEmpty(bulkLoadPath) || !System.IO.Directory.Exists(bulkLoadPath))
+                bulkLoadPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
             // Prompt the user for the staging layer output location and feature class name.
-            var exportDetails = await GISApplication.BulkLoadPromptAsync(
-                exportPath,
+            var bulkLoadDetails = await GISApplication.BulkLoadPromptAsync(
+                bulkLoadPath,
                 outputType == OutputType.FileGeodatabase);
 
             // If the user didn't provide export details then exit.
-            if (exportDetails == default)
+            if (bulkLoadDetails == default)
             {
                 ShowInfo("Bulk Load cancelled by user.", MessageCategory.OSMMLoad);
                 return;
             }
 
             // Extract the export details.
-            string outputWorkspace = exportDetails.outputWorkspace;
-            string outputFeatureClassName = exportDetails.outputFeatureClassName;
+            string outputWorkspace = bulkLoadDetails.outputWorkspace;
+            string outputFeatureClassName = bulkLoadDetails.outputFeatureClassName;
 
             ViewModelWindowMainBulkLoad vmLoad = new(this);
             var (success, featureCount, incidCount) = await vmLoad.OSMMLoadAsync(

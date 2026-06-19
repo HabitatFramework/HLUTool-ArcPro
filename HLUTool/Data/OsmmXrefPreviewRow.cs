@@ -117,7 +117,7 @@ namespace HLU.Data
                 if (!IsMatched)
                     return "No match";
                 if (!IsPrimaryValid && !AreSecondariesValid)
-                    return "Invalid primary/secondaries";
+                    return "Invalid primary & secondaries";
                 if (!IsPrimaryValid)
                     return "Invalid primary";
                 if (!AreSecondariesValid)

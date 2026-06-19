@@ -144,13 +144,6 @@ namespace HLU.UI.View
             // box still holds the default, to avoid overwriting a deliberate edit.
             string baseName = Path.GetFileNameWithoutExtension(chosen);
 
-            // If the current feature class name is empty or still the default "HLU_Staging", update it to the base name of the selected GDB.
-            if (String.IsNullOrWhiteSpace(currentName) ||
-                currentName == "HLU_Staging")
-            {
-                _viewModel.FeatureClassName = baseName;
-            }
-
             // Set focus back to the feature class name box and select all text for easy editing.
             TextBoxFeatureClassName.Focus();
             TextBoxFeatureClassName.SelectAll();

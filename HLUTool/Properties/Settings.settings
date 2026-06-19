@@ -254,7 +254,7 @@
     <Setting Name="WorkingFileGDBPath" Roaming="true" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="ExportPath" Roaming="true" Type="System.String" Scope="User">
+    <Setting Name="DefaultExportPath" Roaming="true" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="BatchProcessingSize" Type="System.Int32" Scope="Application">
@@ -295,6 +295,9 @@
     </Setting>
     <Setting Name="DefaultBulkLoadLayer" Roaming="true" Type="System.String" Scope="User">
       <Value Profile="(Default)">hlu_osmm_staging</Value>
+    </Setting>
+    <Setting Name="DefaultBulkLoadPath" Roaming="true" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>

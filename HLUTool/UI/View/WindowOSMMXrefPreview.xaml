@@ -101,7 +101,8 @@
                     <DataGridTemplateColumn
                         Width="Auto"
                         MinWidth="150"
-                        Header="Status">
+                        Header="Status"
+                        SortMemberPath="Status">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock

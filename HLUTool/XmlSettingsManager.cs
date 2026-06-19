@@ -139,49 +139,39 @@ public class XmlSettingsManager
 public class AddInSettings
 {
     // Help URL
-    public string HelpURL { get; set; } = "https://hlutool-userguide.readthedocs.io/en/latest/";
+    public string HelpURL { get; set; } = "https://hlutool-arcpro-userguide.readthedocs.io/en/latest/";
 
     public HelpPages HelpPages { get; set; } = new();
 
     // Application database options
     public int DbConnectionTimeout { get; set; } = 60;
-
     public int IncidTablePageSize { get; set; } = 100;
 
     // Application dates options
     public string[] SeasonNames { get; set; } = ["Spring", "Summery", "Autumn", "Winter"];
-
     public string VagueDateDelimiter { get; set; } = "-";
 
     // Application validation options
     public int HabitatSecondaryCodeValidation { get; set; } = 2;
-
     public int PrimarySecondaryCodeValidation { get; set; } = 1;
     public int QualityValidation { get; set; } = 1;
     public int PotentialPriorityDetermQtyValidation { get; set; } = 1;
 
     // Application updates options
     public int SubsetUpdateAction { get; set; } = 0;
-
     public string ClearIHSUpdateAction { get; set; } = "Do not clear";
     public string SecondaryCodeDelimiter { get; set; } = ".";
     public bool ResetOSMMUpdatesStatus { get; set; } = false;
 
     // Application bulk update options
     public bool BulkUpdateDeleteOrphanBapHabitats { get; set; } = false;
-
     public bool BulkUpdateDeletePotentialBapHabitats { get; set; } = false;
     public bool BulkUpdateDeleteIHSCodes { get; set; } = false;
     public bool BulkUpdateDeleteSecondaryCodes { get; set; } = false;
     public bool BulkUpdateCreateHistoryRecords { get; set; } = true;
     public string BulkUpdateDeterminationQuality { get; set; } = @"PI";
     public string BulkUpdateInterpretationQuality { get; set; } = @"M2";
-
-    // Application GIS export options
     public int? BulkOSMMSourceId { get; set; } = null;
-
-    // Application bulk load options
-    public string DefaultBulkLoadLayer { get; set; } = null;
 
     // Application reassign options
     public List<ReassignRule> ReassignRules { get; set; } = [];
@@ -206,16 +196,16 @@ public class HelpPages
 {
     // Individual help pages
     public string AppDatabase { get; set; } = "options/options.html#options-database";
-
     public string AppDates { get; set; } = "options/options.html#options-dates";
-    public string AppBulkUpdate { get; set; } = "options/options.html#options-bulk-update";
-    public string AppUpdates { get; set; } = "options/options.html#options-updates";
     public string AppValidation { get; set; } = "options/options.html#options-validation";
-    public string UserGIS { get; set; } = "options/options.html#options-gis";
+    public string AppUpdates { get; set; } = "options/options.html#options-updates";
+    public string AppBulkUpdate { get; set; } = "options/options.html#options-bulk-update";
+    public string AppReassign { get; set; } = "options/options.html#options-reassign";
     public string UserInterface { get; set; } = "options/options.html#options-interface";
+    public string UserGIS { get; set; } = "options/options.html#options-gis";
     public string UserUpdates { get; set; } = "options/options.html#options-user-updates";
+    public string UserBulkLoad { get; set; } = "options/options.html#options-bulk-load";
     public string UserSQL { get; set; } = "options/options.html#options-filter";
     public string UserExport { get; set; } = "options/options.html#options-export";
     public string UserHistory { get; set; } = "options/options.html#options-history";
-    public string AppReassign { get; set; } = "options/options.html#options-reassign";
 }

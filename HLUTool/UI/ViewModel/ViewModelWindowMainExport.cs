@@ -194,7 +194,7 @@ namespace HLU.UI.ViewModel
             _windowExport.Close();
 
             // Get the default export path.
-            string exportPath = Settings.Default.ExportPath;
+            string exportPath = Settings.Default.DefaultExportPath;
 
             // If not cancelled, proceed with the export using the selected format and options.
             if (exportID != -1)
