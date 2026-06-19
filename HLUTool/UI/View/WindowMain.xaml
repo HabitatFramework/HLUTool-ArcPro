@@ -1190,7 +1190,7 @@
                                                 Grid.Column="1"
                                                 VerticalAlignment="Center"
                                                 DisplayMemberPath="description"
-                                                IsEditable="True"
+                                                IsEditable="False"
                                                 IsReadOnly="False"
                                                 IsTextSearchEnabled="True"
                                                 ItemsSource="{Binding LegacyHabitatCodes}"

@@ -47,6 +47,8 @@ namespace HLU.UI.ViewModel
         private readonly Func<string, Task<int>> _countFeaturesAsync;
 
         private string _displayName = "Reassign Features";
+        private int _totalSourceFeatures = -1;
+        private bool _isCountingTotalFeatures;
 
         #endregion Fields
 
@@ -83,12 +85,16 @@ namespace HLU.UI.ViewModel
                 foreach (var rule in rules)
                 {
                     var ruleRow = new RuleRow(rule, _targetLayerNamesWithSkip);
+                    ruleRow.PropertyChanged += RuleRow_PropertyChanged;
                     _ruleRows.Add(ruleRow);
 
                     // Start counting features asynchronously
                     _ = CountFeaturesForRuleAsync(ruleRow);
                 }
             }
+
+            // Start counting total features in the source layer
+            _ = CountTotalSourceFeaturesAsync();
         }
 
         #endregion Constructor
@@ -230,6 +236,130 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public ObservableCollection<RuleRow> RuleRows => _ruleRows;
 
+        /// <summary>
+        /// Gets the total number of features in the source layer.
+        /// </summary>
+        public int TotalSourceFeatures
+        {
+            get => _totalSourceFeatures;
+            private set
+            {
+                if (_totalSourceFeatures != value)
+                {
+                    _totalSourceFeatures = value;
+                    OnPropertyChanged(nameof(TotalSourceFeatures));
+                    OnPropertyChanged(nameof(TotalSourceFeaturesText));
+                    OnPropertyChanged(nameof(TotalRuleFeaturesText));
+                    OnPropertyChanged(nameof(ShowFeatureCountMismatch));
+                    OnPropertyChanged(nameof(FeatureCountMismatchMessage));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the total source features count is being calculated.
+        /// </summary>
+        public bool IsCountingTotalFeatures
+        {
+            get => _isCountingTotalFeatures;
+            private set
+            {
+                if (_isCountingTotalFeatures != value)
+                {
+                    _isCountingTotalFeatures = value;
+                    OnPropertyChanged(nameof(IsCountingTotalFeatures));
+                    OnPropertyChanged(nameof(TotalSourceFeaturesText));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the display text for the total source features count.
+        /// </summary>
+        public string TotalSourceFeaturesText
+        {
+            get
+            {
+                if (_isCountingTotalFeatures)
+                    return "Counting…";
+                if (_totalSourceFeatures < 0)
+                    return "Unknown";
+                return _totalSourceFeatures.ToString("N0");
+            }
+        }
+
+        /// <summary>
+        /// Gets the total number of features represented by all rules.
+        /// </summary>
+        public int TotalRuleFeatures
+        {
+            get
+            {
+                if (_ruleRows == null || _ruleRows.Any(r => r.IsCountingFeatures))
+                    return -1;
+                return _ruleRows.Where(r => r.FeatureCount >= 0).Sum(r => r.FeatureCount);
+            }
+        }
+
+        /// <summary>
+        /// Gets the display text for the total rule features count.
+        /// </summary>
+        public string TotalRuleFeaturesText
+        {
+            get
+            {
+                if (_ruleRows != null && _ruleRows.Any(r => r.IsCountingFeatures))
+                    return "Counting…";
+
+                int total = TotalRuleFeatures;
+                if (total < 0)
+                    return "Unknown";
+
+                return total.ToString("N0");
+            }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether to show the feature count mismatch message.
+        /// </summary>
+        public bool ShowFeatureCountMismatch
+        {
+            get
+            {
+                if (_isCountingTotalFeatures || _totalSourceFeatures < 0)
+                    return false;
+
+                if (_ruleRows != null && _ruleRows.Any(r => r.IsCountingFeatures))
+                    return false;
+
+                int totalRules = TotalRuleFeatures;
+                if (totalRules < 0)
+                    return false;
+
+                return totalRules != _totalSourceFeatures;
+            }
+        }
+
+        /// <summary>
+        /// Gets the feature count mismatch message.
+        /// </summary>
+        public string FeatureCountMismatchMessage
+        {
+            get
+            {
+                if (!ShowFeatureCountMismatch)
+                    return string.Empty;
+
+                int totalRules = TotalRuleFeatures;
+                int difference = Math.Abs(_totalSourceFeatures - totalRules);
+
+                if (totalRules < _totalSourceFeatures)
+                    return $"Warning: Rules account for {difference:N0} fewer features than the source layer.";
+                else
+                    return $"Warning: Rules account for {difference:N0} more features than the source layer (possible overlap).";
+            }
+        }
+
         #endregion Control Properties
 
         #region Feature Count
@@ -274,6 +404,60 @@ namespace HLU.UI.ViewModel
                 // calculation is complete.
                 ruleRow.IsCountingFeatures = false;
                 CommandManager.InvalidateRequerySuggested();
+            }
+        }
+
+        /// <summary>
+        /// Queries the source layer for the total number of features (no WHERE clause).
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation.</returns>
+        private async Task CountTotalSourceFeaturesAsync()
+        {
+            // If the count delegate is not provided, set total feature count to -1 and return.
+            if (_countFeaturesAsync == null)
+            {
+                TotalSourceFeatures = -1;
+                IsCountingTotalFeatures = false;
+                return;
+            }
+
+            // Set the IsCountingTotalFeatures flag to true.
+            IsCountingTotalFeatures = true;
+
+            // Perform the total feature count asynchronously (empty WHERE clause = all features).
+            try
+            {
+                int count = await _countFeaturesAsync(string.Empty);
+
+                // Reset the IsCountingTotalFeatures flag.
+                IsCountingTotalFeatures = false;
+
+                TotalSourceFeatures = count;
+            }
+            catch (Exception)
+            {
+                TotalSourceFeatures = -1;
+            }
+            finally
+            {
+                // Reset the IsCountingTotalFeatures flag.
+                IsCountingTotalFeatures = false;
+            }
+        }
+
+        /// <summary>
+        /// Handles property changes in rule rows to update the total rule features count.
+        /// </summary>
+        /// <param name="sender">The rule row that raised the event.</param>
+        /// <param name="e">The property changed event arguments.</param>
+        private void RuleRow_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            // When a rule row's feature count changes, update the total rule features properties.
+            if (e.PropertyName == nameof(RuleRow.FeatureCount) || e.PropertyName == nameof(RuleRow.IsCountingFeatures))
+            {
+                OnPropertyChanged(nameof(TotalRuleFeaturesText));
+                OnPropertyChanged(nameof(ShowFeatureCountMismatch));
+                OnPropertyChanged(nameof(FeatureCountMismatchMessage));
             }
         }
 

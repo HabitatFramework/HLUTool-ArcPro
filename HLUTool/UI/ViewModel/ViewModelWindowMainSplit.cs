@@ -828,7 +828,7 @@ namespace HLU.UI.ViewModel
                 // Get the current values that aren't 't stored
                 // in the current Incid row.
                 newIncidRow.habitat_primary = _viewModelMain.IncidPrimary;
-                newIncidRow.habitat_secondaries = _viewModelMain.IncidSecondarySummary;
+                newIncidRow.habitat_secondaries = _viewModelMain.IncidSecondaryCodesOnly;
                 newIncidRow.ihs_habitat = _viewModelMain.IncidIhsHabitat;
 
                 // Discard any changes to the Incid table once a copy has been

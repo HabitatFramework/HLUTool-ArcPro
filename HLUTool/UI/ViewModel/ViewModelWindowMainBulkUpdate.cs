@@ -1487,8 +1487,8 @@ namespace HLU.UI.ViewModel
                     // Build a history table for every incid in the DB shadow copy of GIS layer
                     foreach (List<SqlFilterCondition> w in incidWhereClause)
                     {
-                        // Retrieve all the GIS rows for the current incid
-                        DataTable historyTmp = _viewModelMain.GISApplication.SqlSelect(false, true, _viewModelMain.HistoryColumns, w);
+                        // Retrieve all the GIS rows for the current incid (including geometry columns)
+                        DataTable historyTmp = await _viewModelMain.GISApplication.GetHistoryAsync(_viewModelMain.HistoryColumns, w);
 
                         // Append history rows to the history table
                         if (historyTmp != null)
@@ -1551,7 +1551,12 @@ namespace HLU.UI.ViewModel
                         throw new Exception($"Failed to update GIS layer shadow copy in table [{_viewModelMain.HluDataset.incid_mm_polygons.TableName}].", ex);
                     }
 
-                    // Get the current values from the GIS layer
+                    // Get the current values from the GIS layer.
+                    // Note: For bulk updates, only attributes change (not geometry).
+                    // The geometry values captured here represent both the "before" and "after" state
+                    // since the geometry itself is not modified during a bulk update.
+                    // Therefore, modified_length and modified_area will correctly reflect the
+                    // geometry dimensions at the time of the attribute change.
                     DataTable historyTmp = await _viewModelMain.GISApplication.GetHistoryAsync(
                         _viewModelMain.HistoryColumns, whereClause);
 

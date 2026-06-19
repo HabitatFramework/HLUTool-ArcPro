@@ -546,11 +546,13 @@ namespace HLU.UI.ViewModel
             }
 
             // Determine if this is truly a new map by comparing the map itself, not just the MapView instance
+            // This is the key check - if the Map object is the same, it's just a focus change (e.g., attribute table)
             bool isNewMap = _activeMapView == null ||
                             MapView.Active.Map != _activeMapView.Map;
 
             // If it's the same map, just update the reference and continue
-            if (!isNewMap && MapView.Active != _activeMapView)
+            // This handles attribute table openings and other focus changes within the same map
+            if (!isNewMap)
             {
                 // Update the MapView reference but don't treat it as a new map
                 _activeMapView = MapView.Active;
