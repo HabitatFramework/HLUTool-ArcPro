@@ -339,9 +339,13 @@ namespace HLU.UI.ViewModel
         {
             if (dataRows != null && isDirty())
             {
-                if (tableAdapter.Update((DataTable)datasetTable.GetChanges()) == -1)
+                dynamic changes = datasetTable.GetChanges();
+                if (changes != null)
                 {
-                    throw new Exception($"Failed to update table [{datasetTable.TableName}].");
+                    if (tableAdapter.Update(changes) == -1)
+                    {
+                        throw new Exception($"Failed to update table [{datasetTable.TableName}].");
+                    }
                 }
             }
         }

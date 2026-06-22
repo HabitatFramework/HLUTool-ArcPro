@@ -2533,9 +2533,13 @@ namespace HLU.UI.ViewModel
                     bool clearCode = value == _codeDeleteRow;
                     bool newCode = false;
                     if (clearCode)
+                    {
                         value = null;
-                    else
-                        newCode = ((String.IsNullOrEmpty(_incidLegacyHabitat)) && (!String.IsNullOrEmpty(value)));
+                    }
+                    else if (!String.IsNullOrEmpty(value))
+                    {
+                        newCode = String.IsNullOrEmpty(_incidLegacyHabitat);
+                    }
 
                     _incidLegacyHabitat = value;
                     IncidCurrentRow.legacy_habitat = _incidLegacyHabitat;

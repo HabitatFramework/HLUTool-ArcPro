@@ -2525,6 +2525,9 @@ namespace HLU.UI.ViewModel
         {
             try
             {
+                // Define the geometry ID column names to exclude
+                string[] excludedGeometryColumns = ["polygon_id", "point_id", "line_id"];
+
                 // Make sure that all the available history columns are updated when
                 // creating history even if the user only wants to display some of them.
                 return
@@ -2532,7 +2535,8 @@ namespace HLU.UI.ViewModel
                     .. _gisIDColumns,
                     .. GisMMTable.Columns.Cast<DataColumn>()
                         .Where(c => !_gisIDColumnOrdinals.Contains(c.Ordinal)
-                            && !c.ColumnName.StartsWith("shape_")),
+                            && !c.ColumnName.StartsWith("shape_")
+                            && !excludedGeometryColumns.Contains(c.ColumnName.ToLower())),
                 ];
             }
             catch { return historyColumns; }
