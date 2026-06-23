@@ -598,8 +598,8 @@ namespace HLU.UI.ViewModel
                 // Inform the user of success and that the output has been added to the current map.
                 // Show feature count if available, otherwise fall back to incid record count.
                 string exportCountMessage = exportedFeatureCount > 0
-                    ? $"{exportedFeatureCount} features ({exportRowCount} records)"
-                    : $"{exportRowCount} records";
+                    ? $"{exportedFeatureCount} features ({exportRowCount} incids)"
+                    : $"{exportRowCount} incids";
 
                 MessageBox.Show(
                     $"Export successful! {exportCountMessage} were exported.\n\n" +

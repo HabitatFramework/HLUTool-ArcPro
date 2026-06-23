@@ -90,15 +90,15 @@
 					<button refID="esri_editing_ShowCreateFeaturesBtn" size="middle" />
 					<button refID="esri_editing_ShowEditFeaturesBtn" size="middle" />
 					<button refID="esri_editing_EditVerticesModifyFeature" size ="middle" />
-					<button refID="esri_editing_SplitCommand" size ="middle" separator="true" />
+					<button refID="esri_editing_SplitCommand" size ="middle" />
 					<button refID="esri_editing_MergeFeatures" size ="middle" />
 				</group>
 
 				<!-- Filter group -->
 				<group id="HLUTool_Group_Filter" caption="Filter" keytip="G6" launcherButtonID="HLUTool_btnFilterIncidsOptionsLauncher">
-					<button refID="HLUTool_btnFilterByAttributes" size="large" />
-					<button refID="HLUTool_btnClearFilter" size="middle" separator="true" />
-					<editBox refID="HLUTool_edbFilterByIncid" size="large" />
+					<button refID="HLUTool_btnFilterByAttributes" size="middle" />
+					<button refID="HLUTool_btnClearFilter" size="middle" />
+					<editBox refID="HLUTool_edbFilterByIncid" size="middle" />
 				</group>
 
 				<!-- Selection group -->
@@ -116,7 +116,7 @@
 				</group>
 
 				<!-- Feature Insert group -->
-				<group id="HLUTool_Group_FeatureInsert" caption="Feature Insert" keytip="GA">
+				<group id="HLUTool_Group_FeatureInsert" caption="Insert" keytip="GA">
 					<dynamicMenu refID="HLUTool_FeatureInsertMenu" size="large" />
 				</group>
 
@@ -260,11 +260,10 @@
 						className="HLU.UI.UserControls.Toolbar.InsertFeatureSameIncidButton"
 						loadOnClick="false"
 						keytip="IS"
-						smallImage="pack://application:,,,/HLUTool;component/Images/InsertFeatureSameIncid16.png"
-						largeImage="pack://application:,,,/HLUTool;component/Images/InsertFeatureSameIncid32.png">
+						smallImage="pack://application:,,,/HLUTool;component/Images/InsertFeature16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/InsertFeature32.png">
 					<tooltip heading="Insert Feature — Same INCID">
 						Register all selected new features under a single new INCID. Use this when the created features represent fragments of the same habitat record.
-						<disabledText>Available only when editing is active, a reason and process are selected, and all selected features have no INCID assigned.</disabledText>
 					</tooltip>
 				</button>
 
@@ -273,11 +272,10 @@
 						className="HLU.UI.UserControls.Toolbar.InsertFeatureSeparateIncidButton"
 						loadOnClick="false"
 						keytip="IP"
-						smallImage="pack://application:,,,/HLUTool;component/Images/InsertFeatureSeparateIncid16.png"
-						largeImage="pack://application:,,,/HLUTool;component/Images/InsertFeatureSeparateIncid32.png">
+						smallImage="pack://application:,,,/HLUTool;component/Images/InsertFeatureSeparate16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/InsertFeatureSeparate32.png">
 					<tooltip heading="Insert Feature — Separate INCIDs">
 						Register each selected new feature under its own new INCID. Use this when each created feature represents a distinct habitat record.
-						<disabledText>Available only when editing is active, a reason and process are selected, and all selected features have no INCID assigned.</disabledText>
 					</tooltip>
 				</button>
 
@@ -285,7 +283,7 @@
 						  caption=" Active Layer:"
 						  extendedCaption="Select Active Layer"
 						  className="HLU.UI.UserControls.Toolbar.ActiveLayerComboBox"
-						  itemWidth="200"
+						  itemWidth="160"
 						  isEditable="true"
 						  condition="esri_mapping_mapPane"
 						  isReadOnly="true"
@@ -300,7 +298,7 @@
 						  caption=" Reason:"
 						  extendedCaption="Select reason for updates"
 						  className="HLU.UI.UserControls.Toolbar.ReasonComboBox"
-						  itemWidth="220"
+						  itemWidth="160"
 						  isEditable="true"
 						  isReadOnly="true"
 						  resizable="true"
@@ -315,7 +313,7 @@
 						  caption=" Process:"
 						  extendedCaption="Select process for updates"
 						  className="HLU.UI.UserControls.Toolbar.ProcessComboBox"
-						  itemWidth="220"
+						  itemWidth="160"
 						  isEditable="true"
 						  isReadOnly="true"
 						  resizable="true"
@@ -393,7 +391,7 @@
 				</button>
 
 				<editBox id="HLUTool_edbFilterByIncid"
-						 caption="Find Incid:"
+						 caption="Incid:"
 						 className="HLU.UI.UserControls.Toolbar.FilterByIncidEditBox"
 						 condition="esri_mapping_mapPane"
 						 dataType="string"
@@ -433,13 +431,13 @@
 				</button>
 
 				<button id="HLUTool_btnSelectFilteredIncids"
-						caption="Select All Filtered INCIDs"
+						caption="Select Filtered INCIDs"
 						className="HLU.UI.UserControls.Toolbar.SelectFilteredIncidsButton"
 						loadOnClick="false"
 						keytip="SA"
 						smallImage="pack://application:,,,/HLUTool;component/Images/SelectAllOnMap16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/SelectAllOnMap32.png">
-					<tooltip heading="Select All Filtered INCIDs">
+					<tooltip heading="Select Filtered INCIDs">
 						Select all of the features associated with all of the currently filtered INCID records in the active GIS layer.
 						<disabledText>Available only when not in bulk or OSMM Review mode.</disabledText>
 					</tooltip>

@@ -814,7 +814,7 @@ namespace HLU.UI.ViewModel
                 return;
 
             // Clear any existing GIS messages
-            ClearMessage(category: MessageCategory.GIS);
+            ClearMessage(category: MessageCategory.GIS, level: MessageType.Information);
 
             // Temporarily store the incid and GIS selections whilst
             // selecting the current incid in GIS so that the selections
@@ -1398,8 +1398,8 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <param name="sqlFromTables">The list of data tables.</param>
         /// <param name="sqlWhereClause">The where clause string.</param>
-        /// <returns>A task of an integer of the number of fragments expected to be selected.</returns>
-        private async Task<int> ExpectedSelectionFeaturesAsync(List<DataTable> sqlFromTables, string sqlWhereClause)
+        /// <returns>An integer of the number of fragments expected to be selected.</returns>
+        private int ExpectedSelectionFeatures(List<DataTable> sqlFromTables, string sqlWhereClause)
         {
             int numFragments = 0;
 
@@ -1426,15 +1426,16 @@ namespace HLU.UI.ViewModel
                         new SqlFilterCondition("AND", t, tIncidColumn, typeof(DataColumn), "(", ")", rel.ChildColumns[0]) : null).Where(c => c != null);
 
                     // Create a selection DataTable of PK values of the active GIS map-match table.
-                    _incidMMPolygonSelection = await Task.Run(() =>
-                        _db.SqlSelect(
-                            true,
-                            false,
-                            t.PrimaryKey,
-                            [.. whereTables], [.. joinCond], sqlWhereClause));
+                    // NOTE: _db.SqlSelect is synchronous - do NOT wrap in Task.Run()
+                    // because it can cause deferred LINQ execution issues.
+                    _incidMMShadowSelection = _db.SqlSelect(
+                        true,
+                        false,
+                        t.PrimaryKey,
+                        [.. whereTables], [.. joinCond], sqlWhereClause);
 
                     // Count the number of fragments from the selection table.
-                    numFragments = _incidMMPolygonSelection.Rows.Count;
+                    numFragments = _incidMMShadowSelection.Rows.Count;
                 }
                 catch { }
             }

@@ -3491,28 +3491,33 @@ namespace HLU.GISApplication
                 if (!finalCopySuccess)
                     throw new HLUToolException("Failed to copy to final output.");
 
-                // STEP 5: Recalculate geometry attributes
-                var (lengthField, areaField) = await ArcGISProHelpers.GetGeometryFieldNamesAsync(outputPath);
-
-                if (!string.IsNullOrEmpty(lengthField) || !string.IsNullOrEmpty(areaField))
+                // STEP 5: Recalculate geometry attributes (only for shapefiles)
+                // For geodatabase feature classes, Shape_Length and Shape_Area are system-maintained
+                // and not editable, so skip recalculation.
+                if (isShapefile)
                 {
-                    // Map HLU geometry type to ArcGIS geometry type
-                    GeometryType geoType = _hluGeometryType switch
+                    var (lengthField, areaField) = await ArcGISProHelpers.GetGeometryFieldNamesAsync(outputPath);
+
+                    if (!string.IsNullOrEmpty(lengthField) || !string.IsNullOrEmpty(areaField))
                     {
-                        HluGeometryTypes.Polygon => GeometryType.Polygon,
-                        HluGeometryTypes.Line => GeometryType.Polyline,
-                        HluGeometryTypes.Point => GeometryType.Point,
-                        _ => GeometryType.Unknown
-                    };
+                        // Map HLU geometry type to ArcGIS geometry type
+                        GeometryType geoType = _hluGeometryType switch
+                        {
+                            HluGeometryTypes.Polygon => GeometryType.Polygon,
+                            HluGeometryTypes.Line => GeometryType.Polyline,
+                            HluGeometryTypes.Point => GeometryType.Point,
+                            _ => GeometryType.Unknown
+                        };
 
-                    bool recalcSuccess = await ArcGISProHelpers.RecalculateGeometryAttributesAsync(
-                        outputPath,
-                        lengthField,
-                        areaField,
-                        geoType);
+                        bool recalcSuccess = await ArcGISProHelpers.RecalculateGeometryAttributesAsync(
+                            outputPath,
+                            lengthField,
+                            areaField,
+                            geoType);
 
-                    if (!recalcSuccess)
-                        throw new HLUToolException("Failed to recalculate geometry attributes.");
+                        if (!recalcSuccess)
+                            throw new HLUToolException("Failed to recalculate geometry attributes.");
+                    }
                 }
 
                 // STEP 6: Add to map
@@ -3532,10 +3537,22 @@ namespace HLU.GISApplication
                 {
                     try
                     {
-                        using var gdb = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(outputWorkspace)));
-                        string fcName = System.IO.Path.GetFileNameWithoutExtension(outputFeatureClassName);
-                        using var fc = gdb.OpenDataset<FeatureClass>(fcName);
-                        return (int)fc.GetCount();
+                        if (isShapefile)
+                        {
+                            // For shapefiles, use FileSystemConnectionPath
+                            using var fileSystem = new FileSystemDatastore(new FileSystemConnectionPath(new Uri(outputWorkspace), FileSystemDatastoreType.Shapefile));
+                            string fcName = System.IO.Path.GetFileNameWithoutExtension(outputFeatureClassName);
+                            using var fc = fileSystem.OpenDataset<FeatureClass>(fcName);
+                            return (int)fc.GetCount();
+                        }
+                        else
+                        {
+                            // For geodatabases, use FileGeodatabaseConnectionPath
+                            using var gdb = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(outputWorkspace)));
+                            string fcName = System.IO.Path.GetFileNameWithoutExtension(outputFeatureClassName);
+                            using var fc = gdb.OpenDataset<FeatureClass>(fcName);
+                            return (int)fc.GetCount();
+                        }
                     }
                     catch
                     {

@@ -751,7 +751,7 @@ namespace HLU.UI.ViewModel
                     newFragmentID);
 
                 // Synchronize the DB shadow copy of the GIS layer.
-                MergeSynchronizeIncidMMPolygons(selectTable, resultTable, newFragmentID,
+                MergeSynchronizeIncidMMShadow(selectTable, resultTable, newFragmentID,
                     resultFeatureWhereClause[0], mergeFeaturesWhereClause);
 
                 // Create fixed values for history write.
@@ -851,7 +851,7 @@ namespace HLU.UI.ViewModel
         #region Merge Synchronization
 
         /// <summary>
-        /// Synchronizes and merges polygon features in the specified dataset by updating the result feature with new
+        /// Synchronizes and merges shadow features in the specified dataset by updating the result feature with new
         /// attributes and removing merged features from the dataset.
         /// </summary>
         /// <remarks>This method performs the following operations: <list type="bullet">
@@ -866,7 +866,7 @@ namespace HLU.UI.ViewModel
         /// <param name="resultFeatureWhereClause">A list of conditions used to identify the result feature to be updated.</param>
         /// <param name="mergeFeaturesWhereClause">A collection of condition lists, where each list specifies the criteria for identifying the features to be
         /// merged and removed from the dataset.</param>
-        private void MergeSynchronizeIncidMMPolygons(DataTable selectTable,
+        private void MergeSynchronizeIncidMMShadow(DataTable selectTable,
             DataTable resultTable, string newFragmentID, List<SqlFilterCondition> resultFeatureWhereClause,
             List<List<SqlFilterCondition>> mergeFeaturesWhereClause)
         {

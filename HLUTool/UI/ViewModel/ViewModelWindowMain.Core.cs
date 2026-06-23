@@ -75,7 +75,7 @@ namespace HLU.UI.ViewModel
         private RecordIds _recIDs;
         private int _incidCurrentRowIndex;
         private DataTable _incidSelection;
-        private DataTable _incidMMPolygonSelection;
+        private DataTable _incidMMShadowSelection;
 
         private HluDataSet.incidRow _incidCurrentRow;
         private HluDataSet.incidRow _incidCurrentRowClone;
@@ -2454,7 +2454,7 @@ namespace HLU.UI.ViewModel
                     _historyColumns = InitializeHistoryColumns(_historyColumns);
 
                     // Reinitialise the incid filter for the correct geometry table.
-                    _incidMMPolygonsIncidFilter = new()
+                    _incidMMShadowIncidFilter = new()
                     {
                         BooleanOperator = "OR",
                         OpenParentheses = "(",
@@ -4069,6 +4069,7 @@ namespace HLU.UI.ViewModel
                     String.Join(",", incids));
 
                 // Load the page of incids from the database.
+                // Offload synchronous database Fill() to background thread to avoid UI blocking.
                 await Task.Run(() =>
                     _hluTableAdapterMgr.incidTableAdapter.Fill(
                         _hluDS.incid, fillSql));
@@ -4389,7 +4390,7 @@ namespace HLU.UI.ViewModel
                     }
                 };
 
-            _incidMMPolygonsIncidFilter = new()
+            _incidMMShadowIncidFilter = new()
             {
                 BooleanOperator = "OR",
                 OpenParentheses = "(",

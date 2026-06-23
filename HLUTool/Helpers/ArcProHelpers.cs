@@ -625,12 +625,12 @@ namespace HLU.Helpers
 
             string createdPath = null;
 
-            // Try and create the geodatabase on a background thread to avoid blocking the UI. If
-            // creation fails (e.g., due to a name collision, which is unlikely with a GUID-based
-            // name), return null.
+            // Try and create the geodatabase on a background thread using QueuedTask to ensure
+            // it runs on the correct ArcGIS Pro thread. If creation fails (e.g., due to a name
+            // collision, which is unlikely with a GUID-based name), return null.
             try
             {
-                await Task.Run(() =>
+                await QueuedTask.Run(() =>
                 {
                     var gdb = CreateFileGeodatabase(gdbPath);
                     if (gdb != null)
@@ -2086,9 +2086,9 @@ namespace HLU.Helpers
         /// <summary>
         /// Copy the input dataset to the output dataset.
         /// </summary>
-        /// <param name="inputWorkspace">The workspace of the input dataset.</param>
-        /// <param name="inputDatasetName">The name of the input dataset.</param>
-        /// <param name="outputWorkspace">The workspace of the output dataset.</param>
+        /// <param name="inputWorkspace">The input workspace.</param>
+        /// <param name="inputDatasetName">The input dataset name.</param>
+        /// <param name="outputWorkspace">The output workspace.</param>
         /// <param name="outputDatasetName">The name of the output dataset.</param>
         /// <param name="addToMap">Whether to add the output dataset to the map.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains true if the copy operation was successful, otherwise false.</returns>
@@ -2411,7 +2411,7 @@ namespace HLU.Helpers
         /// <param name="inputWorkspace">The input workspace.</param>
         /// <param name="inputDatasetName">The input dataset name.</param>
         /// <param name="outputWorkspace">The output workspace.</param>
-        /// <param name="outputDatasetName">The output dataset name.</param>
+        /// <param name="outputDatasetName">The name of the output dataset.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains true if the copy operation was successful, otherwise false.</returns>
         public static async Task<bool> CopyTableAsync(string inputWorkspace, string inputDatasetName, string outputWorkspace, string outputDatasetName)
         {
