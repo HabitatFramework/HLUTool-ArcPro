@@ -738,6 +738,12 @@ namespace HLU.UI.ViewModel
             // conditions for flags that are not "Any".
             StringBuilder whereClause = new();
 
+            // Add SiteID prefix filter to constrain counts to the active layer.
+            string siteIdFilter = String.Format("{0} LIKE {1}",
+                _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.incidColumn.ColumnName),
+                _db.QuoteValue(_viewModelMain.RecIDs.SiteID + ":%"));
+            whereClause.Append(siteIdFilter);
+
             // Append the selected flags to the WHERE clause if they are not "Any". The "Any" option
             // will show all OSMM Updates regardless of the flag value, so no need to filter by that
             // flag in the query.

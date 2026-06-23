@@ -67,7 +67,7 @@ namespace HLU.UI.ViewModel
         private DataTable _gisSelection;
         private List<List<SqlFilterCondition>> _incidSelectionWhereClause;
         private string _osmmUpdateWhereClause;
-        private SqlFilterCondition _incidMMPolygonsIncidFilter;
+        private SqlFilterCondition _incidMMShadowIncidFilter;
 
         #endregion Fields - Selection Filters
 
@@ -2727,17 +2727,36 @@ namespace HLU.UI.ViewModel
                 newWhereClause = ReplaceStringQualifiers(sqlWhereClause);
 
                 // Create a selection DataTable of PK values of IncidTable.
-                //_incidSelection = _db.SqlSelect(true, IncidTable.PrimaryKey, whereTables, newWhereClause);
-                _incidSelection = await Task.Run(() =>
-                        _db.SqlSelect(
-                            true,
-                            IncidTable.PrimaryKey,
-                            whereTables,
-                            newWhereClause));
+                _incidSelection = _db.SqlSelect(
+                    true,
+                    IncidTable.PrimaryKey,
+                    whereTables,
+                    newWhereClause);
+
+                // Add null check here - if no results found, ensure proper cleanup
+                if (_incidSelection == null || _incidSelection.Rows.Count == 0)
+                {
+                    // No results found - clear state and exit early
+                    _incidSelection = null;
+                    _incidsSelectedMap = null;
+                    _incidSelectionWhereClause = null;
+                    _filteredByMap = false;
+
+                    // Reset the cursor back to normal
+                    ChangeCursor(Cursors.Arrow);
+
+                    // Inform the user that no records were found
+                    ShowInfo("Record not found in database.", MessageCategory.Database);
+
+                    return;
+                }
 
                 // Get a list of all the incids in the selection.
-                _incidsSelectedMap = _incidSelection.AsEnumerable()
-                    .GroupBy(r => r.Field<string>(_incidSelection.Columns[0].ColumnName)).Select(g => g.Key).OrderBy(s => s);
+                // Force immediate execution with collection expression to avoid deferred execution issues.
+                _incidsSelectedMap = [.. _incidSelection.AsEnumerable()
+                    .GroupBy(r => r.Field<string>(_incidSelection.Columns[0].ColumnName))
+                    .Select(g => g.Key)
+                    .OrderBy(s => s)];
 
                 // Retrospectively set the where clause to match the list
                 // of selected incids (for possible use later).
@@ -2752,7 +2771,7 @@ namespace HLU.UI.ViewModel
                 if (IsFiltered)
                 {
                     // Find the expected number of features to be selected in GIS.
-                    _selectedFragsInDBCount = await ExpectedSelectionFeaturesAsync(whereTables, newWhereClause);
+                    _selectedFragsInDBCount = ExpectedSelectionFeatures(whereTables, newWhereClause);
 
                     // Store the number of incids found in the database
                     _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -2916,17 +2935,38 @@ namespace HLU.UI.ViewModel
                 _osmmUpdateWhereClause = newWhereClause;
 
                 // Create a selection DataTable of PK values of IncidTable.
-                //_incidSelection = _db.SqlSelect(true, IncidTable.PrimaryKey, whereTables, newWhereClause);
-                _incidSelection = await Task.Run(() =>
-                        _db.SqlSelect(
-                            true,
-                            IncidTable.PrimaryKey,
-                            whereTables,
-                            newWhereClause));
+                _incidSelection = _db.SqlSelect(
+                    true,
+                    IncidTable.PrimaryKey,
+                    whereTables,
+                    newWhereClause);
+
+                // Add null check here - if no results found, ensure proper cleanup
+                if (_incidSelection == null || _incidSelection.Rows.Count == 0)
+                {
+                    // No results found - clear state and exit early
+                    _incidSelection = null;
+                    _incidsSelectedMap = null;
+                    _incidSelectionWhereClause = null;
+                    _filteredByMap = false;
+                    _osmmUpdateWhereClause = null;
+
+                    // Reset the cursor back to normal
+                    ChangeCursor(Cursors.Arrow);
+
+                    // Inform the user that no records were found (only if caller requested GIS selection)
+                    if (selectInGIS)
+                        ShowInfo("No records found in database.", MessageCategory.Database);
+
+                    return;
+                }
 
                 // Get a list of all the incids in the selection.
-                _incidsSelectedMap = _incidSelection.AsEnumerable()
-                    .GroupBy(r => r.Field<string>(_incidSelection.Columns[0].ColumnName)).Select(g => g.Key).OrderBy(s => s);
+                // Force immediate execution with collection expression to avoid deferred execution issues.
+                _incidsSelectedMap = [.. _incidSelection.AsEnumerable()
+                    .GroupBy(r => r.Field<string>(_incidSelection.Columns[0].ColumnName))
+                    .Select(g => g.Key)
+                    .OrderBy(s => s)];
 
                 // Retrospectively set the where clause to match the list
                 // of selected incids (for possible use later).
@@ -2941,7 +2981,7 @@ namespace HLU.UI.ViewModel
                 if (IsFiltered && selectInGIS)
                 {
                     // Find the expected number of features to be selected in GIS.
-                    _selectedFragsInDBCount = await ExpectedSelectionFeaturesAsync(whereTables, newWhereClause);
+                    _selectedFragsInDBCount = ExpectedSelectionFeatures(whereTables, newWhereClause);
 
                     // Store the number of incids found in the database
                     _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;

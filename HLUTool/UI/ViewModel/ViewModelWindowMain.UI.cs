@@ -6542,8 +6542,8 @@ namespace HLU.UI.ViewModel
                 // Must not be in OSMM Review or standard Bulk mode.
                 bool normalEditMode = !WorkMode.HasAny(WorkMode.OSMMReview | WorkMode.Bulk);
 
-                // The current incid must have a proposed OSMM update (status > 0).
-                bool hasProposedUpdate = IncidOSMMStatus > 0;
+                // The current incid must have a proposed or pending OSMM update (status > 0).
+                bool hasProposedUpdate = IncidOSMMStatus >= 0;
 
                 // The OSMM update must include a primary habitat code to apply.
                 bool hasPrimaryHabitat = IncidOSMMHabitatPrimary != null;
@@ -7339,7 +7339,7 @@ namespace HLU.UI.ViewModel
                         _historyColumns = InitializeHistoryColumns(_historyColumns);
 
                         // Reinitialise the incid filter for the correct geometry table.
-                        _incidMMPolygonsIncidFilter = new()
+                        _incidMMShadowIncidFilter = new()
                         {
                             BooleanOperator = "OR",
                             OpenParentheses = "(",
@@ -9256,11 +9256,15 @@ namespace HLU.UI.ViewModel
                 if (sqlWhereClause != null)
                     newWhereClause = ReplaceStringQualifiers(sqlWhereClause);
 
-                // Backup the current selection (filter).
-                DataTable incidSelectionBackup = _incidSelection;
+                // Apply SiteID prefix filter to restrict results to the active layer.
+                string siteIdFilter = $"{_db.QuoteIdentifier(IncidTable.incidColumn.ColumnName)} LIKE {_db.QuoteValue(_recIDs.SiteID + ":%")}";
+                newWhereClause = string.IsNullOrEmpty(newWhereClause)
+                    ? siteIdFilter
+                    : $"({newWhereClause}) AND {siteIdFilter}";
 
                 // Clear the selection of incids.
                 _incidSelection = null;
+                _incidsSelectedMap = null;
 
                 // Clear the previous where clause (set when performing the
                 // original query builder or when reading the map selection)
@@ -9271,17 +9275,34 @@ namespace HLU.UI.ViewModel
                 if (whereTables.Count > 0)
                 {
                     // Create a selection DataTable of PK values of IncidTable.
-                    //_incidSelection = _db.SqlSelect(true, IncidTable.PrimaryKey, whereTables, newWhereClause);
-                    _incidSelection = await Task.Run(() =>
-                        _db.SqlSelect(
-                            true,
-                            IncidTable.PrimaryKey,
-                            whereTables,
-                            newWhereClause));
+                    // NOTE: _db.SqlSelect is synchronous - do NOT wrap in Task.Run()
+                    // because it can cause deferred LINQ execution issues.
+                    _incidSelection = _db.SqlSelect(true, IncidTable.PrimaryKey, whereTables, newWhereClause);
+
+                    // Add null check here - if no results found, ensure proper cleanup
+                    if (_incidSelection == null || _incidSelection.Rows.Count == 0)
+                    {
+                        // No results found - clear state and exit early
+                        _incidSelection = null;
+                        _incidsSelectedMap = null;
+                        _incidSelectionWhereClause = null;
+                        _filteredByMap = false;
+
+                        // Reset the cursor back to normal
+                        ChangeCursor(Cursors.Arrow);
+
+                        // Inform the user that no records were found
+                        ShowInfo($"No records found for the active {_gisLayerType.ToString().ToLower()} layer type.", MessageCategory.Database);
+
+                        return;
+                    }
 
                     // Get a list of all the incids in the selection.
-                    _incidsSelectedMap = _incidSelection.AsEnumerable()
-                        .GroupBy(r => r.Field<string>(_incidSelection.Columns[0].ColumnName)).Select(g => g.Key).OrderBy(s => s);
+                    // Force immediate execution with ToList() to avoid deferred execution issues.
+                    _incidsSelectedMap = [.. _incidSelection.AsEnumerable()
+                        .GroupBy(r => r.Field<string>(_incidSelection.Columns[0].ColumnName))
+                        .Select(g => g.Key)
+                        .OrderBy(s => s)];
 
                     // Retrospectively set the where clause to match the list
                     // of selected incids (for possible use later).
@@ -9296,7 +9317,7 @@ namespace HLU.UI.ViewModel
                     ChangeCursor(Cursors.Wait, "Counting ...");
 
                     // Find the expected number of features to be selected from the database.
-                    _selectedFragsInDBCount = await ExpectedSelectionFeaturesAsync(whereTables, newWhereClause);
+                    _selectedFragsInDBCount = ExpectedSelectionFeatures(whereTables, newWhereClause);
 
                     // Store the number of incids found in the database
                     _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -9331,9 +9352,6 @@ namespace HLU.UI.ViewModel
                     }
                     else
                     {
-                        // Restore the previous selection (filter).
-                        //_incidSelection = incidSelectionBackup;
-
                         // Clear the selection (filter).
                         _incidSelection = null;
 
@@ -9354,9 +9372,6 @@ namespace HLU.UI.ViewModel
                 }
                 else
                 {
-                    // Restore the previous selection (filter).
-                    //_incidSelection = incidSelectionBackup;
-
                     // Clear the selection (filter).
                     _incidSelection = null;
 
@@ -9653,21 +9668,6 @@ namespace HLU.UI.ViewModel
             if ((sqlFromTables == null) || (sqlWhereClause == null))
                 return;
 
-            //if (IsOsmmBulkMode)
-            //{
-            //    // Set the default source details
-            //    IncidSourcesRows[0].source_id = Settings.Default.BulkOSMMSourceId;
-            //    IncidSourcesRows[0].source_habitat_class = "N/A";
-            //    //_viewModelMain.IncidSourcesRows[0].source_habitat_type = "N/A";
-            //    //Date.VagueDateInstance defaultSourceDate = DefaultSourceDate(null, Settings.Default.BulkOSMMSourceId);
-            //    Date.VagueDateInstance defaultSourceDate = new Date.VagueDateInstance();
-            //    IncidSourcesRows[0].source_date_start = defaultSourceDate.StartDate;
-            //    IncidSourcesRows[0].source_date_end = defaultSourceDate.EndDate;
-            //    IncidSourcesRows[0].source_date_type = defaultSourceDate.DateType;
-            //    IncidSourcesRows[0].source_boundary_importance = Settings.Default.SourceImportanceApply1;
-            //    IncidSourcesRows[0].source_habitat_importance = Settings.Default.SourceImportanceApply1;
-            //}
-
             try
             {
                 ChangeCursor(Cursors.Wait, "Validating ...");
@@ -9708,21 +9708,48 @@ namespace HLU.UI.ViewModel
                     if (sqlWhereClause != null)
                         newWhereClause = ReplaceStringQualifiers(sqlWhereClause);
 
+                    // Apply SiteID prefix filter to restrict results to the active layer.
+                    string siteIdFilter = $"{_db.QuoteIdentifier(IncidTable.incidColumn.ColumnName)} LIKE {_db.QuoteValue(_recIDs.SiteID + ":%")}";
+                    newWhereClause = string.IsNullOrEmpty(newWhereClause)
+                        ? siteIdFilter
+                        : $"({newWhereClause}) AND {siteIdFilter}";
+
                     // Store the where clause for updating the OSMM updates later.
                     _osmmUpdateWhereClause = null;
 
                     // Create a selection DataTable of PK values of IncidTable.
-                    //_incidSelection = _db.SqlSelect(true, IncidTable.PrimaryKey, whereTables, newWhereClause);
-                    _incidSelection = await Task.Run(() =>
-                        _db.SqlSelect(
-                            true,
-                            IncidTable.PrimaryKey,
-                            whereTables,
-                            newWhereClause));
+                    // NOTE: _db.SqlSelect is synchronous - do NOT wrap in Task.Run()
+                    // because it can cause deferred LINQ execution issues.
+                    _incidSelection = _db.SqlSelect(
+                        true,
+                        IncidTable.PrimaryKey,
+                        whereTables,
+                        newWhereClause);
+
+                    // Add null check here - if no results found, ensure proper cleanup
+                    if (_incidSelection == null || _incidSelection.Rows.Count == 0)
+                    {
+                        // No results found - clear state and exit early
+                        _incidSelection = null;
+                        _incidsSelectedMap = null;
+                        _incidSelectionWhereClause = null;
+                        _filteredByMap = false;
+
+                        // Reset the cursor back to normal
+                        ChangeCursor(Cursors.Arrow);
+
+                        // Inform the user that no records were found
+                        ShowInfo($"No records found for the active {_gisLayerType.ToString().ToLower()} layer type.", MessageCategory.Database);
+
+                        return;
+                    }
 
                     // Get a list of all the incids in the selection.
-                    _incidsSelectedMap = _incidSelection.AsEnumerable()
-                        .GroupBy(r => r.Field<string>(_incidSelection.Columns[0].ColumnName)).Select(g => g.Key).OrderBy(s => s);
+                    // Force immediate execution with ToList() to avoid deferred execution issues.
+                    _incidsSelectedMap = [.. _incidSelection.AsEnumerable()
+                        .GroupBy(r => r.Field<string>(_incidSelection.Columns[0].ColumnName))
+                        .Select(g => g.Key)
+                        .OrderBy(s => s)];
 
                     // Retrospectively set the where clause to match the list
                     // of selected incids (for possible use later).
@@ -9737,7 +9764,7 @@ namespace HLU.UI.ViewModel
                     if (IsFiltered)
                     {
                         // Find the expected number of features to be selected in GIS.
-                        _selectedFragsInDBCount = await ExpectedSelectionFeaturesAsync(whereTables, newWhereClause);
+                        _selectedFragsInDBCount = ExpectedSelectionFeatures(whereTables, newWhereClause);
 
                         // Store the number of incids found in the database
                         _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
@@ -10373,9 +10400,9 @@ namespace HLU.UI.ViewModel
                 return;
 
             // Calculate the area and length measures for the current incid based on associated polygon data.
-            _incidMMPolygonsIncidFilter.Value = Incid;
+            _incidMMShadowIncidFilter.Value = Incid;
 
-            List<SqlFilterCondition> incidCond = new([_incidMMPolygonsIncidFilter]);
+            List<SqlFilterCondition> incidCond = new([_incidMMShadowIncidFilter]);
             List<List<SqlFilterCondition>> incidCondList = [incidCond];
 
             _incidArea = 0;
@@ -10385,30 +10412,30 @@ namespace HLU.UI.ViewModel
             switch (_gisLayerType)
             {
                 case HluGeometryTypes.Line:
-                    {
-                        // For line geometries, only calculate length measures.
-                        HluDataSet.incid_mm_linesDataTable table = HluDataset.incid_mm_lines;
-                        GetIncidMMLineRows(incidCondList, ref table);
-                        foreach (HluDataSet.incid_mm_linesRow r in table)
-                            _incidLength += r.shape_length;
-                        break;
-                    }
+				{
+					// For line geometries, only calculate length measures.
+					HluDataSet.incid_mm_linesDataTable table = HluDataset.incid_mm_lines;
+					GetIncidMMLineRows(incidCondList, ref table);
+					foreach (HluDataSet.incid_mm_linesRow r in table)
+						_incidLength += r.shape_length;
+					break;
+				}
                 case HluGeometryTypes.Point:
                     // For point geometries, there are no area or length measures to calculate, so skip to the end.
                     break;
 
                 default:
-                    {
-                        // For polygon geometries, calculate both area and length measures.
-                        HluDataSet.incid_mm_polygonsDataTable table = HluDataset.incid_mm_polygons;
-                        GetIncidMMPolygonRows(incidCondList, ref table);
-                        foreach (HluDataSet.incid_mm_polygonsRow r in table)
-                        {
-                            _incidArea += r.shape_area;
-                            _incidLength += r.shape_length;
-                        }
-                        break;
-                    }
+				{
+					// For polygon geometries, calculate both area and length measures.
+					HluDataSet.incid_mm_polygonsDataTable table = HluDataset.incid_mm_polygons;
+					GetIncidMMPolygonRows(incidCondList, ref table);
+					foreach (HluDataSet.incid_mm_polygonsRow r in table)
+					{
+						_incidArea += r.shape_area;
+						_incidLength += r.shape_length;
+					}
+					break;
+				}
             }
 
             // Convert from native storage units (m² / m) to configured

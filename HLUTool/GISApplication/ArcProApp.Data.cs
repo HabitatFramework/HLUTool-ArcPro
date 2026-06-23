@@ -4174,19 +4174,20 @@ namespace HLU.GISApplication
 
                     if (!string.IsNullOrEmpty(lengthField) || !string.IsNullOrEmpty(areaField))
                     {
-						// Map HLU geometry type to ArcGIS geometry type
-						GeometryType geoType = _hluGeometryType switch
-						{
-							HluGeometryTypes.Polygon => GeometryType.Polygon,
-							HluGeometryTypes.Line => GeometryType.Polyline,
-							HluGeometryTypes.Point => GeometryType.Point,
-							_ => GeometryType.Unknown
-						};
+                        // Map HLU geometry type to ArcGIS geometry type
+                        GeometryType geoType = _hluGeometryType switch
+                        {
+                            HluGeometryTypes.Polygon => GeometryType.Polygon,
+                            HluGeometryTypes.Line => GeometryType.Polyline,
+                            HluGeometryTypes.Point => GeometryType.Point,
+                            _ => GeometryType.Unknown
+                        };
 
                         bool recalcSuccess = await ArcGISProHelpers.RecalculateGeometryAttributesAsync(
                             outputPath,
                             lengthField,
-                            areaField);
+                            areaField,
+                            geoType);
 
                         if (!recalcSuccess)
                             throw new HLUToolException("Failed to recalculate geometry attributes.");
@@ -4210,10 +4211,22 @@ namespace HLU.GISApplication
                 {
                     try
                     {
-                        using var gdb = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(outputWorkspace)));
-                        string fcName = System.IO.Path.GetFileNameWithoutExtension(outputFeatureClassName);
-                        using var fc = gdb.OpenDataset<FeatureClass>(fcName);
-                        return (int)fc.GetCount();
+                        if (isShapefile)
+                        {
+                            // For shapefiles, use FileSystemConnectionPath
+                            using var fileSystem = new FileSystemDatastore(new FileSystemConnectionPath(new Uri(outputWorkspace), FileSystemDatastoreType.Shapefile));
+                            string fcName = System.IO.Path.GetFileNameWithoutExtension(outputFeatureClassName);
+                            using var fc = fileSystem.OpenDataset<FeatureClass>(fcName);
+                            return (int)fc.GetCount();
+                        }
+                        else
+                        {
+                            // For geodatabases, use FileGeodatabaseConnectionPath
+                            using var gdb = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(outputWorkspace)));
+                            string fcName = System.IO.Path.GetFileNameWithoutExtension(outputFeatureClassName);
+                            using var fc = gdb.OpenDataset<FeatureClass>(fcName);
+                            return (int)fc.GetCount();
+                        }
                     }
                     catch
                     {
