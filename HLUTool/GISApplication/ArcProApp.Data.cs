@@ -4165,16 +4165,24 @@ namespace HLU.GISApplication
                 if (!finalCopySuccess)
                     throw new HLUToolException("Failed to copy to final output.");
 
-                // STEP 5: Recalculate geometry attributes (shapefiles only).
-                // In a File Geodatabase, Shape_Length and Shape_Area are system-managed and
-                // are updated automatically by the GDB engine; the CalculateGeometryAttributes
-                // GP tool cannot edit them and will fail with "Field is not editable".
+                // STEP 5: Recalculate geometry attributes (only for shapefiles)
+                // For geodatabase feature classes, Shape_Length and Shape_Area are system-maintained
+                // and not editable, so skip recalculation.
                 if (isShapefile)
                 {
                     var (lengthField, areaField) = await ArcGISProHelpers.GetGeometryFieldNamesAsync(outputPath);
 
                     if (!string.IsNullOrEmpty(lengthField) || !string.IsNullOrEmpty(areaField))
                     {
+						// Map HLU geometry type to ArcGIS geometry type
+						GeometryType geoType = _hluGeometryType switch
+						{
+							HluGeometryTypes.Polygon => GeometryType.Polygon,
+							HluGeometryTypes.Line => GeometryType.Polyline,
+							HluGeometryTypes.Point => GeometryType.Point,
+							_ => GeometryType.Unknown
+						};
+
                         bool recalcSuccess = await ArcGISProHelpers.RecalculateGeometryAttributesAsync(
                             outputPath,
                             lengthField,

@@ -3705,6 +3705,7 @@ namespace HLU.UI.ViewModel
                             _selectedIncidsInGISCount = 0;
                             _selectedToidsInGISCount = 0;
                             _selectedFragsInGISCount = 0;
+                            _selectedFeaturesInGISCount = 0;
 
                             // Refresh all the controls
                             RefreshAll();

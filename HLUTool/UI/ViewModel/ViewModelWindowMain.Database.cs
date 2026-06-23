@@ -393,10 +393,10 @@ namespace HLU.UI.ViewModel
 
             // Check if the selected features in GIS have no INCID (i.e. they are new features that
             // have not yet been registered in the database).
-            if (_selectedFragsInGISCount > 0 && _selectedIncidsInGISCount == 0)
+            if (_selectedFeaturesInGISCount > 0 && _selectedIncidsInGISCount == 0)
             {
                 if (showMessage)
-                    ShowInfo($"{itemType}{(_selectedFragsInGISCount == 1 ? " has" : "s have")} no INCID and {(_selectedFragsInGISCount == 1 ? "has" : "have")} not been registered in the database.", Messagecategory);
+                    ShowInfo($"{itemType}{(_selectedFeaturesInGISCount == 1 ? " has" : "s have")} no INCID and {(_selectedFeaturesInGISCount == 1 ? "has" : "have")} not been registered in the database.", Messagecategory);
                 return false;
             }
 
@@ -3011,6 +3011,7 @@ namespace HLU.UI.ViewModel
                             _selectedIncidsInGISCount = 0;
                             _selectedToidsInGISCount = 0;
                             _selectedFragsInGISCount = 0;
+                            _selectedFeaturesInGISCount = 0;
 
                             // Refresh all the controls
                             RefreshAll();
@@ -3047,6 +3048,7 @@ namespace HLU.UI.ViewModel
                         _selectedIncidsInGISCount = 0;
                         _selectedToidsInGISCount = 0;
                         _selectedFragsInGISCount = 0;
+                        _selectedFeaturesInGISCount = 0;
 
                         // Refresh all the controls
                         RefreshAll();
@@ -3113,6 +3115,7 @@ namespace HLU.UI.ViewModel
                 _selectedIncidsInGISCount = 0;
                 _selectedToidsInGISCount = 0;
                 _selectedFragsInGISCount = 0;
+                _selectedFeaturesInGISCount = 0;
                 _incidPageRowNoMax = -1;
 
                 // Only move to the first incid in the index if required, to save
@@ -3163,6 +3166,7 @@ namespace HLU.UI.ViewModel
             _selectedIncidsInGISCount = 0;
             _selectedToidsInGISCount = 0;
             _selectedFragsInGISCount = 0;
+            _selectedFeaturesInGISCount = 0;
 
             if ((_gisSelection != null) && (_gisSelection.Rows.Count > 0))
             {
@@ -3182,6 +3186,10 @@ namespace HLU.UI.ViewModel
 
                         // Count the number of fragments selected in GIS.
                         _selectedFragsInGISCount = _fragsSelectedMap.Count();
+
+                        // Count the number of features selected in GIS.
+                        _selectedFeaturesInGISCount = _gisSelection.Rows.Count;
+
                         goto case 2;
                     case 2:
                         // Get the unique toids selected in GIS.

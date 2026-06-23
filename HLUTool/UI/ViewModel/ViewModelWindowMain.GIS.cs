@@ -88,11 +88,12 @@ namespace HLU.UI.ViewModel
         private IEnumerable<string> _toidsSelectedMap;
         private IEnumerable<string> _fragsSelectedMap;
 
-        // How many incids, toids and fragments are selected in GIS (set in AnalyzeGisSelectionSet).
+        // How many incids, toids,  fragments and features are selected in GIS (set in AnalyzeGisSelectionSet).
         private int _selectedIncidsInGISCount = 0;
 
         private int _selectedToidsInGISCount = 0;
         private int _selectedFragsInGISCount = 0;
+        private int _selectedFeaturesInGISCount = 0;
 
         // How many incids and fragments are selected in the database for the current GIS selection
         // (set whenever a filter is applied and in ExpectedSelectionFeatures).
@@ -1004,6 +1005,9 @@ namespace HLU.UI.ViewModel
             // Clear any existing GIS messages
             ClearMessage(category: MessageCategory.GIS);
 
+            // Clear any existing info messages
+            ClearMessage(level: MessageType.Information);
+
             try
             {
                 // Check there are no outstanding edits.
@@ -1057,8 +1061,13 @@ namespace HLU.UI.ViewModel
                 // Store the number of incids found in the database
                 _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
 
-                // If any GIS features were found.
-                if ((_gisSelection != null) && (_gisSelection.Rows.Count > 0))
+                // Check if all selected features have null INCIDs (i.e., they are new, unregistered features).
+                bool allIncidsNull = (_gisSelection != null) && (_gisSelection.Rows.Count > 0) &&
+                                      (_incidsSelectedMap != null) &&
+                                      _incidsSelectedMap.All(i => string.IsNullOrEmpty(i));
+
+                // If any GIS features with valid INCIDs were found.
+                if ((_gisSelection != null) && (_gisSelection.Rows.Count > 0) && !allIncidsNull)
                 {
                     // Indicate the selection came from the map.
                     _filteredByMap = true;
@@ -1091,9 +1100,61 @@ namespace HLU.UI.ViewModel
                     // Check if the GIS and database are in sync.
                     CheckInSync(MessageCategory.GIS, showMessage: showMessage);
                 }
+                else if (allIncidsNull)
+                {
+                    // Special case: All selected features have null INCIDs (new, unregistered features).
+                    // Keep the GIS selection intact so feature insert operations can work.
+
+                    // Save the feature count for the message.
+                    int selectedFeatureCount = _gisSelection?.Rows.Count ?? 0;
+
+                    // Clear the form to avoid displaying stale incid details from the previous selection.
+                    ClearForm();
+
+                    // Reset the DB and GIS fragment/toid counts so the status counter
+                    // does not show stale values from the previously active layer or selection.
+                    _currentIncidToidsInGISCount = 0;
+                    _currentIncidFragsInGISCount = 0;
+                    _currentIncidToidsInDBCount = 0;
+                    _currentIncidFragsInDBCount = 0;
+
+                    // Clear the incid selection but keep the GIS selection intact.
+                    _incidSelection = NewIncidSelectionTable();
+
+                    // Indicate the selection came from the map.
+                    _filteredByMap = true;
+
+                    // Reset the cursor back to normal.
+                    ChangeCursor(Cursors.Arrow);
+
+                    // Display a message about the geometry type.
+                    string geomTypeName = _gisLayerType switch
+                    {
+                        HluGeometryTypes.Line  => "line",
+                        HluGeometryTypes.Point => "point",
+                        _                      => "polygon"
+                    };
+
+                    // Refresh all UI bindings so every property reflects the cleared state.
+                    RefreshAll();
+
+                    ShowInfo($"Selected {selectedFeatureCount} new {geomTypeName} {(selectedFeatureCount == 1 ? "feature" : "features")} with no INCID assigned.", MessageCategory.GIS);
+                }
                 else
                 {
-                    // Reset the incid and map selections and move
+                    // No features were selected or no valid features found.
+
+                    // Clear the form to avoid displaying stale incid details from the previous selection.
+                    ClearForm();
+
+                    // Reset the DB and GIS fragment/toid counts so the status counter
+                    // does not show stale values from the previously active layer or selection.
+                    _currentIncidToidsInGISCount = 0;
+                    _currentIncidFragsInGISCount = 0;
+                    _currentIncidToidsInDBCount = 0;
+                    _currentIncidFragsInDBCount = 0;
+
+                    // Reset the incid and map selections if necessary, then move
                     // to the first incid in the database.
                     await ClearFilterAsync(true);
 
@@ -1126,18 +1187,7 @@ namespace HLU.UI.ViewModel
 
                     if (totalDbCount == 0)
                     {
-                        // No features of this geometry type have been registered yet, so
-                        // clear the form to avoid displaying stale incid details, then
-                        // refresh all UI bindings so every property reflects the cleared state.
-                        ClearForm();
-
-                        // Reset the DB and GIS fragment/toid counts so the status counter
-                        // does not show stale values from the previously active layer.
-                        _currentIncidToidsInGISCount = 0;
-                        _currentIncidFragsInGISCount = 0;
-                        _currentIncidToidsInDBCount = 0;
-                        _currentIncidFragsInDBCount = 0;
-
+                        // Refresh all UI bindings so every property reflects the cleared state.
                         RefreshAll();
 
                         ShowWarning($"No {geomTypeName} features have been registered in the database yet.", MessageCategory.GIS);
@@ -1501,8 +1551,10 @@ namespace HLU.UI.ViewModel
         /// </summary>
         public void CountCurrentIncidFrags()
         {
-            // Guard against a null current row (e.g. first insert into a new geometry type).
-            if (_incidCurrentRow == null)
+            // Guard against a null current row (e.g. first insert into a new geometry type)
+            // or a row with a null/DBNull incid field (e.g. after clearing the filter).
+            if (_incidCurrentRow == null || _incidCurrentRow.RowState == DataRowState.Detached ||
+                _incidCurrentRow[_hluDS.incid.incidColumn] == DBNull.Value)
             {
                 _currentIncidToidsInGISCount = 0;
                 _currentIncidFragsInGISCount = 0;
@@ -2174,7 +2226,7 @@ namespace HLU.UI.ViewModel
             var (success, featureCount, incidCount) = await vmInsert.InsertFeaturesSameIncidAsync();
             if (success)
             {
-                ShowSuccess($"Feature insert (same INCID) completed: {featureCount} {(featureCount == 1 ? "feature" : "features")} registered against 1 new INCID.", MessageCategory.Insert);
+                ShowSuccess($"Feature insert completed: {featureCount} {(featureCount == 1 ? "feature" : "features")} registered against 1 new INCID.", MessageCategory.Insert);
             }
         }
 
@@ -2195,7 +2247,7 @@ namespace HLU.UI.ViewModel
             var (success, featureCount, incidCount) = await vmInsert.InsertFeaturesSeparateIncidsAsync();
             if (success)
             {
-                ShowSuccess($"Feature insert (separate INCIDs) completed: {featureCount} {(featureCount == 1 ? "feature" : "features")} registered against {incidCount} new {(incidCount == 1 ? "INCID" : "INCIDs")}.", MessageCategory.Insert);
+                ShowSuccess($"Feature insert completed: {featureCount} {(featureCount == 1 ? "feature" : "features")} registered against {incidCount} new {(incidCount == 1 ? "INCID" : "INCIDs")}.", MessageCategory.Insert);
             }
         }
 
