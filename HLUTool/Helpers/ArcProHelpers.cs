@@ -19,6 +19,7 @@
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.DDL;
 using ArcGIS.Core.Data.Exceptions;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Core.Geoprocessing;
@@ -1719,10 +1720,16 @@ namespace HLU.Helpers
         /// Shape_Length and Shape_Area fields for all features in the specified feature class.
         /// This is necessary after programmatic feature creation as these fields are not automatically
         /// calculated when using CreateRow().
+        ///
+        /// The method uses the appropriate geometry property based on the supplied geometry type:
+        /// - Polygons: PERIMETER_LENGTH for length, AREA for area
+        /// - Polylines: LENGTH for length
+        /// - Points: No geometry attributes are recalculated (points don't have length or area)
         /// </remarks>
         /// <param name="featureClassPath">The full path to the feature class (e.g., "C:\data\test.gdb\myfeatures").</param>
         /// <param name="lengthField">The name of the length field.</param>
         /// <param name="areaField">The name of the area field.</param>
+        /// <param name="geometryType">The geometry type of the feature class (Polygon, Polyline, or Point).</param>
         /// <param name="lengthUnit">Length unit. Default is "METERS".</param>
         /// <param name="areaUnit">Area unit. Default is "SQUARE_METERS".</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains true if successful, otherwise false.</returns>
@@ -1730,6 +1737,7 @@ namespace HLU.Helpers
             string featureClassPath,
             string lengthField,
             string areaField,
+            GeometryType geometryType,
             string lengthUnit = "METERS",
             string areaUnit = "SQUARE_METERS")
         {
@@ -1740,14 +1748,40 @@ namespace HLU.Helpers
             if (string.IsNullOrEmpty(lengthField) && string.IsNullOrEmpty(areaField))
                 return false;
 
-            // Build the geometry property string based on available fields
+            // Build the geometry property string based on geometry type and available fields
             List<string> geometryProps = [];
 
             if (!string.IsNullOrEmpty(lengthField))
-                geometryProps.Add($"{lengthField} PERIMETER_LENGTH");
+            {
+                // Use the appropriate length property based on geometry type:
+                // - Polygons: PERIMETER_LENGTH (perimeter of the polygon)
+                // - Polylines: LENGTH (length of the line)
+                // - Points: No length property (skip)
+                switch (geometryType)
+                {
+                    case GeometryType.Polygon:
+                        geometryProps.Add($"{lengthField} PERIMETER_LENGTH");
+                        break;
+                    case GeometryType.Polyline:
+                        geometryProps.Add($"{lengthField} LENGTH");
+                        break;
+                    case GeometryType.Point:
+                    case GeometryType.Multipoint:
+                        // Points don't have length, skip
+                        break;
+                }
+            }
 
             if (!string.IsNullOrEmpty(areaField))
-                geometryProps.Add($"{areaField} AREA {areaUnit}");
+            {
+                // Area is only valid for polygons
+                if (geometryType == GeometryType.Polygon)
+                    geometryProps.Add($"{areaField} AREA");
+            }
+
+            // If no valid geometry properties were added, return true (nothing to do)
+            if (geometryProps.Count == 0)
+                return true;
 
             string geometryProperties = string.Join(";", geometryProps);
 

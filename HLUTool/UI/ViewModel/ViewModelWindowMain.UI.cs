@@ -2603,7 +2603,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return _showHistoryTab;
+                return _showIHSTab;
             }
             set
             {
@@ -5304,13 +5304,14 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Formats the modified length and area values for a history entry,
         /// summing distinct polygon rows and expressing the totals in the
-        /// configured display units.
+        /// configured display units. Suppresses zero-value area for lines,
+        /// and both zero-value length and area for points.
         /// </summary>
         /// <param name="g">The grouped history rows for one logical
         /// history entry.</param>
         /// <returns>
-        /// A two-line string containing the modified length and area in
-        /// the configured display units, or an empty string when no
+        /// A string containing the modified length and/or area in the
+        /// configured display units, or an empty string when no
         /// geometry data is available.
         /// </returns>
         private string FormatHistoryGeometry(
@@ -5330,17 +5331,46 @@ namespace HLU.UI.ViewModel
             double area = ConvertArea(
                 distinctRows.Sum(r => !r.Ismodified_areaNull()
                     ? r.modified_area : 0));
+
             // Get the display units for length and area from user settings.
             string areaUnits = Settings.Default.DisplayAreaUnits;
             string lengthUnits = Settings.Default.DisplayDistanceUnits;
 
-            // Format the geometry string with the converted values and units, or return an empty
-            // string if no geometry data is available.
-            return
-                String.Format("\n\tModified Length: {0} [{1}]",
-                    length.ToString(LengthFormatString), lengthUnits) +
-                String.Format("\n\tModified Area: {0} [{1}]",
+            // Build the geometry output string conditionally based on layer type and zero values.
+            string result = string.Empty;
+
+            // For points: suppress both length and area if both are zero.
+            if (_gisLayerType == HluGeometryTypes.Point)
+            {
+                if (length > 0 || area > 0)
+                {
+                    if (length > 0)
+                        result += String.Format("\n\tModified Length: {0} [{1}]",
+                            length.ToString(LengthFormatString), lengthUnits);
+                    if (area > 0)
+                        result += String.Format("\n\tModified Area: {0} [{1}]",
+                            area.ToString(AreaFormatString), areaUnits);
+                }
+            }
+            // For lines: always show length, but suppress area if zero.
+            else if (_gisLayerType == HluGeometryTypes.Line)
+            {
+                result += String.Format("\n\tModified Length: {0} [{1}]",
+                    length.ToString(LengthFormatString), lengthUnits);
+                if (area > 0)
+                    result += String.Format("\n\tModified Area: {0} [{1}]",
+                        area.ToString(AreaFormatString), areaUnits);
+            }
+            // For polygons: always show both length and area.
+            else
+            {
+                result += String.Format("\n\tModified Length: {0} [{1}]",
+                    length.ToString(LengthFormatString), lengthUnits);
+                result += String.Format("\n\tModified Area: {0} [{1}]",
                     area.ToString(AreaFormatString), areaUnits);
+            }
+
+            return result;
         }
 
         #endregion Properties - History Tab
@@ -7399,8 +7429,8 @@ namespace HLU.UI.ViewModel
         public void ClearForm()
         {
             // Hide the IHS and History tabs
-            ShowHistoryTab = false;
-            ShowIHSTab = false;
+            //ShowHistoryTab = false;
+            //ShowIHSTab = false;
 
             // Clear the habitat fields
             _incidIhsHabitat = null;
@@ -9426,6 +9456,7 @@ namespace HLU.UI.ViewModel
                 _selectedIncidsInGISCount = 0;
                 _selectedToidsInGISCount = 0;
                 _selectedFragsInGISCount = 0;
+                _selectedFeaturesInGISCount = 0;
 
                 // Refresh all the controls
                 RefreshAll();
@@ -9535,6 +9566,7 @@ namespace HLU.UI.ViewModel
                 _selectedIncidsInGISCount = 0;
                 _selectedToidsInGISCount = 0;
                 _selectedFragsInGISCount = 0;
+                _selectedFeaturesInGISCount = 0;
 
                 // Refresh all the controls
                 RefreshAll();
@@ -9754,6 +9786,7 @@ namespace HLU.UI.ViewModel
                                 _selectedIncidsInGISCount = 0;
                                 _selectedToidsInGISCount = 0;
                                 _selectedFragsInGISCount = 0;
+                                _selectedFeaturesInGISCount = 0;
 
                                 // Refresh all the controls
                                 RefreshAll();
@@ -9790,6 +9823,7 @@ namespace HLU.UI.ViewModel
                             _selectedIncidsInGISCount = 0;
                             _selectedToidsInGISCount = 0;
                             _selectedFragsInGISCount = 0;
+                            _selectedFeaturesInGISCount = 0;
 
                             // Refresh all the controls
                             RefreshAll();

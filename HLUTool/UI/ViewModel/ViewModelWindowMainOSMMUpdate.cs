@@ -20,6 +20,7 @@
 
 using HLU.Data;
 using HLU.Data.Model;
+using HLU.Properties;
 using System;
 using System.Data;
 using System.Threading.Tasks;
@@ -69,6 +70,10 @@ namespace HLU.UI.ViewModel
         {
             // Start the OSMM Review mode
             _viewModelMain.OSMMReviewMode = true;
+
+            // Hide the IHS and History tabs
+            _viewModelMain.ShowHistoryTab = false;
+            _viewModelMain.ShowIHSTab = false;
 
             // Disable all the tabs
             _viewModelMain.TabHabitatControlsEnabled = false;
@@ -391,8 +396,9 @@ namespace HLU.UI.ViewModel
             _viewModelMain.TabDetailsControlsEnabled = true;
             _viewModelMain.TabSourcesControlsEnabled = true;
 
-            // Show the history tab
+            // Show the history tab and IHS tab
             _viewModelMain.ShowHistoryTab = true;
+            _viewModelMain.ShowIHSTab = Settings.Default.ShowIHSTab;
 
             // Select the habitat tab
             _viewModelMain.TabItemSelected = 0;

@@ -385,9 +385,16 @@ namespace HLU.UI.ViewModel
                 {
                     // Recount and refresh so the new INCIDs appear in the UI.
                     _viewModelMain.IncidRowCount(true);
+
+                    // Clear the filter first (without moving to first record).
                     await _viewModelMain.ClearFilterAsync(false);
-                    _viewModelMain.RefillIncidTable = true;
+
+                    // Re-read the map selection to pick up the newly registered features.
                     await _viewModelMain.GetMapSelectionAsync(false);
+
+                    // Request the incid table to be refilled on next access.
+                    // This must come AFTER GetMapSelectionAsync to avoid blocking.
+                    _viewModelMain.RefillIncidTable = true;
                 }
 
                 _viewModelMain.ChangeCursor(Cursors.Arrow);

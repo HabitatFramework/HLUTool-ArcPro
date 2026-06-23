@@ -27,6 +27,7 @@ using HLU.Data.Connection;
 using HLU.Data.Model;
 using HLU.Enums;
 using HLU.Exceptions;
+using HLU.Properties;
 using HLU.UI.View;
 using System;
 using System.Collections.Generic;
@@ -106,6 +107,10 @@ namespace HLU.UI.ViewModel
 
             // Clear the changed flag
             _viewModelMain.Changed = false;
+
+            // Hide the IHS and History tabs
+            _viewModelMain.ShowHistoryTab = false;
+            _viewModelMain.ShowIHSTab = false;
 
             // Clear all the form fields
             _viewModelMain.ClearForm();
@@ -498,9 +503,9 @@ namespace HLU.UI.ViewModel
             _viewModelMain.TabItemHabitatEnabled = true;
             _viewModelMain.TabItemIHSEnabled = true;
 
-            // Show the history tab
+            // Show the history tab and IHS tab
             _viewModelMain.ShowHistoryTab = true;
-            _viewModelMain.ShowIHSTab = true;
+            _viewModelMain.ShowIHSTab = Settings.Default.ShowIHSTab;
 
             // Select the habitat tab
             _viewModelMain.TabItemSelected = 0;
@@ -545,12 +550,16 @@ namespace HLU.UI.ViewModel
             // Update the modes in the main view model
             _viewModelMain.OSMMBulkUpdateMode = true;
 
+            // Hide the IHS and History tabs
+            _viewModelMain.ShowHistoryTab = false;
+            _viewModelMain.ShowIHSTab = false;
+
             // Clear all the form fields.
             _viewModelMain.ClearForm();
 
             // Disable the Habitat and IHS tabs
-            _viewModelMain.TabItemHabitatEnabled = false;
-            _viewModelMain.TabItemIHSEnabled = false;
+            //_viewModelMain.TabItemHabitatEnabled = false;
+            //_viewModelMain.TabItemIHSEnabled = false;
 
             // Clear the selection (filter).
             _viewModelMain.IncidSelection = null;
@@ -926,14 +935,15 @@ namespace HLU.UI.ViewModel
             _viewModelMain.TabItemHabitatEnabled = true;
             _viewModelMain.TabItemIHSEnabled = true;
 
-            // Show the history tab
+            // Show the history tab and IHS tab
             _viewModelMain.ShowHistoryTab = true;
-
-            // Stop the OSMM Bulk Update mode
-            _viewModelMain.OSMMBulkUpdateMode = false;
+            _viewModelMain.ShowIHSTab = Settings.Default.ShowIHSTab;
 
             // Select the habitat tab
             _viewModelMain.TabItemSelected = 0;
+
+            // Stop the OSMM Bulk Update mode
+            _viewModelMain.OSMMBulkUpdateMode = false;
 
             // Clear the active filter.
             _viewModelMain.SuppressUserNotifications = true;

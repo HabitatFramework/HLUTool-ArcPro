@@ -3496,10 +3496,20 @@ namespace HLU.GISApplication
 
                 if (!string.IsNullOrEmpty(lengthField) || !string.IsNullOrEmpty(areaField))
                 {
+                    // Map HLU geometry type to ArcGIS geometry type
+                    GeometryType geoType = _hluGeometryType switch
+                    {
+                        HluGeometryTypes.Polygon => GeometryType.Polygon,
+                        HluGeometryTypes.Line => GeometryType.Polyline,
+                        HluGeometryTypes.Point => GeometryType.Point,
+                        _ => GeometryType.Unknown
+                    };
+
                     bool recalcSuccess = await ArcGISProHelpers.RecalculateGeometryAttributesAsync(
                         outputPath,
                         lengthField,
-                        areaField);
+                        areaField,
+                        geoType);
 
                     if (!recalcSuccess)
                         throw new HLUToolException("Failed to recalculate geometry attributes.");
