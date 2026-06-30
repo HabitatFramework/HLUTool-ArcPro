@@ -1153,7 +1153,7 @@ namespace HLU.UI.ViewModel
                         ShowWarning($"No {geomTypeName} features have been registered in the database yet.", MessageCategory.GIS);
                     }
                     else
-                        ShowWarning($"No {geomTypeName} features selected in active layer.", MessageCategory.GIS);
+                        ShowWarning($"No features selected in active layer.", MessageCategory.GIS);
                 }
             }
             catch (Exception ex)

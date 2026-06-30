@@ -106,7 +106,8 @@ namespace HLU.UI.ViewModel
                     (HluDataSet.incidDataTable)_viewModelMain.HluDataset.incid.GetChanges()) == -1)
                     throw new Exception($"Failed to update table [{_viewModelMain.HluDataset.incid.TableName}].");
 
-                // Update IHS tables to remove any cleared codes and to enable undo of IHS code changes if update cancelled.
+                // Update IHS tables to remove any cleared codes and to enable undo of IHS code
+                // changes if update cancelled.
                 UpdateIHSTables();
 
                 // Update condition rows
@@ -302,7 +303,8 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Update the related IHS tables to apply any changes to the IHS codes and to enable undo of IHS code changes if the update is cancelled.
+        /// Update the related IHS tables to apply any changes to the IHS codes and to enable undo
+        /// of IHS code changes if the update is cancelled.
         /// </summary>
         private void UpdateIHSTables()
         {
@@ -534,9 +536,21 @@ namespace HLU.UI.ViewModel
                 if (!be.IsValid())
                     return null;
                 HluDataSet.incid_bapRow oldRow = q.ElementAt(0);
+
+                // Only update columns that can actually change in the UI.
+                // Skip columns that should be preserved: bap_id (0), incid (1), bap_habitat (2).
+                // Update quality_determination (3), quality_interpretation (4), interpretation_comments (5).
                 object[] itemArray = be.ToItemArray();
-                for (int i = 0; i < itemArray.Length; i++)
-                    oldRow[i] = itemArray[i];
+
+                // Define which columns should be updated (3, 4, 5 = quality fields)
+                int[] updateOrdinals = [ 3, 4, 5 ];
+
+                foreach (int i in updateOrdinals)
+                {
+                    if (i < itemArray.Length)
+                        oldRow[i] = itemArray[i];
+                }
+
                 return oldRow;
             }
             return null;

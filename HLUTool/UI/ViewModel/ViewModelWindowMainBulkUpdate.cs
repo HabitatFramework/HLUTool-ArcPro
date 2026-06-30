@@ -1405,35 +1405,31 @@ namespace HLU.UI.ViewModel
             // bulk update)
             var newBap = from p in mandatoryBap
                          where !beUI.Any(row => row.Bap_habitat == p)
-                         select new BapEnvironment(false, false, -1, currIncid, p, _bulkDeterminationQuality, _bulkInterpretationQuality, "Based on OSMM Update");
+                         select p;
 
             // Insert any new primary BAP environments that aren't
             // in the user interface
-            foreach (BapEnvironment be in newBap)
+            foreach (string bapCode in newBap)
             {
                 // Get any rows for the current BAP habitat already in the database
                 IEnumerable<HluDataSet.incid_bapRow> dbRows =
-                    incidBapTable.Where(r => r.bap_habitat == be.Bap_habitat);
+                    incidBapTable.Where(r => r.bap_habitat == bapCode);
 
                 switch (dbRows.Count())
                 {
                     // If the current BAP habitat is not already in the database
-                    case 0: // Insert the newly added BAP habitat
+                    case 0: // Insert the newly added BAP habitat with bulk update defaults
+                        BapEnvironment be = new(false, false, -1, currIncid, bapCode, _bulkDeterminationQuality, _bulkInterpretationQuality, "Based on OSMM Update");
                         HluDataSet.incid_bapRow newRow = _viewModelMain.IncidBapTable.Newincid_bapRow();
                         newRow.ItemArray = be.ToItemArray(_viewModelMain.RecIDs.NextIncidBapId, currIncid);
                         if (be.IsValid(false, false, newRow)) // reset Bulk Update mode for full validation of a new row
                             _viewModelMain.HluTableAdapterManager.incid_bapTableAdapter.Insert(newRow);
                         break;
                     // If the current BAP habitat is already in the database
-                    case 1: // Update the existing row
-                        updateRow = dbRows.ElementAt(0);
-                        object[] itemArray = be.ToItemArray();
-                        for (int i = 0; i < itemArray.Length; i++)
-                        {
-                            if ((itemArray[i] != null) && (Array.IndexOf(skipOrdinals, i) == -1))
-                                updateRow[i] = itemArray[i];
-                        }
-                        updateRows.Add(updateRow);
+                    case 1: // Preserve existing quality values - no changes needed
+                        // The BAP habitat already exists with its own quality values.
+                        // We don't need to update it just because the secondary habitats changed.
+                        // The existing determination quality, interpretation quality, and comments are preserved.
                         break;
 
                     default: // impossible if rules properly enforced

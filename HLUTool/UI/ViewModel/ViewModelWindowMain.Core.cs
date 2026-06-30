@@ -1943,13 +1943,22 @@ namespace HLU.UI.ViewModel
             }
             catch (Exception ex)
             {
-                // Clear the task so a future OnShow can retry.
-                _initializationTask = null;
+                // Check if this is a version check failure or user cancellation.
+                bool isVersionError = ex is HLUToolException && 
+                    (ex.Message.Contains("minimum application version") || 
+                     ex.Message.Contains("minimum database version"));
+                bool isUserCancellation = ex is UserCancelledException;
 
-                // Only mark InError for real failures, not user cancellations.
-                // A UserCancelledException means the user dismissed the connection
-                // dialog — the tool should be retryable next time OnShow fires.
-                if (ex is not UserCancelledException)
+                // Clear the task so a future OnShow can retry for both user cancellations
+                // and version check failures.
+                if (isUserCancellation || isVersionError)
+                {
+                    _initializationTask = null;
+                }
+
+                // Only mark InError for real failures, not user cancellations or version errors.
+                // Version errors and user cancellations should allow retry on next open.
+                if (!isUserCancellation && !isVersionError)
                 {
                     InError = true;
                     _initializationException = ex;
@@ -1964,6 +1973,24 @@ namespace HLU.UI.ViewModel
                         MessageBox.Show(
                             $"The HLU Tool failed to initialise:{Environment.NewLine}{Environment.NewLine}{ex.Message}{Environment.NewLine}{Environment.NewLine}See {logPath} for details.",
                             "HLU Tool — Initialisation Error");
+                    });
+                }
+                else if (isVersionError)
+                {
+                    // Log the version error but don't set InError.
+                    string logPath = WriteInitLog($"Version check failed:{Environment.NewLine}{ex.Message}{Environment.NewLine}{new string('-', 80)}");
+
+                    Debug.WriteLine($"[HLUTool] Version check failed:{Environment.NewLine}{ex.Message}");
+
+                    // Show the version error to the user and close the DockPane.
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        MessageBox.Show(
+                            $"The HLU Tool cannot be used:{Environment.NewLine}{Environment.NewLine}{ex.Message}{Environment.NewLine}{Environment.NewLine}See {logPath} for details.",
+                            "HLU Tool — Version Error");
+
+                        // Close the DockPane so the user isn't left with a broken state.
+                        FrameworkApplication.DockPaneManager.Find(DockPaneID)?.Hide();
                     });
                 }
 

@@ -1105,6 +1105,62 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
+        /// Resets all copied values and unchecks all copy switches.
+        /// </summary>
+        /// <param name="vmMain">The main view model to notify of the changes.</param>
+        internal void ResetCopy(ViewModelWindowMain vmMain)
+        {
+            // Clear all copy switches
+            foreach (PropertyInfo pi in this.GetType().GetProperties().Where(p => p.Name.StartsWith("Copy")))
+            {
+                try
+                {
+                    pi.SetValue(this, false, null);
+                }
+                catch { }
+            }
+
+            // Clear all copied values
+            _incidPrimary = null;
+            _incidSecondaryHabitats = null;
+            _incidLegacyHabitat = null;
+            _incidBapHabitatsUser = null;
+            _incidGeneralComments = null;
+            _incidBoundaryBaseMap = null;
+            _incidDigitisationBaseMap = null;
+            _incidSiteRef = null;
+            _incidSiteName = null;
+            _incidCondition = null;
+            _incidConditionQualifier = null;
+            _incidConditionDate = null;
+            _incidQualityDetermination = null;
+            _incidQualityInterpretation = null;
+            _incidQualityComments = null;
+            _incidSource1Id = null;
+            _incidSource1Date = null;
+            _incidSource1HabitatClass = null;
+            _incidSource1HabitatType = null;
+            _incidSource1BoundaryImportance = null;
+            _incidSource1HabitatImportance = null;
+            _incidSource2Id = null;
+            _incidSource2Date = null;
+            _incidSource2HabitatClass = null;
+            _incidSource2HabitatType = null;
+            _incidSource2BoundaryImportance = null;
+            _incidSource2HabitatImportance = null;
+            _incidSource3Id = null;
+            _incidSource3Date = null;
+            _incidSource3HabitatClass = null;
+            _incidSource3HabitatType = null;
+            _incidSource3BoundaryImportance = null;
+            _incidSource3HabitatImportance = null;
+
+            // Notify the main view model
+            vmMain.OnPropertyChanged(nameof(vmMain.CanPaste));
+            vmMain.OnPropertyChanged(nameof(vmMain.CanResetCopy));
+        }
+
+        /// <summary>
         /// Gets the default value for a given type. For reference types this is null, for value
         /// types this is the default value (e.g. 0 for int, false for bool etc.).
         /// </summary>
