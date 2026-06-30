@@ -6789,6 +6789,22 @@ namespace HLU.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Can the user reset copied attribute values?
+        /// </summary>
+        /// <value>Indicates whether the user can reset copied attribute values.</value>
+        public bool CanResetCopy
+        {
+            get
+            {
+                // Copy switches must be configured and at least one 'Copy*' switch must be enabled.
+                return _copySwitches != null &&
+                       typeof(WindowMainCopySwitches).GetProperties()
+                           .Where(p => p.Name.StartsWith("Copy"))
+                           .Any(p => (bool)typeof(WindowMainCopySwitches).GetProperty(p.Name).GetValue(_copySwitches, null));
+            }
+        }
+
         #endregion Properties - Copy/Paste
 
         #region Properties - About
@@ -9257,7 +9273,7 @@ namespace HLU.UI.ViewModel
                     newWhereClause = ReplaceStringQualifiers(sqlWhereClause);
 
                 // Apply SiteID prefix filter to restrict results to the active layer.
-                string siteIdFilter = $"{_db.QuoteIdentifier(IncidTable.incidColumn.ColumnName)} LIKE {_db.QuoteValue(_recIDs.SiteID + ":%")}";
+                string siteIdFilter = $"{_db.QuoteIdentifier(IncidTable.TableName)}.{_db.QuoteIdentifier(IncidTable.incidColumn.ColumnName)} LIKE {_db.QuoteValue(_recIDs.SiteID + ":%")}";
                 newWhereClause = string.IsNullOrEmpty(newWhereClause)
                     ? siteIdFilter
                     : $"({newWhereClause}) AND {siteIdFilter}";
@@ -9709,7 +9725,7 @@ namespace HLU.UI.ViewModel
                         newWhereClause = ReplaceStringQualifiers(sqlWhereClause);
 
                     // Apply SiteID prefix filter to restrict results to the active layer.
-                    string siteIdFilter = $"{_db.QuoteIdentifier(IncidTable.incidColumn.ColumnName)} LIKE {_db.QuoteValue(_recIDs.SiteID + ":%")}";
+                    string siteIdFilter = $"{_db.QuoteIdentifier(IncidTable.TableName)}.{_db.QuoteIdentifier(IncidTable.incidColumn.ColumnName)} LIKE {_db.QuoteValue(_recIDs.SiteID + ":%")}";
                     newWhereClause = string.IsNullOrEmpty(newWhereClause)
                         ? siteIdFilter
                         : $"({newWhereClause}) AND {siteIdFilter}";
@@ -10358,9 +10374,14 @@ namespace HLU.UI.ViewModel
         internal void CopySwitches_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName.StartsWith("Copy"))
+            {
                 OnPropertyChanged(nameof(CanCopy));
+                OnPropertyChanged(nameof(CanResetCopy));
+            }
             else
+            {
                 OnPropertyChanged(nameof(CanPaste));
+            }
         }
 
         /// <summary>
@@ -10380,6 +10401,16 @@ namespace HLU.UI.ViewModel
         public void PasteAttributes()
         {
             _copySwitches.PasteValues(this);
+        }
+
+        /// <summary>
+        /// Resets all copied values and unchecks all copy checkboxes.
+        /// </summary>
+        /// <remarks>This method clears the current copy state, restoring all copy switches to
+        /// their default unchecked state and clearing any stored attribute values.</remarks>
+        public void ResetCopy()
+        {
+            _copySwitches.ResetCopy(this);
         }
 
         #endregion Copy/Paste

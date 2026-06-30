@@ -1843,9 +1843,9 @@ namespace HLU.UI.ViewModel
                 incidBapRowsUndel = _incidBapRows.Where(r => r.RowState != DataRowState.Deleted);
             }
 
-            // If there are any undeleted rows and the IHS codes indicate
-            // that there should be some primary BAP (auto) rows then sort out
-            // which of the undeleted rows are the auto rows.
+            // If there are any undeleted rows and the primary/secondary codes indicate that there
+            // should be some primary BAP (auto) rows then sort out which of the undeleted rows are
+            // the auto rows.
             if ((incidBapRowsUndel != null) && (mandatoryBap != null))
             {
                 // primary BAP environments from DB (real bap_id) and new (bap_id = -1)
@@ -1865,21 +1865,38 @@ namespace HLU.UI.ViewModel
                                       where _incidCurrentRow.incid != null && r.incid == _incidCurrentRow.incid
                                       select new BapEnvironment(false, false, r);
 
-                    // Which of the undeleted rows were previously user
-                    // added rows but should now be promoted to auto
-                    // rows as a result of changes to the IHS codes.
+                    // Which of the undeleted rows were previously user added rows but should now be
+                    // promoted to auto rows as a result of changes to the primary/secondary codes.
                     newBapRowsAuto = from r in incidBapRowsUndel
                                      join pot in mandatoryBap on r.bap_habitat equals pot
                                      where !prevBapRowsAuto.Any(p => p.Bap_habitat == r.bap_habitat)
                                      select new BapEnvironment(false, false, r);
                 }
 
-                // Determine if there are any potential BAP rows that should
-                // be added as a result of changes to the IHS codes.
-                var potBap = from p in mandatoryBap
-                             where !prevBapRowsAuto.Any(a => a.Bap_habitat == p)
-                             where !incidBapRowsUndel.Any(row => row.bap_habitat == p)
-                             select new BapEnvironment(false, false, -1, Incid, p, null, null, null);
+                // Determine if there are any potential BAP rows that should be added as a result of
+                // changes to the primary/secondary codes.
+                // Materialize the query into a List so we can modify the objects.
+                var potBap = (from p in mandatoryBap
+                              where !prevBapRowsAuto.Any(a => a.Bap_habitat == p)
+                              where !incidBapRowsUndel.Any(row => row.bap_habitat == p)
+                              select new BapEnvironment(false, false, -1, Incid, p, null, null, null)).ToList();
+
+                // Preserve quality values from existing uncommitted BAP rows (bap_id = -1)
+                // that may have been entered by the user before a secondary habitat change.
+                if (_incidBapRowsAuto != null)
+                {
+                    var uncommittedAuto = _incidBapRowsAuto.Where(be => be.Bap_id == -1).ToList();
+                    foreach (BapEnvironment existingBe in uncommittedAuto)
+                    {
+                        var potBapRow = potBap.FirstOrDefault(be => be.Bap_habitat == existingBe.Bap_habitat);
+                        if (potBapRow != null)
+                        {
+                            potBapRow.Quality_determination = existingBe.Quality_determination;
+                            potBapRow.Quality_interpretation = existingBe.Quality_interpretation;
+                            potBapRow.Interpretation_comments = existingBe.Interpretation_comments;
+                        }
+                    }
+                }
 
                 // Remove any existing handlers before assigning a new collection.
                 if (_incidBapRowsAuto != null)
@@ -1906,9 +1923,9 @@ namespace HLU.UI.ViewModel
                     }
                 }
 
-                // As there should be no primary BAP rows according to the
-                // IHS codes then the auto rows should be blank (because any
-                // undeleted rows must therefore now be considered as user rows.
+                // As there should be no primary BAP rows according to the primary/secondary codes
+                // then the auto rows should be blank (because any undeleted rows must therefore now
+                // be considered as user rows.
                 _incidBapRowsAuto = [];
             }
             else if ((mandatoryBap != null) && (mandatoryBap.Any()))
@@ -1922,11 +1939,29 @@ namespace HLU.UI.ViewModel
                     }
                 }
 
-                // If there should be some primary BAP rows according to the
-                // IHS codes, but there are no existing undeleted rows, then
-                // all the primrary BAP codes must become new auto rows.
-                _incidBapRowsAuto = new ObservableCollection<BapEnvironment>(
-                    mandatoryBap.Select(p => new BapEnvironment(false, false, -1, Incid, p, null, null, null)));
+                // If there should be some primary BAP rows according to the primary/secondary
+                // codes, but there are no existing undeleted rows, then all the primrary BAP codes
+                // must become new auto rows.
+                var newAutoRows = mandatoryBap.Select(p => new BapEnvironment(false, false, -1, Incid, p, null, null, null)).ToList();
+
+                // Preserve quality values from existing uncommitted BAP rows (bap_id = -1)
+                // that may have been entered by the user before a secondary habitat change.
+                if (_incidBapRowsAuto != null)
+                {
+                    var uncommittedAuto = _incidBapRowsAuto.Where(be => be.Bap_id == -1).ToList();
+                    foreach (BapEnvironment existingBe in uncommittedAuto)
+                    {
+                        var newAutoRow = newAutoRows.FirstOrDefault(be => be.Bap_habitat == existingBe.Bap_habitat);
+                        if (newAutoRow != null)
+                        {
+                            newAutoRow.Quality_determination = existingBe.Quality_determination;
+                            newAutoRow.Quality_interpretation = existingBe.Quality_interpretation;
+                            newAutoRow.Interpretation_comments = existingBe.Interpretation_comments;
+                        }
+                    }
+                }
+
+                _incidBapRowsAuto = new ObservableCollection<BapEnvironment>(newAutoRows);
             }
             else
             {

@@ -11,7 +11,7 @@
 		<Image>Images\AddInDesktop32.png</Image>
 		<Author>Andy Foy, andy@andyfoyconsulting.co.uk</Author>
 		<Company>Andy Foy Consulting</Company>
-		<Date>22/06/2026 14:19:00</Date>
+		<Date>30/06/2026 09:18:00</Date>
 		<Subject>Framework, Editing, Geodatabase</Subject>
 		<!-- Note subject can be one or more of these topics:
                     Content, Framework, Editing, Geodatabase, Geometry, Geoprocessing, Layouts, Map Authoring, Map Exploration -->
@@ -78,6 +78,7 @@
 				<group id="HLUTool_Group_CopyPaste" caption="Copy/Paste" keytip="G3">
 					<button refID="HLUTool_btnCopy" size="middle" />
 					<button refID="HLUTool_btnPaste" size="middle" />
+					<button refID="HLUTool_btnReset" size="middle" />
 				</group>
 
 				<!-- ESRI Map Tools group -->
@@ -445,6 +446,19 @@
 					<tooltip heading="Paste">
 						Paste the copied attributes.
 						<disabledText>Available only when an INCID is loaded and at least one value has been copied.</disabledText>
+					</tooltip>
+				</button>
+
+				<button id="HLUTool_btnReset"
+						caption="Reset"
+						className="HLU.UI.UserControls.Toolbar.ResetAttributesButton"
+						loadOnClick="false"
+						keytip="Re"
+						smallImage="pack://application:,,,/HLUTool;component/Images/Reset16.png"
+						largeImage="pack://application:,,,/HLUTool;component/Images/Reset32.png">
+					<tooltip heading="Reset">
+						Reset copied attributes and uncheck all copy options.
+						<disabledText>Available only when attributes have been copied or copy options are checked.</disabledText>
 					</tooltip>
 				</button>
 
