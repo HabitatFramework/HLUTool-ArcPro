@@ -72,6 +72,7 @@ namespace HLU.UI.ViewModel
         /// </returns>
         internal async Task<bool> PerformUpdateAsync()
         {
+            // Start database transaction
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
             // Start a GIS edit operation

@@ -124,7 +124,7 @@
                         <controls:InfoButton
                             Grid.Column="2"
                             Margin="0,0,0,0"
-                            Description="If the Source Habitat group, containing the Habitat Class and Habitat Type lists, will be shown or hidden in the main interface.&#10;&#10;The group can be hidden if the source habitat data is in UKHab and primary and secondary habitats are being entered directly without any need to assist the user with translating from other habitat classifications."
+                            Description="If the Source Habitat group, containing the Habitat Class and Habitat Type lists, will be shown or hidden in the main interface.&#10;&#10;The group can be hidden if the primary and secondary habitats are being entered directly without any need to assist the user with translating from other habitat classifications."
                             Header="Show Source Habitat" />
                     </Grid>
 

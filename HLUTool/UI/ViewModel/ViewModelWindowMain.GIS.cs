@@ -85,13 +85,11 @@ namespace HLU.UI.ViewModel
 
         // The IDs of the currently selected incids, toids and fragments in GIS (set in AnalyzeGisSelectionSet).
         private IEnumerable<string> _incidsSelectedMap;
-
         private IEnumerable<string> _toidsSelectedMap;
         private IEnumerable<string> _fragsSelectedMap;
 
         // How many incids, toids,  fragments and features are selected in GIS (set in AnalyzeGisSelectionSet).
         private int _selectedIncidsInGISCount = 0;
-
         private int _selectedToidsInGISCount = 0;
         private int _selectedFragsInGISCount = 0;
         private int _selectedFeaturesInGISCount = 0;
@@ -99,12 +97,10 @@ namespace HLU.UI.ViewModel
         // How many incids and fragments are selected in the database for the current GIS selection
         // (set whenever a filter is applied and in ExpectedSelectionFeatures).
         private int _selectedIncidsInDBCount = 0;
-
         private int _selectedFragsInDBCount = 0;
 
         // How many toids and fragments are selected in GIS and the database for the current incid (set in CountFrags).
         private int _currentIncidToidsInGISCount = 0;
-
         private int _currentIncidFragsInGISCount = 0;
         private int _currentIncidToidsInDBCount = 0;
         private int _currentIncidFragsInDBCount = 0;
@@ -115,7 +111,6 @@ namespace HLU.UI.ViewModel
 
         // Can the current selection be split or merged (set in RefreshSplitMergeStatus).
         private bool _canPhysicallySplit;
-
         private bool _canLogicallySplit;
         private bool _canPhysicallyMerge;
         private bool _canLogicallyMerge;
@@ -133,7 +128,6 @@ namespace HLU.UI.ViewModel
 
         // Can the Bulk unload or load operation be performed.
         private bool _canBulkUnload;
-
         private bool _canBulkLoad;
 
         #endregion Fields - Bulk Load/Unload

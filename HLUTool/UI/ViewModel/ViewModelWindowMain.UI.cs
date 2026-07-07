@@ -81,7 +81,6 @@ namespace HLU.UI.ViewModel
 
         // Habitat display fields
         private double _incidArea = -1;
-
         private double _incidLength = -1;
         private string _process;
         private string _reason;
@@ -94,7 +93,6 @@ namespace HLU.UI.ViewModel
 
         // IHS/Details display fields
         private string _incidIhsHabitat;
-
         private string _incidPrimary;
         private string _incidPrimaryCategory;
         private string _incidNVCCodes;
@@ -105,7 +103,6 @@ namespace HLU.UI.ViewModel
 
         // OSMM display fields
         private int _incidOSMMUpdatesOSMMXref;
-
         private int _incidOSMMUpdatesProcessFlag;
         private string _incidOSMMUpdatesSpatialFlag;
         private string _incidOSMMUpdatesChangeFlag;
@@ -113,14 +110,12 @@ namespace HLU.UI.ViewModel
 
         // OSMM UI State display fields
         private string _osmmAcceptTag = "A_ccept";
-
         private string _osmmRejectTag = "Re_ject";
         private Nullable<bool> _anyOSMMUpdates;
         private bool _osmmUpdatesEmpty = false;
 
         // Vague date display fields
         private VagueDateInstance _incidConditionDateEntered;
-
         private VagueDateInstance _incidSource1DateEntered;
         private VagueDateInstance _incidSource2DateEntered;
         private VagueDateInstance _incidSource3DateEntered;
@@ -10454,7 +10449,6 @@ namespace HLU.UI.ViewModel
                 case HluGeometryTypes.Point:
                     // For point geometries, there are no area or length measures to calculate, so skip to the end.
                     break;
-
                 default:
 				{
 					// For polygon geometries, calculate both area and length measures.
