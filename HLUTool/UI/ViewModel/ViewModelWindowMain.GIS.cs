@@ -23,6 +23,7 @@
 using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Internal.Framework.Controls;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using HLU.Data;

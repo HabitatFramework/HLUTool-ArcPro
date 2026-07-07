@@ -1639,6 +1639,23 @@ namespace HLU.UI.ViewModel
 
         #endregion Application Updates
 
+        #region Application Reassign
+
+        /// <summary>
+        /// Gets the collection of reassign rules configured by the user.
+        /// Changes to the collection (add/remove/edit) are reflected immediately via
+        /// <see cref="ObservableCollection{T}"/>.
+        /// </summary>
+        public ObservableCollection<ReassignRule> ReassignRules
+        {
+            get
+            {
+                return _reassignRules;
+            }
+        }
+
+        #endregion Application Reassign
+
         #region User Interface
 
         /// <summary>
@@ -2801,23 +2818,6 @@ namespace HLU.UI.ViewModel
         }
 
         #endregion User Bulk Load
-
-        #region Application Reassign
-
-        /// <summary>
-        /// Gets the collection of reassign rules configured by the user.
-        /// Changes to the collection (add/remove/edit) are reflected immediately via
-        /// <see cref="ObservableCollection{T}"/>.
-        /// </summary>
-        public ObservableCollection<ReassignRule> ReassignRules
-        {
-            get
-            {
-                return _reassignRules;
-            }
-        }
-
-        #endregion Application Reassign
 
         #region Error Handling
 

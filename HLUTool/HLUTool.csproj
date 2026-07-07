@@ -12,12 +12,6 @@
 		<Copyright>Copyright © 2011 Hampshire Biodiversity Information Centre. Copyright © 2014 Sussex Biodiversity Record Centre. Copyright © 2019 London and South East Record Centres (LaSER). Copyright © 2019-2022 Greenspace Information for Greater London CIC. Copyright © 2025-2026 Andy Foy Consulting.</Copyright>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
-	<ItemGroup>
-	  <None Remove="Images\Reassign16.png" />
-	  <None Remove="Images\Reassign32.png" />
-	  <None Remove="Images\Reset16.png" />
-	  <None Remove="Images\Reset32.png" />
-	</ItemGroup>
 
 	<!-- Config -->
 	<ItemGroup>
@@ -183,6 +177,8 @@
 		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Resource>
 		<Resource Include="Images\Reassign32.png">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Resource>
 		<Resource Include="Images\Reset16.png">
 		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Resource>

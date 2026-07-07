@@ -151,17 +151,17 @@
             </Expander>
         </StackPanel>
 
-		<TextBlock
+        <TextBlock
             Grid.Row="1"
             Margin="8,0,0,10"
             HorizontalAlignment="Left"
             FontWeight="Medium">
-			<Hyperlink
+            <Hyperlink
                 Command="{Binding OpenHyperlinkCommand}"
                 CommandParameter="{Binding NavigateUri, RelativeSource={RelativeSource Self}}"
                 NavigateUri="{Binding Hyperlink_UserBulkLoadHelp}">
-				Learn more about user bulk load options
-			</Hyperlink>
-		</TextBlock>
-	</Grid>
+                Learn more about user bulk load options
+            </Hyperlink>
+        </TextBlock>
+    </Grid>
 </UserControl>
