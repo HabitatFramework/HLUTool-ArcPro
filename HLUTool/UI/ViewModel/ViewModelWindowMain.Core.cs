@@ -1944,8 +1944,8 @@ namespace HLU.UI.ViewModel
             catch (Exception ex)
             {
                 // Check if this is a version check failure or user cancellation.
-                bool isVersionError = ex is HLUToolException && 
-                    (ex.Message.Contains("minimum application version") || 
+                bool isVersionError = ex is HLUToolException &&
+                    (ex.Message.Contains("minimum application version") ||
                      ex.Message.Contains("minimum database version"));
                 bool isUserCancellation = ex is UserCancelledException;
 

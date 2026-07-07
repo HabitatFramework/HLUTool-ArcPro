@@ -9098,10 +9098,10 @@ namespace HLU.UI.ViewModel
                 Copyright = AssemblyCopyright,
                 IconAttributionURL = "https://www.flaticon.com",
                 IconAttributionText = "www.flaticon.com",
-                UserGuideURL = "https://hlutool-userguide.readthedocs.io/en/latest/",
-                UserGuideText = "hlutool-userguide.readthedocs.io/en/latest",
-                TechnicalGuideURL = "https://hlutool-technicalguide.readthedocs.io/en/latest/",
-                TechnicalGuideText = "hlutool-technicalguide.readthedocs.io/en/latest"
+                UserGuideURL = "https://hlutool-arcpro-userguide.readthedocs.io/en/latest/",
+                UserGuideText = "hlutool-arcpro-userguide.readthedocs.io/en/latest",
+                TechnicalGuideURL = "https://hlutool-arcpro-technicalguide.readthedocs.io/en/latest/",
+                TechnicalGuideText = "hlutool-arcpro-technicalguide.readthedocs.io/en/latest"
             };
 
             // When ViewModel asks to be closed, close window

@@ -135,7 +135,7 @@ public class XmlSettingsManager
 public class AddInSettings
 {
     // Help URL
-    public string HelpURL { get; set; } = "https://hlutool-userguide.readthedocs.io/en/latest/";
+    public string HelpURL { get; set; } = "https://hlutool-arcpro-userguide.readthedocs.io/en/latest/";
 
     public HelpPages HelpPages { get; set; } = new();
 
