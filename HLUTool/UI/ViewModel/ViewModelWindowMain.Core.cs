@@ -1922,7 +1922,7 @@ namespace HLU.UI.ViewModel
                 // Initialised is set inside the dispatch so that OnShow, which also
                 // reads _initialised and sets GridMainVisibility, cannot race between
                 // the flag being written and the visibility update being dispatched.
-                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     // Flag the initialisation as complete — on the UI thread so
                     // GridMainVisibility getter sees the correct value immediately.
@@ -1968,7 +1968,7 @@ namespace HLU.UI.ViewModel
                     Debug.WriteLine($"[HLUTool] InitializeOnceAsync FAILED:{Environment.NewLine}{ex}");
 
                     // Show a message box so the error is visible in Release builds.
-                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    Application.Current.Dispatcher.Invoke(() =>
                     {
                         MessageBox.Show(
                             $"The HLU Tool failed to initialise:{Environment.NewLine}{Environment.NewLine}{ex.Message}{Environment.NewLine}{Environment.NewLine}See {logPath} for details.",
@@ -1983,7 +1983,7 @@ namespace HLU.UI.ViewModel
                     Debug.WriteLine($"[HLUTool] Version check failed:{Environment.NewLine}{ex.Message}");
 
                     // Show the version error to the user and close the DockPane.
-                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    Application.Current.Dispatcher.Invoke(() =>
                     {
                         MessageBox.Show(
                             $"The HLU Tool cannot be used:{Environment.NewLine}{Environment.NewLine}{ex.Message}{Environment.NewLine}{Environment.NewLine}See {logPath} for details.",
@@ -2331,6 +2331,13 @@ namespace HLU.UI.ViewModel
                 // User declined to connect — not an error; return false silently.
                 return false;
             }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"InitializeToolPaneAsync error: {ex.Message}");
+                ShowError(ex.Message, MessageCategory.GIS);
+        }
+
+            return false;
         }
 
         /// <summary>
@@ -2447,75 +2454,62 @@ namespace HLU.UI.ViewModel
             var isActiveHluLayer = !string.IsNullOrEmpty(targetLayerName) &&
                 await _gisApp.IsHluLayerAsync(targetLayerName, true);
 
-            // Sync the geometry type from the GIS application and reinitialise any
-            // geometry-type-dependent state when the active layer changes.
+            // Sync the geometry type from the GIS application
             if (isActiveHluLayer)
             {
+                // Sync the geometry type from the newly activated layer and
+                // reinitialise all geometry-type-dependent state when the
+                // layer type has changed.
                 HluGeometryTypes detectedGeometryType = _gisApp.HluGeometryType;
-                if (detectedGeometryType != _gisLayerType)
+
+                // Always update the geometry type, even if it hasn't changed
+                _gisLayerType = detectedGeometryType;
+
+                // Sync the geometry type on the RecordIds object so that SiteID
+                // returns the correct site ID for the active layer type.
+                if (_recIDs != null)
+                    _recIDs.GisLayerType = _gisLayerType;
+
+                // Reinitialise history columns for the new geometry table.
+                _historyColumns = InitializeHistoryColumns(_historyColumns);
+
+                // Reinitialise the incid filter for the correct geometry table.
+                _incidMMShadowIncidFilter = new()
                 {
-                    _gisLayerType = detectedGeometryType;
+                    BooleanOperator = "OR",
+                    OpenParentheses = "(",
+                    Column = GisMMTable.Columns[_hluDS.incid_mm_polygons.incidColumn.ColumnName],
+                    Table = GisMMTable,
+                    Value = String.Empty,
+                    CloseParentheses = ")"
+                };
 
-                    // Guard: _hluDS may not be initialised yet (e.g. connection dialog still open).
-                    if (GisMMTable == null)
-                        goto skipGeometryReinit;
+                // Reset cached secondary code lists — they are filtered by geometry type
+                // and must be rebuilt for the new layer type.
+                _secondaryCodesAll = null;
+                _secondaryCodesValid = null;
 
-                    // Sync the geometry type on the RecordIds object so that SiteID
-                    // returns the correct site ID for the newly active layer type.
-                    if (_recIDs != null)
-                        _recIDs.GisLayerType = _gisLayerType;
+                // Force the primary codes combo box to rebuild for the new geometry type.
+                // Using a flag (rather than _primaryCodes.Clear()) avoids triggering the
+                // WPF ComboBox binding which would fire the IncidPrimary setter with null
+                // and spuriously set Changed = true on the current record.
+                _forceHabitatTypeRebuild = true;
+                HabitatType = _habitatType;
 
-                    // Invalidate the cached row count so it is re-queried with the
-                    // new geometry-specific SiteID prefix on the next access.
-                    _incidRowCount = 0;
-
-                    // Reinitialise GIS ID columns for the new geometry table.
-                    int result;
-                    _gisIDColumnOrdinals = [.. (from s in Settings.Default.GisIDColumnOrdinals.Cast<string>()
-                                            where Int32.TryParse(s, out result) && (result >= 0) &&
-                                            (result < GisMMTable.Columns.Count)
-                                            select Int32.Parse(s))];
-                    _gisIDColumns = [.. _gisIDColumnOrdinals.Select(i => GisMMTable.Columns[i])];
-
-                    // Reinitialise history columns for the new geometry table.
-                    _historyColumns = InitializeHistoryColumns(_historyColumns);
-
-                    // Reinitialise the incid filter for the correct geometry table.
-                    _incidMMShadowIncidFilter = new()
-                    {
-                        BooleanOperator = "OR",
-                        OpenParentheses = "(",
-                        Column = GisMMTable.Columns[_hluDS.incid_mm_polygons.incidColumn.ColumnName],
-                        Table = GisMMTable,
-                        Value = String.Empty,
-                        CloseParentheses = ")"
-                    };
-
-                    // Reset cached secondary code lists — they are filtered by geometry type
-                    // and must be rebuilt for the new layer type.
-                    _secondaryCodesAll = null;
-                    _secondaryCodesValid = null;
-
-                    // Force the primary codes combo box to rebuild for the new geometry type.
-                    // Using a flag (rather than _primaryCodes.Clear()) avoids triggering the
-                    // WPF ComboBox binding which would fire the IncidPrimary setter with null
-                    // and spuriously set Changed = true on the current record.
-                    _forceHabitatTypeRebuild = true;
-                    HabitatType = _habitatType;
-
-                    // Restore _incidPrimary from the incid row when the setter nulled it because
-                    // the current primary code is absent from the rebuilt list.  This prevents
-                    // IsDirtyIncid() from seeing a discrepancy and falsely flagging the record
-                    // as changed.  The validation in this["IncidPrimary"] will show the warning.
-                    if (_incidPrimary == null && _incidCurrentRow != null
-                        && !_incidCurrentRow.Ishabitat_primaryNull())
-                    {
-                        _incidPrimary = _incidCurrentRow.habitat_primary;
-                        OnPropertyChanged(nameof(IncidPrimary));
-                    }
+                // Restore _incidPrimary from the incid row when the setter nulled it because
+                // the current primary code is absent from the rebuilt list.  This prevents
+                // IsDirtyIncid() from seeing a discrepancy and falsely flagging the record
+                // as changed.  The validation in this["IncidPrimary"] will show the warning.
+                if (_incidPrimary == null && _incidCurrentRow != null
+                    && !_incidCurrentRow.Ishabitat_primaryNull())
+                {
+                    _incidPrimary = _incidCurrentRow.habitat_primary;
+                    OnPropertyChanged(nameof(IncidPrimary));
                 }
 
-                skipGeometryReinit:;
+                // Always recount so _incidRowCount is valid even when geometry type
+                // does not change (e.g. default polygon startup path).
+                IncidRowCount(true);
             }
 
             // Now assign ActiveLayerName

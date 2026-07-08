@@ -1467,7 +1467,8 @@ namespace HLU.UI.ViewModel
                 string previousIncidPrimary = _incidPrimary;
 
                 // Clear the current list without replacing the collection instance.
-                _primaryCodes.Clear();
+                // Must be done on UI thread since _primaryCodes is an ObservableCollection.
+                Application.Current?.Dispatcher.Invoke(() => _primaryCodes.Clear());
 
                 if (!String.IsNullOrEmpty(_habitatType))
                 {
@@ -1539,15 +1540,18 @@ namespace HLU.UI.ViewModel
                     // Add primary codes (skip any with a null/blank code) and mark the
                     // first non-preferred item so the template can draw a divider above it.
                     bool separatorMarked = false;
-                    foreach (CodeDescriptionBool item in primaryCodes.Where(c => !string.IsNullOrWhiteSpace(c.Code)))
+                    Application.Current?.Dispatcher.Invoke(() =>
                     {
-                        if (!separatorMarked && !item.Preferred && primaryCodes.Any(c => c.Preferred))
+                        foreach (CodeDescriptionBool item in primaryCodes.Where(c => !string.IsNullOrWhiteSpace(c.Code)))
                         {
-                            item.IsSeparator = true;
-                            separatorMarked = true;
+                            if (!separatorMarked && !item.Preferred && primaryCodes.Any(c => c.Preferred))
+                            {
+                                item.IsSeparator = true;
+                                separatorMarked = true;
+                            }
+                            _primaryCodes.Add(item);
                         }
-                        _primaryCodes.Add(item);
-                    }
+                    });
 
                     // Load all secondary habitat codes where the habitat type has one of more
                     // optional codes, and the secondary habitat code relates to the current layer's
@@ -1600,8 +1604,11 @@ namespace HLU.UI.ViewModel
                             Preferred = false
                         })];
 
-                    foreach (CodeDescriptionBool item in allPrimaryCodes)
-                        _primaryCodes.Add(item);
+                    Application.Current?.Dispatcher.Invoke(() =>
+                    {
+                        foreach (CodeDescriptionBool item in allPrimaryCodes)
+                            _primaryCodes.Add(item);
+                    });
 
                     // Clear the list of optional and mandatory secondary codes.
                     _secondaryCodesOptional = [];
@@ -6939,7 +6946,7 @@ namespace HLU.UI.ViewModel
             string messageId = null;
 
             // Execute on UI thread
-            System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+            Application.Current?.Dispatcher.Invoke(() =>
             {
                 // Normalize category
                 string normalizedCategory = category ?? MessageCategory.General;
@@ -7008,7 +7015,7 @@ namespace HLU.UI.ViewModel
         /// <param name="level">The level of messages to clear.</param>
         public void ClearMessage(string id = null, string category = null, MessageType? level = null)
         {
-            System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+            Application.Current?.Dispatcher.Invoke(() =>
             {
                 List<MessageItem> messagesToRemove = [];
 
@@ -7292,7 +7299,7 @@ namespace HLU.UI.ViewModel
                     return;
 
                 // Update the list of available layer names in the ViewModel.
-                AvailableHLULayerNames = new System.Collections.ObjectModel.ObservableCollection<string>(_gisApp.ValidHluLayerNames);
+                AvailableHLULayerNames = new ObservableCollection<string>(_gisApp.ValidHluLayerNames);
 
                 // Switch the GIS layer.
                 if (await _gisApp.IsHluLayerAsync(selectedValue, true))
@@ -7301,27 +7308,17 @@ namespace HLU.UI.ViewModel
                     // reinitialise all geometry-type-dependent state when the
                     // layer type has changed (mirrors the logic in CheckActiveMapAsync).
                     HluGeometryTypes detectedGeometryType = _gisApp.HluGeometryType;
+
+                    // Sync the geometry type on the RecordIds object so SiteID
+                    // returns the correct prefix for the newly active layer type.
+                    if (_recIDs != null)
+                        _recIDs.GisLayerType = _gisLayerType;
+
+                    // Only reinitialize geometry-dependent structures if the geometry type actually changed
                     if (detectedGeometryType != _gisLayerType)
                     {
+                        // Update the geometry type
                         _gisLayerType = detectedGeometryType;
-
-                        // Sync the geometry type on the RecordIds object so SiteID
-                        // returns the correct prefix for the newly active layer type.
-                        if (_recIDs != null)
-                            _recIDs.GisLayerType = _gisLayerType;
-
-                        // Force an immediate recount scoped to the new geometry prefix
-                        // so that StatusIncid (which reads _incidRowCount directly)
-                        // shows the correct total for the newly active layer.
-                        IncidRowCount(true);
-
-                        // Reinitialise GIS ID columns for the new geometry table.
-                        int result;
-                        _gisIDColumnOrdinals = [.. (from s in Settings.Default.GisIDColumnOrdinals.Cast<string>()
-                                                where Int32.TryParse(s, out result) && (result >= 0) &&
-                                                (result < GisMMTable.Columns.Count)
-                                                select Int32.Parse(s))];
-                        _gisIDColumns = [.. _gisIDColumnOrdinals.Select(i => GisMMTable.Columns[i])];
 
                         // Reinitialise history columns for the new geometry table.
                         _historyColumns = InitializeHistoryColumns(_historyColumns);
@@ -7364,6 +7361,10 @@ namespace HLU.UI.ViewModel
                             OnPropertyChanged(nameof(IncidPrimary));
                         }
                     }
+
+                    // Always force a recount to update _incidRowCount, even when geometry didn't change.
+                    // This ensures StatusIncid shows the correct total for the active layer.
+                    IncidRowCount(true);
 
                     // Set the active HLU layer name.
                     ActiveLayerName = selectedValue;
