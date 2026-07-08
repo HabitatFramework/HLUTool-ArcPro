@@ -47,6 +47,8 @@
                 <Grid Margin="4,8,4,4">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="4" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="140" />
@@ -66,6 +68,34 @@
                               ItemsSource="{Binding AvailableLayerNames}"
                               SelectedItem="{Binding SelectedLayerName, UpdateSourceTrigger=PropertyChanged}"
                               ToolTip="Select the non-HLU layer that contains the new features to load." />
+
+                    <!--  Selected Only  -->
+                    <Label Grid.Row="2"
+                           Grid.Column="0"
+                           Margin="4,0,8,0"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center"
+                           Content="Selected Only"
+                           IsEnabled="{Binding HaveSelection}" />
+                    <Grid Grid.Row="2"
+                          Grid.Column="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <CheckBox Grid.Column="0"
+                                  Margin="0,0,8,0"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  IsChecked="{Binding SelectedOnly}"
+                                  IsEnabled="{Binding HaveSelection}" />
+                        <Label Grid.Column="1"
+                               Margin="0,0,4,0"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Center"
+                               Content="{Binding SelectionText}"
+                               IsEnabled="{Binding HaveSelection}" />
+                    </Grid>
                 </Grid>
             </GroupBox>
 
@@ -242,61 +272,26 @@
 
             <!--  Output and Selection  -->
             <GroupBox Grid.Row="4"
-                      Header="Output">
+                      Header="Staging Output">
                 <Grid Margin="4,8,4,4">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="4" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="140" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
                     <!--  Output Type  -->
-                    <Label Grid.Row="0"
-                           Grid.Column="0"
+                    <Label Grid.Column="0"
                            Margin="4,0,8,0"
                            HorizontalAlignment="Right"
                            VerticalAlignment="Center"
                            Content="Output Type" />
-                    <ComboBox Grid.Row="0"
-                              Grid.Column="1"
+                    <ComboBox Grid.Column="1"
                               Margin="0,0,4,0"
                               DisplayMemberPath="Display"
                               IsEditable="False"
                               ItemsSource="{Binding OutputTypes}"
                               SelectedValue="{Binding SelectedOutputType, Mode=TwoWay}"
                               SelectedValuePath="Value" />
-
-                    <!--  Selected Only  -->
-                    <Label Grid.Row="2"
-                           Grid.Column="0"
-                           Margin="4,0,8,0"
-                           HorizontalAlignment="Right"
-                           VerticalAlignment="Center"
-                           Content="Selected Only"
-                           IsEnabled="{Binding HaveSelection}" />
-                    <Grid Grid.Row="2"
-                          Grid.Column="1">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                        <CheckBox Grid.Column="0"
-                                  Margin="0,0,8,0"
-                                  HorizontalAlignment="Center"
-                                  VerticalAlignment="Center"
-                                  IsChecked="{Binding SelectedOnly}"
-                                  IsEnabled="{Binding HaveSelection}" />
-                        <Label Grid.Column="1"
-                               Margin="0,0,4,0"
-                               HorizontalAlignment="Left"
-                               VerticalAlignment="Center"
-                               Content="{Binding SelectionText}"
-                               IsEnabled="{Binding HaveSelection}" />
-                    </Grid>
                 </Grid>
             </GroupBox>
 

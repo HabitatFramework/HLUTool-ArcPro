@@ -68,7 +68,12 @@ namespace HLU.UI.ViewModel
                     TotalCount > 1 ? "s" : String.Empty)
                 : String.Format("({0} feature{1})",
                     TotalCount.ToString("N0"),
-                    TotalCount > 1 ? "s" : String.Empty);
+                    TotalCount != 1 ? "s" : String.Empty);
+
+        /// <summary>
+        /// Gets whether this layer can be selected for unload (only layers with selected features are enabled).
+        /// </summary>
+        public bool IsEnabled => SelectedCount > 0;
 
         /// <summary>
         /// Gets or sets whether this layer is checked in the checklist.
@@ -133,13 +138,22 @@ namespace HLU.UI.ViewModel
                         ? c
                         : (0, 0L);
 
-                    return new OsmmUnloadLayerItem
+                    var item = new OsmmUnloadLayerItem
                     {
                         LayerName = n,
                         SelectedCount = sel,
                         TotalCount = tot,
-                        IsChecked = string.Equals(n, activeLayerName, System.StringComparison.OrdinalIgnoreCase)
+                        IsChecked = string.Equals(n, activeLayerName, System.StringComparison.OrdinalIgnoreCase) && sel > 0
                     };
+
+                    // Subscribe to PropertyChanged to update CanOk when IsChecked changes
+                    item.PropertyChanged += (s, e) =>
+                    {
+                        if (e.PropertyName == nameof(OsmmUnloadLayerItem.IsChecked))
+                            OnPropertyChanged(nameof(CanOk));
+                    };
+
+                    return item;
                 }));
         }
 
