@@ -646,6 +646,7 @@ namespace HLU.UI.ViewModel
             if (clearIHSCodes)
             {
                 viewModelMain.IncidCurrentRow.ihs_habitat = null;
+                viewModelMain.IncidCurrentRow.ihs_summary = null;
                 viewModelMain.RemoveIncidIhsMatrixRows();
                 viewModelMain.RemoveIncidIhsFormationRows();
                 viewModelMain.RemoveIncidIhsManagementRows();

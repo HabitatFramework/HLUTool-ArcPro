@@ -639,8 +639,8 @@ namespace HLU.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=localhost;Initial Catalog=HLUData;Integrated Security=True;TrustServe" +
-            "rCertificate=True")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=ZEN\\SQLSERVER2022;Initial Catalog=HLUData;Integrated Security=True;Tr" +
+            "ustServerCertificate=True")]
         public string HluConnectionString {
             get {
                 return ((string)(this["HluConnectionString"]));

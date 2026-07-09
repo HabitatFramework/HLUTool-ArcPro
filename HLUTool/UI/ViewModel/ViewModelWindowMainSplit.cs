@@ -825,11 +825,13 @@ namespace HLU.UI.ViewModel
                 string newIncid = _viewModelMain.NextIncid;
                 newIncidRow.incid = newIncid;
 
-                // Get the current values that aren't 't stored
-                // in the current Incid row.
+                // Get current values that are held outside the row and should be cloned
+                // from the in-memory UI state.
                 newIncidRow.habitat_primary = _viewModelMain.IncidPrimary;
                 newIncidRow.habitat_secondaries = _viewModelMain.IncidSecondaryCodesOnly;
-                newIncidRow.ihs_habitat = _viewModelMain.IncidIhsHabitat;
+
+                // NOTE: ihs_habitat and ihs_summary are already copied from IncidCurrentRow
+                // above and should not be overwritten from cached UI fields.
 
                 // Discard any changes to the Incid table once a copy has been
                 // made.

@@ -3168,8 +3168,9 @@ namespace HLU.UI.ViewModel
         /// Clears any active incid filter and optionally moves to the first incid in the index.
         /// </summary>
         /// <param name="resetRowIndex">If set to <c>true</c> the first incid in the index is loaded.</param>
+        /// <param name="showWarning">If set to <c>true</c> a warning message is displayed if the record is not found.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        public async Task ClearFilterAsync(bool resetRowIndex)
+        public async Task ClearFilterAsync(bool resetRowIndex, bool showWarning = false)
         {
             // Reset the OSMM Updates filter when in OSMM Review mode.
             if (IsOsmmReviewMode)
@@ -3209,7 +3210,7 @@ namespace HLU.UI.ViewModel
                 // toids and fragments for the current incid selected in the GIS and
                 // in the database).
                 if (resetRowIndex)
-                    await MoveIncidCurrentRowIndexAsync(_incidCurrentRowIndex);
+                    await MoveIncidCurrentRowIndexAsync(_incidCurrentRowIndex, showWarning);
                 else
                     // Count the number of toids and fragments for the current incid
                     // selected in the GIS and in the database.
