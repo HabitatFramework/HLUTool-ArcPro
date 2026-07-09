@@ -1484,17 +1484,30 @@ namespace HLU.UI.ViewModel
 
                     // Combine both primary and secondary-derived codes,
                     // but allow only one entry per code, preferring the one marked as preferred.
+
+                    // Pre-compile the regex pattern once outside the query
+                    var regexCache = new Dictionary<string, Regex>();
+
+                    // Filter _lutHabitatTypePrimary once upfront
+                    var relevantHabitatTypePrimary = _lutHabitatTypePrimary
+                        .Where(htp => htp.code_habitat_type == _habitatType)
+                        .ToList(); // Materialize to avoid re-enumeration
+
+                    // Pre-build lookup dictionaries for faster joins
+                    var primaryCategoryLookup = _lutPrimaryCategory.ToDictionary(pc => pc.code);
+                    var habitatClassLookup = _lutHabitatClass.ToDictionary(hc => hc.code);
+
                     CodeDescriptionBool[] primaryCodes = [.. (
-                        // First query – directly matched primary codes.
+                        // First query – directly matched primary codes
                         from p in _lutPrimary
-                        join pc in _lutPrimaryCategory on p.category equals pc.code // Needed to only include local categories.
-                        join hc in _lutHabitatClass on p.habitat_class_code equals hc.code
-                        from htp in _lutHabitatTypePrimary
-                        where htp.code_habitat_type == _habitatType
-                            && PrimaryMatchesLayerType(p)
-                            && (p.code == htp.code_primary
-                                || (htp.code_primary.EndsWith('*') &&
-                                    Regex.IsMatch(p.code, @"\A" + htp.code_primary.TrimEnd('*') + @"")))
+                        where primaryCategoryLookup.ContainsKey(p.category) &&
+                              habitatClassLookup.ContainsKey(p.habitat_class_code) &&
+                              PrimaryMatchesLayerType(p)
+                        from htp in relevantHabitatTypePrimary
+                        where p.code == htp.code_primary ||
+                              (htp.code_primary.EndsWith('*') &&
+                               p.code.StartsWith(htp.code_primary.TrimEnd('*')))
+                        let hc = habitatClassLookup[p.habitat_class_code]
                         select new
                         {
                             Item = new CodeDescriptionBool
@@ -1510,17 +1523,18 @@ namespace HLU.UI.ViewModel
                             PrimaryCode = p.code
                         })
                     .Concat(
-                        // Second query – inferred primary codes via secondary links.
+                        // Second query – inferred primary codes via secondary links
                         from s in _lutSecondary
                         where SecondaryMatchesLayerType(s)
                         join hts in _lutHabitatTypeSecondary on s.code equals hts.code_secondary
-                        join ps in _lutPrimarySecondary on hts.code_secondary equals ps.code_secondary
-                        from p in _lutPrimary
-                        where (p.code == ps.code_primary || p.code.StartsWith(ps.code_primary))
-                            && PrimaryMatchesLayerType(p)
-                        join pc in _lutPrimaryCategory on p.category equals pc.code
-                        join hc in _lutHabitatClass on p.habitat_class_code equals hc.code
                         where hts.code_habitat_type == _habitatType
+                        join ps in _lutPrimarySecondary on s.code equals ps.code_secondary
+                        from p in _lutPrimary
+                        where (p.code == ps.code_primary || p.code.StartsWith(ps.code_primary)) &&
+                              PrimaryMatchesLayerType(p) &&
+                              primaryCategoryLookup.ContainsKey(p.category) &&
+                              habitatClassLookup.ContainsKey(p.habitat_class_code)
+                        let hc = habitatClassLookup[p.habitat_class_code]
                         select new
                         {
                             Item = new CodeDescriptionBool
