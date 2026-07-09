@@ -1114,9 +1114,20 @@ namespace HLU.UI.ViewModel
                     _currentIncidToidsInDBCount = 0;
                     _currentIncidFragsInDBCount = 0;
 
+                    // Check whether the geometry-type map-match table has any records at all.
+                    // If it is empty the user has not yet registered any features of this type.
+                    int totalDbCount = 0;
+                    try
+                    {
+                        totalDbCount = (int)_db.ExecuteScalar(
+                            $"SELECT COUNT(*) FROM {_db.QualifyTableName(GisMMTable.TableName)}",
+                            _db.Connection.ConnectionTimeout, CommandType.Text);
+                    }
+                    catch { }
+
                     // Reset the incid and map selections if necessary, then move
                     // to the first incid in the database.
-                    await ClearFilterAsync(true);
+                    await ClearFilterAsync(true, totalDbCount != 0);
 
                     // Indicate the selection didn't come from the map (but only after
                     // the filter has been cleared and the first incid selected so that
@@ -1134,17 +1145,8 @@ namespace HLU.UI.ViewModel
                         _                      => "polygon"
                     };
 
-                    // Check whether the geometry-type map-match table has any records at all.
-                    // If it is empty the user has not yet registered any features of this type.
-                    int totalDbCount = 0;
-                    try
-                    {
-                        totalDbCount = (int)_db.ExecuteScalar(
-                            $"SELECT COUNT(*) FROM {_db.QualifyTableName(GisMMTable.TableName)}",
-                            _db.Connection.ConnectionTimeout, CommandType.Text);
-                    }
-                    catch { }
-
+                    // Show a warning if no features have been registered in the database yet,
+                    // otherwise show a warning that no features were selected in the active layer.
                     if (totalDbCount == 0)
                     {
                         // Refresh all UI bindings so every property reflects the cleared state.
@@ -1242,7 +1244,7 @@ namespace HLU.UI.ViewModel
                     if (_gisSelection == null || _gisSelection.Rows.Count == 0)
                     {
                         // Show an information message.
-                        ShowInfo("No incid features found in active layer.", MessageCategory.GIS);
+                        ShowInfo("No features for incids found in active layer.", MessageCategory.GIS);
 
                         return;
                     }

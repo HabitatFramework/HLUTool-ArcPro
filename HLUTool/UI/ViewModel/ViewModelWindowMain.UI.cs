@@ -85,6 +85,7 @@ namespace HLU.UI.ViewModel
         private string _reason;
         private string _habitatClass;
         private string _habitatType;
+        private bool _refreshingHabitatType; // Guard to prevent IncidPrimary setter re-entry during HabitatType changes
         private string _habitatSecondariesSuggested;
         private string _habitatTips;
         private string _secondaryGroup;
@@ -92,6 +93,7 @@ namespace HLU.UI.ViewModel
 
         // IHS/Details display fields
         private string _incidIhsHabitat;
+        private string _incidIhsSummary;
         private string _incidPrimary;
         private string _incidPrimaryCategory;
         private string _incidNVCCodes;
@@ -1461,6 +1463,10 @@ namespace HLU.UI.ViewModel
                 // Reset the flag immediately — it is only valid for a single forced call.
                 _forceHabitatTypeRebuild = false;
 
+                // Set the reentrancy guard to prevent IncidPrimary setter from processing changes
+                // triggered by binding refresh during this habitat type update.
+                _refreshingHabitatType = true;
+
                 _habitatType = value;
 
                 // Preserve the current selection if it is still valid after refresh.
@@ -1616,15 +1622,21 @@ namespace HLU.UI.ViewModel
                 }
 
                 // If the previous selection is still valid, keep it.
+                string preservedSelection = null;
                 if (!String.IsNullOrEmpty(previousIncidPrimary) &&
                     _primaryCodes.Any(p => p.Code == previousIncidPrimary))
                 {
-                    _incidPrimary = previousIncidPrimary;
+                    preservedSelection = previousIncidPrimary;
+                    _incidPrimary = preservedSelection;
                 }
                 else
                 {
                     _incidPrimary = null;
                 }
+
+                // Flag that the current record has changed so that the IncidPrimary
+                // change is re-evaluated.
+                Changed = true;
 
                 // Refresh the mandatory habitat secondaries and tips.
                 OnPropertyChanged(nameof(HabitatSecondariesMandatory));
@@ -1634,11 +1646,27 @@ namespace HLU.UI.ViewModel
                 OnPropertyChanged(nameof(ShowHabitatTips));
 
                 // Refresh selection + dependent UI.
-                OnPropertyChanged(nameof(IncidPrimary));
                 OnPropertyChanged(nameof(PrimaryEnabled));
 
                 // IMPORTANT: no OnPropertyChanged(nameof(PrimaryCodes)) needed here anymore
                 // because the ItemsSource collection instance did not change.
+
+                // Clear the reentrancy guard after all property notifications are complete.
+                _refreshingHabitatType = false;
+
+                // Force WPF to re-sync the ComboBox SelectedValue binding by briefly
+                // nulling and restoring the value. This is necessary because WPF may
+                // have temporarily lost the selection match during the collection Clear/Add cycle.
+                if (preservedSelection != null)
+                {
+                    string temp = _incidPrimary;
+                    _incidPrimary = null;
+                    OnPropertyChanged(nameof(IncidPrimary));
+                    _incidPrimary = temp;
+                }
+
+                // Refresh selection + dependent UI.
+                OnPropertyChanged(nameof(IncidPrimary));
             }
         }
 
@@ -1701,6 +1729,11 @@ namespace HLU.UI.ViewModel
             }
             set
             {
+                // Skip setter processing during HabitatType refresh to prevent binding re-entry
+                // and spurious validation errors or Changed flag triggers.
+                if (_refreshingHabitatType)
+                    return;
+
                 // If there is a current record and the primary habitat code has changed
                 if ((IncidCurrentRow != null) && (!string.Equals(_incidPrimary, value, StringComparison.Ordinal)))
                 {
@@ -3194,17 +3227,18 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return ViewModelWindowMainHelpers.IhsSummary([
-                    IncidIhsHabitat,
-                    IncidIhsMatrix1,
-                    IncidIhsMatrix2,
-                    IncidIhsMatrix3,
-                    IncidIhsFormation1,
-                    IncidIhsFormation2,
-                    IncidIhsManagement1,
-                    IncidIhsManagement2,
-                    IncidIhsComplex1,
-                    IncidIhsComplex2 ]);
+                return _incidIhsSummary;
+                //return ViewModelWindowMainHelpers.IhsSummary([
+                //    IncidIhsHabitat,
+                //    IncidIhsMatrix1,
+                //    IncidIhsMatrix2,
+                //    IncidIhsMatrix3,
+                //    IncidIhsFormation1,
+                //    IncidIhsFormation2,
+                //    IncidIhsManagement1,
+                //    IncidIhsManagement2,
+                //    IncidIhsComplex1,
+                //    IncidIhsComplex2 ]);
             }
         }
 
@@ -7309,16 +7343,16 @@ namespace HLU.UI.ViewModel
                     // layer type has changed (mirrors the logic in CheckActiveMapAsync).
                     HluGeometryTypes detectedGeometryType = _gisApp.HluGeometryType;
 
-                    // Sync the geometry type on the RecordIds object so SiteID
-                    // returns the correct prefix for the newly active layer type.
-                    if (_recIDs != null)
-                        _recIDs.GisLayerType = _gisLayerType;
-
                     // Only reinitialize geometry-dependent structures if the geometry type actually changed
                     if (detectedGeometryType != _gisLayerType)
                     {
                         // Update the geometry type
                         _gisLayerType = detectedGeometryType;
+
+                        // Sync the geometry type on the RecordIds object so SiteID
+                        // returns the correct prefix for the newly active layer type.
+                        if (_recIDs != null)
+                            _recIDs.GisLayerType = _gisLayerType;
 
                         // Reinitialise history columns for the new geometry table.
                         _historyColumns = InitializeHistoryColumns(_historyColumns);

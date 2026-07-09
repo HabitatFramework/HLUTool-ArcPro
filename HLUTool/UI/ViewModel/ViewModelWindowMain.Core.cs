@@ -3665,8 +3665,9 @@ namespace HLU.UI.ViewModel
         /// Sets the index of the incid current row.
         /// </summary>
         /// <param name="value">The new index for the incid current row.</param>
+        /// <param name="showWarning">A value indicating whether to show a warning if the record is not found.</param>
         /// <returns>A task that represents the asynchronous operation.</returns>
-        public async Task MoveIncidCurrentRowIndexAsync(int value)
+        public async Task MoveIncidCurrentRowIndexAsync(int value, bool showWarning = true)
         {
             // Check if already moving
             if (_moving)
@@ -3738,29 +3739,45 @@ namespace HLU.UI.ViewModel
                         {
                             // Set the new current row index.
                             _incidCurrentRowIndex = value;
+
+                            // Move to the new incid
+                            await NewIncidCurrentRowAsync();
                         }
                         else
                         {
                             // If the record number is valid.
                             if ((value > 0) &&
-                            (IsFiltered && ((_incidSelection == null) || (value <= _incidSelection.Rows.Count))) ||
-                            (!IsFiltered && ((_incidSelection == null) || (value <= _incidRowCount))))
+                            (
+                                (IsFiltered && (_incidSelection != null) && (value <= _incidSelection.Rows.Count)) ||
+                                (!IsFiltered && (value <= _incidRowCount))
+                            ))
                             {
                                 // Set the new current row index.
                                 _incidCurrentRowIndex = value;
 
                                 // Clear any existing navigation messages
                                 ClearMessage(category: MessageCategory.Navigation);
+
+                                // Move to the new incid
+                                await NewIncidCurrentRowAsync();
                             }
                             else
                             {
-                                // Warn the user that record is not found.
-                                ShowWarning("Record not found in filtered records.", MessageCategory.Navigation);
+                                if (showWarning)
+                                {
+                                    // Warn the user that record is not found, with context-specific message.
+                                    string warningMessage = IsFiltered
+                                        ? "Record not found in filtered records."
+                                        : "Record not found.";
+                                    ShowWarning(warningMessage, MessageCategory.Navigation);
+                                }
+
+                                // Reset the TextBox to show the current valid row index by triggering a property change notification.
+                                OnPropertyChanged(nameof(IncidCurrentRowIndex));
+
+                                // Do NOT call NewIncidCurrentRowAsync() — input was invalid, so don't navigate.
                             }
                         }
-
-                        // Move to the new incid
-                        await NewIncidCurrentRowAsync();
 
                         break;
 
@@ -4216,6 +4233,7 @@ namespace HLU.UI.ViewModel
             _incidPrimary = _incidCurrentRow.Ishabitat_primaryNull() ? null : _incidCurrentRow.habitat_primary;
             NewPrimaryHabitat(_incidPrimary);
             _incidIhsHabitat = _incidCurrentRow.Isihs_habitatNull() ? null : _incidCurrentRow.ihs_habitat;
+            _incidIhsSummary = _incidCurrentRow.Isihs_summaryNull() ? null : _incidCurrentRow.ihs_summary;
         }
 
         /// <summary>

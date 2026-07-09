@@ -338,15 +338,18 @@ namespace HLU.UI.ViewModel
                 }
 
                 // If all IHS multiplex codes are to be deleted clear then add
-                // the IHS habitat code to the list of columns to update
+                // the IHS habitat code and summary to the list of columns to update
                 if (_bulkDeleteIHSCodes)
                 {
                     _viewModelMain.IncidCurrentRow.ihs_habitat = null;
+                    _viewModelMain.IncidCurrentRow.ihs_summary = null;
 
-                    updateStatementIncid = String.Format("{0}, {1} = {2}",
+                    updateStatementIncid = String.Format("{0}, {1} = {2}, {3} = {4}",
                         updateStatementIncid,
                         _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.ihs_habitatColumn.ColumnName),
-                        _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidCurrentRow.ihs_habitat));
+                        _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidCurrentRow.ihs_habitat),
+                        _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.ihs_summaryColumn.ColumnName),
+                        _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidCurrentRow.ihs_summary));
                 }
 
                 // Finally, add the where clause to the update command
@@ -635,15 +638,21 @@ namespace HLU.UI.ViewModel
 
                 // If all IHS codes are to be deleted clear
                 string updateIHSHabitat = "";
+                string updateIHSSummary = "";
                 List<string> ihsMultiplexDeleteStatements = [];
                 if (_bulkDeleteIHSCodes)
                 {
-                    // Build a statement to update the IHS habitat code
+                    // Build a statement to set the IHS habitat code and summary to null
                     _viewModelMain.IncidCurrentRow.ihs_habitat = null;
+                    _viewModelMain.IncidCurrentRow.ihs_summary = null;
 
                     updateIHSHabitat = String.Format(", {0} = {1}",
                         _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.ihs_habitatColumn.ColumnName),
                         _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidCurrentRow.ihs_habitat));
+
+                    updateIHSSummary = String.Format(", {0} = {1}",
+                        _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.ihs_summaryColumn.ColumnName),
+                        _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidCurrentRow.ihs_summary));
 
                     // Build DELETE statements for all IHS multiplex rows
                     ihsMultiplexDeleteStatements.Add(
@@ -832,8 +841,9 @@ namespace HLU.UI.ViewModel
                         // Add the secondary habitat update to the update command
                         updateStatementIncid += updateHabitatSecondaries;
 
-                        // Add the IHS habitat update string to the update command
+                        // Add the IHS habitat and summary update strings to the update command
                         updateStatementIncid += updateIHSHabitat;
+                        updateStatementIncid += updateIHSSummary;
 
                         // Finally, add the where clause to the update command
                         updateStatementIncid += incidWhereClause;

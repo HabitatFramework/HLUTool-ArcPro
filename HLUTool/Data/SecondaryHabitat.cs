@@ -362,17 +362,16 @@ namespace HLU.Data
                         {
                             errors.Add("Error: Secondary habitat is a mandatory field");
                         }
-                        else if (_validSecondaryCodes == null)
-                        {
-                            errors.Add($"Error: Secondary habitat '{Secondary_habitat}' is not valid without primary habitat");
-                        }
                         else if ((_secondaryHabitatList != null) && (_secondaryHabitatList.Count(b => b.Secondary_habitat == Secondary_habitat) > 1))
                         {
                             errors.Add($"Error: Duplicate secondary habitat '{Secondary_habitat}'");
                         }
                         else if (_primarySecondaryCodeValidation > 0)
                         {
-                            if ((_validSecondaryCodes != null) && (!_validSecondaryCodes.Contains(Secondary_habitat)))
+                            // Only validate against the valid secondary codes list if it has been initialized
+                            // and is not empty. If _validSecondaryCodes is null, it means validation is not
+                            // applicable (e.g., no primary habitat type selected yet or during property updates).
+                            if ((_validSecondaryCodes != null) && (_validSecondaryCodes.Any()) && (!_validSecondaryCodes.Contains(Secondary_habitat)))
                             {
                                 errors.Add($"Error: Secondary habitat '{Secondary_habitat}' is not valid for primary habitat");
                             }
