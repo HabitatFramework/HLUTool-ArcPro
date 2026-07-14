@@ -26,6 +26,15 @@ namespace HLU.Data
     /// </summary>
     public sealed class OsmmXrefPreviewRow
     {
+        /// <summary>
+        /// Gets the <c>osmm_xref_id</c> value from <c>lut_osmm_habitat_xref</c>,
+        /// or <c>null</c> when no match was found.
+        /// </summary>
+        public int? OsmmXrefId
+        {
+            get; init;
+        }
+
         /// <summary>Gets the OSMM <c>make</c> attribute value.</summary>
         public string Make
         {
@@ -125,5 +134,11 @@ namespace HLU.Data
                 return "Matched";
             }
         }
+
+        /// <summary>
+        /// Gets a formatted display string for the XRef ID column.
+        /// Returns empty string when no match was found.
+        /// </summary>
+        public string XRefIdDisplay => OsmmXrefId?.ToString() ?? string.Empty;
     }
 }

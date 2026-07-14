@@ -8,10 +8,10 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="{Binding WindowTitle}"
     Width="Auto"
-    MinWidth="600"
-    MinHeight="250"
-    MaxWidth="900"
-    MaxHeight="700"
+    MinWidth="700"
+    MinHeight="350"
+    MaxWidth="1100"
+    MaxHeight="800"
     d:DataContext="{d:DesignInstance Type=local:ViewModelWindowOSMMXrefPreview}"
     Icon="..\..\Images\HLUTool16.png"
     ResizeMode="CanResizeWithGrip"
@@ -44,7 +44,7 @@
                 CanUserSortColumns="True"
                 HeadersVisibility="All"
                 IsReadOnly="True"
-                ItemsSource="{Binding OsmmXrefPreviewRow}"
+                ItemsSource="{Binding OsmmXrefPreviewRows}"
                 RowHeight="24"
                 SelectionMode="Single"
                 SelectionUnit="FullRow"
@@ -80,6 +80,19 @@
                         MinWidth="50"
                         Binding="{Binding Count}"
                         Header="Count">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="HorizontalAlignment" Value="Right" />
+                                <Setter Property="Margin" Value="0,0,4,0" />
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn
+                        Width="Auto"
+                        MinWidth="60"
+                        Binding="{Binding XRefIdDisplay}"
+                        Header="XRef ID"
+                        SortMemberPath="OsmmXrefId">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock">
                                 <Setter Property="HorizontalAlignment" Value="Right" />

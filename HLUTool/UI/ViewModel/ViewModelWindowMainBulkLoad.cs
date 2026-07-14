@@ -199,7 +199,7 @@ namespace HLU.UI.ViewModel
                     _fieldMapping?.FeatCodeField);
 
             // Build the xref cache (same call reused in PerformLoadAsync).
-            Dictionary<(string, string, string, string, string), (string habprimary, string habsecond)> xrefCache =
+            Dictionary<(string, string, string, string, string), (int xrefId, string habprimary, string habsecond)> xrefCache =
                 ViewModelWindowMainBulkHelpers.BuildXrefCache(_viewModelMain);
 
             // Helper function to normalize string values for grouping: trims whitespace and
@@ -261,6 +261,7 @@ namespace HLU.UI.ViewModel
                     // status, and validity flags.
                     return new OsmmXrefPreviewRow
                     {
+                        OsmmXrefId = matched ? xref.xrefId : null,
                         Make = g.Key.Item1,
                         DescGroup = g.Key.Item2,
                         DescTerm = g.Key.Item3,
@@ -396,7 +397,7 @@ namespace HLU.UI.ViewModel
 
                 // Pre-build the xref lookup dictionary keyed by (make, descGroup, descTerm, theme, featCode).
                 // This avoids a separate SQL round-trip per feature.
-                Dictionary<(string, string, string, string, string), (string habprimary, string habsecond)> xrefCache =
+                Dictionary<(string, string, string, string, string), (int xrefId, string habprimary, string habsecond)> xrefCache =
                     ViewModelWindowMainBulkHelpers.BuildXrefCache(_viewModelMain);
 
                 List<long> orderedOids = [.. selectedOids.OrderBy(o => o)];

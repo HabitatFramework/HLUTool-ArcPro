@@ -141,18 +141,18 @@ namespace HLU.UI.ViewModel
         /// Queries <c>lut_osmm_habitat_xref</c> via SQL and returns a dictionary keyed by the
         /// five OSMM attribute values (<c>make</c>, <c>desc_group</c>, <c>desc_term</c>,
         /// <c>theme</c>, <c>feat_code</c>) that maps to the resolved
-        /// (<c>habitat_primary</c>, <c>habitat_secondaries</c>) pair.
+        /// (<c>osmm_xref_id</c>, <c>habitat_primary</c>, <c>habitat_secondaries</c>) tuple.
         /// <para>
         /// Empty-string and <c>NULL</c> column values are both normalised to <see cref="string.Empty"/>
         /// so that the dictionary key comparison is consistent with the values read from the GIS layer.
         /// </para>
         /// </summary>
         internal static Dictionary<(string make, string descGroup, string descTerm, string theme, string featCode),
-                           (string habprimary, string habsecond)> BuildXrefCache(ViewModelWindowMain viewModelMain)
+                           (int xrefId, string habprimary, string habsecond)> BuildXrefCache(ViewModelWindowMain viewModelMain)
         {
             // Create a case-insensitive dictionary to hold the xref cache, using a custom comparer
             // for the five-element tuple keys.
-            var cache = new Dictionary<(string, string, string, string, string), (string, string)>(
+            var cache = new Dictionary<(string, string, string, string, string), (int, string, string)>(
                 new TupleOrdinalIgnoreCaseComparer());
 
             var db = viewModelMain.DataBase;
@@ -161,7 +161,8 @@ namespace HLU.UI.ViewModel
             // Column names as they appear in the real database table.
             string qualTable = db.QualifyTableName(xrefTable.TableName);
             string sql = string.Format(
-                "SELECT {0}, {1}, {2}, {3}, {4}, {5}, {6} FROM {7}",
+                "SELECT {0}, {1}, {2}, {3}, {4}, {5}, {6}, {7} FROM {8}",
+                db.QuoteIdentifier("osmm_xref_id"),
                 db.QuoteIdentifier("make"),
                 db.QuoteIdentifier("desc_group"),
                 db.QuoteIdentifier("desc_term"),
@@ -184,13 +185,14 @@ namespace HLU.UI.ViewModel
 
                 while (reader.Read())
                 {
-                    var key = (Norm(reader[0]), Norm(reader[1]), Norm(reader[2]),
-                               Norm(reader[3]), Norm(reader[4]));
-                    string habprimary = Norm(reader[5]);
-                    string habsecond = Norm(reader[6]);
+                    int xrefId = reader.GetInt32(0);
+                    var key = (Norm(reader[1]), Norm(reader[2]), Norm(reader[3]),
+                               Norm(reader[4]), Norm(reader[5]));
+                    string habprimary = Norm(reader[6]);
+                    string habsecond = Norm(reader[7]);
 
                     // Keep first matching row only.
-                    cache.TryAdd(key, (habprimary, habsecond));
+                    cache.TryAdd(key, (xrefId, habprimary, habsecond));
                 }
             }
             finally

@@ -211,7 +211,7 @@ namespace HLU.UI.ViewModel
                 // Write the header row.
                 sw.WriteLine(
                     "Make,Desc Group,Desc Term,Theme,Feat Code," +
-                    "Count,Habitat Primary,Habitat Secondaries,Status");
+                    "Count,XRef ID,Habitat Primary,Habitat Secondaries,Status");
 
                 // Write each row, escaping any embedded double-quotes in the field values.
                 foreach (OsmmXrefPreviewRow r in OsmmXrefPreviewRows)
@@ -223,6 +223,7 @@ namespace HLU.UI.ViewModel
                         CsvEscape(r.Theme),
                         CsvEscape(r.FeatCode),
                         r.Count.ToString(),
+                        r.XRefIdDisplay,
                         CsvEscape(r.HabitatPrimary),
                         CsvEscape(r.HabitatSecondaries),
                         CsvEscape(r.Status)));
