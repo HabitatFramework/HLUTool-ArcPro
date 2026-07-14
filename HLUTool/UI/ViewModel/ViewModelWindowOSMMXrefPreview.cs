@@ -54,8 +54,8 @@ namespace HLU.UI.ViewModel
         /// </param>
         public ViewModelWindowOSMMXrefPreview(IEnumerable<OsmmXrefPreviewRow> rows)
         {
-            Rows = new ObservableCollection<OsmmXrefPreviewRow>(rows);
-            HasUnmatched = Rows.Any(r => !r.IsMatched);
+            OsmmXrefPreviewRows = new ObservableCollection<OsmmXrefPreviewRow>(rows);
+            HasUnmatched = OsmmXrefPreviewRows.Any(r => !r.IsMatched);
         }
 
         #endregion Constructor
@@ -94,7 +94,7 @@ namespace HLU.UI.ViewModel
         /// <summary>
         /// Gets the rows to display in the preview grid.
         /// </summary>
-        public ObservableCollection<OsmmXrefPreviewRow> Rows
+        public ObservableCollection<OsmmXrefPreviewRow> OsmmXrefPreviewRows
         {
             get;
         }
@@ -112,7 +112,7 @@ namespace HLU.UI.ViewModel
         /// Gets a value indicating whether any rows have invalid primary or secondary codes
         /// for the active layer geometry type.
         /// </summary>
-        public bool HasInvalidCodes => Rows.Any(r => r.IsMatched && (!r.IsPrimaryValid || !r.AreSecondariesValid));
+        public bool HasInvalidCodes => OsmmXrefPreviewRows.Any(r => r.IsMatched && (!r.IsPrimaryValid || !r.AreSecondariesValid));
 
         /// <summary>
         /// Gets the warning message shown when unmatched combinations exist.
@@ -182,7 +182,7 @@ namespace HLU.UI.ViewModel
             {
                 _exportCsvCommand ??= new RelayCommand(
                     _ => ExportCsv(),
-                    _ => Rows != null && Rows.Count > 0);
+                    _ => OsmmXrefPreviewRows != null && OsmmXrefPreviewRows.Count > 0);
                 return _exportCsvCommand;
             }
         }
@@ -214,7 +214,7 @@ namespace HLU.UI.ViewModel
                     "Count,Habitat Primary,Habitat Secondaries,Status");
 
                 // Write each row, escaping any embedded double-quotes in the field values.
-                foreach (OsmmXrefPreviewRow r in Rows)
+                foreach (OsmmXrefPreviewRow r in OsmmXrefPreviewRows)
                 {
                     sw.WriteLine(string.Join(",",
                         CsvEscape(r.Make),

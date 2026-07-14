@@ -108,7 +108,7 @@ namespace HLU.UI.ViewModel
 
         private ICommand _okCommand;
         private ICommand _cancelCommand;
-        private string _displayName = "Bulk Unload — Select Layers";
+        private string _displayName = "Bulk Unload";
 
         #endregion Fields
 

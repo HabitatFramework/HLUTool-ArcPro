@@ -282,7 +282,7 @@ namespace HLU.UI.ViewModel
             // Create the preview view model with the grouped rows and set its display name.
             ViewModelWindowOSMMXrefPreview previewVm = new(previewRows)
             {
-                DisplayName = "OSMM Attribute Preview"
+                DisplayName = "Bulk Load - OSMM Attribute Preview"
             };
 
             // Create the preview window, set its owner, startup location, topmost property, and data context.

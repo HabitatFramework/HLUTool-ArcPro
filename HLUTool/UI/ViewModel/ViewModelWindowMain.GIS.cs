@@ -2272,7 +2272,7 @@ namespace HLU.UI.ViewModel
                 "Have you exported the selected features as a backup or snapshot and performed a database backup before proceeding?\n\n" +
                 "Click 'Yes' to continue with the unload operation.\n" +
                 "Click 'No' to cancel and perform an export and create a backup first.",
-                "HLU: Bulk Unload - Backup Reminder",
+                "Bulk Unload - Backup Reminder",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
 
@@ -2332,7 +2332,7 @@ namespace HLU.UI.ViewModel
                 return;
             }
 
-            // Extract the export details.
+            // Extract the output details.
             string outputWorkspace = bulkLoadDetails.outputWorkspace;
             string outputFeatureClassName = bulkLoadDetails.outputFeatureClassName;
 

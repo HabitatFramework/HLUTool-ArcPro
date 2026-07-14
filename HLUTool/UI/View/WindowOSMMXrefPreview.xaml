@@ -44,7 +44,7 @@
                 CanUserSortColumns="True"
                 HeadersVisibility="All"
                 IsReadOnly="True"
-                ItemsSource="{Binding Rows}"
+                ItemsSource="{Binding OsmmXrefPreviewRow}"
                 RowHeight="24"
                 SelectionMode="Single"
                 SelectionUnit="FullRow"
