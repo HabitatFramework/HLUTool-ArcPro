@@ -2274,9 +2274,6 @@ namespace HLU.UI.ViewModel
                 // Columns to be saved in the history table when records are updated.
                 _historyColumns = InitializeHistoryColumns(_historyColumns);
 
-                // Check for any pending OSMM updates.
-                await CheckAnyOSMMUpdatesAsync();
-
                 // Check the active map is valid — this sets _gisLayerType (and thus
                 // RecordIds.SiteID) to reflect the actual active layer geometry before
                 // the initial row count is performed.
@@ -2284,6 +2281,9 @@ namespace HLU.UI.ViewModel
                 {
                     // Count rows of incid table now that _gisLayerType is correct.
                     IncidRowCount(true);
+
+                    // Check for any pending OSMM updates after geometry type is set.
+                    await CheckAnyOSMMUpdatesAsync();
 
                     // If it is valid move to first row
                     await MoveIncidCurrentRowIndexAsync(1);

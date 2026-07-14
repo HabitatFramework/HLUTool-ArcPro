@@ -24,6 +24,7 @@
                 <ResourceDictionary Source="Dictionary\NullableValueConverterDictionary.xaml" />
                 <ResourceDictionary Source="Dictionary\ErrorMessageConverterDictionary.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            <local:CountToStringConverter xmlns:local="clr-namespace:HLU.Converters" x:Key="countToStringConverter" />
         </ResourceDictionary>
     </controls:ProWindow.Resources>
 
@@ -114,34 +115,40 @@
                                                 IsReadOnly="True" />
                                             <DataGridTextColumn
                                                 Width="67"
-                                                Binding="{Binding Rejected}"
+                                                Binding="{Binding Rejected, Converter={StaticResource countToStringConverter}}"
                                                 Header="Rejected"
-                                                IsReadOnly="True" />
+                                                IsReadOnly="True"
+                                                SortMemberPath="Rejected" />
                                             <DataGridTextColumn
                                                 Width="67"
-                                                Binding="{Binding Ignored}"
+                                                Binding="{Binding Ignored, Converter={StaticResource countToStringConverter}}"
                                                 Header="Ignored"
-                                                IsReadOnly="True" />
+                                                IsReadOnly="True"
+                                                SortMemberPath="Ignored" />
                                             <DataGridTextColumn
                                                 Width="67"
-                                                Binding="{Binding Proposed}"
+                                                Binding="{Binding Proposed, Converter={StaticResource countToStringConverter}}"
                                                 Header="Proposed"
-                                                IsReadOnly="True" />
+                                                IsReadOnly="True"
+                                                SortMemberPath="Proposed" />
                                             <DataGridTextColumn
                                                 Width="67"
-                                                Binding="{Binding Pending}"
+                                                Binding="{Binding Pending, Converter={StaticResource countToStringConverter}}"
                                                 Header="Pending"
-                                                IsReadOnly="True" />
+                                                IsReadOnly="True"
+                                                SortMemberPath="Pending" />
                                             <DataGridTextColumn
                                                 Width="67"
-                                                Binding="{Binding Applied}"
+                                                Binding="{Binding Applied, Converter={StaticResource countToStringConverter}}"
                                                 Header="Applied"
-                                                IsReadOnly="True" />
+                                                IsReadOnly="True"
+                                                SortMemberPath="Applied" />
                                             <DataGridTextColumn
                                                 Width="70"
-                                                Binding="{Binding Total}"
+                                                Binding="{Binding Total, Converter={StaticResource countToStringConverter}}"
                                                 Header="Total"
                                                 IsReadOnly="True"
+                                                SortMemberPath="Total"
                                                 TextBlock.FontWeight="Bold" />
                                         </DataGrid.Columns>
                                     </DataGrid>
@@ -197,32 +204,32 @@
                                                 IsReadOnly="True" />
                                             <DataGridTextColumn
                                                 Width="67"
-                                                Binding="{Binding Rejected}"
+                                                Binding="{Binding Rejected, Converter={StaticResource countToStringConverter}}"
                                                 Header="Rejected"
                                                 IsReadOnly="True" />
                                             <DataGridTextColumn
                                                 Width="67"
-                                                Binding="{Binding Ignored}"
+                                                Binding="{Binding Ignored, Converter={StaticResource countToStringConverter}}"
                                                 Header="Ignored"
                                                 IsReadOnly="True" />
                                             <DataGridTextColumn
                                                 Width="67"
-                                                Binding="{Binding Proposed}"
+                                                Binding="{Binding Proposed, Converter={StaticResource countToStringConverter}}"
                                                 Header="Proposed"
                                                 IsReadOnly="True" />
                                             <DataGridTextColumn
                                                 Width="67"
-                                                Binding="{Binding Pending}"
+                                                Binding="{Binding Pending, Converter={StaticResource countToStringConverter}}"
                                                 Header="Pending"
                                                 IsReadOnly="True" />
                                             <DataGridTextColumn
                                                 Width="67"
-                                                Binding="{Binding Applied}"
+                                                Binding="{Binding Applied, Converter={StaticResource countToStringConverter}}"
                                                 Header="Applied"
                                                 IsReadOnly="True" />
                                             <DataGridTextColumn
                                                 Width="70"
-                                                Binding="{Binding Total}"
+                                                Binding="{Binding Total, Converter={StaticResource countToStringConverter}}"
                                                 Header="Total"
                                                 IsReadOnly="True" />
                                         </DataGrid.Columns>

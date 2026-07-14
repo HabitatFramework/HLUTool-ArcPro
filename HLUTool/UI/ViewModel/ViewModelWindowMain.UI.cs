@@ -7437,6 +7437,11 @@ namespace HLU.UI.ViewModel
                     // This ensures StatusIncid shows the correct total for the active layer.
                     IncidRowCount(true);
 
+                    // Check for any pending OSMM updates after the geometry type has changed.
+                    // This ensures CanOSMMReviewMode and CanOSMMBulkUpdateMode are correctly
+                    // enabled/disabled for the new layer type.
+                    await CheckAnyOSMMUpdatesAsync();
+
                     // Set the active HLU layer name.
                     ActiveLayerName = selectedValue;
 

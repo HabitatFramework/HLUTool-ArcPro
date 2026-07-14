@@ -739,7 +739,8 @@ namespace HLU.UI.ViewModel
             StringBuilder whereClause = new();
 
             // Add SiteID prefix filter to constrain counts to the active layer.
-            string siteIdFilter = String.Format("{0} LIKE {1}",
+            // Include " AND " prefix so it can be appended after the status condition.
+            string siteIdFilter = String.Format(" AND {0} LIKE {1}",
                 _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.incidColumn.ColumnName),
                 _db.QuoteValue(_viewModelMain.RecIDs.SiteID + ":%"));
             whereClause.Append(siteIdFilter);

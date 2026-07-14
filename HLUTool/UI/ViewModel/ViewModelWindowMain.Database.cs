@@ -2667,13 +2667,14 @@ namespace HLU.UI.ViewModel
         /// Populates the specified incid_osmm_updatesDataTable with rows that match the provided filter conditions.
         /// </summary>
         /// <remarks>If no filter conditions are provided, the method does not modify the data table. The
-        /// method only operates when at least one filter group is specified.</remarks>
+        /// method only operates when at least one filter group is specified. Returns false if no rows were found.</remarks>
         /// <param name="whereClause">A collection of filter conditions used to select which rows are retrieved. Each inner list represents a
         /// group of conditions combined with logical AND; multiple groups are combined with logical OR. Cannot be null
         /// or empty.</param>
         /// <param name="table">A reference to the incid_osmm_updatesDataTable that will be filled with the matching rows. Must be a valid,
         /// initialized data table.</param>
-        internal void GetIncidOSMMUpdatesRows(List<List<SqlFilterCondition>> whereClause,
+        /// <returns>True if rows were found and loaded; false if no rows match the filter conditions.</returns>
+        internal bool GetIncidOSMMUpdatesRows(List<List<SqlFilterCondition>> whereClause,
             ref HluDataSet.incid_osmm_updatesDataTable table)
         {
             if ((whereClause != null) && (whereClause.Count > 0))
@@ -2682,8 +2683,18 @@ namespace HLU.UI.ViewModel
                         new HluTableAdapter<HluDataSet.incid_osmm_updatesDataTable,
                             HluDataSet.incid_osmm_updatesRow>(_db);
 
-                _hluTableAdapterMgr.incid_osmm_updatesTableAdapter.Fill(table, whereClause);
+                try
+                {
+                    int rowCount = _hluTableAdapterMgr.incid_osmm_updatesTableAdapter.Fill(table, whereClause);
+                    return rowCount > 0;
+                }
+                catch
+                {
+                    // If Fill fails (e.g., no rows found or database error), return false
+                    return false;
+                }
             }
+            return false;
         }
 
         #endregion Incid MM Polygons Operations
