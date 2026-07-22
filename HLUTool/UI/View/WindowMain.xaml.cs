@@ -132,13 +132,12 @@ namespace HLU.UI.View
             if (e.NewValue is not ViewModelWindowMain vm)
                 return;
 
-            // Ensure the tool is initialised, showing any error dialog only once.
-            // DEBUG: Removed vm.InError suppression so all exceptions are reported.
-            AsyncHelpers.ObserveTask(
-                vm.InitializeAndCheckAsync(),
-                "HLU Tool",
-                "The HLU Tool encountered an error initialising.",
-                ex => ex is UserCancelledException);
+            // Do NOT call InitializeAndCheckAsync() here.
+            // OnShow(true) is raised by the framework immediately after DataContext is set
+            // when the pane becomes visible, and it already calls InitializeAndCheckAsync()
+            // with the _initializationTask guard. Calling it here too creates a race where
+            // both paths see _initializationTask == null (because UnloadApplication nulls it)
+            // and launch two parallel InitializeOnceAsync calls after every Reload.
         }
 
         /// <summary>

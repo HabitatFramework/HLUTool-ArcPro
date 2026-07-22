@@ -28,6 +28,7 @@ using ArcGIS.Desktop.Mapping;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -1158,7 +1159,7 @@ namespace HLU.Helpers
                         {
                             Geoprocessing.ShowMessageBox(gp_result.Messages, "GP Messages", GPMessageBoxStyle.Error);
 
-                            System.Diagnostics.Debug.WriteLine(
+                            Debug.WriteLine(
                                 $"Failed to add index: {string.Join("\n", gp_result.Messages.Select(m => m.Text))}");
 
                             //var messages = gp_result.Messages;
@@ -1176,7 +1177,7 @@ namespace HLU.Helpers
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Error checking for existing index: {ex.Message}");
+                    Debug.WriteLine($"Error checking for existing index: {ex.Message}");
                     return false;
                 }
             });
@@ -1386,7 +1387,7 @@ namespace HLU.Helpers
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Error finding duplicate join fields: {ex.Message}");
+                    Debug.WriteLine($"Error finding duplicate join fields: {ex.Message}");
                     return null;
                 }
             });
@@ -1886,7 +1887,7 @@ namespace HLU.Helpers
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Error getting geometry field names: {ex.Message}");
+                    Debug.WriteLine($"Error getting geometry field names: {ex.Message}");
                     return (null, null);
                 }
                 finally
@@ -2002,7 +2003,7 @@ namespace HLU.Helpers
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error adding feature layer to map: {ex.Message}");
+                Debug.WriteLine($"Error adding feature layer to map: {ex.Message}");
                 return false;
             }
         }
@@ -2279,7 +2280,7 @@ namespace HLU.Helpers
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Error getting distinct INCID values: {ex.Message}");
+                    Debug.WriteLine($"Error getting distinct INCID values: {ex.Message}");
                     return null;
                 }
 
@@ -2331,7 +2332,7 @@ namespace HLU.Helpers
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error filtering table by INCIDs: {ex.Message}");
+                Debug.WriteLine($"Error filtering table by INCIDs: {ex.Message}");
                 return null;
             }
         }

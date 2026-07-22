@@ -21,7 +21,6 @@
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using ArcGIS.Desktop.Core.Events;
-using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Internal.Framework.Controls;
 using ArcGIS.Desktop.Mapping;
@@ -70,7 +69,6 @@ namespace HLU.UI.ViewModel
         private bool _mapMemberEventsSubscribed;
         private bool _projectClosedEventsSubscribed;
         private bool _layersChangedEventsSubscribed;
-        private bool _editCompletedEventsSubscribed;
 
         #endregion Fields - Event Tracking
 
@@ -625,19 +623,6 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Handles the event raised when an edit operation completes.
-        /// Recomputes CanEdit in case the editing session state has changed.
-        /// </summary>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        private Task OnEditCompleted(EditCompletedEventArgs args)
-        {
-            // Recomputes whether editing is currently possible.
-            RefreshEditCapability();
-
-            return Task.CompletedTask;
-        }
-
-        /// <summary>
         /// Event when the project is closed. Recomputes whether editing is currently possible and makes the UI controls hidden.
         /// </summary>
         /// <param name="obj">Event arguments containing details about the project that was closed.</param>
@@ -666,9 +651,9 @@ namespace HLU.UI.ViewModel
             // Toggle the tab state to hidden.
             ToggleState("HLUTool_tab_state", false);
 
-            // Perform complete application cleanup when the pane is explicitly hidden/closed
-            // This allows fresh initialization when the user reopens the pane
-            UnloadApplication();
+            //// Perform complete application cleanup when the pane is explicitly hidden/closed
+            //// This allows fresh initialization when the user reopens the pane
+            //UnloadApplication();
         }
 
         /// <summary>

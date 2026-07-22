@@ -66,8 +66,7 @@ namespace HLU.UI.UserControls.Toolbar
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine(
-                    $"Error setting Bulk Update Mode: {ex}");
+                System.Diagnostics.Debug.WriteLine($"Error setting Bulk Update Mode: {ex}");
             }
         }
 

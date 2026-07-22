@@ -268,6 +268,10 @@ namespace HLU.UI.ViewModel
         private bool _saved = false;
         private bool _savingAttempted;
 
+        // Lock object to prevent two callers racing through EnsureInitializedAsync
+        // when _initializationTask has just been nulled by UnloadApplication.
+        private readonly object _initLock = new();
+
         #endregion Fields - Misc State
 
         #region Fields - Update Control
@@ -1840,12 +1844,20 @@ namespace HLU.UI.ViewModel
         /// <returns>A task that completes when initialisation completes.</returns>
         internal Task EnsureInitializedAsync()
         {
-            // If initialisation has already started, always return the same task
+            // Double-checked lock: cheap fast path (no lock on the common case where
+            // init is already running), safe slow path when _initializationTask is null
+            // after UnloadApplication so two concurrent callers cannot both start a new
+            // InitializeOnceAsync at the same time.
             if (_initializationTask != null)
                 return _initializationTask;
 
-            // Start initialisation once
-            _initializationTask = InitializeOnceAsync();
+            lock (_initLock)
+            {
+                if (_initializationTask != null)
+                    return _initializationTask;
+
+                _initializationTask = InitializeOnceAsync();
+            }
 
             return _initializationTask;
         }
@@ -2120,7 +2132,7 @@ namespace HLU.UI.ViewModel
             catch (Exception ex)
             {
                 HLUTool.WorkingGdbPath = null;
-                System.Diagnostics.Debug.WriteLine($"Failed to create working GDB: {ex.Message}");
+                Debug.WriteLine($"Failed to create working GDB: {ex.Message}");
             }
         }
 
@@ -2261,8 +2273,10 @@ namespace HLU.UI.ViewModel
                     _noneHabitatClassRow.sort_order = -1;
                 }
 
-                // Wire up event handler for copy switches
-                _copySwitches.PropertyChanged += new PropertyChangedEventHandler(CopySwitches_PropertyChanged);
+                // Wire up event handler for copy switches (unsubscribe first to prevent duplicate
+                // handlers accumulating across Reload cycles, since _copySwitches is never reset).
+                _copySwitches.PropertyChanged -= CopySwitches_PropertyChanged;
+                _copySwitches.PropertyChanged += CopySwitches_PropertyChanged;
 
                 int result;
                 // Columns that identify map features and are returned by GIS
@@ -3389,6 +3403,14 @@ namespace HLU.UI.ViewModel
                 _incidCurrentRowIndex = 0;
                 _incidRowCount = 0;
 
+                // Clear OSMM state (non-zero values cause property getters to query
+                // _lutOsmmHabitatXref before it is refilled on the next reload).
+                _incidOSMMUpdatesOSMMXref = 0;
+                _incidOSMMUpdatesProcessFlag = 0;
+                _incidOSMMUpdatesSpatialFlag = null;
+                _incidOSMMUpdatesChangeFlag = null;
+                _incidOSMMUpdatesStatus = null;
+
                 // Clear child rows
                 _incidIhsMatrixRows = null;
                 _incidIhsFormationRows = null;
@@ -3401,7 +3423,33 @@ namespace HLU.UI.ViewModel
                 _incidConditionRows = null;
                 _incidSecondaryRows = null;
 
-                // Clear lookup table caches
+                // Detach CollectionChanged handlers from observable collections before
+                // clearing them. These collections survive across reload cycles and their
+                // handlers would otherwise fire against a half-initialised ViewModel.
+                if (_incidSecondaryHabitats != null)
+                {
+                    _incidSecondaryHabitats.CollectionChanged -= IncidSecondaryHabitats_CollectionChanged;
+                    _incidSecondaryHabitats = null;
+                }
+
+                if (_incidBapRowsAuto != null)
+                {
+                    _incidBapRowsAuto.CollectionChanged -= IncidBapRowsAuto_CollectionChanged;
+                    foreach (BapEnvironment be in _incidBapRowsAuto)
+                        be.DataChanged -= IncidBapRowsUser_DataChanged;
+                    _incidBapRowsAuto = null;
+                }
+
+                if (_incidBapRowsUser != null)
+                {
+                    _incidBapRowsUser.CollectionChanged -= IncidBapRowsUser_CollectionChanged;
+                    foreach (BapEnvironment be in _incidBapRowsUser)
+                        be.DataChanged -= IncidBapRowsUser_DataChanged;
+                    _incidBapRowsUser = null;
+                }
+
+                // Clear lookup table caches (including sentinel rows tied to the
+                // old disposed HluDataSet — they must be recreated against the new one).
                 ClearLookupTableCaches();
 
                 // Clear workflow controllers
@@ -3415,7 +3463,7 @@ namespace HLU.UI.ViewModel
             {
                 // Log but don't throw - we're cleaning up
                 WriteInitLog($"UnloadApplication ERROR: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"Error during UnloadApplication: {ex}");
+                Debug.WriteLine($"Error during UnloadApplication: {ex}");
             }
         }
 
@@ -3451,7 +3499,7 @@ namespace HLU.UI.ViewModel
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error during ResetAndReopenDockPaneAsync: {ex}");
+                Debug.WriteLine($"Error during ResetAndReopenDockPaneAsync: {ex}");
                 MessageBox.Show($"Error resetting HLU Tool:{Environment.NewLine}{ex.Message}.", "HLU Tool error.");
             }
         }
@@ -3491,14 +3539,12 @@ namespace HLU.UI.ViewModel
                     LayersRemovedEvent.Unsubscribe(OnLayersRemoved);
                     _layersChangedEventsSubscribed = false;
                 }
-
-                // Note: Edit completed events are handled in the GIS partial file's OnDispose
             }
             catch (Exception ex)
             {
                 // Log but don't throw - we're cleaning up
                 WriteInitLog($"UnsubscribeFromEvents ERROR: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"Error during UnsubscribeFromEvents: {ex}");
+                Debug.WriteLine($"Error during UnsubscribeFromEvents: {ex}");
             }
         }
 
@@ -3543,6 +3589,14 @@ namespace HLU.UI.ViewModel
             _lutSecondaryBapHabitat = null;
             _lutSecondaryGroup = null;
             _lutSources = null;
+
+            // Reset sentinel rows that are guarded by null-checks in InitializeToolPaneAsync.
+            // They hold typed DataRows tied to the disposed HluDataSet and must be recreated
+            // against the new dataset on the next reload, not reused from the old one.
+            _allRow = null;
+            _allEssRow = null;
+            _noneReasonRow = null;
+            _noneProcessRow = null;
         }
 
         #endregion Show DockPane

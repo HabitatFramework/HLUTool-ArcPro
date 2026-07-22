@@ -808,7 +808,7 @@ namespace HLU.UI.ViewModel
 
                 // Return the first proposed update primary code for this incid
                 // (there should only be one).
-                var q = from ohx in _lutOsmmHabitatXref
+                var q = from ohx in _lutOsmmHabitatXref ?? []
                         where ohx.osmm_xref_id == _incidOSMMUpdatesOSMMXref
                         select ohx.habitat_primary;
 
@@ -837,7 +837,7 @@ namespace HLU.UI.ViewModel
 
                 // Return the first proposed update secondary codes for this incid
                 // (there should only be one).
-                var q = from ohx in _lutOsmmHabitatXref
+                var q = from ohx in _lutOsmmHabitatXref ?? []
                         where ohx.osmm_xref_id == _incidOSMMUpdatesOSMMXref
                         select ohx.habitat_secondaries;
 
