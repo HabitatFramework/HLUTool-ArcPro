@@ -2131,10 +2131,11 @@ namespace HLU.UI.ViewModel
         /// </summary>
         /// <returns>A task that completes when the connection is open and validated.</returns>
         /// <exception cref="HLUToolException">Thrown if no connection can be created or the dataset is invalid.</exception>
+        /// <exception cref="UserCancelledException">Thrown if the user cancelled the connection process.</exception>
         private async Task OpenDatabaseConnectionAsync()
         {
             if ((_db = await DbFactory.CreateConnectionAsync(DbConnectionTimeout)) == null)
-                throw new HLUToolException("No database connection.");
+                throw new UserCancelledException();
 
             _hluDS = new HluDataSet();
 
@@ -2346,6 +2347,12 @@ namespace HLU.UI.ViewModel
         /// <returns>Returns a task that resolves to true if there is a valid active map; false otherwise.</returns>
         internal async Task<bool> CheckActiveMapAsync(bool forceReset = false)
         {
+            // Don't check the active map if required dependencies are not yet initialized.
+            // Check individual dependencies rather than _initialised flag to allow
+            // this method to work during initial startup when called from InitializeToolPaneAsync.
+            if (_hluDS == null || _db == null || _recIDs == null)
+                return false;
+
             // Check the GIS map
             ChangeCursor(Cursors.Wait, "Checking GIS map ...");
 
@@ -3175,7 +3182,7 @@ namespace HLU.UI.ViewModel
         internal static Task ShowDockPane()
         {
             // Get the dockpane DAML id.
-            DockPane pane = FrameworkApplication.DockPaneManager.Find(DockPaneID);
+            DockPane pane = FrameworkApplication.DockPaneManager.Find(_dockPaneID);
             if (pane == null)
                 return Task.CompletedTask;
 
@@ -3279,6 +3286,263 @@ namespace HLU.UI.ViewModel
                 if (!InError && _initialised)
                     GridMainVisibility = Visibility.Visible;
             }
+            else
+            {
+                // Dockpane is being hidden (user switched to another pane or minimized)
+                // Note: We don't unload here because OnShow(false) is called when switching between panes.
+                // Unloading only happens in OnDispose() when ArcGIS Pro closes or via explicit UnloadApplication() call.
+
+                // Just toggle the tab state to hidden
+                ToggleState("HLUTool_tab_state", false);
+            }
+        }
+
+        /// <summary>
+        /// Completely unloads the application state, unsubscribes from events, and cleans up resources.
+        /// This allows the application to reinitialize from scratch the next time the dockpane is shown.
+        /// </summary>
+        private void UnloadApplication()
+        {
+            try
+            {
+                WriteInitLog("UnloadApplication STARTED");
+
+                // Hide the UI immediately
+                GridMainVisibility = Visibility.Hidden;
+
+                // Toggle the tab state to hidden
+                ToggleState("HLUTool_tab_state", false);
+
+                // Unsubscribe from all events
+                UnsubscribeFromEvents();
+
+                // Clear the GIS application reference
+                if (_gisApp != null)
+                {
+                    _gisApp = null;
+                }
+
+                // Clear the active map view reference
+                _activeMapView = null;
+                _activeLayerName = null;
+
+                // Close database connection if open
+                if (_db != null)
+                {
+                    try
+                    {
+                        _db.Connection?.Close();
+                        _db.Connection?.Dispose();
+                    }
+                    catch
+                    {
+                        // Ignore errors during cleanup
+                    }
+                    _db = null;
+                }
+
+                // Clear the dataset
+                if (_hluDS != null)
+                {
+                    _hluDS.Clear();
+                    _hluDS.Dispose();
+                    _hluDS = null;
+                }
+
+                // Clear the table adapter manager
+                _hluTableAdapterMgr = null;
+
+                // Reset initialization flags
+                _initialised = false;
+                _inError = false;
+                _initializationTask = null;
+                _initializationException = null;
+
+                // Reset work mode
+                _workMode = WorkMode.None;
+
+                // Clear selection state
+                _incidsSelectedMap = null;
+                _toidsSelectedMap = null;
+                _fragsSelectedMap = null;
+                _selectedIncidsInGISCount = 0;
+                _selectedToidsInGISCount = 0;
+                _selectedFragsInGISCount = 0;
+                _selectedFeaturesInGISCount = 0;
+                _selectedIncidsInDBCount = 0;
+                _selectedFragsInDBCount = 0;
+                _currentIncidToidsInGISCount = 0;
+                _currentIncidFragsInGISCount = 0;
+                _currentIncidToidsInDBCount = 0;
+                _currentIncidFragsInDBCount = 0;
+
+                // Clear filter state
+                _gisSelection = null;
+                _incidSelection = null;
+                _incidMMShadowSelection = null;
+                _incidSelectionWhereClause = null;
+                _filteredByMap = false;
+
+                // Clear current record state
+                _incidCurrentRow = null;
+                _incidCurrentRowClone = null;
+                _incidCurrentRowIndex = 0;
+                _incidRowCount = 0;
+
+                // Clear child rows
+                _incidIhsMatrixRows = null;
+                _incidIhsFormationRows = null;
+                _incidIhsManagementRows = null;
+                _incidIhsComplexRows = null;
+                _incidBapRows = null;
+                _incidSourcesRows = null;
+                _incidOSMMUpdatesRows = null;
+                _incidHistoryRows = null;
+                _incidConditionRows = null;
+                _incidSecondaryRows = null;
+
+                // Clear lookup table caches
+                ClearLookupTableCaches();
+
+                // Clear workflow controllers
+                _viewModelBulkUpdate = null;
+                _viewModelOSMMUpdate = null;
+                _viewModelUpd = null;
+
+                WriteInitLog("UnloadApplication COMPLETED");
+            }
+            catch (Exception ex)
+            {
+                // Log but don't throw - we're cleaning up
+                WriteInitLog($"UnloadApplication ERROR: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error during UnloadApplication: {ex}");
+            }
+        }
+
+        /// <summary>
+        /// Manually resets and unloads the application, then reopens it fresh.
+        /// This provides a clean way for users to restart the application.
+        /// Call this from a ribbon button or menu item to give users explicit control over reset.
+        /// </summary>
+        internal static async Task ResetAndReopenDockPaneAsync()
+        {
+            try
+            {
+                // Get the dockpane instance
+                DockPane pane = FrameworkApplication.DockPaneManager.Find(_dockPaneID);
+                if (pane == null)
+                    return;
+
+                // Get the ViewModel
+                if (pane is ViewModelWindowMain vm)
+                {
+                    // Perform cleanup
+                    vm.UnloadApplication();
+                }
+
+                // Hide the dockpane (this removes the tab and ensures complete cleanup)
+                pane.Hide();
+
+                // Small delay to ensure cleanup is complete
+                await Task.Delay(500);
+
+                // Reopen the dockpane with fresh initialization
+                await ShowDockPane();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error during ResetAndReopenDockPaneAsync: {ex}");
+                MessageBox.Show($"Error resetting HLU Tool:{Environment.NewLine}{ex.Message}.", "HLU Tool error.");
+            }
+        }
+
+        /// <summary>
+        /// Unsubscribes from all event handlers to prevent memory leaks and unwanted behavior.
+        /// </summary>
+        private void UnsubscribeFromEvents()
+        {
+            try
+            {
+                // Unsubscribe from map events
+                if (_mapEventsSubscribed)
+                {
+                    ActiveMapViewChangedEvent.Unsubscribe(OnActiveMapViewChanged);
+                    _mapEventsSubscribed = false;
+                }
+
+                // Unsubscribe from map member events
+                if (_mapMemberEventsSubscribed)
+                {
+                    MapMemberPropertiesChangedEvent.Unsubscribe(OnMapMemberPropertiesChanged);
+                    _mapMemberEventsSubscribed = false;
+                }
+
+                // Unsubscribe from project closed events
+                if (_projectClosedEventsSubscribed)
+                {
+                    ProjectClosedEvent.Unsubscribe(OnProjectClosed);
+                    _projectClosedEventsSubscribed = false;
+                }
+
+                // Unsubscribe from layers changed events
+                if (_layersChangedEventsSubscribed)
+                {
+                    LayersAddedEvent.Unsubscribe(OnLayersAdded);
+                    LayersRemovedEvent.Unsubscribe(OnLayersRemoved);
+                    _layersChangedEventsSubscribed = false;
+                }
+
+                // Note: Edit completed events are handled in the GIS partial file's OnDispose
+            }
+            catch (Exception ex)
+            {
+                // Log but don't throw - we're cleaning up
+                WriteInitLog($"UnsubscribeFromEvents ERROR: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error during UnsubscribeFromEvents: {ex}");
+            }
+        }
+
+        /// <summary>
+        /// Clears all lookup table caches to free memory and ensure fresh data on next initialization.
+        /// </summary>
+        private void ClearLookupTableCaches()
+        {
+            _reasonCodes = null;
+            _reasonCodesWithNone = null;
+            _processCodes = null;
+            _processCodesWithNone = null;
+            _noneHabitatClassRow = null;
+            _habitatClassCodesWithNone = null;
+            _qualityDeterminationCodes = null;
+            _qualityInterpretationCodes = null;
+
+            _lutBoundaryMap = null;
+            _lutCondition = null;
+            _lutConditionQualifier = null;
+            _lutHabitatClass = null;
+            _lutHabitatType = null;
+            _lutHabitatTypePrimary = null;
+            _lutHabitatTypeSecondary = null;
+            _lutIhsComplex = null;
+            _lutIhsFormation = null;
+            _lutIhsHabitat = null;
+            _lutIhsManagement = null;
+            _lutIhsMatrix = null;
+            _lutImportance = null;
+            _lutLegacyHabitat = null;
+            _lutOsmmHabitatXref = null;
+            _lutPrimary = null;
+            _lutPrimaryBapHabitat = null;
+            _lutPrimaryCategory = null;
+            _lutPrimarySecondary = null;
+            _lutProcess = null;
+            _lutQualityDetermination = null;
+            _lutQualityInterpretation = null;
+            _lutReason = null;
+            _lutSecondary = null;
+            _lutSecondaryBapHabitat = null;
+            _lutSecondaryGroup = null;
+            _lutSources = null;
         }
 
         #endregion Show DockPane

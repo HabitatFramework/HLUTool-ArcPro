@@ -658,63 +658,39 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Event when the DockPane is hidden.
+        /// Event when the DockPane is hidden (user clicked X or pane was explicitly closed).
+        /// This is different from OnShow(false) which is also called when switching tabs.
         /// </summary>
         protected override void OnHidden()
         {
             // Toggle the tab state to hidden.
             ToggleState("HLUTool_tab_state", false);
+
+            // Perform complete application cleanup when the pane is explicitly hidden/closed
+            // This allows fresh initialization when the user reopens the pane
+            UnloadApplication();
         }
 
         /// <summary>
         /// Event when the DockPane is disposed. Unsubscribes from all events to prevent memory
-        /// leaks and calls base to allow parent cleanup.
+        /// leaks, performs complete cleanup, and calls base to allow parent cleanup.
         /// </summary>
         protected override void OnDispose()
         {
-            // Unsubscribe from map events
-            if (_mapEventsSubscribed)
+            try
             {
-                ActiveMapViewChangedEvent.Unsubscribe(OnActiveMapViewChanged);
-                _mapEventsSubscribed = false;
-            }
+                WriteInitLog("OnDispose called");
 
-            // Unsubscribe from layer events
-            if (_layersChangedEventsSubscribed)
-            {
-                LayersAddedEvent.Unsubscribe(OnLayersAdded);
-                LayersRemovedEvent.Unsubscribe(OnLayersRemoved);
-                _layersChangedEventsSubscribed = false;
+                // Perform complete application cleanup
+                // This ensures resources are released whether the pane is hidden or disposed
+                UnloadApplication();
             }
-
-            // Unsubscribe from editing events
-            if (_projectClosedEventsSubscribed)
+            catch (Exception ex)
             {
-                ProjectClosedEvent.Unsubscribe(OnProjectClosed);
-                _projectClosedEventsSubscribed = false;
+                // Log but don't throw - we're disposing
+                WriteInitLog($"OnDispose ERROR: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error during OnDispose: {ex}");
             }
-
-            // Unsubscribe from map member events
-            if (_mapMemberEventsSubscribed)
-            {
-                MapMemberPropertiesChangedEvent.Unsubscribe(OnMapMemberPropertiesChanged);
-                _mapMemberEventsSubscribed = false;
-            }
-
-            // Unsubscribe from edit completed events
-            if (_editCompletedEventsSubscribed)
-            {
-                EditCompletedEvent.Unsubscribe(OnEditCompleted);
-                _editCompletedEventsSubscribed = false;
-            }
-
-            // Clean up all message timers
-            foreach (var timer in _messageTimers.Values)
-            {
-                timer?.Stop();
-                timer?.Dispose();
-            }
-            _messageTimers.Clear();
 
             // Call base to allow parent cleanup
             base.OnDispose();
