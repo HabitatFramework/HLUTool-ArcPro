@@ -186,7 +186,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         private void LoadAvailableLayers()
         {
-            if (_viewModel?.AvailableHLULayerNames?.Any() == true)
+            if (_viewModel?.AvailableHLULayerNames?.Count > 0)
             {
                 // Add new layers from the ViewModel.
                 foreach (var layerName in _viewModel.AvailableHLULayerNames)
