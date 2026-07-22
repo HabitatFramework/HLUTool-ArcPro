@@ -806,6 +806,10 @@ namespace HLU.UI.ViewModel
                 if (_incidOSMMUpdatesOSMMXref <= 0)
                     return null;
 
+                // Return null if lookup table has been cleared during shutdown.
+                if (_lutOsmmHabitatXref == null)
+                    return null;
+
                 // Return the first proposed update primary code for this incid
                 // (there should only be one).
                 var q = from ohx in _lutOsmmHabitatXref ?? []
@@ -833,6 +837,10 @@ namespace HLU.UI.ViewModel
             {
                 // If there is no OSMM xref for this incid then return null.
                 if (_incidOSMMUpdatesOSMMXref <= 0)
+                    return null;
+
+                // Return null if lookup table has been cleared during shutdown.
+                if (_lutOsmmHabitatXref == null)
                     return null;
 
                 // Return the first proposed update secondary codes for this incid
@@ -930,6 +938,10 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                // Don't process if database/lookups not yet loaded
+                if (_hluDS == null || _lutReason == null)
+                    return null;
+
                 // Get the list of values from the lookup table.
                 _reasonCodes ??= [.. _lutReason.OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
@@ -945,6 +957,10 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                // Don't process if database/lookups not yet loaded
+                if (_hluDS == null || _lutReason == null)
+                    return null;
+
                 // Get the list of values from the lookup table.
                 _reasonCodes ??= [.. _lutReason.OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
@@ -993,6 +1009,10 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                // Don't process if database/lookups not yet loaded
+                if (_hluDS == null || _lutProcess == null)
+                    return null;
+
                 // Get the list of values from the lookup table.
                 _processCodes ??= [.. _lutProcess.OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
@@ -1008,6 +1028,10 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                // Don't process if database/lookups not yet loaded
+                if (_hluDS == null || _lutProcess == null)
+                    return null;
+
                 // Get the list of values from the lookup table.
                 _processCodes ??= [.. _lutProcess.OrderBy(r => r.sort_order).ThenBy(r => r.description)];
 
@@ -1309,7 +1333,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_lutHabitatClass == null || !_lutHabitatClass.Any())
+                // Don't process if database/lookups not yet loaded
+                if (_hluDS == null || _lutHabitatClass == null || !_lutHabitatClass.Any())
                     return null;
 
                 // Set the habitat classes for all local habitat classes with
@@ -1333,7 +1358,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                if (_lutHabitatClass == null || !_lutHabitatClass.Any())
+                // Don't process if database/lookups not yet loaded
+                if (_hluDS == null || _lutHabitatClass == null || !_lutHabitatClass.Any())
                     return null;
 
                 _habitatClassCodesWithNone ??= [_noneHabitatClassRow, .. HabitatClassCodes];
@@ -1387,6 +1413,10 @@ namespace HLU.UI.ViewModel
             }
             set
             {
+                // Don't process if database/lookups not yet loaded
+                if (_hluDS == null)
+                    return;
+
                 _habitatClass = value;
 
                 if (!String.IsNullOrEmpty(_habitatClass))
@@ -1422,6 +1452,10 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                // Don't process if database/lookups not yet loaded
+                if (_hluDS == null || _lutHabitatType == null)
+                    return null;
+
                 // Get the list of values from the lookup table.
                 if (!String.IsNullOrEmpty(_habitatClass))
                 {
@@ -1454,6 +1488,10 @@ namespace HLU.UI.ViewModel
             }
             set
             {
+                // Don't process if database/lookups not yet loaded
+                if (_hluDS == null || _lutHabitatType == null)
+                    return;
+
                 // Check if the habitat type has changed.
                 // _forceHabitatTypeRebuild is set when the active layer's geometry type changes
                 // so the codes are rebuilt without clearing the collection (which would trigger
@@ -1744,6 +1782,10 @@ namespace HLU.UI.ViewModel
             }
             set
             {
+                // Don't process if database/lookups not yet loaded
+                if (_hluDS == null || _lutHabitatTypePrimary == null)
+                    return;
+
                 // Skip setter processing during HabitatType refresh to prevent binding re-entry
                 // and spurious validation errors or Changed flag triggers.
                 if (_refreshingHabitatType)
@@ -10359,7 +10401,7 @@ namespace HLU.UI.ViewModel
             if (IsNotBulkMode && IsNotOsmmReviewMode)
             {
                 // Can switch if there is more than one map layer.
-                if (_gisApp.HluLayerCount > 1)
+                if (_gisApp?.HluLayerCount > 1)
                 {
                     // Enable the combo box.
                     ActiveLayerComboBox.GetInstance()?.UpdateState(true);

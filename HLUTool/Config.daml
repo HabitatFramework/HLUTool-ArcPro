@@ -141,7 +141,6 @@
 				<!-- Help group -->
 				<group id="HLUTool_Group_Help" caption="Help" keytip="GI">
 					<button refID="HLUTool_btnOptions" size="middle" />
-					<button refID="HLUTool_btnReload" size="middle" />
 					<button refID="HLUTool_btnAbout" size="middle" />
 				</group>
 			</groups>
@@ -628,18 +627,6 @@
 						largeImage="pack://application:,,,/HLUTool;component/Images/Options32.png">
 					<tooltip heading="Export Options">
 						Open Options window to configure export settings.
-					</tooltip>
-				</button>
-
-				<button id="HLUTool_btnReload"
-						caption="Reload"
-						className="HLU.UI.UserControls.Toolbar.ResetAppButton"
-						loadOnClick="false"
-						keytip="RL"
-						smallImage="pack://application:,,,/HLUTool;component/Images/Reload16.png"
-						largeImage="pack://application:,,,/HLUTool;component/Images/Reload32.png">
-					<tooltip heading="Reload Tool">
-						Restarts the HLU Tool with a fresh state, reloading all lookup tables and configurations.<disabledText />
 					</tooltip>
 				</button>
 

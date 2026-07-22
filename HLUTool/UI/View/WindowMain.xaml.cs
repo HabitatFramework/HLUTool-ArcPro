@@ -19,8 +19,6 @@
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using HLU.Data;
-using HLU.Exceptions;
-using HLU.Helpers;
 using HLU.UI.UserControls;
 using HLU.UI.ViewModel;
 using System.Linq;
@@ -122,22 +120,14 @@ namespace HLU.UI.View
         }
 
         /// <summary>
-        /// Handles the DataContext changed event to initialise the real dockpane view model.
+        /// Handles the DataContext changed event. Initialization is driven by OnShow() in the
+        /// view model, which is the canonical ArcGIS Pro DockPane lifecycle entry point.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">The event data containing the old and new DataContext values.</param>
         private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            // Check if the new DataContext is the expected view model type.
-            if (e.NewValue is not ViewModelWindowMain vm)
-                return;
-
-            // Do NOT call InitializeAndCheckAsync() here.
-            // OnShow(true) is raised by the framework immediately after DataContext is set
-            // when the pane becomes visible, and it already calls InitializeAndCheckAsync()
-            // with the _initializationTask guard. Calling it here too creates a race where
-            // both paths see _initializationTask == null (because UnloadApplication nulls it)
-            // and launch two parallel InitializeOnceAsync calls after every Reload.
+            // No-op: initialization is triggered by OnShow(true) in ViewModelWindowMain.
         }
 
         /// <summary>

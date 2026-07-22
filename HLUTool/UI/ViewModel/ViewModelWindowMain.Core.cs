@@ -268,10 +268,6 @@ namespace HLU.UI.ViewModel
         private bool _saved = false;
         private bool _savingAttempted;
 
-        // Lock object to prevent two callers racing through EnsureInitializedAsync
-        // when _initializationTask has just been nulled by UnloadApplication.
-        private readonly object _initLock = new();
-
         #endregion Fields - Misc State
 
         #region Fields - Update Control
@@ -1844,20 +1840,12 @@ namespace HLU.UI.ViewModel
         /// <returns>A task that completes when initialisation completes.</returns>
         internal Task EnsureInitializedAsync()
         {
-            // Double-checked lock: cheap fast path (no lock on the common case where
-            // init is already running), safe slow path when _initializationTask is null
-            // after UnloadApplication so two concurrent callers cannot both start a new
-            // InitializeOnceAsync at the same time.
+            // If initialisation has already started, always return the same task.
             if (_initializationTask != null)
                 return _initializationTask;
 
-            lock (_initLock)
-            {
-                if (_initializationTask != null)
-                    return _initializationTask;
-
-                _initializationTask = InitializeOnceAsync();
-            }
+            // Start initialisation once.
+            _initializationTask = InitializeOnceAsync();
 
             return _initializationTask;
         }
@@ -3312,8 +3300,52 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
+        /// Unsubscribes from all event handlers to prevent memory leaks and unwanted behavior.
+        /// </summary>
+        private void UnsubscribeFromEvents()
+        {
+            try
+            {
+                // Unsubscribe from map events
+                if (_mapEventsSubscribed)
+                {
+                    ActiveMapViewChangedEvent.Unsubscribe(OnActiveMapViewChanged);
+                    _mapEventsSubscribed = false;
+                }
+
+                // Unsubscribe from map member events
+                if (_mapMemberEventsSubscribed)
+                {
+                    MapMemberPropertiesChangedEvent.Unsubscribe(OnMapMemberPropertiesChanged);
+                    _mapMemberEventsSubscribed = false;
+                }
+
+                // Unsubscribe from project closed events
+                if (_projectClosedEventsSubscribed)
+                {
+                    ProjectClosedEvent.Unsubscribe(OnProjectClosed);
+                    _projectClosedEventsSubscribed = false;
+                }
+
+                // Unsubscribe from layers changed events
+                if (_layersChangedEventsSubscribed)
+                {
+                    LayersAddedEvent.Unsubscribe(OnLayersAdded);
+                    LayersRemovedEvent.Unsubscribe(OnLayersRemoved);
+                    _layersChangedEventsSubscribed = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log but don't throw - we're cleaning up
+                WriteInitLog($"UnsubscribeFromEvents ERROR: {ex.Message}");
+                Debug.WriteLine($"Error during UnsubscribeFromEvents: {ex}");
+            }
+        }
+
+        /// <summary>
         /// Completely unloads the application state, unsubscribes from events, and cleans up resources.
-        /// This allows the application to reinitialize from scratch the next time the dockpane is shown.
+        /// Called from OnDispose() when ArcGIS Pro closes the pane.
         /// </summary>
         private void UnloadApplication()
         {
@@ -3403,8 +3435,7 @@ namespace HLU.UI.ViewModel
                 _incidCurrentRowIndex = 0;
                 _incidRowCount = 0;
 
-                // Clear OSMM state (non-zero values cause property getters to query
-                // _lutOsmmHabitatXref before it is refilled on the next reload).
+                // Clear OSMM state
                 _incidOSMMUpdatesOSMMXref = 0;
                 _incidOSMMUpdatesProcessFlag = 0;
                 _incidOSMMUpdatesSpatialFlag = null;
@@ -3423,9 +3454,7 @@ namespace HLU.UI.ViewModel
                 _incidConditionRows = null;
                 _incidSecondaryRows = null;
 
-                // Detach CollectionChanged handlers from observable collections before
-                // clearing them. These collections survive across reload cycles and their
-                // handlers would otherwise fire against a half-initialised ViewModel.
+                // Detach CollectionChanged handlers from observable collections before clearing them.
                 if (_incidSecondaryHabitats != null)
                 {
                     _incidSecondaryHabitats.CollectionChanged -= IncidSecondaryHabitats_CollectionChanged;
@@ -3448,8 +3477,7 @@ namespace HLU.UI.ViewModel
                     _incidBapRowsUser = null;
                 }
 
-                // Clear lookup table caches (including sentinel rows tied to the
-                // old disposed HluDataSet — they must be recreated against the new one).
+                // Clear lookup table caches
                 ClearLookupTableCaches();
 
                 // Clear workflow controllers
@@ -3464,87 +3492,6 @@ namespace HLU.UI.ViewModel
                 // Log but don't throw - we're cleaning up
                 WriteInitLog($"UnloadApplication ERROR: {ex.Message}");
                 Debug.WriteLine($"Error during UnloadApplication: {ex}");
-            }
-        }
-
-        /// <summary>
-        /// Manually resets and unloads the application, then reopens it fresh.
-        /// This provides a clean way for users to restart the application.
-        /// Call this from a ribbon button or menu item to give users explicit control over reset.
-        /// </summary>
-        internal static async Task ResetAndReopenDockPaneAsync()
-        {
-            try
-            {
-                // Get the dockpane instance
-                DockPane pane = FrameworkApplication.DockPaneManager.Find(_dockPaneID);
-                if (pane == null)
-                    return;
-
-                // Get the ViewModel
-                if (pane is ViewModelWindowMain vm)
-                {
-                    // Perform cleanup
-                    vm.UnloadApplication();
-                }
-
-                // Hide the dockpane (this removes the tab and ensures complete cleanup)
-                pane.Hide();
-
-                // Small delay to ensure cleanup is complete
-                await Task.Delay(500);
-
-                // Reopen the dockpane with fresh initialization
-                await ShowDockPane();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error during ResetAndReopenDockPaneAsync: {ex}");
-                MessageBox.Show($"Error resetting HLU Tool:{Environment.NewLine}{ex.Message}.", "HLU Tool error.");
-            }
-        }
-
-        /// <summary>
-        /// Unsubscribes from all event handlers to prevent memory leaks and unwanted behavior.
-        /// </summary>
-        private void UnsubscribeFromEvents()
-        {
-            try
-            {
-                // Unsubscribe from map events
-                if (_mapEventsSubscribed)
-                {
-                    ActiveMapViewChangedEvent.Unsubscribe(OnActiveMapViewChanged);
-                    _mapEventsSubscribed = false;
-                }
-
-                // Unsubscribe from map member events
-                if (_mapMemberEventsSubscribed)
-                {
-                    MapMemberPropertiesChangedEvent.Unsubscribe(OnMapMemberPropertiesChanged);
-                    _mapMemberEventsSubscribed = false;
-                }
-
-                // Unsubscribe from project closed events
-                if (_projectClosedEventsSubscribed)
-                {
-                    ProjectClosedEvent.Unsubscribe(OnProjectClosed);
-                    _projectClosedEventsSubscribed = false;
-                }
-
-                // Unsubscribe from layers changed events
-                if (_layersChangedEventsSubscribed)
-                {
-                    LayersAddedEvent.Unsubscribe(OnLayersAdded);
-                    LayersRemovedEvent.Unsubscribe(OnLayersRemoved);
-                    _layersChangedEventsSubscribed = false;
-                }
-            }
-            catch (Exception ex)
-            {
-                // Log but don't throw - we're cleaning up
-                WriteInitLog($"UnsubscribeFromEvents ERROR: {ex.Message}");
-                Debug.WriteLine($"Error during UnsubscribeFromEvents: {ex}");
             }
         }
 
@@ -4072,8 +4019,9 @@ namespace HLU.UI.ViewModel
                                 // Set the new current row index.
                                 _incidCurrentRowIndex = value;
 
-                                // Clear any existing navigation messages
+                                // Clear any existing navigation and GIS messages
                                 ClearMessage(category: MessageCategory.Navigation);
+                                ClearMessage(category: MessageCategory.GIS);
 
                                 // Move to the new incid
                                 await NewIncidCurrentRowAsync();

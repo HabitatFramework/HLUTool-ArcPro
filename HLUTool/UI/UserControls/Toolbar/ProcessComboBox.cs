@@ -189,7 +189,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         private void LoadProcesss()
         {
-            if (_viewModel?.ProcessCodes?.Length != 0)
+            if (_viewModel?.ProcessCodes?.Any() == true)
             {
                 // Add new layers from the ViewModel.
                 foreach (var processCode in _viewModel.ProcessCodes)

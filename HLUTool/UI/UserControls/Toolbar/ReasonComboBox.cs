@@ -189,7 +189,7 @@ namespace HLU.UI.UserControls.Toolbar
         /// </summary>
         private void LoadReasons()
         {
-            if (_viewModel?.ReasonCodes?.Length != 0)
+            if (_viewModel?.ReasonCodes?.Any() == true)
             {
                 // Add new layers from the ViewModel.
                 foreach (var reasonCode in _viewModel.ReasonCodes)

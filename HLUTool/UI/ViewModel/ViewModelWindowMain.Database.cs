@@ -1096,12 +1096,16 @@ namespace HLU.UI.ViewModel
         {
             List<string[]> errors = [];
 
+            Nullable<int> source1Id = IncidSource1Id;
+            Nullable<int> source2Id = IncidSource2Id;
+            Nullable<int> source3Id = IncidSource3Id;
+
             // Validate the source if it is real
-            if (IncidSource1Id != null && IncidSource1Id != Int32.MinValue)
+            if (source1Id != null && source1Id != Int32.MinValue)
             {
                 // Check the source id is found in the lookup table
                 EnumerableRowCollection<HluDataSet.lut_sourcesRow> rows =
-                    HluDataset.lut_sources.Where(r => r.source_id == IncidSource1Id);
+                    HluDataset.lut_sources.Where(r => r.source_id == source1Id);
                 if (!rows.Any())
                     errors.Add(["IncidSource1Id", "Error: Source name is mandatory for each source"]);
                 if (IncidSource1Date == null)
@@ -1145,8 +1149,8 @@ namespace HLU.UI.ViewModel
             {
                 // Validation for OSMM Bulk Update mode.
                 if ((IsOsmmBulkMode) &&
-                    (IncidSource2Id == null || IncidSource2Id == Int32.MinValue) &&
-                    (IncidSource3Id == null || IncidSource3Id == Int32.MinValue))
+                    (source2Id == null || source2Id == Int32.MinValue) &&
+                    (source3Id == null || source3Id == Int32.MinValue))
                     errors.Add([ "IncidSource1Id",
                         "Error: At least one source must be specified" ]);
                 if (IncidSource1Date != null)
@@ -1183,12 +1187,14 @@ namespace HLU.UI.ViewModel
         {
             List<string[]> errors = [];
 
+            Nullable<int> source2Id = IncidSource2Id;
+
             // Validate the source if it is real
-            if (IncidSource2Id != null && IncidSource2Id != Int32.MinValue)
+            if (source2Id != null && source2Id != Int32.MinValue)
             {
                 // Check the source id is found in the lookup table
                 EnumerableRowCollection<HluDataSet.lut_sourcesRow> rows =
-                    HluDataset.lut_sources.Where(r => r.source_id == IncidSource2Id);
+                    HluDataset.lut_sources.Where(r => r.source_id == source2Id);
                 if (!rows.Any())
                     errors.Add(["IncidSource1Id", "Error: Source name is mandatory for each source"]);
                 if (IncidSource2Date == null)
@@ -1264,12 +1270,14 @@ namespace HLU.UI.ViewModel
         {
             List<string[]> errors = [];
 
+            Nullable<int> source3Id = IncidSource3Id;
+
             // Validate the source if it is real
-            if (IncidSource3Id != null && IncidSource3Id != Int32.MinValue)
+            if (source3Id != null && source3Id != Int32.MinValue)
             {
                 // Check the source id is found in the lookup table
                 EnumerableRowCollection<HluDataSet.lut_sourcesRow> rows =
-                    HluDataset.lut_sources.Where(r => r.source_id == IncidSource3Id);
+                    HluDataset.lut_sources.Where(r => r.source_id == source3Id);
                 if (!rows.Any())
                     errors.Add(["IncidSource1Id", "Error: Source name is mandatory for each source"]);
                 if (IncidSource3Date == null)
@@ -3400,6 +3408,12 @@ namespace HLU.UI.ViewModel
         /// <returns>The number of rows in the Incid table.</returns>
         public int IncidRowCount(bool recount)
         {
+            // Don't execute if required dependencies not yet initialized.
+            // Check individual dependencies rather than _initialised flag to allow
+            // this method to work during initial startup when called from InitializeToolPaneAsync.
+            if (_hluDS == null || _db == null || _recIDs == null)
+                return -1;
+
             if (recount || (_incidRowCount <= 0))
             {
                 try
