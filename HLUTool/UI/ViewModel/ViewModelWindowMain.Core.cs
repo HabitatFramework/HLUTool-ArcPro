@@ -1492,33 +1492,44 @@ namespace HLU.UI.ViewModel
                         break;
 
                     case "IncidPrimary":
-                        // If the field is in error add the field name to the list of errors
-                        // for the parent tab. Otherwise remove the field from the list.
-                        if (String.IsNullOrEmpty(IncidPrimary) && IsNotBulkMode)
                         {
-                            error = "Error: Primary habitat is mandatory for every INCID";
-                            AddToErrorList(_habitatErrors, columnName);
-                            RemoveFromErrorList(_habitatWarnings, columnName);
+                            // Use backing field to avoid triggering the debug-logged getter.
+                            bool hadError = _habitatErrors.Contains(columnName);
+                            bool hadWarning = _habitatWarnings.Contains(columnName);
+
+                            // If the field is in error add the field name to the list of errors
+                            // for the parent tab. Otherwise remove the field from the list.
+                            if (String.IsNullOrEmpty(_incidPrimary) && IsNotBulkMode)
+                            {
+                                error = "Error: Primary habitat is mandatory for every INCID";
+                                AddToErrorList(_habitatErrors, columnName);
+                                RemoveFromErrorList(_habitatWarnings, columnName);
+                            }
+                            else if (!String.IsNullOrEmpty(_incidPrimary) && IsNotBulkMode
+                                && _incidCurrentRow != null
+                                && _primaryCodes != null && _primaryCodes.Count > 0
+                                && !_primaryCodes.Any(p => p.Code == _incidPrimary))
+                            {
+                                // The stored code is not in the current combo box list — this happens
+                                // when lut_primary has been edited since the incid was last updated.
+                                // Treat as a warning (not an error) so the user can still navigate
+                                // and the read-only value in the database is preserved.
+                                error = $"Warning: Primary habitat '{_incidPrimary}' is not valid for the available options";
+                                AddToErrorList(_habitatWarnings, columnName);
+                                RemoveFromErrorList(_habitatErrors, columnName);
+                            }
+                            else
+                            {
+                                RemoveFromErrorList(_habitatErrors, columnName);
+                                RemoveFromErrorList(_habitatWarnings, columnName);
+                            }
+
+                            // Only notify HabitatTabLabel if the error/warning state changed.
+                            bool hasError = _habitatErrors.Contains(columnName);
+                            bool hasWarning = _habitatWarnings.Contains(columnName);
+                            if (hasError != hadError || hasWarning != hadWarning)
+                                OnPropertyChanged(nameof(HabitatTabLabel));
                         }
-                        else if (!String.IsNullOrEmpty(IncidPrimary) && IsNotBulkMode
-                            && _incidCurrentRow != null
-                            && _primaryCodes != null && _primaryCodes.Count > 0
-                            && !_primaryCodes.Any(p => p.Code == IncidPrimary))
-                        {
-                            // The stored code is not in the current combo box list — this happens
-                            // when lut_primary has been edited since the incid was last updated.
-                            // Treat as a warning (not an error) so the user can still navigate
-                            // and the read-only value in the database is preserved.
-                            error = $"Warning: Primary habitat '{IncidPrimary}' is not valid for the available options";
-                            AddToErrorList(_habitatWarnings, columnName);
-                            RemoveFromErrorList(_habitatErrors, columnName);
-                        }
-                        else
-                        {
-                            RemoveFromErrorList(_habitatErrors, columnName);
-                            RemoveFromErrorList(_habitatWarnings, columnName);
-                        }
-                        OnPropertyChanged(nameof(HabitatTabLabel));
                         break;
 
                     case "HabitatSecondariesMandatory":
@@ -2197,8 +2208,8 @@ namespace HLU.UI.ViewModel
                 _childRowFilterDict = BuildChildRowFilters();
                 _childRowOrderByDict = BuildChildRowOrderByClauses();
 
-                // Fill lookup tables (at least lut_site_id must be filled at this point)
-                _hluTableAdapterMgr.Fill(_hluDS, TableAdapterManager.Scope.Lookup, false);
+                // Fill lookup tables one at a time so that any ConstraintException identifies the offending table.
+                _hluTableAdapterMgr.FillLookupTablesWithDiagnostics(_hluDS);
 
                 // Load all of the lookup tables
                 LoadLookupTables();

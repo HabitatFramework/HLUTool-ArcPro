@@ -1915,6 +1915,39 @@ namespace HLU.Data.Model
         /// <summary>
         /// Fills the specified HluDataSet with data from the database based on the specified scope.
         /// </summary>
+        /// <summary>
+        /// Fills all lookup tables one at a time and logs which table causes a ConstraintException.
+        /// This is a diagnostic helper — replace the normal Fill(Scope.Lookup) call with this
+        /// method temporarily to identify duplicate-key rows in the database.
+        /// </summary>
+        /// <param name="hluDS">The HLU DataSet to fill.</param>
+        public void FillLookupTablesWithDiagnostics(HluDataSet hluDS)
+        {
+            if (hluDS == null)
+                return;
+
+            foreach (Type tableType in LookupTableTypes)
+            {
+                try
+                {
+                    Fill(hluDS, tableType, false);
+                }
+                catch (System.Data.ConstraintException ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(
+                        $"CONSTRAINT VIOLATION in table '{tableType.Name}': {ex.Message}");
+                    throw;
+                }
+                catch (System.Reflection.TargetInvocationException tiEx)
+                    when (tiEx.InnerException is System.Data.ConstraintException cEx)
+                {
+                    System.Diagnostics.Debug.WriteLine(
+                        $"CONSTRAINT VIOLATION in table '{tableType.Name}': {cEx.Message}");
+                    throw;
+                }
+            }
+        }
+
         /// <param name="hluDS"></param>
         /// <param name="fillTables"></param>
         /// <param name="clearBeforeFill"></param>

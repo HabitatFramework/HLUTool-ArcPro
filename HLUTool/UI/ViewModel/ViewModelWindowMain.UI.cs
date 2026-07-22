@@ -1,9 +1,9 @@
 // HLUTool is used to view and maintain habitat and land use GIS data.
-// Copyright � 2011 Hampshire Biodiversity Information Centre
-// Copyright � 2014 Sussex Biodiversity Record Centre
-// Copyright � 2019 London & South East Record Centres (LaSER)
-// Copyright � 2019-2022 Greenspace Information for Greater London CIC
-// Copyright � 2025-2026 Andy Foy Consulting
+// Copyright Â© 2011 Hampshire Biodiversity Information Centre
+// Copyright Â© 2014 Sussex Biodiversity Record Centre
+// Copyright Â© 2019 London & South East Record Centres (LaSER)
+// Copyright Â© 2019-2022 Greenspace Information for Greater London CIC
+// Copyright Â© 2025-2026 Andy Foy Consulting
 //
 // This file is part of HLUTool.
 //
@@ -161,6 +161,13 @@ namespace HLU.UI.ViewModel
 
         #endregion Fields - General
 
+        #region Fields - Debug
+
+        private static readonly DateTime _getterStartTime = DateTime.Now;
+        private static int _getterCallCount = 0;
+
+        #endregion Fields - Debug
+
         #region Fields - Ribbon Controls
 
         // ObservableCollection to hold HLU layers combo box items
@@ -172,7 +179,7 @@ namespace HLU.UI.ViewModel
 
         #region Fields - ComboBox Sources
 
-        private readonly ObservableCollection<CodeDescriptionBool> _primaryCodes = [];
+        private readonly BulkObservableCollection<CodeDescriptionBool> _primaryCodes = [];
         private bool _forceHabitatTypeRebuild;
 
         private HluDataSet.lut_sourcesRow[] _sourceNames;
@@ -276,6 +283,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: FormLoading [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _formLoading;
             }
             set
@@ -292,6 +300,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: HelpURL [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _helpURL;
             }
             set
@@ -308,6 +317,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: AddInSettings [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _addInSettings;
             }
             set
@@ -340,6 +350,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: DisplayName [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _displayName;
             }
             set
@@ -358,6 +369,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                ////Debug.WriteLine($"GET: GridMainVisibility [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!Initialised || InError)
                     return Visibility.Hidden;
                 else
@@ -382,6 +394,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: AvailableHLULayerNames [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _availableHLULayerNames;
             }
             set
@@ -403,6 +416,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: UserID [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!String.IsNullOrEmpty(Environment.UserDomainName))
                     return Environment.UserDomainName + @"\" + Environment.UserName;
                 else
@@ -418,6 +432,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: UserName [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _userName;
             }
         }
@@ -434,6 +449,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: WindowCursor [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _windowCursor;
             }
             set
@@ -456,6 +472,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: Incid [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((IncidCurrentRow != null) && !IncidCurrentRow.IsNull(HluDataset.incid.incidColumn))
                     return IncidCurrentRow.incid;
                 else
@@ -476,6 +493,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidArea [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Don't show the area when in OSMM Review mode and there are no
                 // updates to process, or when the form has been cleared.
                 if ((IsNotBulkMode) && (IsNotOsmmReviewMode || _osmmUpdatesEmpty == false)
@@ -498,6 +516,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidAreaLabel [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return $"Area [{Settings.Default.DisplayAreaUnits}]";
             }
         }
@@ -511,14 +530,15 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: AreaFormatString [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return Settings.Default.DisplayAreaUnits switch
                 {
-                    "m�" => "N0", // integer � m� values are large whole numbers
-                    "km�" => "N6", // small features are tiny fractions of km�
+                    "mÂ²" => "N0", // integer â€” mÂ² values are large whole numbers
+                    "kmÂ²" => "N6", // small features are tiny fractions of kmÂ²
                     "ha" => "N4", // standard precision for habitat mapping
                     "ac" => "N3", // common convention for acres
-                    "ft�" => "N0", // integer
-                    "mi�" => "N6", // small features are tiny fractions of mi�
+                    "ftÂ²" => "N0", // integer
+                    "miÂ²" => "N6", // small features are tiny fractions of miÂ²
                     _ => "N4"  // fallback
                 };
             }
@@ -532,6 +552,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidLength [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Don't show the length when in OSMM Review mode and there are no
                 // updates to process, or when the form has been cleared.
                 if ((IsNotBulkMode) && (IsNotOsmmReviewMode || _osmmUpdatesEmpty == false)
@@ -554,6 +575,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidLengthLabel [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return $"Length [{Settings.Default.DisplayDistanceUnits}]";
             }
         }
@@ -567,6 +589,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: LengthFormatString [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return Settings.Default.DisplayDistanceUnits switch
                 {
                     "m" => "N0", // integer metres
@@ -587,6 +610,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidCreatedDate [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((IncidCurrentRow != null) && !IncidCurrentRow.IsNull(HluDataset.incid.created_dateColumn))
                 {
                     if (IncidCurrentRow.created_date.ToShortTimeString() == "00:00")
@@ -616,6 +640,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidLastModifiedDate [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (IncidCurrentRow != null && _osmmUpdatesEmpty == false && _incidLastModifiedDate != DateTime.MinValue)
                 {
                     if (_incidLastModifiedDate.ToShortTimeString() == "00:00")
@@ -645,6 +670,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidCreatedUser [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Display the created user's name from the lut_user table
                 // (if found) instead of the user_id
                 if ((IncidCurrentRow != null) && !IncidCurrentRow.IsNull(HluDataset.incid.created_user_idColumn))
@@ -668,6 +694,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidLastModifiedUser [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Display the last modified user's name from the lut_user table
                 // (if found) instead of the user_id
                 if ((IncidCurrentRow != null) && !IncidCurrentRow.IsNull(HluDataset.incid.last_modified_user_idColumn))
@@ -691,6 +718,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ShowIncidOSMMPendingGroup [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Show the group if in OSMM Review mode, if show updates are "Always" required, or
                 // When Present" (i.e. an OSMM update exists for the current incid), or
                 // "When Outstanding" (i.e. update flag is "Proposed" (> 0) or "Pending" = 0).
@@ -736,6 +764,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidOSMMProcessFlag [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_incidOSMMUpdatesProcessFlag != 0)
                     return _incidOSMMUpdatesProcessFlag.ToString();
                 else
@@ -755,6 +784,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidOSMMSpatialFlag [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _incidOSMMUpdatesSpatialFlag;
             }
         }
@@ -771,6 +801,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidOSMMChangeFlag [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _incidOSMMUpdatesChangeFlag;
             }
         }
@@ -786,6 +817,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidOSMMStatus [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _incidOSMMUpdatesStatus;
             }
         }
@@ -802,6 +834,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidOSMMHabitatPrimary [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // If there is no OSMM xref for this incid then return null.
                 if (_incidOSMMUpdatesOSMMXref <= 0)
                     return null;
@@ -835,6 +868,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidOSMMHabitatSecondaries [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // If there is no OSMM xref for this incid then return null.
                 if (_incidOSMMUpdatesOSMMXref <= 0)
                     return null;
@@ -844,9 +878,10 @@ namespace HLU.UI.ViewModel
                     return null;
 
                 // Return the first proposed update secondary codes for this incid
-                // (there should only be one).
+                // (there should only be one). Guard against DBNull in habitat_secondaries.
                 var q = from ohx in _lutOsmmHabitatXref ?? []
                         where ohx.osmm_xref_id == _incidOSMMUpdatesOSMMXref
+                              && !ohx.Ishabitat_secondariesNull()
                         select ohx.habitat_secondaries;
 
                 if (q.Any())
@@ -869,6 +904,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidOSMMXRefID [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_incidOSMMUpdatesOSMMXref != 0)
                     return _incidOSMMUpdatesOSMMXref.ToString();
                 else
@@ -889,6 +925,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidOSMMUpdateStatus [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_incidOSMMUpdatesStatus != null)
                 {
                     // Values greater than zero indicate proposed changes
@@ -922,6 +959,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ResetOSMMUpdatesStatus [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _resetOSMMUpdatesStatus;
             }
             set
@@ -938,6 +976,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ReasonCodes [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Don't process if database/lookups not yet loaded
                 if (_hluDS == null || _lutReason == null)
                     return null;
@@ -957,6 +996,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ReasonCodesWithNone [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Don't process if database/lookups not yet loaded
                 if (_hluDS == null || _lutReason == null)
                     return null;
@@ -979,6 +1019,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: Reason [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _reason;
             }
             set
@@ -1009,6 +1050,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ProcessCodes [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Don't process if database/lookups not yet loaded
                 if (_hluDS == null || _lutProcess == null)
                     return null;
@@ -1028,6 +1070,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ProcessCodesWithNone [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Don't process if database/lookups not yet loaded
                 if (_hluDS == null || _lutProcess == null)
                     return null;
@@ -1050,6 +1093,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: Process [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _process;
             }
             set
@@ -1086,6 +1130,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ReasonProcessEnabled [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Enable when not in bulk/OSMM mode
                 if (IsNotBulkMode && IsNotOsmmReviewMode)
                     _reasonProcessEnabled = true;
@@ -1109,6 +1154,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: TabControlDataEnabled [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((IsNotBulkMode) &&
                     (IncidCurrentRow == null ||
                      IncidCurrentRow.RowState == DataRowState.Detached))
@@ -1129,6 +1175,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: TabItemSelected [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _tabItemSelected;
             }
             set
@@ -1142,6 +1189,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: TabItemHabitatEnabled [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _tabItemHabitatEnabled;
             }
             set
@@ -1155,6 +1203,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: TabItemPriorityEnabled [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _tabItemPriorityEnabled;
             }
             set
@@ -1167,6 +1216,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: TabItemDetailsEnabled [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _tabItemDetailsEnabled;
             }
             set
@@ -1179,6 +1229,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: TabItemIHSEnabled [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _tabItemIHSEnabled;
             }
             set
@@ -1192,6 +1243,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: TabItemSourcesEnabled [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _tabItemSourcesEnabled;
             }
             set
@@ -1204,6 +1256,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: TabHabitatControlsEnabled [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _tabHabitatControlsEnabled;
             }
             set
@@ -1216,6 +1269,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: TabIhsControlsEnabled [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _tabIhsControlsEnabled;
             }
             set
@@ -1228,6 +1282,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: TabPriorityControlsEnabled [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _tabPriorityControlsEnabled;
             }
             set
@@ -1240,6 +1295,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: TabDetailsControlsEnabled [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _tabDetailsControlsEnabled;
             }
             set
@@ -1252,6 +1308,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: TabSourcesControlsEnabled [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _tabSourcesControlsEnabled;
             }
             set
@@ -1275,6 +1332,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: HabitatTabLabel [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return "Habitats";
             }
         }
@@ -1288,6 +1346,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: HabitatHeader [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((bool)_showGroupHeaders)
                     return "Source Habitat";
                 else
@@ -1307,6 +1366,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ShowSourceHabitatGroup [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // If should be showing the habitat categories
                 if (_showSourceHabitatGroup)
                 {
@@ -1333,6 +1393,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: HabitatClassCodes [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Don't process if database/lookups not yet loaded
                 if (_hluDS == null || _lutHabitatClass == null || !_lutHabitatClass.Any())
                     return null;
@@ -1358,6 +1419,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: HabitatClassCodesWithNone [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Don't process if database/lookups not yet loaded
                 if (_hluDS == null || _lutHabitatClass == null || !_lutHabitatClass.Any())
                     return null;
@@ -1380,6 +1442,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: HabitatClasses [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // If not already populated
                 if (_habitatClasses == null && _hluDS != null)
                 {
@@ -1405,6 +1468,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: HabitatClass [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Set the habitat class when there are OSMM updates to process.
                 if (_habitatClass == null && _osmmUpdatesEmpty == false)
                     _habitatClass = _defaultHabitatClass;
@@ -1452,6 +1516,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: HabitatTypeCodes [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Don't process if database/lookups not yet loaded
                 if (_hluDS == null || _lutHabitatType == null)
                     return null;
@@ -1484,6 +1549,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: HabitatType [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _habitatType;
             }
             set
@@ -1499,7 +1565,7 @@ namespace HLU.UI.ViewModel
                 if (string.Equals(_habitatType, value, StringComparison.Ordinal) && _primaryCodes != null && _primaryCodes.Count > 0 && !_forceHabitatTypeRebuild)
                     return;
 
-                // Reset the flag immediately � it is only valid for a single forced call.
+                // Reset the flag immediately â€” it is only valid for a single forced call.
                 _forceHabitatTypeRebuild = false;
 
                 // Set the reentrancy guard to prevent IncidPrimary setter from processing changes
@@ -1510,10 +1576,6 @@ namespace HLU.UI.ViewModel
 
                 // Preserve the current selection if it is still valid after refresh.
                 string previousIncidPrimary = _incidPrimary;
-
-                // Clear the current list without replacing the collection instance.
-                // Must be done on UI thread since _primaryCodes is an ObservableCollection.
-                Application.Current?.Dispatcher.Invoke(() => _primaryCodes.Clear());
 
                 if (!String.IsNullOrEmpty(_habitatType))
                 {
@@ -1537,7 +1599,7 @@ namespace HLU.UI.ViewModel
                     var habitatClassLookup = _lutHabitatClass.ToDictionary(hc => hc.code);
 
                     CodeDescriptionBool[] primaryCodes = [.. (
-                        // First query � directly matched primary codes
+                        // First query â€“ directly matched primary codes
                         from p in _lutPrimary
                         where primaryCategoryLookup.ContainsKey(p.category) &&
                               habitatClassLookup.ContainsKey(p.habitat_class_code) &&
@@ -1562,7 +1624,7 @@ namespace HLU.UI.ViewModel
                             PrimaryCode = p.code
                         })
                     .Concat(
-                        // Second query � inferred primary codes via secondary links
+                        // Second query â€“ inferred primary codes via secondary links
                         from s in _lutSecondary
                         where SecondaryMatchesLayerType(s)
                         join hts in _lutHabitatTypeSecondary on s.code equals hts.code_secondary
@@ -1599,18 +1661,19 @@ namespace HLU.UI.ViewModel
                     // Add primary codes (skip any with a null/blank code) and mark the
                     // first non-preferred item so the template can draw a divider above it.
                     bool separatorMarked = false;
-                    Application.Current?.Dispatcher.Invoke(() =>
+                    foreach (CodeDescriptionBool item in primaryCodes.Where(c => !string.IsNullOrWhiteSpace(c.Code)))
                     {
-                        foreach (CodeDescriptionBool item in primaryCodes.Where(c => !string.IsNullOrWhiteSpace(c.Code)))
+                        if (!separatorMarked && !item.Preferred && primaryCodes.Any(c => c.Preferred))
                         {
-                            if (!separatorMarked && !item.Preferred && primaryCodes.Any(c => c.Preferred))
-                            {
-                                item.IsSeparator = true;
-                                separatorMarked = true;
-                            }
-                            _primaryCodes.Add(item);
+                            item.IsSeparator = true;
+                            separatorMarked = true;
                         }
-                    });
+                    }
+
+                    // Replace the collection contents with a single Reset notification to
+                    // avoid O(N²) SelectedValue re-reads from WPF binding on each Add().
+                    Application.Current?.Dispatcher.Invoke(() =>
+                        _primaryCodes.Reset(primaryCodes.Where(c => !string.IsNullOrWhiteSpace(c.Code))));
 
                     // Load all secondary habitat codes where the habitat type has one of more
                     // optional codes, and the secondary habitat code relates to the current layer's
@@ -1663,11 +1726,8 @@ namespace HLU.UI.ViewModel
                             Preferred = false
                         })];
 
-                    Application.Current?.Dispatcher.Invoke(() =>
-                    {
-                        foreach (CodeDescriptionBool item in allPrimaryCodes)
-                            _primaryCodes.Add(item);
-                    });
+                    // Replace the collection contents with a single Reset notification.
+                    Application.Current?.Dispatcher.Invoke(() => _primaryCodes.Reset(allPrimaryCodes));
 
                     // Clear the list of optional and mandatory secondary codes.
                     _secondaryCodesOptional = [];
@@ -1704,12 +1764,11 @@ namespace HLU.UI.ViewModel
                 // IMPORTANT: no OnPropertyChanged(nameof(PrimaryCodes)) needed here anymore
                 // because the ItemsSource collection instance did not change.
 
-                // Clear the reentrancy guard after all property notifications are complete.
-                _refreshingHabitatType = false;
-
                 // Force WPF to re-sync the ComboBox SelectedValue binding by briefly
                 // nulling and restoring the value. This is necessary because WPF may
                 // have temporarily lost the selection match during the collection Clear/Add cycle.
+                // Keep _refreshingHabitatType = true so the IncidPrimary setter does not
+                // cascade into NewPrimaryHabitat/validation during these synthetic notifications.
                 if (preservedSelection != null)
                 {
                     string temp = _incidPrimary;
@@ -1720,6 +1779,10 @@ namespace HLU.UI.ViewModel
 
                 // Refresh selection + dependent UI.
                 OnPropertyChanged(nameof(IncidPrimary));
+
+                // Clear the reentrancy guard only after the synthetic IncidPrimary
+                // notifications are complete, so they cannot cascade into the setter.
+                _refreshingHabitatType = false;
             }
         }
 
@@ -1736,6 +1799,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: PrimaryHeader [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((bool)_showGroupHeaders)
                     return "Primary Habitat";
                 else
@@ -1751,6 +1815,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: PrimaryEnabled [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return true;
             }
         }
@@ -1765,6 +1830,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: PrimaryCodes [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _primaryCodes;
             }
         }
@@ -1778,6 +1844,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidPrimary [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _incidPrimary;
             }
             set
@@ -1853,10 +1920,9 @@ namespace HLU.UI.ViewModel
                     // programmatic assignment (e.g. Adopt, Paste) updates the ComboBox even
                     // when the HabitatType setter was not involved (which is the only other
                     // place that fires this notification).
+                    // Note: NvcCodes and SecondaryGroupCodesValid are already fired by NewPrimaryHabitat().
                     OnPropertyChanged(nameof(IncidPrimary));
                     OnPropertyChanged(nameof(IncidPrimaryCategory));
-                    OnPropertyChanged(nameof(NvcCodes));
-                    OnPropertyChanged(nameof(SecondaryGroupCodesValid));
 
                     // Refresh the BAP habitat environments (in case secondary codes
                     // are, or should be, reflected).
@@ -1883,6 +1949,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidPrimaryCategory [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _incidPrimaryCategory;
             }
         }
@@ -1899,6 +1966,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ShowHabitatSecondariesMandatory [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // If the habitat secondary codes validation is warning or error.
                 if (_habitatSecondaryCodeValidation > 0)
                     return Visibility.Visible;
@@ -1923,6 +1991,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: HabitatSecondariesMandatory [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_secondaryCodesMandatory != null)
                     return string.Join(", ", _secondaryCodesMandatory);
                 else
@@ -1938,6 +2007,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ShowHabitatSecondariesSuggested [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // If should be showing the suggested habitat secondaries
                 if (_showHabitatSecondariesSuggested)
                 {
@@ -1967,6 +2037,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: HabitatSecondariesSuggested [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return string.IsNullOrEmpty(_habitatSecondariesSuggested)
                     ? null
                     : _habitatSecondariesSuggested;
@@ -1986,6 +2057,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: HabitatSecondariesOptional [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_secondaryCodesOptional == null || !_secondaryCodesOptional.Any())
                     return null;
 
@@ -2001,6 +2073,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ShowHabitatTips [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return (_showHabitatSecondariesSuggested && !string.IsNullOrEmpty(_habitatTips))
                     ? Visibility.Visible
                     : Visibility.Collapsed;
@@ -2079,6 +2152,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: HabitatTips [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _habitatTips;
             }
         }
@@ -2095,6 +2169,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: SecondaryHabitatsHeader [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((bool)_showGroupHeaders)
                     return "Secondary Habitats";
                 else
@@ -2110,6 +2185,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: SecondaryGroupEnabled [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return (!String.IsNullOrEmpty(_incidPrimary));
             }
         }
@@ -2124,6 +2200,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: SecondaryHabitatEnabled [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return (!String.IsNullOrEmpty(_incidPrimary) && !String.IsNullOrEmpty(_secondaryGroup));
             }
         }
@@ -2138,6 +2215,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: SecondaryHabitatsEnabled [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return true;
             }
         }
@@ -2150,6 +2228,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: SecondaryGroupCodesValid [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (HluDataset == null)
                     return null;
 
@@ -2160,10 +2239,11 @@ namespace HLU.UI.ViewModel
 
                 // If there is a primary habitat code selected, set the list of valid secondary groups to
                 // those that relate to the primary code, otherwise set to all secondary groups.
-                if (!String.IsNullOrEmpty(IncidPrimary))
+                string primaryCode = IncidPrimary;
+                if (!String.IsNullOrEmpty(primaryCode))
                 {
                     // Get the primary habitat row for the selected primary code.
-                    var primaryRow = _lutPrimary?.FirstOrDefault(p => p.code == IncidPrimary);
+                    var primaryRow = _lutPrimary?.FirstOrDefault(p => p.code == primaryCode);
 
                     // Check if the primary habitat is a UKHAB code.
                     bool isUkhab = primaryRow != null &&
@@ -2181,7 +2261,7 @@ namespace HLU.UI.ViewModel
                         _secondaryGroupsValid = [.. (from sg in _lutSecondaryGroup
                                                  join s in _lutSecondary on sg.code equals s.code_group
                                                  join ps in _lutPrimarySecondary on s.code equals ps.code_secondary
-                                                 where (IncidPrimary == ps.code_primary || IncidPrimary.StartsWith(ps.code_primary))
+                                                 where (primaryCode == ps.code_primary || primaryCode.StartsWith(ps.code_primary))
                                                  select sg).OrderBy(r => r.sort_order).ThenBy(r => r.description).Distinct()];
 
                         if (_secondaryGroupsValid != null)
@@ -2212,6 +2292,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: SecondaryGroupCodesAll [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Set the full list of local secondary groups.
                 if (_secondaryGroups == null || _secondaryGroups.Length == 0)
                 {
@@ -2232,6 +2313,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: SecondaryGroupCodesWithAll [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Set the full list of secondary groups including any <All> groups.
                 if (_secondaryGroupsWithAll == null || _secondaryGroupsWithAll.Length == 0)
                 {
@@ -2266,6 +2348,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: SecondaryGroup [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _secondaryGroup;
             }
             set
@@ -2285,6 +2368,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: SecondaryHabitatCodes [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!String.IsNullOrEmpty(_incidPrimary) && !String.IsNullOrEmpty(_secondaryGroup))
                 {
                     // If the primary/secondary codes must be valid
@@ -2350,6 +2434,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: SecondaryHabitatCodesAll [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 _secondaryCodesAll ??= [.. (from s in _lutSecondary
                                           where SecondaryMatchesLayerType(s)
                                           select s).OrderBy(r => r.sort_order).ThenBy(r => r.description)];
@@ -2368,6 +2453,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: SecondaryHabitatCode [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _secondaryHabitat;
             }
             set
@@ -2385,6 +2471,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidSecondaryHabitats [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _incidSecondaryHabitats;
             }
             set
@@ -2423,6 +2510,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ShowNVCCodes [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // If should be showing NVC codes
                 if (_showNVCCodes)
                 {
@@ -2450,6 +2538,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: NvcCodes [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _incidNVCCodes;
             }
         }
@@ -2466,6 +2555,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: HabitatSummaryHeader [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((bool)_showGroupHeaders)
                     return "Secondary Habitats Summary";
                 else
@@ -2483,6 +2573,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidSecondarySummary [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Create the concatenated secondary habitats summary.
                 string secondarySummary = (_incidSecondaryHabitats != null && _incidSecondaryHabitats.Count > 0)
                     ? String.Join(_secondaryCodeDelimiter, _incidSecondaryHabitats
@@ -2515,6 +2606,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidSecondaryCodesOnly [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Create the concatenated secondary habitats summary.
                 string secondarySummary = (_incidSecondaryHabitats != null && _incidSecondaryHabitats.Count > 0)
                     ? String.Join(_secondaryCodeDelimiter, _incidSecondaryHabitats
@@ -2536,6 +2628,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ShowHabitatSummary [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // If should be showing the concatenated habitat summary
                 if (_showHabitatSummary)
                 {
@@ -2563,6 +2656,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: LegacyHeader [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((bool)_showGroupHeaders)
                     return "Legacy";
                 else
@@ -2581,6 +2675,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: LegacyHabitatCodes [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_lutLegacyHabitat == null || !_lutLegacyHabitat.Any())
                     return null;
 
@@ -2616,6 +2711,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidLegacyHabitat [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((IncidCurrentRow != null) && !IncidCurrentRow.IsNull(HluDataset.incid.legacy_habitatColumn))
                     _incidLegacyHabitat = IncidCurrentRow.legacy_habitat;
                 else
@@ -2670,6 +2766,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IHSTabLabel [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return "IHS";
             }
         }
@@ -2684,6 +2781,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IHSTabVisibility [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((bool)_showIHSTab)
                     return Visibility.Visible;
                 else
@@ -2700,6 +2798,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ShowIHSTab [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _showIHSTab;
             }
             set
@@ -2719,6 +2818,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IhsHabitatHeader [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((bool)_showGroupHeaders)
                     return "IHS Habitat";
                 else
@@ -2740,6 +2840,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidIhsHabitat [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _incidIhsHabitat;
             }
         }
@@ -2754,6 +2855,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidIhsHabitatText [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Return the concatenated habitat code and description.
                 if (_incidIhsHabitat == null)
                     return null;
@@ -2782,6 +2884,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IhsMatrixHeader [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Optionally hide group headers to reduce window height.
                 if ((bool)_showGroupHeaders)
                     return "IHS Matrix";
@@ -2800,6 +2903,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidIhsMatrix1 [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckIhsMatrix())
                     return null;
                 if ((_incidIhsMatrixRows.Length > 0) && (_incidIhsMatrixRows[0] != null) &&
@@ -2820,6 +2924,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidIhsMatrix1Text [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Return the combined code and text value
                 if (IncidIhsMatrix1 == null)
                     return null;
@@ -2844,6 +2949,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidIhsMatrix2 [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckIhsMatrix())
                     return null;
                 if ((_incidIhsMatrixRows.Length > 1) && (_incidIhsMatrixRows[1] != null) &&
@@ -2864,6 +2970,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidIhsMatrix2Text [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Return the combined code and text value.
                 if (IncidIhsMatrix2 == null)
                     return null;
@@ -2888,6 +2995,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidIhsMatrix3 [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckIhsMatrix())
                     return null;
                 if ((_incidIhsMatrixRows.Length > 2) && (_incidIhsMatrixRows[2] != null) &&
@@ -2908,6 +3016,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidIhsMatrix3Text [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Return the combined code and text value.
                 if (IncidIhsMatrix3 == null)
                     return null;
@@ -2936,6 +3045,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IhsFormationHeader [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Optionally hide group headers to reduce window height.
                 if ((bool)_showGroupHeaders)
                     return "IHS Formation";
@@ -2954,6 +3064,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidIhsFormation1 [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckIhsFormation())
                     return null;
                 if ((_incidIhsFormationRows.Length > 0) && (_incidIhsFormationRows[0] != null) &&
@@ -2974,6 +3085,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidIhsFormation1Text [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Return the combined code and text value.
                 if (IncidIhsFormation1 == null)
                     return null;
@@ -2998,6 +3110,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidIhsFormation2 [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckIhsFormation())
                     return null;
                 if ((_incidIhsFormationRows.Length > 1) && (_incidIhsFormationRows[1] != null) &&
@@ -3018,6 +3131,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidIhsFormation2Text [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Return the combined code and text value.
                 if (IncidIhsFormation2 == null)
                     return null;
@@ -3046,6 +3160,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IhsManagementHeader [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Optionally hide group headers to reduce window height.
                 if ((bool)_showGroupHeaders)
                     return "IHS Management";
@@ -3064,6 +3179,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidIhsManagement1 [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckIhsManagement())
                     return null;
                 if ((_incidIhsManagementRows.Length > 0) && (_incidIhsManagementRows[0] != null) &&
@@ -3084,6 +3200,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidIhsManagement1Text [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Return the combined code and text value.
                 if (IncidIhsManagement1 == null)
                     return null;
@@ -3108,6 +3225,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidIhsManagement2 [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckIhsManagement())
                     return null;
                 if ((_incidIhsManagementRows.Length > 1) && (_incidIhsManagementRows[1] != null) &&
@@ -3128,6 +3246,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidIhsManagement2Text [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Return the combined code and text value.
                 if (IncidIhsManagement2 == null)
                     return null;
@@ -3156,6 +3275,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IhsComplexHeader [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Optionally hide group headers to reduce window height.
                 if ((bool)_showGroupHeaders)
                     return "IHS Complex";
@@ -3174,6 +3294,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidIhsComplex1 [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckIhsComplex())
                     return null;
                 if ((_incidIhsComplexRows.Length > 0) && (_incidIhsComplexRows[0] != null) &&
@@ -3194,6 +3315,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidIhsComplex1Text [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Return the combined code and text value.
                 if (IncidIhsComplex1 == null)
                     return null;
@@ -3218,6 +3340,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidIhsComplex2 [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckIhsComplex())
                     return null;
                 if ((_incidIhsComplexRows.Length > 1) && (_incidIhsComplexRows[1] != null) &&
@@ -3238,6 +3361,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidIhsComplex2Text [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Return the combined code and text value.
                 if (IncidIhsComplex2 == null)
                     return null;
@@ -3266,6 +3390,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IhsSummaryHeader [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Optionally hide group headers to reduce window height.
                 if ((bool)_showGroupHeaders)
                     return "IHS Summary";
@@ -3284,6 +3409,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidIhsSummary [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _incidIhsSummary;
                 //return ViewModelWindowMainHelpers.IhsSummary([
                 //    IncidIhsHabitat,
@@ -3317,6 +3443,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: PriorityTabLabel [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return "Priority";
             }
         }
@@ -3335,6 +3462,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: BapHabitatCodes [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Get the value from the lookup table.
                 // Enable multiple priority habitat types (from the same or different
                 // classifications) to be assigned
@@ -3356,6 +3484,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: DeterminationQualityCodes [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return [.. _lutQualityDetermination.OrderBy(r => r.sort_order).ThenBy(r => r.description)];
             }
         }
@@ -3371,6 +3500,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: BapDeterminationQualityCodesAuto [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (DeterminationQualityCodes != null)
                     return [.. DeterminationQualityCodes.Where(r => r.code != BapEnvironment.BAPDetQltyUserAdded
                         && r.code != BapEnvironment.BAPDetQltyPrevious)
@@ -3391,6 +3521,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: BapDeterminationQualityCodesUser [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Show all determination quality values in the drop-down list (instead
                 // of just 'Not present but close to definition') but validate the
                 // selected value later.
@@ -3408,6 +3539,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: InterpretationQualityCodes [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return [.. _lutQualityInterpretation.OrderBy(r => r.sort_order).ThenBy(r => r.description)];
             }
         }
@@ -3422,6 +3554,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: BapInterpretationQualityCodes [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return InterpretationQualityCodes;
             }
         }
@@ -3436,6 +3569,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidBapHabitatsAuto [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _incidBapRowsAuto;
             }
             set
@@ -3459,6 +3593,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidBapHabitatsUser [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _incidBapRowsUser;
             }
             set
@@ -3480,6 +3615,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: BapHabitatsAutoEnabled [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return IncidBapHabitatsAuto != null && IncidBapHabitatsAuto.Count > 0;
             }
         }
@@ -3494,6 +3630,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: BapHabitatsUserEnabled [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Always enable the user to edit potential priority habitats.
                 return true;
             }
@@ -3515,6 +3652,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: DetailsTabLabel [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return "Details";
             }
         }
@@ -3531,6 +3669,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: DetailsCommentsHeader [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((bool)_showGroupHeaders)
                     return "General Comments";
                 else
@@ -3546,6 +3685,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidGeneralComments [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((IncidCurrentRow != null) && !IncidCurrentRow.IsNull(HluDataset.incid.general_commentsColumn))
                     return IncidCurrentRow.general_comments;
                 else
@@ -3575,6 +3715,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: DetailsMapsHeader [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((bool)_showGroupHeaders)
                     return "Maps";
                 else
@@ -3592,6 +3733,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: BoundaryMapCodes [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_lutBoundaryMap == null || !_lutBoundaryMap.Any())
                     return null;
 
@@ -3612,6 +3754,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidBoundaryBaseMap [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((IncidCurrentRow != null) && !IncidCurrentRow.IsNull(HluDataset.incid.boundary_base_mapColumn))
                     return IncidCurrentRow.boundary_base_map;
                 else
@@ -3639,6 +3782,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidDigitisationBaseMap [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((IncidCurrentRow != null) && !IncidCurrentRow.IsNull(HluDataset.incid.digitisation_base_mapColumn))
                     return IncidCurrentRow.digitisation_base_map;
                 else
@@ -3668,6 +3812,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: DetailsSiteHeader [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((bool)_showGroupHeaders)
                     return "Site";
                 else
@@ -3683,6 +3828,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidSiteRef [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((IncidCurrentRow != null) && !IncidCurrentRow.Issite_refNull())
                     return IncidCurrentRow.site_ref;
                 else
@@ -3708,6 +3854,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidSiteName [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((IncidCurrentRow != null) && !IncidCurrentRow.Issite_nameNull())
                     return IncidCurrentRow.site_name;
                 else
@@ -3737,6 +3884,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: DetailsConditionHeader [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((bool)_showGroupHeaders)
                     return "Condition";
                 else
@@ -3754,6 +3902,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ConditionCodes [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // If there are no condition rows then return an empty list.
                 if (_lutCondition == null || !_lutCondition.Any())
                     return [];
@@ -3793,6 +3942,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidCondition [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckCondition())
                     return null;
 
@@ -3852,6 +4002,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ConditionQualifierCodes [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_lutConditionQualifier == null || !_lutConditionQualifier.Any())
                     return null;
 
@@ -3872,6 +4023,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidConditionQualifier [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckCondition())
                     return null;
                 if ((_incidConditionRows.Length > 0) && (_incidConditionRows[0] != null) &&
@@ -3899,6 +4051,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidConditionDate [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Check if there are any valid condition rows.
                 if (!CheckCondition())
                     return null;
@@ -3939,6 +4092,7 @@ namespace HLU.UI.ViewModel
             // Disable remaining condition fields when condition is blank
             get
             {
+                //Debug.WriteLine($"GET: IncidConditionEnabled [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return (IncidCondition != null);
             }
         }
@@ -3955,6 +4109,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: DetailsQualityHeader [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((bool)_showGroupHeaders)
                     return "Quality";
                 else
@@ -3972,6 +4127,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: QualityDeterminationCodes [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_lutQualityDetermination == null || !_lutQualityDetermination.Any())
                     return null;
 
@@ -4007,6 +4163,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidQualityDetermination [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((IncidCurrentRow != null) && !IncidCurrentRow.IsNull(HluDataset.incid.quality_determinationColumn))
                     return IncidCurrentRow.quality_determination;
                 else
@@ -4046,6 +4203,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: QualityInterpretationCodes [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_lutQualityInterpretation == null || !_lutQualityInterpretation.Any())
                     return null;
 
@@ -4081,6 +4239,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidQualityInterpretation [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((IncidCurrentRow != null) && !IncidCurrentRow.IsNull(HluDataset.incid.quality_interpretationColumn))
                     return IncidCurrentRow.quality_interpretation;
                 else
@@ -4123,6 +4282,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidQualityComments [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((IncidCurrentRow != null) && !IncidCurrentRow.IsNull(HluDataset.incid.interpretation_commentsColumn))
                     return IncidCurrentRow.interpretation_comments;
                 else
@@ -4158,6 +4318,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: SourcesTabLabel [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return "Sources";
             }
         }
@@ -4176,6 +4337,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: SourceNames [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_lutSources == null || !_lutSources.Any())
                     return null;
 
@@ -4196,6 +4358,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: SourceHabitatClassCodes [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_lutHabitatClass == null || !_lutHabitatClass.Any())
                     return null;
 
@@ -4217,6 +4380,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: SourceImportanceCodes [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_lutImportance == null || !_lutImportance.Any())
                     return null;
 
@@ -4239,6 +4403,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: Source1Header [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((bool)_showGroupHeaders)
                     return "Source 1";
                 else
@@ -4255,6 +4420,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ShowSourceNumbers [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((bool)_showGroupHeaders)
                     return Visibility.Hidden;
                 else
@@ -4271,6 +4437,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: Source1Names [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (HluDataset == null)
                     return null;
 
@@ -4314,6 +4481,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidSource1Id [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // If there are no valid source rows then return null.
                 if (!CheckSources())
                     return null;
@@ -4392,6 +4560,7 @@ namespace HLU.UI.ViewModel
             // Disable remaining source fields when source name is blank
             get
             {
+                //Debug.WriteLine($"GET: IncidSource1Enabled [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return (IncidSource1Id != null && IncidSource1Id != Int32.MinValue);
             }
         }
@@ -4406,6 +4575,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidSource1Date [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckSources())
                     return null;
                 if ((_incidSourcesRows.Length > 0) && (_incidSourcesRows[0] != null) &&
@@ -4443,6 +4613,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidSource1HabitatClass [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckSources())
                     return null;
                 if ((_incidSourcesRows.Length > 0) && (_incidSourcesRows[0] != null) &&
@@ -4472,16 +4643,18 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: Source1HabitatTypeCodes [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Get the list of values from the lookup table.
-                if (!String.IsNullOrEmpty(IncidSource1HabitatClass))
+                string habitatClass1 = IncidSource1HabitatClass;
+                if (!String.IsNullOrEmpty(habitatClass1))
                 {
                     // Load the habitat types for the selected habitat class.
                     HluDataSet.lut_habitat_typeRow[] retArray = [.. _lutHabitatType
-                        .Where(r => r.habitat_class_code == IncidSource1HabitatClass)
+                        .Where(r => r.habitat_class_code == habitatClass1)
                         .OrderBy(r => r.sort_order).ThenBy(r => r.name)];
 
-                    // Set the habitat type if there is only one
-                    if ((retArray.Length == 1) && (IncidSource1Id != null))
+                    // Set the habitat type if there is only one and not already set
+                    if ((retArray.Length == 1) && (IncidSource1Id != null) && (IncidSource1HabitatType == null))
                     {
                         IncidSource1HabitatType = retArray[0].code;
                         OnPropertyChanged(nameof(IncidSource1HabitatType));
@@ -4502,6 +4675,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidSource1HabitatType [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckSources())
                     return null;
                 if ((_incidSourcesRows.Length > 0) && (_incidSourcesRows[0] != null) &&
@@ -4528,6 +4702,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidSource1BoundaryImportance [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckSources())
                     return null;
                 if ((_incidSourcesRows.Length > 0) && (_incidSourcesRows[0] != null) &&
@@ -4557,6 +4732,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidSource1HabitatImportance [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckSources())
                     return null;
                 if ((_incidSourcesRows.Length > 0) && (_incidSourcesRows[0] != null) &&
@@ -4589,6 +4765,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: Source2Header [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((bool)_showGroupHeaders)
                     return "Source 2";
                 else
@@ -4605,6 +4782,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: Source2Names [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Return the list of source names, with the clear row if applicable, but
                 // exclude the clear row in Bulk Update mode
                 if ((IncidSource2Id != null) && (IncidSource2Id != Int32.MinValue))
@@ -4634,6 +4812,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidSource2Id [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // If there are no valid source rows then return null.
                 if (!CheckSources())
                     return null;
@@ -4712,6 +4891,7 @@ namespace HLU.UI.ViewModel
             // Disable remaining source fields when source name is blank
             get
             {
+                //Debug.WriteLine($"GET: IncidSource2Enabled [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return (IncidSource2Id != null && IncidSource2Id != Int32.MinValue);
             }
         }
@@ -4725,6 +4905,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidSource2Date [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckSources())
                     return null;
                 if ((_incidSourcesRows.Length > 1) && (_incidSourcesRows[1] != null) &&
@@ -4762,6 +4943,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidSource2HabitatClass [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckSources())
                     return null;
                 if ((_incidSourcesRows.Length > 1) && (_incidSourcesRows[1] != null) &&
@@ -4789,16 +4971,18 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: Source2HabitatTypeCodes [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Get the list of values from the lookup table
-                if (!String.IsNullOrEmpty(IncidSource2HabitatClass))
+                string habitatClass2 = IncidSource2HabitatClass;
+                if (!String.IsNullOrEmpty(habitatClass2))
                 {
                     // Load the habitat types for the selected habitat class.
                     HluDataSet.lut_habitat_typeRow[] retArray = [.. _lutHabitatType
-                        .Where(r => r.habitat_class_code == IncidSource2HabitatClass)
+                        .Where(r => r.habitat_class_code == habitatClass2)
                         .OrderBy(r => r.sort_order).ThenBy(r => r.name)];
 
-                    // Set the habitat type if there is only one
-                    if ((retArray.Length == 1) && (IncidSource2Id != null))
+                    // Set the habitat type if there is only one and not already set
+                    if ((retArray.Length == 1) && (IncidSource2Id != null) && (IncidSource2HabitatType == null))
                     {
                         IncidSource2HabitatType = retArray[0].code;
                         OnPropertyChanged(nameof(IncidSource2HabitatType));
@@ -4811,7 +4995,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets or sets the source 2 habitat type code. Setting this property will update the source_habitat_type field
+        /// Gets or sets the source 2 habitat type code.
         /// in the incid_sources table for source 2.
         /// </summary>
         /// <value>The source 2 habitat type code.</value>
@@ -4819,6 +5003,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidSource2HabitatType [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckSources())
                     return null;
                 if ((_incidSourcesRows.Length > 1) && (_incidSourcesRows[1] != null) &&
@@ -4845,6 +5030,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidSource2BoundaryImportance [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckSources())
                     return null;
                 if ((_incidSourcesRows.Length > 1) && (_incidSourcesRows[1] != null) &&
@@ -4866,7 +5052,7 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets or sets the source 2 habitat importance code. Setting this property will update the source_habitat_importance field
+        /// Gets or sets the source 2 habitat importance code.
         /// in the incid_sources table for source 2.
         /// </summary>
         /// <value>The source 2 habitat importance code.</value>
@@ -4874,6 +5060,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidSource2HabitatImportance [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckSources())
                     return null;
                 if ((_incidSourcesRows.Length > 1) && (_incidSourcesRows[1] != null) &&
@@ -4906,6 +5093,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: Source3Header [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((bool)_showGroupHeaders)
                     return "Source 3";
                 else
@@ -4922,6 +5110,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: Source3Names [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Return the list of source names, with the clear row if applicable, but
                 // exclude the clear row in Bulk Update mode
                 if ((IncidSource3Id != null) && (IncidSource3Id != Int32.MinValue))
@@ -4951,6 +5140,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidSource3Id [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // If there are no valid source rows then return null.
                 if (!CheckSources())
                     return null;
@@ -5029,6 +5219,7 @@ namespace HLU.UI.ViewModel
             // Disable remaining source fields when source name is blank
             get
             {
+                //Debug.WriteLine($"GET: IncidSource3Enabled [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return (IncidSource3Id != null && IncidSource3Id != Int32.MinValue);
             }
         }
@@ -5042,6 +5233,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidSource3Date [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckSources())
                     return null;
                 if ((_incidSourcesRows.Length > 2) && (_incidSourcesRows[2] != null) &&
@@ -5079,6 +5271,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidSource3HabitatClass [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckSources())
                     return null;
                 if ((_incidSourcesRows.Length > 2) && (_incidSourcesRows[2] != null) &&
@@ -5106,6 +5299,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidSource3HabitatType [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckSources())
                     return null;
                 if ((_incidSourcesRows.Length > 2) && (_incidSourcesRows[2] != null) &&
@@ -5131,16 +5325,18 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: Source3HabitatTypeCodes [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Get the list of values from the lookup table
-                if (!String.IsNullOrEmpty(IncidSource3HabitatClass))
+                string habitatClass3 = IncidSource3HabitatClass;
+                if (!String.IsNullOrEmpty(habitatClass3))
                 {
                     // Load the habitat types for the selected habitat class.
                     HluDataSet.lut_habitat_typeRow[] retArray = [.. _lutHabitatType
-                        .Where(r => r.habitat_class_code == IncidSource3HabitatClass)
+                        .Where(r => r.habitat_class_code == habitatClass3)
                         .OrderBy(r => r.sort_order).ThenBy(r => r.name)];
 
-                    // Set the habitat type if there is only one
-                    if ((retArray.Length == 1) && (IncidSource3Id != null))
+                    // Set the habitat type if there is only one and not already set
+                    if ((retArray.Length == 1) && (IncidSource3Id != null) && (IncidSource3HabitatType == null))
                     {
                         IncidSource3HabitatType = retArray[0].code;
                         OnPropertyChanged(nameof(IncidSource3HabitatType));
@@ -5161,6 +5357,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidSource3BoundaryImportance [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckSources())
                     return null;
                 if ((_incidSourcesRows.Length > 2) && (_incidSourcesRows[2] != null) &&
@@ -5190,6 +5387,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidSource3HabitatImportance [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!CheckSources())
                     return null;
                 if ((_incidSourcesRows.Length > 2) && (_incidSourcesRows[2] != null) &&
@@ -5233,6 +5431,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidHistory [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_incidHistoryRows == null)
                     return null;
 
@@ -5485,6 +5684,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: HistoryTabLabel [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return "History";
             }
         }
@@ -5499,6 +5699,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: HistoryTabVisibility [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((bool)_showHistoryTab)
                     return Visibility.Visible;
                 else
@@ -5515,6 +5716,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ShowHistoryTab [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _showHistoryTab;
             }
             set
@@ -5536,6 +5738,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: SiteID [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _recIDs.SiteID;
             }
         }
@@ -5625,6 +5828,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: StatusIncid [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (IsOsmmReviewMode && !IsFiltered)
                     return null;
 
@@ -5694,6 +5898,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: EditPriorityHabitatsCommand [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_editPriorityHabitatsCommand == null)
                 {
                     Action<object> editPriorityHabitatsAction = new(this.EditPriorityHabitatsClicked);
@@ -5711,6 +5916,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanEditPriorityHabitats [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 //return IsNotBulkMode && IsNotOsmmReviewMode && BapHabitatsAutoEnabled;
                 return IsNotOsmmReviewMode && BapHabitatsAutoEnabled;
             }
@@ -5724,6 +5930,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: EditPotentialHabitatsCommand [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_editPotentialHabitatsCommand == null)
                 {
                     Action<object> editPotentialHabitatsAction = new(this.EditPotentialHabitatsClicked);
@@ -5741,6 +5948,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanEditPotentialHabitats [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 //return IsNotBulkMode && IsNotOsmmReviewMode && BapHabitatsUserEnabled;
                 return IsNotOsmmReviewMode && BapHabitatsUserEnabled;
             }
@@ -5754,6 +5962,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: AddSecondaryHabitatCommand [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_addSecondaryHabitatCommand == null)
                 {
                     Action<object> addSecondaryHabitatAction = new(this.AddSecondaryHabitatClicked);
@@ -5771,6 +5980,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanAddSecondaryHabitat [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Check not in OSMM Review mode and GIS present and primary
                 // code and secondary habitat group and code have been set.
                 return (IsNotOsmmReviewMode
@@ -5786,6 +5996,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: AddSecondaryHabitatListCommand [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_addSecondaryHabitatListCommand == null)
                 {
                     Action<object> addSecondaryHabitatListAction = new(this.AddSecondaryHabitatListClicked);
@@ -5803,6 +6014,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanAddSecondaryHabitatList [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Check not in OSMM Review mode and GIS present and primary
                 // code and secondary habitat group and code have been set.
                 return (IsNotOsmmReviewMode
@@ -5823,6 +6035,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanExport [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Allow export when not in bulk mode or OSMM Bulk Update mode with a selection.
                 return IsNotBulkMode && IsNotOsmmReviewMode && _hluDS != null;
             }
@@ -5842,6 +6055,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanReassign [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return IsEditMode &&
                        IsNotBulkMode &&
                        IsNotOsmmReviewMode &&
@@ -5865,6 +6079,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanFilterByAttributes [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Enable filter when not in Bulk Update mode.
                 return (IsNotBulkMode || (IsBulkMode && IsOsmmBulkMode))
                 && IncidCurrentRow != null;
@@ -5882,6 +6097,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanFilterByIncid [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return IsNotBulkMode && IsNotOsmmReviewMode && IncidCurrentRow != null;
             }
         }
@@ -5894,6 +6110,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: FilterByAttributesOSMMCommand [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_filterByAttributesOSMMCommand == null)
                 {
                     Action<object> filterByAttributesOSMMAction = new(this.FilterByAttributesOSMMClicked);
@@ -5914,6 +6131,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanFilterByAttributesOSMM [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Enable filter when in OSMM Bulk Update mode
                 return (IsOsmmReviewMode && IncidCurrentRow != null);
             }
@@ -5927,6 +6145,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanClearFilter [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Don't allow filter to be cleared when in OSMM review mode or
                 // OSMM Bulk Update mode.
                 return IsFiltered == true &&
@@ -5948,6 +6167,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ProcessStatus [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _processStatus;
             }
             set
@@ -5968,6 +6188,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IsProcessing [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_processStatus != null)
                     return Visibility.Visible;
                 else
@@ -5997,6 +6218,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: NavigateFirstCommand [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_navigateFirstCommand == null)
                 {
                     Action<object> navigateFirstAction = new(this.NavigateFirstClicked);
@@ -6014,6 +6236,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: NavigatePreviousCommand [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_navigatePreviousCommand == null)
                 {
                     Action<object> navigatePreviousAction = new(this.NavigatePreviousClicked);
@@ -6031,6 +6254,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanNavigateBackward [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return IncidCurrentRowIndex > 1;
             }
         }
@@ -6043,6 +6267,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: NavigateNextCommand [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_navigateNextCommand == null)
                 {
                     Action<object> navigateNextAction = new(this.NavigateNextClicked);
@@ -6060,6 +6285,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: NavigateLastCommand [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_navigateLastCommand == null)
                 {
                     Action<object> navigateLastAction = new(this.NavigateLastClicked);
@@ -6077,6 +6303,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanNavigateForward [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // When a filter is active, compare against the number of filtered records.
                 bool withinFilteredRange = IsFiltered && IncidCurrentRowIndex < _incidSelection.Rows.Count;
 
@@ -6095,6 +6322,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: NavigateIncidCommand [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_navigateIncidCommand == null)
                 {
                     Action<object> navigateIncidAction = new(this.NavigateIncidClicked);
@@ -6112,6 +6340,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanNavigateIncid [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Can navigate backward (not already on the first record).
                 bool canGoBack = IncidCurrentRowIndex > 1;
 
@@ -6136,6 +6365,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: UpdateCommand [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_updateCommand == null)
                 {
                     Action<object> updateAction = new(this.UpdateClicked);
@@ -6155,6 +6385,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanUpdate [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // In Bulk Update mode: allow update if there is a selection
                 // and there are no errors.
                 if ((BulkUpdateMode) &&
@@ -6184,6 +6415,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanEdit [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return WorkMode.HasFlag(WorkMode.CanEdit);
             }
         }
@@ -6200,6 +6432,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanUserBulkUpdate [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_canUserBulkUpdate == null)
                     GetUserInfo();
 
@@ -6215,6 +6448,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanBulkUpdate [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Must be in edit-ready state (CanEdit + Reason/Process both selected).
                 bool editReady = IsEditReady;
 
@@ -6242,6 +6476,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanCancelBulkUpdate [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return IsBulkMode;
             }
         }
@@ -6257,6 +6492,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: BulkUpdateMode [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return WorkMode.HasFlag(WorkMode.Bulk);
             }
             set
@@ -6274,6 +6510,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: HideInBulkUpdateMode [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (IsBulkMode)
                     return Visibility.Hidden;
                 else
@@ -6292,6 +6529,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ShowInBulkUpdateMode [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (IsBulkMode)
                     return Visibility.Visible;
                 else
@@ -6311,6 +6549,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: TopControlsGroupHeader [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((bool)_showGroupHeaders)
                     return "INCID";
                 else
@@ -6327,6 +6566,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: TopControlsBulkUpdateGroupHeader [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if ((bool)_showGroupHeaders)
                     return "Bulk Update";
                 else
@@ -6350,6 +6590,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: OSMMAcceptTag [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _osmmAcceptTag;
             }
             set
@@ -6372,6 +6613,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: OSMMRejectTag [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _osmmRejectTag;
             }
             set
@@ -6390,6 +6632,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanOSMMReviewMode [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Must be in edit mode (layer editable by the authorised user).
                 bool inEditMode = IsEditMode;
 
@@ -6414,6 +6657,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanCancelOSMMReview [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return IsOsmmReviewMode;
             }
         }
@@ -6426,6 +6670,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: OSMMSkipCommand [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_osmmSkipCommand == null)
                 {
                     Action<object> osmmSkipAction = new(this.OSMMSkipClicked);
@@ -6445,6 +6690,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanOSMMSkip [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Allow skip whenever there is a filter active and we are not
                 // mid-update, even if the current incid has no OSMM update record
                 // (in that case the skip simply navigates to the next record).
@@ -6461,6 +6707,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: OSMMAcceptCommand [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_osmmAcceptCommand == null)
                 {
                     Action<object> osmmAcceptAction = new(this.OSMMAcceptClicked);
@@ -6478,6 +6725,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: OSMMRejectCommand [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_osmmRejectCommand == null)
                 {
                     Action<object> osmmRejectAction = new(this.OSMMRejectClicked);
@@ -6496,6 +6744,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanOSMMAccept [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // An OSMM update must not currently be in progress (prevents double-actioning).
                 bool notUpdating = _osmmUpdating == false;
 
@@ -6525,6 +6774,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: OSMMReviewMode [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return WorkMode.HasFlag(WorkMode.OSMMReview);
             }
             set
@@ -6542,6 +6792,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: HideInOSMMReviewMode [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (IsOsmmReviewMode)
                     return Visibility.Hidden;
                 else
@@ -6560,6 +6811,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ShowInOSMMReviewMode [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Show the group if in OSMM Review mode
                 if (IsOsmmReviewMode)
                 {
@@ -6584,6 +6836,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: OSMMAcceptText [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return OSMMAcceptTag == "Ctrl" ? "A_ccept All" : "A_ccept";
             }
         }
@@ -6597,6 +6850,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: OSMMRejectText [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return OSMMRejectTag == "Ctrl" ? "Re_ject All" : "Re_ject";
             }
         }
@@ -6610,6 +6864,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ApplyOSMMUpdateToFormCommand [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (_applyOSMMUpdateToFormCommand == null)
                 {
                     Action<object> action = new(this.ApplyOSMMUpdateToFormClicked);
@@ -6628,6 +6883,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanApplyOSMMUpdateToForm [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Must be in edit mode (layer editable by the authorised user).
                 bool inEditMode = IsEditMode;
 
@@ -6652,6 +6908,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanOSMMUpdateAccept [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Must be in edit mode (layer editable by the authorised user).
                 bool inEditMode = IsEditMode;
 
@@ -6678,6 +6935,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanOSMMUpdateReject [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Must be in edit mode (layer editable by the authorised user).
                 bool inEditMode = IsEditMode;
 
@@ -6704,6 +6962,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: AnyOSMMUpdates [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _anyOSMMUpdates ?? false;
             }
         }
@@ -6716,6 +6975,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: OSMMIncidCurrentRowIndex [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _osmmUpdatesEmpty ? 0 : _incidCurrentRowIndex;
             }
         }
@@ -6732,6 +6992,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanOSMMBulkUpdateMode [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Must be in edit-ready state (CanEdit + Reason/Process both selected).
                 bool editReady = IsEditReady;
 
@@ -6759,6 +7020,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanCancelOSMMBulkUpdate [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return IsOsmmBulkMode;
             }
         }
@@ -6775,6 +7037,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: OSMMBulkUpdateMode [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return WorkMode.HasFlag(WorkMode.OSMMBulk);
             }
             set
@@ -6798,6 +7061,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidLastModifiedDateVal [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _incidLastModifiedDate;
             }
             set
@@ -6814,6 +7078,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: IncidLastModifiedUserId [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _incidLastModifiedUser;
             }
             set
@@ -6835,6 +7100,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CopySwitches [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _copySwitches;
             }
             set
@@ -6851,6 +7117,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanCopy [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // There must be a current incid row and copy switches must be configured.
                 if (IncidCurrentRow == null || _copySwitches == null)
                     return false;
@@ -6870,6 +7137,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanPaste [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // There must be a current incid row and copy switches must be configured.
                 if (IncidCurrentRow == null || _copySwitches == null)
                     return false;
@@ -6889,6 +7157,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: CanResetCopy [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Copy switches must be configured and at least one 'Copy*' switch must be enabled.
                 return _copySwitches != null &&
                        typeof(WindowMainCopySwitches).GetProperties()
@@ -6910,6 +7179,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: AssemblyCopyright [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 // Get all Copyright attributes on this assembly
                 object[] attributes = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyCopyrightAttribute), false);
 
@@ -6937,6 +7207,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ButtonAddSecondaryHabitatImg [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 string imageSource = "pack://application:,,,/HLUTool;component/Images/AddRowSquare16.png";
                 return new BitmapImage(new Uri(imageSource)) as ImageSource;
             }
@@ -6950,6 +7221,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ButtonAddSecondaryHabitatListImg [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 string imageSource = "pack://application:,,,/HLUTool;component/Images/AddScript16.png";
                 return new BitmapImage(new Uri(imageSource)) as ImageSource;
             }
@@ -6963,6 +7235,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ButtonGetMapSelectionImg [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 string imageSource = "pack://application:,,,/HLUTool;component/Images/GetMapSelection16.png";
                 return new BitmapImage(new Uri(imageSource)) as ImageSource;
             }
@@ -6976,6 +7249,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ButtonEditPriorityHabitatsImg [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 string imageSource = "pack://application:,,,/HLUTool;component/Images/ZoomTable16.png";
                 return new BitmapImage(new Uri(imageSource)) as ImageSource;
             }
@@ -6989,6 +7263,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: ButtonEditPotentialHabitatsImg [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 string imageSource = "pack://application:,,,/HLUTool;component/Images/ZoomTable16.png";
                 return new BitmapImage(new Uri(imageSource)) as ImageSource;
             }
@@ -7010,6 +7285,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: MessageQueue [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _messageQueue;
             }
         }
@@ -7022,6 +7298,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: HasMessages [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _messageQueue.Count > 0;
             }
         }
@@ -7034,6 +7311,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: MessageQueueVisibility [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return HasMessages ? Visibility.Visible : Visibility.Collapsed;
             }
         }
@@ -7293,6 +7571,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: HasErrors [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _messageQueue.Any(m => m.Level == MessageType.Error);
             }
         }
@@ -7305,6 +7584,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: HasWarnings [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 return _messageQueue.Any(m => m.Level == MessageType.Warning);
             }
         }
@@ -7358,6 +7638,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
+                //Debug.WriteLine($"GET: DismissMessageCommand [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 _dismissMessageCommand ??= new RelayCommand(
                         param => ClearMessage(id: param?.ToString()),
                         param => true);
@@ -7447,7 +7728,7 @@ namespace HLU.UI.ViewModel
                             CloseParentheses = ")"
                         };
 
-                        // Reset cached secondary code lists � they are filtered by geometry type
+                        // Reset cached secondary code lists â€” they are filtered by geometry type
                         // and must be rebuilt for the new layer type.
                         _secondaryCodesAll = null;
                         _secondaryCodesValid = null;
@@ -7461,8 +7742,8 @@ namespace HLU.UI.ViewModel
 
                         // The HabitatType setter may have nulled _incidPrimary when the current
                         // primary code is absent from the rebuilt list for the new geometry type.
-                        // Restore it from the incid row so that IsDirtyIncid() � which compares
-                        // _incidPrimary against _incidCurrentRow.habitat_primary � does not see a
+                        // Restore it from the incid row so that IsDirtyIncid() â€” which compares
+                        // _incidPrimary against _incidCurrentRow.habitat_primary â€” does not see a
                         // discrepancy and falsely mark the record as changed, triggering the
                         // "record has been changed" dialog on every layer switch.
                         // The validation in this["IncidPrimary"] will detect that the restored code
@@ -8099,7 +8380,6 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(Source1Names));
             OnPropertyChanged(nameof(IncidSource1Date));
             OnPropertyChanged(nameof(IncidSource1HabitatClass));
-            OnPropertyChanged(nameof(IncidSource1HabitatType));
             OnPropertyChanged(nameof(Source1HabitatTypeCodes));
             OnPropertyChanged(nameof(IncidSource1HabitatType));
             OnPropertyChanged(nameof(IncidSource1BoundaryImportance));
@@ -8117,7 +8397,6 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(Source2Names));
             OnPropertyChanged(nameof(IncidSource2Date));
             OnPropertyChanged(nameof(IncidSource2HabitatClass));
-            OnPropertyChanged(nameof(IncidSource2HabitatType));
             OnPropertyChanged(nameof(Source2HabitatTypeCodes));
             OnPropertyChanged(nameof(IncidSource2HabitatType));
             OnPropertyChanged(nameof(IncidSource2BoundaryImportance));
@@ -8135,7 +8414,6 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(Source3Names));
             OnPropertyChanged(nameof(IncidSource3Date));
             OnPropertyChanged(nameof(IncidSource3HabitatClass));
-            OnPropertyChanged(nameof(IncidSource3HabitatType));
             OnPropertyChanged(nameof(Source3HabitatTypeCodes));
             OnPropertyChanged(nameof(IncidSource3HabitatType));
             OnPropertyChanged(nameof(IncidSource3BoundaryImportance));
@@ -9026,7 +9304,7 @@ namespace HLU.UI.ViewModel
                 // Parse and add each proposed secondary code.
                 if (!string.IsNullOrWhiteSpace(proposedSecondaries))
                 {
-                    // Split on whitespace, commas, and common connectives � same approach as ExpandSuggestedCodes.
+                    // Split on whitespace, commas, and common connectives â€” same approach as ExpandSuggestedCodes.
                     string[] tokens = OsmmSecondariesSplitRegex()
                         .Split(proposedSecondaries.Replace('[', ' ').Replace(']', ' '));
 
@@ -10559,8 +10837,8 @@ namespace HLU.UI.ViewModel
 				}
             }
 
-            // Convert from native storage units (m� / m) to configured
-            // display units. No rounding here � deferred to display.
+            // Convert from native storage units (mÂ² / m) to configured
+            // display units. No rounding here â€” deferred to display.
             _incidArea = ConvertArea(_incidArea);
             _incidLength = ConvertLength(_incidLength);
         }
@@ -10575,12 +10853,12 @@ namespace HLU.UI.ViewModel
         {
             return Settings.Default.DisplayAreaUnits switch
             {
-                "m�" => squareMetres,
-                "km�" => squareMetres / 1_000_000d,
+                "mÂ²" => squareMetres,
+                "kmÂ²" => squareMetres / 1_000_000d,
                 "ha" => squareMetres / 10_000d,
                 "ac" => squareMetres / 4_046.8564d,
-                "ft�" => squareMetres * 10.76391d,
-                "mi�" => squareMetres / 2_589_988.11d,
+                "ftÂ²" => squareMetres * 10.76391d,
+                "miÂ²" => squareMetres / 2_589_988.11d,
                 _ => squareMetres / 10_000d // fallback: ha
             };
         }

@@ -441,13 +441,16 @@ namespace HLU.UI.ViewModel
             if (_hluDS == null)
                 return false;
 
+            if (Incid == null)
+                return false;
+
             if (IsBulkMode)
                 return true;
 
             if (_incidIhsMatrixRows == null)
             {
                 HluDataSet.incid_ihs_matrixDataTable ihsMatrixTable = _hluDS.incid_ihs_matrix;
-                GetIncidChildRowsDb([Incid],
+                _incidIhsMatrixRows = GetIncidChildRowsDb([Incid],
                     _hluTableAdapterMgr.incid_ihs_matrixTableAdapter, ref ihsMatrixTable);
             }
 
@@ -481,13 +484,16 @@ namespace HLU.UI.ViewModel
             if (_hluDS == null)
                 return false;
 
+            if (Incid == null)
+                return false;
+
             if (IsBulkMode)
                 return true;
 
             if (_incidIhsFormationRows == null)
             {
                 HluDataSet.incid_ihs_formationDataTable ihsFormationTable = _hluDS.incid_ihs_formation;
-                GetIncidChildRowsDb([Incid],
+                _incidIhsFormationRows = GetIncidChildRowsDb([Incid],
                     _hluTableAdapterMgr.incid_ihs_formationTableAdapter, ref ihsFormationTable);
             }
             return _incidIhsFormationRows != null;
@@ -519,13 +525,16 @@ namespace HLU.UI.ViewModel
             if (_hluDS == null)
                 return false;
 
+            if (Incid == null)
+                return false;
+
             if (IsBulkMode)
                 return true;
 
             if (_incidIhsManagementRows == null)
             {
                 HluDataSet.incid_ihs_managementDataTable ihsManagementTable = _hluDS.incid_ihs_management;
-                GetIncidChildRowsDb([Incid],
+                _incidIhsManagementRows = GetIncidChildRowsDb([Incid],
                     _hluTableAdapterMgr.incid_ihs_managementTableAdapter, ref ihsManagementTable);
             }
 
@@ -558,13 +567,16 @@ namespace HLU.UI.ViewModel
             if (_hluDS == null)
                 return false;
 
+            if (Incid == null)
+                return false;
+
             if (IsBulkMode)
                 return true;
 
             if (_incidIhsComplexRows == null)
             {
                 HluDataSet.incid_ihs_complexDataTable ihsComplexTable = _hluDS.incid_ihs_complex;
-                GetIncidChildRowsDb([Incid],
+                _incidIhsComplexRows = GetIncidChildRowsDb([Incid],
                     _hluTableAdapterMgr.incid_ihs_complexTableAdapter, ref ihsComplexTable);
             }
 
@@ -2463,13 +2475,18 @@ namespace HLU.UI.ViewModel
             if (_hluDS == null)
                 return false;
 
+            // Use IncidCurrentRow directly to avoid triggering the logged Incid property getter.
+            if ((IncidCurrentRow == null) || IncidCurrentRow.IsNull(HluDataset.incid.incidColumn))
+                return false;
+
             if (IsBulkMode)
                 return true;
 
             if (_incidSourcesRows == null)
             {
+                string incid = IncidCurrentRow.incid;
                 HluDataSet.incid_sourcesDataTable incidSourcesTable = _hluDS.incid_sources;
-                _incidSourcesRows = GetIncidChildRowsDb([Incid],
+                _incidSourcesRows = GetIncidChildRowsDb([incid],
                     _hluTableAdapterMgr.incid_sourcesTableAdapter, ref incidSourcesTable);
             }
             return _incidSourcesRows != null;
