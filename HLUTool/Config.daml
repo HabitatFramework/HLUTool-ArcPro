@@ -536,7 +536,7 @@
 						smallImage="pack://application:,,,/HLUTool;component/Images/SelectOnMap16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/SelectOnMap32.png">
 					<tooltip heading="Select Current Incid">
-						Select all of the features associated with only the current INCID record in the active GIS layer.
+						Select all of the features in the active GIS layer that are associated with the current INCID record only.
 						<disabledText>Available only when not in bulk or OSMM Review mode.</disabledText>
 					</tooltip>
 				</button>
@@ -549,7 +549,7 @@
 						smallImage="pack://application:,,,/HLUTool;component/Images/SelectAllOnMap16.png"
 						largeImage="pack://application:,,,/HLUTool;component/Images/SelectAllOnMap32.png">
 					<tooltip heading="Select Filtered INCIDs">
-						Select all of the features associated with all of the currently filtered INCID records in the active GIS layer.
+						Select all of the features in the active GIS layer that are associated with all of the currently filtered INCID records.
 						<disabledText>Available only when not in bulk or OSMM Review mode.</disabledText>
 					</tooltip>
 				</button>
