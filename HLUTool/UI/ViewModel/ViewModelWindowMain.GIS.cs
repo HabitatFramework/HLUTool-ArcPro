@@ -567,6 +567,11 @@ namespace HLU.UI.ViewModel
                 return;
             }
 
+            // Check for any pending OSMM updates now that a valid map is active.
+            // This also covers the cold-start case where InitializeToolPaneAsync ran
+            // before ArcGIS Pro had an active map, so the check was skipped there.
+            await CheckAnyOSMMUpdatesAsync();
+
             // Make the UI controls visible.
             GridMainVisibility = Visibility.Visible;
         }

@@ -2300,9 +2300,6 @@ namespace HLU.UI.ViewModel
                 // the initial row count is performed.
                 if (await CheckActiveMapAsync())
                 {
-                    // Count rows of incid table now that _gisLayerType is correct.
-                    IncidRowCount(true);
-
                     // Check for any pending OSMM updates after geometry type is set.
                     await CheckAnyOSMMUpdatesAsync();
 
