@@ -130,7 +130,7 @@ namespace HLU.UI.ViewModel
         private string _osmmSpatialFlag;
         private string _osmmChangeFlag;
 
-        private string _codeAnyRow = Settings.Default.CodeAnyRow;
+        private string _codeAny = Settings.Default.CodeAny;
 
         private string _displayName = "OSMM Updates Filter";
 
@@ -157,9 +157,9 @@ namespace HLU.UI.ViewModel
             _viewModelMain = viewModelMain;
 
             // Reset all the filter fields.
-            _osmmProcessFlag = _codeAnyRow;
-            _osmmSpatialFlag = _codeAnyRow;
-            _osmmChangeFlag = _codeAnyRow;
+            _osmmProcessFlag = _codeAny;
+            _osmmSpatialFlag = _codeAny;
+            _osmmChangeFlag = _codeAny;
 
             // Set the default status value
             if (_viewModelMain.IsOsmmBulkMode)
@@ -331,9 +331,9 @@ namespace HLU.UI.ViewModel
         private async void ResetOSMMFilterClicked(object param)
         {
             // Reset all the filter fields.
-            _osmmProcessFlag = _codeAnyRow;
-            _osmmSpatialFlag = _codeAnyRow;
-            _osmmChangeFlag = _codeAnyRow;
+            _osmmProcessFlag = _codeAny;
+            _osmmSpatialFlag = _codeAny;
+            _osmmChangeFlag = _codeAny;
 
             // Set the default status value
             if (_viewModelMain.IsOsmmBulkMode)
@@ -607,7 +607,7 @@ namespace HLU.UI.ViewModel
         private HluDataSet.lut_osmm_updates_processRow[] AnyRowOSMMUpdatesProcess(int sortOrder)
         {
             HluDataSet.lut_osmm_updates_processRow anyRow = _hluDataset.lut_osmm_updates_process.Newlut_osmm_updates_processRow();
-            anyRow.code = _codeAnyRow;
+            anyRow.code = _codeAny;
             anyRow.sort_order = sortOrder;
             anyRow.description = String.Empty;
             return [anyRow];
@@ -622,7 +622,7 @@ namespace HLU.UI.ViewModel
         private HluDataSet.lut_osmm_updates_spatialRow[] AnyRowOSMMUpdatesSpatial(int sortOrder)
         {
             HluDataSet.lut_osmm_updates_spatialRow anyRow = _hluDataset.lut_osmm_updates_spatial.Newlut_osmm_updates_spatialRow();
-            anyRow.code = _codeAnyRow;
+            anyRow.code = _codeAny;
             anyRow.sort_order = sortOrder;
             anyRow.description = String.Empty;
             return [anyRow];
@@ -637,7 +637,7 @@ namespace HLU.UI.ViewModel
         private HluDataSet.lut_osmm_updates_changeRow[] AnyRowOSMMUpdatesChange(int sortOrder)
         {
             HluDataSet.lut_osmm_updates_changeRow anyRow = _hluDataset.lut_osmm_updates_change.Newlut_osmm_updates_changeRow();
-            anyRow.code = _codeAnyRow;
+            anyRow.code = _codeAny;
             anyRow.sort_order = sortOrder;
             anyRow.description = String.Empty;
             return [anyRow];
@@ -748,19 +748,19 @@ namespace HLU.UI.ViewModel
             // Append the selected flags to the WHERE clause if they are not "Any". The "Any" option
             // will show all OSMM Updates regardless of the flag value, so no need to filter by that
             // flag in the query.
-            if (!String.IsNullOrEmpty(_osmmProcessFlag) && _osmmProcessFlag != _codeAnyRow)
+            if (!String.IsNullOrEmpty(_osmmProcessFlag) && _osmmProcessFlag != _codeAny)
             {
                 whereClause.Append(String.Format(" AND {0} = {1}",
                 _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.process_flagColumn.ColumnName), _osmmProcessFlag));
             }
 
-            if (!String.IsNullOrEmpty(_osmmSpatialFlag) && _osmmSpatialFlag != _codeAnyRow)
+            if (!String.IsNullOrEmpty(_osmmSpatialFlag) && _osmmSpatialFlag != _codeAny)
             {
                 whereClause.Append(String.Format(" AND {0} = {1}",
                 _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.spatial_flagColumn.ColumnName), _db.QuoteValue(_osmmSpatialFlag)));
             }
 
-            if (!String.IsNullOrEmpty(_osmmChangeFlag) && _osmmChangeFlag != _codeAnyRow)
+            if (!String.IsNullOrEmpty(_osmmChangeFlag) && _osmmChangeFlag != _codeAny)
             {
                 whereClause.Append(String.Format(" AND {0} = {1}",
                 _db.QuoteIdentifier(_hluDataset.incid_osmm_updates.change_flagColumn.ColumnName), _db.QuoteValue(_osmmChangeFlag)));
@@ -805,7 +805,7 @@ namespace HLU.UI.ViewModel
 
             // Set the filter count based on the selected status. This will be used to determine
             // whether the filter can be applied.
-            if (!String.IsNullOrEmpty(_osmmUpdatesStatus) && _osmmUpdatesStatus != _codeAnyRow)
+            if (!String.IsNullOrEmpty(_osmmUpdatesStatus) && _osmmUpdatesStatus != _codeAny)
             {
                 switch (_osmmUpdatesStatus)
                 {

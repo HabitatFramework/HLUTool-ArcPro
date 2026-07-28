@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using HLU.Properties;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -50,6 +51,8 @@ namespace HLU.UI.ViewModel
         private int _totalSourceFeatures = -1;
         private bool _isCountingTotalFeatures;
 
+        private string _codeSkip = Settings.Default.CodeSkip;
+
         #endregion Fields
 
         #region Constructor
@@ -76,7 +79,7 @@ namespace HLU.UI.ViewModel
             _countFeaturesAsync = countFeaturesAsync;
 
             // Create the target layer list with <Skip> option
-            _targetLayerNamesWithSkip = ["<Skip>", .. _targetLayerNames];
+            _targetLayerNamesWithSkip = [_codeSkip, .. _targetLayerNames];
 
             // Create a RuleRow for each rule and start counting features
             _ruleRows = [];
@@ -164,7 +167,7 @@ namespace HLU.UI.ViewModel
         {
             // Build the list of (targetLayerName, rule) assignments for rules not marked as <Skip>
             var assignments = _ruleRows
-                .Where(r => !string.IsNullOrEmpty(r.SelectedTargetLayer) && r.SelectedTargetLayer != "<Skip>")
+                .Where(r => !string.IsNullOrEmpty(r.SelectedTargetLayer) && r.SelectedTargetLayer != _codeSkip)
                 .Select(r => (r.SelectedTargetLayer, r.Rule))
                 .ToList();
 
@@ -182,7 +185,7 @@ namespace HLU.UI.ViewModel
                 // Can OK if at least one rule has a valid target layer selected and no rules are
                 // still counting
                 return _ruleRows != null &&
-                       _ruleRows.Any(r => !string.IsNullOrEmpty(r.SelectedTargetLayer) && r.SelectedTargetLayer != "<Skip>") &&
+                       _ruleRows.Any(r => !string.IsNullOrEmpty(r.SelectedTargetLayer) && r.SelectedTargetLayer != _codeSkip) &&
                        !_ruleRows.Any(r => r.IsCountingFeatures);
             }
         }
@@ -499,6 +502,7 @@ namespace HLU.UI.ViewModel
             private int _featureCount = -1;
             private bool _isCountingFeatures;
             private string _featureCountError;
+            private string _codeSkip = Settings.Default.CodeSkip;
 
             /// <summary>
             /// Constructs a RuleRow for the given rule and available target layers.
@@ -510,7 +514,7 @@ namespace HLU.UI.ViewModel
                 Rule = rule;
                 AvailableTargetLayers = availableTargetLayers;
                 // Default to <Skip> so users must explicitly choose a target
-                _selectedTargetLayer = "<Skip>";
+                _selectedTargetLayer = _codeSkip;
             }
 
             /// <summary>

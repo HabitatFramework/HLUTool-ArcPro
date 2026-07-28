@@ -59,8 +59,8 @@
     <Setting Name="HistoryDisplayLastN" Roaming="true" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">10</Value>
     </Setting>
-    <Setting Name="CodeDeleteRow" Roaming="true" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">&lt;clear&gt;</Value>
+    <Setting Name="CodeClear" Roaming="true" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">&lt;Clear&gt;</Value>
     </Setting>
     <Setting Name="GdbJoinThresholdMin" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">100</Value>
@@ -146,8 +146,8 @@
     <Setting Name="ShowGroupHeaders" Roaming="true" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="CodeAnyRow" Roaming="true" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">&lt;all&gt;</Value>
+    <Setting Name="CodeAny" Roaming="true" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">&lt;Any&gt;</Value>
     </Setting>
     <Setting Name="BAPDeterminationQualityPrevious" Type="System.String" Scope="Application">
       <Value Profile="(Default)">PP</Value>
@@ -304,6 +304,21 @@
     </Setting>
     <Setting Name="DefaultBulkLoadPath" Roaming="true" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="CodeNone" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">&lt;None&gt;</Value>
+    </Setting>
+    <Setting Name="CodeAll" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">&lt;All&gt;</Value>
+    </Setting>
+    <Setting Name="CodeSkip" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">&lt;Skip&gt;</Value>
+    </Setting>
+    <Setting Name="CodeGIS" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">&lt;Gis&gt;</Value>
+    </Setting>
+    <Setting Name="CodeAllEssentials" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">&lt;All Essentials&gt;</Value>
     </Setting>
   </Settings>
 </SettingsFile>

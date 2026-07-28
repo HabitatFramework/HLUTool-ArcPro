@@ -33,7 +33,7 @@ namespace HLU.Converters
     /// </summary>
     internal class CodeNameDescriptionConverter : IValueConverter
     {
-        private string _codeDeleteRow = Settings.Default.CodeDeleteRow;
+        private string _codeDeleteRow = Settings.Default.CodeClear;
 
         #region IValueConverter Members
 

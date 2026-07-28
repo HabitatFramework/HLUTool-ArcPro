@@ -2969,16 +2969,16 @@ namespace HLU.UI.ViewModel
                 sqlWhereClause = $"[incid_osmm_updates].incid LIKE '{_recIDs.SiteID}:%' AND [incid_osmm_updates].status <> -1";
 
                 // Add any other filter criteria.
-                if (processFlag != null && processFlag != _codeAnyRow)
+                if (processFlag != null && processFlag != _codeAny)
                     sqlWhereClause = String.Format("{0} AND [incid_osmm_updates].process_flag = {1}", sqlWhereClause, processFlag);
 
-                if (spatialFlag != null && spatialFlag != _codeAnyRow)
+                if (spatialFlag != null && spatialFlag != _codeAny)
                     sqlWhereClause = String.Format("{0} AND [incid_osmm_updates].spatial_flag = '{1}'", sqlWhereClause, spatialFlag);
 
-                if (changeFlag != null && changeFlag != _codeAnyRow)
+                if (changeFlag != null && changeFlag != _codeAny)
                     sqlWhereClause = String.Format("{0} AND [incid_osmm_updates].change_flag = '{1}'", sqlWhereClause, changeFlag);
 
-                if (status != null && status != _codeAnyRow)
+                if (status != null && status != _codeAny)
                 {
                     int newStatus = status switch
                     {
@@ -2997,7 +2997,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Don't show pending or applied updates when no status filter is applied
-                if (status == null || status == _codeAnyRow)
+                if (status == null || status == _codeAny)
                     sqlWhereClause = String.Format("{0} AND [incid_osmm_updates].status <> 0  AND [incid_osmm_updates].status <> -1", sqlWhereClause);
 
                 // Replace any connection type specific qualifiers and delimiters.

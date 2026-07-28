@@ -216,10 +216,10 @@ namespace HLU.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("<clear>")]
-        public string CodeDeleteRow {
+        [global::System.Configuration.DefaultSettingValueAttribute("<Clear>")]
+        public string CodeClear {
             get {
-                return ((string)(this["CodeDeleteRow"]));
+                return ((string)(this["CodeClear"]));
             }
         }
         
@@ -525,10 +525,10 @@ namespace HLU.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("<all>")]
-        public string CodeAnyRow {
+        [global::System.Configuration.DefaultSettingValueAttribute("<Any>")]
+        public string CodeAny {
             get {
-                return ((string)(this["CodeAnyRow"]));
+                return ((string)(this["CodeAny"]));
             }
         }
         
@@ -1005,6 +1005,51 @@ namespace HLU.Properties {
             }
             set {
                 this["DefaultBulkLoadPath"] = value;
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("<None>")]
+        public string CodeNone {
+            get {
+                return ((string)(this["CodeNone"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("<All>")]
+        public string CodeAll {
+            get {
+                return ((string)(this["CodeAll"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("<Skip>")]
+        public string CodeSkip {
+            get {
+                return ((string)(this["CodeSkip"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("<Gis>")]
+        public string CodeGIS {
+            get {
+                return ((string)(this["CodeGIS"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("<All Essentials>")]
+        public string CodeAllEssentials {
+            get {
+                return ((string)(this["CodeAllEssentials"]));
             }
         }
     }

@@ -72,6 +72,8 @@ namespace HLU.UI.ViewModel
 
         private string _displayName = "Options";
 
+        private string _codeNone = Settings.Default.CodeNone;
+
         private HluDataSet.incid_mm_polygonsDataTable _incidMMPolygonsTable = new();
         private List<int> _gisIDColumnOrdinals;
 
@@ -1927,8 +1929,8 @@ namespace HLU.UI.ViewModel
             get
             {
                 // Allow <None> as a valid selection.
-                if (_defaultHabitatClass == "<None>")
-                    return "<None>";
+                if (_defaultHabitatClass == _codeNone)
+                    return _defaultHabitatClass;
 
                 var q = HabitatClassCodes.Where(h => h.code == _defaultHabitatClass);
                 if (q.Any())

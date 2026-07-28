@@ -20,6 +20,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
 using HLU.Data;
 using HLU.Enums;
+using HLU.Properties;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -68,8 +69,7 @@ namespace HLU.UI.ViewModel
         private long _totalCount;
         private bool _selectedOnly;
 
-        // Constants
-        private const string NoneOptionText = "<None>";
+        private string _codeNone = Settings.Default.CodeNone;
 
         #endregion Fields
 
@@ -426,7 +426,7 @@ namespace HLU.UI.ViewModel
         private void OkCommandClick()
         {
             // If ToidField is "<None>", pass null instead.
-            string toidFieldValue = (_toidField == NoneOptionText) ? null : _toidField;
+            string toidFieldValue = (_toidField == _codeNone) ? null : _toidField;
 
             // Close the dialog and pass the field mappings and other options back to the main ViewModel.
             RequestClose?.Invoke(
@@ -692,7 +692,7 @@ namespace HLU.UI.ViewModel
                 await _viewModelMain.GISApplication.GetFCFieldNamesAsync(_selectedLayerName);
 
             // Create a list with "<None>" as the first item for the TOID field only.
-            List<string> fieldsWithNone = [NoneOptionText, .. (fieldNames?.OrderBy(f => f) ?? Enumerable.Empty<string>())];
+            List<string> fieldsWithNone = [_codeNone, .. (fieldNames?.OrderBy(f => f) ?? Enumerable.Empty<string>())];
 
             // Create a list without "<None>" for the required fields.
             List<string> fieldsOnly = [.. (fieldNames?.OrderBy(f => f) ?? Enumerable.Empty<string>())];
@@ -748,7 +748,7 @@ namespace HLU.UI.ViewModel
             else
             {
                 // If TOID field is not found, default to "<None>" since it's optional.
-                _toidField = NoneOptionText;
+                _toidField = _codeNone;
                 OnPropertyChanged(nameof(ToidField));
             }
 

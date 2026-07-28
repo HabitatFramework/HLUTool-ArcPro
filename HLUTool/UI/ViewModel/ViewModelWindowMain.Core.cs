@@ -256,9 +256,13 @@ namespace HLU.UI.ViewModel
 
         #region Fields - Misc State
 
-        private string _codeAnyRow;
         private bool _suppressUserNotifications;
-        private string _codeDeleteRow;
+        private string _codeAny;
+        private string _codeClear;
+        private string _codeNone;
+        private string _codeAll;
+        private string _codeAllEssentials;
+
         private HluDataSet.lut_secondary_groupRow _allRow;
         private HluDataSet.lut_secondary_groupRow _allEssRow;
 
@@ -2185,9 +2189,12 @@ namespace HLU.UI.ViewModel
             ApplyUserSettings();
 
             // Get application settings
-            _codeDeleteRow = Settings.Default.CodeDeleteRow;
+            _codeClear = Settings.Default.CodeClear;
+            _codeAny = Settings.Default.CodeAny;
+            _codeAll = Settings.Default.CodeAll;
+            _codeAllEssentials = Settings.Default.CodeAllEssentials;
+            _codeNone = Settings.Default.CodeNone;
             _autoSelectOnGis = Settings.Default.AutoSelectOnGis;
-            _codeAnyRow = Settings.Default.CodeAnyRow;
 
             // Initialise statics.
             HistoryGeometry1ColumnName = Settings.Default.HistoryGeometry1ColumnName;
@@ -2229,9 +2236,9 @@ namespace HLU.UI.ViewModel
                 if (_allRow == null)
                 {
                     _allRow = HluDataset.lut_secondary_group.Newlut_secondary_groupRow();
-                    _allRow.code = "<All>";
+                    _allRow.code = _codeAll;
                     _allRow.is_local = true;
-                    _allRow.description = "<All>";
+                    _allRow.description = _codeAll;
                     _allRow.sort_order = -1;
                 }
 
@@ -2239,9 +2246,9 @@ namespace HLU.UI.ViewModel
                 if (_allEssRow == null)
                 {
                     _allEssRow = HluDataset.lut_secondary_group.Newlut_secondary_groupRow();
-                    _allEssRow.code = "<All Essentials>";
+                    _allEssRow.code = _codeAllEssentials;
                     _allEssRow.is_local = true;
-                    _allEssRow.description = "<All Essentials>";
+                    _allEssRow.description = _codeAllEssentials;
                     _allEssRow.sort_order = -1;
                 }
 
@@ -2249,8 +2256,8 @@ namespace HLU.UI.ViewModel
                 if (_noneReasonRow == null)
                 {
                     _noneReasonRow = HluDataset.lut_reason.Newlut_reasonRow();
-                    _noneReasonRow.code = "<None>";
-                    _noneReasonRow.description = "<None>";
+                    _noneReasonRow.code = _codeNone;
+                    _noneReasonRow.description = _codeNone;
                     _noneReasonRow.sort_order = -1;
                 }
 
@@ -2258,8 +2265,8 @@ namespace HLU.UI.ViewModel
                 if (_noneProcessRow == null)
                 {
                     _noneProcessRow = HluDataset.lut_process.Newlut_processRow();
-                    _noneProcessRow.code = "<None>";
-                    _noneProcessRow.description = "<None>";
+                    _noneProcessRow.code = _codeNone;
+                    _noneProcessRow.description = _codeNone;
                     _noneProcessRow.sort_order = -1;
                 }
 
@@ -2267,8 +2274,8 @@ namespace HLU.UI.ViewModel
                 if (_noneHabitatClassRow == null)
                 {
                     _noneHabitatClassRow = HluDataset.lut_habitat_class.Newlut_habitat_classRow();
-                    _noneHabitatClassRow.code = "<None>";
-                    _noneHabitatClassRow.description = "<None>";
+                    _noneHabitatClassRow.code = _codeNone;
+                    _noneHabitatClassRow.description = _codeNone;
                     _noneHabitatClassRow.sort_order = -1;
                 }
 
@@ -2313,7 +2320,7 @@ namespace HLU.UI.ViewModel
                 BapEnvironment.PotentialPriorityDetermQtyValidation = _potentialPriorityDetermQtyValidation;
 
                 // Set default reason and process from settings and update toolbar combo boxes
-                if (!string.IsNullOrWhiteSpace(_defaultReason) && _defaultReason != "<None>")
+                if (!string.IsNullOrWhiteSpace(_defaultReason) && _defaultReason != _codeNone)
                 {
                     // _defaultReason stores the code; resolve to description for the VM.
                     var reasonRow = _lutReason?.FirstOrDefault(r =>
@@ -2322,7 +2329,7 @@ namespace HLU.UI.ViewModel
                         Reason = reasonRow.description;
                 }
 
-                if (!string.IsNullOrWhiteSpace(_defaultProcess) && _defaultProcess != "<None>")
+                if (!string.IsNullOrWhiteSpace(_defaultProcess) && _defaultProcess != _codeNone)
                 {
                     // _defaultProcess stores the code; resolve to description for the VM.
                     var processRow = _lutProcess?.FirstOrDefault(r =>
@@ -3791,7 +3798,7 @@ namespace HLU.UI.ViewModel
             }
 
             // Set the default reason for updates if not already set.
-            if ((String.IsNullOrWhiteSpace(Reason)) && (_defaultReason != "<None>"))
+            if ((String.IsNullOrWhiteSpace(Reason)) && (_defaultReason != _codeNone))
             {
                 // _defaultReason stores the code; resolve to description for the VM.
                 var reasonRow = _lutReason?.FirstOrDefault(r =>
@@ -3801,7 +3808,7 @@ namespace HLU.UI.ViewModel
             }
 
             // Set the default process for updates if not already set.
-            if ((String.IsNullOrWhiteSpace(Process)) && (_defaultProcess != "<None>"))
+            if ((String.IsNullOrWhiteSpace(Process)) && (_defaultProcess != _codeNone))
             {
                 // _defaultProcess stores the code; resolve to description for the VM.
                 var processRow = _lutProcess?.FirstOrDefault(r =>
@@ -3921,7 +3928,7 @@ namespace HLU.UI.ViewModel
             _defaultProcess = Settings.Default.DefaultProcess;
             // Store null when <None> is selected so HabitatClass getter leaves the field unset.
             string storedHabitatClass = Settings.Default.DefaultHabitatClass;
-            _defaultHabitatClass = storedHabitatClass == "<None>" ? null : storedHabitatClass;
+            _defaultHabitatClass = storedHabitatClass == _codeNone ? null : storedHabitatClass;
             _defaultSecondaryGroup = Settings.Default.DefaultSecondaryGroup;
             _secondaryCodeOrder = Settings.Default.SecondaryCodeOrder;
             _notifyOnSplitMerge = Settings.Default.NotifyOnSplitMerge;

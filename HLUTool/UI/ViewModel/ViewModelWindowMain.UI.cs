@@ -2374,13 +2374,13 @@ namespace HLU.UI.ViewModel
                     // If the primary/secondary codes must be valid
                     if (_primarySecondaryCodeValidation > 0)
                     {
-                        if (_secondaryGroup == "<All>")
+                        if (_secondaryGroup == _codeAll)
                         {
                             // Load all secondary habitat codes that are flagged as local for
                             // all secondary groups that relate to the primary habitat.
                             return _secondaryCodesValid;
                         }
-                        else if (_secondaryGroup == "<All Essentials>")
+                        else if (_secondaryGroup == _codeAllEssentials)
                         {
                             // Load all secondary habitat codes that are flagged as local for
                             // all secondary groups that relate to the primary habitat and
@@ -2396,13 +2396,13 @@ namespace HLU.UI.ViewModel
                     }
                     else
                     {
-                        if (_secondaryGroup == "<All>")
+                        if (_secondaryGroup == _codeAll)
                         {
                             // Load all secondary habitat codes that are flagged as local
                             // regardless of the primary habitat.
                             return _secondaryCodesAll;
                         }
-                        else if (_secondaryGroup == "<All Essentials>")
+                        else if (_secondaryGroup == _codeAllEssentials)
                         {
                             // Load all secondary habitat codes that are flagged as local
                             // regardless of the primary habitat and are essential.
@@ -2687,8 +2687,8 @@ namespace HLU.UI.ViewModel
                 {
                     // Define the <Clear> row
                     HluDataSet.lut_legacy_habitatRow clearRow = HluDataset.lut_legacy_habitat.Newlut_legacy_habitatRow();
-                    clearRow.code = _codeDeleteRow;
-                    clearRow.description = _codeDeleteRow;
+                    clearRow.code = _codeClear;
+                    clearRow.description = _codeClear;
                     clearRow.sort_order = -1;
 
                     // Add the <Clear> row
@@ -2723,7 +2723,7 @@ namespace HLU.UI.ViewModel
             {
                 if (IncidCurrentRow != null)
                 {
-                    bool clearCode = value == _codeDeleteRow;
+                    bool clearCode = value == _codeClear;
                     bool newCode = false;
                     if (clearCode)
                     {
@@ -3918,8 +3918,8 @@ namespace HLU.UI.ViewModel
                 {
                     // Define the <Clear> row
                     HluDataSet.lut_conditionRow clearRow = HluDataset.lut_condition.Newlut_conditionRow();
-                    clearRow.code = _codeDeleteRow;
-                    clearRow.description = _codeDeleteRow;
+                    clearRow.code = _codeClear;
+                    clearRow.description = _codeClear;
                     clearRow.sort_order = -1;
 
                     // Add the <Clear> row
@@ -3961,7 +3961,7 @@ namespace HLU.UI.ViewModel
             {
                 if (IncidCurrentRow != null)
                 {
-                    bool clearCode = value == _codeDeleteRow;
+                    bool clearCode = value == _codeClear;
                     bool newCode = false;
                     if (clearCode)
                         value = null;
@@ -4139,8 +4139,8 @@ namespace HLU.UI.ViewModel
                 {
                     // Define the <Clear> row
                     HluDataSet.lut_quality_determinationRow clearRow = HluDataset.lut_quality_determination.Newlut_quality_determinationRow();
-                    clearRow.code = _codeDeleteRow;
-                    clearRow.description = _codeDeleteRow;
+                    clearRow.code = _codeClear;
+                    clearRow.description = _codeClear;
                     clearRow.sort_order = -1;
 
                     // Add the <Clear> row
@@ -4173,7 +4173,7 @@ namespace HLU.UI.ViewModel
             {
                 if (IncidCurrentRow != null)
                 {
-                    bool clearCode = value == _codeDeleteRow;
+                    bool clearCode = value == _codeClear;
                     bool newCode = false;
                     if (clearCode)
                         value = null;
@@ -4215,8 +4215,8 @@ namespace HLU.UI.ViewModel
                 {
                     // Define the <Clear> row
                     HluDataSet.lut_quality_interpretationRow clearRow = HluDataset.lut_quality_interpretation.Newlut_quality_interpretationRow();
-                    clearRow.code = _codeDeleteRow;
-                    clearRow.description = _codeDeleteRow;
+                    clearRow.code = _codeClear;
+                    clearRow.description = _codeClear;
                     clearRow.sort_order = -1;
 
                     // Add the <Clear> row
@@ -4249,7 +4249,7 @@ namespace HLU.UI.ViewModel
             {
                 if (IncidCurrentRow != null)
                 {
-                    bool clearCode = value == _codeDeleteRow;
+                    bool clearCode = value == _codeClear;
                     bool newCode = false;
                     if (clearCode)
                         value = null;
@@ -4457,7 +4457,7 @@ namespace HLU.UI.ViewModel
                     // Define the <Clear> row
                     HluDataSet.lut_sourcesRow clearRow = HluDataset.lut_sources.Newlut_sourcesRow();
                     clearRow.source_id = -1;
-                    clearRow.source_name = _codeDeleteRow;
+                    clearRow.source_name = _codeClear;
                     clearRow.sort_order = -1;
 
                     // Add the <Clear> row
@@ -4790,7 +4790,7 @@ namespace HLU.UI.ViewModel
                     // Define the <Clear> row
                     HluDataSet.lut_sourcesRow clearRow = HluDataset.lut_sources.Newlut_sourcesRow();
                     clearRow.source_id = -1;
-                    clearRow.source_name = _codeDeleteRow;
+                    clearRow.source_name = _codeClear;
                     clearRow.sort_order = -1;
 
                     // Add the <Clear> row
@@ -5118,7 +5118,7 @@ namespace HLU.UI.ViewModel
                     // Define the <Clear> row
                     HluDataSet.lut_sourcesRow clearRow = HluDataset.lut_sources.Newlut_sourcesRow();
                     clearRow.source_id = -1;
-                    clearRow.source_name = _codeDeleteRow;
+                    clearRow.source_name = _codeClear;
                     clearRow.sort_order = -1;
 
                     // Add the clear row
