@@ -21,6 +21,7 @@
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using ArcGIS.Core.Data;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework;
 using HLU.Data;
@@ -307,7 +308,7 @@ namespace HLU.UI.ViewModel
 
             // Discard any pending edits left by geoprocessing tools to release
             // geodatabase schema locks before creating new tables.
-            await ArcGIS.Desktop.Core.Project.Current.DiscardEditsAsync();
+            await Project.Current.DiscardEditsAsync();
 
             // Clean up all tables and feature classes before starting
             await ArcGISProHelpers.CleanupGeodatabaseAsync(workingFileGDBpath);
@@ -622,7 +623,7 @@ namespace HLU.UI.ViewModel
             {
                 // Discard any pending edits before schema cleanup to release
                 // any geodatabase schema locks left by geoprocessing tools.
-                await ArcGIS.Desktop.Core.Project.Current.DiscardEditsAsync();
+                await Project.Current.DiscardEditsAsync();
 
                 // Clean up all tables and feature classes after export
                 await ArcGISProHelpers.CleanupGeodatabaseAsync(workingFileGDBpath);

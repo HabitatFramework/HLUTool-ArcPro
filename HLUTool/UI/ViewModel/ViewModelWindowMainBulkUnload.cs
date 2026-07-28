@@ -17,6 +17,7 @@
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using ArcGIS.Core.Data;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Mapping;
@@ -187,7 +188,7 @@ namespace HLU.UI.ViewModel
         /// </returns>
         private async Task<int> PerformUnloadAsync(IReadOnlyList<string> targetLayerNames)
         {
-            _viewModelMain.ChangeCursor(Cursors.Wait, "Unloading ...");
+            _viewModelMain.ChangeCursor(Cursors.Wait, "Unloading features from GIS ...");
 
             int totalFeaturesUnloaded = 0;
 
@@ -307,6 +308,8 @@ namespace HLU.UI.ViewModel
                     // ---------------------------------------------------------------
                     // 3. Delete the shadow map-match rows for this layer's selection.
                     // ---------------------------------------------------------------
+                    _viewModelMain.ChangeCursor(Cursors.Wait, "Cleaning database ...");
+
                     // Get the geometry type of the current layer to determine which MM table to delete from.
                     HluGeometryTypes layerGeomType = _viewModelMain.GISApplication.HluGeometryType;
 
@@ -512,6 +515,8 @@ namespace HLU.UI.ViewModel
                 // ---------------------------------------------------------------
                 // 6. Execute the queued GIS deletes.
                 // ---------------------------------------------------------------
+                _viewModelMain.ChangeCursor(Cursors.Wait, "Commiting updates ...");
+
                 bool executed = await editOperation.ExecuteAsync();
 
                 // If the GIS edits could not be executed, throw an exception with the error message.
@@ -524,7 +529,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Save the edits to the current ArcGIS project. If the save operation fails, throw an exception.
-                bool saved = await ArcGIS.Desktop.Core.Project.Current.SaveEditsAsync();
+                bool saved = await Project.Current.SaveEditsAsync();
                 if (!saved)
                     throw new HLUToolException("GIS edits were applied but could not be saved.");
 

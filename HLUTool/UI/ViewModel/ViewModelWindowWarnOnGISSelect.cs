@@ -19,7 +19,6 @@
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
 using HLU.Enums;
-using HLU.Properties;
 using System;
 using System.Globalization;
 using System.Text;
@@ -38,7 +37,6 @@ namespace HLU.UI.ViewModel
         private int _gisFeaturesNum;
         private int _gisIncidNum;
         private string _gisFeaturesType;
-        private int _maxFeaturesGISSelect;
         private ICommand _noCommand;
         private ICommand _yesCommand;
 
@@ -52,8 +50,7 @@ namespace HLU.UI.ViewModel
         /// <param name="numFeatures">The expected number of features to be selected in GIS (or -1 if unknown).</param>
         /// <param name="numIncids">The expected number of incids to be selected in GIS (or -1 if unknown).</param>
         /// <param name="typeFeatures">The type of features expected to be selected in GIS.</param>
-        /// <param name="maxFeaturesGISSelect">The maximum number of features to be selected in GIS before a warning dialog is displayed, based on user settings.</param>
-        public ViewModelWindowWarnOnGISSelect(int numFeatures, int numIncids, HluGeometryTypes typeFeatures, int maxFeaturesGISSelect)
+        public ViewModelWindowWarnOnGISSelect(int numFeatures, int numIncids, HluGeometryTypes typeFeatures)
         {
             // Store the expected number of features to be selected in GIS.
             _gisFeaturesNum = numFeatures;
@@ -66,9 +63,6 @@ namespace HLU.UI.ViewModel
                 _gisFeaturesType = typeFeatures.ToString().ToLower();
             else
                 _gisFeaturesType = "feature";
-
-            // Store the maximum number of features expected to be selected in GIS before a warning dialog is displayed, based on user settings.
-            _maxFeaturesGISSelect = maxFeaturesGISSelect;
         }
 
         #endregion Constructor
@@ -132,10 +126,6 @@ namespace HLU.UI.ViewModel
         /// <remarks></remarks>
         private void YesCommandClick(object param)
         {
-            // Save the user options (in case the user doesn't want
-            // to be warned again in future.
-            Settings.Default.Save();
-
             // Close the window.
             RequestClose?.Invoke(true);
         }
@@ -233,39 +223,6 @@ namespace HLU.UI.ViewModel
             }
             set
             {
-            }
-        }
-
-        public bool DoNotAskAgain
-        {
-            get
-            {
-                // Only enable when the current maximum number of features to be selected in GIS before a warning
-                // dialog is displayed is 0 (i.e. the user doesn't want to be warned again in future).
-                if (Settings.Default.MaxFeaturesGISSelect > 0)
-                    return false;
-                else
-                    return true;
-            }
-            set
-            {
-                // Set the maximum number of features to be selected in GIS before a warning dialog is displayed
-                // to 0 if the user doesn't want to be warned again in future.
-                if (Settings.Default.MaxFeaturesGISSelect > 0)
-                    Settings.Default.MaxFeaturesGISSelect = 0;
-            }
-        }
-
-        public bool DoNotAskAgainEnabled
-        {
-            get
-            {
-                // Only enable if the current maximum number of features to be selected in GIS before a warning dialog
-                // is displayed is greater than 0.
-                if (Settings.Default.MaxFeaturesGISSelect > 0)
-                    return true;
-                else
-                    return false;
             }
         }
 

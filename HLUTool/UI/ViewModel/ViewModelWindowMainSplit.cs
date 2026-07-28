@@ -21,6 +21,7 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing;
 using HLU.Data;
 using HLU.Data.Connection;
@@ -162,7 +163,7 @@ namespace HLU.UI.ViewModel
         /// langword="false"/>.</returns>
         private async Task<bool> PerformLogicalSplitAsync()
         {
-            _viewModelMain.ChangeCursor(Cursors.Wait, "Splitting ...");
+            _viewModelMain.ChangeCursor(Cursors.Wait, "Splitting record ...");
             bool success = true;
 
             // Check if a transaction is already started.
@@ -387,7 +388,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Save edits to clear the pending edit state
-                bool saved = await ArcGIS.Desktop.Core.Project.Current.SaveEditsAsync();
+                bool saved = await Project.Current.SaveEditsAsync();
                 if (!saved)
                     throw new HLUToolException("GIS edits were applied but could not be saved.");
 
@@ -514,7 +515,7 @@ namespace HLU.UI.ViewModel
         /// value indicating whether the physical split was successful.</returns>
         private async Task<bool> PerformPhysicalSplitAsync()
         {
-            _viewModelMain.ChangeCursor(Cursors.Wait, "Splitting ...");
+            _viewModelMain.ChangeCursor(Cursors.Wait, "Splitting features ...");
             bool success = true;
 
             // Check if a transaction is already started.
@@ -712,7 +713,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Save edits to clear the pending edit state
-                bool saved = await ArcGIS.Desktop.Core.Project.Current.SaveEditsAsync();
+                bool saved = await Project.Current.SaveEditsAsync();
                 if (!saved)
                     throw new HLUToolException("GIS edits were applied but could not be saved.");
 

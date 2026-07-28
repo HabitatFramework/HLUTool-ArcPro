@@ -2385,7 +2385,11 @@ namespace HLU.UI.ViewModel
             if (needsNewGisApp || mapChanged)
             {
                 // Create a new GIS functions instance
-                _gisApp = new();
+                _gisApp = new()
+                {
+                    // Apply the current join threshold to the new instance.
+                    GdbJoinThreshold = _warnBeforeMaxFeatures
+                };
 
                 // If map changed, update the cached view
                 if (mapChanged)
@@ -3889,8 +3893,16 @@ namespace HLU.UI.ViewModel
             // Get user GIS options
             _minZoom = Settings.Default.MinAutoZoom;
             _autoZoomToSelection = Settings.Default.AutoZoomToSelection;
-            _warnBeforeMaxFeatures = Settings.Default.MaxFeaturesGISSelect;
+            // Clamp the join/warn threshold to the configured user min/max bounds.
+            _warnBeforeMaxFeatures = Math.Clamp(
+                Settings.Default.GdbJoinThreshold,
+                Settings.Default.GdbJoinThresholdMin,
+                Settings.Default.GdbJoinThresholdMax);
             _workingFileGDBPath = Settings.Default.WorkingFileGDBPath;
+
+            // Propagate the join threshold to the GIS layer instance if it is already initialised.
+            if (_gisApp != null)
+                _gisApp.GdbJoinThreshold = _warnBeforeMaxFeatures;
 
             // Get user history options
             _historyDisplayLastN = Settings.Default.HistoryDisplayLastN;

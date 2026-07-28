@@ -16,6 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework;
 using HLU.Enums;
@@ -178,7 +179,7 @@ namespace HLU.UI.ViewModel
                 // Process each rule assignment sequentially
                 foreach (var (targetLayerName, rule) in assignments)
                 {
-                    _viewModelMain.ChangeCursor(Cursors.Wait, $"Reassigning features using rule '{rule.RuleName}'…");
+                    _viewModelMain.ChangeCursor(Cursors.Wait, $"Applying reassign rule '{rule.RuleName}'…");
 
                     try
                     {
@@ -303,7 +304,7 @@ namespace HLU.UI.ViewModel
             }
 
             // Save edits.
-            bool saved = await ArcGIS.Desktop.Core.Project.Current.SaveEditsAsync();
+            bool saved = await Project.Current.SaveEditsAsync();
             if (!saved)
                 throw new System.Exception("Features were moved but edits could not be saved.");
 

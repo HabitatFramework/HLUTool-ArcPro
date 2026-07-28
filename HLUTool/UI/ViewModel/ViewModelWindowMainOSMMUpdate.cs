@@ -121,7 +121,7 @@ namespace HLU.UI.ViewModel
 
             try
             {
-                _viewModelMain.ChangeCursor(Cursors.Wait, "Updating ...");
+                _viewModelMain.ChangeCursor(Cursors.Wait, "Updating OSMM update ...");
 
                 // Only update DateTime fields to whole seconds.
                 // Fractions of a second can cause rounding differences when
@@ -205,7 +205,7 @@ namespace HLU.UI.ViewModel
         /// </param>
         internal async Task OSMMUpdateAllAsync(int updateStatus)
         {
-            _viewModelMain.ChangeCursor(Cursors.Wait, "Updating all ...");
+            _viewModelMain.ChangeCursor(Cursors.Wait, "Updating all OSMM updates...");
 
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 

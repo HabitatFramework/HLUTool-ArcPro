@@ -321,7 +321,7 @@ namespace HLU.UI.ViewModel
         /// <returns>A tuple of (success, featureCount, incidCount).</returns>
         private async Task<(bool success, int featureCount, int incidCount)> PerformLoadAsync()
         {
-            _viewModelMain.ChangeCursor(Cursors.Wait, "Loading ...");
+            _viewModelMain.ChangeCursor(Cursors.Wait, "Loading features ...");
 
             int featureCount = 0;
             int incidCount = 0;

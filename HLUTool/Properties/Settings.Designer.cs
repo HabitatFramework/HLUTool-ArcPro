@@ -223,16 +223,34 @@ namespace HLU.Properties {
             }
         }
         
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("100")]
+        public int GdbJoinThresholdMin {
+            get {
+                return ((int)(this["GdbJoinThresholdMin"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("50000")]
+        public int GdbJoinThresholdMax {
+            get {
+                return ((int)(this["GdbJoinThresholdMax"]));
+            }
+        }
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("1000")]
         [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public int MaxFeaturesGISSelect {
+        public int GdbJoinThreshold {
             get {
-                return ((int)(this["MaxFeaturesGISSelect"]));
+                return ((int)(this["GdbJoinThreshold"]));
             }
             set {
-                this["MaxFeaturesGISSelect"] = value;
+                this["GdbJoinThreshold"] = value;
             }
         }
         

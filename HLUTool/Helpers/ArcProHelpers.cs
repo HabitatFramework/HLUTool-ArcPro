@@ -24,6 +24,7 @@ using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Core.Geoprocessing;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ArcGIS.Desktop.Layouts;
 using ArcGIS.Desktop.Mapping;
 using System;
 using System.Collections.Generic;
@@ -1111,6 +1112,8 @@ namespace HLU.Helpers
             if (string.IsNullOrWhiteSpace(fieldNames))
                 return false;
 
+            string tablePath = System.IO.Path.Combine(gdbPath, inTable);
+
             return await QueuedTask.Run(async () =>
             {
                 try
@@ -1133,7 +1136,7 @@ namespace HLU.Helpers
                         return true;
 
                     // Set the parameters to add the index to the table or feature class.
-                    var parameters = Geoprocessing.MakeValueArray(inTable, fieldNames, indexName, "", "");
+                    var parameters = Geoprocessing.MakeValueArray(tablePath, fieldNames, indexName, "", "");
 
                     // Make a value array of the environments to be passed to the tool.
                     var environments = Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
@@ -1184,6 +1187,70 @@ namespace HLU.Helpers
         }
 
         #endregion Indexes
+
+        #region Selection Table
+
+        /// <summary>
+        /// Creates a single-column incid selection table in the working geodatabase and populates it
+        /// with the supplied incid values. Any existing table with the same name is deleted first.
+        /// An attribute index is added to the incid field to make subsequent attribute joins fast.
+        /// </summary>
+        /// <param name="gdbPath">Full path to the working file geodatabase.</param>
+        /// <param name="tableName">Name to use for the temporary selection table.</param>
+        /// <param name="incidFieldName">Name of the incid field to create in the table.</param>
+        /// <param name="incidFieldLength">Maximum length of the incid text field.</param>
+        /// <param name="incids">The distinct incid values to write.</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains
+        /// <see langword="true"/> if the table was created and populated successfully;
+        /// otherwise <see langword="false"/>.
+        /// </returns>
+        public static async Task<bool> WriteIncidSelectionTableAsync(
+            string gdbPath,
+            string tableName,
+            string incidFieldName,
+            int incidFieldLength,
+            IReadOnlyList<string> incids)
+        {
+            // Validate parameters.
+            if (string.IsNullOrEmpty(gdbPath) || string.IsNullOrEmpty(tableName) ||
+                string.IsNullOrEmpty(incidFieldName) || incids == null || incids.Count == 0)
+                return false;
+
+            // Build a one-column schema DataTable.
+            DataTable schema = new(tableName);
+            DataColumn col = new(incidFieldName, typeof(string))
+            {
+                MaxLength = incidFieldLength > 0 ? incidFieldLength : 20
+            };
+            schema.Columns.Add(col);
+
+            // Create (or recreate) the table using the existing helper.
+            bool created = await CreateTableAsync(gdbPath, tableName, schema);
+            if (!created)
+                return false;
+
+            // Populate the table using the bulk-insert helper.
+            var rows = incids
+                .Select(id => new Dictionary<string, object> { [incidFieldName] = id })
+                .ToList();
+
+            int inserted = await BulkInsertRowsAsync(gdbPath, tableName, rows);
+            if (inserted != incids.Count)
+                return false;
+
+            // Add an attribute index on the incid field to make the subsequent join fast.
+            // A failed index creation means the join would degrade to a full table scan,
+            // so treat it as a hard failure and return false.
+            string indexName = $"IX_{tableName}_{incidFieldName}";
+            bool indexed = await AddAttributeIndexAsync(gdbPath, tableName, incidFieldName, indexName);
+            if (!indexed)
+                return false;
+
+            return true;
+        }
+
+        #endregion Selection Table
 
         #region Joins
 
@@ -1402,6 +1469,177 @@ namespace HLU.Helpers
             // Delete all duplicate fields using the DeleteField helper method.
             string fieldsToDelete = string.Join(";", duplicateFields);
             return await DeleteFieldAsync(featureClassPath, fieldsToDelete);
+        }
+
+        /// <summary>
+        /// Adds a temporary attribute join from a layer to a standalone table using the
+        /// <c>management.AddJoin</c> geoprocessing tool. The join is ephemeral (in-memory) and must
+        /// be removed with <see cref="RemoveJoinAsync"/> when no longer needed.
+        /// </summary>
+        /// <param name="layerName">The name of the feature layer in the active map.</param>
+        /// <param name="layerJoinField">The field in the layer to join on.</param>
+        /// <param name="joinTablePath">The full path to the join table in the geodatabase.</param>
+        /// <param name="joinTableField">The field in the join table to join on.</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains
+        /// <see langword="true"/> if the join was added successfully; otherwise <see langword="false"/>.
+        /// </returns>
+        public static async Task<bool> AddJoinAsync(
+            string layerName,
+            string layerJoinField,
+            string joinTablePath,
+            string joinTableField)
+        {
+            if (string.IsNullOrEmpty(layerName) || string.IsNullOrEmpty(layerJoinField) ||
+                string.IsNullOrEmpty(joinTablePath) || string.IsNullOrEmpty(joinTableField))
+                return false;
+
+            // KEEP_ALL retains features with no matching row in the join table (a left outer join).
+            // This is important so the layer's total feature count is not changed.
+            // Make a value array of strings to be passed to the tool.
+            var parameters = Geoprocessing.MakeValueArray(
+                layerName, layerJoinField, joinTablePath, joinTableField, "KEEP_ALL");
+
+            // Make a value array of the environments to be passed to the tool.
+            var environments = Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
+
+            GPExecuteToolFlags executeFlags = GPExecuteToolFlags.GPThread;
+
+            //Geoprocessing.OpenToolDialog("management.AddJoin", parameters);  // Useful for debugging.
+
+            // Execute the tool.
+            try
+            {
+                IGPResult result = await Geoprocessing.ExecuteToolAsync(
+                    "management.AddJoin",
+                    parameters, environments, null, null, executeFlags);
+
+                if (result.IsFailed)
+                {
+                    Debug.WriteLine(
+                        $"AddJoin failed: {string.Join("; ", result.Messages.Select(m => m.Text))}");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"AddJoin exception: {ex.Message}");
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Removes a temporary attribute join previously added by <see cref="AddJoinAsync"/> using
+        /// the <c>management.RemoveJoin</c> geoprocessing tool.
+        /// </summary>
+        /// <param name="layerName">The name of the feature layer in the active map.</param>
+        /// <param name="joinTableName">
+        /// The base name (no path) of the table whose join should be removed.
+        /// </param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains
+        /// <see langword="true"/> if the join was removed successfully; otherwise <see langword="false"/>.
+        /// </returns>
+        public static async Task<bool> RemoveJoinAsync(string layerName, string joinTableName)
+        {
+            if (string.IsNullOrEmpty(layerName) || string.IsNullOrEmpty(joinTableName))
+                return false;
+
+            // Make a value array of strings to be passed to the tool.
+            var parameters = Geoprocessing.MakeValueArray(layerName, joinTableName);
+
+            // Make a value array of the environments to be passed to the tool.
+            var environments = Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
+
+            GPExecuteToolFlags executeFlags = GPExecuteToolFlags.GPThread;
+
+            //Geoprocessing.OpenToolDialog("management.RemoveJoin", parameters);  // Useful for debugging.
+
+            // Execute the tool.
+            try
+            {
+                IGPResult result = await Geoprocessing.ExecuteToolAsync(
+                    "management.RemoveJoin",
+                    parameters, environments, null, null, executeFlags);
+
+                if (result.IsFailed)
+                {
+                    Debug.WriteLine(
+                        $"RemoveJoin failed: {string.Join("; ", result.Messages.Select(m => m.Text))}");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"RemoveJoin exception: {ex.Message}");
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Selects features in a feature layer by attribute using the
+        /// <c>management.SelectLayerByAttribute</c> geoprocessing tool.
+        /// </summary>
+        /// <param name="layerName">The name of the feature layer in the active map.</param>
+        /// <param name="selectionType">
+        /// The selection type: <c>"NEW_SELECTION"</c>, <c>"ADD_TO_SELECTION"</c>,
+        /// <c>"REMOVE_FROM_SELECTION"</c>, <c>"SUBSET_SELECTION"</c>, or
+        /// <c>"CLEAR_SELECTION"</c>.
+        /// </param>
+        /// <param name="whereClause">
+        /// The SQL WHERE clause. May be empty when <paramref name="selectionType"/> is
+        /// <c>"CLEAR_SELECTION"</c>.
+        /// </param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result contains
+        /// <see langword="true"/> if the selection was applied successfully;
+        /// otherwise <see langword="false"/>.
+        /// </returns>
+        public static async Task<bool> SelectLayerByAttributeAsync(
+            string layerName,
+            string selectionType,
+            string whereClause = "")
+        {
+            // Check parameters
+            if (string.IsNullOrEmpty(layerName))
+                return false;
+
+            // Make a value array of strings to be passed to the tool.
+            var parameters = Geoprocessing.MakeValueArray(layerName, selectionType, whereClause);
+
+            // Make a value array of the environments to be passed to the tool.
+            var environments = Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
+
+            GPExecuteToolFlags executeFlags = GPExecuteToolFlags.GPThread;
+
+            //Geoprocessing.OpenToolDialog("management.SelectLayerByAttribute", parameters);  // Useful for debugging.
+
+            // Execute the tool.
+            try
+            {
+                IGPResult result = await Geoprocessing.ExecuteToolAsync(
+                    "management.SelectLayerByAttribute",
+                    parameters, environments, null, null, executeFlags);
+
+                if (result.IsFailed)
+                {
+                    Debug.WriteLine(
+                        $"SelectLayerByAttribute failed: " +
+                        $"{string.Join("; ", result.Messages.Select(m => m.Text))}");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"SelectLayerByAttribute exception: {ex.Message}");
+                return false;
+            }
+
+            return true;
         }
 
         #endregion Joins

@@ -163,8 +163,8 @@ namespace HLU.UI.ViewModel
 
         #region Fields - Debug
 
-        private static readonly DateTime _getterStartTime = DateTime.Now;
-        private static int _getterCallCount = 0;
+        //private static readonly DateTime _getterStartTime = DateTime.Now;
+        //private static int _getterCallCount = 0;
 
         #endregion Fields - Debug
 
@@ -369,7 +369,7 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                ////Debug.WriteLine($"GET: GridMainVisibility [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
+                //Debug.WriteLine($"GET: GridMainVisibility [t={(int)(DateTime.Now - _getterStartTime).TotalSeconds}s #{System.Threading.Interlocked.Increment(ref _getterCallCount)}]");
                 if (!Initialised || InError)
                     return Visibility.Hidden;
                 else
@@ -8380,6 +8380,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(Source1Names));
             OnPropertyChanged(nameof(IncidSource1Date));
             OnPropertyChanged(nameof(IncidSource1HabitatClass));
+            OnPropertyChanged(nameof(IncidSource1HabitatType)); // This is needed to avoid alternating errors
             OnPropertyChanged(nameof(Source1HabitatTypeCodes));
             OnPropertyChanged(nameof(IncidSource1HabitatType));
             OnPropertyChanged(nameof(IncidSource1BoundaryImportance));
@@ -8397,6 +8398,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(Source2Names));
             OnPropertyChanged(nameof(IncidSource2Date));
             OnPropertyChanged(nameof(IncidSource2HabitatClass));
+            OnPropertyChanged(nameof(IncidSource2HabitatType)); // This is needed to avoid alternating errors
             OnPropertyChanged(nameof(Source2HabitatTypeCodes));
             OnPropertyChanged(nameof(IncidSource2HabitatType));
             OnPropertyChanged(nameof(IncidSource2BoundaryImportance));
@@ -8414,6 +8416,7 @@ namespace HLU.UI.ViewModel
             OnPropertyChanged(nameof(Source3Names));
             OnPropertyChanged(nameof(IncidSource3Date));
             OnPropertyChanged(nameof(IncidSource3HabitatClass));
+            OnPropertyChanged(nameof(IncidSource3HabitatType)); // This is needed to avoid alternating errors
             OnPropertyChanged(nameof(Source3HabitatTypeCodes));
             OnPropertyChanged(nameof(IncidSource3HabitatType));
             OnPropertyChanged(nameof(IncidSource3BoundaryImportance));
@@ -8700,7 +8703,7 @@ namespace HLU.UI.ViewModel
                 return;
             }
 
-            ChangeCursor(Cursors.Wait, "Filtering ...");
+            ChangeCursor(Cursors.Wait, "Applying filter ...");
 
             // Initialise the GIS selection table.
             _gisSelection = NewGisSelectionTable();
@@ -8761,7 +8764,7 @@ namespace HLU.UI.ViewModel
                     if (_updateAllFeatures == false)
                     {
                         // Set the status to processing and the cursor to wait.
-                        ChangeCursor(Cursors.Wait, "Splitting ...");
+                        ChangeCursor(Cursors.Wait, "Splitting features ...");
 
                         // Create ViewModel for split class.
                         ViewModelWindowMainSplit vmSplit = new(this);
@@ -9616,7 +9619,7 @@ namespace HLU.UI.ViewModel
 
             try
             {
-                ChangeCursor(Cursors.Wait, "Validating ...");
+                ChangeCursor(Cursors.Wait, "Validating query ...");
 
                 await Task.Yield();
 
@@ -9699,7 +9702,7 @@ namespace HLU.UI.ViewModel
                 // not currently in Bulk Update mode).
                 if (IsFiltered)
                 {
-                    ChangeCursor(Cursors.Wait, "Counting ...");
+                    ChangeCursor(Cursors.Wait, "Counting expected features ...");
 
                     // Find the expected number of features to be selected from the database.
                     _selectedFragsInDBCount = ExpectedSelectionFeatures(whereTables, newWhereClause);
@@ -9721,7 +9724,7 @@ namespace HLU.UI.ViewModel
 
                     if (_selectedIncidsInGISCount > 0)
                     {
-                        ChangeCursor(Cursors.Wait, "Filtering ...");
+                        ChangeCursor(Cursors.Wait, "Applying filter ...");
 
                         // Indicate the selection didn't come from the map.
                         _filteredByMap = false;
@@ -9740,7 +9743,7 @@ namespace HLU.UI.ViewModel
                         // Clear the selection (filter).
                         _incidSelection = null;
 
-                        ChangeCursor(Cursors.Wait, "Filtering ...");
+                        ChangeCursor(Cursors.Wait, "Applying filter ...");
 
                         // Indicate the selection didn't come from the map.
                         _filteredByMap = false;
@@ -9810,7 +9813,7 @@ namespace HLU.UI.ViewModel
 
                 // Create ViewModel to which main window binds
                 _viewModelWinWarnGISSelect = new ViewModelWindowWarnOnGISSelect(
-                    expectedNumFeatures, expectedNumIncids, expectedNumFeatures > -1 ? _gisLayerType : HluGeometryTypes.Unknown, _warnBeforeMaxFeatures);
+                    expectedNumFeatures, expectedNumIncids, expectedNumFeatures > -1 ? _gisLayerType : HluGeometryTypes.Unknown);
 
                 // When ViewModel asks to be closed, close window
                 _viewModelWinWarnGISSelect.RequestClose -= ViewModelWinWarnGISSelect_RequestClose; // Safety: avoid double subscription.
@@ -9842,8 +9845,13 @@ namespace HLU.UI.ViewModel
             _viewModelWinWarnGISSelect.RequestClose -= ViewModelWinWarnGISSelect_RequestClose;
             _windowWarnGISSelect.Close();
 
-            // Update the user warning count threshold in case it was changed in the options within the warning window.
-            _warnBeforeMaxFeatures = Settings.Default.MaxFeaturesGISSelect;
+            // Refresh the warn/join threshold in case settings were saved during the dialog.
+            _warnBeforeMaxFeatures = Math.Clamp(
+                Settings.Default.GdbJoinThreshold,
+                Settings.Default.GdbJoinThresholdMin,
+                Settings.Default.GdbJoinThresholdMax);
+            if (_gisApp != null)
+                _gisApp.GdbJoinThreshold = _warnBeforeMaxFeatures;
 
             // If the user doesn't wish to proceed then clear the
             // current incid filter.
@@ -10055,7 +10063,7 @@ namespace HLU.UI.ViewModel
 
             try
             {
-                ChangeCursor(Cursors.Wait, "Validating ...");
+                ChangeCursor(Cursors.Wait, "Validating query ...");
 
                 // Get a list of all the possible query tables.
                 List<DataTable> tables = [];
@@ -10148,13 +10156,15 @@ namespace HLU.UI.ViewModel
                     // not currently in Bulk Update mode).
                     if (IsFiltered)
                     {
+                        ChangeCursor(Cursors.Wait, "Counting expected features ...");
+
                         // Find the expected number of features to be selected in GIS.
                         _selectedFragsInDBCount = ExpectedSelectionFeatures(whereTables, newWhereClause);
 
                         // Store the number of incids found in the database
                         _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
 
-                        ChangeCursor(Cursors.Wait, "Filtering ...");
+                        ChangeCursor(Cursors.Wait, "Applying filter ...");
 
                         // Select the required incid(s) in GIS.
                         if (await PerformGisSelectionAsync(true, _selectedFragsInDBCount, _selectedIncidsInDBCount))

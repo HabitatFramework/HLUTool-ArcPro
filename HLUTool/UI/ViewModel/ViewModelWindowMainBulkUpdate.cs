@@ -20,6 +20,7 @@
 // You should have received a copy of the GNU General Public License
 // along with HLUTool.  If not, see <http://www.gnu.org/licenses/>.
 
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework;
 using HLU.Data;
@@ -266,7 +267,7 @@ namespace HLU.UI.ViewModel
                 return;
             }
 
-            _viewModelMain.ChangeCursor(Cursors.Wait, "Applying bulk update ...");
+            _viewModelMain.ChangeCursor(Cursors.Wait, "Applying bulk update in database ...");
 
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
@@ -428,6 +429,8 @@ namespace HLU.UI.ViewModel
                     BulkUpdateAdo(currIncid, secondaryHabitats, selectStatementIncid, updateStatementIncid, null,
                         ihsMultiplexDeleteStatements, secondaryDelStatement, _bulkDeleteOrphanBapHabitats, _bulkDeletePotentialBapHabitats);
                 }
+
+                _viewModelMain.ChangeCursor(Cursors.Wait, "Applying bulk update in GIS ...");
 
                 // Perform the bulk updates on the GIS data, shadow copy in DB and history
                 await BulkUpdateGisAsync(incidOrdinal, _viewModelMain.IncidSelection, _bulkDeleteSecondaryCodes, _bulkCreateHistory, Operations.BulkUpdate, nowDtTm, editOperation);
@@ -596,7 +599,7 @@ namespace HLU.UI.ViewModel
                 return;
             }
 
-            _viewModelMain.ChangeCursor(Cursors.Wait, "Applying OSMM bulk update ...");
+            _viewModelMain.ChangeCursor(Cursors.Wait, "Applying OSMM bulk update in database ...");
 
             _viewModelMain.DataBase.BeginTransaction(true, IsolationLevel.ReadCommitted);
 
@@ -867,6 +870,8 @@ namespace HLU.UI.ViewModel
                             ihsMultiplexDeleteStatements, secondaryDelStatement, _bulkDeleteOrphanBapHabitats, _bulkDeletePotentialBapHabitats);
                     }
                 }
+
+                _viewModelMain.ChangeCursor(Cursors.Wait, "Applying OSMM bulk update in GIS ...");
 
                 // Perform the bulk updates on the GIS data, shadow copy in DB and history
                 await BulkUpdateGisAsync(incidOrdinal, _viewModelMain.IncidSelection, _bulkDeleteSecondaryCodes, _bulkCreateHistory, Operations.OSMMUpdate, nowDtTm, editOperation);
@@ -1619,7 +1624,7 @@ namespace HLU.UI.ViewModel
                 }
 
                 // Save edits to clear the pending edit state
-                bool saved = await ArcGIS.Desktop.Core.Project.Current.SaveEditsAsync();
+                bool saved = await Project.Current.SaveEditsAsync();
                 if (!saved)
                     throw new HLUToolException("GIS edits were applied but could not be saved.");
             }

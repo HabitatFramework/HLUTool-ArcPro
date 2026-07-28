@@ -774,6 +774,9 @@ namespace HLU.UI.ViewModel
                     return;
                 }
 
+                // Set the status to processing and the cursor to wait.
+                ChangeCursor(Cursors.Wait, "Zooming to selection ...");
+
                 // Zoom to the GIS selection (if auto zoom configured).
                 await _gisApp.ZoomSelectedAsync(_minZoom, _autoZoomToSelection);
             }
@@ -1187,7 +1190,7 @@ namespace HLU.UI.ViewModel
             try
             {
                 // Set the status to processing and the cursor to wait.
-                ChangeCursor(Cursors.Wait, "Selecting in GIS ...");
+                ChangeCursor(Cursors.Wait, "Counting expected features ...");
 
                 // Backup the current selection (filter).
                 DataTable incidSelectionBackup = _incidSelection;
@@ -1214,6 +1217,9 @@ namespace HLU.UI.ViewModel
 
                 // Find the expected number of incids to be selected in GIS.
                 int expectedNumIncids = _incidSelection.Rows.Count;
+
+                // Set the status to processing and the cursor to wait.
+                ChangeCursor(Cursors.Wait, "Selecting in GIS ...");
 
                 // Select the required incid(s) in GIS and read the selection.
                 if (await PerformGisSelectionAsync(true, expectedNumFeatures, expectedNumIncids))
@@ -1244,6 +1250,9 @@ namespace HLU.UI.ViewModel
 
                         return;
                     }
+
+                    // Set the status to processing and the cursor to wait.
+                    ChangeCursor(Cursors.Wait, "Zooming to selection ...");
 
                     // Zoom to the GIS selection (if auto zoom configured).
                     await _gisApp.ZoomSelectedAsync(_minZoom, _autoZoomToSelection);

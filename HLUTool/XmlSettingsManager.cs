@@ -138,7 +138,8 @@ public class XmlSettingsManager
 /// </summary>
 public class AddInSettings
 {
-    // Help URL
+    // Help URL — not user-configurable; always uses the code-defined default.
+    [XmlIgnore]
     public string HelpURL { get; set; } = "https://hlutool-arcpro-userguide.readthedocs.io/en/latest/";
 
     public HelpPages HelpPages { get; set; } = new();
@@ -191,21 +192,21 @@ public class ReassignRule
 
 /// <summary>
 /// The individual help pages settings.
-/// </summary>
+/// </summary>hlutool-userguide.readthedocs
 public class HelpPages
 {
     // Individual help pages
-    public string AppDatabase { get; set; } = "options/options.html#options-database";
-    public string AppDates { get; set; } = "options/options.html#options-dates";
-    public string AppValidation { get; set; } = "options/options.html#options-validation";
-    public string AppUpdates { get; set; } = "options/options.html#options-updates";
-    public string AppBulkUpdate { get; set; } = "options/options.html#options-bulk-update";
-    public string AppReassign { get; set; } = "options/options.html#options-reassign";
-    public string UserInterface { get; set; } = "options/options.html#options-interface";
-    public string UserGIS { get; set; } = "options/options.html#options-gis";
+    public string AppDatabase { get; set; } = "options/options.html#options-app-database";
+    public string AppDates { get; set; } = "options/options.html#options-app-dates";
+    public string AppValidation { get; set; } = "options/options.html#options-app-validation";
+    public string AppUpdates { get; set; } = "options/options.html#options-app-updates";
+    public string AppBulkUpdate { get; set; } = "options/options.html#options-app-bulk-update";
+    public string AppReassign { get; set; } = "options/options.html#options-app-reassign";
+    public string UserInterface { get; set; } = "options/options.html#options-user-interface";
+    public string UserGIS { get; set; } = "options/options.html#options-user-gis";
     public string UserUpdates { get; set; } = "options/options.html#options-user-updates";
-    public string UserBulkLoad { get; set; } = "options/options.html#options-bulk-load";
-    public string UserSQL { get; set; } = "options/options.html#options-filter";
-    public string UserExport { get; set; } = "options/options.html#options-export";
-    public string UserHistory { get; set; } = "options/options.html#options-history";
+    public string UserBulkLoad { get; set; } = "options/options.html#options-user-bulk-load";
+    public string UserSQL { get; set; } = "options/options.html#options-user-filter";
+    public string UserExport { get; set; } = "options/options.html#options-user-export";
+    public string UserHistory { get; set; } = "options/options.html#options-user-history";
 }

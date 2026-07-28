@@ -2782,7 +2782,7 @@ namespace HLU.UI.ViewModel
                 // Clear any existing GIS messages
                 ClearMessage(category: MessageCategory.GIS);
 
-                ChangeCursor(Cursors.Wait, "Validating ...");
+                ChangeCursor(Cursors.Wait, "Validating query ...");
 
                 // Select only the incid database table to use in the query.
                 List<DataTable> whereTables = [];
@@ -2841,13 +2841,15 @@ namespace HLU.UI.ViewModel
                 // not currently in Bulk Update mode).
                 if (IsFiltered)
                 {
+                    ChangeCursor(Cursors.Wait, "Counting expected features ...");
+
                     // Find the expected number of features to be selected in GIS.
                     _selectedFragsInDBCount = ExpectedSelectionFeatures(whereTables, newWhereClause);
 
                     // Store the number of incids found in the database
                     _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
 
-                    ChangeCursor(Cursors.Wait, "Filtering ...");
+                    ChangeCursor(Cursors.Wait, "Applying filter ...");
 
                     // Select the required incid(s) in GIS.
                     if (await PerformGisSelectionAsync(true, _selectedFragsInDBCount, _selectedIncidsInDBCount))
@@ -2956,7 +2958,7 @@ namespace HLU.UI.ViewModel
         {
             try
             {
-                ChangeCursor(Cursors.Wait, "Validating ...");
+                ChangeCursor(Cursors.Wait, "Validating query ...");
 
                 // Select only the incid_osmm_updates database table to use in the query.
                 List<DataTable> whereTables = [];
@@ -3051,13 +3053,15 @@ namespace HLU.UI.ViewModel
                 // Bulk Update mode), and the caller has requested to select the records in GIS.
                 if (IsFiltered && selectInGIS)
                 {
+                    ChangeCursor(Cursors.Wait, "Counting expected features ...");
+
                     // Find the expected number of features to be selected in GIS.
                     _selectedFragsInDBCount = ExpectedSelectionFeatures(whereTables, newWhereClause);
 
                     // Store the number of incids found in the database
                     _selectedIncidsInDBCount = _incidSelection != null ? _incidSelection.Rows.Count : 0;
 
-                    ChangeCursor(Cursors.Wait, "Filtering ...");
+                    ChangeCursor(Cursors.Wait, "Applying filter ...");
 
                     // Select the required incid(s) in GIS.
                     if (await PerformGisSelectionAsync(true, _selectedFragsInDBCount, _selectedIncidsInDBCount))

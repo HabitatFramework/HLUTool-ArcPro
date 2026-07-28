@@ -133,7 +133,7 @@ namespace HLU.UI.ViewModel
         private int _maxAutoZoom;
         private string _displayAreaUnits;
         private string _displayDistanceUnits;
-        private int? _maxFeaturesGISSelect;
+        private int? _gdbJoinThreshold;
         private string _workingFileGDBPath;
 
         // User Update options
@@ -244,7 +244,10 @@ namespace HLU.UI.ViewModel
             _maxAutoZoom = Settings.Default.MaxAutoZoom;
             _displayAreaUnits = Settings.Default.DisplayAreaUnits;
             _displayDistanceUnits = Settings.Default.DisplayDistanceUnits;
-            _maxFeaturesGISSelect = Settings.Default.MaxFeaturesGISSelect;
+            _gdbJoinThreshold = Math.Clamp(
+                Settings.Default.GdbJoinThreshold,
+                Settings.Default.GdbJoinThresholdMin,
+                Settings.Default.GdbJoinThresholdMax);
             _workingFileGDBPath = Settings.Default.WorkingFileGDBPath;
 
             // Get the history column ordinals from the settings, excluding the GIS ID columns,
@@ -312,7 +315,7 @@ namespace HLU.UI.ViewModel
             _reassignRules = new ObservableCollection<ReassignRule>(
                 _addInSettings.ReassignRules ?? []);
 
-            // Load the navigation items (the individual options pages).
+            // Load the navigation items
             NavigationItems =
             [
                 new() { Name = "Database", Category = "Application", Content = new AppDatabaseOptions() },
@@ -827,7 +830,7 @@ namespace HLU.UI.ViewModel
             Settings.Default.MinAutoZoom = (int)_minAutoZoom;
             Settings.Default.DisplayAreaUnits = _displayAreaUnits;
             Settings.Default.DisplayDistanceUnits = _displayDistanceUnits;
-            Settings.Default.MaxFeaturesGISSelect = (int)_maxFeaturesGISSelect;
+            Settings.Default.GdbJoinThreshold = (int)_gdbJoinThreshold;
             Settings.Default.WorkingFileGDBPath = _workingFileGDBPath;
 
             // Update user update options
@@ -2201,22 +2204,30 @@ namespace HLU.UI.ViewModel
         }
 
         /// <summary>
-        /// Gets or sets the maximum number of features at which to warn the user before selecting.
+        /// Gets or sets the INCID count threshold above which the GDB temp-table attribute-join
+        /// strategy is used instead of chunked SQL IN-clauses when selecting features on the map.
+        /// Must be within the range [<c>GdbJoinThresholdMin</c>, <c>GdbJoinThresholdMax</c>].
         /// </summary>
-        /// <value>The maximum number of features at which to warn the user before selecting.</value>
-        public int? MaxFeaturesGISSelect
+        public int? GdbJoinThreshold
         {
-            get
-            {
-                return _maxFeaturesGISSelect;
-            }
+            get => _gdbJoinThreshold;
             set
             {
-                _maxFeaturesGISSelect = value;
-                OnPropertyChanged(nameof(MaxFeaturesGISSelect));
+                _gdbJoinThreshold = value;
+                OnPropertyChanged(nameof(GdbJoinThreshold));
                 NotifyNavigationItemErrorsChanged();
             }
         }
+
+        /// <summary>
+        /// Gets the minimum allowed value for <see cref="GdbJoinThreshold"/>.
+        /// </summary>
+        public int GdbJoinThresholdMin => Settings.Default.GdbJoinThresholdMin;
+
+        /// <summary>
+        /// Gets the maximum allowed value for <see cref="GdbJoinThreshold"/>.
+        /// </summary>
+        public int GdbJoinThresholdMax => Settings.Default.GdbJoinThresholdMax;
 
         /// <summary>
         /// Get the working File GDB path command.
@@ -2887,6 +2898,7 @@ namespace HLU.UI.ViewModel
                 "OSMMSourceId" when OSMMSourceId == null
                     => "Error: Select the default source name for OS MasterMap.",
 
+
                 // User - Interface options
                 "ShowOSMMUpdatesOption" when ShowOSMMUpdatesOption == null
                     => "Error: Select option of when to display any OSMM Updates.",
@@ -2942,10 +2954,12 @@ namespace HLU.UI.ViewModel
                     => "Error: Select the distance units to use for display.",
                 "DisplayDistanceUnits" when !DisplayDistanceUnitOptions.Contains(DisplayDistanceUnits)
                     => "Error: Select a valid distance unit.",
-                "MaxFeaturesGISSelect" when (Convert.ToInt32(MaxFeaturesGISSelect) < 0 || MaxFeaturesGISSelect == null)
-                    => "Error: Maximum features expected before warning on select must be zero or greater.",
-                "MaxFeaturesGISSelect" when Convert.ToInt32(MaxFeaturesGISSelect) > 100000
-                    => "Error: Maximum features expected before warning on select must not be greater than 10000. Otherwise set to zero to disable warning",
+                "GdbJoinThreshold" when GdbJoinThreshold == null
+                    => "Error: Enter the INCID count threshold for switching to the GDB join selection strategy.",
+                "GdbJoinThreshold" when Convert.ToInt32(GdbJoinThreshold) < Settings.Default.GdbJoinThresholdMin
+                    => $"Error: Threshold must be at least {Settings.Default.GdbJoinThresholdMin:N0}.",
+                "GdbJoinThreshold" when Convert.ToInt32(GdbJoinThreshold) > Settings.Default.GdbJoinThresholdMax
+                    => $"Error: Threshold must not be greater than {Settings.Default.GdbJoinThresholdMax:N0}.",
                 "WorkingFileGDBPath" when String.IsNullOrEmpty(WorkingFileGDBPath)
                     => "Error: You must enter a working File Geodatabase path.",
                 "WorkingFileGDBPath" when WorkingFileGDBPath.EndsWith(".gdb", StringComparison.OrdinalIgnoreCase)
@@ -3040,7 +3054,7 @@ namespace HLU.UI.ViewModel
                 ("Application", "Bulk Updates") => ["BulkDeterminationQuality", "BulkInterpretationQuality", "OSMMSourceId"],
                 ("Application", "Reassign") => ["ReassignRules"],
                 ("User", "Interface") => ["ShowOSMMUpdatesOption", "MessageAutoDismissError", "MessageAutoDismissWarning", "MessageAutoDismissInfo", "MessageAutoDismissSuccess"],
-                ("User", "GIS") => ["AutoZoomToSelectionOption", "MinAutoZoom", "DisplayAreaUnits", "DisplayDistanceUnits", "MaxFeaturesGISSelect", "WorkingFileGDBPath"],
+                ("User", "GIS") => ["AutoZoomToSelectionOption", "MinAutoZoom", "DisplayAreaUnits", "DisplayDistanceUnits", "GdbJoinThreshold", "WorkingFileGDBPath"],
                 ("User", "Updates") => ["DefaultReason", "DefaultProcess", "DefaultHabitatClass", "DefaultSecondaryGroup", "SecondaryCodeOrder", "NotifyOnSplitMerge"],
                 ("User", "Bulk Load") => ["DefaultBulkLoadPath", "DefaultBulkLoadLayer"],
                 ("User", "SQL") => ["GetValueRows", "SQLPath"],

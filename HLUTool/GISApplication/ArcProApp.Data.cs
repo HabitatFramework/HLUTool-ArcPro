@@ -149,6 +149,17 @@ namespace HLU.GISApplication
 
         #endregion Fields
 
+        #region Properties
+
+        /// <summary>
+        /// Gets or sets the INCID count threshold above which <see cref="SelectIncidsOnMapAsync"/>
+        /// switches from chunked SQL IN-clauses to a temporary-table attribute-join strategy.
+        /// Set this from the application settings after loading or saving options.
+        /// </summary>
+        public int GdbJoinThreshold { get; set; } = 500;
+
+        #endregion Properties
+
         #region SqlBuilder
 
         /// <summary>
@@ -921,6 +932,27 @@ namespace HLU.GISApplication
         /// Selects all INCIDs from a supplied selection table on the active HLU layer and
         /// returns the selected features into the supplied result table schema.
         /// </summary>
+        /// <remarks>
+        /// Two strategies are used depending on the size of the INCID list:
+        /// <list type="bullet">
+        ///   <item>
+        ///     <description>
+        ///       <b>Small list</b> (count &lt;= <see cref="Settings.GdbJoinThreshold"/>): chunked SQL
+        ///       <c>IN (...)</c> WHERE clauses applied directly to the layer.  Fast for small sets because
+        ///       the GDB index is used for each chunk.
+        ///     </description>
+        ///   </item>
+        ///   <item>
+        ///     <description>
+        ///       <b>Large list</b> (count &gt; <see cref="Settings.GdbJoinThreshold"/>): the incids are
+        ///       written to a temporary table in the working geodatabase, a transient attribute join is
+        ///       added to the layer, and <c>SelectLayerByAttribute</c> selects all rows whose joined incid
+        ///       field is not NULL (i.e. has a match).  The join is then removed and the temp table deleted.
+        ///       This avoids generating hundreds of SQL chunks and performs a single index-assisted join.
+        ///     </description>
+        ///   </item>
+        /// </list>
+        /// </remarks>
         /// <param name="incidSelection">
         /// A DataTable containing the INCID values that should be selected in GIS.
         /// </param>
@@ -933,26 +965,21 @@ namespace HLU.GISApplication
             if (incidSelection == null || incidSelection.Rows.Count == 0)
                 return false;
 
-            // The active HLU layer must already be known (as with SelectCurrentOnMapAsync).
+            // The active HLU layer must already be known.
             if (_hluLayer == null)
                 throw new GisSelectionException("No active HLU layer is set.");
 
             // Determine the ordinal of the INCID column from the layer structure.
-            // This keeps the logic consistent with the rest of the tool.
             int incidOrdinal = _hluLayerStructure.incidColumn.Ordinal;
 
             // Resolve the actual GIS field name for the INCID column.
             string incidFieldName = GetFieldName(incidOrdinal);
 
-            // If we can't resolve the field name, we can't proceed.
             if (String.IsNullOrWhiteSpace(incidFieldName))
                 throw new GisSelectionException(
                     "Could not resolve the incid field name for the active HLU layer.");
 
-            // Extract all distinct INCID values from the selection table, and:
-            //  - convert to string (INCID is stored as text),
-            //  - ignore null/empty values,
-            //  - remove duplicates (important for SQL length and performance).
+            // Extract all distinct INCID values from the selection table.
             var incids = incidSelection.Rows
                 .Cast<DataRow>()
                 .Select(r => r[incidOrdinal]?.ToString())
@@ -960,33 +987,155 @@ namespace HLU.GISApplication
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            // If no valid INCIDs were found, there is nothing to select.
             if (incids.Count == 0)
                 return false;
 
-            // Build one or more WHERE clauses of the form:
-            //   <incidField> IN ('A','B','C',...)
-            //
-            // The clauses are chunked to avoid provider SQL length limits
-            // (FGDB, SDE, shapefile, etc.).
-            IEnumerable<string> whereClauses = BuildInWhereClauses(
-                QuoteIdentifier(incidFieldName),
-                incids,
-                maxClauseLength: 8000);
+            // Use the instance threshold (set from application settings), clamped to
+            // the hard min/max limits defined in the application configuration.
+            int joinThreshold = Math.Clamp(
+                GdbJoinThreshold,
+                Settings.Default.GdbJoinThresholdMin,
+                Settings.Default.GdbJoinThresholdMax);
 
-            // First selection replaces the current map selection,
-            // subsequent clauses are added to it.
-            bool first = true;
-
-            foreach (string whereClause in whereClauses)
+            // Decide which strategy to use.
+            if (incids.Count <= joinThreshold)
             {
-                await SelectByWhereClauseAsync(
-                    whereClause,
-                    first
-                        ? SelectionCombinationMethod.New
-                        : SelectionCombinationMethod.Add).ConfigureAwait(false);
+                // ── Small selection: chunked IN-clause WHERE clauses ─────────────────────────
+                //
+                // Fast for small sets because the geodatabase index can satisfy each chunk
+                // quickly.  The clauses are chunked to stay inside provider SQL length limits
+                // (FGDB, SDE, shapefile, etc.).
+                IEnumerable<string> whereClauses = BuildInWhereClauses(
+                    QuoteIdentifier(incidFieldName),
+                    incids,
+                    maxClauseLength: 8000);
 
-                first = false;
+                bool first = true;
+                foreach (string whereClause in whereClauses)
+                {
+                    await SelectByWhereClauseAsync(
+                        whereClause,
+                        first
+                            ? SelectionCombinationMethod.New
+                            : SelectionCombinationMethod.Add).ConfigureAwait(false);
+                    first = false;
+                }
+            }
+            else
+            {
+                // ── Large selection: temp GDB table + transient attribute join ─────────────────
+                //
+                // Writing hundreds of IN-clause chunks against large datasets creates excessive
+                // round-trips to the geodatabase.  Instead we write all incids into a small
+                // temporary table, add a transient join to the active layer, and run a single
+                // SelectLayerByAttribute that matches every row whose joined incid field is
+                // non-NULL.  The join and temp table are cleaned up afterwards.
+
+                string workingGdbPath = HLUTool.WorkingGdbPath;
+                if (String.IsNullOrWhiteSpace(workingGdbPath))
+                {
+                    // Working GDB is unavailable – fall back to chunked IN-clause strategy.
+                    IEnumerable<string> fallbackClauses = BuildInWhereClauses(
+                        QuoteIdentifier(incidFieldName),
+                        incids,
+                        maxClauseLength: 8000);
+
+                    bool first = true;
+                    foreach (string whereClause in fallbackClauses)
+                    {
+                        await SelectByWhereClauseAsync(
+                            whereClause,
+                            first
+                                ? SelectionCombinationMethod.New
+                                : SelectionCombinationMethod.Add).ConfigureAwait(false);
+                        first = false;
+                    }
+
+                    return true;
+                }
+
+                // Generate a unique name for the temporary selection table.
+                string selTableName = $"SelIncids_{DateTime.Now:yyyyMMddHHmmss}";
+                string selTablePath = System.IO.Path.Combine(workingGdbPath, selTableName);
+
+                // Determine the incid field length from the layer structure so the temp table
+                // column is wide enough to store every value.
+                int incidFieldLength = 0;
+                await QueuedTask.Run(() =>
+                {
+                    using FeatureClassDefinition def = _hluFeatureClass.GetDefinition();
+                    Field fld = def.GetFields()
+                        .FirstOrDefault(f => f.Name.Equals(incidFieldName,
+                            StringComparison.OrdinalIgnoreCase));
+                    if (fld != null)
+                        incidFieldLength = fld.Length;
+                }).ConfigureAwait(false);
+
+                if (incidFieldLength <= 0)
+                    incidFieldLength = 20; // safe default
+
+                // Resolve the full layer path (e.g. "GroupLayer/LayerName") so that the GP
+                // tools work correctly when the active HLU layer is inside a group layer.
+                string hluLayerPath = await GetLayerPathAsync(_hluLayer).ConfigureAwait(false)
+                    ?? _hluLayer.Name;
+
+                bool joinRemoved = false;
+
+                try
+                {
+                    // Step 1: Write all incids to the temporary selection table.
+                    //         WriteIncidSelectionTableAsync creates the table, bulk-inserts all
+                    //         incid values, and adds an attribute index on the incid field so that
+                    //         the join engine can use an index seek on the temp table side.
+                    bool written = await ArcGISProHelpers.WriteIncidSelectionTableAsync(
+                        workingGdbPath, selTableName, incidFieldName,
+                        incidFieldLength, incids).ConfigureAwait(false);
+
+                    if (!written)
+                        throw new GisSelectionException(
+                            "Failed to write the incid selection table to the working geodatabase.");
+
+                    // Step 2: Add a transient attribute join from the active layer to the temp table.
+                    bool joined = await ArcGISProHelpers.AddJoinAsync(
+                        hluLayerPath,
+                        incidFieldName,
+                        selTablePath,
+                        incidFieldName).ConfigureAwait(false);
+
+                    if (!joined)
+                        throw new GisSelectionException(
+                            "Failed to add the attribute join to the active HLU layer.");
+
+                    joinRemoved = false;
+
+                    // Step 3: Select all features whose joined incid field is not NULL.
+                    //         After an AddJoin the joined field is qualified with the table name,
+                    //         e.g. SelIncids_20250601120000.incid.
+                    string joinedField = $"{selTableName}.{incidFieldName}";
+                    string selectWhereClause = $"{QuoteIdentifier(joinedField)} IS NOT NULL";
+
+                    bool selected = await ArcGISProHelpers.SelectLayerByAttributeAsync(
+                        hluLayerPath,
+                        "NEW_SELECTION",
+                        selectWhereClause).ConfigureAwait(false);
+
+                    if (!selected)
+                        throw new GisSelectionException(
+                            "Failed to select features via the attribute join.");
+                }
+                finally
+                {
+                    // Step 4: Always remove the join (even on failure) to leave the layer clean.
+                    if (!joinRemoved)
+                    {
+                        await ArcGISProHelpers.RemoveJoinAsync(
+                            hluLayerPath, selTableName).ConfigureAwait(false);
+                    }
+
+                    // Step 5: Delete the temporary selection table.
+                    await ArcGISProHelpers.DeleteGeodatabaseTableAsync(
+                        workingGdbPath, selTableName).ConfigureAwait(false);
+                }
             }
 
             return true;
@@ -1299,44 +1448,88 @@ namespace HLU.GISApplication
             if (incids.Count == 0)
                 return (0, 0, 0);
 
+            // The distinct INCID count is already known from the in-memory list.
+            int incidCount = incids.Count;
+
             // Build chunked WHERE clauses for querying the layer.
-            IEnumerable<string> whereClauses = BuildInWhereClauses(
+            // Materialise to a list so we can inspect the count before entering QueuedTask.
+            List<string> whereClauses = [.. BuildInWhereClauses(
                 QuoteIdentifier(incidFieldName),
                 incids,
-                maxClauseLength: 8000);
+                maxClauseLength: 8000)];
 
             // Run the counting logic on the MCT.
             return await QueuedTask.Run(() =>
             {
                 int fragmentCount = 0;
 
-                // Create HashSets to track distinct INCIDs and TOIDs explicitly, since the layer may return duplicates.
-                var distinctIncids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                // Track distinct TOIDs across all chunks.
                 var distinctToids = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-                // Query the layer for each chunked WHERE clause.
-                foreach (string whereClause in whereClauses)
+                // Strategy selection:
+                //
+                // Chunked IN-clause queries are efficient for small selections because the
+                // database index can satisfy each chunk quickly.  However, with a large
+                // INCID count (e.g. 158,000) this produces hundreds of separate round-trips,
+                // which dominates cost especially on enterprise geodatabases.
+                //
+                // When the number of chunks exceeds the threshold, a single sequential scan
+                // of the entire layer filtered in memory is faster: one trip instead of N,
+                // and purely sequential I/O rather than N separate index seeks.
+                //
+                // Using _hluLayer (not _hluFeatureClass) throughout ensures any definition
+                // query applied to the layer is respected.
+                const int fullScanThreshold = 20;
+
+                if (whereClauses.Count <= fullScanThreshold)
                 {
+                    // Small selection – use indexed IN-clause queries and count in the cursor
+                    // (avoids a second GetCount() round-trip per chunk while staying
+                    // consistent with any definition query on _hluLayer).
+                    foreach (string whereClause in whereClauses)
+                    {
+                        QueryFilter qf = new()
+                        {
+                            WhereClause = whereClause,
+                            SubFields = QuoteIdentifier(toidFieldName)
+                        };
+
+                        using RowCursor cursor = _hluLayer.Search(qf);
+                        while (cursor.MoveNext())
+                        {
+                            using Row row = cursor.Current;
+
+                            fragmentCount++;
+
+                            string toid = Convert.ToString(row[toidFieldName]);
+                            if (!String.IsNullOrWhiteSpace(toid))
+                                distinctToids.Add(toid);
+                        }
+                    }
+                }
+                else
+                {
+                    // Large selection – single sequential scan with in-memory INCID filter.
+                    // Build a HashSet for O(1) membership tests.
+                    var incidSet = new HashSet<string>(incids, StringComparer.OrdinalIgnoreCase);
+
                     QueryFilter qf = new()
                     {
-                        WhereClause = whereClause,
+                        // No WhereClause – read the whole layer in one pass.
                         SubFields =
                             $"{QuoteIdentifier(incidFieldName)},{QuoteIdentifier(toidFieldName)}"
                     };
 
-                    // Loop through the returned rows.
                     using RowCursor cursor = _hluLayer.Search(qf);
                     while (cursor.MoveNext())
                     {
                         using Row row = cursor.Current;
 
-                        // Increment the fragment count for every returned row.
-                        fragmentCount++;
-
-                        // Collect unique INCIDs and TOIDs.
                         string incid = Convert.ToString(row[incidFieldName]);
-                        if (!String.IsNullOrWhiteSpace(incid))
-                            distinctIncids.Add(incid);
+                        if (String.IsNullOrWhiteSpace(incid) || !incidSet.Contains(incid))
+                            continue;
+
+                        fragmentCount++;
 
                         string toid = Convert.ToString(row[toidFieldName]);
                         if (!String.IsNullOrWhiteSpace(toid))
@@ -1345,7 +1538,7 @@ namespace HLU.GISApplication
                 }
 
                 // Return the counts.
-                return (distinctIncids.Count, distinctToids.Count, fragmentCount);
+                return (incidCount, distinctToids.Count, fragmentCount);
             }).ConfigureAwait(false);
         }
 
@@ -4076,7 +4269,7 @@ namespace HLU.GISApplication
 
                 // Save any edits started by the geoprocessing tool to release
                 // the geodatabase schema lock before the next operation.
-                await ArcGIS.Desktop.Core.Project.Current.SaveEditsAsync();
+                await Project.Current.SaveEditsAsync();
 
                 // STEP 2: Delete unwanted GIS fields from temp FC
 
@@ -4149,7 +4342,7 @@ namespace HLU.GISApplication
 
                 // Save any edits started by the geoprocessing tool to release
                 // the geodatabase schema lock before the next operation.
-                await ArcGIS.Desktop.Core.Project.Current.SaveEditsAsync();
+                await Project.Current.SaveEditsAsync();
 
                 // STEP 3: Delete duplicate join key field if it was added by the join
                 await ArcGISProHelpers.DeleteDuplicateJoinFieldAsync(tempFcPath, joinKeyField);
