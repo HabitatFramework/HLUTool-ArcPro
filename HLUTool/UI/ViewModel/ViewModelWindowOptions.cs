@@ -79,10 +79,12 @@ namespace HLU.UI.ViewModel
 
         // Application Database options
         private int? _dbConnectionTimeout;
+
         private int? _incidTablePageSize;
 
         // Application Dates options
         private string _seasonSpring;
+
         private string _seasonSummer;
         private string _seasonAutumn;
         private string _seasonWinter;
@@ -90,12 +92,14 @@ namespace HLU.UI.ViewModel
 
         // Application Validation options
         private int _habitatSecondaryCodeValidation;
+
         private int _primarySecondaryCodeValidation;
         private int _qualityValidation;
         private int _potentialPriorityDetermQtyValidation;
 
         // Application Updates options
         private int? _subsetUpdateAction;
+
         private string[] _clearIHSUpdateActions;
         private string _clearIHSUpdateAction;
         private string _secondaryCodeDelimiter;
@@ -103,6 +107,7 @@ namespace HLU.UI.ViewModel
 
         // Application Bulk Update options
         private bool _bulkDeleteOrphanBapHabitats;
+
         private bool _bulkDeletePotentialBapHabitats;
         private bool _bulkDeleteIHSCodes;
         private bool _bulkDeleteSecondaryCodes;
@@ -116,6 +121,7 @@ namespace HLU.UI.ViewModel
 
         // User Interface options
         private bool _showGroupHeaders;
+
         private bool _showIHSTab;
         private bool _showSourceHabitatGroup;
         private bool _showHabitatSecondariesSuggested;
@@ -130,6 +136,7 @@ namespace HLU.UI.ViewModel
 
         // User GIS options
         private string[] _autoZoomToSelectionOptions;
+
         private string _autoZoomToSelection;
         private int? _minAutoZoom;
         private int _maxAutoZoom;
@@ -140,6 +147,7 @@ namespace HLU.UI.ViewModel
 
         // User Update options
         private string _defaultReason;
+
         private string _defaultProcess;
         private string _defaultHabitatClass;
         private string _defaultSecondaryGroup;
@@ -149,24 +157,29 @@ namespace HLU.UI.ViewModel
 
         // User Bulk Load options
         private string _defaultBulkLoadPath;
+
         private string _defaultBulkLoadLayer;
 
         // User SQL options
         private int? _getValueRows;
+
         private int _maxGetValueRows;
         private string _sqlPath;
 
         // User History options
         private SelectionList<string> _historyColumns;
+
         private int? _historyDisplayLastN;
         private bool _historyDisplayGeometry;
 
         // User Export options
         private string _defaultExportPath;
+
         private int? _maxFeaturesExport;
 
         // Backup variables
         private string _bakSQLPath;
+
         private string _bakDefaultExportPath;
         private string _bakDefaultBulkLoadPath;
         private string _bakWorkingFileGDBPath;
@@ -2899,7 +2912,6 @@ namespace HLU.UI.ViewModel
                     => "Error: Select the default interpretation quality for new priority habitats.",
                 "OSMMSourceId" when OSMMSourceId == null
                     => "Error: Select the default source name for OS MasterMap.",
-
 
                 // User - Interface options
                 "ShowOSMMUpdatesOption" when ShowOSMMUpdatesOption == null

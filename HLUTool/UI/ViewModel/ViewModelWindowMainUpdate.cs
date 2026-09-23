@@ -544,7 +544,7 @@ namespace HLU.UI.ViewModel
                 object[] itemArray = be.ToItemArray();
 
                 // Define which columns should be updated (3, 4, 5 = quality fields)
-                int[] updateOrdinals = [ 3, 4, 5 ];
+                int[] updateOrdinals = [3, 4, 5];
 
                 foreach (int i in updateOrdinals)
                 {

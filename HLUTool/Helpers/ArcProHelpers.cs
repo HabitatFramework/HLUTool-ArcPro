@@ -24,7 +24,6 @@ using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Core.Geoprocessing;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ArcGIS.Desktop.Layouts;
 using ArcGIS.Desktop.Mapping;
 using System;
 using System.Collections.Generic;
@@ -2009,9 +2008,11 @@ namespace HLU.Helpers
                     case GeometryType.Polygon:
                         geometryProps.Add($"{lengthField} PERIMETER_LENGTH");
                         break;
+
                     case GeometryType.Polyline:
                         geometryProps.Add($"{lengthField} LENGTH");
                         break;
+
                     case GeometryType.Point:
                     case GeometryType.Multipoint:
                         // Points don't have length, skip

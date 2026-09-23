@@ -103,7 +103,6 @@
                             Text="{Binding FeatureCountMismatchMessage}"
                             Visibility="{Binding ShowFeatureCountMismatch, Converter={StaticResource BooleanToVisibilityConverter}}" />
                     </Grid>
-
                 </Grid>
             </GroupBox>
 

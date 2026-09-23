@@ -146,26 +146,31 @@ public class AddInSettings
 
     // Application database options
     public int DbConnectionTimeout { get; set; } = 60;
+
     public int IncidTablePageSize { get; set; } = 100;
 
     // Application dates options
     public string[] SeasonNames { get; set; } = ["Spring", "Summery", "Autumn", "Winter"];
+
     public string VagueDateDelimiter { get; set; } = "-";
 
     // Application validation options
     public int HabitatSecondaryCodeValidation { get; set; } = 2;
+
     public int PrimarySecondaryCodeValidation { get; set; } = 1;
     public int QualityValidation { get; set; } = 1;
     public int PotentialPriorityDetermQtyValidation { get; set; } = 1;
 
     // Application updates options
     public int SubsetUpdateAction { get; set; } = 0;
+
     public string ClearIHSUpdateAction { get; set; } = "Do not clear";
     public string SecondaryCodeDelimiter { get; set; } = ".";
     public bool ResetOSMMUpdatesStatus { get; set; } = false;
 
     // Application bulk update options
     public bool BulkUpdateDeleteOrphanBapHabitats { get; set; } = false;
+
     public bool BulkUpdateDeletePotentialBapHabitats { get; set; } = false;
     public bool BulkUpdateDeleteIHSCodes { get; set; } = false;
     public bool BulkUpdateDeleteSecondaryCodes { get; set; } = false;
@@ -197,6 +202,7 @@ public class HelpPages
 {
     // Individual help pages
     public string AppDatabase { get; set; } = "options/options.html#options-app-database";
+
     public string AppDates { get; set; } = "options/options.html#options-app-dates";
     public string AppValidation { get; set; } = "options/options.html#options-app-validation";
     public string AppUpdates { get; set; } = "options/options.html#options-app-updates";

@@ -50,34 +50,42 @@ namespace HLU.UI.ViewModel
         {
             get; set;
         }
+
         public string Spatial
         {
             get; set;
         }
+
         public string Change
         {
             get; set;
         }
+
         public int Rejected
         {
             get; set;
         }
+
         public int Ignored
         {
             get; set;
         }
+
         public int Proposed
         {
             get; set;
         }
+
         public int Pending
         {
             get; set;
         }
+
         public int Applied
         {
             get; set;
         }
+
         public int Total
         {
             get; set;
@@ -96,11 +104,11 @@ namespace HLU.UI.ViewModel
     /// <summary>
     /// Contains the view model for the OSMM Updates Query window.
     /// </summary>
-    class ViewModelWindowQueryOSMM : ViewModelBase, INotifyPropertyChanged
+    internal class ViewModelWindowQueryOSMM : ViewModelBase, INotifyPropertyChanged
     {
         #region Fields
 
-        ViewModelWindowMain _viewModelMain;
+        private ViewModelWindowMain _viewModelMain;
 
         public static HluDataSet HluDatasetStatic = null;
 
