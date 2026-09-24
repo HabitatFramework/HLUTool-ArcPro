@@ -645,10 +645,13 @@ namespace HLU.UI.ViewModel
 
                 try
                 {
-                    _viewModelMain.DataBase.ExecuteNonQuery(
+                    int rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                         updateStatement,
                         _viewModelMain.DataBase.Connection.ConnectionTimeout,
                         CommandType.Text);
+
+                    if (rowsAffected == -1)
+                        throw new Exception(_viewModelMain.DataBase.ErrorMessage);
                 }
                 catch (Exception ex)
                 {
@@ -673,10 +676,13 @@ namespace HLU.UI.ViewModel
                     // Try and execute the insert statement
                     try
                     {
-                        _viewModelMain.DataBase.ExecuteNonQuery(
+                        int rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                             insertStatement,
                             _viewModelMain.DataBase.Connection.ConnectionTimeout,
                             CommandType.Text);
+
+                        if (rowsAffected == -1)
+                            throw new Exception(_viewModelMain.DataBase.ErrorMessage);
                     }
                     catch (Exception ex)
                     {
@@ -1492,10 +1498,13 @@ namespace HLU.UI.ViewModel
 
                 try
                 {
-                    _viewModelMain.DataBase.ExecuteNonQuery(
+                    int rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                         updateStatement,
                         _viewModelMain.DataBase.Connection.ConnectionTimeout,
                         CommandType.Text);
+
+                    if (rowsAffected == -1)
+                        throw new Exception(_viewModelMain.DataBase.ErrorMessage);
                 }
                 catch (Exception ex)
                 {

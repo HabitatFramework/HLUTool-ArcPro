@@ -156,12 +156,18 @@ namespace HLU.UI.ViewModel
                 return;
             }
 
+            // Get the GIS layer selection again (just in case), so that the
+            // export dialog and subsequent export both use a consistent, up-to-date
+            // selection cache (matching the pattern used by ReassignFeaturesAsync
+            // and PhysicalMergeAsync).
+            await _viewModelMain.GetMapSelectionAsync(false);
+
             // Count features for the dialog display.
-            int fragCount = await _viewModelMain.GISApplication.CountMapSelectionAsync();
+            int fragCount = _viewModelMain.GisSelection == null ? 0 : _viewModelMain.GisSelection.Rows.Count;
             long totalCount = await _viewModelMain.GISApplication.CountMapFeaturesAsync();
 
             _viewModelExport = new(
-                _viewModelMain.GisSelection == null ? 0 : fragCount,
+                fragCount,
                 totalCount,
                 _viewModelMain.GISApplication.HluLayerName,
                 _viewModelMain.HluDataset.exports)
@@ -252,15 +258,11 @@ namespace HLU.UI.ViewModel
                 return;
             }
 
-            // If exporting only selected features, always synchronise the internal
-            // selection cache with the live GIS selection. The user may have selected
-            // features directly in GIS without clicking 'Get Map Selection', leaving
-            // _gisSelection stale, null, or pointing to a different set of features.
+            // If exporting only selected features, check the selection cache
+            // (synchronised with the live GIS selection in InitiateExport) is
+            // still usable.
             if (selectedOnly)
             {
-                await _viewModelMain.GetMapSelectionAsync(false);
-
-                // Abort if the sync produced no usable selection.
                 if (_viewModelMain.GisSelection == null ||
                     _viewModelMain.GisSelection.Rows.Count == 0)
                 {
@@ -307,6 +309,21 @@ namespace HLU.UI.ViewModel
             // Extract the export details.
             string exportWorkspace = exportDetails.outputWorkspace;
             string exportFeatureClassName = exportDetails.outputFeatureClassName;
+
+            // Halt the export if the requested output matches the active HLU layer,
+            // as it cannot (and must not) be overwritten.
+            bool isActiveLayer = await _viewModelMain.GISApplication.IsActiveHluLayerPathAsync(
+                exportWorkspace, exportFeatureClassName);
+            if (isActiveLayer)
+            {
+                MessageBox.Show(
+                    $"Cannot export: the requested output layer '{exportFeatureClassName}' is the active HLU layer.\n\n" +
+                    "Please choose a different output path or feature class name, or change the active HLU layer.",
+                    "HLU: Export",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Exclamation);
+                return;
+            }
 
             // Discard any pending edits left by geoprocessing tools to release
             // geodatabase schema locks before creating new tables.

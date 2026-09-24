@@ -2260,7 +2260,7 @@ namespace HLU.UI.ViewModel
             // If the user clicked No, cancel the operation.
             if (result == MessageBoxResult.No)
             {
-                ShowInfo("Bulk Unload operation cancelled. Please create a backup before unloading.", MessageCategory.OSMMLoad);
+                ShowInfo("Bulk Unload cancelled by user.", MessageCategory.OSMMLoad);
                 return;
             }
 
@@ -2285,8 +2285,11 @@ namespace HLU.UI.ViewModel
             // Clear any existing messages.
             ClearAllMessages();
 
-            // Re-read the map selection to ensure it is current.
-            await GetMapSelectionAsync(false);
+            // Check there are no outstanding edits before proceeding, as the
+            // load will change the current selection/map state.
+            MessageBoxResult userResponse = CheckDirty();
+            if (userResponse == MessageBoxResult.Cancel)
+                return;
 
             // Show the Bulk Load setup dialog so the user can select the source layer
             // and map its fields to the lut_osmm_habitat_xref lookup columns.

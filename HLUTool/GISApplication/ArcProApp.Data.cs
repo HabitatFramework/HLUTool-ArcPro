@@ -4773,6 +4773,72 @@ namespace HLU.GISApplication
         }
 
         /// <summary>
+        /// Determines whether the active HLU layer's underlying feature class is located at the
+        /// specified workspace and feature class name. Used to detect whether a chosen output
+        /// path (e.g. for a Bulk Load staging layer or export) would collide with the layer that
+        /// is currently active and in use, before any attempt is made to overwrite it.
+        /// </summary>
+        /// <param name="workspacePath">The candidate output workspace path (folder for shapefiles, .gdb path for geodatabase).</param>
+        /// <param name="featureClassName">The candidate output feature class name (including .shp for shapefiles).</param>
+        /// <returns>
+        /// A task that represents the asynchronous operation. The task result is true if the
+        /// active HLU layer's feature class matches the specified workspace and name; otherwise false.
+        /// </returns>
+        public async Task<bool> IsActiveHluLayerPathAsync(string workspacePath, string featureClassName)
+        {
+            if (_hluFeatureClass == null ||
+                string.IsNullOrEmpty(workspacePath) ||
+                string.IsNullOrEmpty(featureClassName))
+                return false;
+
+            try
+            {
+                return await QueuedTask.Run(() =>
+                {
+                    using Datastore datastore = _hluFeatureClass.GetDatastore();
+
+                    // Get the workspace path for the active HLU layer's feature class.
+                    string activeWorkspacePath = datastore switch
+                    {
+                        ArcGIS.Core.Data.FileSystemDatastore fsDatastore => fsDatastore.GetPath()?.LocalPath,
+                        Geodatabase gdb => gdb.GetPath()?.LocalPath,
+                        _ => null
+                    };
+
+                    if (string.IsNullOrEmpty(activeWorkspacePath))
+                        return false;
+
+                    // Get the active HLU layer's feature class name (strip any .shp extension for comparison).
+                    string activeFeatureClassName = _hluFeatureClass.GetName();
+
+                    // Normalise the candidate feature class name in the same way (strip .shp if present).
+                    string candidateFeatureClassName = featureClassName.EndsWith(".shp", StringComparison.OrdinalIgnoreCase)
+                        ? featureClassName[..^4]
+                        : featureClassName;
+
+                    // Compare the workspace paths and feature class names (case-insensitive, ignoring trailing separators).
+                    bool sameWorkspace = string.Equals(
+                        activeWorkspacePath.TrimEnd('\\', '/'),
+                        workspacePath.TrimEnd('\\', '/'),
+                        StringComparison.OrdinalIgnoreCase);
+
+                    bool sameName = string.Equals(
+                        activeFeatureClassName,
+                        candidateFeatureClassName,
+                        StringComparison.OrdinalIgnoreCase);
+
+                    return sameWorkspace && sameName;
+                });
+            }
+            catch
+            {
+                // If the check cannot be performed for any reason, err on the side of caution
+                // and report no collision so the existing delete-based safeguard still applies.
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Determines whether the current map contains any valid HLU layers.
         /// This method only discovers valid layers and chooses a candidate active layer name.
         /// It does not activate a layer and does not set _hluLayer or _hluTableName.

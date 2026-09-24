@@ -932,10 +932,13 @@ namespace HLU.UI.ViewModel
                     // Execute the delete statement.
                     try
                     {
-                        _viewModelMain.DataBase.ExecuteNonQuery(
+                        int rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                             deleteStatement,
                             _viewModelMain.DataBase.Connection.ConnectionTimeout,
                             CommandType.Text);
+
+                        if (rowsAffected == -1)
+                            throw new Exception(_viewModelMain.DataBase.ErrorMessage);
                     }
                     catch (Exception ex)
                     {
@@ -946,10 +949,13 @@ namespace HLU.UI.ViewModel
                 // Execute the update statement.
                 try
                 {
-                    _viewModelMain.DataBase.ExecuteNonQuery(
+                    int rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                         updateStatement,
                         _viewModelMain.DataBase.Connection.ConnectionTimeout,
                         CommandType.Text);
+
+                    if (rowsAffected == -1)
+                        throw new Exception(_viewModelMain.DataBase.ErrorMessage);
                 }
                 catch (Exception ex)
                 {
@@ -1021,10 +1027,13 @@ namespace HLU.UI.ViewModel
             // Execute the update statement within the caller's transaction.
             try
             {
-                _viewModelMain.DataBase.ExecuteNonQuery(
+                int rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                     updateStatement,
                     _viewModelMain.DataBase.Connection.ConnectionTimeout,
                     CommandType.Text);
+
+                if (rowsAffected == -1)
+                    throw new Exception(_viewModelMain.DataBase.ErrorMessage);
             }
             catch (Exception ex)
             {
@@ -1088,10 +1097,13 @@ namespace HLU.UI.ViewModel
             // Execute the update statement within the caller's transaction.
             try
             {
-                _viewModelMain.DataBase.ExecuteNonQuery(
+                int rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                     updateStatement,
                     _viewModelMain.DataBase.Connection.ConnectionTimeout,
                     CommandType.Text);
+
+                if (rowsAffected == -1)
+                    throw new Exception(_viewModelMain.DataBase.ErrorMessage);
             }
             catch (Exception ex)
             {

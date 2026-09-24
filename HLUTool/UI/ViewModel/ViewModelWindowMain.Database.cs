@@ -406,7 +406,7 @@ namespace HLU.UI.ViewModel
             {
                 // Show informational message that physical split can be performed if desired.
                 if (showMessage)
-                    ShowInfo($"{itemType}{(_currentIncidFragsInGISCount == 1 ? "" : "s")} may have been split in GIS but not physically split using HLU Tool.", Messagecategory);
+                    ShowInfo($"{itemType}{(_currentIncidFragsInGISCount == 1 ? "" : "s")} split in GIS but not physically split using HLU Tool.", Messagecategory);
             }
             // Check if there are multiple fragments in GIS that share the same incid and toid.
             // Physical merge is not applicable for point features.
@@ -416,7 +416,7 @@ namespace HLU.UI.ViewModel
             {
                 // Show informational message that physical merge can be performed if desired.
                 if (showMessage)
-                    ShowInfo("Selected features share the same INCID and TOID so a physical merge is possible.", MessageCategory.GIS);
+                    ShowInfo("Physical merge possible - selected features share the same INCID and TOID.", MessageCategory.GIS);
             }
             // Check if the GIS and database are in sync.
             else if ((_currentIncidToidsInGISCount > _currentIncidToidsInDBCount) ||
@@ -2241,7 +2241,10 @@ namespace HLU.UI.ViewModel
                     if ((q != null) && (q.Length != 0))
                         primaryBap = q;
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Failed to determine mandatory primary BAP habitats for primary habitat '{primaryHabitat}': {ex.Message}", ex);
+                }
             }
 
             // Get the BAP habitats associated with all of the secondary habitats
@@ -2258,7 +2261,10 @@ namespace HLU.UI.ViewModel
                     if ((q != null) && (q.Length != 0))
                         secondaryBap = q;
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Failed to determine mandatory secondary BAP habitats: {ex.Message}", ex);
+                }
             }
 
             IEnumerable<string> allBap = null;
@@ -2475,12 +2481,16 @@ namespace HLU.UI.ViewModel
             if (_hluDS == null)
                 return false;
 
+            // In Bulk Update / OSMM Bulk Update mode the current row is a detached
+            // placeholder row whose incid column is never populated, so it must be
+            // checked before (not after) the incid null-check below, otherwise the
+            // source fields would always be treated as invalid/disabled.
+            if (IsBulkMode)
+                return true;
+
             // Use IncidCurrentRow directly to avoid triggering the logged Incid property getter.
             if ((IncidCurrentRow == null) || IncidCurrentRow.IsNull(HluDataset.incid.incidColumn))
                 return false;
-
-            if (IsBulkMode)
-                return true;
 
             if (_incidSourcesRows == null)
             {

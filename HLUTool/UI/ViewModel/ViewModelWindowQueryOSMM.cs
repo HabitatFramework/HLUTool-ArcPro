@@ -843,6 +843,13 @@ namespace HLU.UI.ViewModel
 
             OnPropertyChanged(nameof(CanApplyOSMMFilter));
 
+            // Force the Ok button (and any other commands bound via RelayCommand) to
+            // re-evaluate their CanExecute state immediately. Without this, the button's
+            // enabled state can lag behind the freshly calculated counts because
+            // RelayCommand.CanExecuteChanged only forwards to CommandManager.RequerySuggested,
+            // which is normally only re-queried on UI input events.
+            CommandManager.InvalidateRequerySuggested();
+
             // Reset the cursor back to normal.
             if (!suppressCursorChange)
                 ChangeCursor(Cursors.Arrow);

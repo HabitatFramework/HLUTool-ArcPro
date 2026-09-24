@@ -348,9 +348,9 @@ namespace HLU.UI.ViewModel
                     updateStatementIncid = String.Format("{0}, {1} = {2}, {3} = {4}",
                         updateStatementIncid,
                         _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.ihs_habitatColumn.ColumnName),
-                        _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidCurrentRow.ihs_habitat),
+                        _viewModelMain.DataBase.QuoteValue(DBNull.Value),
                         _viewModelMain.DataBase.QuoteIdentifier(_viewModelMain.HluDataset.incid.ihs_summaryColumn.ColumnName),
-                        _viewModelMain.DataBase.QuoteValue(_viewModelMain.IncidCurrentRow.ihs_summary));
+                        _viewModelMain.DataBase.QuoteValue(DBNull.Value));
                 }
 
                 // Finally, add the where clause to the update command
@@ -464,7 +464,7 @@ namespace HLU.UI.ViewModel
 
                 // Show error message
                 MessageBox.Show(String.Format("Bulk update failed. The error message returned was:\n\n{0}",
-                    ex.Message), "HLU: Bulk Update", MessageBoxButton.OK, MessageBoxImage.Error);
+                    exMessage), "HLU: Bulk Update", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -905,7 +905,7 @@ namespace HLU.UI.ViewModel
 
                 // Show error message
                 MessageBox.Show(String.Format("OSMM Bulk update failed. The error message returned was:\n\n{0}",
-                    ex.Message), "HLU: OSMM Bulk Update", MessageBoxButton.OK, MessageBoxImage.Error);
+                    exMessage), "HLU: OSMM Bulk Update", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -1006,10 +1006,13 @@ namespace HLU.UI.ViewModel
             {
                 try
                 {
-                    _viewModelMain.DataBase.ExecuteNonQuery(
+                    int rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                         String.Format(updateStatementIncid, currIncid),
                         _viewModelMain.DataBase.Connection.ConnectionTimeout,
                         CommandType.Text);
+
+                    if (rowsAffected == -1)
+                        throw new Exception(_viewModelMain.DataBase.ErrorMessage);
                 }
                 catch (Exception ex)
                 {
@@ -1025,10 +1028,13 @@ namespace HLU.UI.ViewModel
             {
                 try
                 {
-                    _viewModelMain.DataBase.ExecuteNonQuery(
+                    int rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                         String.Format(secondaryDeleteStatement, currIncid),
                         _viewModelMain.DataBase.Connection.ConnectionTimeout,
                         CommandType.Text);
+
+                    if (rowsAffected == -1)
+                        throw new Exception(_viewModelMain.DataBase.ErrorMessage);
                 }
                 catch (Exception ex)
                 {
@@ -1045,10 +1051,13 @@ namespace HLU.UI.ViewModel
                 foreach (string s in ihsMultiplexDeleteStatements)
                     try
                     {
-                        _viewModelMain.DataBase.ExecuteNonQuery(
+                        int rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                             String.Format(s, currIncid),
                             _viewModelMain.DataBase.Connection.ConnectionTimeout,
                             CommandType.Text);
+
+                        if (rowsAffected == -1)
+                            throw new Exception(_viewModelMain.DataBase.ErrorMessage);
                     }
                     catch (Exception ex)
                     {
@@ -1064,10 +1073,13 @@ namespace HLU.UI.ViewModel
             {
                 try
                 {
-                    _viewModelMain.DataBase.ExecuteNonQuery(
+                    int rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                         String.Format(updateStatementIncidOSMMUpdates, currIncid),
                         _viewModelMain.DataBase.Connection.ConnectionTimeout,
                         CommandType.Text);
+
+                    if (rowsAffected == -1)
+                        throw new Exception(_viewModelMain.DataBase.ErrorMessage);
                 }
                 catch (Exception ex)
                 {
@@ -1561,11 +1573,14 @@ namespace HLU.UI.ViewModel
                 {
                     try
                     {
-                        _viewModelMain.DataBase.ExecuteNonQuery(
+                        int rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                             String.Format(incidMMPolygonsUpdateCmdTemplate,
                                 _viewModelMain.DataBase.WhereClause(false, true, true, whereClause)),
                             _viewModelMain.DataBase.Connection.ConnectionTimeout,
                             CommandType.Text);
+
+                        if (rowsAffected == -1)
+                            throw new Exception(_viewModelMain.DataBase.ErrorMessage);
                     }
                     catch (Exception ex)
                     {

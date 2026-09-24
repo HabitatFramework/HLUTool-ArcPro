@@ -84,7 +84,7 @@
 				<!-- ESRI Map Tools group -->
 				<group id="HLUTool_Group_MapTools" caption="Map Tools" keytip="G4">
 					<toolPalette refID="esri_mapping_selectToolPalette" />
-					<button refID="esri_mapping_clearSelectionButton" size="middle" separator="true" />
+					<button refID="esri_mapping_clearSelectionButton" size="middle" />
 					<button refID="esri_mapping_zoomToSelectionButton" size="middle" />
 				</group>
 
@@ -107,7 +107,7 @@
 				<!-- Selection group -->
 				<group id="HLUTool_Group_Selection" caption="Selection" keytip="G7">
 					<button refID="HLUTool_btnGetMapSelection" size="large" />
-					<button refID="HLUTool_btnSelectCurrentIncid" size="middle" separator="true" />
+					<button refID="HLUTool_btnSelectCurrentIncid" size="middle" />
 					<button refID="HLUTool_btnSelectFilteredIncids" size="middle" />
 					<button refID="HLUTool_btnAutoSelectOnGis" size="middle" />
 				</group>

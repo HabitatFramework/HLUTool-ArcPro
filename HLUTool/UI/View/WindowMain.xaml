@@ -3200,7 +3200,7 @@
 
                     <Grid x:Name="GridBulkUpdate"
                           Grid.Column="0"
-                          Height="23"
+                          Height="Auto"
                           VerticalAlignment="Bottom"
                           Visibility="{Binding Path=ShowInBulkUpdateMode}">
                         <Grid.ColumnDefinitions>
@@ -3210,7 +3210,7 @@
                                Margin="0,0,0,0"
                                HorizontalAlignment="Right"
                                VerticalAlignment="Center"
-                               Content="Bulk Update Involved:"
+                               Content="Bulk Update Map Counts:"
                                FontStretch="UltraExpanded"
                                FontWeight="Bold" />
                     </Grid>

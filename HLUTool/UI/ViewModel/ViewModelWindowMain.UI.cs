@@ -8333,8 +8333,8 @@ namespace HLU.UI.ViewModel
             if (_selectedIncidsInGISCount <= 0)
             {
                 // Ask the user before re-selecting the current incid features in GIS.
-                if (MessageBox.Show("There are no features selected in the GIS.\n" +
-                            "Would you like to apply the changes to all features for this incid?", "HLU: Save",
+                if (MessageBox.Show("There are no features selected in the GIS.\n\n" +
+                            "Apply the changes to all features for this incid?", "HLU: Save",
                             MessageBoxButton.YesNoCancel, MessageBoxImage.Question) == MessageBoxResult.Yes)
                 {
                     // Set the status to processing and the cursor to wait.
@@ -10192,38 +10192,38 @@ namespace HLU.UI.ViewModel
                         else
                             errorCodes.Add(secondaryHabitat);
                     }
+                }
 
-                    // If any valid codes were entered and were added to the table
-                    if (addedCodes == true)
-                    {
-                        // Refresh secondary table and summary.
-                        RefreshSecondaryHabitats();
-                        OnPropertyChanged(nameof(IncidSecondarySummary));
+                // If any valid codes were entered and were added to the table
+                if (addedCodes == true)
+                {
+                    // Refresh secondary table and summary.
+                    RefreshSecondaryHabitats();
+                    OnPropertyChanged(nameof(IncidSecondarySummary));
 
-                        // Refresh the BAP habitat environments (in case secondary codes
-                        // are, or should be, reflected).
-                        GetBapEnvironments();
-                        OnPropertyChanged(nameof(IncidBapHabitatsAuto));
-                        OnPropertyChanged(nameof(IncidBapHabitatsUser));
-                        OnPropertyChanged(nameof(BapHabitatsAutoEnabled));
-                        OnPropertyChanged(nameof(BapHabitatsUserEnabled));
-                    }
+                    // Refresh the BAP habitat environments (in case secondary codes
+                    // are, or should be, reflected).
+                    GetBapEnvironments();
+                    OnPropertyChanged(nameof(IncidBapHabitatsAuto));
+                    OnPropertyChanged(nameof(IncidBapHabitatsUser));
+                    OnPropertyChanged(nameof(BapHabitatsAutoEnabled));
+                    OnPropertyChanged(nameof(BapHabitatsUserEnabled));
+                }
 
-                    // If any codes were invalid then tell the user
-                    if (errorCodes != null && errorCodes.Count > 0)
-                    {
-                        // Sort the distinct secondary codes in error numerically
-                        errorCodes = [.. errorCodes.Distinct().OrderBy(e => e.PadLeft(5, '0'))];
-                        // Message the user, depending on if there is one or more
-                        if (errorCodes.Count == 1)
-                            ShowWarning("Code '" +
-                                errorCodes.FirstOrDefault() + "' is a duplicate/unknown and has not been added.",
-                                MessageCategory.Update);
-                        else
-                            ShowWarning("Codes '" +
-                                String.Join(", ", errorCodes.Take(errorCodes.Count - 1)) + " and " + errorCodes.Last() + "' are duplicates/unknown and have not been added.",
-                                MessageCategory.Update);
-                    }
+                // If any codes were invalid then tell the user
+                if (errorCodes != null && errorCodes.Count > 0)
+                {
+                    // Sort the distinct secondary codes in error numerically
+                    errorCodes = [.. errorCodes.Distinct().OrderBy(e => e.PadLeft(5, '0'))];
+                    // Message the user, depending on if there is one or more
+                    if (errorCodes.Count == 1)
+                        ShowWarning("Code '" +
+                            errorCodes.FirstOrDefault() + "' is a duplicate/unknown and has not been added.",
+                            MessageCategory.Update);
+                    else
+                        ShowWarning("Codes '" +
+                            String.Join(", ", errorCodes.Take(errorCodes.Count - 1)) + " and " + errorCodes.Last() + "' are duplicates/unknown and have not been added.",
+                            MessageCategory.Update);
                 }
             }
             catch (Exception ex)

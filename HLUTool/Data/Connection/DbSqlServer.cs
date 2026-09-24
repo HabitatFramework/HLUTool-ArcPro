@@ -1293,7 +1293,7 @@ namespace HLU.Data.Connection
         /// <returns>The quoted value as a string.</returns>
         public override string QuoteValue(object value)
         {
-            if (value == null)
+            if (value == null || value == DBNull.Value)
                 return "NULL";
             Type valueType = value.GetType();
             int colType;

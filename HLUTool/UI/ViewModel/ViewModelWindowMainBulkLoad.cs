@@ -119,6 +119,19 @@ namespace HLU.UI.ViewModel
             if (!string.IsNullOrEmpty(_outputWorkspace) &&
                 !string.IsNullOrEmpty(_outputFeatureClassName))
             {
+                // Halt the load if the requested staging output matches the active HLU layer,
+                // as it cannot (and must not) be deleted.
+                bool isActiveLayer = await _viewModelMain.GISApplication.IsActiveHluLayerPathAsync(
+                    _outputWorkspace, _outputFeatureClassName);
+                if (isActiveLayer)
+                {
+                    _viewModelMain.ShowWarning(
+                        $"Cannot load: the requested output layer '{_outputFeatureClassName}' is the active HLU layer. " +
+                        "Please choose a different output path or feature class name, or change the active HLU layer.",
+                        MessageCategory.OSMMLoad);
+                    return (false, 0, 0);
+                }
+
                 // Check if the output feature class already exists.
                 bool outputExists = await ArcGISProHelpers.FeatureClassExistsAsync(
                     _outputWorkspace, _outputFeatureClassName);

@@ -498,10 +498,13 @@ namespace HLU.UI.ViewModel
                             try
                             {
                                 // Execute the SQL DELETE statement to remove orphaned INCIDs from the database.
-                                _viewModelMain.DataBase.ExecuteNonQuery(
+                                int rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                                     deleteStatement,
                                     _viewModelMain.DataBase.Connection.ConnectionTimeout,
                                     CommandType.Text);
+
+                                if (rowsAffected == -1)
+                                    throw new Exception(_viewModelMain.DataBase.ErrorMessage);
                             }
                             catch (Exception ex)
                             {

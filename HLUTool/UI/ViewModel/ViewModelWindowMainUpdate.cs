@@ -375,10 +375,13 @@ namespace HLU.UI.ViewModel
             // Update the DB copy of the GIS layer.
             try
             {
-                _viewModelMain.DataBase.ExecuteNonQuery(
+                int rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                     updateStatement,
                     _viewModelMain.DataBase.Connection.ConnectionTimeout,
                     CommandType.Text);
+
+                if (rowsAffected == -1)
+                    throw new Exception(_viewModelMain.DataBase.ErrorMessage);
             }
             catch (Exception ex)
             {
@@ -682,10 +685,13 @@ namespace HLU.UI.ViewModel
             // Update the modified columns in the incid table.
             try
             {
-                _viewModelMain.DataBase.ExecuteNonQuery(
+                int rowsAffected = _viewModelMain.DataBase.ExecuteNonQuery(
                     updateStatement,
                     _viewModelMain.DataBase.Connection.ConnectionTimeout,
                     CommandType.Text);
+
+                if (rowsAffected == -1)
+                    throw new Exception(_viewModelMain.DataBase.ErrorMessage);
             }
             catch (Exception ex)
             {

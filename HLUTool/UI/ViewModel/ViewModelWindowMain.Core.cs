@@ -4460,7 +4460,7 @@ namespace HLU.UI.ViewModel
                 userResponse = MessageBoxResult.Yes;
                 if (!IsDirty)
                 {
-                    userResponse = _saving ? MessageBox.Show("The current record has not been changed.\n" +
+                    userResponse = _saving ? MessageBox.Show("The current record has not been changed.\n\n" +
                         "Would you still like to save the record?", "HLU: Save",
                         MessageBoxButton.YesNoCancel, MessageBoxImage.Question) : MessageBoxResult.Yes;
                 }
@@ -4489,7 +4489,7 @@ namespace HLU.UI.ViewModel
                 if (CanUpdate)
                 {
                     userResponse = MessageBox.Show("The current record has been changed." +
-                        "\n\nWould you like to leave this record discarding your changes?",
+                        "\n\nLeave this record and discard your changes?",
                         "HLU: Selection", MessageBoxButton.YesNo, MessageBoxImage.Exclamation,
                         MessageBoxResult.Yes);
                     if (userResponse == MessageBoxResult.Yes)
@@ -4501,7 +4501,7 @@ namespace HLU.UI.ViewModel
                 {
                     userResponse = MessageBox.Show("The current record has been changed, " +
                         "but it cannot be saved at this time because it is in error." +
-                        "\n\nWould you like to leave this record discarding your changes?",
+                        "\n\nLeave this record and discard your changes?",
                         "HLU: Selection", MessageBoxButton.YesNo, MessageBoxImage.Exclamation,
                         MessageBoxResult.No);
                     if (userResponse == MessageBoxResult.Yes)

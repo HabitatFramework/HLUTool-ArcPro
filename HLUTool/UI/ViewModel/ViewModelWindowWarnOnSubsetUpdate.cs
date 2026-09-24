@@ -209,8 +209,8 @@ namespace HLU.UI.ViewModel
         {
             get
             {
-                return String.Format("Only {0} out of {2} {1}s have been selected for this Incid.\n" +
-                    "Would you like to logically split the selected {1}{3} before applying the update?\n\n" +
+                return String.Format("Only {0} out of {2} {1}s have been selected for this Incid.\n\n" +
+                    "Logically split the selected {1}{3} before applying the update?\n\n" +
                     "Clicking 'No' will apply the update to all of the {1}s for this Incid?",
                     _numFrags.ToString(CultureInfo.CurrentCulture),
                     _gisFeaturesType.ToString().ToLower(),
